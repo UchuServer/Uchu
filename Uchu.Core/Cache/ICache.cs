@@ -7,5 +7,7 @@ namespace Uchu.Core
         string CreateSession(IPEndPoint endpoint, long userId);
 
         Session GetSession(IPEndPoint endpoint);
+
+        void DeleteSession(IPEndPoint endpoint);
     }
 }

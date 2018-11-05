@@ -4,6 +4,12 @@ namespace Uchu.Core
 {
     public class UchuContext : DbContext
     {
+        public DbSet<Character> Characters { get; set; }
+        public DbSet<User> Users { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseNpgsql("Host=localhost;Database=uchu;Username=postgres;Password=postgres");
+        }
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -9,7 +9,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="BCrypt.Net-Next" Version="3.1.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.4" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
       <PackageReference Include="ServiceStack.Redis" Version="5.4.0" />

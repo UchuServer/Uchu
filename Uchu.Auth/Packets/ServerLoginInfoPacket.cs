@@ -5,7 +5,7 @@ namespace Uchu.Auth
 {
     public class ServerLoginInfoPacket : AutoSerializingPacket
     {
-        public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Server;
+        public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Client;
         public override uint PacketId => 0x00;
 
         [AutoSerialize]
@@ -21,7 +21,7 @@ namespace Uchu.Auth
         public GameVersion Version { get; set; } = new GameVersion();
 
         [AutoSerialize(Wide = true)]
-        public string UserKey { get; set; }
+        public string UserKey { get; set; } = "";
 
         [AutoSerialize]
         public string WorldInstanceAddress { get; set; }
@@ -48,10 +48,10 @@ namespace Uchu.Auth
         public string Locale { get; set; } = "US";
 
         [AutoSerialize(Bool = true)]
-        public bool FirstLoginWithSubscription { get; set; }
+        public bool FirstLoginWithSubscription { get; set; } = false;
 
         [AutoSerialize(Bool = true)]
-        public bool FreeToPlay { get; set; }
+        public bool FreeToPlay { get; set; } = false;
 
         [AutoSerialize]
         public ulong Unknown3 { get; set; } = 0;
@@ -60,7 +60,7 @@ namespace Uchu.Auth
         public ErrorMessage Error { get; set; } = new ErrorMessage {Message = null};
 
         [AutoSerialize]
-        public uint StampCount { get; set; } = 0;
+        public uint StampCount { get; set; } = 4;
 
         // TODO: add stamps
 

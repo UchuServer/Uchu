@@ -33,7 +33,10 @@ namespace Uchu.Core
         }
 
         public Session GetSession(IPEndPoint endpoint)
-            =>_client.Get<Session>(endpoint.ToString());
+            => _client.Get<Session>(endpoint.ToString());
+
+        public void DeleteSession(IPEndPoint endpoint)
+            => _client.Remove(endpoint.ToString());
 
         private string _generateKey(int length = 24)
         {
