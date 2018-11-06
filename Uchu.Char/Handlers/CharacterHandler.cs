@@ -104,5 +104,17 @@ namespace Uchu.Char
 
             await SendCharacterList(endpoint, session.UserId);
         }
+
+        [PacketHandler]
+        public void JoinWorld(JoinWorldPacket packet, IPEndPoint endpoint)
+        {
+            Server.Cache.SetCharacter(endpoint, packet.CharacterId);
+
+            Server.Send(new ServerRedirectionPacket
+            {
+                Address = "127.0.0.1",
+                Port = 2005
+            }, endpoint);
+        }
     }
 }

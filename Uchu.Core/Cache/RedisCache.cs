@@ -32,6 +32,15 @@ namespace Uchu.Core
             return key;
         }
 
+        public void SetCharacter(IPEndPoint endpoint, long characterId)
+        {
+            var session = GetSession(endpoint);
+
+            session.CharacterId = characterId;
+
+            _client.Set(endpoint.ToString(), session, TimeSpan.FromDays(1));
+        }
+
         public Session GetSession(IPEndPoint endpoint)
             => _client.Get<Session>(endpoint.ToString());
 
