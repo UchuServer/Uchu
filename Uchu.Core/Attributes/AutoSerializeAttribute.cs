@@ -11,6 +11,7 @@ namespace Uchu.Core
         public bool Unsigned { get; set; } = false;
         public bool Wide { get; set; } = false;
         public bool Bool { get; set; } = false;
+        public bool Bits { get; set; } = false;
 
         public AutoSerializeAttribute()
         {

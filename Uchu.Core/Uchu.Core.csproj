@@ -6,6 +6,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\RakDotNet\RakDotNet\RakDotNet.csproj" />
+      <ProjectReference Include="..\Uchu.Resources\Uchu.Resources.csproj" />
     </ItemGroup>
 
     <ItemGroup>

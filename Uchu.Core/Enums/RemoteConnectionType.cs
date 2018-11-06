@@ -5,7 +5,7 @@ namespace Uchu.Core
         General,
         Auth,
         Chat,
-        Server = 4,
-        Client
+        Client = 0x04,
+        Server
     }
 }

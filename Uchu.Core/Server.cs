@@ -17,6 +17,7 @@ namespace Uchu.Core
 
         public int Port { get; }
         public ICache Cache { get; }
+        public ResourceAssembly Resources { get; }
 
         public Server(int port)
         {
@@ -24,15 +25,69 @@ namespace Uchu.Core
             _handlerMap = new HandlerMap();
             Port = port;
             Cache = new RedisCache();
+            Resources = new ResourceAssembly("Uchu.Resources.dll");
 
             _server.PacketReceived += _handlePacket;
 
             RegisterAssembly(Assembly.GetExecutingAssembly());
         }
 
-        public void Start() => _server.Start();
+        public void Start()
+        {
+            var active = true;
 
-        public void Stop() => _server.Stop();
+            _server.Start();
+
+            while (active)
+            {
+                Console.Write("> ");
+
+                var input = Console.ReadLine();
+                var split = input.Split(' ');
+
+                switch (split[0].ToLower())
+                {
+                    case "exit":
+                    case "quit":
+                    case "stop":
+                        active = false;
+                        break;
+
+                    case "adduser":
+                        var name = split[1];
+                        var password = split[2];
+
+                        Database.CreateUserAsync(name, password).ContinueWith(t =>
+                        {
+                            if (t.IsFaulted)
+                                Console.WriteLine(t.Exception);
+                        });
+                        break;
+
+                    case "help":
+                        Console.WriteLine("help       Display this message");
+                        Console.WriteLine("adduser    Create a new user");
+                        Console.WriteLine("stop       Stop the server");
+                        break;
+
+                    default:
+                        Console.WriteLine("Unknown command");
+                        break;
+                }
+            }
+
+            _server.Stop();
+        }
+
+        public void Stop()
+        {
+            Console.WriteLine("Stopping...");
+
+            _server.Stop();
+        }
+
+        public void DisconnectClient(IPEndPoint endpoint, DisconnectId id = DisconnectId.UnknownServerError)
+            => Send(new DisconnectNotifyPacket {DisconnectId = id}, endpoint);
 
         public void Send(IPacket packet, IPEndPoint endpoint)
         {

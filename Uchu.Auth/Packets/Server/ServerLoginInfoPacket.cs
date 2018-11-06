@@ -5,7 +5,7 @@ namespace Uchu.Auth
 {
     public class ServerLoginInfoPacket : AutoSerializingPacket
     {
-        public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Client;
+        public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Server;
         public override uint PacketId => 0x00;
 
         [AutoSerialize]
@@ -24,13 +24,13 @@ namespace Uchu.Auth
         public string UserKey { get; set; } = "";
 
         [AutoSerialize]
-        public string WorldInstanceAddress { get; set; }
+        public string CharacterInstanceAddress { get; set; }
 
         [AutoSerialize]
         public string ChatInstanceAddress { get; set; }
 
         [AutoSerialize]
-        public ushort WorldInstancePort { get; set; }
+        public ushort CharacterInstancePort { get; set; }
 
         [AutoSerialize]
         public ushort ChatInstancePort { get; set; }

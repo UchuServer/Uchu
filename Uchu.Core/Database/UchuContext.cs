@@ -4,8 +4,9 @@ namespace Uchu.Core
 {
     public class UchuContext : DbContext
     {
-        public DbSet<Character> Characters { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Character> Characters { get; set; }
+        public DbSet<InventoryItem> InventoryItems { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

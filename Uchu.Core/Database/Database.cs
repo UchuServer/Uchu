@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,10 +15,12 @@ namespace Uchu.Core
                 Password = hashed,
                 CharacterIndex = 0
             };
-            
+
             using (var ctx = new UchuContext())
             {
                 await ctx.Users.AddAsync(user);
+
+                await ctx.SaveChangesAsync();
             }
 
             return user;
@@ -27,7 +30,7 @@ namespace Uchu.Core
         {
             using (var ctx = new UchuContext())
             {
-                return await ctx.Users.SingleOrDefaultAsync(user => user.Username == username);
+                return await ctx.Users.Include(u => u.Characters).SingleOrDefaultAsync(user => user.Username == username);
             }
         }
 
@@ -35,7 +38,37 @@ namespace Uchu.Core
         {
             using (var ctx = new UchuContext())
             {
-                return await ctx.Users.SingleOrDefaultAsync(user => user.UserId == id);
+                return await ctx.Users.Include(u => u.Characters).SingleOrDefaultAsync(user => user.UserId == id);
+            }
+        }
+
+        public static async Task CreateCharacter(Character character, long userId)
+        {
+            character.CharacterId = Utils.GenerateObjectId();
+
+            using (var ctx = new UchuContext())
+            {
+                var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == userId);
+
+                user.Characters.Add(character);
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        public static async Task<Character> GetCharacter(long id)
+        {
+            using (var ctx = new UchuContext())
+            {
+                return await ctx.Characters.Include(c => c.Items).SingleOrDefaultAsync(ch => ch.CharacterId == id);
+            }
+        }
+
+        public static async Task<Character> GetCharacter(string name)
+        {
+            using (var ctx = new UchuContext())
+            {
+                return await ctx.Characters.Include(c => c.Items).SingleOrDefaultAsync(ch => ch.Name == name);
             }
         }
     }

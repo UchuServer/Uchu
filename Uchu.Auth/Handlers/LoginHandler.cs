@@ -9,18 +9,17 @@ namespace Uchu.Auth
         [PacketHandler]
         public async Task LoginInfo(ClientLoginInfoPacket packet, IPEndPoint endpoint)
         {
-            var user = await Database.GetUserAsync(packet.Username) ??
-                       await Database.CreateUserAsync(packet.Username, packet.Password);
+            var user = await Database.GetUserAsync(packet.Username);
 
             var info = new ServerLoginInfoPacket
             {
-                WorldInstanceAddress = "127.0.0.1",
-                WorldInstancePort = 2002,
+                CharacterInstanceAddress = "127.0.0.1",
+                CharacterInstancePort = 2002,
                 ChatInstanceAddress = "127.0.0.1",
                 ChatInstancePort = 2003
             };
 
-            if (BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
+            if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
             {
                 var key = Server.Cache.CreateSession(endpoint, user.UserId);
 

@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RakDotNet;
@@ -98,6 +100,7 @@ namespace Uchu.Core
             var wide = attr.Wide;
             var length = attr.Length;
             var boolean = attr.Bool;
+            var bits = attr.Bits;
             var writeType = type.IsEnum ? type.GetEnumUnderlyingType() : type;
 
             if (writeType == typeof(sbyte))
@@ -162,8 +165,16 @@ namespace Uchu.Core
             }
             else if (writeType == typeof(byte[]))
             {
-                if (compressed) stream.WriteBitsCompressed((byte[]) val, length, unsigned);
-                else stream.WriteBits((byte[]) val, length);
+                if (bits)
+                {
+                    if (compressed) stream.WriteBitsCompressed((byte[]) val, length, unsigned);
+                    else stream.WriteBits((byte[]) val, length);
+                }
+                else
+                {
+                    if (compressed) stream.WriteCompressed((byte[]) val, unsigned);
+                    else stream.Write((byte[]) val);
+                }
             }
             else if (writeType == typeof(string))
             {
@@ -172,6 +183,16 @@ namespace Uchu.Core
             else if (typeof(ISerializable).IsAssignableFrom(writeType))
             {
                 stream.WriteSerializable((ISerializable) val);
+            }
+            else if (type.IsArray || typeof(IList).IsAssignableFrom(type))
+            {
+                var elementType = type.GetElementType();
+                var list = (IList) val;
+
+                foreach (var item in list)
+                {
+                    _serializeType(stream, elementType, item, attr);
+                }
             }
             else
             {
@@ -186,6 +207,7 @@ namespace Uchu.Core
             var wide = attr.Wide;
             var length = attr.Length;
             var boolean = attr.Bool;
+            var bits = attr.Bits;
             var readType = type.IsEnum ? type.GetEnumUnderlyingType() : type;
             object val;
 
@@ -239,7 +261,9 @@ namespace Uchu.Core
             }
             else if (readType == typeof(byte[]))
             {
-                val = compressed ? stream.ReadCompressedBits(length, unsigned) : stream.ReadBits(length);
+                val = bits ?
+                    compressed ? stream.ReadCompressedBits(length, unsigned) : stream.ReadBits(length) :
+                    compressed ? stream.ReadCompressed(length, unsigned) : stream.Read(length);
             }
             else if (readType == typeof(string))
             {

@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Auth", "Uchu.Auth\Uchu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakDotNet\RakDotNet.csproj", "{646F6B9C-9381-4A94-B63A-E71B4BAA9D3C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Char", "Uchu.Char\Uchu.Char.csproj", "{AD39776C-D7DB-4360-82BF-5F35E01CA9A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Resources", "Uchu.Resources\Uchu.Resources.csproj", "{DD94B0FF-E75D-40AA-85EB-452030E1A01D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{646F6B9C-9381-4A94-B63A-E71B4BAA9D3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{646F6B9C-9381-4A94-B63A-E71B4BAA9D3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{646F6B9C-9381-4A94-B63A-E71B4BAA9D3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD39776C-D7DB-4360-82BF-5F35E01CA9A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD39776C-D7DB-4360-82BF-5F35E01CA9A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD39776C-D7DB-4360-82BF-5F35E01CA9A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD39776C-D7DB-4360-82BF-5F35E01CA9A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
