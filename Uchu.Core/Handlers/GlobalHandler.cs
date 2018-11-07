@@ -16,7 +16,7 @@ namespace Uchu.Core
         [PacketHandler]
         public void ValidateClient(SessionInfoPacket packet, IPEndPoint endpoint)
         {
-            var session = Server.Cache.GetSession(endpoint);
+            var session = Server.SessionCache.GetSession(endpoint);
 
             if (session == null || packet.UserKey != session.Key)
             {

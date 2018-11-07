@@ -2,7 +2,7 @@ using System.Net;
 
 namespace Uchu.Core
 {
-    public interface ICache
+    public interface ISessionCache
     {
         string CreateSession(IPEndPoint endpoint, long userId);
 

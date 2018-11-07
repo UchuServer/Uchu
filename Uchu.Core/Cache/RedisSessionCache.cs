@@ -6,13 +6,13 @@ using ServiceStack.Redis;
 
 namespace Uchu.Core
 {
-    public class RedisCache : ICache
+    public class RedisSessionCache : ISessionCache
     {
         private readonly RedisManagerPool _manager;
         private readonly ICacheClient _client;
         private readonly RNGCryptoServiceProvider _rng;
 
-        public RedisCache()
+        public RedisSessionCache()
         {
             _manager = new RedisManagerPool();
             _client = _manager.GetCacheClient();

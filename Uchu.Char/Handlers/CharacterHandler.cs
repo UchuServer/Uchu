@@ -63,7 +63,7 @@ namespace Uchu.Char
         [PacketHandler]
         public async Task CharacterList(CharacterListRequestPacket packet, IPEndPoint endpoint)
         {
-            var session = Server.Cache.GetSession(endpoint);
+            var session = Server.SessionCache.GetSession(endpoint);
 
             await SendCharacterList(endpoint, session.UserId);
         }
@@ -71,7 +71,7 @@ namespace Uchu.Char
         [PacketHandler]
         public async Task CharacterCreate(CharacterCreateRequestPacket packet, IPEndPoint endpoint)
         {
-            var session = Server.Cache.GetSession(endpoint);
+            var session = Server.SessionCache.GetSession(endpoint);
 
             var first = (await Server.Resources.ReadTextAsync("Names/first.txt")).Split('\n');
             var middle = (await Server.Resources.ReadTextAsync("Names/middle.txt")).Split('\n');
@@ -108,7 +108,7 @@ namespace Uchu.Char
         [PacketHandler]
         public void JoinWorld(JoinWorldPacket packet, IPEndPoint endpoint)
         {
-            Server.Cache.SetCharacter(endpoint, packet.CharacterId);
+            Server.SessionCache.SetCharacter(endpoint, packet.CharacterId);
 
             Server.Send(new ServerRedirectionPacket
             {

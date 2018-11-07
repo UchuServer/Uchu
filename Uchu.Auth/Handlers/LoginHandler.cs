@@ -21,7 +21,7 @@ namespace Uchu.Auth
 
             if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
             {
-                var key = Server.Cache.CreateSession(endpoint, user.UserId);
+                var key = Server.SessionCache.CreateSession(endpoint, user.UserId);
 
                 info.LoginCode = LoginCode.Success;
                 info.UserKey = key;
