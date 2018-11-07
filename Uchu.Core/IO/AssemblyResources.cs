@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace Uchu.Core
 {
-    public class ResourceAssembly
+    public class AssemblyResources : IResources
     {
         private readonly Assembly _assembly;
         private readonly string _namespace;
 
-        public ResourceAssembly(string dll)
+        public AssemblyResources(string dll)
         {
             _assembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetCallingAssembly().Location), dll));
             _namespace = Path.GetFileNameWithoutExtension(dll);
@@ -24,9 +24,21 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<byte[]> ReadBytesAsync(string path)
+        {
+            using (var stream = GetStream(path))
+            {
+                var bytes = new byte[stream.Length];
+
+                await stream.ReadAsync(bytes, 0, (int) stream.Length);
+
+                return bytes;
+            }
+        }
+
         public Stream GetStream(string path)
         {
-            path = path.Replace('/', '.').Replace('\\', '.').Replace('-', '_');
+            path = path.Replace('/', '.').Replace('\\', '.');
 
             return _assembly.GetManifestResourceStream($@"{_namespace}.{path}");
         }

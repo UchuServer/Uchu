@@ -16,16 +16,16 @@ namespace Uchu.Core
         private readonly HandlerMap _handlerMap;
 
         public int Port { get; }
-        public ICache Cache { get; }
-        public ResourceAssembly Resources { get; }
+        public ISessionCache SessionCache { get; }
+        public IResources Resources { get; }
 
         public Server(int port)
         {
             _server = new RakNetServer(port, "3.25 ND1");
             _handlerMap = new HandlerMap();
             Port = port;
-            Cache = new RedisCache();
-            Resources = new ResourceAssembly("Uchu.Resources.dll");
+            SessionCache = new RedisSessionCache();
+            Resources = new AssemblyResources("Uchu.Resources.dll");
 
             _server.PacketReceived += _handlePacket;
 

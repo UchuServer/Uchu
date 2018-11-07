@@ -1,0 +1,37 @@
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
+
+namespace Uchu.Core
+{
+    public class FileResources : IResources
+    {
+        private readonly string _dir;
+        
+        public FileResources(string dir = null)
+        {
+            _dir = dir ?? Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+        }
+        
+        public async Task<string> ReadTextAsync(string path)
+        {
+            using (var stream = File.OpenRead(Path.Combine(_dir, path)))
+            using (var reader = new StreamReader(stream))
+            {
+                return await reader.ReadToEndAsync();
+            }
+        }
+
+        public async Task<byte[]> ReadBytesAsync(string path)
+        {
+            using (var stream = File.OpenRead(Path.Combine(_dir, path)))
+            {
+                var data = new byte[stream.Length];
+
+                await stream.ReadAsync(data, 0, (int) stream.Length);
+
+                return data;
+            }
+        }
+    }
+}
