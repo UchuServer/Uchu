@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Names\**\*" />
+        <EmbeddedResource Include="Maps\**\*" />
     </ItemGroup>
 
 </Project>
