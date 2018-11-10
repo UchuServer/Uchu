@@ -9,4 +9,10 @@
         <EmbeddedResource Include="Maps\**\*" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="CDClient.db">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

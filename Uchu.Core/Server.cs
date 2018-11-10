@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
+using Uchu.Core.IO;
 
 namespace Uchu.Core
 {
@@ -18,6 +19,7 @@ namespace Uchu.Core
         public int Port { get; }
         public ISessionCache SessionCache { get; }
         public IResources Resources { get; }
+        public ZoneParser ZoneParser { get; }
 
         public Server(int port)
         {
@@ -26,6 +28,7 @@ namespace Uchu.Core
             Port = port;
             SessionCache = new RedisSessionCache();
             Resources = new AssemblyResources("Uchu.Resources.dll");
+            ZoneParser = new ZoneParser(Resources);
 
             _server.PacketReceived += _handlePacket;
 
@@ -85,6 +88,9 @@ namespace Uchu.Core
 
             _server.Stop();
         }
+
+        public ReplicaManager CreateReplicaManager()
+            => new ReplicaManager(_server);
 
         public void DisconnectClient(IPEndPoint endpoint, DisconnectId id = DisconnectId.UnknownServerError)
             => Send(new DisconnectNotifyPacket {DisconnectId = id}, endpoint);
@@ -170,6 +176,8 @@ namespace Uchu.Core
 
             foreach (var handler in handlers)
             {
+                stream.ReadPosition = 64;
+
                 try
                 {
                     stream.ReadSerializable(handler.Packet);

@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using RakDotNet;
 
@@ -194,6 +194,30 @@ namespace Uchu.Core
                     _serializeType(stream, elementType, item, attr);
                 }
             }
+            else if (type == typeof(Vector2))
+            {
+                var vec = (Vector2) val;
+
+                stream.WriteFloat(vec.X);
+                stream.WriteFloat(vec.Y);
+            }
+            else if (type == typeof(Vector3))
+            {
+                var vec = (Vector3) val;
+
+                stream.WriteFloat(vec.X);
+                stream.WriteFloat(vec.Y);
+                stream.WriteFloat(vec.Z);
+            }
+            else if (type == typeof(Vector4))
+            {
+                var vec = (Vector4) val;
+
+                stream.WriteFloat(vec.X);
+                stream.WriteFloat(vec.Y);
+                stream.WriteFloat(vec.Z);
+                stream.WriteFloat(vec.W);
+            }
             else
             {
                 throw new NotSupportedException($"Type {writeType} is not supported");
@@ -276,6 +300,33 @@ namespace Uchu.Core
                 stream.ReadSerializable(instance);
 
                 val = instance;
+            }
+            else if (type == typeof(Vector2))
+            {
+                val = new Vector2
+                {
+                    X = stream.ReadFloat(),
+                    Y = stream.ReadFloat()
+                };
+            }
+            else if (type == typeof(Vector3))
+            {
+                val = new Vector3
+                {
+                    X = stream.ReadFloat(),
+                    Y = stream.ReadFloat(),
+                    Z = stream.ReadFloat()
+                };
+            }
+            else if (type == typeof(Vector4))
+            {
+                val = new Vector4
+                {
+                    X = stream.ReadFloat(),
+                    Y = stream.ReadFloat(),
+                    Z = stream.ReadFloat(),
+                    W = stream.ReadFloat()
+                };
             }
             else
             {

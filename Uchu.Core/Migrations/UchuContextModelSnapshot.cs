@@ -45,6 +45,10 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("LastZone");
 
+                    b.Property<long>("LegoScore");
+
+                    b.Property<long>("Level");
+
                     b.Property<long>("Lh");
 
                     b.Property<long>("MouthStyle");
@@ -63,6 +67,60 @@ namespace Uchu.Core.Migrations
 
                     b.Property<long>("ShirtStyle");
 
+                    b.Property<long>("TotalArmorPowerUpsCollected");
+
+                    b.Property<long>("TotalArmorRepaired");
+
+                    b.Property<long>("TotalBricksCollected");
+
+                    b.Property<long>("TotalCurrencyCollected");
+
+                    b.Property<long>("TotalDamageHealed");
+
+                    b.Property<long>("TotalDamageTaken");
+
+                    b.Property<long>("TotalDistanceDriven");
+
+                    b.Property<long>("TotalDistanceTraveled");
+
+                    b.Property<long>("TotalEnemiesSmashed");
+
+                    b.Property<long>("TotalFirstPlaceFinishes");
+
+                    b.Property<long>("TotalImaginationPowerUpsCollected");
+
+                    b.Property<long>("TotalImaginationRestored");
+
+                    b.Property<long>("TotalImaginationUsed");
+
+                    b.Property<long>("TotalLifePowerUpsCollected");
+
+                    b.Property<long>("TotalMissionsCompleted");
+
+                    b.Property<long>("TotalPetsTamed");
+
+                    b.Property<long>("TotalQuickBuildsCompleted");
+
+                    b.Property<long>("TotalRacecarBoostsActivated");
+
+                    b.Property<long>("TotalRacecarWrecks");
+
+                    b.Property<long>("TotalRacesFinished");
+
+                    b.Property<long>("TotalRacingImaginationCratesSmashed");
+
+                    b.Property<long>("TotalRacingImaginationPowerUpsCollected");
+
+                    b.Property<long>("TotalRacingSmashablesSmashed");
+
+                    b.Property<long>("TotalRocketsUsed");
+
+                    b.Property<long>("TotalSmashablesSmashed");
+
+                    b.Property<long>("TotalSuicides");
+
+                    b.Property<long>("TotalTimeAirborne");
+
                     b.Property<long>("UserId");
 
                     b.HasKey("CharacterId");
@@ -74,12 +132,16 @@ namespace Uchu.Core.Migrations
 
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
                 {
-                    b.Property<int>("InventoryItemId")
+                    b.Property<long>("InventoryItemId")
                         .ValueGeneratedOnAdd();
 
                     b.Property<long>("CharacterId");
 
-                    b.Property<long>("LOT");
+                    b.Property<long>("Count");
+
+                    b.Property<int>("LOT");
+
+                    b.Property<int>("Slot");
 
                     b.HasKey("InventoryItemId");
 

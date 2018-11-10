@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -79,7 +77,7 @@ namespace Uchu.Char
 
             var name = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
 
-            await Database.CreateCharacter(new Character
+            await Database.CreateCharacterAsync(new Character
             {
                 Name = name,
                 CustomName = packet.CustomName,
@@ -106,6 +104,20 @@ namespace Uchu.Char
         }
 
         [PacketHandler]
+        public async Task DeleteCharacter(CharacterDeleteRequestPacket packet, IPEndPoint endpoint)
+        {
+            await Database.DeleteCharacterAsync(packet.CharacterId);
+
+            Server.Send(new CharacterCreateResponsePacket(), endpoint);
+        }
+
+        [PacketHandler]
+        public async Task RenameCharacter(CharacterRenameRequestPacket packet, IPEndPoint endpoint)
+        {
+            await Database.RenameCharacterAsync(packet.CharacterId, packet.Name);
+        }
+
+        [PacketHandler]
         public void JoinWorld(JoinWorldPacket packet, IPEndPoint endpoint)
         {
             Server.SessionCache.SetCharacter(endpoint, packet.CharacterId);
@@ -113,7 +125,7 @@ namespace Uchu.Char
             Server.Send(new ServerRedirectionPacket
             {
                 Address = "127.0.0.1",
-                Port = 2005
+                Port = 2003
             }, endpoint);
         }
     }

@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,7 +41,7 @@ namespace Uchu.Core
             }
         }
 
-        public static async Task CreateCharacter(Character character, long userId)
+        public static async Task CreateCharacterAsync(Character character, long userId)
         {
             character.CharacterId = Utils.GenerateObjectId();
 
@@ -56,19 +55,43 @@ namespace Uchu.Core
             }
         }
 
-        public static async Task<Character> GetCharacter(long id)
+        public static async Task<Character> GetCharacterAsync(long id)
         {
             using (var ctx = new UchuContext())
             {
-                return await ctx.Characters.Include(c => c.Items).SingleOrDefaultAsync(ch => ch.CharacterId == id);
+                return await ctx.Characters.Include(c => c.Items).Include(c => c.User).SingleOrDefaultAsync(ch => ch.CharacterId == id);
             }
         }
 
-        public static async Task<Character> GetCharacter(string name)
+        public static async Task<Character> GetCharacterAsync(string name)
         {
             using (var ctx = new UchuContext())
             {
-                return await ctx.Characters.Include(c => c.Items).SingleOrDefaultAsync(ch => ch.Name == name);
+                return await ctx.Characters.Include(c => c.Items).Include(c => c.User).SingleOrDefaultAsync(ch => ch.Name == name);
+            }
+        }
+
+        public static async Task RenameCharacterAsync(long id, string name)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var chr = await ctx.Characters.FindAsync(id);
+
+                chr.CustomName = name;
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        public static async Task DeleteCharacterAsync(long id)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var chr = await ctx.Characters.FindAsync(id);
+
+                ctx.Characters.Remove(chr);
+
+                await ctx.SaveChangesAsync();
             }
         }
     }

@@ -16,7 +16,7 @@ namespace Uchu.Auth
                 CharacterInstanceAddress = "127.0.0.1",
                 CharacterInstancePort = 2002,
                 ChatInstanceAddress = "127.0.0.1",
-                ChatInstancePort = 2003
+                ChatInstancePort = 2004
             };
 
             if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))

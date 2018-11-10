@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Uchu.Core
+namespace Uchu.Core.IO
 {
     public interface IResources
     {

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Char", "Uchu.Char\Uchu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Resources", "Uchu.Resources\Uchu.Resources.csproj", "{DD94B0FF-E75D-40AA-85EB-452030E1A01D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.World", "Uchu.World\Uchu.World.csproj", "{DCFD2FB6-2FD7-4382-BB23-149A3F7C0B77}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD94B0FF-E75D-40AA-85EB-452030E1A01D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCFD2FB6-2FD7-4382-BB23-149A3F7C0B77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCFD2FB6-2FD7-4382-BB23-149A3F7C0B77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCFD2FB6-2FD7-4382-BB23-149A3F7C0B77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCFD2FB6-2FD7-4382-BB23-149A3F7C0B77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

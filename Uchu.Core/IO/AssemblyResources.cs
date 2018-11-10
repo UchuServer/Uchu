@@ -2,7 +2,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Uchu.Core
+namespace Uchu.Core.IO
 {
     public class AssemblyResources : IResources
     {

@@ -1,7 +1,5 @@
 using System;
-using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace Uchu.Core
 {
@@ -25,5 +23,15 @@ namespace Uchu.Core
 
         public static long GenerateSpawnerId()
             => RandomLong(70000000000000, 79999999999999);
+
+        public static ZoneChecksum GetChecksum(ZoneId id)
+        {
+            var name = Enum.GetName(typeof(ZoneId), id);
+
+            var names = Enum.GetNames(typeof(ZoneChecksum));
+            var values = Enum.GetValues(typeof(ZoneChecksum));
+
+            return (ZoneChecksum) values.GetValue(names.ToList().IndexOf(name));
+        }
     }
 }

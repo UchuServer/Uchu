@@ -2,17 +2,17 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Uchu.Core
+namespace Uchu.Core.IO
 {
     public class FileResources : IResources
     {
         private readonly string _dir;
-        
+
         public FileResources(string dir = null)
         {
             _dir = dir ?? Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
         }
-        
+
         public async Task<string> ReadTextAsync(string path)
         {
             using (var stream = File.OpenRead(Path.Combine(_dir, path)))
