@@ -10,25 +10,32 @@ using Uchu.Core.IO;
 namespace Uchu.Core
 {
     using HandlerMap = Dictionary<RemoteConnectionType, Dictionary<uint, List<Handler>>>;
+    using GameMessageHandlerMap = Dictionary<ushort, List<Handler>>;
 
     public class Server
     {
         private readonly RakNetServer _server;
         private readonly HandlerMap _handlerMap;
+        private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
         public int Port { get; }
         public ISessionCache SessionCache { get; }
         public IResources Resources { get; }
         public ZoneParser ZoneParser { get; }
+        public CDClient CDClient { get; }
+        public Dictionary<ZoneId, World> Worlds { get; }
 
         public Server(int port)
         {
             _server = new RakNetServer(port, "3.25 ND1");
             _handlerMap = new HandlerMap();
+            _gameMessageHandlerMap = new GameMessageHandlerMap();
             Port = port;
             SessionCache = new RedisSessionCache();
             Resources = new AssemblyResources("Uchu.Resources.dll");
             ZoneParser = new ZoneParser(Resources);
+            CDClient = new CDClient();
+            Worlds = new Dictionary<ZoneId, World>();
 
             _server.PacketReceived += _handlePacket;
 
@@ -139,6 +146,25 @@ namespace Uchu.Core
                     var rct = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
                     var packetId = attr.PacketId ?? packet.PacketId;
 
+                    if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                    {
+                        var msg = (IGameMessage) packet;
+
+                        if (!_gameMessageHandlerMap.ContainsKey(msg.GameMessageId))
+                            _gameMessageHandlerMap[msg.GameMessageId] = new List<Handler>();
+
+                        _gameMessageHandlerMap[msg.GameMessageId].Add(new Handler
+                        {
+                            Group = group,
+                            Method = method,
+                            Packet = packet
+                        });
+
+                        Console.WriteLine($"Registered handler for game message {packet}");
+
+                        continue;
+                    }
+
                     if (!_handlerMap.ContainsKey(rct))
                         _handlerMap[rct] = new Dictionary<uint, List<Handler>>();
 
@@ -147,14 +173,14 @@ namespace Uchu.Core
                     if (!handlers.ContainsKey(packetId))
                         handlers[packetId] = new List<Handler>();
 
-                    Console.WriteLine($"Registered handler for packet {packet}");
-
                     handlers[packetId].Add(new Handler
                     {
                         Group = group,
                         Method = method,
                         Packet = packet
                     });
+
+                    Console.WriteLine($"Registered handler for packet {packet}");
                 }
             }
         }
@@ -168,6 +194,42 @@ namespace Uchu.Core
 
             if (header.MessageId != MessageIdentifiers.UserPacketEnum)
                 return;
+
+            if (header.PacketId == 0x05)
+            {
+                var objId = stream.ReadLong();
+                var msgId = stream.ReadUShort();
+
+                if (!_gameMessageHandlerMap.TryGetValue(msgId, out var msgHandlers))
+                {
+                    Console.WriteLine($"Unhandled game message (0x{msgId:X})");
+
+                    return;
+                }
+
+                Console.WriteLine($"Received {msgHandlers[0].Packet}");
+
+                foreach (var handler in msgHandlers)
+                {
+                    stream.ReadPosition = 144;
+
+                    ((IGameMessage) handler.Packet).ObjectId = objId;
+
+                    try
+                    {
+                        stream.ReadSerializable(handler.Packet);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        continue;
+                    }
+
+                    _invokeHandler(handler, endpoint);
+                }
+
+                return;
+            }
 
             if (!_handlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
                 !temp.TryGetValue(header.PacketId, out var handlers)) return;
@@ -188,34 +250,39 @@ namespace Uchu.Core
                     continue;
                 }
 
-                var task = handler.Method.ReturnType == typeof(Task);
+                _invokeHandler(handler, endpoint);
+            }
+        }
 
-                var parameters = new object[] {handler.Packet, endpoint};
+        private void _invokeHandler(Handler handler, IPEndPoint endpoint)
+        {
+            var task = handler.Method.ReturnType == typeof(Task);
 
-                if (task)
-                {
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await (Task) handler.Method.Invoke(handler.Group, parameters);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
-                    });
-                }
-                else
+            var parameters = new object[] {handler.Packet, endpoint};
+
+            if (task)
+            {
+                Task.Run(async () =>
                 {
                     try
                     {
-                        handler.Method.Invoke(handler.Group, parameters);
+                        await (Task) handler.Method.Invoke(handler.Group, parameters);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
+                });
+            }
+            else
+            {
+                try
+                {
+                    handler.Method.Invoke(handler.Group, parameters);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
             }
         }

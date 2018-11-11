@@ -7,6 +7,8 @@ namespace Uchu.Core
         public DbSet<User> Users { get; set; }
         public DbSet<Character> Characters { get; set; }
         public DbSet<InventoryItem> InventoryItems { get; set; }
+        public DbSet<Mission> Missions { get; set; }
+        public DbSet<MissionTask> MissionTasks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

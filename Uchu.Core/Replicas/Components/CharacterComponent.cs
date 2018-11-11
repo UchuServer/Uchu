@@ -81,7 +81,7 @@ namespace Uchu.Core
                 stream.WriteULong((ulong) Character.User.UserId);
                 stream.WriteULong((ulong) Character.LastActivity);
                 stream.WriteULong(0);
-                stream.WriteULong((ulong) Character.LegoScore);
+                stream.WriteULong((ulong) Character.UniverseScore);
                 stream.WriteBit(Character.FreeToPlay);
 
                 stream.WriteULong((ulong) Character.TotalCurrencyCollected);

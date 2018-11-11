@@ -38,6 +38,7 @@ namespace Uchu.Core
             if (hasParent)
             {
                 stream.WriteLong(ParentObjectId);
+                stream.WriteBit(false);
             }
 
             var hasChildren = ChildObjectIds != null && ChildObjectIds.Length > 0;
@@ -57,6 +58,9 @@ namespace Uchu.Core
             _write(stream);
 
             foreach (var component in Components) stream.WriteSerializable(component);
+
+            if (HasTriggerId)
+                stream.WriteSerializable(new TriggerComponent());
         }
 
         public void Construct(BitStream stream)
@@ -103,6 +107,9 @@ namespace Uchu.Core
             _write(stream);
 
             foreach (var component in Components) component.Construct(stream);
+
+            if (HasTriggerId)
+                new TriggerComponent().Construct(stream);
         }
 
         public void Deserialize(BitStream stream)

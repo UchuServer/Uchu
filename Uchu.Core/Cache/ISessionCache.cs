@@ -8,6 +8,8 @@ namespace Uchu.Core
 
         void SetCharacter(IPEndPoint endpoint, long characterId);
 
+        void SetZone(IPEndPoint endpoint, ZoneId zone);
+
         Session GetSession(IPEndPoint endpoint);
 
         void DeleteSession(IPEndPoint endpoint);

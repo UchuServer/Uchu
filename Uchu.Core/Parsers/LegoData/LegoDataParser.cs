@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace Uchu.Core
 {
@@ -47,7 +50,19 @@ namespace Uchu.Core
                         break;
 
                     default:
-                        dict[key] = val;
+                        if (val.Contains('\u001F'))
+                        {
+                            var floats = val.Split('\u001F').Select(float.Parse).ToArray();
+
+                            dict[key] =
+                                floats.Length == 1 ? floats[0] :
+                                floats.Length == 2 ? new Vector2(floats[0], floats[1]) :
+                                floats.Length == 3 ? new Vector3(floats[0], floats[1], floats[2]) :
+                                floats.Length == 4 ? new Vector4(floats[0], floats[1], floats[2], floats[3]) :
+                                (object) val;
+                        }
+                        else
+                            dict[key] = val;
                         break;
                 }
             }

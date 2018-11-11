@@ -24,7 +24,7 @@ namespace Uchu.Core
             {
                 var obj = new LevelObject
                 {
-                    ObjectId = stream.ReadULong(),
+                    ObjectId = stream.ReadULong() | 70368744177664,
                     LOT = stream.ReadInt()
                 };
 

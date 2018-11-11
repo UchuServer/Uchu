@@ -137,25 +137,31 @@ namespace Uchu.World
     public class MinifigureNode
     {
         [XmlAttribute("es")]
-        public int EyebrowStyle { get; set; }
+        public long EyebrowStyle { get; set; }
 
         [XmlAttribute("ess")]
-        public int EyeStyle { get; set; }
+        public long EyeStyle { get; set; }
 
         [XmlAttribute("hc")]
-        public int HairColor { get; set; }
+        public long HairColor { get; set; }
 
         [XmlAttribute("hs")]
-        public int HairStyle { get; set; }
+        public long HairStyle { get; set; }
+
+        [XmlAttribute("l")]
+        public long PantsColor { get; set; }
 
         [XmlAttribute("lh")]
-        public int Lh { get; set; }
+        public long Lh { get; set; }
+
+        [XmlAttribute("ms")]
+        public long MouthStyle { get; set; }
 
         [XmlAttribute("rh")]
-        public int Rh { get; set; }
+        public long Rh { get; set; }
 
         [XmlAttribute("t")]
-        public int ShirtColor { get; set; }
+        public long ShirtColor { get; set; }
     }
 
     public class CharacterNode
@@ -164,7 +170,7 @@ namespace Uchu.World
         public long AccountId { get; set; }
 
         [XmlAttribute("cc")]
-        public int Currency { get; set; }
+        public long Currency { get; set; }
 
         [XmlAttribute("ft")]
         public int FreeToPlay { get; set; } = 0;
@@ -173,7 +179,7 @@ namespace Uchu.World
         public int GMLevel { get; set; }
 
         [XmlAttribute("ls")]
-        public int UniverseScore { get; set; }
+        public long UniverseScore { get; set; }
 
         [XmlAttribute("stt")]
         public string PlayerStats { get; set; }
@@ -185,7 +191,7 @@ namespace Uchu.World
     public class LevelNode
     {
         [XmlAttribute("l")]
-        public int Level { get; set; }
+        public long Level { get; set; }
     }
 
     public class MissionsNode
@@ -205,13 +211,13 @@ namespace Uchu.World
         public long MissionId { get; set; }
 
         [XmlElement("sv")]
-        public MissionProgressNode Progress { get; set; }
+        public MissionProgressNode[] Progress { get; set; }
     }
 
     public class MissionProgressNode
     {
         [XmlAttribute("v")]
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 
     public class CompletedMissionNode

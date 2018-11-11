@@ -41,6 +41,15 @@ namespace Uchu.Core
             _client.Set(endpoint.ToString(), session, TimeSpan.FromDays(1));
         }
 
+        public void SetZone(IPEndPoint endpoint, ZoneId zone)
+        {
+            var session = GetSession(endpoint);
+
+            session.ZoneId = (ushort) zone;
+
+            _client.Set(endpoint.ToString(), session, TimeSpan.FromDays(1));
+        }
+
         public Session GetSession(IPEndPoint endpoint)
             => _client.Get<Session>(endpoint.ToString());
 

@@ -65,7 +65,28 @@ namespace Uchu.Core
         public long Level { get; set; }
 
         [Required]
-        public long LegoScore { get; set; }
+        public long UniverseScore { get; set; }
+
+        [Required]
+        public long Currency { get; set; }
+
+        [Required]
+        public int MaximumHealth { get; set; } = 4;
+
+        [Required]
+        public int CurrentHealth { get; set; } = 4;
+
+        [Required]
+        public int MaximumArmor { get; set; } = 0;
+
+        [Required]
+        public int CurrentArmor { get; set; } = 0;
+
+        [Required]
+        public int MaximumImagination { get; set; } = 0;
+
+        [Required]
+        public int CurrentImagination { get; set; } = 0;
 
         [Required]
         public long TotalCurrencyCollected { get; set; }
@@ -152,5 +173,6 @@ namespace Uchu.Core
         public User User { get; set; }
 
         public List<InventoryItem> Items { get; set; }
+        public List<Mission> Missions { get; set; }
     }
 }

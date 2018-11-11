@@ -16,6 +16,9 @@ namespace Uchu.Core
         public override void Serialize(BitStream stream)
         {
             stream.WriteBit(true);
+            stream.WriteUInt(0);
+
+            stream.WriteBit(true);
             stream.WriteUInt((uint) State);
             stream.WriteBit(Success);
             stream.WriteBit(Enabled);
