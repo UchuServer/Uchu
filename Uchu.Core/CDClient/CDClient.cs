@@ -233,6 +233,117 @@ namespace Uchu.Core
             return list.ToArray();
         }
 
+        public async Task<SkillBehaviorRow> GetSkillBehaviorAsync(int skillId)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM SkillBehavior WHERE skillID = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = skillId});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    return new SkillBehaviorRow
+                    {
+                        SkillId = reader.GetInt32(0),
+                        LocStatus = reader.GetInt32(1),
+                        BehaviorId = reader.GetInt32(2),
+                        ImaginationCost = reader.GetInt32(3),
+                        CooldownGroup = reader.GetInt32(4),
+                        Cooldown = reader.GetFloat(5),
+                        InNPCEditor = reader.GetBoolean(6),
+                        SkillIcon = reader.GetInt32(7),
+                        OOMSkillId = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                        OOMBehaviorEffectId = reader.IsDBNull(9) ? -1 : reader.GetInt32(9),
+                        CastTypeDesc = reader.IsDBNull(10) ? -1 : reader.GetInt32(10),
+                        ImaginationBonusUserInterface = reader.IsDBNull(11) ? -1 : reader.GetInt32(11),
+                        LifeBonusUserInterface = reader.IsDBNull(12) ? -1 : reader.GetInt32(12),
+                        ArmorBonusUserInterface = reader.IsDBNull(13) ? -1 : reader.GetInt32(13),
+                        DamageUserInterface = reader.IsDBNull(14) ? -1 : reader.GetInt32(14),
+                        HideIcon = reader.GetBoolean(15),
+                        Localize = reader.GetBoolean(16),
+                        GateVersion = reader.IsDBNull(17) ? "" : reader.GetString(17),
+                        CancelType = reader.IsDBNull(18) ? -1 : reader.GetInt32(18)
+                    };
+                }
+            }
+        }
+
+        public async Task<BehaviorTemplateRow> GetBehaviorTemplateAsync(int behaviorId)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM BehaviorTemplate WHERE behaviorID = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = behaviorId});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    return new BehaviorTemplateRow
+                    {
+                        BehaviorId = reader.GetInt32(0),
+                        TemplateId = reader.GetInt32(1),
+                        EffectId = reader.IsDBNull(2) ? -1 : reader.GetInt32(2),
+                        EffectHandle = reader.IsDBNull(3) ? "" : reader.GetString(3)
+                    };
+                }
+            }
+        }
+
+        public async Task<BehaviorParameterRow[]> GetBehaviorParametersAsync(int behaviorId)
+        {
+            var list = new List<BehaviorParameterRow>();
+
+            using (var cmd = new SQLiteCommand("SELECT * FROM BehaviorParameter WHERE behaviorID = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = behaviorId});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new BehaviorParameterRow
+                        {
+                            BehaviorId = reader.GetInt32(0),
+                            ParameterId = reader.GetString(1),
+                            Value = reader.GetFloat(2)
+                        });
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
+
+        public async Task<BehaviorParameterRow> GetBehaviorParameterAsync(int behaviorId, string name)
+        {
+            using (var cmd =
+                new SQLiteCommand("SELECT * FROM BehaviorParameter WHERE behaviorID = ? AND parameterID = ?",
+                    Connection))
+            {
+                cmd.Parameters.AddRange(new[]
+                {
+                    new SQLiteParameter {Value = behaviorId},
+                    new SQLiteParameter {Value = name}
+                });
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    return new BehaviorParameterRow
+                    {
+                        BehaviorId = reader.GetInt32(0),
+                        ParameterId = reader.GetString(1),
+                        Value = reader.GetFloat(2)
+                    };
+                }
+            }
+        }
+
         public void Dispose()
         {
             Connection?.Dispose();

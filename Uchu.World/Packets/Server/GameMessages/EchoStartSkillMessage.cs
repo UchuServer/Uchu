@@ -32,9 +32,6 @@ namespace Uchu.World
         {
             stream.WriteBit(IsMouseClick);
 
-            if (IsMouseClick)
-                stream.WriteBit(IsMouseClick);
-
             var hasLatency = !CasterLatency.Equals(0);
 
             stream.WriteBit(hasLatency);

@@ -227,8 +227,13 @@ namespace Uchu.World
         }
 
         [PacketHandler]
-        public void StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
+        public async Task StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
         {
+            var stream = new BitStream(msg.Data);
+            var behavior = await Server.CDClient.GetSkillBehaviorAsync((int) msg.SkillId);
+
+            await HandleBehaviorAsync(stream, behavior.BehaviorId);
+
             Server.Send(new EchoStartSkillMessage
             {
                 IsMouseClick = msg.IsMouseClick,
@@ -254,6 +259,233 @@ namespace Uchu.World
                 BehaviorHandle = msg.BehaviorHandle,
                 SkillHandle = msg.SkillHandle
             }, endpoint);
+        }
+
+        public async Task HandleBehaviorAsync(BitStream stream, int behaviorId)
+        {
+            var template = await Server.CDClient.GetBehaviorTemplateAsync(behaviorId);
+
+            switch ((BehaviorTemplateId) template.TemplateId)
+            {
+                case BehaviorTemplateId.BasicAttack:
+                {
+                    stream.AlignRead();
+
+                    stream.ReadUShort();
+                    stream.ReadBit();
+                    stream.ReadBit();
+                    stream.ReadBit();
+                    stream.ReadUInt();
+
+                    var damage = stream.ReadUInt();
+
+                    Console.WriteLine($"Damage = {damage}");
+
+                    if (stream.ReadBit())
+                    {
+                        var success = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "on success");
+
+                        await HandleBehaviorAsync(stream, (int) success.Value);
+                    }
+                    break;
+                }
+
+                case BehaviorTemplateId.TacArc:
+                {
+                    var isHit = stream.ReadBit();
+
+                    if (isHit)
+                    {
+                        if (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "check env") != null)
+                            stream.ReadBit();
+
+                        var targetCount = stream.ReadUInt();
+                        var targets = new long[targetCount];
+                        var action = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action");
+
+                        for (var i = 0; i < targetCount; i++)
+                        {
+                            targets[i] = stream.ReadLong();
+
+                            Console.WriteLine($"Hit {targets[i]}");
+
+                            await HandleBehaviorAsync(stream, (int) action.Value);
+                        }
+                    }
+                    else
+                    {
+                        var missAction = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "miss action");
+                        var blockedAction =
+                            await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "blocked action");
+
+                        if (blockedAction != null && stream.ReadBit())
+                        {
+                            await HandleBehaviorAsync(stream, (int) blockedAction.Value);
+                        }
+                        else
+                        {
+                            await HandleBehaviorAsync(stream, (int) missAction.Value);
+                        }
+                    }
+                    break;
+                }
+
+                case BehaviorTemplateId.And:
+                {
+                    var parameters = await Server.CDClient.GetBehaviorParametersAsync(behaviorId);
+
+                    foreach (var parameter in parameters)
+                        await HandleBehaviorAsync(stream, (int) parameter.Value);
+                    break;
+                }
+
+                case BehaviorTemplateId.ProjectileAttack:
+                {
+                    var target = stream.ReadLong();
+
+                    Console.WriteLine($"Hit {target}");
+
+                    var count = (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "spread count")).Value;
+                    var projectiles = new long[(int) count];
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        projectiles[i] = stream.ReadLong();
+
+                        Console.WriteLine($"Projectile {projectiles[i]}");
+                    }
+
+                    break;
+                }
+
+                case BehaviorTemplateId.MovementSwitch:
+                {
+                    var type = (MovementType) stream.ReadUInt();
+
+                    var name =
+                        type == MovementType.Ground ? "ground_action" :
+                        type == MovementType.Jump ? "jump_action" :
+                        type == MovementType.Falling ? "falling_action" :
+                        type == MovementType.DoubleJump ? "double_jump_action" :
+                        type == MovementType.Jetpack ? "jetpack_action" :
+                        "";
+
+                    var parameter = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, name);
+
+                    await HandleBehaviorAsync(stream, (int) parameter.Value);
+
+                    break;
+                }
+
+                case BehaviorTemplateId.AreaOfEffect:
+                {
+                    var targetCount = stream.ReadUInt();
+                    var targets = new long[targetCount];
+                    var action = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action");
+
+                    for (var i = 0; i < targetCount; i++)
+                    {
+                        targets[i] = stream.ReadLong();
+
+                        Console.WriteLine($"Hit {targets[i]}");
+
+                        await HandleBehaviorAsync(stream, (int) action.Value);
+                    }
+
+                    break;
+                }
+
+                case BehaviorTemplateId.Stun:
+                {
+                    // TODO
+                    break;
+                }
+
+                case BehaviorTemplateId.Knockback:
+                {
+                    stream.ReadBit();
+                    break;
+                }
+
+                case BehaviorTemplateId.AttackDelay:
+                {
+                    var handle = stream.ReadUInt();
+                    break;
+                }
+
+                case BehaviorTemplateId.Switch:
+                {
+                    var state = true;
+
+                    if (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "isEnemyFaction") == null ||
+                        (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "imagination")).Value > 0)
+                        state = stream.ReadBit();
+
+                    if (state)
+                    {
+                        var actionTrue = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action_true");
+
+                        await HandleBehaviorAsync(stream, (int) actionTrue.Value);
+                    }
+                    else
+                    {
+                        var actionFalse = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action_false");
+
+                        await HandleBehaviorAsync(stream, (int) actionFalse.Value);
+                    }
+                    break;
+                }
+
+                case BehaviorTemplateId.Chain:
+                {
+                    var index = stream.ReadUInt();
+
+                    var behaviorParameter =
+                        await Server.CDClient.GetBehaviorParameterAsync(behaviorId, $"behavior {index}");
+                    var delayParameter = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "chain_delay");
+
+                    await Task.Delay((int) delayParameter.Value); // is this right?
+
+                    await HandleBehaviorAsync(stream, (int) behaviorParameter.Value);
+                    break;
+                }
+
+                case BehaviorTemplateId.ForceMovement:
+                {
+                    // TODO
+                    break;
+                }
+
+                case BehaviorTemplateId.Interrupt:
+                {
+                    // TODO
+                    break;
+                }
+
+                case BehaviorTemplateId.SwitchMultiple:
+                {
+                    var value = stream.ReadFloat();
+                    var name =
+                        value <= (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "value 1")).Value
+                            ? "behavior 1"
+                            : "behavior 2";
+
+                    var behavior = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, name);
+
+                    await HandleBehaviorAsync(stream, (int) behavior.Value);
+
+                    break;
+                }
+
+                case BehaviorTemplateId.AirMovement:
+                {
+                    var handle = stream.ReadUInt();
+
+                    // TODO: syncskill thing
+
+                    break;
+                }
+            }
         }
 
         public async Task<bool> AllTasksCompletedAsync(Mission mission)

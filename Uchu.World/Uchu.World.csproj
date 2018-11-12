@@ -9,8 +9,4 @@
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Replicas" />
-    </ItemGroup>
-
 </Project>

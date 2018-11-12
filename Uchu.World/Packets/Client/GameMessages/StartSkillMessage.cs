@@ -34,7 +34,7 @@ namespace Uchu.World
 
         public override void Deserialize(BitStream stream)
         {
-            IsMouseClick = stream.ReadBit() && stream.ReadBit();
+            IsMouseClick = stream.ReadBit();
             ConsumableItemId = stream.ReadBit() ? stream.ReadLong() : -1;
             CasterLatency = stream.ReadBit() ? stream.ReadFloat() : 0;
             CastType = stream.ReadBit() ? stream.ReadInt() : 0;
