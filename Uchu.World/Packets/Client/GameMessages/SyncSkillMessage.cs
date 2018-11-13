@@ -19,7 +19,8 @@ namespace Uchu.World
         public override void Deserialize(BitStream stream)
         {
             IsDone = stream.ReadBit();
-            Data = stream.Read((int) stream.ReadUInt());
+            var length = (int) stream.ReadUInt();
+            Data = length > 0 ? stream.Read(length) : new byte[0];
             BehaviorHandle = stream.ReadUInt();
             SkillHandle = stream.ReadUInt();
         }

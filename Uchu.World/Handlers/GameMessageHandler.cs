@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -12,6 +13,13 @@ namespace Uchu.World
 {
     public class GameMessageHandler : HandlerGroupBase
     {
+        private Dictionary<uint, int> _behaviors;
+
+        public GameMessageHandler()
+        {
+            _behaviors = new Dictionary<uint, int>();
+        }
+
         [PacketHandler]
         public async Task RequestUse(RequestUseMessage msg, IPEndPoint endpoint)
         {
@@ -229,13 +237,9 @@ namespace Uchu.World
         [PacketHandler]
         public async Task StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
         {
-            var stream = new BitStream(msg.Data);
-            var behavior = await Server.CDClient.GetSkillBehaviorAsync((int) msg.SkillId);
-
-            await HandleBehaviorAsync(stream, behavior.BehaviorId);
-
             Server.Send(new EchoStartSkillMessage
             {
+                ObjectId = msg.ObjectId,
                 IsMouseClick = msg.IsMouseClick,
                 CasterLatency = msg.CasterLatency,
                 CastType = msg.CastType,
@@ -247,21 +251,168 @@ namespace Uchu.World
                 SkillId = msg.SkillId,
                 SkillHandle = msg.SkillHandle
             }, endpoint);
+
+            var stream = new BitStream(msg.Data);
+            var behavior = await Server.CDClient.GetSkillBehaviorAsync((int) msg.SkillId);
+
+            await HandleBehaviorAsync(stream, behavior.BehaviorId, endpoint);
         }
 
         [PacketHandler]
-        public void SyncSkill(SyncSkillMessage msg, IPEndPoint endpoint)
+        public async Task SyncSkill(SyncSkillMessage msg, IPEndPoint endpoint)
         {
             Server.Send(new EchoSyncSkillMessage
             {
+                ObjectId = msg.ObjectId,
                 IsDone = msg.IsDone,
                 Data = msg.Data,
                 BehaviorHandle = msg.BehaviorHandle,
                 SkillHandle = msg.SkillHandle
             }, endpoint);
+
+            Console.WriteLine($"Length = {msg.Data.Length}");
+            Console.WriteLine($"BehaviorHandle = {msg.BehaviorHandle}");
+
+            if (_behaviors.TryGetValue(msg.BehaviorHandle, out var id))
+            {
+                var stream = new BitStream(msg.Data);
+                var template = await Server.CDClient.GetBehaviorTemplateAsync(id);
+
+                switch ((BehaviorTemplateId) template.TemplateId)
+                {
+                    case BehaviorTemplateId.AttackDelay:
+                    {
+                        var action = await Server.CDClient.GetBehaviorParameterAsync(id, "action");
+                        var delay = await Server.CDClient.GetBehaviorParameterAsync(id, "delay");
+
+                        await Task.Delay((int) (delay.Value * 1000));
+
+                        await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
+
+                        break;
+                    }
+
+                    case BehaviorTemplateId.ForceMovement:
+                    case BehaviorTemplateId.AirMovement:
+                    {
+                        var behaviorId = stream.ReadUInt();
+                        var target = stream.ReadULong();
+
+                        Console.WriteLine($"BehaviorId = {behaviorId}");
+                        Console.WriteLine($"Hit {target}");
+
+                        if (target != 0)
+                            await DropLootAsync((long) target, endpoint);
+
+                        if (behaviorId != 0)
+                            await HandleBehaviorAsync(stream, (int) behaviorId, endpoint);
+                        break;
+                    }
+                }
+            }
         }
 
-        public async Task HandleBehaviorAsync(BitStream stream, int behaviorId)
+        [PacketHandler]
+        public async Task PickupItem(PickupItemMessage msg, IPEndPoint endpoint)
+        {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+
+            var itemLOT = world.GetLootLOT(msg.LootObjectId);
+
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.Include(c => c.Items)
+                    .SingleAsync(c => c.CharacterId == session.CharacterId);
+
+                var id = Utils.GenerateObjectId();
+
+                var item = new InventoryItem
+                {
+                    InventoryItemId = id,
+                    LOT = itemLOT,
+                    Slot = character.Items.Count,
+                    Count = 1
+                };
+
+                character.Items.Add(item);
+
+                await ctx.SaveChangesAsync();
+
+                Server.Send(new AddItemToInventoryMessage
+                {
+                    ObjectId = session.CharacterId,
+                    ItemLOT = itemLOT,
+                    ItemCount = (uint) item.Count,
+                    ItemObjectId = id,
+                    Slot = item.Slot
+                }, endpoint);
+
+                /*var comp = await Server.CDClient.GetItemComponent(itemLOT);
+
+                Console.WriteLine($"Type = {comp.ItemType}");*/
+            }
+        }
+
+        public async Task DropLootAsync(long objectId, IPEndPoint endpoint)
+        {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var obj = world.GetObject(objectId);
+            var physics = (SimplePhysicsComponent) obj.Components.FirstOrDefault(c => c is SimplePhysicsComponent);
+
+            if (physics == null)
+                return;
+
+            var rand = new Random();
+
+            var spawnPosition = physics.Position;
+
+            spawnPosition.Y++;
+
+            var drops = await Server.CDClient.GetDropsForObjectAsync(obj.LOT);
+
+            foreach (var drop in drops)
+            {
+                var count = rand.Next(drop.MinDrops, drop.MaxDrops);
+                /*var items = (await Server.CDClient.GetItemDropsAsync(drop.LootTableIndex)).Where(i => !i.IsMissionDrop)
+                    .ToArray();*/
+                var items = await Server.CDClient.GetItemDropsAsync(drop.LootTableIndex);
+
+                if (items.Length == 0)
+                    return;
+
+                for (var i = 0; i < count; i++)
+                {
+                    if (rand.NextDouble() <= drop.Percent)
+                    {
+                        var item = items[rand.Next(0, items.Length)];
+                        var lootId = Utils.GenerateObjectId();
+                        var finalPosition = physics.Position;
+
+                        finalPosition.X += ((float) rand.NextDouble() % 1f - 0.5f) * 20f;
+                        finalPosition.Z += ((float) rand.NextDouble() % 1f - 0.5f) * 20f;
+
+                        world.RegisterLoot(lootId, item.ItemId);
+
+                        Server.Send(new DropClientLootMessage
+                        {
+                            ObjectId = session.CharacterId,
+                            UsePosition = true,
+                            FinalPosition = finalPosition,
+                            Currency = 0,
+                            ItemLOT = item.ItemId,
+                            LootObjectId = lootId,
+                            OwnerObjectId = session.CharacterId,
+                            SourceObjectId = objectId,
+                            SpawnPosition = spawnPosition
+                        }, endpoint);
+                    }
+                }
+            }
+        }
+
+        public async Task HandleBehaviorAsync(BitStream stream, int behaviorId, IPEndPoint endpoint)
         {
             var template = await Server.CDClient.GetBehaviorTemplateAsync(behaviorId);
 
@@ -281,12 +432,7 @@ namespace Uchu.World
 
                     Console.WriteLine($"Damage = {damage}");
 
-                    if (stream.ReadBit())
-                    {
-                        var success = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "on success");
-
-                        await HandleBehaviorAsync(stream, (int) success.Value);
-                    }
+                    stream.ReadBit();
                     break;
                 }
 
@@ -308,8 +454,9 @@ namespace Uchu.World
                             targets[i] = stream.ReadLong();
 
                             Console.WriteLine($"Hit {targets[i]}");
+                            await DropLootAsync(targets[i], endpoint);
 
-                            await HandleBehaviorAsync(stream, (int) action.Value);
+                            await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
                         }
                     }
                     else
@@ -320,11 +467,11 @@ namespace Uchu.World
 
                         if (blockedAction != null && stream.ReadBit())
                         {
-                            await HandleBehaviorAsync(stream, (int) blockedAction.Value);
+                            await HandleBehaviorAsync(stream, (int) blockedAction.Value, endpoint);
                         }
-                        else
+                        else if (missAction != null)
                         {
-                            await HandleBehaviorAsync(stream, (int) missAction.Value);
+                            await HandleBehaviorAsync(stream, (int) missAction.Value, endpoint);
                         }
                     }
                     break;
@@ -335,7 +482,7 @@ namespace Uchu.World
                     var parameters = await Server.CDClient.GetBehaviorParametersAsync(behaviorId);
 
                     foreach (var parameter in parameters)
-                        await HandleBehaviorAsync(stream, (int) parameter.Value);
+                        await HandleBehaviorAsync(stream, (int) parameter.Value, endpoint);
                     break;
                 }
 
@@ -344,6 +491,7 @@ namespace Uchu.World
                     var target = stream.ReadLong();
 
                     Console.WriteLine($"Hit {target}");
+                    await DropLootAsync(target, endpoint);
 
                     var count = (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "spread count")).Value;
                     var projectiles = new long[(int) count];
@@ -372,7 +520,7 @@ namespace Uchu.World
 
                     var parameter = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, name);
 
-                    await HandleBehaviorAsync(stream, (int) parameter.Value);
+                    await HandleBehaviorAsync(stream, (int) parameter.Value, endpoint);
 
                     break;
                 }
@@ -388,8 +536,9 @@ namespace Uchu.World
                         targets[i] = stream.ReadLong();
 
                         Console.WriteLine($"Hit {targets[i]}");
+                        await DropLootAsync(targets[i], endpoint);
 
-                        await HandleBehaviorAsync(stream, (int) action.Value);
+                        await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
                     }
 
                     break;
@@ -398,24 +547,42 @@ namespace Uchu.World
                 case BehaviorTemplateId.Stun:
                 {
                     // TODO
+                    Console.WriteLine("stun");
+                    break;
+                }
+
+                case BehaviorTemplateId.Duration:
+                {
+                    var action = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action");
+
+                    await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
                     break;
                 }
 
                 case BehaviorTemplateId.Knockback:
                 {
                     stream.ReadBit();
+                    Console.WriteLine("knockback");
                     break;
                 }
 
                 case BehaviorTemplateId.AttackDelay:
                 {
                     var handle = stream.ReadUInt();
+
+                    _behaviors[handle] = behaviorId;
                     break;
                 }
 
                 case BehaviorTemplateId.Switch:
                 {
-                    var state = true;
+                    var handle = stream.ReadUInt();
+
+                    Console.WriteLine("switch");
+
+                    _behaviors[handle] = behaviorId;
+
+                    /*var state = true;
 
                     if (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "isEnemyFaction") == null ||
                         (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "imagination")).Value > 0)
@@ -425,14 +592,14 @@ namespace Uchu.World
                     {
                         var actionTrue = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action_true");
 
-                        await HandleBehaviorAsync(stream, (int) actionTrue.Value);
+                        await HandleBehaviorAsync(stream, originId, (int) actionTrue.Value);
                     }
                     else
                     {
                         var actionFalse = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "action_false");
 
-                        await HandleBehaviorAsync(stream, (int) actionFalse.Value);
-                    }
+                        await HandleBehaviorAsync(stream, originId, (int) actionFalse.Value);
+                    }*/
                     break;
                 }
 
@@ -444,21 +611,36 @@ namespace Uchu.World
                         await Server.CDClient.GetBehaviorParameterAsync(behaviorId, $"behavior {index}");
                     var delayParameter = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "chain_delay");
 
-                    await Task.Delay((int) delayParameter.Value); // is this right?
+                    await Task.Delay((int) (delayParameter.Value * 1000)); // is this right?
 
-                    await HandleBehaviorAsync(stream, (int) behaviorParameter.Value);
+                    await HandleBehaviorAsync(stream, (int) behaviorParameter.Value, endpoint);
                     break;
                 }
 
                 case BehaviorTemplateId.ForceMovement:
                 {
-                    // TODO
+                    var hitAction = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "hit_action");
+                    var hitActionEnemy =
+                        await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "hit_action_enemy");
+                    var hitActionFaction =
+                        await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "hit_action_faction");
+
+                    if (hitAction != null && hitAction.Value > 0 ||
+                        hitActionEnemy != null && hitActionEnemy.Value > 0 ||
+                        hitActionFaction != null && hitActionFaction.Value > 0)
+                    {
+                        var handle = stream.ReadUInt();
+
+                        _behaviors[handle] = behaviorId;
+                    }
+
                     break;
                 }
 
                 case BehaviorTemplateId.Interrupt:
                 {
                     // TODO
+                    Console.WriteLine("interrupt");
                     break;
                 }
 
@@ -472,7 +654,7 @@ namespace Uchu.World
 
                     var behavior = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, name);
 
-                    await HandleBehaviorAsync(stream, (int) behavior.Value);
+                    await HandleBehaviorAsync(stream, (int) behavior.Value, endpoint);
 
                     break;
                 }
@@ -481,7 +663,14 @@ namespace Uchu.World
                 {
                     var handle = stream.ReadUInt();
 
-                    // TODO: syncskill thing
+                    _behaviors[handle] = behaviorId;
+
+                    break;
+                }
+
+                default:
+                {
+                    Console.WriteLine($"Unhandled behavior: {template.TemplateId}");
 
                     break;
                 }

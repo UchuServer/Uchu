@@ -22,6 +22,9 @@ namespace Uchu.Core
         [Column("itemType")]
         public int ItemType { get; set; }
 
+        [Column("itemInfo")]
+        public long ItemInfo { get; set; }
+
         [Column("inLootTable")]
         public bool IsInLootTable { get; set; }
 
@@ -32,10 +35,10 @@ namespace Uchu.Core
         public bool IsUnique { get; set; }
 
         [Column("isBOP")]
-        public bool isBOP { get; set; }
+        public bool IsBoundOnPickup { get; set; }
 
         [Column("isBOE")]
-        public bool isBOE { get; set; }
+        public bool IsBoundOnEquip { get; set; }
 
         [Column("reqFlagID")]
         public int RequiredFlagId { get; set; }
@@ -93,6 +96,12 @@ namespace Uchu.Core
 
         [Column("altCurrencyCost")]
         public int AltAmmunitionCost { get; set; }
+
+        [Column("subItems")]
+        public int[] SubItems { get; set; }
+
+        [Column("audioEventUse")]
+        public string AudioEventUse { get; set; }
 
         [Column("noEquipAnimation")]
         public bool NoEquipAnimation { get; set; }

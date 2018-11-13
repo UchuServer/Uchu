@@ -13,7 +13,13 @@ namespace Uchu.Core
         public int Slot { get; set; }
 
         [Required]
-        public long Count { get; set; }
+        public long Count { get; set; } = 1;
+
+        [Required]
+        public bool IsBound { get; set; } = false;
+
+        [Required]
+        public bool IsEquipped { get; set; } = false;
 
         public long CharacterId { get; set; }
         public Character Character { get; set; }

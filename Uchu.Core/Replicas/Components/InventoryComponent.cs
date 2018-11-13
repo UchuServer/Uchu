@@ -24,18 +24,14 @@ namespace Uchu.Core
                 stream.WriteBit(stack);
 
                 if (stack)
-                {
                     stream.WriteUInt((uint) item.Count);
-                }
 
                 var hasSlot = item.Slot != -1;
 
                 stream.WriteBit(hasSlot);
 
                 if (hasSlot)
-                {
                     stream.WriteUShort((ushort) item.Slot);
-                }
 
                 stream.WriteBit(false);
                 // stream.WriteUInt(4);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core;
@@ -9,9 +10,10 @@ using Uchu.Core;
 namespace Uchu.Core.Migrations
 {
     [DbContext(typeof(UchuContext))]
-    partial class UchuContextModelSnapshot : ModelSnapshot
+    [Migration("20181113173655_AddItemProperties")]
+    partial class AddItemProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

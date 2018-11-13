@@ -109,7 +109,25 @@ namespace Uchu.World
                         {
                             new ItemContainerNode
                             {
-                                Type = 0
+                                Type = 0,
+                                Items = character.Items.Select(i =>
+                                {
+                                    var node = new ItemNode
+                                    {
+                                        Count = (int) i.Count,
+                                        Slot = i.Slot,
+                                        LOT = i.LOT,
+                                        ObjectId = i.InventoryItemId
+                                    };
+
+                                    if (i.IsEquipped)
+                                        node.Equipped = 1;
+
+                                    if (i.IsBound)
+                                        node.Bound = 1;
+
+                                    return node;
+                                }).ToArray()
                             }
                         }
                     },

@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Uchu.Core
@@ -339,6 +340,133 @@ namespace Uchu.Core
                         BehaviorId = reader.GetInt32(0),
                         ParameterId = reader.GetString(1),
                         Value = reader.GetFloat(2)
+                    };
+                }
+            }
+        }
+
+        public async Task<LootMatrixRow[]> GetDropsForObjectAsync(int lot)
+        {
+            var list = new List<LootMatrixRow>();
+
+            var str = new StringBuilder();
+
+            str.Append("SELECT * FROM LootMatrix WHERE LootMatrixIndex = (");
+            str.Append("SELECT LootMatrixIndex FROM DestructibleComponent WHERE id = (");
+            str.Append("SELECT component_id FROM ComponentsRegistry WHERE id = ? AND component_type = 7))");
+
+            using (var cmd = new SQLiteCommand(str.ToString(), Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new LootMatrixRow
+                        {
+                            LootMatrixIndex = reader.GetInt32(0),
+                            LootTableIndex = reader.GetInt32(1),
+                            RarityTableIndex = reader.GetInt32(2),
+                            Percent = reader.GetFloat(3),
+                            MinDrops = reader.GetInt32(4),
+                            MaxDrops = reader.GetInt32(5),
+                            Id = reader.GetInt32(6),
+                            FlagId = reader.IsDBNull(7) ? -1 : reader.GetInt32(7),
+                            GateVersion = reader.IsDBNull(8) ? "" : reader.GetString(8)
+                        });
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
+
+        public async Task<LootTableRow[]> GetItemDropsAsync(int index)
+        {
+            var list = new List<LootTableRow>();
+
+            using (var cmd = new SQLiteCommand("SELECT * FROM LootTable WHERE LootTableIndex = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = index});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new LootTableRow
+                        {
+                            ItemId = reader.GetInt32(0),
+                            LootTableIndex = reader.GetInt32(1),
+                            Id = reader.GetInt32(2),
+                            IsMissionDrop = reader.GetBoolean(3),
+                            SortPriority = reader.GetInt32(4)
+                        });
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
+
+        public async Task<ItemComponentRow> GetItemComponent(int lot)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM ItemComponent WHERE id = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    return new ItemComponentRow
+                    {
+                        ItemId = reader.GetInt32(0),
+                        EquipLocation = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                        BaseValue = reader.GetInt32(2),
+                        IsKitPiece = reader.GetBoolean(3),
+                        Rarity = reader.GetInt32(4),
+                        ItemType = reader.GetInt32(5),
+                        ItemInfo = reader.IsDBNull(6) ? -1 : reader.GetInt64(6),
+                        IsInLootTable = reader.GetBoolean(7),
+                        IsInVendor = reader.GetBoolean(8),
+                        IsUnique = reader.GetBoolean(9),
+                        IsBoundOnPickup = reader.GetBoolean(10),
+                        IsBoundOnEquip = reader.GetBoolean(11),
+                        RequiredFlagId = reader.IsDBNull(12) ? -1 : reader.GetInt32(12),
+                        RequiredSpecialtyId = reader.IsDBNull(13) ? -1 : reader.GetInt32(13),
+                        RequiredSpecialtyRank = reader.IsDBNull(14) ? -1 : reader.GetInt32(14),
+                        RequiredAchievementId = reader.IsDBNull(15) ? -1 : reader.GetInt32(15),
+                        StackSize = reader.GetInt32(16),
+                        Color = reader.IsDBNull(17) ? -1 : reader.GetInt32(17),
+                        Decal = reader.IsDBNull(18) ? -1 : reader.GetInt32(18),
+                        OffsetGroupId = reader.IsDBNull(19) ? -1 : reader.GetInt32(19),
+                        BuildTypes = reader.IsDBNull(20) ? -1 : reader.GetInt32(20),
+                        RequiredPrecondition = reader.IsDBNull(21) ? "" : reader.GetString(21),
+                        AnimationFlag = reader.IsDBNull(22) ? -1 : reader.GetInt32(22),
+                        EquipEffects = reader.IsDBNull(23) ? -1 : reader.GetInt32(23),
+                        ReadyForQA = reader.GetBoolean(24),
+                        ItemRating = reader.IsDBNull(25) ? -1 : reader.GetInt32(25),
+                        IsTwoHanded = reader.GetBoolean(26),
+                        MinimumNumberRequired = reader.IsDBNull(27) ? -1 : reader.GetInt32(27),
+                        DelResIndex = reader.IsDBNull(28) ? -1 : reader.GetInt32(28),
+                        AmmunitionLOT = reader.IsDBNull(29) ? -1 : reader.GetInt32(29),
+                        AltAmmunitionCost = reader.IsDBNull(30) ? -1 : reader.GetInt32(30),
+                        SubItems = reader.IsDBNull(31)
+                            ? new int[0]
+                            : reader.GetString(31).Trim().Split(',').Where(s => !string.IsNullOrEmpty(s.Trim()))
+                                .Select(s => int.Parse(s.Trim())).ToArray(),
+                        AudioEventUse = reader.IsDBNull(32) ? "" : reader.GetString(32),
+                        NoEquipAnimation = reader.GetBoolean(33),
+                        CommendationLOT = reader.IsDBNull(34) ? -1 : reader.GetInt32(34),
+                        CommendationCost = reader.IsDBNull(35) ? -1 : reader.GetInt32(35),
+                        AudioEquipMetaEventSet = reader.IsDBNull(36) ? "" : reader.GetString(36),
+                        CurrencyCosts = reader.IsDBNull(37) ? "" : reader.GetString(37), // TODO: parse
+                        IngredientInfo = reader.IsDBNull(38) ? "" : reader.GetString(38),
+                        LocStatus = reader.IsDBNull(39) ? -1 : reader.GetInt32(39),
+                        ForgeType = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
+                        SellMultiplier = reader.IsDBNull(41) ? -1 : reader.GetFloat(41)
                     };
                 }
             }

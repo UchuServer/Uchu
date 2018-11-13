@@ -16,6 +16,7 @@ namespace Uchu.Core
         };
 
         private readonly List<ReplicaPacket> _replicas;
+        private readonly Dictionary<long, int> _loot;
         private readonly Server _server;
 
         public ReplicaManager ReplicaManager { get; }
@@ -24,6 +25,7 @@ namespace Uchu.Core
         public World(Server server)
         {
             _replicas = new List<ReplicaPacket>();
+            _loot = new Dictionary<long, int>();
             _server = server;
 
             ReplicaManager = server.CreateReplicaManager();
@@ -62,6 +64,14 @@ namespace Uchu.Core
 
         public ReplicaPacket GetObject(long objectId)
             => _replicas.Find(r => r.ObjectId == objectId);
+
+        public void RegisterLoot(long objectId, int lot)
+        {
+            _loot[objectId] = lot;
+        }
+
+        public int GetLootLOT(long objectId)
+            => _loot[objectId];
 
         public void SpawnObject(ReplicaPacket packet)
         {
