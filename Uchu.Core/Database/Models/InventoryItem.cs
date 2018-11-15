@@ -21,6 +21,9 @@ namespace Uchu.Core
         [Required]
         public bool IsEquipped { get; set; } = false;
 
+        [Required]
+        public int InventoryType { get; set; } = 0;
+
         public long CharacterId { get; set; }
         public Character Character { get; set; }
     }

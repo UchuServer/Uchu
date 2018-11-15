@@ -4,10 +4,10 @@ namespace Uchu.Core
 {
     public class PetComponent : ReplicaComponent
     {
-        public long OwnerObjectId { get; set; }
+        public long OwnerObjectId { get; set; } = -1;
 
-        public string Name { get; set; }
-        public string OwnerName { get; set; }
+        public string Name { get; set; } = "";
+        public string OwnerName { get; set; } = "";
 
         public override void Serialize(BitStream stream)
         {
@@ -16,8 +16,12 @@ namespace Uchu.Core
             stream.WriteUInt(0);
             stream.WriteBit(false);
 
-            stream.WriteBit(true);
-            stream.WriteLong(OwnerObjectId);
+            var hasOwner = OwnerObjectId != -1;
+
+            stream.WriteBit(hasOwner);
+
+            if (hasOwner)
+                stream.WriteLong(OwnerObjectId);
 
             stream.WriteBit(true);
             stream.WriteUInt(0);

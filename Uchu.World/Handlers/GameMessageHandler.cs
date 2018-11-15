@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -55,6 +54,13 @@ namespace Uchu.World
         }
 
         [PacketHandler]
+        public void LinkedMission(RequestLinkedMissionMessage msg, IPEndPoint endpoint)
+        {
+            Console.WriteLine($"Mission = {msg.MissionId}");
+            Console.WriteLine($"Offered = {msg.OfferedMission}");
+        }
+
+        [PacketHandler]
         public async Task RespondToMission(RespondToMissionMessage msg, IPEndPoint endpoint)
         {
             var session = Server.SessionCache.GetSession(endpoint);
@@ -63,6 +69,8 @@ namespace Uchu.World
             {
                 var character = await ctx.Characters.Include(c => c.Missions).ThenInclude(m => m.Tasks)
                     .SingleAsync(c => c.CharacterId == msg.PlayerObjectId);
+
+                var mission = await Server.CDClient.GetMissionAsync(msg.MissionId);
 
                 if (!character.Missions.Exists(m => m.MissionId == msg.MissionId))
                 {
@@ -80,39 +88,6 @@ namespace Uchu.World
 
                     await ctx.SaveChangesAsync();
 
-                    return;
-                }
-
-                var mission = character.Missions.Find(m => m.MissionId == msg.MissionId);
-
-                if (await AllTasksCompletedAsync(mission))
-                {
-                    mission.State = (int) MissionState.Completed;
-                    mission.CompletionCount++;
-                    mission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
-
-                    await ctx.SaveChangesAsync();
-
-                    await OfferMissionAsync(Server.Worlds[(ZoneId) session.ZoneId], msg.ReceiverObjectId,
-                        msg.PlayerObjectId, endpoint);
-                }
-            }
-        }
-
-        [PacketHandler]
-        public async Task MissionDialogueOk(MissionDialogueOkMessage msg, IPEndPoint endpoint)
-        {
-            var session = Server.SessionCache.GetSession(endpoint);
-
-            using (var ctx = new UchuContext())
-            {
-                var character = await ctx.Characters.Include(c => c.Missions).ThenInclude(m => m.Tasks)
-                    .SingleAsync(c => c.CharacterId == session.CharacterId);
-
-                var mission = await Server.CDClient.GetMissionAsync(msg.MissionId);
-
-                if (!character.Missions.Exists(m => m.MissionId == msg.MissionId))
-                {
                     Server.Send(new NotifyMissionMessage
                     {
                         ObjectId = session.CharacterId,
@@ -131,9 +106,9 @@ namespace Uchu.World
                     return;
                 }
 
-                var chrMission = character.Missions.Find(m => m.MissionId == msg.MissionId);
+                var charMission = character.Missions.Find(m => m.MissionId == msg.MissionId);
 
-                if (!await AllTasksCompletedAsync(chrMission))
+                if (!await AllTasksCompletedAsync(charMission))
                 {
                     Server.Send(new NotifyMissionMessage
                     {
@@ -152,6 +127,10 @@ namespace Uchu.World
                     MissionState = MissionState.Unavailable,
                     SendingRewards = true
                 }, endpoint);
+
+                charMission.State = (int) MissionState.Completed;
+                charMission.CompletionCount++;
+                charMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 character.Currency += mission.CurrencyReward;
                 character.UniverseScore += mission.LegoScoreReward;
@@ -177,37 +156,37 @@ namespace Uchu.World
                     }, endpoint);
                 }
 
-                if (mission.MaximumHealthReward > 0 || mission.MaximumImaginationReward > 0)
+                if (mission.MaximumImaginationReward > 0)
                 {
-                    var world = Server.Worlds[(ZoneId) session.ZoneId];
-                    var obj = world.GetObject(session.CharacterId);
-
-                    var comp = (StatsComponent) obj.Components.First(c => c is StatsComponent);
-
-                    if (mission.MaximumHealthReward > 0)
+                    var dict = new Dictionary<string, object>
                     {
-                        character.CurrentHealth = character.MaximumHealth;
+                        ["amount"] = character.MaximumImagination.ToString(),
+                        ["type"] = "imagination"
+                    };
 
-                        comp.MaxHealth = character.MaximumHealth;
-                        comp.CurrentHealth = (uint) character.CurrentHealth;
-                    }
-
-                    if (mission.MaximumImaginationReward > 0)
+                    Server.Send(new UIMessageToClientMessage
                     {
-                        character.CurrentImagination = character.MaximumImagination;
-
-                        comp.MaxImagination = character.MaximumImagination;
-                        comp.CurrentImagination = (uint) character.CurrentImagination;
-                    }
-
-                    var index = obj.Components.ToList().IndexOf(comp);
-
-                    obj.Components[index] = comp;
-
-                    world.ReplicaManager.SendSerialization(obj);
+                        ObjectId = session.CharacterId,
+                        Arguments = new AMF3<object>(dict),
+                        MessageName = "MaxPlayerBarUpdate"
+                    }, endpoint);
                 }
 
-                await ctx.SaveChangesAsync();
+                if (mission.MaximumHealthReward > 0)
+                {
+                    var dict = new Dictionary<string, object>
+                    {
+                        ["amount"] = character.MaximumHealth.ToString(),
+                        ["type"] = "health"
+                    };
+
+                    Server.Send(new UIMessageToClientMessage
+                    {
+                        ObjectId = session.CharacterId,
+                        Arguments = new AMF3<object>(dict),
+                        MessageName = "MaxPlayerBarUpdate"
+                    }, endpoint);
+                }
 
                 Server.Send(new NotifyMissionMessage
                 {
@@ -216,7 +195,21 @@ namespace Uchu.World
                     MissionState = MissionState.Completed,
                     SendingRewards = false
                 }, endpoint);
+
+                await ctx.SaveChangesAsync();
+
+                await OfferMissionAsync(Server.Worlds[(ZoneId) session.ZoneId], msg.ReceiverObjectId,
+                    msg.PlayerObjectId, endpoint);
             }
+        }
+
+        [PacketHandler]
+        public async Task MissionDialogueOk(MissionDialogueOkMessage msg, IPEndPoint endpoint)
+        {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+
+            await OfferMissionAsync(world, msg.ObjectId, session.CharacterId, endpoint);
         }
 
         [PacketHandler]
@@ -227,17 +220,17 @@ namespace Uchu.World
 
             await UpdateMissionTaskAsync(world, MissionTaskType.Collect, msg.ObjectId, msg.PlayerObjectId, endpoint);
 
-            Server.Send(new HasBeenCollectedByClientMessage
+            /*Server.Send(new HasBeenCollectedByClientMessage
             {
                 ObjectId = msg.ObjectId,
                 PlayerObjectId = msg.PlayerObjectId
-            }, endpoint);
+            }, endpoint);*/
         }
 
         [PacketHandler]
         public async Task StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
         {
-            Server.Send(new EchoStartSkillMessage
+            /*Server.Send(new EchoStartSkillMessage
             {
                 ObjectId = msg.ObjectId,
                 IsMouseClick = msg.IsMouseClick,
@@ -250,7 +243,7 @@ namespace Uchu.World
                 Data = msg.Data,
                 SkillId = msg.SkillId,
                 SkillHandle = msg.SkillHandle
-            }, endpoint);
+            }, endpoint);*/
 
             var stream = new BitStream(msg.Data);
             var behavior = await Server.CDClient.GetSkillBehaviorAsync((int) msg.SkillId);
@@ -261,14 +254,14 @@ namespace Uchu.World
         [PacketHandler]
         public async Task SyncSkill(SyncSkillMessage msg, IPEndPoint endpoint)
         {
-            Server.Send(new EchoSyncSkillMessage
+            /*Server.Send(new EchoSyncSkillMessage
             {
                 ObjectId = msg.ObjectId,
                 IsDone = msg.IsDone,
                 Data = msg.Data,
                 BehaviorHandle = msg.BehaviorHandle,
                 SkillHandle = msg.SkillHandle
-            }, endpoint);
+            }, endpoint);*/
 
             Console.WriteLine($"Length = {msg.Data.Length}");
             Console.WriteLine($"BehaviorHandle = {msg.BehaviorHandle}");
@@ -313,6 +306,52 @@ namespace Uchu.World
         }
 
         [PacketHandler]
+        public async Task SetFlag(SetFlagMessage msg, IPEndPoint endpoint)
+        {
+            Console.WriteLine($"Flag = {msg.Flag}");
+            Console.WriteLine($"FlagId = {msg.FlagId}");
+
+            var session = Server.SessionCache.GetSession(endpoint);
+
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.Include(c => c.Missions).ThenInclude(m => m.Tasks)
+                    .SingleAsync(c => c.CharacterId == session.CharacterId);
+
+                foreach (var mission in character.Missions)
+                {
+                    if (mission.State != (int) MissionState.Active &&
+                        mission.State != (int) MissionState.CompletedActive)
+                        continue;
+
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
+
+                    var task = tasks.Find(t =>
+                        t.TargetLOTs.Contains(msg.FlagId) &&
+                        character.Missions.Exists(m => m.Tasks.Exists(a => a.TaskId == t.UId)));
+
+                    if (task == null)
+                        continue;
+
+                    var charTask = mission.Tasks.Find(t => t.TaskId == task.UId);
+
+                    if (!charTask.Values.Contains(msg.FlagId))
+                        charTask.Values.Add(msg.FlagId);
+
+                    Server.Send(new NotifyMissionTaskMessage
+                    {
+                        ObjectId = session.CharacterId,
+                        MissionId = task.MissionId,
+                        TaskIndex = tasks.IndexOf(task),
+                        Updates = new[] {(float) charTask.Values.Count}
+                    }, endpoint);
+
+                    await ctx.SaveChangesAsync();
+                }
+            }
+        }
+
+        [PacketHandler]
         public async Task PickupItem(PickupItemMessage msg, IPEndPoint endpoint)
         {
             var session = Server.SessionCache.GetSession(endpoint);
@@ -326,13 +365,34 @@ namespace Uchu.World
                     .SingleAsync(c => c.CharacterId == session.CharacterId);
 
                 var id = Utils.GenerateObjectId();
+                var inventoryType =
+                    await Server.CDClient.IsModelAsync(itemLOT) ? 5 :
+                    await Server.CDClient.IsBrickAsync(itemLOT) ? 2 :
+                    await Server.CDClient.IsItemAsync(itemLOT) ? 0 : 7;
+
+                var items = character.Items.Where(i => i.InventoryType == inventoryType).ToArray();
+
+                var slot = 0;
+
+                if (items.Length > 0)
+                {
+                    var max = items.Max(i => i.Slot);
+                    slot = max + 1;
+
+                    for (var i = 0; i < max; i++)
+                    {
+                        if (items.All(itm => itm.Slot != i))
+                            slot = i;
+                    }
+                }
 
                 var item = new InventoryItem
                 {
                     InventoryItemId = id,
                     LOT = itemLOT,
-                    Slot = character.Items.Count,
-                    Count = 1
+                    Slot = slot,
+                    Count = 1,
+                    InventoryType = inventoryType
                 };
 
                 character.Items.Add(item);
@@ -345,7 +405,8 @@ namespace Uchu.World
                     ItemLOT = itemLOT,
                     ItemCount = (uint) item.Count,
                     ItemObjectId = id,
-                    Slot = item.Slot
+                    Slot = item.Slot,
+                    InventoryType = inventoryType
                 }, endpoint);
 
                 /*var comp = await Server.CDClient.GetItemComponent(itemLOT);
@@ -611,7 +672,7 @@ namespace Uchu.World
                         await Server.CDClient.GetBehaviorParameterAsync(behaviorId, $"behavior {index}");
                     var delayParameter = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "chain_delay");
 
-                    await Task.Delay((int) (delayParameter.Value * 1000)); // is this right?
+                    // await Task.Delay((int) (delayParameter.Value * 1000)); // is this right?
 
                     await HandleBehaviorAsync(stream, (int) behaviorParameter.Value, endpoint);
                     break;
@@ -692,7 +753,7 @@ namespace Uchu.World
                 return;
 
             var componentId = await Server.CDClient.GetComponentIdAsync(obj.LOT, 73);
-            var missions = await Server.CDClient.GetNPCMissions((int) componentId);
+            var missions = await Server.CDClient.GetNPCMissionsAsync((int) componentId);
 
             using (var ctx = new UchuContext())
             {
@@ -701,6 +762,8 @@ namespace Uchu.World
 
                 foreach (var mission in missions)
                 {
+                    Console.WriteLine(mission.MissionId);
+
                     if (mission.AcceptsMission)
                     {
                         if (character.Missions.Exists(m => m.MissionId == mission.MissionId))
@@ -722,6 +785,8 @@ namespace Uchu.World
                                     MissionId = mission.MissionId,
                                     OffererObjectId = objectId
                                 }, endpoint);
+
+                                break;
                             }
                         }
                     }
@@ -740,6 +805,9 @@ namespace Uchu.World
 
                             foreach (var id in miss.PrerequiredMissions)
                             {
+                                if (id == 664)
+                                    continue;
+
                                 if (!character.Missions.Exists(m => m.MissionId == id))
                                 {
                                     canOffer = false;
@@ -771,6 +839,8 @@ namespace Uchu.World
                                 MissionId = mission.MissionId,
                                 OffererObjectId = objectId
                             }, endpoint);
+
+                            break;
                         }
                     }
                 }

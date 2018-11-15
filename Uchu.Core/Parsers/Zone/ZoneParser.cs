@@ -18,7 +18,8 @@ namespace Uchu.Core
             [1200] = "Maps/Nimbus_Station/nd_nimbus_station.luz",
             [1201] = "Maps/Nimbus_Station/Pet_Ranch/nd_ns_pet_ranch.luz",
             [1203] = "Maps/Nimbus_Station/Racetrack/nd_nimbus_station_racetrack.luz",
-            [1204] = "Maps/Nimbus_Station/Waves/nd_ns_waves.luz"
+            [1204] = "Maps/Nimbus_Station/Waves/nd_ns_waves.luz",
+            [2000] = "Maps/njhub/nd_nj_monastery.luz"
         };
 
         private readonly IResources _resources;

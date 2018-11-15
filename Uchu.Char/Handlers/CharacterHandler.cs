@@ -122,9 +122,11 @@ namespace Uchu.Char
         {
             Server.SessionCache.SetCharacter(endpoint, packet.CharacterId);
 
+            var address = endpoint.Address.ToString() == "127.0.0.1" ? "127.0.0.1" : "192.168.1.109";
+
             Server.Send(new ServerRedirectionPacket
             {
-                Address = "127.0.0.1",
+                Address = address,
                 Port = 2003
             }, endpoint);
         }

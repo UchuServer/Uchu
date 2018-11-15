@@ -49,6 +49,27 @@ namespace Uchu.World
             }, endpoint);
         }
 
+        [PacketHandler(RunTask = true)]
+        public void PositionUpdate(PositionUpdatePacket packet, IPEndPoint endpoint)
+        {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var charObj = world.GetObject(session.CharacterId);
+            var comp = (ControllablePhysicsComponent) charObj.Components.First(c => c is ControllablePhysicsComponent);
+
+            comp.HasPosition = true;
+            comp.Position = packet.Position;
+            comp.Rotation = packet.Rotation;
+            comp.IsOnGround = packet.IsOnGround;
+            comp.NegativeAngularVelocity = packet.NegativeAngularVelocity;
+            comp.Velocity = packet.Velocity;
+            comp.AngularVelocity = packet.AngularVelocity;
+            comp.PlatformObjectId = packet.PlatformObjectId;
+            comp.PlatformPosition = packet.PlatformPosition;
+
+            world.UpdateObject(charObj);
+        }
+
         [PacketHandler]
         public async Task LoadComplete(ClientLoadCompletePacket packet, IPEndPoint endpoint)
         {
@@ -110,23 +131,53 @@ namespace Uchu.World
                             new ItemContainerNode
                             {
                                 Type = 0,
-                                Items = character.Items.Select(i =>
+                                Items = character.Items.Where(i => i.InventoryType == 0).Select(i => new ItemNode
                                 {
-                                    var node = new ItemNode
-                                    {
-                                        Count = (int) i.Count,
-                                        Slot = i.Slot,
-                                        LOT = i.LOT,
-                                        ObjectId = i.InventoryItemId
-                                    };
-
-                                    if (i.IsEquipped)
-                                        node.Equipped = 1;
-
-                                    if (i.IsBound)
-                                        node.Bound = 1;
-
-                                    return node;
+                                    Count = (int) i.Count,
+                                    Slot = i.Slot,
+                                    LOT = i.LOT,
+                                    ObjectId = i.InventoryItemId,
+                                    Equipped = i.IsEquipped ? 1 : 0,
+                                    Bound = i.IsBound ? 1 : 0
+                                }).ToArray()
+                            },
+                            new ItemContainerNode
+                            {
+                                Type = 2,
+                                Items = character.Items.Where(i => i.InventoryType == 2).Select(i => new ItemNode
+                                {
+                                    Count = (int) i.Count,
+                                    Slot = i.Slot,
+                                    LOT = i.LOT,
+                                    ObjectId = i.InventoryItemId,
+                                    Equipped = i.IsEquipped ? 1 : 0,
+                                    Bound = i.IsBound ? 1 : 0
+                                }).ToArray()
+                            },
+                            new ItemContainerNode
+                            {
+                                Type = 5,
+                                Items = character.Items.Where(i => i.InventoryType == 5).Select(i => new ItemNode
+                                {
+                                    Count = (int) i.Count,
+                                    Slot = i.Slot,
+                                    LOT = i.LOT,
+                                    ObjectId = i.InventoryItemId,
+                                    Equipped = i.IsEquipped ? 1 : 0,
+                                    Bound = i.IsBound ? 1 : 0
+                                }).ToArray()
+                            },
+                            new ItemContainerNode
+                            {
+                                Type = 7,
+                                Items = character.Items.Where(i => i.InventoryType == 7).Select(i => new ItemNode
+                                {
+                                    Count = (int) i.Count,
+                                    Slot = i.Slot,
+                                    LOT = i.LOT,
+                                    ObjectId = i.InventoryItemId,
+                                    Equipped = i.IsEquipped ? 1 : 0,
+                                    Bound = i.IsBound ? 1 : 0
                                 }).ToArray()
                             }
                         }
@@ -200,10 +251,7 @@ namespace Uchu.World
                             Level = (uint) character.Level,
                             Character = character
                         },
-                        new InventoryComponent
-                        {
-                            Items = character.Items.ToArray()
-                        },
+                        new InventoryComponent(),
                         new ScriptComponent(),
                         new SkillComponent(),
                         new RenderComponent(),
@@ -244,8 +292,8 @@ namespace Uchu.World
                     world.ReplicaManager.AddConnection(endpoint);
                     world.SpawnObject(replica);
 
-                    Server.Send(new DoneLoadingObjectsPacket {ObjectId = character.CharacterId}, endpoint);
-                    Server.Send(new PlayerReadyPacket {ObjectId = character.CharacterId}, endpoint);
+                    Server.Send(new DoneLoadingObjectsMessage {ObjectId = character.CharacterId}, endpoint);
+                    Server.Send(new PlayerReadyMessage {ObjectId = character.CharacterId}, endpoint);
                 }
             }
         }

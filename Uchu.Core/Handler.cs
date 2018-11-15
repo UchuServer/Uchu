@@ -7,5 +7,6 @@ namespace Uchu.Core
         public HandlerGroupBase Group { get; set; }
         public IPacket Packet { get; set; }
         public MethodInfo Method { get; set; }
+        public bool RunTask { get; set; }
     }
 }

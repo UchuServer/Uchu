@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Remotion.Linq.Clauses.ResultOperators;
+using ServiceStack.Text;
 
 namespace Uchu.Core
 {
@@ -69,11 +71,17 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<MissionNPCComponentRow[]> GetNPCMissions(int lot)
+        public async Task<MissionNPCComponentRow[]> GetNPCMissionsAsync(int lot)
         {
             var list = new List<MissionNPCComponentRow>();
 
-            using (var cmd = new SQLiteCommand("SELECT * FROM MissionNPCComponent WHERE id = ?", Connection))
+            var str = new StringBuilder();
+
+            str.Append("SELECT C.* FROM MissionNPCComponent AS C ");
+            str.Append("JOIN Missions AS M ON C.missionID = M.id ");
+            str.Append("WHERE C.id = ? ORDER BY UISortOrder");
+
+            using (var cmd = new SQLiteCommand(str.ToString(), Connection))
             {
                 cmd.Parameters.Add(new SQLiteParameter {Value = lot});
 
@@ -180,7 +188,10 @@ namespace Uchu.Core
                 {
                     while (await reader.ReadAsync())
                     {
-                        var targets = new List<int> {reader.GetInt32(3)};
+                        var targets = new List<int>();
+
+                        if (!reader.IsDBNull(3))
+                            targets.Add(reader.GetInt32(3));
 
                         if (!reader.IsDBNull(4))
                             targets.AddRange(reader.GetString(4).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
@@ -468,6 +479,54 @@ namespace Uchu.Core
                         ForgeType = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
                         SellMultiplier = reader.IsDBNull(41) ? -1 : reader.GetFloat(41)
                     };
+                }
+            }
+        }
+
+        public async Task<bool> IsItemAsync(int lot)
+        {
+            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM ItemComponent WHERE id = ?)", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return false;
+
+                    return reader.GetBoolean(0);
+                }
+            }
+        }
+
+        public async Task<bool> IsModelAsync(int lot)
+        {
+            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM Objects WHERE id = ?)", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return false;
+
+                    return reader.GetBoolean(0);
+                }
+            }
+        }
+
+        public async Task<bool> IsBrickAsync(int lot)
+        {
+            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM BrickIDTable WHERE NDObjectID = ?)", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return false;
+
+                    return reader.GetBoolean(0);
                 }
             }
         }

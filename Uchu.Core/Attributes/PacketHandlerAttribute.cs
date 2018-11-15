@@ -5,7 +5,8 @@ namespace Uchu.Core
     [AttributeUsage(AttributeTargets.Method)]
     public class PacketHandlerAttribute : Attribute
     {
-        public RemoteConnectionType? RemoteConnectionType { internal get; set; } = null;
-        public uint? PacketId { internal get; set; } = null;
+        public RemoteConnectionType? RemoteConnectionType { get; set; } = null;
+        public uint? PacketId { get; set; } = null;
+        public bool RunTask { get; set; } = false;
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet;
@@ -55,16 +56,6 @@ namespace Uchu.Core
             }
         }
 
-        public void DestroyObject(long objectId)
-        {
-            var data = _replicas.Find(r => r.ObjectId == objectId);
-
-            ReplicaManager.SendDestruction(data);
-        }
-
-        public ReplicaPacket GetObject(long objectId)
-            => _replicas.Find(r => r.ObjectId == objectId);
-
         public void RegisterLoot(long objectId, int lot)
         {
             _loot[objectId] = lot;
@@ -72,6 +63,25 @@ namespace Uchu.Core
 
         public int GetLootLOT(long objectId)
             => _loot[objectId];
+
+        public void DestroyObject(long objectId)
+        {
+            var data = _replicas.Find(r => r.ObjectId == objectId);
+
+            _replicas.Remove(data);
+
+            ReplicaManager.SendDestruction(data);
+        }
+
+        public ReplicaPacket GetObject(long objectId)
+            => _replicas.Find(r => r.ObjectId == objectId);
+
+        public void UpdateObject(ReplicaPacket packet)
+        {
+            // _replicas[_replicas.FindIndex(r => r.ObjectId == packet.ObjectId)] = packet;
+
+            ReplicaManager.SendSerialization(packet);
+        }
 
         public void SpawnObject(ReplicaPacket packet)
         {
@@ -92,6 +102,9 @@ namespace Uchu.Core
                 obj.LOT = (int) spawnTemplate;
 
             var registryComponents = await _server.CDClient.GetComponentsAsync(obj.LOT);
+
+            if (registryComponents.Select(c => c.ComponentType).Contains(69))
+                return null;
 
             registryComponents = registryComponents.Where(c => ComponentOrder.Contains(c.ComponentType)).ToArray();
 
@@ -234,7 +247,7 @@ namespace Uchu.Core
                     case 25:
                         component = new MovingPlatformComponent
                         {
-                            PathName = (string) obj.Settings["attached_path"]
+                            PathName = obj.Settings.TryGetValue("attached_path", out var path) ? (string) path : ""
                         };
                         break;
 

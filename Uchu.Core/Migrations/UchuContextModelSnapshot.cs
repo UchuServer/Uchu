@@ -154,6 +154,8 @@ namespace Uchu.Core.Migrations
 
                     b.Property<long>("Count");
 
+                    b.Property<int>("InventoryType");
+
                     b.Property<bool>("IsBound");
 
                     b.Property<bool>("IsEquipped");

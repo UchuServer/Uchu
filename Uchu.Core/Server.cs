@@ -50,9 +50,15 @@ namespace Uchu.Core
 
             while (active)
             {
-                Console.Write("> ");
-
                 var input = Console.ReadLine();
+
+                /*if (!input?.StartsWith('/') ?? true)
+                {
+                    continue;
+                }
+
+                input = input.Remove(0, 1);*/
+
                 var split = input.Split(' ');
 
                 switch (split[0].ToLower())
@@ -75,9 +81,9 @@ namespace Uchu.Core
                         break;
 
                     case "help":
-                        Console.WriteLine("help       Display this message");
-                        Console.WriteLine("adduser    Create a new user");
-                        Console.WriteLine("stop       Stop the server");
+                        Console.WriteLine("help                         Display this message");
+                        Console.WriteLine("adduser <name> <password>    Create a new user");
+                        Console.WriteLine("stop                         Stop the server");
                         break;
 
                     default:
@@ -177,7 +183,8 @@ namespace Uchu.Core
                     {
                         Group = group,
                         Method = method,
-                        Packet = packet
+                        Packet = packet,
+                        RunTask = attr.RunTask
                     });
 
                     Console.WriteLine($"Registered handler for packet {packet}");
@@ -267,6 +274,20 @@ namespace Uchu.Core
                     try
                     {
                         await (Task) handler.Method.Invoke(handler.Group, parameters);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                });
+            }
+            else if (handler.RunTask)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        handler.Method.Invoke(handler.Group, parameters);
                     }
                     catch (Exception e)
                     {

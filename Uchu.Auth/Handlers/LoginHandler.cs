@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using Uchu.Core;
@@ -11,11 +12,13 @@ namespace Uchu.Auth
         {
             var user = await Database.GetUserAsync(packet.Username);
 
+            var address = endpoint.Address.ToString() == "127.0.0.1" ? "127.0.0.1" : "192.168.1.109";
+
             var info = new ServerLoginInfoPacket
             {
-                CharacterInstanceAddress = "127.0.0.1",
+                CharacterInstanceAddress = address,
                 CharacterInstancePort = 2002,
-                ChatInstanceAddress = "127.0.0.1",
+                ChatInstanceAddress = address,
                 ChatInstancePort = 2004
             };
 

@@ -14,21 +14,26 @@ namespace Uchu.Core
         public Vector4 Rotation { get; set; }
 
         public bool IsOnGround { get; set; } = true;
+        public bool NegativeAngularVelocity { get; set; } = false;
 
         public Vector3? Velocity { get; set; } = null;
 
         public Vector3? AngularVelocity { get; set; } = null;
 
+        public long PlatformObjectId { get; set; } = -1;
+
+        public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
+
         private void _write(BitStream stream)
         {
             stream.WriteBit(false);
 
-            stream.WriteBit(true);
-            stream.WriteFloat(0);
             stream.WriteBit(false);
+            //stream.WriteFloat(0);
+            //stream.WriteBit(false);
 
-            stream.WriteBit(true);
             stream.WriteBit(false);
+            //stream.WriteBit(false);
 
             stream.WriteBit(HasPosition);
 
@@ -44,7 +49,7 @@ namespace Uchu.Core
                 stream.WriteFloat(Rotation.W);
 
                 stream.WriteBit(IsOnGround);
-                stream.WriteBit(false);
+                stream.WriteBit(NegativeAngularVelocity);
 
                 var hasVelocity = Velocity != null;
 
@@ -72,7 +77,20 @@ namespace Uchu.Core
                     stream.WriteFloat(vec.Z);
                 }
 
-                stream.WriteBit(false);
+                var hasPlatform = PlatformObjectId != -1;
+
+                stream.WriteBit(hasPlatform);
+
+                if (hasPlatform)
+                {
+                    stream.WriteLong(PlatformObjectId);
+
+                    stream.WriteFloat(PlatformPosition.X);
+                    stream.WriteFloat(PlatformPosition.Y);
+                    stream.WriteFloat(PlatformPosition.Z);
+
+                    stream.WriteBit(false);
+                }
             }
         }
 

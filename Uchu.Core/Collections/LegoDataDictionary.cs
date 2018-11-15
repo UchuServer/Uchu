@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using RakDotNet;
 
 namespace Uchu.Core.Collections
@@ -13,7 +14,7 @@ namespace Uchu.Core.Collections
         public bool IsReadOnly => false;
 
         public ICollection<string> Keys => _map.Keys;
-        public ICollection<object> Values => Array.Empty<object>();
+        public ICollection<object> Values => _map.Values.Select(v => v.Item2).ToArray();
 
         public LegoDataDictionary()
         {
