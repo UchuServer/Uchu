@@ -1,6 +1,6 @@
 namespace Uchu.Core
 {
-    public enum AMF3Markers : byte
+    public enum AMF3Marker : byte
     {
         Undefined,
         Null,

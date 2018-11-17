@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Numerics;
+using Uchu.Core.Collections;
 
 namespace Uchu.Core
 {
@@ -10,6 +10,6 @@ namespace Uchu.Core
         public Vector3 Position { get; set; }
         public Vector4 Rotation { get; set; }
         public float Scale { get; set; }
-        public Dictionary<string, object> Settings { get; set; }
+        public LegoDataDictionary Settings { get; set; }
     }
 }

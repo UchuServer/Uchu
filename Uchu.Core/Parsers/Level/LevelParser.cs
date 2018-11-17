@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet;
+using Uchu.Core.Collections;
 using Uchu.Core.IO;
 
 namespace Uchu.Core
@@ -50,7 +51,7 @@ namespace Uchu.Core
 
                 var settings = stream.ReadString((int) stream.ReadUInt(), true);
 
-                obj.Settings = LegoDataParser.ParseText(settings);
+                obj.Settings = LegoDataDictionary.FromString(settings);
 
                 objects[i] = obj;
 

@@ -1,6 +1,10 @@
 using System;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.Char
@@ -9,53 +13,50 @@ namespace Uchu.Char
     {
         public async Task SendCharacterList(IPEndPoint endpoint, long userId)
         {
-            var user = await Database.GetUserAsync(userId);
-
-            if (user == null)
+            using (var ctx = new UchuContext())
             {
-                Server.DisconnectClient(endpoint);
+                var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
+                    .SingleAsync(u => u.UserId == userId);
 
-                return;
-            }
+                var charCount = user.Characters.Count;
+                var chars = new CharacterListResponsePacket.Character[charCount];
 
-            var charCount = user.Characters?.Count ?? 0;
-
-            var chars = new CharacterListResponsePacket.Character[charCount];
-
-            for (var i = 0; i < charCount; i++)
-            {
-                var chr = user.Characters[i];
-
-                chars[i] = new CharacterListResponsePacket.Character
+                for (var i = 0; i < charCount; i++)
                 {
-                    CharacterId = chr.CharacterId,
-                    Name = chr.Name,
-                    UnnaprovedName = chr.CustomName,
-                    NameRejected = chr.NameRejected,
-                    FreeToPlay = chr.FreeToPlay,
-                    ShirtColor = (uint) chr.ShirtColor,
-                    ShirtStyle = (uint) chr.ShirtStyle,
-                    PantsColor = (uint) chr.PantsColor,
-                    HairStyle = (uint) chr.HairStyle,
-                    HairColor = (uint) chr.HairColor,
-                    Lh = (uint) chr.Lh,
-                    Rh = (uint) chr.Rh,
-                    EyebrowStyle = (uint) chr.EyebrowStyle,
-                    EyeStyle = (uint) chr.EyeStyle,
-                    MouthStyle = (uint) chr.MouthStyle,
-                    LastZone = (ZoneId) chr.LastZone,
-                    LastInstance = (ushort) chr.LastInstance,
-                    LastClone = (uint) chr.LastClone,
-                    LastActivity = (ulong) chr.LastActivity
-                };
-            }
+                    var chr = user.Characters[i];
 
-            Server.Send(new CharacterListResponsePacket
-            {
-                CharacterCount = (byte) charCount,
-                CharacterIndex = (byte) user.CharacterIndex,
-                Characters = chars
-            }, endpoint);
+                    chars[i] = new CharacterListResponsePacket.Character
+                    {
+                        CharacterId = chr.CharacterId,
+                        Name = chr.Name,
+                        UnnaprovedName = chr.CustomName,
+                        NameRejected = chr.NameRejected,
+                        FreeToPlay = chr.FreeToPlay,
+                        ShirtColor = (uint) chr.ShirtColor,
+                        ShirtStyle = (uint) chr.ShirtStyle,
+                        PantsColor = (uint) chr.PantsColor,
+                        HairStyle = (uint) chr.HairStyle,
+                        HairColor = (uint) chr.HairColor,
+                        Lh = (uint) chr.Lh,
+                        Rh = (uint) chr.Rh,
+                        EyebrowStyle = (uint) chr.EyebrowStyle,
+                        EyeStyle = (uint) chr.EyeStyle,
+                        MouthStyle = (uint) chr.MouthStyle,
+                        LastZone = (ZoneId) chr.LastZone,
+                        LastInstance = (ushort) chr.LastInstance,
+                        LastClone = (uint) chr.LastClone,
+                        LastActivity = (ulong) chr.LastActivity,
+                        Items = chr.Items.Where(itm => itm.IsEquipped).Select(itm => (uint) itm.LOT).ToArray()
+                    };
+                }
+
+                Server.Send(new CharacterListResponsePacket
+                {
+                    CharacterCount = (byte) charCount,
+                    CharacterIndex = (byte) user.CharacterIndex,
+                    Characters = chars
+                }, endpoint);
+            }
         }
 
         [PacketHandler]
@@ -77,44 +78,63 @@ namespace Uchu.Char
 
             var name = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
 
-            await Database.CreateCharacterAsync(new Character
+            using (var ctx = new UchuContext())
             {
-                Name = name,
-                CustomName = packet.CustomName,
-                ShirtColor = packet.ShirtColor,
-                ShirtStyle = packet.ShirtStyle,
-                PantsColor = packet.PantsColor,
-                HairStyle = packet.HairStyle,
-                HairColor = packet.HairColor,
-                Lh = packet.Lh,
-                Rh = packet.Rh,
-                EyebrowStyle = packet.EyebrowStyle,
-                EyeStyle = packet.EyeStyle,
-                MouthStyle = packet.MouthStyle,
-                LastZone = (int) ZoneId.VentureExplorerCinematic,
-                LastInstance = 0,
-                LastClone = 0,
-                LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds()
-            }, session.UserId);
+                var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == session.UserId);
 
-            // TODO: check if creation actually succeeded
-            Server.Send(new CharacterCreateResponsePacket {ResponseId = CharacterCreationResponse.Success}, endpoint);
+                user.Characters.Add(new Character
+                {
+                    CharacterId = Utils.GenerateObjectId(),
+                    Name = name,
+                    CustomName = packet.CustomName,
+                    ShirtColor = packet.ShirtColor,
+                    ShirtStyle = packet.ShirtStyle,
+                    PantsColor = packet.PantsColor,
+                    HairStyle = packet.HairStyle,
+                    HairColor = packet.HairColor,
+                    Lh = packet.Lh,
+                    Rh = packet.Rh,
+                    EyebrowStyle = packet.EyebrowStyle,
+                    EyeStyle = packet.EyeStyle,
+                    MouthStyle = packet.MouthStyle,
+                    LastZone = (int) ZoneId.VentureExplorerCinematic,
+                    LastInstance = 0,
+                    LastClone = 0,
+                    LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds()
+                });
 
-            await SendCharacterList(endpoint, session.UserId);
+                await ctx.SaveChangesAsync();
+
+                Server.Send(new CharacterCreateResponsePacket {ResponseId = CharacterCreationResponse.Success}, endpoint);
+
+                await SendCharacterList(endpoint, session.UserId);
+            }
         }
 
         [PacketHandler]
         public async Task DeleteCharacter(CharacterDeleteRequestPacket packet, IPEndPoint endpoint)
         {
-            await Database.DeleteCharacterAsync(packet.CharacterId);
+            using (var ctx = new UchuContext())
+            {
+                ctx.Characters.Remove(await ctx.Characters.FindAsync(packet.CharacterId));
 
-            Server.Send(new CharacterCreateResponsePacket(), endpoint);
+                await ctx.SaveChangesAsync();
+
+                Server.Send(new CharacterDeleteResponsePacket(), endpoint);
+            }
         }
 
         [PacketHandler]
         public async Task RenameCharacter(CharacterRenameRequestPacket packet, IPEndPoint endpoint)
         {
-            await Database.RenameCharacterAsync(packet.CharacterId, packet.Name);
+            using (var ctx = new UchuContext())
+            {
+                var chr = await ctx.Characters.FindAsync(packet.CharacterId);
+
+                chr.Name = packet.Name;
+
+                await ctx.SaveChangesAsync();
+            }
         }
 
         [PacketHandler]
@@ -122,7 +142,14 @@ namespace Uchu.Char
         {
             Server.SessionCache.SetCharacter(endpoint, packet.CharacterId);
 
-            var address = endpoint.Address.ToString() == "127.0.0.1" ? "127.0.0.1" : "192.168.1.109";
+            var addresses = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(i => (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
+                             i.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
+                            i.OperationalStatus == OperationalStatus.Up)
+                .SelectMany(i => i.GetIPProperties().UnicastAddresses).Select(a => a.Address)
+                .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
+
+            var address = endpoint.Address.ToString() == "127.0.0.1" ? "127.0.0.1" : addresses[0].ToString();
 
             Server.Send(new ServerRedirectionPacket
             {

@@ -1,19 +1,19 @@
 using System.Collections.Generic;
 using System.Numerics;
 using RakDotNet;
-using Uchu.Core;
+using Uchu.Core.Collections;
 
-namespace Uchu.World
+namespace Uchu.Core
 {
     public class AddItemToInventoryMessage : ServerGameMessage
     {
         public override ushort GameMessageId => 0x00E3;
 
         public bool IsBound { get; set; } = false;
-        public bool IsBOE { get; set; } = false;
-        public bool IsBOP { get; set; } = false;
+        public bool IsBoundOnEquip { get; set; } = false;
+        public bool IsBoundOnPickup { get; set; } = false;
         public int Source { get; set; } = -1;
-        public Dictionary<string, object> ExtraInfo { get; set; } = new Dictionary<string, object>();
+        public LegoDataDictionary ExtraInfo { get; set; } = null;
         public int ItemLOT { get; set; }
         public long Subkey { get; set; } = -1;
         public int InventoryType { get; set; } = -1;
@@ -27,8 +27,8 @@ namespace Uchu.World
         public override void SerializeMessage(BitStream stream)
         {
             stream.WriteBit(IsBound);
-            stream.WriteBit(IsBOE);
-            stream.WriteBit(IsBOP);
+            stream.WriteBit(IsBoundOnEquip);
+            stream.WriteBit(IsBoundOnPickup);
 
             var hasSource = Source != -1;
 
@@ -37,8 +37,24 @@ namespace Uchu.World
             if (hasSource)
                 stream.WriteInt(Source);
 
-            // TODO: implement
-            stream.WriteUInt(0);
+            if (ExtraInfo != null)
+            {
+                var ldf = ExtraInfo.ToString();
+
+                stream.WriteUInt((uint) ldf.Length);
+
+                if (ldf.Length > 0)
+                {
+                    stream.WriteString(ldf, ldf.Length, true);
+
+                    stream.WriteByte(0);
+                    stream.WriteByte(0);
+                }
+            }
+            else
+            {
+                stream.WriteUInt(0);
+            }
 
             stream.WriteInt(ItemLOT);
 

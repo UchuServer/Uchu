@@ -73,11 +73,19 @@ namespace Uchu.Core
                         var name = split[1];
                         var password = split[2];
 
-                        Database.CreateUserAsync(name, password).ContinueWith(t =>
+                        using (var ctx = new UchuContext())
                         {
-                            if (t.IsFaulted)
-                                Console.WriteLine(t.Exception);
-                        });
+                            var hashed = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+
+                            ctx.Users.Add(new User
+                            {
+                                Username = name,
+                                Password = hashed,
+                                CharacterIndex = 0
+                            });
+
+                            ctx.SaveChanges();
+                        }
                         break;
 
                     case "help":

@@ -24,6 +24,8 @@ namespace Uchu.Core
         [Required]
         public int InventoryType { get; set; } = 0;
 
+        public string ExtraInfo { get; set; } = null;
+
         public long CharacterId { get; set; }
         public Character Character { get; set; }
     }

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet;
+using Uchu.Core.Collections;
 
 namespace Uchu.Core
 {
@@ -19,6 +19,11 @@ namespace Uchu.Core
         private readonly List<ReplicaPacket> _replicas;
         private readonly Dictionary<long, int> _loot;
         private readonly Server _server;
+        private readonly List<Player> _players;
+
+        private Zone _zone;
+
+        public Zone Zone => _zone;
 
         public ReplicaManager ReplicaManager { get; }
         public uint ZoneId { get; private set; }
@@ -28,6 +33,7 @@ namespace Uchu.Core
             _replicas = new List<ReplicaPacket>();
             _loot = new Dictionary<long, int>();
             _server = server;
+            _players = new List<Player>();
 
             ReplicaManager = server.CreateReplicaManager();
         }
@@ -35,6 +41,7 @@ namespace Uchu.Core
         public async Task InitializeAsync(Zone zone)
         {
             ZoneId = zone.ZoneId;
+            _zone = await _server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) ZoneId]);
             /*foreach (var file in Directory.GetFiles("Logs/"))
             {
                 if (file.EndsWith(".txt"))
@@ -54,6 +61,59 @@ namespace Uchu.Core
                         SpawnObject(pkt);
                 }
             }
+        }
+
+        public Player GetPlayer(long objectId)
+            => _players.Find(p => p.CharacterId == objectId);
+
+        public void SpawnPlayer(Character character, IPEndPoint endpoint)
+        {
+            ReplicaManager.AddConnection(endpoint);
+
+            _players.Add(new Player(_server, endpoint));
+
+            var replica = new ReplicaPacket
+            {
+                ObjectId = character.CharacterId,
+                LOT = 1,
+                Name = character.Name,
+                Created = 0,
+                Components = new IReplicaComponent[]
+                {
+                    new ControllablePhysicsComponent
+                    {
+                        HasPosition = true,
+                        Position = _zone.SpawnPosition,
+                        Rotation = _zone.SpawnRotation
+                    },
+                    new DestructibleComponent(),
+                    new StatsComponent
+                    {
+                        HasStats = true,
+                        CurrentArmor = (uint) character.CurrentArmor,
+                        MaxArmor = (uint) character.MaximumArmor,
+                        CurrentHealth = (uint) character.CurrentHealth,
+                        MaxHealth = (uint) character.MaximumHealth,
+                        CurrentImagination = (uint) character.CurrentImagination,
+                        MaxImagination = (uint) character.CurrentImagination
+                    },
+                    new CharacterComponent
+                    {
+                        Level = (uint) character.Level,
+                        Character = character
+                    },
+                    new InventoryComponent
+                    {
+                        Items = character.Items.Where(i => i.IsEquipped).ToArray()
+                    },
+                    new ScriptComponent(),
+                    new SkillComponent(),
+                    new RenderComponent(),
+                    new Component107()
+                }
+            };
+
+            SpawnObject(replica);
         }
 
         public void RegisterLoot(long objectId, int lot)
@@ -215,7 +275,8 @@ namespace Uchu.Core
                                 InventoryItemId = Utils.GenerateObjectId(),
                                 Count = i.ItemCount,
                                 LOT = i.ItemId,
-                                Slot = -1
+                                Slot = -1,
+                                IsEquipped = i.Equipped
                             }).ToArray()
                         };
                         break;
@@ -329,7 +390,7 @@ namespace Uchu.Core
                     Position = (Vector3) obj.Settings["rebuild_activators"],
                     Rotation = Vector4.Zero,
                     Scale = -1,
-                    Settings = new Dictionary<string, object>()
+                    Settings = new LegoDataDictionary()
                 }, data.ObjectId);
 
                 SpawnObject(spawner);

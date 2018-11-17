@@ -73,30 +73,30 @@ namespace Uchu.Core
             switch (type)
             {
                 case null:
-                    stream.WriteByte((byte) AMF3Markers.Undefined);
+                    stream.WriteByte((byte) AMF3Marker.Undefined);
                     break;
 
                 case bool b:
-                    stream.WriteByte((byte) (b ? AMF3Markers.True : AMF3Markers.False));
+                    stream.WriteByte((byte) (b ? AMF3Marker.True : AMF3Marker.False));
                     break;
 
                 case int i:
-                    stream.WriteByte((byte) AMF3Markers.Integer);
+                    stream.WriteByte((byte) AMF3Marker.Integer);
                     _writeU29(stream, i);
                     break;
 
                 case double d:
-                    stream.WriteByte((byte) AMF3Markers.Double);
+                    stream.WriteByte((byte) AMF3Marker.Double);
                     stream.WriteDouble(d);
                     break;
 
                 case string s:
-                    stream.WriteByte((byte) AMF3Markers.String);
+                    stream.WriteByte((byte) AMF3Marker.String);
                     _writeString(stream, s);
                     break;
 
                 case Dictionary<string, object> dict:
-                    stream.WriteByte((byte) AMF3Markers.Array);
+                    stream.WriteByte((byte) AMF3Marker.Array);
                     _writeDictionary(stream, dict);
                     break;
             }
@@ -137,7 +137,7 @@ namespace Uchu.Core
             return str;
         }
 
-        public Dictionary<object, object> _readDictionary(BitStream stream)
+        private Dictionary<object, object> _readDictionary(BitStream stream)
         {
             var val = _readU29(stream);
             var isLiteral = (val & 0x01) != 0;
@@ -169,30 +169,30 @@ namespace Uchu.Core
 
         private object _readType(BitStream stream)
         {
-            var marker = (AMF3Markers) stream.ReadByte();
+            var marker = (AMF3Marker) stream.ReadByte();
 
             switch (marker)
             {
-                case AMF3Markers.Undefined:
-                case AMF3Markers.Null:
+                case AMF3Marker.Undefined:
+                case AMF3Marker.Null:
                     return null;
 
-                case AMF3Markers.False:
+                case AMF3Marker.False:
                     return false;
 
-                case AMF3Markers.True:
+                case AMF3Marker.True:
                     return true;
 
-                case AMF3Markers.Integer:
+                case AMF3Marker.Integer:
                     return (int) _readU29(stream);
 
-                case AMF3Markers.Double:
+                case AMF3Marker.Double:
                     return stream.ReadDouble();
 
-                case AMF3Markers.String:
+                case AMF3Marker.String:
                     return _readString(stream);
 
-                case AMF3Markers.Array:
+                case AMF3Marker.Array:
                     return _readDictionary(stream);
 
                 default:

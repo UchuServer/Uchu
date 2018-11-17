@@ -139,22 +139,22 @@ namespace Uchu.Core
                         SecondEmoteReward = reader.GetInt32(19),
                         ThirdEmoteReward = reader.GetInt32(20),
                         FourthEmoteReward = reader.GetInt32(21),
-                        MaximumImaginationReward = reader.GetInt32(22),
-                        MaximumHealthReward = reader.GetInt32(23),
-                        MaximumInventoryReward = reader.GetInt32(24),
-                        MaximumModelsReward = reader.GetInt32(25),
-                        MaximumWidgetsReward = reader.GetInt32(26),
-                        MaximumWalletReward = reader.GetInt64(27),
+                        MaximumImaginationReward = reader.IsDBNull(22) ? -1 : reader.GetInt32(22),
+                        MaximumHealthReward = reader.IsDBNull(23) ? -1 : reader.GetInt32(23),
+                        MaximumInventoryReward = reader.IsDBNull(24) ? -1 : reader.GetInt32(24),
+                        MaximumModelsReward = reader.IsDBNull(25) ? -1 : reader.GetInt32(25),
+                        MaximumWidgetsReward = reader.IsDBNull(26) ? -1 : reader.GetInt32(26),
+                        MaximumWalletReward = reader.IsDBNull(27) ? -1 : reader.GetInt64(27),
                         IsRepeatable = reader.GetBoolean(28),
-                        RepeatableCurrencyReward = reader.GetInt64(29),
-                        FirstRepeatableItemReward = reader.GetInt32(30),
-                        FirstRepeatableItemRewardCount = reader.GetInt32(31),
-                        SecondRepeatableItemReward = reader.GetInt32(32),
-                        SecondRepeatableItemRewardCount = reader.GetInt32(33),
-                        ThirdRepeatableItemReward = reader.GetInt32(34),
-                        ThirdRepeatableItemRewardCount = reader.GetInt32(35),
-                        FourthRepeatableItemReward = reader.GetInt32(36),
-                        FourthRepeatableItemRewardCount = reader.GetInt32(37),
+                        RepeatableCurrencyReward = reader.IsDBNull(29) ? -1 : reader.GetInt64(29),
+                        FirstRepeatableItemReward = reader.IsDBNull(30) ? -1 : reader.GetInt32(30),
+                        FirstRepeatableItemRewardCount = reader.IsDBNull(32) ? -1 : reader.GetInt32(31),
+                        SecondRepeatableItemReward = reader.IsDBNull(32) ? -1 : reader.GetInt32(32),
+                        SecondRepeatableItemRewardCount = reader.IsDBNull(33) ? -1 : reader.GetInt32(33),
+                        ThirdRepeatableItemReward = reader.IsDBNull(34) ? -1 : reader.GetInt32(34),
+                        ThirdRepeatableItemRewardCount = reader.IsDBNull(35) ? -1 : reader.GetInt32(35),
+                        FourthRepeatableItemReward = reader.IsDBNull(36) ? -1 : reader.GetInt32(36),
+                        FourthRepeatableItemRewardCount = reader.IsDBNull(37) ? -1 : reader.GetInt32(37),
                         TimeLimit = reader.IsDBNull(38) ? -1 : reader.GetInt32(38),
                         IsMission = reader.GetBoolean(39),
                         MissionIconId = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
@@ -169,7 +169,7 @@ namespace Uchu.Core
                         PrerequiredUserInterfaceId = reader.IsDBNull(47) ? -1 : reader.GetInt32(47),
                         GateVersion = reader.IsDBNull(48) ? "" : reader.GetString(48),
                         HUDStates = reader.IsDBNull(49) ? "" : reader.GetString(49),
-                        LocStatus = reader.GetInt32(50),
+                        LocStatus = reader.IsDBNull(50) ? -1 : reader.GetInt32(50),
                         BankInventoryReward = reader.IsDBNull(51) ? -1 : reader.GetInt32(51)
                     };
                 }
@@ -196,6 +196,57 @@ namespace Uchu.Core
                         if (!reader.IsDBNull(4))
                             targets.AddRange(reader.GetString(4).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
                                 .Select(c => int.Parse(c.Trim())));
+
+                        list.Add(new MissionTasksRow
+                        {
+                            MissionId = reader.GetInt32(0),
+                            LocStatus = reader.GetInt32(1),
+                            TaskType = reader.GetInt32(2),
+                            TargetLOTs = targets.ToArray(),
+                            TargetValue = reader.GetInt32(5),
+                            TaskParameter = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                            LargeTaskIcon = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                            IconId = reader.GetInt32(8),
+                            UId = reader.GetInt32(9),
+                            LargeTaskIconId = reader.GetInt32(10),
+                            Localize = reader.GetBoolean(11),
+                            GateVersion = reader.IsDBNull(12) ? "" : reader.GetString(12)
+                        });
+                    }
+                }
+            }
+
+            return list;
+        }
+
+        public async Task<List<MissionTasksRow>> GetMissionTasksWithTargetAsync(int lot)
+        {
+            var list = new List<MissionTasksRow>();
+
+            using (var cmd = new SQLiteCommand("SELECT * FROM MissionTasks WHERE targetGroup LIKE ? OR target = ?",
+                Connection))
+            {
+                cmd.Parameters.AddRange(new[]
+                {
+                    new SQLiteParameter {Value = $"%{lot}%"},
+                    new SQLiteParameter {Value = lot}
+                });
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var targets = new List<int>();
+
+                        if (!reader.IsDBNull(3))
+                            targets.Add(reader.GetInt32(3));
+
+                        if (!reader.IsDBNull(4))
+                            targets.AddRange(reader.GetString(4).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
+                                .Select(c => int.Parse(c.Trim())));
+
+                        if (!targets.Contains(lot))
+                            continue;
 
                         list.Add(new MissionTasksRow
                         {
@@ -420,11 +471,11 @@ namespace Uchu.Core
             return list.ToArray();
         }
 
-        public async Task<ItemComponentRow> GetItemComponent(int lot)
+        public async Task<ItemComponentRow> GetItemComponentAsync(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM ItemComponent WHERE id = ?", Connection))
             {
-                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
 
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
@@ -435,10 +486,10 @@ namespace Uchu.Core
                     {
                         ItemId = reader.GetInt32(0),
                         EquipLocation = reader.IsDBNull(1) ? "" : reader.GetString(1),
-                        BaseValue = reader.GetInt32(2),
+                        BaseValue = reader.IsDBNull(2) ? -1 : reader.GetInt32(2),
                         IsKitPiece = reader.GetBoolean(3),
-                        Rarity = reader.GetInt32(4),
-                        ItemType = reader.GetInt32(5),
+                        Rarity = reader.IsDBNull(4) ? -1 : reader.GetInt32(4),
+                        ItemType = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                         ItemInfo = reader.IsDBNull(6) ? -1 : reader.GetInt64(6),
                         IsInLootTable = reader.GetBoolean(7),
                         IsInVendor = reader.GetBoolean(8),
@@ -449,7 +500,7 @@ namespace Uchu.Core
                         RequiredSpecialtyId = reader.IsDBNull(13) ? -1 : reader.GetInt32(13),
                         RequiredSpecialtyRank = reader.IsDBNull(14) ? -1 : reader.GetInt32(14),
                         RequiredAchievementId = reader.IsDBNull(15) ? -1 : reader.GetInt32(15),
-                        StackSize = reader.GetInt32(16),
+                        StackSize = reader.IsDBNull(16) ? -1 : reader.GetInt32(16),
                         Color = reader.IsDBNull(17) ? -1 : reader.GetInt32(17),
                         Decal = reader.IsDBNull(18) ? -1 : reader.GetInt32(18),
                         OffsetGroupId = reader.IsDBNull(19) ? -1 : reader.GetInt32(19),
@@ -483,50 +534,34 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<bool> IsItemAsync(int lot)
+        public async Task<RocketLaunchpadControlComponentRow> GetLaunchpadComponent(int id)
         {
-            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM ItemComponent WHERE id = ?)", Connection))
+            using (var cmd =
+                new SQLiteCommand("SELECT * FROM RocketLaunchpadControlComponent WHERE id = ?", Connection))
             {
-                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
 
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     if (!await reader.ReadAsync())
-                        return false;
+                        return null;
 
-                    return reader.GetBoolean(0);
-                }
-            }
-        }
-
-        public async Task<bool> IsModelAsync(int lot)
-        {
-            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM Objects WHERE id = ?)", Connection))
-            {
-                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
-
-                using (var reader = await cmd.ExecuteReaderAsync())
-                {
-                    if (!await reader.ReadAsync())
-                        return false;
-
-                    return reader.GetBoolean(0);
-                }
-            }
-        }
-
-        public async Task<bool> IsBrickAsync(int lot)
-        {
-            using (var cmd = new SQLiteCommand("SELECT EXISTS(SELECT * FROM BrickIDTable WHERE NDObjectID = ?)", Connection))
-            {
-                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
-
-                using (var reader = await cmd.ExecuteReaderAsync())
-                {
-                    if (!await reader.ReadAsync())
-                        return false;
-
-                    return reader.GetBoolean(0);
+                    return new RocketLaunchpadControlComponentRow
+                    {
+                        LaunchpadId = reader.GetInt32(0),
+                        TargetZone = reader.GetInt32(1),
+                        DefaultZoneId = reader.GetInt32(2),
+                        TargetScene = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                        GmLevel = reader.GetInt32(4),
+                        PlayerAnimation = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                        RocketAnimation = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                        LaunchMusic = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                        UseLaunchPrecondition = reader.GetBoolean(8),
+                        UseLandingPrecondition = reader.GetBoolean(9),
+                        LaunchPrecondition = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                        LandingPrecondition = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                        LandingSpawnpointName = reader.IsDBNull(12) ? "" : reader.GetString(12)
+                    };
                 }
             }
         }

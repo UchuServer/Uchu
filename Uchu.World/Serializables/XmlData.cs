@@ -28,6 +28,10 @@ namespace Uchu.World
 
         [XmlElement("mis")]
         public MissionsNode Missions { get; set; }
+
+        [XmlArray("flag")]
+        [XmlArrayItem("f")]
+        public FlagNode[] Flags { get; set; }
     }
 
     [XmlType("dest")]
@@ -196,19 +200,24 @@ namespace Uchu.World
 
     public class MissionsNode
     {
-        [XmlArray("cur")]
-        [XmlArrayItem("m")]
-        public MissionNode[] CurrentMissions { get; set; }
-
         [XmlArray("done")]
         [XmlArrayItem("m")]
         public CompletedMissionNode[] CompletedMissions { get; set; }
+
+        [XmlArray("cur")]
+        [XmlArrayItem("m")]
+        public MissionNode[] CurrentMissions { get; set; }
     }
 
     public class MissionNode
     {
         [XmlAttribute("id")]
         public long MissionId { get; set; }
+
+        [XmlAttribute("o")]
+        public int Unknown { get; set; }
+
+        public bool ShouldSerializeUnknown() => Unknown > 0;
 
         [XmlElement("sv")]
         public MissionProgressNode[] Progress { get; set; }
@@ -218,6 +227,8 @@ namespace Uchu.World
     {
         [XmlAttribute("v")]
         public int Value { get; set; }
+
+        public bool ShouldSerializeValue() => Value > 0;
     }
 
     public class CompletedMissionNode
@@ -230,5 +241,14 @@ namespace Uchu.World
 
         [XmlAttribute("id")]
         public long MissionId { get; set; }
+    }
+
+    public class FlagNode
+    {
+        [XmlAttribute("id")]
+        public int FlagId { get; set; }
+
+        [XmlAttribute("v")]
+        public int Flag { get; set; }
     }
 }

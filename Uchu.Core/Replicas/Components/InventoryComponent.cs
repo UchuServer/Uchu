@@ -1,4 +1,5 @@
 using RakDotNet;
+using Uchu.Core.Collections;
 
 namespace Uchu.Core
 {
@@ -36,7 +37,12 @@ namespace Uchu.Core
                 stream.WriteBit(false);
                 // stream.WriteUInt(4);
 
-                stream.WriteBit(false);
+                var hasExtra = !string.IsNullOrEmpty(item.ExtraInfo);
+
+                stream.WriteBit(hasExtra);
+
+                if (hasExtra)
+                    stream.WriteLDFCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ","));
 
                 stream.WriteBit(true);
             }

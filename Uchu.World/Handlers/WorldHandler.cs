@@ -29,24 +29,34 @@ namespace Uchu.World
         public async Task SessionInfo(SessionInfoPacket packet, IPEndPoint endpoint)
         {
             var session = Server.SessionCache.GetSession(endpoint);
-            var character = await Database.GetCharacterAsync(session.CharacterId);
-            var zoneId = (ushort) character.LastZone;
 
-            if (zoneId == 0)
-                zoneId = 1000;
-
-            Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
-
-            var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
-
-            Server.Send(new WorldInfoPacket
+            using (var ctx = new UchuContext())
             {
-                ZoneId = (ZoneId) zoneId,
-                Instance = 0,
-                Clone = 0,
-                Checksum = Utils.GetChecksum((ZoneId) zoneId),
-                Position = zone.SpawnPosition
-            }, endpoint);
+                var character = await ctx.Characters.FindAsync(session.CharacterId);
+
+                var zoneId = (ushort) character.LastZone;
+
+                if (zoneId == 0)
+                {
+                    zoneId = 1000;
+                    character.LastZone = 1000;
+
+                    await ctx.SaveChangesAsync();
+                }
+
+                Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
+
+                var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
+
+                Server.Send(new WorldInfoPacket
+                {
+                    ZoneId = (ZoneId) zoneId,
+                    Instance = 0,
+                    Clone = 0,
+                    Checksum = Utils.GetChecksum((ZoneId) zoneId),
+                    Position = zone.SpawnPosition
+                }, endpoint);
+            }
         }
 
         [PacketHandler(RunTask = true)]
@@ -117,7 +127,8 @@ namespace Uchu.World
                         missions.Add(new MissionNode
                         {
                             MissionId = mission.MissionId,
-                            Progress = mission.Tasks.Select(t => new MissionProgressNode {Value = t.Values.Count}).ToArray()
+                            Progress = mission.Tasks.OrderBy(t => t.TaskId)
+                                .Select(t => new MissionProgressNode {Value = t.Values.Count}).ToArray()
                         });
                     }
                 }
@@ -164,7 +175,11 @@ namespace Uchu.World
                                     LOT = i.LOT,
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
-                                    Bound = i.IsBound ? 1 : 0
+                                    Bound = i.IsBound ? 1 : 0,
+                                    ExtraInfo = i.ExtraInfo != null ? new ExtraInfoNode
+                                    {
+                                        ModuleAssemblyInfo = "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"].ToString()
+                                    } : null
                                 }).ToArray()
                             },
                             new ItemContainerNode
@@ -221,50 +236,15 @@ namespace Uchu.World
                     }
                 };
 
-                var replica = new ReplicaPacket
-                {
-                    ObjectId = character.CharacterId,
-                    LOT = 1,
-                    Name = character.Name,
-                    Created = 0,
-                    Components = new IReplicaComponent[]
-                    {
-                        new ControllablePhysicsComponent
-                        {
-                            HasPosition = true,
-                            Position = zone.SpawnPosition,
-                            Rotation = zone.SpawnRotation
-                        },
-                        new DestructibleComponent(),
-                        new StatsComponent
-                        {
-                            HasStats = true,
-                            CurrentArmor = (uint) character.CurrentArmor,
-                            MaxArmor = (uint) character.MaximumArmor,
-                            CurrentHealth = (uint) character.CurrentHealth,
-                            MaxHealth = (uint) character.MaximumHealth,
-                            CurrentImagination = (uint) character.CurrentImagination,
-                            MaxImagination = (uint) character.CurrentImagination
-                        },
-                        new CharacterComponent
-                        {
-                            Level = (uint) character.Level,
-                            Character = character
-                        },
-                        new InventoryComponent(),
-                        new ScriptComponent(),
-                        new SkillComponent(),
-                        new RenderComponent(),
-                        new Component107()
-                    }
-                };
-
                 using (var ms = new MemoryStream())
                 using (var writer = new StreamWriter(ms, Encoding.UTF8))
                 {
                     Serializer.Serialize(writer, xmlData);
 
                     var bytes = ms.ToArray();
+                    var xml = new byte[bytes.Length - 3];
+
+                    Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
 
                     var ldf = new LegoDataDictionary
                     {
@@ -272,25 +252,32 @@ namespace Uchu.World
                         ["objid", 9] = character.CharacterId,
                         ["name"] = character.Name,
                         ["template"] = 1,
-                        ["xmlData"] = bytes
+                        ["xmlData"] = xml
                     };
 
-                    var temp = new BitStream();
+                    foreach (var b in xml)
+                    {
+                        Console.Write((char) b);
+                    }
+
+                    Console.WriteLine();
+
+                    /*var temp = new BitStream();
 
                     temp.WriteSerializable(ldf);
 
                     var length = temp.BaseBuffer.Length;
 
-                    var compressed = await Zlib.CompressBytesAsync(temp.BaseBuffer, CompressionLevel.Fastest);
+                    var compressed = await Zlib.CompressBytesAsync(temp.BaseBuffer);*/
 
                     Server.Send(new DetailedUserInfoPacket
                     {
-                        UncompressedSize = (uint) length,
-                        Data = compressed
+                        /*UncompressedSize = (uint) length,
+                        Data = compressed*/
+                        LDF = ldf
                     }, endpoint);
 
-                    world.ReplicaManager.AddConnection(endpoint);
-                    world.SpawnObject(replica);
+                    world.SpawnPlayer(character, endpoint);
 
                     Server.Send(new DoneLoadingObjectsMessage {ObjectId = character.CharacterId}, endpoint);
                     Server.Send(new PlayerReadyMessage {ObjectId = character.CharacterId}, endpoint);
