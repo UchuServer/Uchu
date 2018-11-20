@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Timers;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
@@ -14,10 +15,12 @@ namespace Uchu.World
     public class GameMessageHandler : HandlerGroupBase
     {
         private Dictionary<uint, int> _behaviors;
+        private Dictionary<long, Timer> _rebuilds;
 
         public GameMessageHandler()
         {
             _behaviors = new Dictionary<uint, int>();
+            _rebuilds = new Dictionary<long, Timer>();
         }
 
         [PacketHandler]
@@ -38,6 +41,80 @@ namespace Uchu.World
 
                 if (components.Any(c => c.ComponentType == 67))
                     await player.LaunchRocket(msg.TargetObjectId);
+            }
+
+            var rep = world.GetObject(msg.TargetObjectId);
+
+            if (rep != null)
+            {
+                if (rep.Components.Any(c => c is RebuildComponent))
+                {
+                    var comp = (RebuildComponent) rep.Components.First(c => c is RebuildComponent);
+
+                    if (comp.State == RebuildState.Open)
+                    {
+                        Server.Send(new RebuildNotifyStateMessage
+                        {
+                            ObjectId = msg.TargetObjectId,
+                            PreviousState = RebuildState.Open,
+                            NewState = RebuildState.Building,
+                            PlayerObjectId = session.CharacterId
+                        }, endpoint);
+
+                        Server.Send(new EnableRebuildMessage
+                        {
+                            ObjectId = msg.TargetObjectId,
+                            Enable = true,
+                            PlayerObjectId = session.CharacterId
+                        }, endpoint);
+
+                        comp.State = RebuildState.Building;
+                        comp.Enabled = true;
+                        comp.Players = new[] {(ulong) session.CharacterId};
+
+                        world.UpdateObject(rep);
+
+                        var completeTime = (float) rep.Settings["compTime"];
+
+                        var timer = new Timer
+                        {
+                            AutoReset = false,
+                            Interval = completeTime * 1000
+                        };
+
+                        timer.Elapsed += async (sender, args) =>
+                        {
+                            _rebuilds.Remove(session.CharacterId);
+
+                            Server.Send(new RebuildNotifyStateMessage
+                            {
+                                ObjectId = msg.TargetObjectId,
+                                PreviousState = RebuildState.Building,
+                                NewState = RebuildState.Completed,
+                                PlayerObjectId = session.CharacterId
+                            }, endpoint);
+
+                            Server.Send(new EnableRebuildMessage
+                            {
+                                ObjectId = msg.TargetObjectId,
+                                IsSuccess = true,
+                                PlayerObjectId = session.CharacterId
+                            }, endpoint);
+
+                            comp.State = RebuildState.Completed;
+                            comp.Success = true;
+                            comp.Players = new[] {(ulong) session.CharacterId};
+
+                            world.UpdateObject(rep);
+
+                            await player.UpdateTaskAsync(rep.LOT, MissionTaskType.QuickBuild);
+                        };
+
+                        _rebuilds[session.CharacterId] = timer;
+
+                        timer.Start();
+                    }
+                }
             }
 
             await player.UpdateObjectTaskAsync(MissionTaskType.Interact, msg.TargetObjectId);
@@ -64,6 +141,47 @@ namespace Uchu.World
             else
             {
                 await player.OfferMissionAsync(msg.TargetObjectId);
+            }
+        }
+
+        [PacketHandler]
+        public void RebuildCancel(RebuildCancelMessage msg, IPEndPoint endpoint)
+        {
+            if (_rebuilds.ContainsKey(msg.PlayerObjectId))
+            {
+                var timer = _rebuilds[msg.PlayerObjectId];
+
+                timer.Stop();
+                timer.Dispose();
+
+                var session = Server.SessionCache.GetSession(endpoint);
+                var world = Server.Worlds[(ZoneId) session.ZoneId];
+                var obj = world.GetObject(msg.ObjectId);
+
+                var comp = (RebuildComponent) obj.Components.First(c => c is RebuildComponent);
+
+                Server.Send(new RebuildNotifyStateMessage
+                {
+                    ObjectId = msg.ObjectId,
+                    PreviousState = comp.State,
+                    NewState = RebuildState.Incomplete,
+                    PlayerObjectId = session.CharacterId
+                }, endpoint);
+
+                Server.Send(new EnableRebuildMessage
+                {
+                    ObjectId = msg.ObjectId,
+                    IsFail = true,
+                    FailReason = RebuildFailReason.Canceled,
+                    PlayerObjectId = session.CharacterId
+                }, endpoint);
+
+                comp.State = RebuildState.Incomplete;
+                comp.Enabled = false;
+                comp.Success = false;
+                comp.Players = new ulong[0];
+
+                world.UpdateObject(obj);
             }
         }
 
@@ -99,8 +217,9 @@ namespace Uchu.World
                         {
                             var values = new List<float>();
 
-                            values.AddRange(t.TargetLOTs.Where(lot => character.Items.Exists(i => i.LOT == lot))
-                                .Select(lot => (float) lot));
+                            values.AddRange(t.Targets
+                                .Where(lot => lot is int && character.Items.Exists(i => i.LOT == (int) lot))
+                                .Select(lot => (float) (int) lot));
 
                             return new MissionTask
                             {
@@ -144,97 +263,7 @@ namespace Uchu.World
                     return;
                 }
 
-                Server.Send(new NotifyMissionMessage
-                {
-                    ObjectId = session.CharacterId,
-                    MissionId = msg.MissionId,
-                    MissionState = MissionState.Unavailable,
-                    SendingRewards = true
-                }, endpoint);
-
-                charMission.State = (int) MissionState.Completed;
-                charMission.CompletionCount++;
-                charMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
-
-                character.Currency += mission.CurrencyReward;
-                character.UniverseScore += mission.LegoScoreReward;
-                character.MaximumHealth += mission.MaximumHealthReward;
-                character.MaximumImagination += mission.MaximumImaginationReward;
-
-                if (mission.CurrencyReward > 0)
-                {
-                    Server.Send(new SetCurrencyMessage
-                    {
-                        ObjectId = session.CharacterId,
-                        Currency = character.Currency,
-                        Position = Vector3.Zero // TODO: find out what to set this to
-                    }, endpoint);
-                }
-
-                if (mission.LegoScoreReward > 0)
-                {
-                    Server.Send(new ModifyLegoScoreMessage
-                    {
-                        ObjectId = session.CharacterId,
-                        SourceType = 2,
-                        Score = character.UniverseScore
-                    }, endpoint);
-                }
-
-                if (mission.MaximumImaginationReward > 0)
-                {
-                    var dict = new Dictionary<string, object>
-                    {
-                        ["amount"] = character.MaximumImagination.ToString(),
-                        ["type"] = "imagination"
-                    };
-
-                    Server.Send(new UIMessageToClientMessage
-                    {
-                        ObjectId = session.CharacterId,
-                        Arguments = new AMF3<object>(dict),
-                        MessageName = "MaxPlayerBarUpdate"
-                    }, endpoint);
-                }
-
-                if (mission.MaximumHealthReward > 0)
-                {
-                    var dict = new Dictionary<string, object>
-                    {
-                        ["amount"] = character.MaximumHealth.ToString(),
-                        ["type"] = "health"
-                    };
-
-                    Server.Send(new UIMessageToClientMessage
-                    {
-                        ObjectId = session.CharacterId,
-                        Arguments = new AMF3<object>(dict),
-                        MessageName = "MaxPlayerBarUpdate"
-                    }, endpoint);
-                }
-
-                if (mission.FirstItemReward != -1)
-                    await player.AddItemAsync(mission.FirstItemReward, mission.FirstItemRewardCount);
-
-                if (mission.SecondItemReward != -1)
-                    await player.AddItemAsync(mission.SecondItemReward, mission.SecondItemRewardCount);
-
-                if (mission.ThirdItemReward != -1)
-                    await player.AddItemAsync(mission.ThirdItemReward, mission.ThirdItemRewardCount);
-
-                if (mission.FourthItemReward != -1)
-                    await player.AddItemAsync(mission.FourthItemReward, mission.FourthItemRewardCount);
-
-                Server.Send(new NotifyMissionMessage
-                {
-                    ObjectId = session.CharacterId,
-                    MissionId = msg.MissionId,
-                    MissionState = MissionState.Completed,
-                    SendingRewards = false
-                }, endpoint);
-
-                await ctx.SaveChangesAsync();
-
+                await player.CompleteMissionAsync(mission);
                 await player.OfferMissionAsync(msg.ReceiverObjectId);
             }
         }
@@ -415,7 +444,13 @@ namespace Uchu.World
             var world = Server.Worlds[(ZoneId) session.ZoneId];
             var player = world.GetPlayer(session.CharacterId);
 
-            await player.UpdateTaskAsync(msg.FlagId);
+            await player.UpdateTaskAsync(msg.FlagId, MissionTaskType.Flag);
+
+            Server.Send(new NotifyClientFlagChangeMessage
+            {
+                Flag = msg.Flag,
+                FlagId = msg.FlagId
+            }, endpoint);
         }
 
         [PacketHandler]
@@ -432,10 +467,15 @@ namespace Uchu.World
         [PacketHandler]
         public async Task StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
         {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
             var stream = new BitStream(msg.Data);
             var behavior = await Server.CDClient.GetSkillBehaviorAsync((int) msg.SkillId);
 
             await HandleBehaviorAsync(stream, behavior.BehaviorId, endpoint);
+            await player.UpdateTaskAsync((int) msg.SkillId, MissionTaskType.UseSkill);
         }
 
         [PacketHandler]
@@ -571,7 +611,9 @@ namespace Uchu.World
 
                     if (isHit)
                     {
-                        if (await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "check env") != null)
+                        var param = await Server.CDClient.GetBehaviorParameterAsync(behaviorId, "check_env");
+
+                        if (param.Value > 0)
                             stream.ReadBit();
 
                         var targetCount = stream.ReadUInt();
@@ -584,7 +626,10 @@ namespace Uchu.World
 
                             Console.WriteLine($"Hit {targets[i]}");
                             await DropLootAsync(targets[i], endpoint);
+                        }
 
+                        for (var i = 0; i < targetCount; i++)
+                        {
                             await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
                         }
                     }
@@ -666,7 +711,10 @@ namespace Uchu.World
 
                         Console.WriteLine($"Hit {targets[i]}");
                         await DropLootAsync(targets[i], endpoint);
+                    }
 
+                    for (var i = 0; i < targetCount; i++)
+                    {
                         await HandleBehaviorAsync(stream, (int) action.Value, endpoint);
                     }
 

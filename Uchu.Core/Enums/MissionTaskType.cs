@@ -8,7 +8,7 @@ namespace Uchu.Core
         Collect,
         GoToNPC,
         UseEmote,
-        UseConsumable,
+        UseConsumable = 9,
         UseSkill,
         ObtainItem,
         Discover,
@@ -16,9 +16,9 @@ namespace Uchu.Core
         MinigameAchievement,
         Interact,
         MissionComplete,
-        TamePet,
+        TamePet = 22,
         Racing,
         Flag,
-        NexusTowerBrickDonation
+        NexusTowerBrickDonation = 32
     }
 }

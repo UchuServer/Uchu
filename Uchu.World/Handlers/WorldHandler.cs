@@ -232,7 +232,7 @@ namespace Uchu.World
                         MaximumHealth = character.MaximumHealth,
                         CurrentHealth = character.CurrentHealth,
                         MaximumImagination = character.MaximumImagination,
-                        CurrentImagination = character.MaximumImagination
+                        CurrentImagination = character.CurrentImagination
                     }
                 };
 
@@ -255,29 +255,24 @@ namespace Uchu.World
                         ["xmlData"] = xml
                     };
 
-                    foreach (var b in xml)
+                    /*foreach (var b in xml)
                     {
                         Console.Write((char) b);
                     }
 
-                    Console.WriteLine();
+                    Console.WriteLine();*/
 
-                    /*var temp = new BitStream();
-
-                    temp.WriteSerializable(ldf);
-
-                    var length = temp.BaseBuffer.Length;
-
-                    var compressed = await Zlib.CompressBytesAsync(temp.BaseBuffer);*/
-
-                    Server.Send(new DetailedUserInfoPacket
-                    {
-                        /*UncompressedSize = (uint) length,
-                        Data = compressed*/
-                        LDF = ldf
-                    }, endpoint);
+                    Server.Send(new DetailedUserInfoPacket {LDF = ldf}, endpoint);
 
                     world.SpawnPlayer(character, endpoint);
+
+                    if (character.LandingByRocket)
+                    {
+                        character.LandingByRocket = false;
+                        character.Rocket = null;
+
+                        await ctx.SaveChangesAsync();
+                    }
 
                     Server.Send(new DoneLoadingObjectsMessage {ObjectId = character.CharacterId}, endpoint);
                     Server.Send(new PlayerReadyMessage {ObjectId = character.CharacterId}, endpoint);

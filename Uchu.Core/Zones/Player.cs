@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core.Collections;
@@ -145,7 +147,7 @@ namespace Uchu.Core
                 };
 
                 if (extraInfo != null)
-                    item.ExtraInfo = extraInfo.ToString(";");
+                    item.ExtraInfo = extraInfo.ToString();
 
                 character.Items.Add(item);
 
@@ -162,11 +164,11 @@ namespace Uchu.Core
                     ExtraInfo = extraInfo
                 }, _endpoint);
 
-                await UpdateTaskAsync(lot);
+                await UpdateTaskAsync(lot, MissionTaskType.ObtainItem);
             }
         }
 
-        public async Task UpdateTaskAsync(int id)
+        public async Task UpdateTaskAsync(int id, MissionTaskType type = MissionTaskType.None)
         {
             using (var ctx = new UchuContext())
             {
@@ -182,7 +184,7 @@ namespace Uchu.Core
                     var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     var task = tasks.Find(
-                        t => t.TargetLOTs.Contains(id) && mission.Tasks.Exists(a => a.TaskId == t.UId));
+                        t => t.Targets.Contains(id) && mission.Tasks.Exists(a => a.TaskId == t.UId));
 
                     if (task == null)
                         continue;
@@ -201,6 +203,79 @@ namespace Uchu.Core
                     }, _endpoint);
 
                     await ctx.SaveChangesAsync();
+                }
+
+                var otherTasks = await _server.CDClient.GetMissionTasksWithTargetAsync(id);
+
+                foreach (var task in otherTasks)
+                {
+                    var mission = await _server.CDClient.GetMissionAsync(task.MissionId);
+
+                    if (mission.OffererObjectId != -1 || mission.TargetObjectId != -1 || mission.IsMission ||
+                        task.TaskType != (int) type)
+                        continue;
+
+                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+
+                    if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
+                    {
+                        var canOffer = true;
+
+                        foreach (var mId in mission.PrerequiredMissions)
+                        {
+                            if (!character.Missions.Exists(m => m.MissionId == mId))
+                            {
+                                canOffer = false;
+                                break;
+                            }
+
+                            var chrMission = character.Missions.Find(m => m.MissionId == mId);
+
+                            if (!await AllTasksCompletedAsync(chrMission))
+                            {
+                                canOffer = false;
+                                break;
+                            }
+                        }
+
+                        if (!canOffer)
+                            continue;
+
+                        character.Missions.Add(new Mission
+                        {
+                            MissionId = mission.MissionId,
+                            State = (int) MissionState.Active,
+                            Tasks = tasks.Select(t => new MissionTask
+                            {
+                                TaskId = t.UId,
+                                Values = new List<float>()
+                            }).ToList()
+                        });
+                    }
+
+                    var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
+
+                    if (charMission.State != (int) MissionState.Active ||
+                        charMission.State != (int) MissionState.CompletedActive)
+                        continue;
+
+                    var charTask = charMission.Tasks.Find(t => t.TaskId == task.UId);
+
+                    if (!charTask.Values.Contains(id))
+                        charTask.Values.Add(id);
+
+                    await ctx.SaveChangesAsync();
+
+                    _server.Send(new NotifyMissionTaskMessage
+                    {
+                        ObjectId = CharacterId,
+                        MissionId = mission.MissionId,
+                        TaskIndex = tasks.IndexOf(task),
+                        Updates = new[] {(float) charTask.Values.Count}
+                    }, _endpoint);
+
+                    if (await AllTasksCompletedAsync(charMission))
+                        await CompleteMissionAsync(mission);
                 }
             }
         }
@@ -226,7 +301,7 @@ namespace Uchu.Core
                     var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     var task = tasks.Find(t =>
-                        t.TargetLOTs.Contains(obj.LOT) && mission.Tasks.Exists(a => a.TaskId == t.UId));
+                        t.Targets.Contains(obj.LOT) && mission.Tasks.Exists(a => a.TaskId == t.UId));
 
                     if (task == null)
                         continue;
@@ -267,6 +342,202 @@ namespace Uchu.Core
                             break;
                     }
                 }
+
+                var otherTasks = await _server.CDClient.GetMissionTasksWithTargetAsync(obj.LOT);
+
+                foreach (var task in otherTasks)
+                {
+                    var mission = await _server.CDClient.GetMissionAsync(task.MissionId);
+
+                    if (mission.OffererObjectId != -1 || mission.TargetObjectId != -1 || mission.IsMission ||
+                        task.TaskType != (int) type)
+                        continue;
+
+                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+
+                    if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
+                    {
+                        var canOffer = true;
+
+                        foreach (var id in mission.PrerequiredMissions)
+                        {
+                            if (!character.Missions.Exists(m => m.MissionId == id))
+                            {
+                                canOffer = false;
+                                break;
+                            }
+
+                            var chrMission = character.Missions.Find(m => m.MissionId == id);
+
+                            if (!await AllTasksCompletedAsync(chrMission))
+                            {
+                                canOffer = false;
+                                break;
+                            }
+                        }
+
+                        if (!canOffer)
+                            continue;
+
+                        character.Missions.Add(new Mission
+                        {
+                            MissionId = mission.MissionId,
+                            State = (int) MissionState.Active,
+                            Tasks = tasks.Select(t => new MissionTask
+                            {
+                                TaskId = t.UId,
+                                Values = new List<float>()
+                            }).ToList()
+                        });
+                    }
+
+                    var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
+
+                    if (charMission.State != (int) MissionState.Active ||
+                        charMission.State != (int) MissionState.CompletedActive)
+                        continue;
+
+                    var charTask = charMission.Tasks.Find(t => t.TaskId == task.UId);
+
+                    if (!charTask.Values.Contains(obj.LOT))
+                        charTask.Values.Add(obj.LOT);
+
+                    await ctx.SaveChangesAsync();
+
+                    _server.Send(new NotifyMissionTaskMessage
+                    {
+                        ObjectId = CharacterId,
+                        MissionId = mission.MissionId,
+                        TaskIndex = tasks.IndexOf(task),
+                        Updates = new[] {(float) charTask.Values.Count}
+                    }, _endpoint);
+
+                    if (await AllTasksCompletedAsync(charMission))
+                        await CompleteMissionAsync(mission);
+                }
+            }
+        }
+
+        public async Task CompleteMissionAsync(MissionsRow mission)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.Include(c => c.Items).Include(c => c.Missions)
+                    .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == CharacterId);
+
+                if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
+                {
+                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+
+                    character.Missions.Add(new Mission
+                    {
+                        MissionId = mission.MissionId,
+                        State = (int) MissionState.Active,
+                        Tasks = tasks.Select(t => new MissionTask
+                        {
+                            TaskId = t.UId,
+                            Values = t.Targets.Where(tgt => tgt is int).Select(tgt => (float) (int) tgt).ToList()
+                        }).ToList()
+                    });
+                }
+
+                var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
+
+                _server.Send(new NotifyMissionMessage
+                {
+                    ObjectId = CharacterId,
+                    MissionId = mission.MissionId,
+                    MissionState = MissionState.Unavailable,
+                    SendingRewards = true
+                }, _endpoint);
+
+                charMission.State = (int) MissionState.Completed;
+                charMission.CompletionCount++;
+                charMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                if (character.MaximumImagination == 0 && mission.MaximumImaginationReward > 0)
+                    await CompleteMissionAsync(await _server.CDClient.GetMissionAsync(664));
+
+                character.Currency += mission.CurrencyReward;
+                character.UniverseScore += mission.LegoScoreReward;
+                character.MaximumHealth += mission.MaximumHealthReward;
+                character.MaximumImagination += mission.MaximumImaginationReward;
+
+                if (mission.CurrencyReward > 0)
+                {
+                    _server.Send(new SetCurrencyMessage
+                    {
+                        ObjectId = CharacterId,
+                        Currency = character.Currency,
+                        Position = Vector3.Zero // TODO: find out what to set this to
+                    }, _endpoint);
+                }
+
+                if (mission.LegoScoreReward > 0)
+                {
+                    _server.Send(new ModifyLegoScoreMessage
+                    {
+                        ObjectId = CharacterId,
+                        SourceType = 2,
+                        Score = mission.LegoScoreReward
+                    }, _endpoint);
+                }
+
+                if (mission.MaximumImaginationReward > 0)
+                {
+                    var dict = new Dictionary<string, object>
+                    {
+                        ["amount"] = character.MaximumImagination.ToString(),
+                        ["type"] = "imagination"
+                    };
+
+                    _server.Send(new UIMessageToClientMessage
+                    {
+                        ObjectId = CharacterId,
+                        Arguments = new AMF3<object>(dict),
+                        MessageName = "MaxPlayerBarUpdate"
+                    }, _endpoint);
+                }
+
+                if (mission.MaximumHealthReward > 0)
+                {
+                    var dict = new Dictionary<string, object>
+                    {
+                        ["amount"] = character.MaximumHealth.ToString(),
+                        ["type"] = "health"
+                    };
+
+                    _server.Send(new UIMessageToClientMessage
+                    {
+                        ObjectId = CharacterId,
+                        Arguments = new AMF3<object>(dict),
+                        MessageName = "MaxPlayerBarUpdate"
+                    }, _endpoint);
+                }
+
+                if (mission.FirstItemReward != -1)
+                    await AddItemAsync(mission.FirstItemReward, mission.FirstItemRewardCount);
+
+                if (mission.SecondItemReward != -1)
+                    await AddItemAsync(mission.SecondItemReward, mission.SecondItemRewardCount);
+
+                if (mission.ThirdItemReward != -1)
+                    await AddItemAsync(mission.ThirdItemReward, mission.ThirdItemRewardCount);
+
+                if (mission.FourthItemReward != -1)
+                    await AddItemAsync(mission.FourthItemReward, mission.FourthItemRewardCount);
+
+                _server.Send(new NotifyMissionMessage
+                {
+                    ObjectId = CharacterId,
+                    MissionId = mission.MissionId,
+                    MissionState = MissionState.Completed,
+                    SendingRewards = false
+                }, _endpoint);
+
+                await UpdateTaskAsync(mission.MissionId, MissionTaskType.MissionComplete);
+
+                await ctx.SaveChangesAsync();
             }
         }
 
@@ -294,6 +565,11 @@ namespace Uchu.Core
 
                 foreach (var mission in missions)
                 {
+                    var miss = await _server.CDClient.GetMissionAsync(mission.MissionId);
+
+                    if (!miss.IsMission)
+                        continue;
+
                     if (mission.AcceptsMission)
                     {
                         if (character.Missions.Exists(m => m.MissionId == mission.MissionId))
@@ -329,15 +605,10 @@ namespace Uchu.Core
                             character.Missions.Find(m => m.MissionId == mission.MissionId).State ==
                             (int) MissionState.ReadyToComplete)
                         {
-                            var miss = await _server.CDClient.GetMissionAsync(mission.MissionId);
-
                             var canOffer = true;
 
                             foreach (var id in miss.PrerequiredMissions)
                             {
-                                if (id == 664)
-                                    continue;
-
                                 if (!character.Missions.Exists(m => m.MissionId == id))
                                 {
                                     canOffer = false;
@@ -405,6 +676,13 @@ namespace Uchu.Core
                     TargetObjectId = rocket.InventoryItemId,
                     SenderObjectId = CharacterId
                 }, _endpoint);
+
+                character.LandingByRocket = true;
+                character.Rocket =
+                    ((LegoDataList) LegoDataDictionary.FromString(rocket.ExtraInfo)["assemblyPartLOTs"]).ToString(";") +
+                    ";";
+
+                await ctx.SaveChangesAsync();
             }
         }
     }

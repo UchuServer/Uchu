@@ -28,12 +28,12 @@ namespace Uchu.Core
         {
             stream.WriteBit(false);
 
+            stream.WriteBit(true);
+            stream.WriteFloat(0);
             stream.WriteBit(false);
-            //stream.WriteFloat(0);
-            //stream.WriteBit(false);
 
+            stream.WriteBit(true);
             stream.WriteBit(false);
-            //stream.WriteBit(false);
 
             stream.WriteBit(HasPosition);
 
@@ -98,7 +98,7 @@ namespace Uchu.Core
         {
             _write(stream);
 
-            stream.WriteBit(true);
+            stream.WriteBit(false);
         }
 
         public override void Construct(BitStream stream)

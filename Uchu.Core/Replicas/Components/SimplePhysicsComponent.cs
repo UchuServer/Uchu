@@ -5,6 +5,7 @@ namespace Uchu.Core
 {
     public class SimplePhysicsComponent : ReplicaComponent
     {
+        public bool HasPosition { get; set; } = true;
         public Vector3 Position { get; set; }
         public Vector4 Rotation { get; set; }
 
@@ -14,14 +15,18 @@ namespace Uchu.Core
 
             stream.WriteBit(false);
 
-            stream.WriteBit(true);
-            stream.WriteFloat(Position.X);
-            stream.WriteFloat(Position.Y);
-            stream.WriteFloat(Position.Z);
-            stream.WriteFloat(Rotation.X);
-            stream.WriteFloat(Rotation.Y);
-            stream.WriteFloat(Rotation.Z);
-            stream.WriteFloat(Rotation.W);
+            stream.WriteBit(HasPosition);
+
+            if (HasPosition)
+            {
+                stream.WriteFloat(Position.X);
+                stream.WriteFloat(Position.Y);
+                stream.WriteFloat(Position.Z);
+                stream.WriteFloat(Rotation.X);
+                stream.WriteFloat(Rotation.Y);
+                stream.WriteFloat(Rotation.Z);
+                stream.WriteFloat(Rotation.W);
+            }
         }
 
         public override void Construct(BitStream stream)

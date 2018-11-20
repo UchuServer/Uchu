@@ -15,7 +15,7 @@ namespace Uchu.Core
         public int TaskType { get; set; }
 
         [Column("targetGroup")]
-        public int[] TargetLOTs { get; set; }
+        public object[] Targets { get; set; }
 
         [Column("targetValue")]
         public int TargetValue { get; set; }

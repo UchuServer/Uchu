@@ -1,7 +1,6 @@
 using RakDotNet;
-using Uchu.Core;
 
-namespace Uchu.World
+namespace Uchu.Core
 {
     public class SetMissionTypeStateMessage : ServerGameMessage
     {
@@ -13,7 +12,13 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitStream stream)
         {
-            stream.WriteInt((int) LockState);
+            var hasState = LockState != MissionLockState.New;
+
+            stream.WriteBit(hasState);
+
+            if (hasState)
+                stream.WriteInt((int) LockState);
+
             stream.WriteUInt((uint) Subtype.Length);
             stream.WriteString(Subtype, Subtype.Length);
             stream.WriteUInt((uint) Type.Length);

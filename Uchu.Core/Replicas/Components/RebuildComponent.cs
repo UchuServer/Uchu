@@ -1,22 +1,38 @@
 using System.Numerics;
 using RakDotNet;
+using ServiceStack.Text;
 
 namespace Uchu.Core
 {
     public class RebuildComponent : ReplicaComponent
     {
+        public ulong[] Players { get; set; } = new ulong[0];
         public RebuildState State { get; set; } = RebuildState.Open;
         public bool Success { get; set; } = false;
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
         public float TimeSinceStart { get; set; } = 0;
         public float PausedTime { get; set; } = 0;
-
         public Vector3 ActivatorPosition { get; set; }
 
         public override void Serialize(BitStream stream)
         {
             stream.WriteBit(true);
-            stream.WriteUInt(0);
+            stream.WriteUInt((uint) Players.Length);
+
+            foreach (var player in Players)
+            {
+                stream.WriteULong(player);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+                stream.WriteFloat(0);
+            }
 
             stream.WriteBit(true);
             stream.WriteUInt((uint) State);

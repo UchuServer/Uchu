@@ -12,5 +12,6 @@ namespace Uchu.Core
         public string MapName { get; set; }
         public string MapDescription { get; set; }
         public Transition[][] Transitions { get; set; }
+        public IPath[] Paths { get; set; }
     }
 }

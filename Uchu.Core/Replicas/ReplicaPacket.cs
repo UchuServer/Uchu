@@ -1,5 +1,6 @@
 using System;
 using RakDotNet;
+using Uchu.Core.Collections;
 
 namespace Uchu.Core
 {
@@ -26,6 +27,8 @@ namespace Uchu.Core
         public long[] ChildObjectIds { get; set; } = null;
 
         public IReplicaComponent[] Components { get; set; }
+
+        public LegoDataDictionary Settings { get; set; }
 
         private void _write(BitStream stream)
         {

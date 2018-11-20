@@ -120,12 +120,12 @@ namespace Uchu.Core
                         MissionId = reader.GetInt32(0),
                         Type = reader.IsDBNull(1) ? "" : reader.GetString(1),
                         Subtype = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                        UserInterfaceSortOrder = reader.GetInt32(3),
+                        UserInterfaceSortOrder = reader.IsDBNull(3) ? -1 : reader.GetInt32(3),
                         OffererObjectId = reader.GetInt32(4),
                         TargetObjectId = reader.GetInt32(5),
                         CurrencyReward = reader.GetInt64(6),
                         LegoScoreReward = reader.GetInt32(7),
-                        ReputationReward = reader.GetInt64(8),
+                        ReputationReward = reader.IsDBNull(8) ? 0 : reader.GetInt64(8),
                         IsChoiceReward = reader.GetBoolean(9),
                         FirstItemReward = reader.GetInt32(10),
                         FirstItemRewardCount = reader.GetInt32(11),
@@ -137,24 +137,24 @@ namespace Uchu.Core
                         FourthItemRewardCount = reader.GetInt32(17),
                         FirstEmoteReward = reader.GetInt32(18),
                         SecondEmoteReward = reader.GetInt32(19),
-                        ThirdEmoteReward = reader.GetInt32(20),
-                        FourthEmoteReward = reader.GetInt32(21),
-                        MaximumImaginationReward = reader.IsDBNull(22) ? -1 : reader.GetInt32(22),
-                        MaximumHealthReward = reader.IsDBNull(23) ? -1 : reader.GetInt32(23),
-                        MaximumInventoryReward = reader.IsDBNull(24) ? -1 : reader.GetInt32(24),
-                        MaximumModelsReward = reader.IsDBNull(25) ? -1 : reader.GetInt32(25),
-                        MaximumWidgetsReward = reader.IsDBNull(26) ? -1 : reader.GetInt32(26),
-                        MaximumWalletReward = reader.IsDBNull(27) ? -1 : reader.GetInt64(27),
+                        ThirdEmoteReward = reader.IsDBNull(20) ? -1 : reader.GetInt32(20),
+                        FourthEmoteReward = reader.IsDBNull(21) ? -1 : reader.GetInt32(21),
+                        MaximumImaginationReward = reader.IsDBNull(22) ? 0 : reader.GetInt32(22),
+                        MaximumHealthReward = reader.IsDBNull(23) ? 0 : reader.GetInt32(23),
+                        MaximumInventoryReward = reader.IsDBNull(24) ? 0 : reader.GetInt32(24),
+                        MaximumModelsReward = reader.IsDBNull(25) ? 0 : reader.GetInt32(25),
+                        MaximumWidgetsReward = reader.IsDBNull(26) ? 0 : reader.GetInt32(26),
+                        MaximumWalletReward = reader.IsDBNull(27) ? 0 : reader.GetInt64(27),
                         IsRepeatable = reader.GetBoolean(28),
-                        RepeatableCurrencyReward = reader.IsDBNull(29) ? -1 : reader.GetInt64(29),
+                        RepeatableCurrencyReward = reader.IsDBNull(29) ? 0 : reader.GetInt64(29),
                         FirstRepeatableItemReward = reader.IsDBNull(30) ? -1 : reader.GetInt32(30),
-                        FirstRepeatableItemRewardCount = reader.IsDBNull(32) ? -1 : reader.GetInt32(31),
+                        FirstRepeatableItemRewardCount = reader.IsDBNull(32) ? 0 : reader.GetInt32(31),
                         SecondRepeatableItemReward = reader.IsDBNull(32) ? -1 : reader.GetInt32(32),
-                        SecondRepeatableItemRewardCount = reader.IsDBNull(33) ? -1 : reader.GetInt32(33),
+                        SecondRepeatableItemRewardCount = reader.IsDBNull(33) ? 0 : reader.GetInt32(33),
                         ThirdRepeatableItemReward = reader.IsDBNull(34) ? -1 : reader.GetInt32(34),
-                        ThirdRepeatableItemRewardCount = reader.IsDBNull(35) ? -1 : reader.GetInt32(35),
+                        ThirdRepeatableItemRewardCount = reader.IsDBNull(35) ? 0 : reader.GetInt32(35),
                         FourthRepeatableItemReward = reader.IsDBNull(36) ? -1 : reader.GetInt32(36),
-                        FourthRepeatableItemRewardCount = reader.IsDBNull(37) ? -1 : reader.GetInt32(37),
+                        FourthRepeatableItemRewardCount = reader.IsDBNull(37) ? 0 : reader.GetInt32(37),
                         TimeLimit = reader.IsDBNull(38) ? -1 : reader.GetInt32(38),
                         IsMission = reader.GetBoolean(39),
                         MissionIconId = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
@@ -163,7 +163,7 @@ namespace Uchu.Core
                                 .Select(c => int.Parse(c.Trim())).ToArray(),
                         Localize = reader.GetBoolean(42),
                         IsInMotd = reader.GetBoolean(43),
-                        CooldownTime = reader.IsDBNull(44) ? -1 : reader.GetInt64(44),
+                        CooldownTime = reader.IsDBNull(44) ? 0 : reader.GetInt64(44),
                         IsRandom = reader.GetBoolean(45),
                         RandomPool = reader.IsDBNull(46) ? "" : reader.GetString(46),
                         PrerequiredUserInterfaceId = reader.IsDBNull(47) ? -1 : reader.GetInt32(47),
@@ -188,27 +188,27 @@ namespace Uchu.Core
                 {
                     while (await reader.ReadAsync())
                     {
-                        var targets = new List<int>();
+                        var targets = new List<object>();
 
                         if (!reader.IsDBNull(3))
                             targets.Add(reader.GetInt32(3));
 
                         if (!reader.IsDBNull(4))
                             targets.AddRange(reader.GetString(4).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
-                                .Select(c => int.Parse(c.Trim())));
+                                .Select(c => int.TryParse(c.Trim(), out var num) ? (object) num : c.Trim()));
 
                         list.Add(new MissionTasksRow
                         {
                             MissionId = reader.GetInt32(0),
                             LocStatus = reader.GetInt32(1),
                             TaskType = reader.GetInt32(2),
-                            TargetLOTs = targets.ToArray(),
+                            Targets = targets.ToArray(),
                             TargetValue = reader.GetInt32(5),
                             TaskParameter = reader.IsDBNull(6) ? "" : reader.GetString(6),
                             LargeTaskIcon = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                            IconId = reader.GetInt32(8),
+                            IconId = reader.IsDBNull(8) ? -1 : reader.GetInt32(8),
                             UId = reader.GetInt32(9),
-                            LargeTaskIconId = reader.GetInt32(10),
+                            LargeTaskIconId = reader.IsDBNull(10) ? -1 : reader.GetInt32(10),
                             Localize = reader.GetBoolean(11),
                             GateVersion = reader.IsDBNull(12) ? "" : reader.GetString(12)
                         });
@@ -236,14 +236,14 @@ namespace Uchu.Core
                 {
                     while (await reader.ReadAsync())
                     {
-                        var targets = new List<int>();
+                        var targets = new List<object>();
 
                         if (!reader.IsDBNull(3))
                             targets.Add(reader.GetInt32(3));
 
                         if (!reader.IsDBNull(4))
                             targets.AddRange(reader.GetString(4).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
-                                .Select(c => int.Parse(c.Trim())));
+                                .Select(c => int.TryParse(c.Trim(), out var num) ? (object) num : c.Trim()));
 
                         if (!targets.Contains(lot))
                             continue;
@@ -253,13 +253,13 @@ namespace Uchu.Core
                             MissionId = reader.GetInt32(0),
                             LocStatus = reader.GetInt32(1),
                             TaskType = reader.GetInt32(2),
-                            TargetLOTs = targets.ToArray(),
+                            Targets = targets.ToArray(),
                             TargetValue = reader.GetInt32(5),
                             TaskParameter = reader.IsDBNull(6) ? "" : reader.GetString(6),
                             LargeTaskIcon = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                            IconId = reader.GetInt32(8),
+                            IconId = reader.IsDBNull(8) ? -1 : reader.GetInt32(8),
                             UId = reader.GetInt32(9),
-                            LargeTaskIconId = reader.GetInt32(10),
+                            LargeTaskIconId = reader.IsDBNull(10) ? -1 : reader.GetInt32(10),
                             Localize = reader.GetBoolean(11),
                             GateVersion = reader.IsDBNull(12) ? "" : reader.GetString(12)
                         });

@@ -169,6 +169,12 @@ namespace Uchu.Core
         [Required]
         public long TotalFirstPlaceFinishes { get; set; }
 
+        [Required]
+        public bool LandingByRocket { get; set; }
+
+        [MaxLength(30)]
+        public string Rocket { get; set; }
+
         public long UserId { get; set; }
         public User User { get; set; }
 

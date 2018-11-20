@@ -34,8 +34,12 @@ namespace Uchu.Core
                 if (hasSlot)
                     stream.WriteUShort((ushort) item.Slot);
 
-                stream.WriteBit(false);
-                // stream.WriteUInt(4);
+                var hasInvtype = item.InventoryType != -1;
+
+                stream.WriteBit(hasInvtype);
+
+                if (hasInvtype)
+                    stream.WriteUInt((uint) item.InventoryType);
 
                 var hasExtra = !string.IsNullOrEmpty(item.ExtraInfo);
 

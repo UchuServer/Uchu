@@ -10,8 +10,6 @@ namespace Uchu.Core
 
         public Character Character { get; set; }
 
-        public string Rocket { get; set; } = null;
-
         public bool IsPvP { get; set; } = false;
 
         public bool IsGM { get; set; } = false;
@@ -113,14 +111,12 @@ namespace Uchu.Core
                 stream.WriteULong((ulong) Character.TotalFirstPlaceFinishes);
                 stream.WriteBit(false);
 
-                var hasRocket = Rocket != null;
+                stream.WriteBit(Character.LandingByRocket);
 
-                stream.WriteBit(hasRocket);
-
-                if (hasRocket)
+                if (Character.LandingByRocket)
                 {
-                    stream.WriteUShort((ushort) Rocket.Length);
-                    stream.WriteString(Rocket, Rocket.Length, true);
+                    stream.WriteUShort((ushort) Character.Rocket.Length);
+                    stream.WriteString(Character.Rocket, Character.Rocket.Length, true);
                 }
             }
 

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Timers;
+using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet;
 using Uchu.Core.Collections;
 
@@ -20,6 +22,7 @@ namespace Uchu.Core
         private readonly Dictionary<long, int> _loot;
         private readonly Server _server;
         private readonly List<Player> _players;
+        private readonly List<Timer> _platformTimers;
 
         private Zone _zone;
 
@@ -34,6 +37,7 @@ namespace Uchu.Core
             _loot = new Dictionary<long, int>();
             _server = server;
             _players = new List<Player>();
+            _platformTimers = new List<Timer>();
 
             ReplicaManager = server.CreateReplicaManager();
         }
@@ -42,11 +46,6 @@ namespace Uchu.Core
         {
             ZoneId = zone.ZoneId;
             _zone = await _server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) ZoneId]);
-            /*foreach (var file in Directory.GetFiles("Logs/"))
-            {
-                if (file.EndsWith(".txt"))
-                    File.Delete(file);
-            }*/
 
             foreach (var scene in zone.Scenes)
             {
@@ -58,7 +57,15 @@ namespace Uchu.Core
                     var pkt = await CreateObjectAsync(obj);
 
                     if (pkt != null)
+                    {
                         SpawnObject(pkt);
+
+                        var platform =
+                            (MovingPlatformComponent) pkt.Components.FirstOrDefault(c => c is MovingPlatformComponent);
+
+                        if (platform != null)
+                            _platformTimer(pkt.ObjectId, (int) platform.PathStart, platform.Path);
+                    }
                 }
             }
         }
@@ -95,7 +102,7 @@ namespace Uchu.Core
                         CurrentHealth = (uint) character.CurrentHealth,
                         MaxHealth = (uint) character.MaximumHealth,
                         CurrentImagination = (uint) character.CurrentImagination,
-                        MaxImagination = (uint) character.CurrentImagination
+                        MaxImagination = (uint) character.MaximumImagination
                     },
                     new CharacterComponent
                     {
@@ -152,7 +159,8 @@ namespace Uchu.Core
 
         public async Task<ReplicaPacket> CreateObjectAsync(LevelObject obj, long parentId = -1)
         {
-            if (obj.Settings.TryGetValue("loadOnClientOnly", out var clientOnly) && (bool) clientOnly ||
+            if (obj.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
+                obj.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
                 obj.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled) // is this right?
                 return null;
 
@@ -163,8 +171,11 @@ namespace Uchu.Core
 
             var registryComponents = await _server.CDClient.GetComponentsAsync(obj.LOT);
 
-            if (registryComponents.Select(c => c.ComponentType).Contains(69))
-                return null;
+            /*if (registryComponents.Select(c => c.ComponentType).Contains(78))
+                Console.WriteLine($"Proximity LOT = {spawnLOT}");*/
+
+            /*if (registryComponents.Select(c => c.ComponentType).Contains(69))
+                return null;*/
 
             registryComponents = registryComponents.Where(c => ComponentOrder.Contains(c.ComponentType)).ToArray();
 
@@ -173,31 +184,14 @@ namespace Uchu.Core
 
             var components = new List<IReplicaComponent>();
 
-            /*if (obj.LOT == 6316)
-            {
-                foreach (var (k, v) in obj.Settings)
-                {
-                    Console.WriteLine($"{k}: {v}");
-                }
-
-                Console.WriteLine();
-            }*/
-
-            /*using (var file = File.AppendText($"Logs/{obj.LOT}.txt"))
-            {
-                file.WriteLine($"{obj.LOT} ({spawnLOT}):");
-                file.WriteLine("    Settings:");
-                foreach (var (k, v) in obj.Settings) file.WriteLine($"        {k}: {v}");
-                file.WriteLine("    Components:");*/
-
             foreach (var c in registryComponents)
             {
-                IReplicaComponent component = null;
+                var list = new List<IReplicaComponent>();
 
                 switch (c.ComponentType)
                 {
                     case 108:
-                        component = new PossesableComponent(); // TODO: set id
+                        list.Add(new PossesableComponent()); // TODO: set id
                         break;
 
                     case 61:
@@ -205,60 +199,60 @@ namespace Uchu.Core
                         break;
 
                     case 1:
-                        component = new ControllablePhysicsComponent
+                        list.Add(new ControllablePhysicsComponent
                         {
                             HasPosition = true,
                             Position = obj.Position,
                             Rotation = obj.Rotation
-                        };
+                        });
                         break;
 
                     case 3:
-                        component = new SimplePhysicsComponent
+                        list.Add(new SimplePhysicsComponent
                         {
                             Position = obj.Position,
                             Rotation = obj.Rotation
-                        };
+                        });
                         break;
 
                     case 20:
-                        component = new RigidBodyPhantomPhysicsComponent
+                        list.Add(new RigidBodyPhantomPhysicsComponent
                         {
                             Position = obj.Position,
                             Rotation = obj.Rotation
-                        };
+                        });
                         break;
 
                     case 30:
-                        component = new VehiclePhysicsComponent();
+                        list.Add(new VehiclePhysicsComponent());
                         break;
 
                     case 40:
-                        component = new PhantomPhysicsComponent
+                        list.Add(new PhantomPhysicsComponent
                         {
                             Position = obj.Position,
                             Rotation = obj.Rotation
-                        };
+                        });
                         break;
 
                     case 7:
-                        component = new DestructibleComponent();
+                        list.Add(new DestructibleComponent());
 
-                        components.Add(new StatsComponent {HasStats = false});
+                        list.Add(new StatsComponent {HasStats = false});
                         break;
 
                     case 23:
-                        components.Add(new StatsComponent {HasStats = false});
+                        list.Add(new StatsComponent {HasStats = false});
 
-                        component = new CollectibleComponent {CollectibleId = (ushort) (int) obj.Settings["collectible_id"]};
+                        list.Add(new CollectibleComponent {CollectibleId = (ushort) (int) obj.Settings["collectible_id"]});
                         break;
 
                     case 26:
-                        component = new PetComponent(); // TODO: set name and owner
+                        list.Add(new PetComponent()); // TODO: set name and owner
                         break;
 
                     case 4:
-                        component = new CharacterComponent(); // TODO: set properties
+                        list.Add(new CharacterComponent()); // TODO: set properties
                         break;
 
                     case 19:
@@ -268,64 +262,88 @@ namespace Uchu.Core
                     case 17:
                         var items = await _server.CDClient.GetInventoryItemsAsync(c.ComponentId);
 
-                        component = new InventoryComponent // TODO: make this work
+                        list.Add(new InventoryComponent // TODO: make this work
                         {
-                            Items = items.Select(i => new InventoryItem
+                            Items = items.Where(i => i.Equipped).Select(i => new InventoryItem
                             {
                                 InventoryItemId = Utils.GenerateObjectId(),
                                 Count = i.ItemCount,
                                 LOT = i.ItemId,
                                 Slot = -1,
-                                IsEquipped = i.Equipped
+                                InventoryType = -1
                             }).ToArray()
-                        };
+                        });
                         break;
 
                     case 5:
-                        component = new ScriptComponent();
+                        list.Add(new ScriptComponent());
                         break;
 
                     case 9:
-                        component = new SkillComponent();
+                        list.Add(new SkillComponent());
                         break;
 
                     case 60:
-                        component = new BaseCombatAIComponent(); // TODO: set properties
+                        list.Add(new BaseCombatAIComponent()); // TODO: set properties
                         break;
 
                     case 48:
                         components.Add(new StatsComponent {HasStats = false});
 
-                        component = new RebuildComponent
+                        list.Add(new RebuildComponent
                         {
-                            ActivatorPosition = (Vector3) obj.Settings["rebuild_activators"],
-                            // following is temp
-                            State = RebuildState.Completed,
-                            Success = true
-                        };
+                            ActivatorPosition = (Vector3) obj.Settings["rebuild_activators"]
+                        });
                         break;
 
                     case 25:
-                        component = new MovingPlatformComponent
+                        var pathName = obj.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
+                        var pathStart = obj.Settings.TryGetValue("attached_path_start", out var start)
+                            ? (uint) start
+                            : 0;
+
+                        var path = (MovingPlatformPath) _zone.Paths.FirstOrDefault(p =>
+                            p is MovingPlatformPath && p.Name == pathName);
+
+                        var nextWaypoint = pathStart + 1 >  path.Waypoints.Length - 1  ? 0 : pathStart + 1;
+                        var type = obj.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
+                            ?
+                            PlatformType.Mover
+                            : obj.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
+                              (bool) isSimpleMover
+                                ? PlatformType.SimpleMover
+                                : PlatformType.None;
+
+                        var waypoint = (MovingPlatformWaypoint) path.Waypoints[nextWaypoint];
+
+                        list.Add(new MovingPlatformComponent
                         {
-                            PathName = obj.Settings.TryGetValue("attached_path", out var path) ? (string) path : ""
-                        };
+                            Path = path,
+                            PathName = pathName,
+                            PathStart = pathStart,
+                            Type = type,
+                            State = PlatformState.Moving,
+                            CurrentWaypointIndex = pathStart,
+                            NextWaypointIndex = nextWaypoint,
+                            TargetPosition = waypoint.Position,
+                            TargetRotation = waypoint.Rotation
+                        });
                         break;
 
                     case 49:
-                        component = new SwitchComponent(); // TODO: set state
+                        list.Add(new SwitchComponent()); // TODO: set state
                         break;
 
                     case 16:
-                        component = new VendorComponent();
+                        list.Add(new VendorComponent());
                         break;
 
                     case 6:
-                        component = new BouncerComponent(); // TODO: set pet required
+                        list.Add(new BouncerComponent()); // TODO: set pet required
                         break;
 
                     case 39:
-                        component = new ScriptedActivityComponent();
+                        list.Add(new ScriptedActivityComponent());
                         break;
 
                     case 71:
@@ -341,10 +359,10 @@ namespace Uchu.Core
                         break;
 
                     case 2:
-                        component = new RenderComponent
+                        list.Add(new RenderComponent
                         {
                             Disabled = (bool?) disabled ?? false
-                        };
+                        });
                         break;
 
                     case 50:
@@ -352,23 +370,30 @@ namespace Uchu.Core
                         break;
 
                     case 107:
-                        component = new Component107();
+                        list.Add(new Component107());
                         break;
 
-                    case 69:
-                        component = new TriggerComponent(); // set id
-                        break;
+                    /*case 69:
+                        list.Add(new TriggerComponent()); // set id
+                        break;*/
                 }
 
-                if (component != null)
-                {
-                        //file.WriteLine($"        {component.GetType().Name} ({c.ComponentType}): {c.ComponentId}");
-                    components.Add(component);
-                }
+                components.AddRange(list);
             }
 
-                //file.WriteLine();
-            // }
+            if (obj.Settings.TryGetValue("trigger_id", out var triggerId))
+            {
+                var str = (string) triggerId;
+                var colonIndex = str.IndexOf(':');
+                var v = str.Substring(colonIndex + 1);
+
+                Console.WriteLine($"TriggerId = {v}");
+
+                components.Add(new TriggerComponent
+                {
+                    TriggerId = int.Parse(v)
+                });
+            }
 
             var data = new ReplicaPacket
             {
@@ -379,7 +404,8 @@ namespace Uchu.Core
                 Scale = obj.Scale,
                 Components = components.ToArray(),
                 SpawnerObjectId = spawnLOT == 176 ? (long) obj.ObjectId : -1,
-                ParentObjectId = parentId
+                ParentObjectId = parentId,
+                Settings = obj.Settings
             };
 
             if (obj.Settings.TryGetValue("spawnActivator", out var spawnActivator) && (bool) spawnActivator)
@@ -399,6 +425,68 @@ namespace Uchu.Core
             }
 
             return data;
+        }
+
+        private void _platformTimer(long objectId, int index, MovingPlatformPath path)
+        {
+            var obj = GetObject(objectId);
+            var component =
+                (MovingPlatformComponent) obj.Components.First(c => c is MovingPlatformComponent);
+            var physics = (SimplePhysicsComponent) obj.Components.FirstOrDefault(c => c is SimplePhysicsComponent);
+
+            if (physics != null)
+                physics.HasPosition = false;
+
+            var nextIndex = index + 1 > path.Waypoints.Length - 1 ? 0 : index + 1;
+            var waypoint = (MovingPlatformWaypoint) path.Waypoints[index];
+
+            /*Console.WriteLine($"{objectId}:");
+            Console.WriteLine($"    {index} -> {nextIndex}");
+            Console.WriteLine($"    Wait = {waypoint.WaitTime}");
+            Console.WriteLine($"    Speed = {waypoint.Speed}");
+            Console.WriteLine();*/
+
+            component.PathName = null;
+            component.State = PlatformState.Idle;
+            component.TargetPosition = waypoint.Position;
+            component.TargetRotation = waypoint.Rotation;
+            component.CurrentWaypointIndex = (uint) index;
+            component.NextWaypointIndex = (uint) nextIndex;
+
+            UpdateObject(obj);
+
+            var t1 = new Timer
+            {
+                Interval = waypoint.WaitTime * 1000,
+                AutoReset = false
+            };
+
+            t1.Elapsed += (sender, args) =>
+            {
+                index = nextIndex;
+                nextIndex = index + 1 > path.Waypoints.Length - 1 ? 0 : index + 1;
+                waypoint = (MovingPlatformWaypoint) path.Waypoints[index];
+
+                component.State = PlatformState.Moving;
+                component.TargetPosition = waypoint.Position;
+                component.TargetRotation = waypoint.Rotation;
+                component.CurrentWaypointIndex = (uint) index;
+                component.NextWaypointIndex = (uint) nextIndex;
+
+                UpdateObject(obj);
+
+                var t2 = new Timer
+                {
+                    Interval = waypoint.Speed * 1000,
+                    AutoReset = false
+                };
+
+                t2.Elapsed += (o, eventArgs) => _platformTimer(objectId, index, path);
+
+                t2.Start();
+            };
+
+            t1.Start();
         }
     }
 }
