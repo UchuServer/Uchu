@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -259,7 +260,7 @@ namespace Uchu.Core.Collections
                         break;
 
                     case 3:
-                        v = float.Parse(val);
+                        v = float.Parse(val, CultureInfo.InvariantCulture);
                         break;
 
                     case 4:
@@ -287,7 +288,7 @@ namespace Uchu.Core.Collections
                         }
                         else if (val.Contains('\u001F'))
                         {
-                            var floats = val.Split('\u001F').Select(float.Parse).ToArray();
+                            var floats = val.Split('\u001F').Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray();
 
                             v =
                                 floats.Length == 1 ? floats[0] :

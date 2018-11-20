@@ -37,14 +37,7 @@ namespace Uchu.World
                 var zoneId = (ushort) character.LastZone;
 
                 if (zoneId == 0)
-                {
                     zoneId = 1000;
-                    character.LastZone = 1000;
-
-                    await ctx.SaveChangesAsync();
-                }
-
-                Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
 
                 var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
 
@@ -93,7 +86,14 @@ namespace Uchu.World
                 var zoneId = (ushort) character.LastZone;
 
                 if (zoneId == 0)
+                {
                     zoneId = 1000;
+                    character.LastZone = 1000;
+
+                    await ctx.SaveChangesAsync();
+                }
+
+                Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
 
                 var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
 
