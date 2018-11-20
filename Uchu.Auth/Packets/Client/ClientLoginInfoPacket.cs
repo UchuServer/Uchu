@@ -11,7 +11,7 @@ namespace Uchu.Auth
         [AutoSerialize(Wide = true)]
         public string Username { get; set; }
 
-        [AutoSerialize(Length = 82)]
+        [AutoSerialize(Length = 42, Wide = true)]
         public string Password { get; set; }
 
         [AutoSerialize]
