@@ -14,8 +14,8 @@ namespace Uchu.World
 {
     public class GameMessageHandler : HandlerGroupBase
     {
-        private Dictionary<uint, int> _behaviors;
-        private Dictionary<long, Timer> _rebuilds;
+        private readonly Dictionary<uint, int> _behaviors;
+        private readonly Dictionary<long, Timer> _rebuilds;
 
         public GameMessageHandler()
         {
@@ -23,6 +23,54 @@ namespace Uchu.World
             _rebuilds = new Dictionary<long, Timer>();
         }
 
+        [PacketHandler]
+        public async Task RequestDie(RequestDieMessage msg, IPEndPoint endPoint)
+        {
+            /*
+             * TODO: Make work.
+             */
+            
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            await player.Smash();
+        }
+        
+        [PacketHandler]
+        public async Task RequestSmashPlayer(RequestSmashPlayerMessage msg, IPEndPoint endPoint)
+        {
+            /*
+             * TODO: Make work.
+             */
+            
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            await player.Smash();
+        }
+
+        [PacketHandler]
+        public async Task MoveItemInInventory(MoveItemInInventoryMessage msg, IPEndPoint endPoint)
+        {
+            await Player.MoveItemAsync(msg.ObjectID, msg.Slot);
+        }
+
+        [PacketHandler]
+        public void PlayerLoaded(PlayerLoadedMessage msg, IPEndPoint endPoint)
+        {
+            /*
+             * Sends RestoreToPostLoadStatsMessage to the player, making imagination useable.
+             * TODO: Look into this being sent earlier.
+             */
+            
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+            Server.Send(new RestoreToPostLoadStatsMessage {ObjectId = player.CharacterId}, endPoint);
+        }
+        
         [PacketHandler]
         public async Task RequestUse(RequestUseMessage msg, IPEndPoint endpoint)
         {
@@ -45,76 +93,13 @@ namespace Uchu.World
 
             var rep = world.GetObject(msg.TargetObjectId);
 
-            if (rep != null)
+            /*
+             * Call OnUse on GameScripts assigned to this object.
+             */
+            foreach (var gameObject in world.GameScripts)
             {
-                if (rep.Components.Any(c => c is RebuildComponent))
-                {
-                    var comp = (RebuildComponent) rep.Components.First(c => c is RebuildComponent);
-
-                    if (comp.State == RebuildState.Open)
-                    {
-                        Server.Send(new RebuildNotifyStateMessage
-                        {
-                            ObjectId = msg.TargetObjectId,
-                            PreviousState = RebuildState.Open,
-                            NewState = RebuildState.Building,
-                            PlayerObjectId = session.CharacterId
-                        }, endpoint);
-
-                        Server.Send(new EnableRebuildMessage
-                        {
-                            ObjectId = msg.TargetObjectId,
-                            Enable = true,
-                            PlayerObjectId = session.CharacterId
-                        }, endpoint);
-
-                        comp.State = RebuildState.Building;
-                        comp.Enabled = true;
-                        comp.Players = new[] {(ulong) session.CharacterId};
-
-                        world.UpdateObject(rep);
-
-                        var completeTime = (float) rep.Settings["compTime"];
-
-                        var timer = new Timer
-                        {
-                            AutoReset = false,
-                            Interval = completeTime * 1000
-                        };
-
-                        timer.Elapsed += async (sender, args) =>
-                        {
-                            _rebuilds.Remove(session.CharacterId);
-
-                            Server.Send(new RebuildNotifyStateMessage
-                            {
-                                ObjectId = msg.TargetObjectId,
-                                PreviousState = RebuildState.Building,
-                                NewState = RebuildState.Completed,
-                                PlayerObjectId = session.CharacterId
-                            }, endpoint);
-
-                            Server.Send(new EnableRebuildMessage
-                            {
-                                ObjectId = msg.TargetObjectId,
-                                IsSuccess = true,
-                                PlayerObjectId = session.CharacterId
-                            }, endpoint);
-
-                            comp.State = RebuildState.Completed;
-                            comp.Success = true;
-                            comp.Players = new[] {(ulong) session.CharacterId};
-
-                            world.UpdateObject(rep);
-
-                            await player.UpdateTaskAsync(rep.LOT, MissionTaskType.QuickBuild);
-                        };
-
-                        _rebuilds[session.CharacterId] = timer;
-
-                        timer.Start();
-                    }
-                }
+                if (gameObject.ObjectID == rep.ObjectId)
+                    gameObject.OnUse(player);
             }
 
             await player.UpdateObjectTaskAsync(MissionTaskType.Interact, msg.TargetObjectId);
@@ -147,49 +132,32 @@ namespace Uchu.World
         [PacketHandler]
         public void RebuildCancel(RebuildCancelMessage msg, IPEndPoint endpoint)
         {
-            if (_rebuilds.ContainsKey(msg.PlayerObjectId))
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+
+            /*
+             * Call OnRebuildCanceled on GameScripts assigned to this object.
+             */
+            foreach (var gameObject in world.GameScripts)
             {
-                var timer = _rebuilds[msg.PlayerObjectId];
-
-                timer.Stop();
-                timer.Dispose();
-
-                var session = Server.SessionCache.GetSession(endpoint);
-                var world = Server.Worlds[(ZoneId) session.ZoneId];
-                var obj = world.GetObject(msg.ObjectId);
-
-                var comp = (RebuildComponent) obj.Components.First(c => c is RebuildComponent);
-
-                Server.Send(new RebuildNotifyStateMessage
-                {
-                    ObjectId = msg.ObjectId,
-                    PreviousState = comp.State,
-                    NewState = RebuildState.Incomplete,
-                    PlayerObjectId = session.CharacterId
-                }, endpoint);
-
-                Server.Send(new EnableRebuildMessage
-                {
-                    ObjectId = msg.ObjectId,
-                    IsFail = true,
-                    FailReason = RebuildFailReason.Canceled,
-                    PlayerObjectId = session.CharacterId
-                }, endpoint);
-
-                comp.State = RebuildState.Incomplete;
-                comp.Enabled = false;
-                comp.Success = false;
-                comp.Players = new ulong[0];
-
-                world.UpdateObject(obj);
+                if (gameObject.ObjectID == msg.ObjectId)
+                    gameObject.OnRebuildCanceled(world.GetPlayer(msg.PlayerObjectId));
             }
         }
 
         [PacketHandler]
-        public void LinkedMission(RequestLinkedMissionMessage msg, IPEndPoint endpoint)
+        public async Task LinkedMission(RequestLinkedMissionMessage msg, IPEndPoint endpoint)
         {
             Console.WriteLine($"Mission = {msg.MissionId}");
             Console.WriteLine($"Offered = {msg.OfferedMission}");
+            
+            /*
+             * I had something going here but forgot.
+             */
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+            await player.OfferMissionAsync(msg.MissionId);
         }
 
         [PacketHandler]
@@ -465,6 +433,33 @@ namespace Uchu.World
         }
 
         [PacketHandler]
+        public void PickupCurrency(PickupCurrencyMessage msg, IPEndPoint endpoint)
+        {
+            /*
+             * Update the player currency when coins are picked up.
+             */
+            
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+            
+            using (var ctx = new UchuContext())
+            {
+                var character = ctx.Characters.First(c => c.CharacterId == player.CharacterId);
+                character.Currency += msg.Currency;
+                
+                Server.Send(new SetCurrencyMessage
+                {
+                    Currency = character.Currency,
+                    Position = msg.Position,
+                    ObjectId = player.CharacterId
+                }, endpoint);
+
+                ctx.SaveChanges();
+            }
+        }
+
+        [PacketHandler]
         public async Task StartSkill(StartSkillMessage msg, IPEndPoint endpoint)
         {
             var session = Server.SessionCache.GetSession(endpoint);
@@ -527,57 +522,11 @@ namespace Uchu.World
         {
             var session = Server.SessionCache.GetSession(endpoint);
             var world = Server.Worlds[(ZoneId) session.ZoneId];
-            var obj = world.GetObject(objectId);
-            var physics = (SimplePhysicsComponent) obj.Components.FirstOrDefault(c => c is SimplePhysicsComponent);
 
-            if (physics == null)
-                return;
-
-            var rand = new Random();
-
-            var spawnPosition = physics.Position;
-
-            spawnPosition.Y++;
-
-            var drops = await Server.CDClient.GetDropsForObjectAsync(obj.LOT);
-
-            foreach (var drop in drops)
+            foreach (var script in world.GameScripts)
             {
-                var count = rand.Next(drop.MinDrops, drop.MaxDrops);
-                /*var items = (await Server.CDClient.GetItemDropsAsync(drop.LootTableIndex)).Where(i => !i.IsMissionDrop)
-                    .ToArray();*/
-                var items = await Server.CDClient.GetItemDropsAsync(drop.LootTableIndex);
-
-                if (items.Length == 0)
-                    return;
-
-                for (var i = 0; i < count; i++)
-                {
-                    if (rand.NextDouble() <= drop.Percent)
-                    {
-                        var item = items[rand.Next(0, items.Length)];
-                        var lootId = Utils.GenerateObjectId();
-                        var finalPosition = physics.Position;
-
-                        finalPosition.X += ((float) rand.NextDouble() % 1f - 0.5f) * 20f;
-                        finalPosition.Z += ((float) rand.NextDouble() % 1f - 0.5f) * 20f;
-
-                        world.RegisterLoot(lootId, item.ItemId);
-
-                        Server.Send(new DropClientLootMessage
-                        {
-                            ObjectId = session.CharacterId,
-                            UsePosition = true,
-                            FinalPosition = finalPosition,
-                            Currency = 0,
-                            ItemLOT = item.ItemId,
-                            LootObjectId = lootId,
-                            OwnerObjectId = session.CharacterId,
-                            SourceObjectId = objectId,
-                            SpawnPosition = spawnPosition
-                        }, endpoint);
-                    }
-                }
+                if (script.ObjectID == objectId)
+                    await script.OnSmash(world.Players.First(p => p.EndPoint.Equals(endpoint)));
             }
         }
 

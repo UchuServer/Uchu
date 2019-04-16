@@ -70,13 +70,27 @@ namespace Uchu.Char
         [PacketHandler]
         public async Task CharacterCreate(CharacterCreateRequestPacket packet, IPEndPoint endpoint)
         {
+            /*
+             * TODO: The Server should add the chosen shirt and legs to the player inventory and equip them.
+             */
+            
             var session = Server.SessionCache.GetSession(endpoint);
 
             var first = (await Server.Resources.ReadTextAsync("Names/first.txt")).Split('\n');
             var middle = (await Server.Resources.ReadTextAsync("Names/middle.txt")).Split('\n');
             var last = (await Server.Resources.ReadTextAsync("Names/last.txt")).Split('\n');
 
-            var name = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
+            /*
+             * Make sure there are no awkward newlines in the player name.
+             */
+            var rawName = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
+            var name = "";
+
+            foreach (var c in rawName)
+            {
+                if (c != (char) 13)
+                    name += c;
+            }
 
             using (var ctx = new UchuContext())
             {

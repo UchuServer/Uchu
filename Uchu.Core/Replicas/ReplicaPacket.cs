@@ -6,11 +6,21 @@ namespace Uchu.Core
 {
     public class ReplicaPacket : IReplica
     {
+        private string _name;
+        
         public long ObjectId { get; set; }
 
         public int LOT { get; set; }
 
-        public string Name { get; set; }
+        /// <summary>
+        /// Name of the Replica, without newline.
+        /// </summary>
+        public string Name
+        {
+            get => _name;
+            // TODO: Look into this.
+            set => _name = value.Replace((char) 13, '\r');
+        }
 
         public uint Created { get; set; }
 
