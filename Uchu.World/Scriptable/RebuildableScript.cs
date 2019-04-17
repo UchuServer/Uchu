@@ -8,6 +8,7 @@ using Uchu.Core.Scriptable;
 
 namespace Uchu.World.Scriptable
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Script for EVERY rebuildable object.
     /// </summary>

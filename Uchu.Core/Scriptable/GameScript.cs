@@ -99,11 +99,6 @@ namespace Uchu.Core.Scriptable
         {
         }
 
-        public static explicit operator ReplicaPacket(GameScript gameScript)
-        {
-            return gameScript.ReplicaPacket;
-        }
-
         #endregion
     }
 }

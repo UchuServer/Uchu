@@ -26,7 +26,7 @@ namespace Uchu.Core.Scriptable
         public AutoAssignAttribute(Type component = null, string name = null, int lot = 0)
         {
             if (component != null && component.BaseType != typeof(ReplicaComponent))
-                throw new Exception(
+                throw new ArgumentException(
                     $"Auto Assign to Component {component} is not of type {typeof(IReplicaComponent)}!");
 
             Component = component;

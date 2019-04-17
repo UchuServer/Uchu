@@ -433,7 +433,7 @@ namespace Uchu.World
         }
 
         [PacketHandler]
-        public void PickupCurrency(PickupCurrencyMessage msg, IPEndPoint endpoint)
+        public async Task PickupCurrency(PickupCurrencyMessage msg, IPEndPoint endpoint)
         {
             /*
              * Update the player currency when coins are picked up.
@@ -455,7 +455,7 @@ namespace Uchu.World
                     ObjectId = player.CharacterId
                 }, endpoint);
 
-                ctx.SaveChanges();
+                await ctx.SaveChangesAsync();
             }
         }
 

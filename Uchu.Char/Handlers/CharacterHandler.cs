@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -83,14 +84,9 @@ namespace Uchu.Char
             /*
              * Make sure there are no awkward newlines in the player name.
              */
-            var rawName = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
-            var name = "";
-
-            foreach (var c in rawName)
-            {
-                if (c != (char) 13)
-                    name += c;
-            }
+            var name =
+                (first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last])
+                .Replace("\r", "");
 
             using (var ctx = new UchuContext())
             {

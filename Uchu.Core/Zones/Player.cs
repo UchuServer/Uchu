@@ -130,7 +130,9 @@ namespace Uchu.Core
                 }
                 catch
                 {
-                    StatPickup(lot);
+                    if (Enum.IsDefined(typeof(PickupLOT), lot))
+                        await StatPickup(lot);
+                    // TODO: Check for more passable pickup types.
                     return;
                 }
 
@@ -188,7 +190,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="lot"></param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public void StatPickup(int lot)
+        public async Task StatPickup(int lot)
         {
             Console.WriteLine($"Updating stat for LOT: {lot}");
             var imaginationToAdd = 0;
@@ -253,7 +255,7 @@ namespace Uchu.Core
                 character.CurrentHealth += healthToAdd;
                 character.CurrentArmor += armorToAdd;
                 
-                ctx.SaveChanges();
+                await ctx.SaveChangesAsync();
             }
             
             Console.WriteLine($"Adding: {imaginationToAdd} | {healthToAdd} | {armorToAdd}");

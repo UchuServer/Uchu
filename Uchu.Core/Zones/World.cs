@@ -116,10 +116,7 @@ namespace Uchu.Core
             foreach (var gameObject in GameScripts) gameObject.Start();
         }
 
-        public Player GetPlayer(long objectId)
-        {
-            return Players.Find(p => p.CharacterId == objectId);
-        }
+        public Player GetPlayer(long objectId) => Players.Find(p => p.CharacterId == objectId);
 
         public void SpawnPlayer(Character character, IPEndPoint endpoint)
         {
