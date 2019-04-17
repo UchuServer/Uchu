@@ -71,10 +71,6 @@ namespace Uchu.Char
         [PacketHandler]
         public async Task CharacterCreate(CharacterCreateRequestPacket packet, IPEndPoint endpoint)
         {
-            /*
-             * TODO: The Server should add the chosen shirt and legs to the player inventory and equip them.
-             */
-            
             var session = Server.SessionCache.GetSession(endpoint);
 
             var first = (await Server.Resources.ReadTextAsync("Names/first.txt")).Split('\n');
@@ -92,6 +88,14 @@ namespace Uchu.Char
             {
                 var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == session.UserId);
 
+                var shirtLOT =
+                    await Server.CDClient.GetTemplateFromName(
+                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) + $" Shirt {packet.ShirtStyle}");
+                
+                var legsLOT =
+                    await Server.CDClient.GetTemplateFromName(
+                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) + " Pants");
+                
                 user.Characters.Add(new Character
                 {
                     CharacterId = Utils.GenerateObjectId(),
@@ -110,8 +114,34 @@ namespace Uchu.Char
                     LastZone = (int) ZoneId.VentureExplorerCinematic,
                     LastInstance = 0,
                     LastClone = 0,
-                    LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds()
+                    LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    Items = new List<InventoryItem>
+                    {
+                        /*
+                         * Add Shirt and Legs to the player inventory.
+                         */
+                        new InventoryItem
+                        {
+                            InventoryItemId = Utils.GenerateObjectId(),
+                            LOT = shirtLOT,
+                            Slot = 0,
+                            Count = 1,
+                            InventoryType = (int) InventoryType.Items,
+                            IsEquipped = true
+                        },
+                        new InventoryItem
+                        {
+                            InventoryItemId = Utils.GenerateObjectId(),
+                            LOT = legsLOT,
+                            Slot = 1,
+                            Count = 1,
+                            InventoryType = (int) InventoryType.Items,
+                            IsEquipped = true
+                        }
+                    }
                 });
+                
+                
 
                 await ctx.SaveChangesAsync();
 

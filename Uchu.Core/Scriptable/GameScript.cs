@@ -76,7 +76,7 @@ namespace Uchu.Core.Scriptable
 
             Update();
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
         }
 
         public virtual void Start()
@@ -98,6 +98,8 @@ namespace Uchu.Core.Scriptable
         public virtual async Task OnSmash(Player player)
         {
         }
+
+        public static implicit operator ReplicaPacket(GameScript gameScript) => gameScript.ReplicaPacket;
 
         #endregion
     }

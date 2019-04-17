@@ -10,7 +10,7 @@ namespace Uchu.World.Scriptable
 {
     /// <inheritdoc />
     /// <summary>
-    ///     Script for EVERY rebuildable object.
+    ///     Script for every rebuildable object.
     /// </summary>
     [AutoAssign(typeof(RebuildComponent))]
     public class RebuildableScript : GameScript
@@ -49,6 +49,8 @@ namespace Uchu.World.Scriptable
         ///     Timer to determine when the quickbuild is done.
         /// </summary>
         private PausableTimer _timer;
+
+        private Timer _imaginationTimer;
 
         /// <summary>
         ///     Inherited Constructor
@@ -117,7 +119,7 @@ namespace Uchu.World.Scriptable
             comp.Success = false;
             comp.Players = new[] {(ulong) player.CharacterId};
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
 
             // Determine the completion time for this Quickbuild.
             var completeTime = (float) ReplicaPacket.Settings["compTime"];
@@ -131,55 +133,57 @@ namespace Uchu.World.Scriptable
                 _timer = new PausableTimer(completeTime * 1000);
 
                 _timer.Elapsed += (sender, args) => { CompleteBuild(player); };
-
-                var imgTimer = new Timer
-                {
-                    AutoReset = true,
-                    Interval = 1000
-                };
-
-                imgTimer.Elapsed += (sender, args) =>
-                {
-                    using (var ctx = new UchuContext())
-                    {
-                        var character = ctx.Characters.First(c => c.CharacterId == player.CharacterId);
-
-                        // Check if the player is out of imagination.
-                        if (character.CurrentImagination == 0)
-                        {
-                            imgTimer.Stop();
-                            imgTimer.Dispose();
-                            StopRebuild(player, RebuildFailReason.OutOfImagination);
-                        }
-
-                        // Take one imagination.
-                        if (_taken != _cost - 1)
-                        {
-                            _taken++;
-                            character.CurrentImagination--;
-                        }
-
-                        // If this Quickbuild is canceled.
-                        if (comp.State != RebuildState.Building)
-                        {
-                            imgTimer.Stop();
-                            imgTimer.Dispose();
-                        }
-
-                        ctx.SaveChanges();
-                    }
-
-                    // Keep the player stats up to date.
-                    player.UpdateStats();
-                };
-
-                Task.Run(() => { _timer.Start(); });
-                Task.Run(() => { imgTimer.Start(); });
             }
             else
             {
                 _timer.Resume();
             }
+
+            _imaginationTimer?.Dispose();
+
+            _imaginationTimer = new Timer
+            {
+                AutoReset = true,
+                Interval = 1000
+            };
+            
+            _imaginationTimer.Elapsed += (sender, args) =>
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var character = ctx.Characters.First(c => c.CharacterId == player.CharacterId);
+
+                    // Check if the player is out of imagination.
+                    if (character.CurrentImagination == 0)
+                    {
+                        _imaginationTimer.Stop();
+                        _imaginationTimer.Dispose();
+                        StopRebuild(player, RebuildFailReason.OutOfImagination);
+                    }
+
+                    // Take one imagination.
+                    if (_taken != _cost - 1)
+                    {
+                        _taken++;
+                        character.CurrentImagination--;
+                    }
+
+                    // If this Quickbuild is canceled.
+                    if (comp.State != RebuildState.Building)
+                    {
+                        _imaginationTimer.Stop();
+                        _imaginationTimer.Dispose();
+                    }
+
+                    ctx.SaveChanges();
+                }
+
+                // Keep the player stats up to date.
+                player.UpdateStats();
+            };
+            
+            Task.Run(() => _timer.Start());
+            Task.Run(() => _imaginationTimer.Start());
         }
 
         /// <summary>
@@ -234,7 +238,7 @@ namespace Uchu.World.Scriptable
             comp.TimeSinceStart = (float) (_timer.Time / 1000);
             comp.Players = new ulong[0];
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
 
             // Determine the completion time for this Quickbuild.
             var completeTime = (float) ReplicaPacket.Settings["compTime"];
@@ -301,7 +305,7 @@ namespace Uchu.World.Scriptable
             comp.Enabled = true;
             comp.Players = new[] {(ulong) player.CharacterId};
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
 
             // Update any mission task that required this quickbuild.
             await player.UpdateTaskAsync(LOT, MissionTaskType.QuickBuild);
@@ -363,7 +367,7 @@ namespace Uchu.World.Scriptable
             comp.TimeSinceStart = 0;
             comp.State = RebuildState.Resetting;
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
 
             // Open up the quickbuild for use.
             OpenBuild(player);
@@ -403,7 +407,7 @@ namespace Uchu.World.Scriptable
             comp.PausedTime = 0;
             comp.State = RebuildState.Open;
 
-            World.UpdateObject(ReplicaPacket);
+            World.UpdateObject(this);
         }
     }
 }

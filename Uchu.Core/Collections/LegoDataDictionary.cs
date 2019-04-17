@@ -250,7 +250,7 @@ namespace Uchu.Core.Collections
                 var type = int.Parse(line.Substring(firstEqual + 1, firstColon - firstEqual - 1));
                 var val = line.Substring(firstColon + 1);
 
-                object v = null;
+                object v;
 
                 switch (type)
                 {

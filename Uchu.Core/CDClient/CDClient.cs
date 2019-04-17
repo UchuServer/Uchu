@@ -566,6 +566,36 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<int> GetTemplateFromName(string name)
+        {
+            using (var cmd = new SQLiteCommand("SELECT id FROM Objects WHERE name = '" + name + "'", Connection))
+            {
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return -1;
+
+                    return reader.GetInt32(0);
+                }
+            }
+        }
+
+        public async Task<string> GetBrickColorName(int brickColor)
+        {
+            using (var cmd = new SQLiteCommand("SELECT description FROM BrickColors WHERE id = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = brickColor});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return "";
+
+                    return reader.GetString(0);
+                }
+            }
+        }
+
         public void Dispose()
         {
             Connection?.Dispose();
