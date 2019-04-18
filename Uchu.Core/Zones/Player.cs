@@ -626,6 +626,7 @@ namespace Uchu.Core
                     // Bob mission
                     await CompleteMissionAsync(await _server.CDClient.GetMissionAsync(664));
                     _server.Send(new RestoreToPostLoadStatsMessage {ObjectId = CharacterId}, EndPoint);
+                    UpdateStats();
                 }
 
                 character.Currency += mission.CurrencyReward;

@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using RakDotNet;
 
@@ -39,49 +40,51 @@ namespace Uchu.Core
 
             stream.WriteBit(hasPlatform);
 
-            if (hasPlatform)
+            if (!hasPlatform) return;
+            stream.WriteUInt((uint) Type);
+
+            switch (Type)
             {
-                stream.WriteUInt((uint) Type);
+                case PlatformType.Mover:
+                    stream.WriteBit(true);
 
-                switch (Type)
-                {
-                    case PlatformType.Mover:
-                        stream.WriteBit(true);
+                    stream.WriteUInt((uint) State);
 
-                        stream.WriteUInt((uint) State);
+                    stream.WriteInt(-1);
+                    stream.WriteBit(false);
+                    stream.WriteBit(CurrentWaypointIndex != 0); // is this how to do it?
+                    stream.WriteFloat(0);
 
-                        stream.WriteInt(-1);
-                        stream.WriteBit(false);
-                        stream.WriteBit(CurrentWaypointIndex != 0); // is this how to do it?
-                        stream.WriteFloat(0);
+                    stream.WriteFloat(TargetPosition.X);
+                    stream.WriteFloat(TargetPosition.Y);
+                    stream.WriteFloat(TargetPosition.Z);
 
-                        stream.WriteFloat(TargetPosition.X);
-                        stream.WriteFloat(TargetPosition.Y);
-                        stream.WriteFloat(TargetPosition.Z);
+                    stream.WriteUInt(CurrentWaypointIndex);
+                    stream.WriteUInt(NextWaypointIndex);
 
-                        stream.WriteUInt(CurrentWaypointIndex);
-                        stream.WriteUInt(NextWaypointIndex);
+                    stream.WriteFloat(IdleTimeElapsed);
+                    stream.WriteUInt(0);
+                    break;
 
-                        stream.WriteFloat(IdleTimeElapsed);
-                        stream.WriteUInt(0);
-                        break;
+                case PlatformType.SimpleMover:
+                    stream.WriteBit(true);
+                    stream.WriteBit(true);
 
-                    case PlatformType.SimpleMover:
-                        stream.WriteBit(true);
-                        stream.WriteBit(true);
+                    stream.WriteFloat(TargetPosition.X);
+                    stream.WriteFloat(TargetPosition.Y);
+                    stream.WriteFloat(TargetPosition.Z);
 
-                        stream.WriteFloat(TargetPosition.X);
-                        stream.WriteFloat(TargetPosition.Y);
-                        stream.WriteFloat(TargetPosition.Z);
+                    stream.WriteFloat(TargetRotation.X);
+                    stream.WriteFloat(TargetRotation.Y);
+                    stream.WriteFloat(TargetRotation.Z);
+                    stream.WriteFloat(TargetRotation.W);
 
-                        stream.WriteFloat(TargetRotation.X);
-                        stream.WriteFloat(TargetRotation.Y);
-                        stream.WriteFloat(TargetRotation.Z);
-                        stream.WriteFloat(TargetRotation.W);
-
-                        stream.WriteBit(false);
-                        break;
-                }
+                    stream.WriteBit(false);
+                    break;
+                case PlatformType.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

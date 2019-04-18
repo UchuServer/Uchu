@@ -573,7 +573,7 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     if (!await reader.ReadAsync())
-                        return -1;
+                        return 2620;
 
                     return reader.GetInt32(0);
                 }

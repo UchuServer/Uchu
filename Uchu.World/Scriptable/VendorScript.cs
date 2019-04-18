@@ -43,6 +43,7 @@ namespace Uchu.World.Scriptable
         {
             Console.WriteLine($"Vendor Interaction! {ObjectID}");
 
+            return;
             // Open a Vendor Window on the client. TODO: This is not working, WHY!?
             Server.Send(new VendorOpenWindowMessage
             {

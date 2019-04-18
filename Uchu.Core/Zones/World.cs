@@ -26,21 +26,18 @@ namespace Uchu.Core
         };
 
         private readonly Dictionary<long, int> _loot;
-        private readonly List<Timer> _platformTimers;
 
-        private readonly List<ReplicaPacket> _replicas;
-        public readonly List<GameScript> GameScripts = new List<GameScript>();
+        public readonly List<ReplicaPacket> Replicas;
 
         public readonly List<Player> Players;
         public readonly Server Server;
 
         public World(Server server)
         {
-            _replicas = new List<ReplicaPacket>();
+            Replicas = new List<ReplicaPacket>();
             _loot = new Dictionary<long, int>();
             Server = server;
             Players = new List<Player>();
-            _platformTimers = new List<Timer>();
 
             ReplicaManager = server.CreateReplicaManager();
 
@@ -84,15 +81,13 @@ namespace Uchu.Core
                     if (pkt != null)
                     {
                         SpawnObject(pkt);
-
-                        var platform =
-                            (MovingPlatformComponent) pkt.Components.FirstOrDefault(c => c is MovingPlatformComponent);
-
-                        if (platform != null)
-                            _platformTimer(pkt.ObjectId, (int) platform.PathStart, platform.Path);
                     }
                 }
             }
+            
+            /*
+             * GameScripts
+             */
 
             var gameObjects = Assembly.GetEntryAssembly()
                 .GetTypes().Where(t => t.BaseType == typeof(GameScript));
@@ -101,7 +96,7 @@ namespace Uchu.Core
                 var attribute = gameObject.GetCustomAttribute<AutoAssignAttribute>();
                 if (attribute == null) continue;
 
-                foreach (var replica in _replicas)
+                foreach (var replica in Replicas)
                 {
                     if (attribute.Name != null && replica.Name != attribute.Name) continue;
                     if (attribute.LOT != 0 && replica.LOT != attribute.LOT) continue;
@@ -109,11 +104,17 @@ namespace Uchu.Core
                         replica.Components.All(c => c.GetType().FullName != attribute.Component.FullName)) continue;
 
                     var instance = (GameScript) Activator.CreateInstance(gameObject, this, replica);
-                    GameScripts.Add(instance);
+                    replica.GameScripts.Add(instance);
                 }
             }
 
-            foreach (var gameObject in GameScripts) gameObject.Start();
+            foreach (var replica in Replicas)
+            {
+                foreach (var gameScript in replica.GameScripts)
+                {
+                    gameScript.Start();
+                }
+            }
         }
 
         public Player GetPlayer(long objectId) => Players.Find(p => p.CharacterId == objectId);
@@ -183,16 +184,16 @@ namespace Uchu.Core
 
         public void DestroyObject(long objectId)
         {
-            var data = _replicas.Find(r => r.ObjectId == objectId);
+            var data = Replicas.Find(r => r.ObjectId == objectId);
 
-            _replicas.Remove(data);
+            Replicas.Remove(data);
 
             ReplicaManager.SendDestruction(data);
         }
 
         public ReplicaPacket GetObject(long objectId)
         {
-            return _replicas.Find(r => r.ObjectId == objectId);
+            return Replicas.Find(r => r.ObjectId == objectId);
         }
 
         public void UpdateObject(ReplicaPacket packet)
@@ -204,7 +205,7 @@ namespace Uchu.Core
 
         public void SpawnObject(ReplicaPacket packet)
         {
-            _replicas.Add(packet);
+            Replicas.Add(packet);
 
             ReplicaManager.SendConstruction(packet);
         }
@@ -374,7 +375,7 @@ namespace Uchu.Core
                             PathName = pathName,
                             PathStart = pathStart,
                             Type = type,
-                            State = PlatformState.Moving,
+                            State = PlatformState.Idle,
                             CurrentWaypointIndex = pathStart,
                             NextWaypointIndex = nextWaypoint,
                             TargetPosition = waypoint.Position,
@@ -477,68 +478,6 @@ namespace Uchu.Core
             }
 
             return data;
-        }
-
-        private void _platformTimer(long objectId, int index, MovingPlatformPath path)
-        {
-            var obj = GetObject(objectId);
-            var component =
-                (MovingPlatformComponent) obj.Components.First(c => c is MovingPlatformComponent);
-            var physics = (SimplePhysicsComponent) obj.Components.FirstOrDefault(c => c is SimplePhysicsComponent);
-
-            if (physics != null)
-                physics.HasPosition = false;
-
-            var nextIndex = index + 1 > path.Waypoints.Length - 1 ? 0 : index + 1;
-            var waypoint = (MovingPlatformWaypoint) path.Waypoints[index];
-
-            /*Console.WriteLine($"{objectId}:");
-            Console.WriteLine($"    {index} -> {nextIndex}");
-            Console.WriteLine($"    Wait = {waypoint.WaitTime}");
-            Console.WriteLine($"    Speed = {waypoint.Speed}");
-            Console.WriteLine();*/
-
-            component.PathName = null;
-            component.State = PlatformState.Idle;
-            component.TargetPosition = waypoint.Position;
-            component.TargetRotation = waypoint.Rotation;
-            component.CurrentWaypointIndex = (uint) index;
-            component.NextWaypointIndex = (uint) nextIndex;
-
-            UpdateObject(obj);
-
-            var t1 = new Timer
-            {
-                Interval = waypoint.WaitTime * 1000,
-                AutoReset = false
-            };
-
-            t1.Elapsed += (sender, args) =>
-            {
-                index = nextIndex;
-                nextIndex = index + 1 > path.Waypoints.Length - 1 ? 0 : index + 1;
-                waypoint = (MovingPlatformWaypoint) path.Waypoints[index];
-
-                component.State = PlatformState.Moving;
-                component.TargetPosition = waypoint.Position;
-                component.TargetRotation = waypoint.Rotation;
-                component.CurrentWaypointIndex = (uint) index;
-                component.NextWaypointIndex = (uint) nextIndex;
-
-                UpdateObject(obj);
-
-                var t2 = new Timer
-                {
-                    Interval = waypoint.Speed * 1000,
-                    AutoReset = false
-                };
-
-                t2.Elapsed += (o, eventArgs) => _platformTimer(objectId, index, path);
-
-                t2.Start();
-            };
-
-            t1.Start();
         }
     }
 }

@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using RakDotNet;
 using Uchu.Core.Collections;
+using Uchu.Core.Scriptable;
 
 namespace Uchu.Core
 {
     public class ReplicaPacket : IReplica
     {
         private string _name;
+        
+        public List<GameScript> GameScripts = new List<GameScript>();
         
         public long ObjectId { get; set; }
 

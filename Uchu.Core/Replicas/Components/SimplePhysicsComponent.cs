@@ -17,16 +17,14 @@ namespace Uchu.Core
 
             stream.WriteBit(HasPosition);
 
-            if (HasPosition)
-            {
-                stream.WriteFloat(Position.X);
-                stream.WriteFloat(Position.Y);
-                stream.WriteFloat(Position.Z);
-                stream.WriteFloat(Rotation.X);
-                stream.WriteFloat(Rotation.Y);
-                stream.WriteFloat(Rotation.Z);
-                stream.WriteFloat(Rotation.W);
-            }
+            if (!HasPosition) return;
+            stream.WriteFloat(Position.X);
+            stream.WriteFloat(Position.Y);
+            stream.WriteFloat(Position.Z);
+            stream.WriteFloat(Rotation.X);
+            stream.WriteFloat(Rotation.Y);
+            stream.WriteFloat(Rotation.Z);
+            stream.WriteFloat(Rotation.W);
         }
 
         public override void Construct(BitStream stream)

@@ -15,12 +15,10 @@ namespace Uchu.World
     public class GameMessageHandler : HandlerGroupBase
     {
         private readonly Dictionary<uint, int> _behaviors;
-        private readonly Dictionary<long, Timer> _rebuilds;
 
         public GameMessageHandler()
         {
             _behaviors = new Dictionary<uint, int>();
-            _rebuilds = new Dictionary<long, Timer>();
         }
 
         [PacketHandler]
@@ -96,10 +94,10 @@ namespace Uchu.World
             /*
              * Call OnUse on GameScripts assigned to this object.
              */
-            foreach (var gameObject in world.GameScripts)
+            foreach (var script in world.Replicas.Where(r => r.ObjectId == rep.ObjectId)
+                .SelectMany(c => c.GameScripts))
             {
-                if (gameObject.ObjectID == rep.ObjectId)
-                    gameObject.OnUse(player);
+                script.OnUse(player);
             }
 
             await player.UpdateObjectTaskAsync(MissionTaskType.Interact, msg.TargetObjectId);
@@ -138,10 +136,11 @@ namespace Uchu.World
             /*
              * Call OnRebuildCanceled on GameScripts assigned to this object.
              */
-            foreach (var gameObject in world.GameScripts)
+            foreach (var script in world.Replicas.Where(r => r.ObjectId == msg.ObjectId)
+                .SelectMany(c => c.GameScripts))
             {
-                if (gameObject.ObjectID == msg.ObjectId)
-                    gameObject.OnRebuildCanceled(world.GetPlayer(msg.PlayerObjectId));
+                if (script.ObjectID == msg.ObjectId)
+                    script.OnRebuildCanceled(world.GetPlayer(msg.PlayerObjectId));
             }
         }
 
@@ -523,10 +522,10 @@ namespace Uchu.World
             var session = Server.SessionCache.GetSession(endpoint);
             var world = Server.Worlds[(ZoneId) session.ZoneId];
 
-            foreach (var script in world.GameScripts)
+            foreach (var script in world.Replicas.Where(r => r.ObjectId == objectId)
+                .SelectMany(c => c.GameScripts))
             {
-                if (script.ObjectID == objectId)
-                    await script.OnSmash(world.Players.First(p => p.EndPoint.Equals(endpoint)));
+                await script.OnSmash(world.Players.First(p => p.EndPoint.Equals(endpoint)));
             }
         }
 

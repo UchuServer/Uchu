@@ -46,8 +46,11 @@ namespace Uchu.Char
                         LastZone = (ZoneId) chr.LastZone,
                         LastInstance = (ushort) chr.LastInstance,
                         LastClone = (uint) chr.LastClone,
-                        LastActivity = (ulong) chr.LastActivity,
-                        Items = chr.Items.Where(itm => itm.IsEquipped).Select(itm => (uint) itm.LOT).ToArray()
+                        LastActivity = (ulong) chr.LastActivity
+                        /*
+                         * TODO: Reenable when this is figured out; currently it sometimes equips a ton of random stuff, making the client sometime crash.
+                         */
+                        //Items = chr.Items.Where(itm => itm.IsEquipped).Select(itm => (uint) itm.LOT).ToArray()
                     };
                 }
 
@@ -90,12 +93,13 @@ namespace Uchu.Char
 
                 var shirtLOT =
                     await Server.CDClient.GetTemplateFromName(
-                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) + $" Shirt {packet.ShirtStyle}");
-                
+                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) +
+                        $" Shirt {packet.ShirtStyle}");
+
                 var legsLOT =
                     await Server.CDClient.GetTemplateFromName(
-                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) + " Pants");
-                
+                        await Server.CDClient.GetBrickColorName((int) packet.PantsColor) + " Pants");
+
                 user.Characters.Add(new Character
                 {
                     CharacterId = Utils.GenerateObjectId(),
@@ -138,14 +142,15 @@ namespace Uchu.Char
                             InventoryType = (int) InventoryType.Items,
                             IsEquipped = true
                         }
-                    }
+                    },
+                    CurrentImagination = 0,
+                    MaximumImagination = 0
                 });
-                
-                
 
                 await ctx.SaveChangesAsync();
 
-                Server.Send(new CharacterCreateResponsePacket {ResponseId = CharacterCreationResponse.Success}, endpoint);
+                Server.Send(new CharacterCreateResponsePacket {ResponseId = CharacterCreationResponse.Success},
+                    endpoint);
 
                 await SendCharacterList(endpoint, session.UserId);
             }

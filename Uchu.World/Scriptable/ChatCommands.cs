@@ -1,8 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.Core.Packets.Server.GameMessages;
 
-namespace Uchu.Core.Scriptable
+namespace Uchu.World.Scriptable
 {
     /// <summary>
     ///     Manage chat commends.
@@ -12,6 +13,22 @@ namespace Uchu.Core.Scriptable
         /*
          * Purely for experimental purposes. Has to be developed on.
          */
+
+        public static string StateCommand(string[] args, Player player)
+        {
+            switch (args[0].ToLower())
+            {
+                case "off":
+                    MovingPlatformScript.StateOff = (PlatformState) int.Parse(args[1]);
+                    return $"Turned OFF {MovingPlatformScript.StateOff}\0";
+                case "on":
+                    MovingPlatformScript.StateOn = (PlatformState) int.Parse(args[1]);
+                    return $"Turned ON {MovingPlatformScript.StateOn}\0";
+                    break;
+                default:
+                    return "Not a pos!\0";
+            }
+        }
 
         public static async Task<string> GiveCommand(string[] args, Player player)
         {

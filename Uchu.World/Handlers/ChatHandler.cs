@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.Core.Scriptable;
+using Uchu.World.Scriptable;
 
 namespace Uchu.World
 {
@@ -61,6 +62,9 @@ namespace Uchu.World
                     break;
                 case "fly":
                     chatCallback = ChatCommands.FlyCommand(args.ToArray(), player);
+                    break;
+                case "state":
+                    chatCallback = ChatCommands.StateCommand(args.ToArray(), player);
                     break;
                 default:
                     chatCallback = $"Unknown command: {command}\0";
