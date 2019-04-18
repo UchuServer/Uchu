@@ -300,6 +300,40 @@ namespace Uchu.Core
             }
         }
 
+        public async Task RemoveItemFromInventoryAsync(long item, uint count)
+        {
+            /*
+             * TODO: Find out how to force the client to remove an item. Use of consumables does not work without that.
+             */
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == CharacterId);
+
+                var items = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == item);
+                items.Count -= (int) count;
+                if (items.Count <= 0)
+                {
+                    if (items.IsEquipped)
+                    {
+                        await UnequipItemAsync(item);
+                        items.IsEquipped = false;
+                        ctx.InventoryItems.Remove(items);
+                    }
+
+                    try
+                    {
+                        character.Items.Remove(items);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+        
         public async Task UpdateTaskAsync(int id, MissionTaskType type = MissionTaskType.None)
         {
             using (var ctx = new UchuContext())

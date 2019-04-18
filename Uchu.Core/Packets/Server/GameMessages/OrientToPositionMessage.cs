@@ -1,7 +1,7 @@
 using System.Numerics;
 using RakDotNet;
 
-namespace Uchu.Core.Packets.Server.GameMessages
+namespace Uchu.Core
 {
     public class OrientToPositionMessage : ServerGameMessage
     {

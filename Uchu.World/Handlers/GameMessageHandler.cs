@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Collections;
+using Uchu.Core.Packets.Server.GameMessages;
 
 namespace Uchu.World
 {
@@ -53,6 +54,28 @@ namespace Uchu.World
         public async Task MoveItemInInventory(MoveItemInInventoryMessage msg, IPEndPoint endPoint)
         {
             await Player.MoveItemAsync(msg.ObjectID, msg.Slot);
+        }
+
+        [PacketHandler]
+        public async Task RemoveItemFromInventory(RemoveItemFromInventoryMessage msg, IPEndPoint endPoint)
+        {
+            if (!msg.Confirmed) return;
+            
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            await player.RemoveItemFromInventoryAsync(msg.ObjID, msg.StackCount);
+        }
+
+        [PacketHandler]
+        public async Task ClientItemConsumed(ClientItemConsumedMessage msg, IPEndPoint endPoint)
+        {
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+            
+            await player.RemoveItemFromInventoryAsync(msg.Item, 1);
         }
 
         [PacketHandler]

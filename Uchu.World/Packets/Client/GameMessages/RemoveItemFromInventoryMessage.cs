@@ -17,8 +17,8 @@ namespace Uchu.World
         public bool DeleteItem { get; set; } = true;
 
         public bool OutSuccess { get; set; } = false;
-        
-        public InventoryType InventoryType { get; set; }
+
+        public InventoryType InventoryType { get; set; } = InventoryType.Items;
         
         public ItemType ItemType { get; set; }
         
@@ -44,7 +44,68 @@ namespace Uchu.World
         
         public override void Deserialize(BitStream stream)
         {
-            base.Deserialize(stream);
+            Confirmed = stream.ReadBit();
+            DeleteItem = stream.ReadBit();
+            OutSuccess = stream.ReadBit();
+
+            if (stream.ReadBit())
+            {
+                InventoryType = (InventoryType) stream.ReadInt32();
+            }
+
+            if (stream.ReadBit())
+            {
+                ItemType = (ItemType) stream.ReadInt32();
+            }
+
+            var len = stream.ReadUInt32();
+            if (len > 0)
+            {
+                var info = stream.ReadString((int) len, true);
+                ExtraInfo = LegoDataDictionary.FromString(info);
+            }
+
+            ForceDeletion = stream.ReadBit();
+
+            if (stream.ReadBit())
+            {
+                LootTypeSourceID = stream.ReadInt64();
+            }
+
+            if (stream.ReadBit())
+            {
+                ObjID = stream.ReadInt64();
+            }
+
+            if (stream.ReadBit())
+            {
+                LOT = stream.ReadInt32();
+            }
+
+            if (stream.ReadBit())
+            {
+                RequestingObjID = stream.ReadInt64();
+            }
+
+            if (stream.ReadBit())
+            {
+                StackCount = stream.ReadUInt32();
+            }
+
+            if (stream.ReadBit())
+            {
+                StackRemaining = stream.ReadUInt32();
+            }
+
+            if (stream.ReadBit())
+            {
+                SubKey = stream.ReadInt64();
+            }
+
+            if (stream.ReadBit())
+            {
+                TradeID = stream.ReadInt64();
+            }
         }
     }
 }
