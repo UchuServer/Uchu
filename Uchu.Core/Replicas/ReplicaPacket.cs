@@ -19,7 +19,7 @@ namespace Uchu.Core
         {
             get => _name;
             // TODO: Look into this.
-            set => _name = value.Replace("/r", " ").Replace("\n", " ");
+            set => _name = value.Replace("\r", "").Replace("\n", " ");
         }
 
         public uint Created { get; set; }
