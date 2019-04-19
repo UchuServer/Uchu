@@ -255,7 +255,7 @@ namespace Uchu.World.Scriptable
                     ResetBuild(player);
             };
 
-            Task.Run(() => { timer.Start(); });
+            Task.Run(() => timer.Start());
         }
 
         /// <summary>
