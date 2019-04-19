@@ -4,17 +4,14 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Remotion.Linq.Clauses.ResultOperators;
-using ServiceStack.Text;
 
 namespace Uchu.Core
 {
     public class CDClient : IDisposable
     {
-        public SQLiteConnection Connection { get; }
-
         public CDClient()
         {
             var file = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "CDClient.db");
@@ -22,6 +19,13 @@ namespace Uchu.Core
             Connection = new SQLiteConnection($"Data Source={file};Version=3");
 
             Connection.Open();
+        }
+
+        public SQLiteConnection Connection { get; }
+
+        public void Dispose()
+        {
+            Connection?.Dispose();
         }
 
         public async Task<ComponentsRegistryRow[]> GetComponentsAsync(int lot)
@@ -35,14 +39,12 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new ComponentsRegistryRow
                         {
                             LOT = reader.GetInt32(0),
                             ComponentType = reader.GetInt32(1),
                             ComponentId = reader.GetInt32(2)
                         });
-                    }
                 }
             }
 
@@ -88,7 +90,6 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new MissionNPCComponentRow
                         {
                             LOT = reader.GetInt32(0),
@@ -97,7 +98,6 @@ namespace Uchu.Core
                             AcceptsMission = reader.GetBoolean(3),
                             GateVersion = reader.IsDBNull(4) ? "" : reader.GetString(4)
                         });
-                    }
                 }
             }
 
@@ -115,7 +115,7 @@ namespace Uchu.Core
                     if (!await reader.ReadAsync())
                         return null;
 
-                    return new MissionsRow
+                    var row = new MissionsRow
                     {
                         MissionId = reader.GetInt32(0),
                         Type = reader.IsDBNull(1) ? "" : reader.GetString(1),
@@ -158,9 +158,12 @@ namespace Uchu.Core
                         TimeLimit = reader.IsDBNull(38) ? -1 : reader.GetInt32(38),
                         IsMission = reader.GetBoolean(39),
                         MissionIconId = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
-                        PrerequiredMissions = reader.IsDBNull(41) ? new int[0] :
-                            reader.GetString(41).Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
-                                .Select(c => int.Parse(c.Trim())).ToArray(),
+                        // TODO: Look more into this
+                        PrerequiredMissions = reader.IsDBNull(41)
+                            ? new int[0]
+                            : reader.GetValue(41).ToString().Trim().Split(',', '|')
+                                .Select(s => s.Trim().Split(':')[0].Trim()).Where(s => !string.IsNullOrEmpty(s))
+                                .Select(int.Parse).ToArray(),
                         Localize = reader.GetBoolean(42),
                         IsInMotd = reader.GetBoolean(43),
                         CooldownTime = reader.IsDBNull(44) ? 0 : reader.GetInt64(44),
@@ -172,6 +175,7 @@ namespace Uchu.Core
                         LocStatus = reader.IsDBNull(50) ? -1 : reader.GetInt32(50),
                         BankInventoryReward = reader.IsDBNull(51) ? -1 : reader.GetInt32(51)
                     };
+                    return row;
                 }
             }
         }
@@ -281,7 +285,6 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new InventoryComponentRow
                         {
                             InventoryId = reader.GetInt32(0),
@@ -289,7 +292,6 @@ namespace Uchu.Core
                             ItemCount = reader.GetInt32(2),
                             Equipped = reader.GetBoolean(3)
                         });
-                    }
                 }
             }
 
@@ -366,14 +368,12 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new BehaviorParameterRow
                         {
                             BehaviorId = reader.GetInt32(0),
                             ParameterId = reader.GetString(1),
                             Value = reader.GetFloat(2)
                         });
-                    }
                 }
             }
 
@@ -424,7 +424,6 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new LootMatrixRow
                         {
                             LootMatrixIndex = reader.GetInt32(0),
@@ -437,7 +436,6 @@ namespace Uchu.Core
                             FlagId = reader.IsDBNull(7) ? -1 : reader.GetInt32(7),
                             GateVersion = reader.IsDBNull(8) ? "" : reader.GetString(8)
                         });
-                    }
                 }
             }
 
@@ -455,7 +453,6 @@ namespace Uchu.Core
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
-                    {
                         list.Add(new LootTableRow
                         {
                             ItemId = reader.GetInt32(0),
@@ -464,7 +461,6 @@ namespace Uchu.Core
                             IsMissionDrop = reader.GetBoolean(3),
                             SortPriority = reader.GetInt32(4)
                         });
-                    }
                 }
             }
 
@@ -566,6 +562,27 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<ScriptComponentRow> GetScriptComponent(int id)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM ScriptComponent WHERE id = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+                    
+                    return new ScriptComponentRow
+                    {
+                        ScriptId = reader.GetInt32(0),
+                        ServerScriptName = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        ClientScriptName = reader.IsDBNull(2) ? null : reader.GetString(2)
+                    };
+                }
+            }
+        }
+
         public async Task<int> GetTemplateFromName(string name)
         {
             using (var cmd = new SQLiteCommand("SELECT id FROM Objects WHERE name = '" + name + "'", Connection))
@@ -594,11 +611,6 @@ namespace Uchu.Core
                     return reader.GetString(0);
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            Connection?.Dispose();
         }
     }
 }

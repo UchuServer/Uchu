@@ -14,7 +14,7 @@ namespace Uchu.Core
     public class Player
     {
         public readonly IPEndPoint EndPoint;
-        private readonly Server _server;
+        public readonly Server Server;
 
         public World World { get; set; }
         public long CharacterId { get; set; }
@@ -23,7 +23,7 @@ namespace Uchu.Core
 
         public Player(Server server, IPEndPoint endPoint)
         {
-            _server = server;
+            Server = server;
             EndPoint = endPoint;
 
             var session = server.SessionCache.GetSession(endPoint);
@@ -114,8 +114,8 @@ namespace Uchu.Core
 
         public async Task AddItemAsync(int lot, int count = 1, LegoDataDictionary extraInfo = null)
         {
-            var comp = await _server.CDClient.GetComponentIdAsync(lot, 11);
-            var itemComp = await _server.CDClient.GetItemComponentAsync((int) comp);
+            var comp = await Server.CDClient.GetComponentIdAsync(lot, 11);
+            var itemComp = await Server.CDClient.GetItemComponentAsync((int) comp);
 
             using (var ctx = new UchuContext())
             {
@@ -170,7 +170,7 @@ namespace Uchu.Core
 
                 await ctx.SaveChangesAsync();
 
-                _server.Send(new AddItemToInventoryMessage
+                Server.Send(new AddItemToInventoryMessage
                 {
                     ObjectId = CharacterId,
                     ItemLOT = lot,
@@ -347,7 +347,7 @@ namespace Uchu.Core
                         mission.State != (int) MissionState.CompletedActive)
                         continue;
 
-                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     var task = tasks.Find(
                         t => t.Targets.Contains(id) && mission.Tasks.Exists(a => a.TaskId == t.UId));
@@ -360,7 +360,7 @@ namespace Uchu.Core
                     if (!charTask.Values.Contains(id))
                         charTask.Values.Add(id);
 
-                    _server.Send(new NotifyMissionTaskMessage
+                    Server.Send(new NotifyMissionTaskMessage
                     {
                         ObjectId = CharacterId,
                         MissionId = task.MissionId,
@@ -371,17 +371,17 @@ namespace Uchu.Core
                     await ctx.SaveChangesAsync();
                 }
 
-                var otherTasks = await _server.CDClient.GetMissionTasksWithTargetAsync(id);
+                var otherTasks = await Server.CDClient.GetMissionTasksWithTargetAsync(id);
 
                 foreach (var task in otherTasks)
                 {
-                    var mission = await _server.CDClient.GetMissionAsync(task.MissionId);
+                    var mission = await Server.CDClient.GetMissionAsync(task.MissionId);
 
                     if (mission.OffererObjectId != -1 || mission.TargetObjectId != -1 || mission.IsMission ||
                         task.TaskType != (int) type)
                         continue;
 
-                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
                     {
@@ -432,7 +432,7 @@ namespace Uchu.Core
 
                     await ctx.SaveChangesAsync();
 
-                    _server.Send(new NotifyMissionTaskMessage
+                    Server.Send(new NotifyMissionTaskMessage
                     {
                         ObjectId = CharacterId,
                         MissionId = mission.MissionId,
@@ -464,7 +464,7 @@ namespace Uchu.Core
                         mission.State != (int) MissionState.CompletedActive)
                         continue;
 
-                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     var task = tasks.Find(t =>
                         t.Targets.Contains(obj.LOT) && mission.Tasks.Exists(a => a.TaskId == t.UId));
@@ -480,7 +480,7 @@ namespace Uchu.Core
                             if (!charTask.Values.Contains(obj.LOT))
                                 charTask.Values.Add(obj.LOT);
 
-                            _server.Send(new NotifyMissionTaskMessage
+                            Server.Send(new NotifyMissionTaskMessage
                             {
                                 ObjectId = CharacterId,
                                 MissionId = task.MissionId,
@@ -496,7 +496,7 @@ namespace Uchu.Core
                             if (!charTask.Values.Contains(component.CollectibleId))
                                 charTask.Values.Add(component.CollectibleId);
 
-                            _server.Send(new NotifyMissionTaskMessage
+                            Server.Send(new NotifyMissionTaskMessage
                             {
                                 ObjectId = CharacterId,
                                 MissionId = task.MissionId,
@@ -509,6 +509,18 @@ namespace Uchu.Core
                         case MissionTaskType.KillEnemy:
                             break;
                         case MissionTaskType.Script:
+                            if (!charTask.Values.Contains(obj.LOT))
+                                charTask.Values.Add(obj.LOT);
+                            
+                            Server.Send(new NotifyMissionTaskMessage
+                            {
+                                ObjectId = CharacterId,
+                                MissionId = task.MissionId,
+                                TaskIndex = tasks.IndexOf(task),
+                                Updates = new[] {(float) charTask.Values.Count}
+                            }, EndPoint);
+
+                            await ctx.SaveChangesAsync();
                             break;
                         case MissionTaskType.QuickBuild:
                             break;
@@ -543,17 +555,17 @@ namespace Uchu.Core
                     }
                 }
 
-                var otherTasks = await _server.CDClient.GetMissionTasksWithTargetAsync(obj.LOT);
+                var otherTasks = await Server.CDClient.GetMissionTasksWithTargetAsync(obj.LOT);
 
                 foreach (var task in otherTasks)
                 {
-                    var mission = await _server.CDClient.GetMissionAsync(task.MissionId);
+                    var mission = await Server.CDClient.GetMissionAsync(task.MissionId);
 
                     if (mission.OffererObjectId != -1 || mission.TargetObjectId != -1 || mission.IsMission ||
                         task.TaskType != (int) type)
                         continue;
 
-                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
                     {
@@ -604,7 +616,7 @@ namespace Uchu.Core
 
                     await ctx.SaveChangesAsync();
 
-                    _server.Send(new NotifyMissionTaskMessage
+                    Server.Send(new NotifyMissionTaskMessage
                     {
                         ObjectId = CharacterId,
                         MissionId = mission.MissionId,
@@ -627,7 +639,7 @@ namespace Uchu.Core
 
                 if (!character.Missions.Exists(m => m.MissionId == mission.MissionId))
                 {
-                    var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+                    var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
                     character.Missions.Add(new Mission
                     {
@@ -643,7 +655,7 @@ namespace Uchu.Core
 
                 var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
 
-                _server.Send(new NotifyMissionMessage
+                Server.Send(new NotifyMissionMessage
                 {
                     ObjectId = CharacterId,
                     MissionId = mission.MissionId,
@@ -658,8 +670,8 @@ namespace Uchu.Core
                 if (character.MaximumImagination == 0 && mission.MaximumImaginationReward > 0)
                 {
                     // Bob mission
-                    await CompleteMissionAsync(await _server.CDClient.GetMissionAsync(664));
-                    _server.Send(new RestoreToPostLoadStatsMessage {ObjectId = CharacterId}, EndPoint);
+                    await CompleteMissionAsync(await Server.CDClient.GetMissionAsync(664));
+                    Server.Send(new RestoreToPostLoadStatsMessage {ObjectId = CharacterId}, EndPoint);
                     UpdateStats();
                 }
 
@@ -670,7 +682,7 @@ namespace Uchu.Core
 
                 if (mission.CurrencyReward > 0)
                 {
-                    _server.Send(new SetCurrencyMessage
+                    Server.Send(new SetCurrencyMessage
                     {
                         ObjectId = CharacterId,
                         Currency = character.Currency,
@@ -680,7 +692,7 @@ namespace Uchu.Core
 
                 if (mission.LegoScoreReward > 0)
                 {
-                    _server.Send(new ModifyLegoScoreMessage
+                    Server.Send(new ModifyLegoScoreMessage
                     {
                         ObjectId = CharacterId,
                         SourceType = 2,
@@ -696,7 +708,7 @@ namespace Uchu.Core
                         ["type"] = "imagination"
                     };
 
-                    _server.Send(new UIMessageToClientMessage
+                    Server.Send(new UIMessageToClientMessage
                     {
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
@@ -712,7 +724,7 @@ namespace Uchu.Core
                         ["type"] = "health"
                     };
 
-                    _server.Send(new UIMessageToClientMessage
+                    Server.Send(new UIMessageToClientMessage
                     {
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
@@ -732,7 +744,7 @@ namespace Uchu.Core
                 if (mission.FourthItemReward != -1)
                     await AddItemAsync(mission.FourthItemReward, mission.FourthItemRewardCount);
 
-                _server.Send(new NotifyMissionMessage
+                Server.Send(new NotifyMissionMessage
                 {
                     ObjectId = CharacterId,
                     MissionId = mission.MissionId,
@@ -748,8 +760,14 @@ namespace Uchu.Core
 
         public async Task<bool> AllTasksCompletedAsync(Mission mission)
         {
-            var tasks = await _server.CDClient.GetMissionTasksAsync(mission.MissionId);
+            var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
+            foreach (var task in tasks)
+            {
+                Console.WriteLine(
+                    $"TASK {mission.Tasks.Find(t => t.TaskId == task.UId).Values.Count} | {task.TargetValue}");
+            }
+            
             return tasks.TrueForAll(t => mission.Tasks.Find(t2 => t2.TaskId == t.UId).Values.Count >= t.TargetValue);
         }
 
@@ -760,8 +778,8 @@ namespace Uchu.Core
             if (obj == null)
                 return;
 
-            var componentId = await _server.CDClient.GetComponentIdAsync(obj.LOT, 73);
-            var missions = await _server.CDClient.GetNPCMissionsAsync((int) componentId);
+            var componentId = await Server.CDClient.GetComponentIdAsync(obj.LOT, 73);
+            var missions = await Server.CDClient.GetNPCMissionsAsync((int) componentId);
 
             using (var ctx = new UchuContext())
             {
@@ -770,7 +788,7 @@ namespace Uchu.Core
 
                 foreach (var mission in missions)
                 {
-                    var miss = await _server.CDClient.GetMissionAsync(mission.MissionId);
+                    var miss = await Server.CDClient.GetMissionAsync(mission.MissionId);
 
                     if (!miss.IsMission)
                         continue;
@@ -783,7 +801,7 @@ namespace Uchu.Core
 
                             if (charMission.State != (int) MissionState.Completed && await AllTasksCompletedAsync(charMission))
                             {
-                                _server.Send(new OfferMissionMessage
+                                Server.Send(new OfferMissionMessage
                                 {
                                     ObjectId = character.CharacterId,
                                     MissionId = mission.MissionId,
@@ -832,7 +850,7 @@ namespace Uchu.Core
                             if (!canOffer)
                                 continue;
 
-                            _server.Send(new OfferMissionMessage
+                            Server.Send(new OfferMissionMessage
                             {
                                 ObjectId = character.CharacterId,
                                 MissionId = mission.MissionId,
@@ -862,19 +880,19 @@ namespace Uchu.Core
 
                 var rocket = character.Items.Find(i => i.LOT == 6416); // TODO: find out how to properly get the active rocket
 
-                _server.Send(new EquipItemMessage
+                Server.Send(new EquipItemMessage
                 {
                     ObjectId = CharacterId,
                     ItemObjectId = rocket.InventoryItemId
                 }, EndPoint);
 
-                _server.Send(new ChangeObjectWorldStateMessage
+                Server.Send(new ChangeObjectWorldStateMessage
                 {
                     ObjectId = rocket.InventoryItemId,
                     State = ObjectWorldState.Attached
                 }, EndPoint);
 
-                _server.Send(new FireClientEventMessage
+                Server.Send(new FireClientEventMessage
                 {
                     ObjectId = objectId,
                     Arguments = "RocketEquipped",
@@ -899,7 +917,7 @@ namespace Uchu.Core
                 var character = await ctx.Characters.Include(c => c.Items)
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
-                _server.Send(new DieMessage
+                Server.Send(new DieMessage
                 {
                     ClientDeath = true,
                     DeathType = "electro-shock-death",

@@ -89,12 +89,14 @@ namespace Uchu.Core
              * GameScripts
              */
 
-            var gameObjects = Assembly.GetEntryAssembly()
+            var gameScripts = Assembly.GetEntryAssembly()
                 .GetTypes().Where(t => t.BaseType == typeof(GameScript));
-            foreach (var gameObject in gameObjects)
+            foreach (var script in gameScripts)
             {
-                var attribute = gameObject.GetCustomAttribute<AutoAssignAttribute>();
+                var attribute = script.GetCustomAttribute<AutoAssignAttribute>();
                 if (attribute == null) continue;
+                
+                Console.WriteLine($"");
 
                 foreach (var replica in Replicas)
                 {
@@ -103,7 +105,7 @@ namespace Uchu.Core
                     if (attribute.Component != null &&
                         replica.Components.All(c => c.GetType().FullName != attribute.Component.FullName)) continue;
 
-                    var instance = (GameScript) Activator.CreateInstance(gameObject, this, replica);
+                    var instance = (GameScript) Activator.CreateInstance(script, this, replica);
                     replica.GameScripts.Add(instance);
                 }
             }
@@ -458,7 +460,9 @@ namespace Uchu.Core
                 Components = components.ToArray(),
                 SpawnerObjectId = spawnLOT == 176 ? (long) obj.ObjectId : -1,
                 ParentObjectId = parentId,
-                Settings = obj.Settings
+                Settings = obj.Settings,
+                Position = obj.Position,
+                Rotation = obj.Rotation
             };
 
             if (obj.Settings.TryGetValue("spawnActivator", out var spawnActivator) && (bool) spawnActivator)

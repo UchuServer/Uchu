@@ -66,6 +66,12 @@ namespace Uchu.World
                 case "state":
                     chatCallback = ChatCommands.StateCommand(args.ToArray(), player);
                     break;
+                case "complete":
+                    chatCallback = await ChatCommands.Complete(args.ToArray(), player);
+                    break;
+                case "near":
+                    chatCallback = ChatCommands.NearCommand(args.ToArray(), player);
+                    break;
                 default:
                     chatCallback = $"Unknown command: {command}\0";
                     break;

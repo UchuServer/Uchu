@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using RakDotNet;
 using Uchu.Core.Collections;
 using Uchu.Core.Scriptable;
@@ -43,6 +44,10 @@ namespace Uchu.Core
         public IReplicaComponent[] Components { get; set; }
 
         public LegoDataDictionary Settings { get; set; }
+
+        public Vector3 Position;
+
+        public Vector4 Rotation;
 
         private void _write(BitStream stream)
         {
