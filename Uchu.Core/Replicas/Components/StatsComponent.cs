@@ -1,3 +1,4 @@
+using System;
 using RakDotNet;
 
 namespace Uchu.Core
@@ -22,27 +23,25 @@ namespace Uchu.Core
         {
             stream.WriteBit(HasStats);
 
-            if (HasStats)
-            {
-                stream.WriteUInt(CurrentHealth);
-                stream.WriteFloat(MaxHealth);
-                stream.WriteUInt(CurrentArmor);
-                stream.WriteFloat(MaxArmor);
-                stream.WriteUInt(CurrentImagination);
-                stream.WriteFloat(MaxImagination);
-                stream.WriteUInt(0);
-                stream.WriteBit(true);
-                stream.WriteBit(false);
-                stream.WriteBit(false);
-                stream.WriteFloat(MaxHealth);
-                stream.WriteFloat(MaxArmor);
-                stream.WriteFloat(MaxImagination);
-                stream.WriteUInt((uint) Factions.Length);
+            if (!HasStats) return;
+            stream.WriteUInt(CurrentHealth);
+            stream.WriteFloat(MaxHealth);
+            stream.WriteUInt(CurrentArmor);
+            stream.WriteFloat(MaxArmor);
+            stream.WriteUInt(CurrentImagination);
+            stream.WriteFloat(MaxImagination);
+            stream.WriteUInt(0);
+            stream.WriteBit(true);
+            stream.WriteBit(false);
+            stream.WriteBit(false);
+            stream.WriteFloat(MaxHealth);
+            stream.WriteFloat(MaxArmor);
+            stream.WriteFloat(MaxImagination);
+            stream.WriteUInt((uint) Factions.Length);
 
-                foreach (var faction in Factions) stream.WriteInt(faction);
+            foreach (var faction in Factions) stream.WriteInt(faction);
 
-                stream.WriteBit(Smashable);
-            }
+            stream.WriteBit(Smashable);
         }
 
         public override void Serialize(BitStream stream)

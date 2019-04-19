@@ -14,7 +14,7 @@ namespace Uchu.Core
 
     public class Server
     {
-        private readonly RakNetServer _server;
+        public readonly RakNetServer RakNetServer;
         private readonly HandlerMap _handlerMap;
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
@@ -27,7 +27,7 @@ namespace Uchu.Core
 
         public Server(int port)
         {
-            _server = new RakNetServer(port, "3.25 ND1");
+            RakNetServer = new RakNetServer(port, "3.25 ND1");
             _handlerMap = new HandlerMap();
             _gameMessageHandlerMap = new GameMessageHandlerMap();
             Port = port;
@@ -37,7 +37,7 @@ namespace Uchu.Core
             CDClient = new CDClient();
             Worlds = new Dictionary<ZoneId, World>();
 
-            _server.PacketReceived += _handlePacket;
+            RakNetServer.PacketReceived += _handlePacket;
 
             RegisterAssembly(Assembly.GetExecutingAssembly());
         }
@@ -46,7 +46,7 @@ namespace Uchu.Core
         {
             var active = true;
 
-            _server.Start();
+            RakNetServer.Start();
 
             while (active)
             {
@@ -59,10 +59,16 @@ namespace Uchu.Core
 
                 input = input.Remove(0, 1);*/
 
-                var split = input.Split(' ');
+                var split = input?.Split(' ');
 
-                switch (split[0].ToLower())
+                switch (split?[0].ToLower())
                 {
+                    case "players":
+                        foreach (var connection in RakNetServer.Connections)
+                        {
+                            Console.WriteLine(connection);
+                        }
+                        break;
                     case "exit":
                     case "quit":
                     case "stop":
@@ -100,18 +106,18 @@ namespace Uchu.Core
                 }
             }
 
-            _server.Stop();
+            RakNetServer.Stop();
         }
 
         public void Stop()
         {
             Console.WriteLine("Stopping...");
 
-            _server.Stop();
+            RakNetServer.Stop();
         }
 
         public ReplicaManager CreateReplicaManager()
-            => new ReplicaManager(_server);
+            => new ReplicaManager(RakNetServer);
 
         public void DisconnectClient(IPEndPoint endpoint, DisconnectId id = DisconnectId.UnknownServerError)
             => Send(new DisconnectNotifyPacket {DisconnectId = id}, endpoint);
@@ -122,16 +128,16 @@ namespace Uchu.Core
 
             stream.WriteSerializable(packet);
 
-            _server.Send(stream, endpoint);
+            RakNetServer.Send(stream, endpoint);
 
             Console.WriteLine($"Sent {packet}");
         }
 
         public void Send(byte[] data, IPEndPoint endpoint)
-            => _server.Send(data, endpoint);
+            => RakNetServer.Send(data, endpoint);
 
         public void Send(BitStream stream, IPEndPoint endpoint)
-            => _server.Send(stream, endpoint);
+            => RakNetServer.Send(stream, endpoint);
 
         public void RegisterAssembly(Assembly assembly)
         {

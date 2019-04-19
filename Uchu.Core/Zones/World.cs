@@ -3,49 +3,74 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Numerics;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
-using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet;
 using Uchu.Core.Collections;
+using Uchu.Core.Packets.Server.GameMessages;
+using Uchu.Core.Scriptable;
 
 namespace Uchu.Core
 {
     public class World
     {
+        /*
+         * There is a problem of when the player crashes and the server does not pick up on it. The player is than
+         * stuck in the world.
+         */
+
         public static List<int> ComponentOrder = new List<int>
         {
             108, 61, 1, 3, 20, 30, 40, 7, 23, 26, 4, 19, 17, 5, 9, 60, 48, 25, 49, 16, 6, 39, 71, 75, 42, 2, 50, 107, 69
         };
 
-        private readonly List<ReplicaPacket> _replicas;
         private readonly Dictionary<long, int> _loot;
-        private readonly Server _server;
-        private readonly List<Player> _players;
         private readonly List<Timer> _platformTimers;
 
-        private Zone _zone;
+        private readonly List<ReplicaPacket> _replicas;
+        public readonly List<GameScript> GameScripts = new List<GameScript>();
 
-        public Zone Zone => _zone;
-
-        public ReplicaManager ReplicaManager { get; }
-        public uint ZoneId { get; private set; }
+        public readonly List<Player> Players;
+        public readonly Server Server;
 
         public World(Server server)
         {
             _replicas = new List<ReplicaPacket>();
             _loot = new Dictionary<long, int>();
-            _server = server;
-            _players = new List<Player>();
+            Server = server;
+            Players = new List<Player>();
             _platformTimers = new List<Timer>();
 
             ReplicaManager = server.CreateReplicaManager();
+
+            // Disconnected Players must be removed!
+            Server.RakNetServer.Disconnection += RemovePlayer;
+        }
+
+        public Zone Zone { get; private set; }
+
+        public ReplicaManager ReplicaManager { get; }
+
+        public uint ZoneId { get; private set; }
+
+        /// <summary>
+        ///     Remove a player from this world.
+        /// </summary>
+        /// <param name="endPoint"></param>
+        public void RemovePlayer(IPEndPoint endPoint)
+        {
+            Console.WriteLine($"{endPoint} disconnected from World!");
+            var player = Players.First(p => p.EndPoint.Equals(endPoint));
+            DestroyObject(player.CharacterId);
+            ReplicaManager.RemoveConnection(endPoint);
+            Players.Remove(player);
         }
 
         public async Task InitializeAsync(Zone zone)
         {
             ZoneId = zone.ZoneId;
-            _zone = await _server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) ZoneId]);
+            Zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) ZoneId]);
 
             foreach (var scene in zone.Scenes)
             {
@@ -68,16 +93,36 @@ namespace Uchu.Core
                     }
                 }
             }
+
+            var gameObjects = Assembly.GetEntryAssembly()
+                .GetTypes().Where(t => t.BaseType == typeof(GameScript));
+            foreach (var gameObject in gameObjects)
+            {
+                var attribute = gameObject.GetCustomAttribute<AutoAssignAttribute>();
+                if (attribute == null) continue;
+
+                foreach (var replica in _replicas)
+                {
+                    if (attribute.Name != null && replica.Name != attribute.Name) continue;
+                    if (attribute.LOT != 0 && replica.LOT != attribute.LOT) continue;
+                    if (attribute.Component != null &&
+                        replica.Components.All(c => c.GetType().FullName != attribute.Component.FullName)) continue;
+
+                    var instance = (GameScript) Activator.CreateInstance(gameObject, this, replica);
+                    GameScripts.Add(instance);
+                }
+            }
+
+            foreach (var gameObject in GameScripts) gameObject.Start();
         }
 
-        public Player GetPlayer(long objectId)
-            => _players.Find(p => p.CharacterId == objectId);
+        public Player GetPlayer(long objectId) => Players.Find(p => p.CharacterId == objectId);
 
         public void SpawnPlayer(Character character, IPEndPoint endpoint)
         {
             ReplicaManager.AddConnection(endpoint);
 
-            _players.Add(new Player(_server, endpoint));
+            Players.Add(new Player(Server, endpoint));
 
             var replica = new ReplicaPacket
             {
@@ -90,8 +135,8 @@ namespace Uchu.Core
                     new ControllablePhysicsComponent
                     {
                         HasPosition = true,
-                        Position = _zone.SpawnPosition,
-                        Rotation = _zone.SpawnRotation
+                        Position = Zone.SpawnPosition,
+                        Rotation = Zone.SpawnRotation
                     },
                     new DestructibleComponent(),
                     new StatsComponent
@@ -121,6 +166,9 @@ namespace Uchu.Core
             };
 
             SpawnObject(replica);
+
+            // TODO: Fix
+            Server.Send(new DisplayZoneSummaryMessage {IsZoneStart = true, Sender = 0}, endpoint);
         }
 
         public void RegisterLoot(long objectId, int lot)
@@ -129,7 +177,9 @@ namespace Uchu.Core
         }
 
         public int GetLootLOT(long objectId)
-            => _loot[objectId];
+        {
+            return _loot[objectId];
+        }
 
         public void DestroyObject(long objectId)
         {
@@ -141,7 +191,9 @@ namespace Uchu.Core
         }
 
         public ReplicaPacket GetObject(long objectId)
-            => _replicas.Find(r => r.ObjectId == objectId);
+        {
+            return _replicas.Find(r => r.ObjectId == objectId);
+        }
 
         public void UpdateObject(ReplicaPacket packet)
         {
@@ -169,7 +221,7 @@ namespace Uchu.Core
             if (obj.Settings.TryGetValue("spawntemplate", out var spawnTemplate))
                 obj.LOT = (int) spawnTemplate;
 
-            var registryComponents = await _server.CDClient.GetComponentsAsync(obj.LOT);
+            var registryComponents = await Server.CDClient.GetComponentsAsync(obj.LOT);
 
             /*if (registryComponents.Select(c => c.ComponentType).Contains(78))
                 Console.WriteLine($"Proximity LOT = {spawnLOT}");*/
@@ -244,7 +296,8 @@ namespace Uchu.Core
                     case 23:
                         list.Add(new StatsComponent {HasStats = false});
 
-                        list.Add(new CollectibleComponent {CollectibleId = (ushort) (int) obj.Settings["collectible_id"]});
+                        list.Add(new CollectibleComponent
+                            {CollectibleId = (ushort) (int) obj.Settings["collectible_id"]});
                         break;
 
                     case 26:
@@ -260,7 +313,7 @@ namespace Uchu.Core
                         break;
 
                     case 17:
-                        var items = await _server.CDClient.GetInventoryItemsAsync(c.ComponentId);
+                        var items = await Server.CDClient.GetInventoryItemsAsync(c.ComponentId);
 
                         list.Add(new InventoryComponent // TODO: make this work
                         {
@@ -302,13 +355,12 @@ namespace Uchu.Core
                             ? (uint) start
                             : 0;
 
-                        var path = (MovingPlatformPath) _zone.Paths.FirstOrDefault(p =>
+                        var path = (MovingPlatformPath) Zone.Paths.FirstOrDefault(p =>
                             p is MovingPlatformPath && p.Name == pathName);
 
-                        var nextWaypoint = pathStart + 1 >  path.Waypoints.Length - 1  ? 0 : pathStart + 1;
+                        var nextWaypoint = pathStart + 1 > path.Waypoints.Length - 1 ? 0 : pathStart + 1;
                         var type = obj.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
-                            ?
-                            PlatformType.Mover
+                            ? PlatformType.Mover
                             : obj.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
                               (bool) isSimpleMover
                                 ? PlatformType.SimpleMover

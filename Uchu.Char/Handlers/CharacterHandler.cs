@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -70,13 +71,22 @@ namespace Uchu.Char
         [PacketHandler]
         public async Task CharacterCreate(CharacterCreateRequestPacket packet, IPEndPoint endpoint)
         {
+            /*
+             * TODO: The Server should add the chosen shirt and legs to the player inventory and equip them.
+             */
+            
             var session = Server.SessionCache.GetSession(endpoint);
 
             var first = (await Server.Resources.ReadTextAsync("Names/first.txt")).Split('\n');
             var middle = (await Server.Resources.ReadTextAsync("Names/middle.txt")).Split('\n');
             var last = (await Server.Resources.ReadTextAsync("Names/last.txt")).Split('\n');
 
-            var name = first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last];
+            /*
+             * Make sure there are no awkward newlines in the player name.
+             */
+            var name =
+                (first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last])
+                .Replace("\r", "");
 
             using (var ctx = new UchuContext())
             {

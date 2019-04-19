@@ -73,8 +73,10 @@ namespace Uchu.Core
                 case ItemType.QuestObject:
                     return InventoryType.Hidden;
 
-                default:
+                case ItemType.Invalid:
                     return InventoryType.Invalid;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }
     }

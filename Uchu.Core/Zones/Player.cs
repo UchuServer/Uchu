@@ -1,28 +1,32 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core.Collections;
+using Uchu.World;
 
 namespace Uchu.Core
 {
     public class Player
     {
-        private readonly IPEndPoint _endpoint;
+        public readonly IPEndPoint EndPoint;
         private readonly Server _server;
 
         public World World { get; set; }
         public long CharacterId { get; set; }
 
-        public Player(Server server, IPEndPoint endpoint)
+        public ReplicaPacket ReplicaPacket => World.GetObject(CharacterId);
+
+        public Player(Server server, IPEndPoint endPoint)
         {
             _server = server;
-            _endpoint = endpoint;
+            EndPoint = endPoint;
 
-            var session = server.SessionCache.GetSession(endpoint);
+            var session = server.SessionCache.GetSession(endPoint);
 
             CharacterId = session.CharacterId;
             World = server.Worlds[(ZoneId) session.ZoneId];
@@ -119,10 +123,23 @@ namespace Uchu.Core
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
                 var id = Utils.GenerateObjectId();
-                var inventoryType = (int) Utils.GetItemInventoryType((ItemType) itemComp.ItemType);
+                int inventoryType;
+                try
+                {
+                    inventoryType = (int) Utils.GetItemInventoryType((ItemType) itemComp.ItemType);
+                }
+                catch
+                {
+                    if (Enum.IsDefined(typeof(PickupLOT), lot))
+                        await StatPickup(lot);
+                    // TODO: Check for more passable pickup types.
+                    return;
+                }
 
                 var items = character.Items.Where(i => i.InventoryType == inventoryType).ToArray();
 
+                Console.WriteLine($"Adding {lot} to inventory!");
+                
                 var slot = 0;
 
                 if (items.Length > 0)
@@ -162,9 +179,124 @@ namespace Uchu.Core
                     Slot = item.Slot,
                     InventoryType = inventoryType,
                     ExtraInfo = extraInfo
-                }, _endpoint);
+                }, EndPoint);
 
                 await UpdateTaskAsync(lot, MissionTaskType.ObtainItem);
+            }
+        }
+
+        /// <summary>
+        ///     Pickup of a stat pickup.
+        /// </summary>
+        /// <param name="lot"></param>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public async Task StatPickup(int lot)
+        {
+            Console.WriteLine($"Updating stat for LOT: {lot}");
+            var imaginationToAdd = 0;
+            var armorToAdd = 0;
+            var healthToAdd = 0;
+            
+            switch ((PickupLOT) lot)
+            {
+                case PickupLOT.Imagination:
+                    imaginationToAdd = 1;
+                    break;
+                case PickupLOT.TwoImagination:
+                    imaginationToAdd = 2;
+                    break;
+                case PickupLOT.ThreeImagination:
+                    imaginationToAdd = 3;
+                    break;
+                case PickupLOT.FiveImagination:
+                    imaginationToAdd = 5;
+                    break;
+                case PickupLOT.TenImagination:
+                    imaginationToAdd = 10;
+                    break;
+                case PickupLOT.Health:
+                    healthToAdd = 1;
+                    break;
+                case PickupLOT.TwoHealth:
+                    healthToAdd = 2;
+                    break;
+                case PickupLOT.ThreeHealth:
+                    healthToAdd = 3;
+                    break;
+                case PickupLOT.FiveHealth:
+                    healthToAdd = 5;
+                    break;
+                case PickupLOT.TenHealth:
+                    healthToAdd = 10;
+                    break;
+                case PickupLOT.Armor:
+                    armorToAdd = 1;
+                    break;
+                case PickupLOT.TwoArmor:
+                    armorToAdd = 2;
+                    break;
+                case PickupLOT.ThreeArmor:
+                    armorToAdd = 3;
+                    break;
+                case PickupLOT.FiveArmor:
+                    armorToAdd = 5;
+                    break;
+                case PickupLOT.TenArmor:
+                    armorToAdd = 10;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(lot), lot, null);
+            }
+
+            using (var ctx = new UchuContext())
+            {
+                var character = ctx.Characters.First(c => c.CharacterId == CharacterId);
+                character.CurrentImagination += imaginationToAdd;
+                character.CurrentHealth += healthToAdd;
+                character.CurrentArmor += armorToAdd;
+                
+                await ctx.SaveChangesAsync();
+            }
+            
+            Console.WriteLine($"Adding: {imaginationToAdd} | {healthToAdd} | {armorToAdd}");
+            
+            UpdateStats();
+        }
+
+        public void UpdateStats()
+        {
+            using (var ctx = new UchuContext())
+            {
+                var character = ctx.Characters.First(c => c.CharacterId == CharacterId);
+                var obj = World.GetObject(CharacterId);
+                var stats = (StatsComponent) obj.Components.First(c => c is StatsComponent);
+
+                if (character.CurrentImagination > character.MaximumImagination)
+                    character.CurrentImagination = character.MaximumImagination;
+                if (character.CurrentHealth > character.MaximumHealth)
+                    character.CurrentHealth = character.MaximumHealth;
+                if (character.CurrentArmor > character.MaximumArmor)
+                    character.CurrentArmor = character.MaximumArmor;
+                
+                stats.CurrentImagination = (uint) character.CurrentImagination;
+                stats.CurrentHealth = (uint) character.CurrentHealth;
+                stats.CurrentArmor = (uint) character.CurrentArmor;
+
+                stats.MaxImagination = character.MaximumImagination;
+                stats.MaxHealth = character.MaximumHealth;
+                stats.MaxArmor = character.MaximumArmor;
+                
+                World.UpdateObject(obj);
+            }
+        }
+        
+        public static async Task MoveItemAsync(long item, ulong slot)
+        {
+            Console.WriteLine($"Moving {item} to {slot}.");
+            using (var ctx = new UchuContext())
+            {
+                ctx.InventoryItems.First(i => i.InventoryItemId == item).Slot = (int) slot;
+                await ctx.SaveChangesAsync();
             }
         }
 
@@ -200,7 +332,7 @@ namespace Uchu.Core
                         MissionId = task.MissionId,
                         TaskIndex = tasks.IndexOf(task),
                         Updates = new[] {(float) charTask.Values.Count}
-                    }, _endpoint);
+                    }, EndPoint);
 
                     await ctx.SaveChangesAsync();
                 }
@@ -272,7 +404,7 @@ namespace Uchu.Core
                         MissionId = mission.MissionId,
                         TaskIndex = tasks.IndexOf(task),
                         Updates = new[] {(float) charTask.Values.Count}
-                    }, _endpoint);
+                    }, EndPoint);
 
                     if (await AllTasksCompletedAsync(charMission))
                         await CompleteMissionAsync(mission);
@@ -320,7 +452,7 @@ namespace Uchu.Core
                                 MissionId = task.MissionId,
                                 TaskIndex = tasks.IndexOf(task),
                                 Updates = new[] {(float) charTask.Values.Count}
-                            }, _endpoint);
+                            }, EndPoint);
 
                             await ctx.SaveChangesAsync();
                             break;
@@ -336,10 +468,44 @@ namespace Uchu.Core
                                 MissionId = task.MissionId,
                                 TaskIndex = tasks.IndexOf(task),
                                 Updates = new[] {(float) (component.CollectibleId + (World.ZoneId << 8))}
-                            }, _endpoint);
+                            }, EndPoint);
 
                             await ctx.SaveChangesAsync();
                             break;
+                        case MissionTaskType.KillEnemy:
+                            break;
+                        case MissionTaskType.Script:
+                            break;
+                        case MissionTaskType.QuickBuild:
+                            break;
+                        case MissionTaskType.GoToNPC:
+                            break;
+                        case MissionTaskType.UseEmote:
+                            break;
+                        case MissionTaskType.UseConsumable:
+                            break;
+                        case MissionTaskType.UseSkill:
+                            break;
+                        case MissionTaskType.ObtainItem:
+                            break;
+                        case MissionTaskType.Discover:
+                            break;
+                        case MissionTaskType.None:
+                            break;
+                        case MissionTaskType.MinigameAchievement:
+                            break;
+                        case MissionTaskType.MissionComplete:
+                            break;
+                        case MissionTaskType.TamePet:
+                            break;
+                        case MissionTaskType.Racing:
+                            break;
+                        case MissionTaskType.Flag:
+                            break;
+                        case MissionTaskType.NexusTowerBrickDonation:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(type), type, null);
                     }
                 }
 
@@ -410,7 +576,7 @@ namespace Uchu.Core
                         MissionId = mission.MissionId,
                         TaskIndex = tasks.IndexOf(task),
                         Updates = new[] {(float) charTask.Values.Count}
-                    }, _endpoint);
+                    }, EndPoint);
 
                     if (await AllTasksCompletedAsync(charMission))
                         await CompleteMissionAsync(mission);
@@ -449,14 +615,18 @@ namespace Uchu.Core
                     MissionId = mission.MissionId,
                     MissionState = MissionState.Unavailable,
                     SendingRewards = true
-                }, _endpoint);
+                }, EndPoint);
 
                 charMission.State = (int) MissionState.Completed;
                 charMission.CompletionCount++;
                 charMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 if (character.MaximumImagination == 0 && mission.MaximumImaginationReward > 0)
+                {
+                    // Bob mission
                     await CompleteMissionAsync(await _server.CDClient.GetMissionAsync(664));
+                    _server.Send(new RestoreToPostLoadStatsMessage {ObjectId = CharacterId}, EndPoint);
+                }
 
                 character.Currency += mission.CurrencyReward;
                 character.UniverseScore += mission.LegoScoreReward;
@@ -470,7 +640,7 @@ namespace Uchu.Core
                         ObjectId = CharacterId,
                         Currency = character.Currency,
                         Position = Vector3.Zero // TODO: find out what to set this to
-                    }, _endpoint);
+                    }, EndPoint);
                 }
 
                 if (mission.LegoScoreReward > 0)
@@ -480,7 +650,7 @@ namespace Uchu.Core
                         ObjectId = CharacterId,
                         SourceType = 2,
                         Score = mission.LegoScoreReward
-                    }, _endpoint);
+                    }, EndPoint);
                 }
 
                 if (mission.MaximumImaginationReward > 0)
@@ -496,7 +666,7 @@ namespace Uchu.Core
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
                         MessageName = "MaxPlayerBarUpdate"
-                    }, _endpoint);
+                    }, EndPoint);
                 }
 
                 if (mission.MaximumHealthReward > 0)
@@ -512,7 +682,7 @@ namespace Uchu.Core
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
                         MessageName = "MaxPlayerBarUpdate"
-                    }, _endpoint);
+                    }, EndPoint);
                 }
 
                 if (mission.FirstItemReward != -1)
@@ -533,7 +703,7 @@ namespace Uchu.Core
                     MissionId = mission.MissionId,
                     MissionState = MissionState.Completed,
                     SendingRewards = false
-                }, _endpoint);
+                }, EndPoint);
 
                 await UpdateTaskAsync(mission.MissionId, MissionTaskType.MissionComplete);
 
@@ -583,7 +753,7 @@ namespace Uchu.Core
                                     ObjectId = character.CharacterId,
                                     MissionId = mission.MissionId,
                                     OffererObjectId = offererId
-                                }, _endpoint);
+                                }, EndPoint);
 
                                 /*_server.Send(new OfferMissionMessage
                                 {
@@ -632,7 +802,7 @@ namespace Uchu.Core
                                 ObjectId = character.CharacterId,
                                 MissionId = mission.MissionId,
                                 OffererObjectId = offererId
-                            }, _endpoint);
+                            }, EndPoint);
 
                             /*_server.Send(new OfferMissionMessage
                             {
@@ -661,13 +831,13 @@ namespace Uchu.Core
                 {
                     ObjectId = CharacterId,
                     ItemObjectId = rocket.InventoryItemId
-                }, _endpoint);
+                }, EndPoint);
 
                 _server.Send(new ChangeObjectWorldStateMessage
                 {
                     ObjectId = rocket.InventoryItemId,
                     State = ObjectWorldState.Attached
-                }, _endpoint);
+                }, EndPoint);
 
                 _server.Send(new FireClientEventMessage
                 {
@@ -675,7 +845,7 @@ namespace Uchu.Core
                     Arguments = "RocketEquipped",
                     TargetObjectId = rocket.InventoryItemId,
                     SenderObjectId = CharacterId
-                }, _endpoint);
+                }, EndPoint);
 
                 character.LandingByRocket = true;
                 character.Rocket =
@@ -683,6 +853,24 @@ namespace Uchu.Core
                     ";";
 
                 await ctx.SaveChangesAsync();
+            }
+        }
+
+        public async Task Smash()
+        {
+            Console.WriteLine("Smashing player...");
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.Include(c => c.Items)
+                    .SingleAsync(c => c.CharacterId == CharacterId);
+
+                _server.Send(new DieMessage
+                {
+                    ClientDeath = true,
+                    DeathType = "electro-shock-death",
+                    SpawnLoot = false,
+                    LootOwner = CharacterId
+                }, EndPoint);
             }
         }
     }
