@@ -259,7 +259,7 @@ namespace Uchu.World.Scriptable
                     ResetBuild(player);
             };
 
-            Task.Run(() => { timer.Start(); });
+            Task.Run(() => timer.Start());
         }
 
         /// <summary>
@@ -360,7 +360,7 @@ namespace Uchu.World.Scriptable
             /*
              * Update the object in the World.
              */
-            comp.Players = new ulong[] { };
+            comp.Players = new ulong[0];
             comp.Success = false;
             comp.Enabled = true;
             comp.PausedTime = 0;
