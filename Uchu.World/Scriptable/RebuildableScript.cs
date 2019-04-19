@@ -356,7 +356,7 @@ namespace Uchu.World.Scriptable
             /*
              * Update the object in the World.
              */
-            comp.Players = new ulong[] { };
+            comp.Players = new ulong[0];
             comp.Success = false;
             comp.Enabled = true;
             comp.PausedTime = 0;
