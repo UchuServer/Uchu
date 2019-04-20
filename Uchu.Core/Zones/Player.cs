@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -90,25 +89,42 @@ namespace Uchu.Core
             }
         }
 
-        public async Task RemoveItemAsync(int lot, int count = 1)
+        public async Task ChangeLOTStackAsync(int lot, int count = 1, bool forceOnClient = true)
         {
             using (var ctx = new UchuContext())
             {
                 var character = await ctx.Characters.Include(c => c.Items)
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
-                var item = character.Items.Find(i => i.LOT == lot);
-
-                if (item.Count - count > 0)
+                InventoryItem item = null;
+                foreach (var inventoryItem in character.Items.Where(i => i.LOT == lot))
                 {
-                    item.Count -= count;
+                    if (item == null)
+                    {
+                        item = inventoryItem;
+                        continue;
+                    }
+
+                    if (inventoryItem.Count < item.Count)
+                        item = inventoryItem;
+                }
+
+                if (item == null) return;
+                if (forceOnClient)
+                {
+                    await ChangeItemStackAsync(item.InventoryItemId, count);
                 }
                 else
                 {
-                    character.Items.Remove(item);
-                }
+                    item.Count += count;
+                    if (item.Count <= 0)
+                    {
+                        await DisassembleItemAsync(item.InventoryItemId);
+                        ctx.InventoryItems.Remove(item);
+                    }
 
-                await ctx.SaveChangesAsync();
+                    await ctx.SaveChangesAsync();
+                }
             }
         }
 
@@ -138,19 +154,44 @@ namespace Uchu.Core
 
                 var items = character.Items.Where(i => i.InventoryType == inventoryType).ToArray();
 
-                Console.WriteLine($"Adding {lot} to inventory!");
+                /*
+                 * Check for already present stack
+                 */
+                
+                if (items.Any(i => i.LOT == lot) && itemComp.StackSize > 1)
+                {
+                    InventoryItem stack = null;
+                    foreach (var inventoryItem in items.Where(i => i.LOT == lot))
+                    {
+                        if (stack == null)
+                        {
+                            stack = inventoryItem;
+                            continue;
+                        }
+
+                        if (inventoryItem.Count < itemComp.StackSize && inventoryItem.Slot < stack.Slot)
+                            stack = inventoryItem;
+                    }
+
+                    if (stack != null && stack.Count != itemComp.StackSize)
+                    {
+                        await ChangeItemStackAsync(items.First(i => i.LOT == lot).InventoryItemId, count);
+                        return;
+                    }
+                }
+                
+                /*
+                 * Create new stack
+                 */
                 
                 var slot = 0;
-
-                if (items.Length > 0)
+                
+                if (items.Length > 0 && items.Any(i => i.Slot == 0))
                 {
-                    var max = items.Max(i => i.Slot);
-                    slot = max + 1;
-
-                    for (var i = 0; i < max; i++)
+                    for (var j = 0; j < items.Length + 1; j++)
                     {
-                        if (items.All(itm => itm.Slot != i))
-                            slot = i;
+                        if (items.All(i => i.Slot != j)) break;
+                        slot++;
                     }
                 }
 
@@ -178,10 +219,105 @@ namespace Uchu.Core
                     ItemObjectId = id,
                     Slot = item.Slot,
                     InventoryType = inventoryType,
-                    ExtraInfo = extraInfo
+                    ExtraInfo = extraInfo,
+                    ShowFlyingLoot = true
                 }, EndPoint);
 
                 await UpdateTaskAsync(lot, MissionTaskType.ObtainItem);
+            }
+        }
+
+        /// <summary>
+        ///     Change the number of items in a stack in this Player's inventory. Removes item if nothing is left in the
+        ///     stack.
+        /// </summary>
+        /// <param name="itemId">Item ID</param>
+        /// <param name="count">The amount of items to add (can be negative)</param>
+        /// <returns></returns>
+        public async Task ChangeItemStackAsync(long itemId, int count = 1)
+        {
+            using (var ctx = new UchuContext())
+            {
+                InventoryItem itemStack;
+                try
+                {
+                    itemStack = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
+                }
+                catch
+                {
+                    // It's on the client but removed from the database.
+                    return;
+                }
+
+                itemStack.Count += count;
+                Console.WriteLine($"Adding {count} to {itemStack.Slot} slot. [{itemStack.InventoryItemId}]");
+
+                if (count > 0)
+                {
+                    Server.Send(new AddItemToInventoryMessage
+                    {
+                        ObjectId = CharacterId,
+                        ItemObjectId = itemStack.InventoryItemId,
+                        ItemLOT = itemStack.LOT,
+                        // Yes, this is LU logic
+                        ItemCount = (uint) count,
+                        Slot = itemStack.Slot,
+                        InventoryType = itemStack.InventoryType,
+                        ShowFlyingLoot = count > 0,
+                        TotalItems = (uint) itemStack.Count
+                    }, EndPoint);
+                }
+                else if (count < 0)
+                {
+                    var comp = await Server.CDClient.GetComponentIdAsync(itemStack.LOT, 11);
+                    var itemComp = await Server.CDClient.GetItemComponentAsync((int) comp);
+
+                    Server.Send(new RemoveItemFromInventoryMessageServer
+                    {
+                        ObjectId = CharacterId,
+                        Confirmed = true,
+                        DeleteItem = true,
+                        OutSuccess = false,
+                        ItemType = (ItemType) itemComp.ItemType,
+                        InventoryType = (InventoryType) itemStack.InventoryType,
+                        ExtraInfo = null,
+                        ForceDeletion = true,
+                        //LootTypeSourceID = itemStack.LOT,
+                        ObjID = itemStack.InventoryItemId,
+                        //LOT = itemStack.LOT,
+                        StackCount = (uint) Math.Abs(count),
+                        StackRemaining = (uint) itemStack.Count
+                    }, EndPoint);
+                }
+                
+                if (itemStack.Count == 0)
+                {
+                    await DisassembleItemAsync(itemId);
+                    ctx.InventoryItems.Remove(itemStack);
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        public async Task DisassembleItemAsync(long itemId)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
+                if (string.IsNullOrEmpty(item.ExtraInfo)) return;
+
+                switch (item.LOT)
+                {
+                    case 6416:
+                        foreach (var part in (LegoDataList) LegoDataDictionary.FromString(item.ExtraInfo)["assemblyPartLOTs"])
+                        {
+                            await AddItemAsync((int) part);
+                        }
+                        break;
+                    default:
+                        return;
+                }
             }
         }
 
@@ -296,40 +432,6 @@ namespace Uchu.Core
             using (var ctx = new UchuContext())
             {
                 ctx.InventoryItems.First(i => i.InventoryItemId == item).Slot = (int) slot;
-                await ctx.SaveChangesAsync();
-            }
-        }
-
-        public async Task RemoveItemFromInventoryAsync(long item, uint count)
-        {
-            /*
-             * TODO: Find out how to force the client to remove an item. Use of consumables does not work without that.
-             */
-            using (var ctx = new UchuContext())
-            {
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == CharacterId);
-
-                var items = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == item);
-                items.Count -= (int) count;
-                if (items.Count <= 0)
-                {
-                    if (items.IsEquipped)
-                    {
-                        await UnequipItemAsync(item);
-                        items.IsEquipped = false;
-                        ctx.InventoryItems.Remove(items);
-                    }
-
-                    try
-                    {
-                        character.Items.Remove(items);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-
                 await ctx.SaveChangesAsync();
             }
         }

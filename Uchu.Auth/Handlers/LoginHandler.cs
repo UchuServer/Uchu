@@ -15,8 +15,6 @@ namespace Uchu.Auth
         {
             using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.SingleAsync(u => u.Username == packet.Username);
-
                 var addresses = NetworkInterface.GetAllNetworkInterfaces()
                     .Where(i => (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
                                  i.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
@@ -34,16 +32,25 @@ namespace Uchu.Auth
                     ChatInstancePort = 2004
                 };
 
-                if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
+                if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username))
                 {
-                    var key = Server.SessionCache.CreateSession(endpoint, user.UserId);
-
-                    info.LoginCode = LoginCode.Success;
-                    info.UserKey = key;
+                    info.LoginCode = LoginCode.InvalidLogin;
                 }
                 else
                 {
-                    info.LoginCode = LoginCode.InvalidLogin;
+                    var user = await ctx.Users.SingleAsync(u => u.Username == packet.Username);
+
+                    if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
+                    {
+                        var key = Server.SessionCache.CreateSession(endpoint, user.UserId);
+
+                        info.LoginCode = LoginCode.Success;
+                        info.UserKey = key;
+                    }
+                    else
+                    {
+                        info.LoginCode = LoginCode.InvalidLogin;
+                    }
                 }
 
                 Server.Send(info, endpoint);

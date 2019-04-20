@@ -361,15 +361,12 @@ namespace Uchu.Core
                         var path = (MovingPlatformPath) Zone.Paths.FirstOrDefault(p =>
                             p is MovingPlatformPath && p.Name == pathName);
 
-                        var nextWaypoint = pathStart + 1 > path.Waypoints.Length - 1 ? 0 : pathStart + 1;
                         var type = obj.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
                             ? PlatformType.Mover
                             : obj.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
                               (bool) isSimpleMover
                                 ? PlatformType.SimpleMover
                                 : PlatformType.None;
-
-                        var waypoint = (MovingPlatformWaypoint) path.Waypoints[nextWaypoint];
 
                         list.Add(new MovingPlatformComponent
                         {
@@ -378,10 +375,7 @@ namespace Uchu.Core
                             PathStart = pathStart,
                             Type = type,
                             State = PlatformState.Idle,
-                            CurrentWaypointIndex = pathStart,
-                            NextWaypointIndex = nextWaypoint,
-                            TargetPosition = waypoint.Position,
-                            TargetRotation = waypoint.Rotation
+                            CurrentWaypointIndex = pathStart
                         });
                         break;
 

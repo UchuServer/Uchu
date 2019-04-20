@@ -118,6 +118,16 @@ namespace Uchu.Core.Scriptable
         }
 
         /// <summary>
+        ///     Called then a player collects the Replica Object this script is assigned to.
+        /// </summary>
+        /// <param name="player">Player who collected</param>
+        /// <returns></returns>
+        public virtual async Task OnCollected(Player player)
+        {
+            
+        }
+
+        /// <summary>
         ///     Implicit operator to access the ReplicaPacket this script is assigned to.
         /// </summary>
         /// <param name="gameScript"></param>

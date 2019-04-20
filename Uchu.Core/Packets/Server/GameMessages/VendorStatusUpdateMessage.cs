@@ -11,7 +11,7 @@ namespace Uchu.Core.Packets.Server.GameMessages
 
         public int[] LOTs { get; set; } = new int[0];
         
-        public override void Serialize(BitStream stream)
+        public override void SerializeMessage(BitStream stream)
         {
             Console.WriteLine($"Sending {GameMessageId} from {ObjectId}");
             stream.WriteBit(UpdateOnly);

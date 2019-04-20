@@ -22,7 +22,7 @@ namespace Uchu.Core.Packets.Server.GameMessages
 
         public int WarningEffectID { get; set; } = -1;
         
-        public override void Serialize(BitStream stream)
+        public override void SerializeMessage(BitStream stream)
         {
             stream.WriteBit(BypassChecks);
             stream.WriteBit(DoHover);

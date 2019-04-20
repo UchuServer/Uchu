@@ -9,7 +9,7 @@ namespace Uchu.Core
 
         public Vector3 Position { get; set; } = Vector3.Zero;
         
-        public override void Serialize(BitStream stream)
+        public override void SerializeMessage(BitStream stream)
         {
             stream.WriteFloat(Position.X);
             stream.WriteFloat(Position.Y);

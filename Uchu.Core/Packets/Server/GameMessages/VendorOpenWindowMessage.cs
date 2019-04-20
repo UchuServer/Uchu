@@ -7,7 +7,7 @@ namespace Uchu.Core.Packets.Server.GameMessages
     {
         public override ushort GameMessageId => 0x171;
 
-        public override void Serialize(BitStream stream)
+        public override void SerializeMessage(BitStream stream)
         {
             Console.WriteLine($"Sending {GameMessageId} from {ObjectId}");
         }

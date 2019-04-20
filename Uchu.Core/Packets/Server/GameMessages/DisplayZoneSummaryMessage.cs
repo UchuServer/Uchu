@@ -12,7 +12,7 @@ namespace Uchu.Core.Packets.Server.GameMessages
         
         public override ushort GameMessageId => 0x0413;
 
-        public override void Serialize(BitStream stream)
+        public override void SerializeMessage(BitStream stream)
         {
             stream.WriteBit(IsPropertyMap);
             stream.WriteBit(IsZoneStart);

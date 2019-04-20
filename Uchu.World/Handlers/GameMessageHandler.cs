@@ -65,7 +65,12 @@ namespace Uchu.World
             var world = Server.Worlds[(ZoneId) session.ZoneId];
             var player = world.GetPlayer(session.CharacterId);
 
-            await player.RemoveItemFromInventoryAsync(msg.ObjID, msg.StackCount);
+            using (var ctx = new UchuContext())
+            {
+                await player.ChangeLOTStackAsync(
+                    (await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == msg.ObjID)).LOT,
+                    -(int) msg.StackCount, false);
+            }
         }
 
         [PacketHandler]
@@ -74,8 +79,12 @@ namespace Uchu.World
             var session = Server.SessionCache.GetSession(endPoint);
             var world = Server.Worlds[(ZoneId) session.ZoneId];
             var player = world.GetPlayer(session.CharacterId);
-            
-            await player.RemoveItemFromInventoryAsync(msg.Item, 1);
+
+            using (var ctx = new UchuContext())
+            {
+                await player.ChangeLOTStackAsync(
+                    (await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == msg.Item)).LOT, -1);
+            }
         }
 
         [PacketHandler]
@@ -353,7 +362,7 @@ namespace Uchu.World
 
             foreach (var lot in msg.Modules)
             {
-                await player.RemoveItemAsync(lot);
+                await player.ChangeLOTStackAsync(lot, -1);
             }
 
             var ldf = new LegoDataDictionary
@@ -421,6 +430,11 @@ namespace Uchu.World
             var world = Server.Worlds[(ZoneId) session.ZoneId];
             var player = world.GetPlayer(session.CharacterId);
 
+            foreach (var script in world.Replicas.First(r => r.ObjectId == msg.ObjectId).GameScripts)
+            {
+                await script.OnCollected(player);
+            }
+            
             await player.UpdateObjectTaskAsync(MissionTaskType.Collect, msg.ObjectId);
         }
 

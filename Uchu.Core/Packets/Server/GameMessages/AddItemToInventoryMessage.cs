@@ -14,6 +14,7 @@ namespace Uchu.Core
         public bool IsBoundOnPickup { get; set; } = false;
         public int Source { get; set; } = -1;
         public LegoDataDictionary ExtraInfo { get; set; } = null;
+        
         public int ItemLOT { get; set; }
         public long Subkey { get; set; } = -1;
         public int InventoryType { get; set; } = -1;
@@ -72,7 +73,7 @@ namespace Uchu.Core
             if (hasInvType)
                 stream.WriteInt(InventoryType);
 
-            var hasCount = ItemCount > 1;
+            var hasCount = ItemCount != 1;
 
             stream.WriteBit(hasCount);
 
