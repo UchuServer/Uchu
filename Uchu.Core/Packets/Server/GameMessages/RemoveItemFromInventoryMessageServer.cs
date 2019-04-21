@@ -64,14 +64,6 @@ namespace Uchu.Core
                 stream.WriteUInt32(0);
             }
 
-            /*
-            stream.WriteUInt32((uint) (ExtraInfo?.ToString().Length ?? 0));
-            if (ExtraInfo != null && ExtraInfo?.ToString().Length > 0)
-            {
-                stream.WriteString(ExtraInfo.ToString(), ExtraInfo.ToString().Length, true);
-            }
-            */
-
             stream.WriteBit(ForceDeletion);
 
             stream.WriteBit(LootTypeSourceID != -1);

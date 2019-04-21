@@ -27,6 +27,8 @@ namespace Uchu.Core
 
         public World World { get; set; }
         public long CharacterId { get; set; }
+        
+        public bool IsBuilding { get; set; }
 
         public ReplicaPacket ReplicaPacket => World.GetObject(CharacterId);
 
@@ -70,13 +72,21 @@ namespace Uchu.Core
 
                 if (item == null)
                     return;
+                
+                var itemComp = await Server.CDClient.GetItemComponentAsync(
+                    (int) await Server.CDClient.GetComponentIdAsync(item.LOT, 11));
+
+                if ((itemComp.ItemType == (int) ItemType.Brick || itemComp.ItemType == (int) ItemType.Model ||
+                     itemComp.ItemType == (int) ItemType.Vehicle || itemComp.ItemType == (int) ItemType.LootModel ||
+                     item.LOT == 6086) && !IsBuilding)
+                {
+                    return;
+                }
 
                 /*
                  * Unequip already equipped item in that slot.
                  */
 
-                var itemComp = await Server.CDClient.GetItemComponentAsync(
-                    (int) await Server.CDClient.GetComponentIdAsync(item.LOT, 11));
                 if (character.Items.Any(c => c.IsEquipped))
                     foreach (var inventoryItem in character.Items.Where(c => c.IsEquipped))
                     {
@@ -187,7 +197,8 @@ namespace Uchu.Core
             }
         }
 
-        public async Task AddItemAsync(int lot, int count = 1, LegoDataDictionary extraInfo = null)
+        public async Task AddItemAsync(int lot, int count = 1, LegoDataDictionary extraInfo = null,
+            InventoryType inventoryType = InventoryType.Invalid)
         {
             var comp = await Server.CDClient.GetComponentIdAsync(lot, 11);
             var itemComp = await Server.CDClient.GetItemComponentAsync((int) comp);
@@ -197,21 +208,22 @@ namespace Uchu.Core
                 var character = await ctx.Characters.Include(c => c.Items)
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
-                var id = Utils.GenerateObjectId();
-                int inventoryType;
-                try
+                if (inventoryType == InventoryType.Invalid)
                 {
-                    inventoryType = (int) Utils.GetItemInventoryType((ItemType) itemComp.ItemType);
-                }
-                catch
-                {
-                    if (Enum.IsDefined(typeof(PickupLOT), lot))
-                        await StatPickup(lot);
-                    // TODO: Check for more passable pickup types.
-                    return;
+                    try
+                    {
+                        inventoryType = Utils.GetItemInventoryType((ItemType) itemComp.ItemType);
+                    }
+                    catch
+                    {
+                        if (Enum.IsDefined(typeof(PickupLOT), lot))
+                            await StatPickup(lot);
+                        // TODO: Check for more passable pickup types.
+                        return;
+                    }
                 }
 
-                var items = character.Items.Where(i => i.InventoryType == inventoryType).ToArray();
+                var items = character.Items.Where(i => i.InventoryType == (int) inventoryType).ToArray();
 
                 /*
                  * Check for already present stack
@@ -219,18 +231,27 @@ namespace Uchu.Core
 
                 if (items.Any(i => i.LOT == lot) && itemComp.StackSize > 1)
                 {
-                    var stack = items.FirstOrDefault(i => i.Count != itemComp.StackSize && i.LOT == lot);
-
-                    if (stack != null)
+                    if (itemComp.ItemType == (int) ItemType.Brick)
                     {
-                        var left = (int) (stack.Count + count) - itemComp.StackSize;
-                        int toAdd;
-                        if (left <= 0)
-                            toAdd = count;
-                        else
-                            toAdd = (int) (itemComp.StackSize - stack.Count);
-                        await ChangeItemStackAsync(stack.InventoryItemId, toAdd);
-                        count -= toAdd;
+                        await ChangeItemStackAsync(items.First(i => i.LOT == lot).InventoryItemId, count);
+                        return;
+                    }
+
+                    if (itemComp.StackSize != 0)
+                    {
+                        var stack = items.FirstOrDefault(i => i.Count != itemComp.StackSize && i.LOT == lot);
+
+                        if (stack != null)
+                        {
+                            var left = (int) (stack.Count + count) - itemComp.StackSize;
+                            int toAdd;
+                            if (left <= 0)
+                                toAdd = count;
+                            else
+                                toAdd = (int) (itemComp.StackSize - stack.Count);
+                            await ChangeItemStackAsync(stack.InventoryItemId, toAdd);
+                            count -= toAdd;
+                        }
                     }
                 }
 
@@ -256,13 +277,15 @@ namespace Uchu.Core
                     count = itemComp.StackSize;
                 }
 
+                var id = Utils.GenerateObjectId();
+
                 var item = new InventoryItem
                 {
                     InventoryItemId = id,
                     LOT = lot,
                     Slot = slot,
-                    Count = count,
-                    InventoryType = inventoryType,
+                    Count = count == 0 ? 1 : count,
+                    InventoryType = (int) inventoryType,
                     IsBound = itemComp.IsBoundOnPickup
                 };
 
@@ -280,7 +303,7 @@ namespace Uchu.Core
                     ItemCount = (uint) item.Count,
                     ItemObjectId = id,
                     Slot = item.Slot,
-                    InventoryType = inventoryType,
+                    InventoryType = (int) inventoryType,
                     ExtraInfo = extraInfo,
                     ShowFlyingLoot = true,
                     IsBound = item.IsBound
@@ -288,7 +311,7 @@ namespace Uchu.Core
 
                 await UpdateTaskAsync(lot, MissionTaskType.ObtainItem);
 
-                if (leftToSend > 0)
+                if (leftToSend > 0 && itemComp.StackSize != 0)
                     await AddItemAsync(lot, leftToSend, extraInfo);
             }
         }

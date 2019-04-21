@@ -41,6 +41,8 @@ namespace Uchu.Core
 
             // Disconnected Players must be removed!
             Server.RakNetServer.Disconnection += RemovePlayer;
+
+            Task.Run(async () => await OnStartup());
         }
 
         public Zone Zone { get; private set; }
@@ -60,6 +62,35 @@ namespace Uchu.Core
             DestroyObject(player.CharacterId);
             ReplicaManager.RemoveConnection(endPoint);
             Players.Remove(player);
+
+            Task.Run(async () =>
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var buybackItems = ctx.InventoryItems.Where(i =>
+                        i.CharacterId == player.CharacterId && i.InventoryType == (int) InventoryType.VendorBuyback);
+                    foreach (var item in buybackItems)
+                    {
+                        ctx.Remove(item);
+                    }
+
+                    await ctx.SaveChangesAsync();
+                }
+            });
+        }
+
+        public async Task OnStartup()
+        {
+            using (var ctx = new UchuContext())
+            {
+                var buybackItems = ctx.InventoryItems.Where(i => i.InventoryType == (int) InventoryType.VendorBuyback);
+                foreach (var item in buybackItems)
+                {
+                    ctx.Remove(item);
+                }
+
+                await ctx.SaveChangesAsync();
+            }
         }
 
         public async Task InitializeAsync(Zone zone)

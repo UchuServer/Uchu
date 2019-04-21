@@ -10,6 +10,7 @@ namespace Uchu.Core
         TemporaryModels,
         Behaviors,
         PropertyDeeds,
+        VendorBuyback = 11,
         Hidden = 12,
         VaultModels = 14,
         Invalid = 100

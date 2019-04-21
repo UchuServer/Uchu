@@ -3,16 +3,20 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class SellToVendorMessage : ClientGameMessage
+    public class BuybackFromVendorMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x0176;
+        public override ushort GameMessageId => 0x0546;
 
+        public bool Confirmed { get; set; }
+        
         public int Count { get; set; } = 1;
         
         public long ItemId { get; set; }
-
+        
         public override void Deserialize(BitStream stream)
         {
+            Confirmed = stream.ReadBit();
+            
             if (stream.ReadBit())
             {
                 Count = stream.ReadInt32();

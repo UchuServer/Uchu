@@ -110,12 +110,39 @@ namespace Uchu.World
                 await player.ChangeLOTStackAsync(LOT, -msg.Count);
 
                 await player.ChangeCurrencyAsync((int) Math.Floor(item.BaseValue * 0.1d) * msg.Count);
+
+                await player.AddItemAsync(LOT, msg.Count, inventoryType: InventoryType.VendorBuyback);
                 
                 Server.Send(new VendorTransactionResultMessage
                 {
                     ObjectId = msg.ObjectId,
                     TransactionResult = TransactionResult.Success
                 }, endPoint);
+            }
+        }
+
+        [PacketHandler]
+        public async Task BuybackFromVendor(BuybackFromVendorMessage msg, IPEndPoint endPoint)
+        {
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            using (var ctx = new UchuContext())
+            {
+                Console.WriteLine($"Buying back: {msg.ItemId}");
+                
+                var LOT = (await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == msg.ItemId)).LOT;
+                
+                var item = await Server.CDClient.GetItemComponentAsync((int) await Server.CDClient.GetComponentIdAsync(LOT, 11));
+            
+                if (msg.Count == 0 || item.BaseValue <= 0) return;
+
+                await player.ChangeItemStackAsync(msg.ItemId, -msg.Count);
+                
+                await player.AddItemAsync(LOT, msg.Count);
+            
+                await player.ChangeCurrencyAsync(-((int) Math.Floor(item.BaseValue * 0.1d) * msg.Count));
             }
         }
 
@@ -382,6 +409,9 @@ namespace Uchu.World
             var obj = world.GetObject(session.CharacterId);
             var comp = (ControllablePhysicsComponent) obj.Components.First(c => c is ControllablePhysicsComponent);
 
+            var player = world.GetPlayer(session.CharacterId);
+            player.IsBuilding = true;
+            
             Server.Send(new StartArrangingMessage
             {
                 ObjectId = session.CharacterId,
@@ -406,6 +436,8 @@ namespace Uchu.World
             var world = Server.Worlds[(ZoneId) session.ZoneId];
             var player = world.GetPlayer(session.CharacterId);
 
+            player.IsBuilding = false;
+
             foreach (var lot in msg.Modules)
             {
                 await player.ChangeLOTStackAsync(lot, -1);
@@ -417,6 +449,12 @@ namespace Uchu.World
             };
 
             await player.AddItemAsync(6416, extraInfo: ldf); // is this always 6416?
+            using (var ctx = new UchuContext())
+            {
+                var item = await ctx.InventoryItems.FirstAsync(
+                    i => i.LOT == 6086 && i.CharacterId == player.CharacterId);
+                await player.UnequipItemAsync(item.InventoryItemId);
+            }
 
             Server.Send(new FinishArrangingMessage {ObjectId = session.CharacterId}, endpoint);
         }
@@ -445,8 +483,20 @@ namespace Uchu.World
         }
 
         [PacketHandler]
-        public void DoneArranging(DoneArrangingMessage msg, IPEndPoint endpoint)
+        public async Task DoneArranging(DoneArrangingMessage msg, IPEndPoint endpoint)
         {
+            var session = Server.SessionCache.GetSession(endpoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            player.IsBuilding = false;
+            
+            using (var ctx = new UchuContext())
+            {
+                var item = await ctx.InventoryItems.FirstAsync(
+                    i => i.LOT == 6086 && i.CharacterId == player.CharacterId);
+                await player.UnequipItemAsync(item.InventoryItemId);
+            }
         }
 
         [PacketHandler]
