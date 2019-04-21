@@ -1,7 +1,7 @@
 using RakDotNet;
 using Uchu.Core;
 
-namespace Uchu.World
+namespace Uchu.Core
 {
     public class RestoreToPostLoadStatsMessage : ServerGameMessage
     {

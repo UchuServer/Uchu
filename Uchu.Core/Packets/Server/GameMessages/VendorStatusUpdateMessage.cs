@@ -1,7 +1,7 @@
 using System;
 using RakDotNet;
 
-namespace Uchu.Core.Packets.Server.GameMessages
+namespace Uchu.Core
 {
     public class VendorStatusUpdateMessage : ServerGameMessage
     {
@@ -9,17 +9,16 @@ namespace Uchu.Core.Packets.Server.GameMessages
 
         public bool UpdateOnly { get; set; }
 
-        public int[] LOTs { get; set; } = new int[0];
+        public Tuple<int, int>[] LOTs { get; set; } = new Tuple<int, int>[0];
         
         public override void SerializeMessage(BitStream stream)
         {
-            Console.WriteLine($"Sending {GameMessageId} from {ObjectId}");
             stream.WriteBit(UpdateOnly);
             stream.WriteUInt32((uint) LOTs.Length);
-            for (var index = 0; index < LOTs.Length; index++)
+            foreach (var (item1, item2) in LOTs)
             {
-                stream.WriteInt32(LOTs[index]);
-                stream.WriteInt32(index);
+                stream.WriteInt32(item1);
+                stream.WriteInt32(item2);
             }
         }
     }

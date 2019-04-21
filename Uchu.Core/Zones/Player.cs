@@ -6,7 +6,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core.Collections;
-using Uchu.World;
 
 namespace Uchu.Core
 {
@@ -14,11 +13,6 @@ namespace Uchu.Core
     {
         public readonly IPEndPoint EndPoint;
         public readonly Server Server;
-
-        public World World { get; set; }
-        public long CharacterId { get; set; }
-
-        public ReplicaPacket ReplicaPacket => World.GetObject(CharacterId);
 
         public Player(Server server, IPEndPoint endPoint)
         {
@@ -30,6 +24,11 @@ namespace Uchu.Core
             CharacterId = session.CharacterId;
             World = server.Worlds[(ZoneId) session.ZoneId];
         }
+
+        public World World { get; set; }
+        public long CharacterId { get; set; }
+
+        public ReplicaPacket ReplicaPacket => World.GetObject(CharacterId);
 
         public async Task UnequipItemAsync(long objectId)
         {
@@ -72,6 +71,24 @@ namespace Uchu.Core
                 if (item == null)
                     return;
 
+                /*
+                 * Unequip already equipped item in that slot.
+                 */
+
+                var itemComp = await Server.CDClient.GetItemComponentAsync(
+                    (int) await Server.CDClient.GetComponentIdAsync(item.LOT, 11));
+                if (character.Items.Any(c => c.IsEquipped))
+                    foreach (var inventoryItem in character.Items.Where(c => c.IsEquipped))
+                    {
+                        var equippedComp =
+                            await Server.CDClient.GetItemComponentAsync(
+                                (int) await Server.CDClient.GetComponentIdAsync(inventoryItem.LOT, 11));
+                        if (equippedComp.ItemType == itemComp.ItemType)
+                            await UnequipItemAsync(inventoryItem.InventoryItemId);
+                    }
+
+                if (itemComp.IsBoundOnEquip && !item.IsBound) item.IsBound = true;
+
                 item.IsEquipped = true;
 
                 await ctx.SaveChangesAsync();
@@ -89,41 +106,83 @@ namespace Uchu.Core
             }
         }
 
-        public async Task ChangeLOTStackAsync(int lot, int count = 1, bool forceOnClient = true)
+        public async Task ChangeCurrencyAsync(int count)
         {
             using (var ctx = new UchuContext())
             {
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == CharacterId);
+                character.Currency += count;
+
+                Server.Send(new SetCurrencyMessage
+                {
+                    ObjectId = CharacterId,
+                    Currency = character.Currency
+                }, EndPoint);
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>
+        ///     Change the amount of a LOT in the player inventory.
+        /// </summary>
+        /// <param name="lot">LOT count to change.</param>
+        /// <param name="count">The amount of items to add (can be negative)</param>
+        /// <param name="forceOnClient">
+        ///     Force the removal of these items on the client. Set to false if you know the
+        ///     client will remove the item from its inventory itself.
+        /// </param>
+        /// <returns></returns>
+        public async Task ChangeLOTStackAsync(int lot, int count = 1, bool forceOnClient = true)
+        {
+            if (count > 0)
+            {
+                await AddItemAsync(lot, count);
+                return;
+            }
+            
+            Console.WriteLine($"Changing {lot} with {count}");
+            
+            using (var ctx = new UchuContext())
+            {
+                var comp = await Server.CDClient.GetComponentIdAsync(lot, 11);
+                var itemComp = await Server.CDClient.GetItemComponentAsync((int) comp);
+                
                 var character = await ctx.Characters.Include(c => c.Items)
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
-                InventoryItem item = null;
-                foreach (var inventoryItem in character.Items.Where(i => i.LOT == lot))
-                {
-                    if (item == null)
-                    {
-                        item = inventoryItem;
-                        continue;
-                    }
-
-                    if (inventoryItem.Count < item.Count)
-                        item = inventoryItem;
-                }
+                var list = new List<InventoryItem>();
+                
+                var item = character.Items.FirstOrDefault(i => i.LOT == lot && i.Count < itemComp.StackSize) ??
+                           character.Items.First(i => i.LOT == lot);
 
                 if (item == null) return;
-                if (forceOnClient)
-                {
-                    await ChangeItemStackAsync(item.InventoryItemId, count);
-                }
-                else
-                {
-                    item.Count += count;
-                    if (item.Count <= 0)
-                    {
-                        await DisassembleItemAsync(item.InventoryItemId);
-                        ctx.InventoryItems.Remove(item);
-                    }
 
-                    await ctx.SaveChangesAsync();
+                list.Add(item);
+                list.AddRange(character.Items.Where(i => i != item && i.LOT == lot));
+
+                count = Math.Abs(count);
+                foreach (var inventoryItem in list)
+                {
+                    var take = (int) Math.Min(count, inventoryItem.Count);
+                    count -= take;
+                    Console.WriteLine($"Taking {take} from [{inventoryItem.InventoryItemId}] {inventoryItem.Slot}");
+                    if (forceOnClient)
+                    {
+                        await ChangeItemStackAsync(inventoryItem.InventoryItemId, -take);
+                    }
+                    else
+                    {
+                        inventoryItem.Count -= take;
+                        if (inventoryItem.Count <= 0)
+                        {
+                            await DisassembleItemAsync(inventoryItem.InventoryItemId);
+                            ctx.InventoryItems.Remove(inventoryItem);
+                        }
+
+                        await ctx.SaveChangesAsync();
+                    }
+                    if (count == 0) return;
                 }
             }
         }
@@ -157,42 +216,44 @@ namespace Uchu.Core
                 /*
                  * Check for already present stack
                  */
-                
+
                 if (items.Any(i => i.LOT == lot) && itemComp.StackSize > 1)
                 {
-                    InventoryItem stack = null;
-                    foreach (var inventoryItem in items.Where(i => i.LOT == lot))
-                    {
-                        if (stack == null)
-                        {
-                            stack = inventoryItem;
-                            continue;
-                        }
+                    var stack = items.FirstOrDefault(i => i.Count != itemComp.StackSize && i.LOT == lot);
 
-                        if (inventoryItem.Count < itemComp.StackSize && inventoryItem.Slot < stack.Slot)
-                            stack = inventoryItem;
-                    }
-
-                    if (stack != null && stack.Count != itemComp.StackSize)
+                    if (stack != null)
                     {
-                        await ChangeItemStackAsync(items.First(i => i.LOT == lot).InventoryItemId, count);
-                        return;
+                        var left = (int) (stack.Count + count) - itemComp.StackSize;
+                        int toAdd;
+                        if (left <= 0)
+                            toAdd = count;
+                        else
+                            toAdd = (int) (itemComp.StackSize - stack.Count);
+                        await ChangeItemStackAsync(stack.InventoryItemId, toAdd);
+                        count -= toAdd;
                     }
                 }
-                
+
                 /*
                  * Create new stack
                  */
-                
+
+                if (count == 0) return;
+
                 var slot = 0;
-                
+
                 if (items.Length > 0 && items.Any(i => i.Slot == 0))
-                {
                     for (var j = 0; j < items.Length + 1; j++)
                     {
                         if (items.All(i => i.Slot != j)) break;
                         slot++;
                     }
+
+                var leftToSend = 0;
+                if (count - itemComp.StackSize > 0)
+                {
+                    leftToSend = count - itemComp.StackSize;
+                    count = itemComp.StackSize;
                 }
 
                 var item = new InventoryItem
@@ -201,7 +262,8 @@ namespace Uchu.Core
                     LOT = lot,
                     Slot = slot,
                     Count = count,
-                    InventoryType = inventoryType
+                    InventoryType = inventoryType,
+                    IsBound = itemComp.IsBoundOnPickup
                 };
 
                 if (extraInfo != null)
@@ -220,10 +282,14 @@ namespace Uchu.Core
                     Slot = item.Slot,
                     InventoryType = inventoryType,
                     ExtraInfo = extraInfo,
-                    ShowFlyingLoot = true
+                    ShowFlyingLoot = true,
+                    IsBound = item.IsBound
                 }, EndPoint);
 
                 await UpdateTaskAsync(lot, MissionTaskType.ObtainItem);
+
+                if (leftToSend > 0)
+                    await AddItemAsync(lot, leftToSend, extraInfo);
             }
         }
 
@@ -250,8 +316,7 @@ namespace Uchu.Core
                 }
 
                 itemStack.Count += count;
-                Console.WriteLine($"Adding {count} to {itemStack.Slot} slot. [{itemStack.InventoryItemId}]");
-
+                
                 if (count > 0)
                 {
                     Server.Send(new AddItemToInventoryMessage
@@ -259,7 +324,6 @@ namespace Uchu.Core
                         ObjectId = CharacterId,
                         ItemObjectId = itemStack.InventoryItemId,
                         ItemLOT = itemStack.LOT,
-                        // Yes, this is LU logic
                         ItemCount = (uint) count,
                         Slot = itemStack.Slot,
                         InventoryType = itemStack.InventoryType,
@@ -271,7 +335,11 @@ namespace Uchu.Core
                 {
                     var comp = await Server.CDClient.GetComponentIdAsync(itemStack.LOT, 11);
                     var itemComp = await Server.CDClient.GetItemComponentAsync((int) comp);
-
+                    
+                    /*
+                     * Remove from player inventory.
+                     */
+                    
                     Server.Send(new RemoveItemFromInventoryMessageServer
                     {
                         ObjectId = CharacterId,
@@ -282,14 +350,12 @@ namespace Uchu.Core
                         InventoryType = (InventoryType) itemStack.InventoryType,
                         ExtraInfo = null,
                         ForceDeletion = true,
-                        //LootTypeSourceID = itemStack.LOT,
                         ObjID = itemStack.InventoryItemId,
-                        //LOT = itemStack.LOT,
                         StackCount = (uint) Math.Abs(count),
                         StackRemaining = (uint) itemStack.Count
                     }, EndPoint);
                 }
-                
+
                 if (itemStack.Count == 0)
                 {
                     await DisassembleItemAsync(itemId);
@@ -310,10 +376,8 @@ namespace Uchu.Core
                 switch (item.LOT)
                 {
                     case 6416:
-                        foreach (var part in (LegoDataList) LegoDataDictionary.FromString(item.ExtraInfo)["assemblyPartLOTs"])
-                        {
-                            await AddItemAsync((int) part);
-                        }
+                        foreach (var part in (LegoDataList) LegoDataDictionary.FromString(item.ExtraInfo)[
+                            "assemblyPartLOTs"]) await AddItemAsync((int) part);
                         break;
                     default:
                         return;
@@ -332,7 +396,7 @@ namespace Uchu.Core
             var imaginationToAdd = 0;
             var armorToAdd = 0;
             var healthToAdd = 0;
-            
+
             switch ((PickupLOT) lot)
             {
                 case PickupLOT.Imagination:
@@ -390,12 +454,12 @@ namespace Uchu.Core
                 character.CurrentImagination += imaginationToAdd;
                 character.CurrentHealth += healthToAdd;
                 character.CurrentArmor += armorToAdd;
-                
+
                 await ctx.SaveChangesAsync();
             }
-            
+
             Console.WriteLine($"Adding: {imaginationToAdd} | {healthToAdd} | {armorToAdd}");
-            
+
             UpdateStats();
         }
 
@@ -413,7 +477,7 @@ namespace Uchu.Core
                     character.CurrentHealth = character.MaximumHealth;
                 if (character.CurrentArmor > character.MaximumArmor)
                     character.CurrentArmor = character.MaximumArmor;
-                
+
                 stats.CurrentImagination = (uint) character.CurrentImagination;
                 stats.CurrentHealth = (uint) character.CurrentHealth;
                 stats.CurrentArmor = (uint) character.CurrentArmor;
@@ -421,11 +485,11 @@ namespace Uchu.Core
                 stats.MaxImagination = character.MaximumImagination;
                 stats.MaxHealth = character.MaximumHealth;
                 stats.MaxArmor = character.MaximumArmor;
-                
+
                 World.UpdateObject(obj);
             }
         }
-        
+
         public static async Task MoveItemAsync(long item, ulong slot)
         {
             Console.WriteLine($"Moving {item} to {slot}.");
@@ -435,7 +499,7 @@ namespace Uchu.Core
                 await ctx.SaveChangesAsync();
             }
         }
-        
+
         public async Task UpdateTaskAsync(int id, MissionTaskType type = MissionTaskType.None)
         {
             using (var ctx = new UchuContext())
@@ -613,7 +677,7 @@ namespace Uchu.Core
                         case MissionTaskType.Script:
                             if (!charTask.Values.Contains(obj.LOT))
                                 charTask.Values.Add(obj.LOT);
-                            
+
                             Server.Send(new NotifyMissionTaskMessage
                             {
                                 ObjectId = CharacterId,
@@ -783,24 +847,20 @@ namespace Uchu.Core
                 character.MaximumImagination += mission.MaximumImaginationReward;
 
                 if (mission.CurrencyReward > 0)
-                {
                     Server.Send(new SetCurrencyMessage
                     {
                         ObjectId = CharacterId,
                         Currency = character.Currency,
                         Position = Vector3.Zero // TODO: find out what to set this to
                     }, EndPoint);
-                }
 
                 if (mission.LegoScoreReward > 0)
-                {
                     Server.Send(new ModifyLegoScoreMessage
                     {
                         ObjectId = CharacterId,
                         SourceType = 2,
                         Score = mission.LegoScoreReward
                     }, EndPoint);
-                }
 
                 if (mission.MaximumImaginationReward > 0)
                 {
@@ -865,11 +925,9 @@ namespace Uchu.Core
             var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
 
             foreach (var task in tasks)
-            {
                 Console.WriteLine(
                     $"TASK {mission.Tasks.Find(t => t.TaskId == task.UId).Values.Count} | {task.TargetValue}");
-            }
-            
+
             return tasks.TrueForAll(t => mission.Tasks.Find(t2 => t2.TaskId == t.UId).Values.Count >= t.TargetValue);
         }
 
@@ -896,12 +954,12 @@ namespace Uchu.Core
                         continue;
 
                     if (mission.AcceptsMission)
-                    {
                         if (character.Missions.Exists(m => m.MissionId == mission.MissionId))
                         {
                             var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
 
-                            if (charMission.State != (int) MissionState.Completed && await AllTasksCompletedAsync(charMission))
+                            if (charMission.State != (int) MissionState.Completed &&
+                                await AllTasksCompletedAsync(charMission))
                             {
                                 Server.Send(new OfferMissionMessage
                                 {
@@ -920,10 +978,8 @@ namespace Uchu.Core
                                 break;
                             }
                         }
-                    }
 
                     if (mission.OffersMission)
-                    {
                         if (!character.Missions.Exists(m => m.MissionId == mission.MissionId) ||
                             character.Missions.Find(m => m.MissionId == mission.MissionId).State ==
                             (int) MissionState.Active ||
@@ -968,7 +1024,6 @@ namespace Uchu.Core
 
                             break;
                         }
-                    }
                 }
             }
         }
@@ -980,7 +1035,8 @@ namespace Uchu.Core
                 var character = await ctx.Characters.Include(c => c.Items)
                     .SingleAsync(c => c.CharacterId == CharacterId);
 
-                var rocket = character.Items.Find(i => i.LOT == 6416); // TODO: find out how to properly get the active rocket
+                var rocket =
+                    character.Items.Find(i => i.LOT == 6416); // TODO: find out how to properly get the active rocket
 
                 Server.Send(new EquipItemMessage
                 {

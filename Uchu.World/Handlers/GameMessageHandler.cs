@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Numerics;
 using System.Threading.Tasks;
-using System.Timers;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Collections;
-using Uchu.Core.Packets.Server.GameMessages;
 
 namespace Uchu.World
 {
@@ -74,6 +71,55 @@ namespace Uchu.World
         }
 
         [PacketHandler]
+        public async Task BuyFromVendor(BuyFromVendorMessage msg, IPEndPoint endPoint)
+        {
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            var item = await Server.CDClient.GetItemComponentAsync((int) await Server.CDClient.GetComponentIdAsync(msg.LOT, 11));
+            
+            if (msg.Count == 0 || item.BaseValue <= 0) return;
+            
+            await player.AddItemAsync(msg.LOT, msg.Count);
+            
+            await player.ChangeCurrencyAsync(-(item.BaseValue * msg.Count));
+            
+            Server.Send(new VendorTransactionResultMessage
+            {
+                ObjectId = msg.ObjectId,
+                TransactionResult = TransactionResult.Success
+            }, endPoint);
+        }
+        
+        [PacketHandler]
+        public async Task SellToVendor(SellToVendorMessage msg, IPEndPoint endPoint)
+        {
+            var session = Server.SessionCache.GetSession(endPoint);
+            var world = Server.Worlds[(ZoneId) session.ZoneId];
+            var player = world.GetPlayer(session.CharacterId);
+
+            using (var ctx = new UchuContext())
+            {
+                var LOT = (await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == msg.ItemId)).LOT;
+                
+                var item = await Server.CDClient.GetItemComponentAsync((int) await Server.CDClient.GetComponentIdAsync(LOT, 11));
+
+                if (msg.Count == 0 || item.BaseValue <= 0) return;
+                
+                await player.ChangeLOTStackAsync(LOT, -msg.Count);
+
+                await player.ChangeCurrencyAsync((int) Math.Floor(item.BaseValue * 0.1d) * msg.Count);
+                
+                Server.Send(new VendorTransactionResultMessage
+                {
+                    ObjectId = msg.ObjectId,
+                    TransactionResult = TransactionResult.Success
+                }, endPoint);
+            }
+        }
+
+        [PacketHandler]
         public async Task ClientItemConsumed(ClientItemConsumedMessage msg, IPEndPoint endPoint)
         {
             var session = Server.SessionCache.GetSession(endPoint);
@@ -129,7 +175,7 @@ namespace Uchu.World
             foreach (var script in world.Replicas.Where(r => r.ObjectId == rep.ObjectId)
                 .SelectMany(c => c.GameScripts))
             {
-                script.OnUse(player);
+                await script.OnUse(player);
             }
 
             await player.UpdateObjectTaskAsync(MissionTaskType.Interact, msg.TargetObjectId);

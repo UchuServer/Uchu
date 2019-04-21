@@ -562,6 +562,62 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<VendorComponentRow> GetVendorComponent(int id)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM VendorComponent WHERE id = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    var row = new VendorComponentRow
+                    {
+                        Id = reader.GetInt32(0),
+                        BuyScale = reader.GetFloat(1),
+                        SellScale = reader.GetFloat(2),
+                        RefreshTime = (int) reader.GetFloat(3),
+                        LootMatrixIndex = reader.GetInt32(4)
+                    };
+                    
+                    return row;
+                }
+            }
+        }
+
+        public async Task<LootMatrixRow[]> GetLootMatrix(int id)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM LootMatrix WHERE LootMatrixIndex = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    var list = new List<LootMatrixRow>();
+                    
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new LootMatrixRow
+                        {
+                            LootMatrixIndex = reader.GetInt32(0),
+                            LootTableIndex = reader.GetInt32(1),
+                            RarityTableIndex = reader.GetInt32(2),
+                            Percent = reader.GetFloat(3),
+                            MinDrops = reader.GetInt32(4),
+                            MaxDrops = reader.GetInt32(5),
+                            Id = reader.GetInt32(6),
+                            FlagId = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                            GateVersion = reader.IsDBNull(8) ? null : reader.GetString(7)
+                        });
+                    }
+
+                    return list.ToArray();
+                }
+            }
+        }
+
         public async Task<ScriptComponentRow> GetScriptComponent(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM ScriptComponent WHERE id = ?", Connection))

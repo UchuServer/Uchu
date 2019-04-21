@@ -96,7 +96,7 @@ namespace Uchu.Core.Scriptable
         ///     Called when a player interacts with the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who interacted</param>
-        public virtual void OnUse(Player player)
+        public virtual async Task OnUse(Player player)
         {
         }
 

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using Uchu.Core;
-using Uchu.Core.Packets.Server.GameMessages;
 using Uchu.Core.Scriptable;
 
 namespace Uchu.World.Scriptable
@@ -61,6 +60,7 @@ namespace Uchu.World.Scriptable
         {
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     Called once at the start of world load.
         /// </summary>
@@ -69,11 +69,12 @@ namespace Uchu.World.Scriptable
             _cost = (uint) Math.Floor((float) ReplicaPacket.Settings["compTime"]);
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     Called when player requests to use quickbuild.
         /// </summary>
         /// <param name="player"></param>
-        public override void OnUse(Player player)
+        public override async Task OnUse(Player player)
         {
             // Player's stats.
             var stats = (StatsComponent) World.GetObject(player.CharacterId).Components.First(c => c is StatsComponent);

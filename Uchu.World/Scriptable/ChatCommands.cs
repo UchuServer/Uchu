@@ -3,7 +3,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
-using Uchu.Core.Packets.Server.GameMessages;
 
 namespace Uchu.World.Scriptable
 {
@@ -18,10 +17,8 @@ namespace Uchu.World.Scriptable
 
         public static string NearCommand(string[] args, Player player)
         {
-            var comp =
-                player.ReplicaPacket.Components.First(c => c is ControllablePhysicsComponent) as
-                    ControllablePhysicsComponent;
-            if (comp == null) return "Error\0";
+            if (!(player.ReplicaPacket.Components.First(c => c is ControllablePhysicsComponent) is
+                ControllablePhysicsComponent comp)) return "Error\0";
 
             var closest = (ReplicaPacket) null;
             foreach (var replica in player.World.Replicas)
