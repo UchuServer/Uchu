@@ -9,4 +9,9 @@
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Scriptable\Collectables" />
+      <Folder Include="Scriptable\Missions" />
+    </ItemGroup>
+
 </Project>
