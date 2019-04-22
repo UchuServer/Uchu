@@ -202,7 +202,7 @@ namespace Uchu.World
             foreach (var script in world.Replicas.Where(r => r.ObjectId == rep.ObjectId)
                 .SelectMany(c => c.GameScripts))
             {
-                await script.OnUse(player);
+                await script.OnUseAsync(player);
             }
 
             await player.UpdateObjectTaskAsync(MissionTaskType.Interact, msg.TargetObjectId);
@@ -528,7 +528,7 @@ namespace Uchu.World
 
             foreach (var script in world.Replicas.First(r => r.ObjectId == msg.ObjectId).GameScripts)
             {
-                await script.OnCollected(player);
+                await script.OnCollectedAsync(player);
             }
             
             await player.UpdateObjectTaskAsync(MissionTaskType.Collect, msg.ObjectId);
@@ -658,7 +658,7 @@ namespace Uchu.World
             foreach (var script in world.Replicas.Where(r => r.ObjectId == objectId)
                 .SelectMany(c => c.GameScripts))
             {
-                await script.OnSmash(world.Players.First(p => p.EndPoint.Equals(endpoint)));
+                await script.OnSmashAsync(world.Players.First(p => p.EndPoint.Equals(endpoint)));
             }
         }
 

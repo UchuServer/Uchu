@@ -84,35 +84,47 @@ namespace Uchu.Core.Scriptable
         /// <summary>
         ///     Called once at the start of world load.
         /// </summary>
-        public abstract void Start();
+        public virtual void Start()
+        {
+        }
 
-        protected abstract void Update();
+        protected virtual void Update()
+        {
+        }
 
         /// <summary>
         ///     Called when a player interacts with the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who interacted</param>
-        public abstract Task OnUseAsync(Player player);
+        public virtual async Task OnUseAsync(Player player)
+        {
+        }
 
         /// <summary>
         ///     Called when a player stops a quickbuild on the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who stopped the quickbuild</param>
-        public abstract void OnRebuildCanceled(Player player);
+        public virtual void OnRebuildCanceled(Player player)
+        {
+        }
 
         /// <summary>
         ///     Called when a player smashes the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who smashed</param>
         /// <returns></returns>
-        public abstract Task OnSmashAsync(Player player);
+        public virtual async Task OnSmashAsync(Player player)
+        {
+        }
 
         /// <summary>
         ///     Called then a player collects the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who collected</param>
         /// <returns></returns>
-        public abstract Task OnCollectedAsync(Player player);
+        public virtual async Task OnCollectedAsync(Player player)
+        {
+        }
 
         /// <summary>
         ///     Implicit operator to access the ReplicaPacket this script is assigned to.

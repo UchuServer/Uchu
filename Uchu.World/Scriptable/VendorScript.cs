@@ -37,7 +37,7 @@ namespace Uchu.World.Scriptable
         ///     Called when a player interacts with this vendor.
         /// </summary>
         /// <param name="player"></param>
-        public override async Task OnUse(Player player)
+        public override async Task OnUseAsync(Player player)
         {
             Console.WriteLine($"Vendor Interaction! {ObjectID}");
 

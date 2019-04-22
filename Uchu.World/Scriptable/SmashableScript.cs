@@ -26,7 +26,7 @@ namespace Uchu.World.Scriptable
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
-        public override async Task OnSmash(Player player)
+        public override async Task OnSmashAsync(Player player)
         {
             /*
              * Code moved from GameMessage Handlers.

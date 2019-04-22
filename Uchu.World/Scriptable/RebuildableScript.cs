@@ -74,7 +74,7 @@ namespace Uchu.World.Scriptable
         ///     Called when player requests to use quickbuild.
         /// </summary>
         /// <param name="player"></param>
-        public override async Task OnUse(Player player)
+        public override async Task OnUseAsync(Player player)
         {
             // Player's stats.
             var stats = (StatsComponent) World.GetObject(player.CharacterId).Components.First(c => c is StatsComponent);

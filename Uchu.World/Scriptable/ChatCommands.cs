@@ -47,10 +47,11 @@ namespace Uchu.World.Scriptable
                 case "off":
                     MovingPlatformScript.StateOff = (PlatformState) int.Parse(args[1]);
                     return $"Turned OFF {MovingPlatformScript.StateOff}\0";
+
                 case "on":
                     MovingPlatformScript.StateOn = (PlatformState) int.Parse(args[1]);
                     return $"Turned ON {MovingPlatformScript.StateOn}\0";
-                    break;
+
                 default:
                     return "Not a pos!\0";
             }
