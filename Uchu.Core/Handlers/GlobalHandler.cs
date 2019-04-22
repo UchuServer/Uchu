@@ -1,3 +1,4 @@
+using System;
 using RakDotNet;
 using System.Net;
 
@@ -14,17 +15,21 @@ namespace Uchu.Core
             {
                 ConnectionType = Server.Port == port ? 0x01u : 0x04u
             }, endpoint);
+            
         }
 
         [PacketHandler]
         public void ValidateClient(SessionInfoPacket packet, IPEndPoint endpoint)
         {
-            var session = Server.SessionCache.GetSession(endpoint);
-
-            if (session == null || packet.UserKey != session.Key)
+            if (!Server.SessionCache.IsKey(packet.UserKey))
             {
                 Server.DisconnectClient(endpoint, DisconnectId.InvalidSessionKey);
+                return;
             }
+            
+            Console.WriteLine($"Registered Key for {endpoint} [{packet.UserKey}]");
+            
+            Server.SessionCache.RegisterKey(endpoint, packet.UserKey);
         }
     }
 }

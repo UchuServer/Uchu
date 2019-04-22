@@ -194,7 +194,7 @@ namespace Uchu.Char
                 .SelectMany(i => i.GetIPProperties().UnicastAddresses).Select(a => a.Address)
                 .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
 
-            var address = endpoint.Address.ToString() == "127.0.0.1" ? "127.0.0.1" : addresses[0].ToString();
+            var address = endpoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
 
             Server.Send(new ServerRedirectionPacket
             {
