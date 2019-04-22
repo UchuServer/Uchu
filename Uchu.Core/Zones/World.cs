@@ -42,7 +42,7 @@ namespace Uchu.Core
             // Disconnected Players must be removed!
             Server.RakNetServer.Disconnection += RemovePlayer;
 
-            Task.Run(async () => await OnStartup());
+            Task.Run(async () => await OnStartupAsync());
         }
 
         public Zone Zone { get; private set; }
@@ -58,9 +58,11 @@ namespace Uchu.Core
         public void RemovePlayer(IPEndPoint endPoint)
         {
             Console.WriteLine($"{endPoint} disconnected from World!");
+
             var player = Players.First(p => p.EndPoint.Equals(endPoint));
+
             DestroyObject(player.CharacterId);
-            ReplicaManager.RemoveConnection(endPoint);
+
             Players.Remove(player);
 
             Task.Run(async () =>
@@ -79,7 +81,7 @@ namespace Uchu.Core
             });
         }
 
-        public async Task OnStartup()
+        public async Task OnStartupAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -120,12 +122,13 @@ namespace Uchu.Core
 
             var gameScripts = Assembly.GetEntryAssembly()
                 .GetTypes().Where(t => t.BaseType == typeof(GameScript));
+
             foreach (var script in gameScripts)
             {
                 var attribute = script.GetCustomAttribute<AutoAssignAttribute>();
-                if (attribute == null) continue;
-                
-                Console.WriteLine($"");
+
+                if (attribute == null)
+                    continue;
 
                 foreach (var replica in Replicas)
                 {

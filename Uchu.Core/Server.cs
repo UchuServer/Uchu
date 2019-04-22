@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
+using RakDotNet.TcpUdp;
 using Uchu.Core.IO;
 
 namespace Uchu.Core
@@ -14,7 +15,8 @@ namespace Uchu.Core
 
     public class Server
     {
-        public readonly RakNetServer RakNetServer;
+        public readonly IRakNetServer RakNetServer;
+
         private readonly HandlerMap _handlerMap;
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
@@ -27,7 +29,7 @@ namespace Uchu.Core
 
         public Server(int port)
         {
-            RakNetServer = new RakNetServer(port, "3.25 ND1");
+            RakNetServer = new TcpUdpServer(port, "3.25 ND1");
             _handlerMap = new HandlerMap();
             _gameMessageHandlerMap = new GameMessageHandlerMap();
             Port = port;
@@ -63,12 +65,12 @@ namespace Uchu.Core
 
                 switch (split?[0].ToLower())
                 {
-                    case "players":
+                    /*case "players":
                         foreach (var connection in RakNetServer.Connections)
                         {
                             Console.WriteLine(connection);
                         }
-                        break;
+                        break;*/
                     case "exit":
                     case "quit":
                     case "stop":

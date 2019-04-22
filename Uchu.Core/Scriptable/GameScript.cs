@@ -7,7 +7,7 @@ namespace Uchu.Core.Scriptable
     /// <summary>
     ///     Class every game script inherits from.
     /// </summary>
-    public class GameScript
+    public abstract class GameScript
     {
         #region Management
 
@@ -84,48 +84,35 @@ namespace Uchu.Core.Scriptable
         /// <summary>
         ///     Called once at the start of world load.
         /// </summary>
-        public virtual void Start()
-        {
-        }
+        public abstract void Start();
 
-        protected virtual void Update()
-        {
-        }
+        protected abstract void Update();
 
         /// <summary>
         ///     Called when a player interacts with the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who interacted</param>
-        public virtual async Task OnUse(Player player)
-        {
-        }
+        public abstract Task OnUseAsync(Player player);
 
         /// <summary>
         ///     Called when a player stops a quickbuild on the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who stopped the quickbuild</param>
-        public virtual void OnRebuildCanceled(Player player)
-        {
-        }
+        public abstract void OnRebuildCanceled(Player player);
 
         /// <summary>
         ///     Called when a player smashes the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who smashed</param>
         /// <returns></returns>
-        public virtual async Task OnSmash(Player player)
-        {
-        }
+        public abstract Task OnSmashAsync(Player player);
 
         /// <summary>
         ///     Called then a player collects the Replica Object this script is assigned to.
         /// </summary>
         /// <param name="player">Player who collected</param>
         /// <returns></returns>
-        public virtual async Task OnCollected(Player player)
-        {
-            
-        }
+        public abstract Task OnCollectedAsync(Player player);
 
         /// <summary>
         ///     Implicit operator to access the ReplicaPacket this script is assigned to.
@@ -146,7 +133,8 @@ namespace Uchu.Core.Scriptable
         /// </summary>
         /// <typeparam name="T">Type of Script</typeparam>
         /// <returns>Script of type T. Null if not found.</returns>
-        public T GetScript<T>() where T : GameScript
+        public T GetScript<T>()
+            where T : GameScript
         {
             return ReplicaPacket.GameScripts.FirstOrDefault(c => c is T) as T;
         }
@@ -166,7 +154,8 @@ namespace Uchu.Core.Scriptable
         /// </summary>
         /// <typeparam name="T">Type of Component</typeparam>
         /// <returns>Component of type T. Null if not found.</returns>
-        public T GetComponent<T>() where T : ReplicaComponent
+        public T GetComponent<T>()
+            where T : ReplicaComponent
         {
             return ReplicaPacket.Components.FirstOrDefault(c => c is T) as T;
         }

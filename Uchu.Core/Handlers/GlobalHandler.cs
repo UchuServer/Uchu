@@ -1,3 +1,4 @@
+using RakDotNet;
 using System.Net;
 
 namespace Uchu.Core
@@ -7,9 +8,11 @@ namespace Uchu.Core
         [PacketHandler]
         public void Handshake(HandshakePacket packet, IPEndPoint endpoint)
         {
+            var port = Server.RakNetServer.Protocol == ServerProtocol.RakNet ? 1001 : 21836;
+
             Server.Send(new HandshakePacket
             {
-                ConnectionType = Server.Port == 1001 ? 0x01u : 0x04u
+                ConnectionType = Server.Port == port ? 0x01u : 0x04u
             }, endpoint);
         }
 
