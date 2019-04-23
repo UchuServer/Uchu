@@ -483,10 +483,10 @@ namespace Uchu.Core
 
             Console.WriteLine($"Adding: {imaginationToAdd} | {healthToAdd} | {armorToAdd}");
 
-            UpdateStats();
+            await UpdateStats();
         }
 
-        public void UpdateStats()
+        public async Task UpdateStats()
         {
             using (var ctx = new UchuContext())
             {
@@ -509,7 +509,24 @@ namespace Uchu.Core
                 stats.MaxHealth = character.MaximumHealth;
                 stats.MaxArmor = character.MaximumArmor;
 
+                /*
+                 * Set correct level
+                 */
+                
+                var level = 0u;
+                for (var i = 0u; i < 45; i++)
+                {
+                    var uScoreRequirement = await Server.CDClient.GetUScoreRequirement(i);
+                    if (character.UniverseScore >= uScoreRequirement) continue;
+                    level = i - 1;
+                    break;
+                }
+
+                character.Level = level;
+
                 World.UpdateObject(obj);
+
+                await ctx.SaveChangesAsync();
             }
         }
 
@@ -861,7 +878,6 @@ namespace Uchu.Core
                     // Bob mission
                     await CompleteMissionAsync(await Server.CDClient.GetMissionAsync(664));
                     Server.Send(new RestoreToPostLoadStatsMessage {ObjectId = CharacterId}, EndPoint);
-                    UpdateStats();
                 }
 
                 character.Currency += mission.CurrencyReward;

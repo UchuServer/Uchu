@@ -618,6 +618,23 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<uint> GetUScoreRequirement(uint level)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM LevelProgressionLookup WHERE id = ?",
+                Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = level});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return 0;
+
+                    return (uint) reader.GetInt32(1);
+                }
+            }
+        }
+
         public async Task<ScriptComponentRow> GetScriptComponent(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM ScriptComponent WHERE id = ?", Connection))

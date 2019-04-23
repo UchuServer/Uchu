@@ -2,34 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
-using ServiceStack.Caching;
-using ServiceStack.Redis;
+using StackExchange.Redis;
 
 namespace Uchu.Core
 {
     public class RedisSessionCache : ISessionCache
     {
-        private readonly RedisManagerPool _manager;
-        private readonly ICacheClient _client;
+        private readonly IDatabase _client;
         private readonly RNGCryptoServiceProvider _rng;
         private readonly Dictionary<string, string> _keys = new Dictionary<string, string>();
 
         public RedisSessionCache()
         {
-            _manager = new RedisManagerPool();
-            _client = _manager.GetCacheClient();
+            var manager = ConnectionMultiplexer.Connect("localhost");
+            _client = manager.GetDatabase();
             _rng = new RNGCryptoServiceProvider();
         }
 
         public string CreateSession(IPEndPoint endpoint, long userId)
         {
             var key = _generateKey();
-
-            _client.Set(key, new Session
+            
+            _client.StringSet(key, new Session
             {
                 Key = key,
                 UserId = userId
-            }, TimeSpan.FromDays(1));
+            }.ToBytes(), TimeSpan.FromDays(1));
 
             return key;
         }
@@ -40,7 +38,7 @@ namespace Uchu.Core
 
             session.CharacterId = characterId;
 
-            _client.Set(_keys[endpoint.ToString()], session, TimeSpan.FromDays(1));
+            _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
 
         public void SetZone(IPEndPoint endpoint, ZoneId zone)
@@ -49,15 +47,15 @@ namespace Uchu.Core
 
             session.ZoneId = (ushort) zone;
 
-            _client.Set(_keys[endpoint.ToString()], session, TimeSpan.FromDays(1));
+            _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
 
         public Session GetSession(IPEndPoint endPoint)
-            => _client.Get<Session>(_keys[endPoint.ToString()]);
+            => Session.FromBytes(_client.StringGet(_keys[endPoint.ToString()]));
 
         public bool IsKey(string key)
         {
-            return _client.Get<Session>(key) != null;
+            return _client.KeyExists(key);
         }
 
         public void RegisterKey(IPEndPoint endPoint, string key)
@@ -66,7 +64,7 @@ namespace Uchu.Core
         }
 
         public void DeleteSession(IPEndPoint endpoint)
-            => _client.Remove(endpoint.ToString());
+            => _client.KeyDelete(endpoint.ToString());
 
         private string _generateKey(int length = 24)
         {

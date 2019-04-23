@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
-using RakDotNet;
-using ServiceStack;
 using Uchu.Core;
 using Uchu.Core.Collections;
-using Uchu.Core.IO.Compression;
 
 namespace Uchu.World
 {
@@ -29,6 +24,12 @@ namespace Uchu.World
         [PacketHandler]
         public async Task SessionInfo(SessionInfoPacket packet, IPEndPoint endpoint)
         {
+            if (!Server.SessionCache.IsKey(packet.UserKey))
+            {
+                Server.DisconnectClient(endpoint, DisconnectId.InvalidSessionKey);
+                return;
+            }
+
             var session = Server.SessionCache.GetSession(endpoint);
 
             using (var ctx = new UchuContext())

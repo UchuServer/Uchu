@@ -14,7 +14,7 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.4" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.4" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
-      <PackageReference Include="ServiceStack.Redis" Version="5.4.0" />
+      <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
       <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
     </ItemGroup>
 
