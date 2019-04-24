@@ -19,7 +19,9 @@ namespace Uchu.Core
 
             Configuration config;
 
-            using (var file = File.OpenRead("config.xml"))
+            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+
+            using (var file = File.OpenRead(fn))
             {
                 config = (Configuration)serializer.Deserialize(file);
             }
