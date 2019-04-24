@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         public static void Main(string[] args)
         {
-            var server = new Server(2003);
+            var server = new Server(ServerType.World);
 
             server.RegisterAssembly(Assembly.GetEntryAssembly());
 

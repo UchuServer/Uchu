@@ -1,0 +1,3 @@
+function onStartup(self)
+
+end

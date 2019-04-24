@@ -22,7 +22,7 @@ namespace Uchu.Core
         public bool IsEquipped { get; set; } = false;
 
         [Required]
-        public int InventoryType { get; set; } = 0;
+        public InventoryType InventoryType { get; set; } = InventoryType.Items;
 
         public string ExtraInfo { get; set; } = null;
 

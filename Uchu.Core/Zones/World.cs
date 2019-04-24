@@ -70,7 +70,7 @@ namespace Uchu.Core
                 using (var ctx = new UchuContext())
                 {
                     var buybackItems = ctx.InventoryItems.Where(i =>
-                        i.CharacterId == player.CharacterId && i.InventoryType == (int) InventoryType.VendorBuyback);
+                        i.CharacterId == player.CharacterId && i.InventoryType == InventoryType.VendorBuyback);
                     foreach (var item in buybackItems)
                     {
                         ctx.Remove(item);
@@ -85,7 +85,7 @@ namespace Uchu.Core
         {
             using (var ctx = new UchuContext())
             {
-                var buybackItems = ctx.InventoryItems.Where(i => i.InventoryType == (int) InventoryType.VendorBuyback);
+                var buybackItems = ctx.InventoryItems.Where(i => i.InventoryType == InventoryType.VendorBuyback);
                 foreach (var item in buybackItems)
                 {
                     ctx.Remove(item);
@@ -98,7 +98,8 @@ namespace Uchu.Core
         public async Task InitializeAsync(Zone zone)
         {
             ZoneId = zone.ZoneId;
-            Zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) ZoneId]);
+            var info = await Server.CDClient.GetZoneAsync((ushort) ZoneId);
+            Zone = await Server.ZoneParser.ParseAsync(info.FileName);
 
             foreach (var scene in zone.Scenes)
             {
@@ -278,7 +279,7 @@ namespace Uchu.Core
                 switch (c.ComponentType)
                 {
                     case 108:
-                        list.Add(new PossesableComponent()); // TODO: set id
+                        list.Add(new PossessableComponent()); // TODO: set id
                         break;
 
                     case 61:
@@ -358,7 +359,7 @@ namespace Uchu.Core
                                 Count = i.ItemCount,
                                 LOT = i.ItemId,
                                 Slot = -1,
-                                InventoryType = -1
+                                InventoryType = InventoryType.Invalid
                             }).ToArray()
                         });
                         break;

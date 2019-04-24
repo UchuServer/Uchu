@@ -12,12 +12,11 @@ namespace Uchu.Core
         [Required]
         public int TaskId { get; set; }
 
-        [Required]
-        public List<float> Values { get; set; }
-
         public int MissionId { get; set; }
 
         [ForeignKey("MissionId")]
         public Mission Mission { get; set; }
+
+        public List<MissionTaskValue> Values { get; set; }
     }
 }

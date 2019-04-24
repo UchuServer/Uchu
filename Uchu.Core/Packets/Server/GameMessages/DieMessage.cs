@@ -19,9 +19,9 @@ namespace Uchu.Core
 
         public float DirectionForce;
 
-        public long KillerID;
+        public long KillerObjectId;
 
-        public long LootOwner;
+        public long LootOwnerId;
 
         public override void SerializeMessage(BitStream stream)
         {
@@ -38,12 +38,12 @@ namespace Uchu.Core
             
             stream.WriteInt32(1);
 
-            stream.WriteLong(KillerID > 1 ? KillerID : ObjectId);
+            stream.WriteLong(KillerObjectId > 1 ? KillerObjectId : ObjectId);
 
-            if (LootOwner > 1)
+            if (LootOwnerId > 1)
             {
                 stream.WriteBit(true);
-                stream.WriteLong(LootOwner);
+                stream.WriteLong(LootOwnerId);
             }
             else
             {

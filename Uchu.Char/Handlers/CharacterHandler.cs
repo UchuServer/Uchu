@@ -92,13 +92,13 @@ namespace Uchu.Char
                 var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == session.UserId);
 
                 var shirtLOT =
-                    await Server.CDClient.GetTemplateFromName(
-                        await Server.CDClient.GetBrickColorName((int) packet.ShirtColor) +
+                    await Server.CDClient.GetTemplateFromNameAsync(
+                        await Server.CDClient.GetBrickColorNameAsync((int) packet.ShirtColor) +
                         $" Shirt {packet.ShirtStyle}");
 
                 var legsLOT =
-                    await Server.CDClient.GetTemplateFromName(
-                        await Server.CDClient.GetBrickColorName((int) packet.PantsColor) + " Pants");
+                    await Server.CDClient.GetTemplateFromNameAsync(
+                        await Server.CDClient.GetBrickColorNameAsync((int) packet.PantsColor) + " Pants");
 
                 user.Characters.Add(new Character
                 {

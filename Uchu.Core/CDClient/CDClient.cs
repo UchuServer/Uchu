@@ -4,7 +4,6 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -159,11 +158,7 @@ namespace Uchu.Core
                         IsMission = reader.GetBoolean(39),
                         MissionIconId = reader.IsDBNull(40) ? -1 : reader.GetInt32(40),
                         // TODO: Look more into this
-                        PrerequiredMissions = reader.IsDBNull(41)
-                            ? new int[0]
-                            : reader.GetValue(41).ToString().Trim().Split(',', '|')
-                                .Select(s => s.Trim().Split(':')[0].Trim()).Where(s => !string.IsNullOrEmpty(s))
-                                .Select(int.Parse).ToArray(),
+                        PrerequiredMissions = reader.IsDBNull(41) ? "" : reader.GetString(41),
                         Localize = reader.GetBoolean(42),
                         IsInMotd = reader.GetBoolean(43),
                         CooldownTime = reader.IsDBNull(44) ? 0 : reader.GetInt64(44),
@@ -530,7 +525,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<RocketLaunchpadControlComponentRow> GetLaunchpadComponent(int id)
+        public async Task<RocketLaunchpadControlComponentRow> GetLaunchpadComponentAsync(int id)
         {
             using (var cmd =
                 new SQLiteCommand("SELECT * FROM RocketLaunchpadControlComponent WHERE id = ?", Connection))
@@ -562,7 +557,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<VendorComponentRow> GetVendorComponent(int id)
+        public async Task<VendorComponentRow> GetVendorComponentAsync(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM VendorComponent WHERE id = ?", Connection))
             {
@@ -587,7 +582,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<LootMatrixRow[]> GetLootMatrix(int id)
+        public async Task<LootMatrixRow[]> GetLootMatrixAsync(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM LootMatrix WHERE LootMatrixIndex = ?", Connection))
             {
@@ -618,7 +613,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<uint> GetUScoreRequirement(uint level)
+        public async Task<uint> GetUScoreRequirementAsync(uint level)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM LevelProgressionLookup WHERE id = ?",
                 Connection))
@@ -635,7 +630,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<ScriptComponentRow> GetScriptComponent(int id)
+        public async Task<ScriptComponentRow> GetScriptComponentAsync(int id)
         {
             using (var cmd = new SQLiteCommand("SELECT * FROM ScriptComponent WHERE id = ?", Connection))
             {
@@ -649,14 +644,14 @@ namespace Uchu.Core
                     return new ScriptComponentRow
                     {
                         ScriptId = reader.GetInt32(0),
-                        ServerScriptName = reader.IsDBNull(1) ? null : reader.GetString(1),
-                        ClientScriptName = reader.IsDBNull(2) ? null : reader.GetString(2)
+                        ServerScript = reader.IsDBNull(1) ? "" : reader.GetString(1).Replace('\\', '/').Replace("scripts/", ""),
+                        ClientScript = reader.IsDBNull(2) ? "" : reader.GetString(2).Replace('\\', '/').Replace("scripts/", ""),
                     };
                 }
             }
         }
 
-        public async Task<int> GetTemplateFromName(string name)
+        public async Task<int> GetTemplateFromNameAsync(string name)
         {
             using (var cmd = new SQLiteCommand("SELECT id FROM Objects WHERE name = '" + name + "'", Connection))
             {
@@ -670,7 +665,7 @@ namespace Uchu.Core
             }
         }
 
-        public async Task<string> GetBrickColorName(int brickColor)
+        public async Task<string> GetBrickColorNameAsync(int brickColor)
         {
             using (var cmd = new SQLiteCommand("SELECT description FROM BrickColors WHERE id = ?", Connection))
             {
@@ -682,6 +677,128 @@ namespace Uchu.Core
                         return "";
 
                     return reader.GetString(0);
+                }
+            }
+        }
+
+        public async Task<ZoneTableRow> GetZoneAsync(int id)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM ZoneTable WHERE zoneID = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    return new ZoneTableRow
+                    {
+                        ZoneId = reader.GetInt32(0),
+                        LocStatus = reader.GetInt32(1),
+                        FileName = Path.Combine("Maps", reader.GetString(2)),
+                        ScriptComponentId = reader.IsDBNull(3) ? -1 : reader.GetInt32(3),
+                        MinimumGhostDistance = reader.IsDBNull(4) ? 0 : reader.GetFloat(4),
+                        GhostDistance = reader.GetFloat(5),
+                        SoftPlayerCap = reader.GetInt32(6),
+                        HardPlayerCap = reader.GetInt32(7),
+                        Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                        MapDirectory = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                        MinimumSmashDistance = reader.IsDBNull(10) ? 0 : reader.GetFloat(10),
+                        MaximumSmashDistance = reader.IsDBNull(11) ? 0 : reader.GetFloat(11),
+                        MixerProgram = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                        ClientPhysicsFramerate = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                        ServerPhysicsFramerate = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                        ZoneControlLOT = reader.IsDBNull(15) ? -1 : reader.GetInt32(15),
+                        WidthInChunks = reader.IsDBNull(16) ? 0 : reader.GetInt32(16),
+                        HeightInChunks = reader.IsDBNull(17) ? 0 : reader.GetInt32(17),
+                        PetsAllowed = reader.GetBoolean(18),
+                        Localize = reader.GetBoolean(19),
+                        ZoneWeight = reader.IsDBNull(20) ? 0 : reader.GetFloat(20),
+                        Thumbnail = reader.IsDBNull(21) ? "" : reader.GetString(21),
+                        LoseCoins = reader.GetBoolean(22),
+                        DisableLocationSave = reader.GetBoolean(23),
+                        TeamRadius = reader.IsDBNull(24) ? -1 : reader.GetFloat(24),
+                        GateVersion = reader.IsDBNull(25) ? "" : reader.GetString(25),
+                        MountsAllowed = reader.GetBoolean(26)
+                    };
+                }
+            }
+        }
+
+        public async Task<CurrencyTableRow[]> GetCurrencyForObjectAsync(int lot)
+        {
+            var list = new List<CurrencyTableRow>();
+
+            var str = new StringBuilder();
+
+            str.Append("SELECT * FROM CurrencyTable WHERE currencyIndex = (");
+            str.Append("SELECT CurrencyIndex FROM DestructibleComponent WHERE id = (");
+            str.Append("SELECT component_id FROM ComponentsRegistry WHERE id = ? AND component_type = 7))");
+
+            using (var cmd = new SQLiteCommand(str.ToString(), Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = lot});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        list.Add(new CurrencyTableRow
+                        {
+                            CurrencyIndex = reader.GetInt32(0),
+                            MinimumNPCLevel = reader.GetInt32(1),
+                            MinimumValue = reader.GetInt32(2),
+                            MaximumValue = reader.GetInt32(3),
+                            CurrencyId = reader.GetInt32(4)
+                        });
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
+
+        public async Task<DestructibleComponentRow> GetDestructibleComponentAsync(int id)
+        {
+            using (var cmd = new SQLiteCommand("SELECT * FROM DestructibleComponent WHERE id = ?", Connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter {Value = id});
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (!await reader.ReadAsync())
+                        return null;
+
+                    var factions = new List<int>();
+
+                    if (!reader.IsDBNull(2))
+                        factions.AddRange(reader.GetString(2).Split(',').Select(int.Parse));
+
+                    if (!reader.IsDBNull(1))
+                    {
+                        var faction = reader.GetInt32(1);
+
+                        if (!factions.Contains(faction))
+                            factions.Add(faction);
+                    }
+
+                    return new DestructibleComponentRow
+                    {
+                        DestructibleId = reader.GetInt32(0),
+                        Factions = factions.ToArray(),
+                        Health = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                        Imagination = reader.GetInt32(4),
+                        LootMatrixIndex = reader.IsDBNull(5) ? -1 : reader.GetInt32(5),
+                        CurrencyIndex = reader.IsDBNull(6) ? -1 : reader.GetInt32(6),
+                        Level = reader.IsDBNull(7) ? 1 : reader.GetInt32(7),
+                        Armor = reader.IsDBNull(8) ? 0 : reader.GetFloat(8),
+                        DeathBehavior = reader.GetInt32(9),
+                        IsNPC = !reader.IsDBNull(10) && reader.GetBoolean(10),
+                        AttackPriority = reader.GetInt32(11),
+                        IsSmashable = reader.GetBoolean(12),
+                        DifficultyLevel = reader.IsDBNull(13) ? 0 : reader.GetInt32(13)
+                    };
                 }
             }
         }

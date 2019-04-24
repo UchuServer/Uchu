@@ -3,7 +3,7 @@ using RakDotNet;
 
 namespace Uchu.Core
 {
-    public class ControllablePhysicsComponent : ReplicaComponent
+    public class ControllablePhysicsComponent : ReplicaComponent, IPhysics
     {
         public uint JetpackEffectId { get; set; } = 0;
 

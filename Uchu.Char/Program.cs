@@ -7,7 +7,7 @@ namespace Uchu.Char
     {
         public static void Main(string[] args)
         {
-            var server = new Server(2002);
+            var server = new Server(ServerType.Character);
 
             server.RegisterAssembly(Assembly.GetEntryAssembly());
 

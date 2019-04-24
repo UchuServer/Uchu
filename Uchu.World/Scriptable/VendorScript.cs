@@ -47,9 +47,9 @@ namespace Uchu.World.Scriptable
                 ObjectId = ObjectID
             }, player.EndPoint);
 
-            var comp = await Server.CDClient.GetVendorComponent(
+            var comp = await Server.CDClient.GetVendorComponentAsync(
                 (int) await Server.CDClient.GetComponentIdAsync(LOT, 16));
-            var matrix = await Server.CDClient.GetLootMatrix(comp.LootMatrixIndex);
+            var matrix = await Server.CDClient.GetLootMatrixAsync(comp.LootMatrixIndex);
             var shopItems = new List<Tuple<int, int>>();
 
             foreach (var max in matrix)

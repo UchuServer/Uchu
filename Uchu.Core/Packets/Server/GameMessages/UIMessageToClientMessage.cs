@@ -2,11 +2,11 @@ using RakDotNet;
 
 namespace Uchu.Core
 {
-    public class UIMessageToClientMessage : ServerGameMessage
+    public class UIMessageToClientMessage<T> : ServerGameMessage
     {
         public override ushort GameMessageId => 0x04A0;
 
-        public AMF3<object> Arguments { get; set; }
+        public AMF3<T> Arguments { get; set; }
         public string MessageName { get; set; }
 
         public override void SerializeMessage(BitStream stream)

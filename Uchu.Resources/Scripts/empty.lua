@@ -1,0 +1,3 @@
+--This script is an empty placeholder
+--It is typically used to force an object to use the regular shader instead of the smashable shader
+--Right now, objects that don't have scripts attached to them use the smashable shader by default.

@@ -129,7 +129,7 @@ namespace Uchu.Core
         public int MissionIconId { get; set; }
 
         [Column("prereqMissionID")]
-        public int[] PrerequiredMissions { get; set; }
+        public string PrerequiredMissions { get; set; }
 
         [Column("localize")]
         public bool Localize { get; set; }

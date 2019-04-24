@@ -1,0 +1,1 @@
+-- Timed zone script for battle instance

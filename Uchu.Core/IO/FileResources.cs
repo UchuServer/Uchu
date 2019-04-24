@@ -6,11 +6,13 @@ namespace Uchu.Core.IO
 {
     public class FileResources : IResources
     {
+        public static readonly string AssemblyDirectory = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+
         private readonly string _dir;
 
         public FileResources(string dir = null)
         {
-            _dir = dir ?? Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+            _dir = dir ?? AssemblyDirectory;
         }
 
         public async Task<string> ReadTextAsync(string path)

@@ -3,7 +3,7 @@ using RakDotNet;
 
 namespace Uchu.Core
 {
-    public abstract class ReplicaComponent  : IReplicaComponent
+    public abstract class ReplicaComponent : IReplicaComponent
     {
         public abstract void Serialize(BitStream stream);
 

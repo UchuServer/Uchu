@@ -12,7 +12,7 @@ namespace Uchu.Core
         public int MissionId { get; set; }
 
         [Required]
-        public int State { get; set; } = (int) MissionState.Active;
+        public MissionState State { get; set; } = MissionState.Active;
 
         [Required]
         public int CompletionCount { get; set; } = 0;

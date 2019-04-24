@@ -217,13 +217,6 @@ namespace Uchu.World
                         MissionId = (int) msg.MultiInteractId,
                         OffererObjectId = msg.TargetObjectId
                     }, endpoint);
-
-                    /*Server.Send(new OfferMissionMessage
-                    {
-                        ObjectId = session.CharacterId,
-                        MissionId = (int) msg.MultiInteractId,
-                        OffererObjectId = msg.TargetObjectId
-                    }, endpoint);*/
                 }
             }
             else
@@ -287,11 +280,11 @@ namespace Uchu.World
                         MissionId = msg.MissionId,
                         Tasks = tasks.Select(t =>
                         {
-                            var values = new List<float>();
+                            var values = new List<MissionTaskValue>();
 
                             values.AddRange(t.Targets
                                 .Where(lot => lot is int && character.Items.Exists(i => i.LOT == (int) lot))
-                                .Select(lot => (float) (int) lot));
+                                .Select(lot => new MissionTaskValue {Value = (float)(int)lot}));
 
                             return new MissionTask
                             {
@@ -356,7 +349,7 @@ namespace Uchu.World
                         .First();
 
                     var launchpad =
-                        await Server.CDClient.GetLaunchpadComponent(
+                        await Server.CDClient.GetLaunchpadComponentAsync(
                             (int) await Server.CDClient.GetComponentIdAsync(obj.LOT, 67));
 
                     using (var ctx = new UchuContext())
@@ -385,7 +378,8 @@ namespace Uchu.World
 
                     Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
 
-                    var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[(ushort) zoneId]);
+                    var zoneInfo = await Server.CDClient.GetZoneAsync((ushort) zoneId);
+                    var zone = await Server.ZoneParser.ParseAsync(zoneInfo.FileName);
 
                     Server.Send(new WorldInfoPacket
                     {

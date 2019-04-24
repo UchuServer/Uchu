@@ -3,7 +3,7 @@ using RakDotNet;
 
 namespace Uchu.Core
 {
-    public class SimplePhysicsComponent : ReplicaComponent
+    public class SimplePhysicsComponent : ReplicaComponent, IPhysics
     {
         public bool HasPosition { get; set; } = true;
         public Vector3 Position { get; set; }

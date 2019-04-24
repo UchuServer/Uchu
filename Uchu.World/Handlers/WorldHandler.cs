@@ -41,7 +41,8 @@ namespace Uchu.World
                 if (zoneId == 0)
                     zoneId = 1000;
 
-                var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
+                var zoneInfo = await Server.CDClient.GetZoneAsync(zoneId);
+                var zone = await Server.ZoneParser.ParseAsync(zoneInfo.FileName);
 
                 Server.Send(new WorldInfoPacket
                 {
@@ -97,7 +98,8 @@ namespace Uchu.World
 
                 Server.SessionCache.SetZone(endpoint, (ZoneId) zoneId);
 
-                var zone = await Server.ZoneParser.ParseAsync(ZoneParser.Zones[zoneId]);
+                var zoneInfo = await Server.CDClient.GetZoneAsync(zoneId);
+                var zone = await Server.ZoneParser.ParseAsync(zoneInfo.FileName);
 
                 if (!Server.Worlds.ContainsKey(packet.ZoneId))
                 {
@@ -115,7 +117,7 @@ namespace Uchu.World
 
                 foreach (var mission in character.Missions)
                 {
-                    if (mission.State == (int) MissionState.Completed)
+                    if (mission.State == MissionState.Completed)
                     {
                         completed.Add(new CompletedMissionNode
                         {
@@ -144,7 +146,7 @@ namespace Uchu.World
                             new ItemContainerNode
                             {
                                 Type = 0,
-                                Items = character.Items.Where(i => i.InventoryType == 0).Select(i => new ItemNode
+                                Items = character.Items.Where(i => i.InventoryType == InventoryType.Items).Select(i => new ItemNode
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
@@ -157,7 +159,7 @@ namespace Uchu.World
                             new ItemContainerNode
                             {
                                 Type = 2,
-                                Items = character.Items.Where(i => i.InventoryType == 2).Select(i => new ItemNode
+                                Items = character.Items.Where(i => i.InventoryType == InventoryType.Bricks).Select(i => new ItemNode
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
@@ -170,7 +172,7 @@ namespace Uchu.World
                             new ItemContainerNode
                             {
                                 Type = 5,
-                                Items = character.Items.Where(i => i.InventoryType == 5).Select(i => new ItemNode
+                                Items = character.Items.Where(i => i.InventoryType == InventoryType.Models).Select(i => new ItemNode
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
@@ -187,7 +189,7 @@ namespace Uchu.World
                             new ItemContainerNode
                             {
                                 Type = 7,
-                                Items = character.Items.Where(i => i.InventoryType == 7).Select(i => new ItemNode
+                                Items = character.Items.Where(i => i.InventoryType == InventoryType.Behaviors).Select(i => new ItemNode
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,

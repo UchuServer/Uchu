@@ -223,7 +223,7 @@ namespace Uchu.Core
                     }
                 }
 
-                var items = character.Items.Where(i => i.InventoryType == (int) inventoryType).ToArray();
+                var items = character.Items.Where(i => i.InventoryType == inventoryType).ToArray();
 
                 /*
                  * Check for already present stack
@@ -285,7 +285,7 @@ namespace Uchu.Core
                     LOT = lot,
                     Slot = slot,
                     Count = count == 0 ? 1 : count,
-                    InventoryType = (int) inventoryType,
+                    InventoryType = inventoryType,
                     IsBound = itemComp.IsBoundOnPickup
                 };
 
@@ -349,7 +349,7 @@ namespace Uchu.Core
                         ItemLOT = itemStack.LOT,
                         ItemCount = (uint) count,
                         Slot = itemStack.Slot,
-                        InventoryType = itemStack.InventoryType,
+                        InventoryType = (int) itemStack.InventoryType,
                         ShowFlyingLoot = count > 0,
                         TotalItems = (uint) itemStack.Count
                     }, EndPoint);
@@ -516,7 +516,7 @@ namespace Uchu.Core
                 var level = 0u;
                 for (var i = 0u; i < 45; i++)
                 {
-                    var uScoreRequirement = await Server.CDClient.GetUScoreRequirement(i);
+                    var uScoreRequirement = await Server.CDClient.GetUScoreRequirementAsync(i);
                     if (character.UniverseScore >= uScoreRequirement) continue;
                     level = i - 1;
                     break;
@@ -549,8 +549,8 @@ namespace Uchu.Core
 
                 foreach (var mission in character.Missions)
                 {
-                    if (mission.State != (int) MissionState.Active &&
-                        mission.State != (int) MissionState.CompletedActive)
+                    if (mission.State != MissionState.Active &&
+                        mission.State != MissionState.CompletedActive)
                         continue;
 
                     var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
@@ -563,8 +563,8 @@ namespace Uchu.Core
 
                     var charTask = mission.Tasks.Find(t => t.TaskId == task.UId);
 
-                    if (!charTask.Values.Contains(id))
-                        charTask.Values.Add(id);
+                    if (!charTask.Values.Exists(v => v.Value == id))
+                        charTask.Values.Add(new MissionTaskValue {Value = id});
 
                     Server.Send(new NotifyMissionTaskMessage
                     {
@@ -616,25 +616,25 @@ namespace Uchu.Core
                         character.Missions.Add(new Mission
                         {
                             MissionId = mission.MissionId,
-                            State = (int) MissionState.Active,
+                            State = MissionState.Active,
                             Tasks = tasks.Select(t => new MissionTask
                             {
                                 TaskId = t.UId,
-                                Values = new List<float>()
+                                Values = new List<MissionTaskValue>()
                             }).ToList()
                         });
                     }
 
                     var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
 
-                    if (charMission.State != (int) MissionState.Active ||
-                        charMission.State != (int) MissionState.CompletedActive)
+                    if (charMission.State != MissionState.Active ||
+                        charMission.State != MissionState.CompletedActive)
                         continue;
 
                     var charTask = charMission.Tasks.Find(t => t.TaskId == task.UId);
 
-                    if (!charTask.Values.Contains(id))
-                        charTask.Values.Add(id);
+                    if (!charTask.Values.Exists(v => v.Value == id))
+                        charTask.Values.Add(new MissionTaskValue {Value = id});
 
                     await ctx.SaveChangesAsync();
 
@@ -666,8 +666,8 @@ namespace Uchu.Core
 
                 foreach (var mission in character.Missions)
                 {
-                    if (mission.State != (int) MissionState.Active &&
-                        mission.State != (int) MissionState.CompletedActive)
+                    if (mission.State != MissionState.Active &&
+                        mission.State != MissionState.CompletedActive)
                         continue;
 
                     var tasks = await Server.CDClient.GetMissionTasksAsync(mission.MissionId);
@@ -683,8 +683,8 @@ namespace Uchu.Core
                     switch (type)
                     {
                         case MissionTaskType.Interact:
-                            if (!charTask.Values.Contains(obj.LOT))
-                                charTask.Values.Add(obj.LOT);
+                            if (!charTask.Values.Exists(v => v.Value == obj.LOT))
+                                charTask.Values.Add(new MissionTaskValue {Value = obj.LOT});
 
                             Server.Send(new NotifyMissionTaskMessage
                             {
@@ -699,8 +699,8 @@ namespace Uchu.Core
                         case MissionTaskType.Collect:
                             var component = (CollectibleComponent) obj.Components.First(c => c is CollectibleComponent);
 
-                            if (!charTask.Values.Contains(component.CollectibleId))
-                                charTask.Values.Add(component.CollectibleId);
+                            if (!charTask.Values.Exists(v => v.Value == component.CollectibleId))
+                                charTask.Values.Add(new MissionTaskValue {Value = component.CollectibleId});
 
                             Server.Send(new NotifyMissionTaskMessage
                             {
@@ -715,8 +715,8 @@ namespace Uchu.Core
                         case MissionTaskType.KillEnemy:
                             break;
                         case MissionTaskType.Script:
-                            if (!charTask.Values.Contains(obj.LOT))
-                                charTask.Values.Add(obj.LOT);
+                            if (!charTask.Values.Exists(v => v.Value == obj.LOT))
+                                charTask.Values.Add(new MissionTaskValue {Value = obj.LOT});
 
                             Server.Send(new NotifyMissionTaskMessage
                             {
@@ -800,25 +800,25 @@ namespace Uchu.Core
                         character.Missions.Add(new Mission
                         {
                             MissionId = mission.MissionId,
-                            State = (int) MissionState.Active,
+                            State = MissionState.Active,
                             Tasks = tasks.Select(t => new MissionTask
                             {
                                 TaskId = t.UId,
-                                Values = new List<float>()
+                                Values = new List<MissionTaskValue>()
                             }).ToList()
                         });
                     }
 
                     var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
 
-                    if (charMission.State != (int) MissionState.Active ||
-                        charMission.State != (int) MissionState.CompletedActive)
+                    if (charMission.State != MissionState.Active ||
+                        charMission.State != MissionState.CompletedActive)
                         continue;
 
                     var charTask = charMission.Tasks.Find(t => t.TaskId == task.UId);
 
-                    if (!charTask.Values.Contains(obj.LOT))
-                        charTask.Values.Add(obj.LOT);
+                    if (!charTask.Values.Exists(v => v.Value == obj.LOT))
+                        charTask.Values.Add(new MissionTaskValue {Value = obj.LOT});
 
                     await ctx.SaveChangesAsync();
 
@@ -850,11 +850,11 @@ namespace Uchu.Core
                     character.Missions.Add(new Mission
                     {
                         MissionId = mission.MissionId,
-                        State = (int) MissionState.Active,
+                        State = MissionState.Active,
                         Tasks = tasks.Select(t => new MissionTask
                         {
                             TaskId = t.UId,
-                            Values = t.Targets.Where(tgt => tgt is int).Select(tgt => (float) (int) tgt).ToList()
+                            Values = t.Targets.Where(tgt => tgt is int).Select(tgt => new MissionTaskValue {Value = (float)(int)tgt}).ToList()
                         }).ToList()
                     });
                 }
@@ -869,7 +869,7 @@ namespace Uchu.Core
                     SendingRewards = true
                 }, EndPoint);
 
-                charMission.State = (int) MissionState.Completed;
+                charMission.State = MissionState.Completed;
                 charMission.CompletionCount++;
                 charMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
@@ -909,7 +909,7 @@ namespace Uchu.Core
                         ["type"] = "imagination"
                     };
 
-                    Server.Send(new UIMessageToClientMessage
+                    Server.Send(new UIMessageToClientMessage<object>
                     {
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
@@ -925,7 +925,7 @@ namespace Uchu.Core
                         ["type"] = "health"
                     };
 
-                    Server.Send(new UIMessageToClientMessage
+                    Server.Send(new UIMessageToClientMessage<object>
                     {
                         ObjectId = CharacterId,
                         Arguments = new AMF3<object>(dict),
@@ -997,7 +997,7 @@ namespace Uchu.Core
                         {
                             var charMission = character.Missions.Find(m => m.MissionId == mission.MissionId);
 
-                            if (charMission.State != (int) MissionState.Completed &&
+                            if (charMission.State != MissionState.Completed &&
                                 await AllTasksCompletedAsync(charMission))
                             {
                                 Server.Send(new OfferMissionMessage
@@ -1020,10 +1020,8 @@ namespace Uchu.Core
 
                     if (mission.OffersMission)
                         if (!character.Missions.Exists(m => m.MissionId == mission.MissionId) ||
-                            character.Missions.Find(m => m.MissionId == mission.MissionId).State ==
-                            (int) MissionState.Active ||
-                            character.Missions.Find(m => m.MissionId == mission.MissionId).State ==
-                            (int) MissionState.ReadyToComplete)
+                            character.Missions.Find(m => m.MissionId == mission.MissionId).State == MissionState.Active ||
+                            character.Missions.Find(m => m.MissionId == mission.MissionId).State == MissionState.ReadyToComplete)
                         {
                             var canOffer = true;
 
@@ -1119,7 +1117,7 @@ namespace Uchu.Core
                     ClientDeath = true,
                     DeathType = "electro-shock-death",
                     SpawnLoot = false,
-                    LootOwner = CharacterId
+                    LootOwnerId = CharacterId
                 }, EndPoint);
             }
         }

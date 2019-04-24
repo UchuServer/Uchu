@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using RakDotNet;
 using RakDotNet.TcpUdp;
 using Uchu.Core.IO;
@@ -26,18 +28,39 @@ namespace Uchu.Core
         public ZoneParser ZoneParser { get; }
         public CDClient CDClient { get; }
         public Dictionary<ZoneId, World> Worlds { get; }
+        public ServerType ServerType { get; }
+        public Configuration Config { get; }
+        public InstanceManager InstanceManager { get; }
 
-        public Server(int port)
+        public Server(ServerType type)
         {
-            RakNetServer = new TcpUdpServer(port, "3.25 ND1");
+            ServerType = type;
+
+            var serializer = new XmlSerializer(typeof(Configuration));
+            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+
+            using (var file = File.OpenRead(fn))
+            {
+                Config = (Configuration)serializer.Deserialize(file);
+            }
+
+            Port =
+                type == ServerType.Authentication ? 21836 :
+                type == ServerType.Character ? Config.Character.Port :
+                type == ServerType.World ? Config.World.Port :
+                type == ServerType.Chat ? Config.Chat.Port :
+                throw new NotSupportedException();
+
+            RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
             _handlerMap = new HandlerMap();
             _gameMessageHandlerMap = new GameMessageHandlerMap();
-            Port = port;
             SessionCache = new RedisSessionCache();
             Resources = new AssemblyResources("Uchu.Resources.dll");
             ZoneParser = new ZoneParser(Resources);
             CDClient = new CDClient();
-            Worlds = new Dictionary<ZoneId, World>();
+            InstanceManager = new InstanceManager(this);
+
+            Worlds = new Dictionary<ZoneId, World>(); // TODO: move everything to new impl
 
             RakNetServer.PacketReceived += _handlePacket;
 
@@ -179,7 +202,8 @@ namespace Uchu.Core
                         {
                             Group = group,
                             Method = method,
-                            Packet = packet
+                            Packet = packet,
+                            RunTask = attr.RunTask
                         });
 
                         Console.WriteLine($"Registered handler for game message {packet}");

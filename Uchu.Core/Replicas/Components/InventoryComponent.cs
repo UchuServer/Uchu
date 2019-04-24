@@ -34,7 +34,7 @@ namespace Uchu.Core
                 if (hasSlot)
                     stream.WriteUShort((ushort) item.Slot);
 
-                var hasInvtype = item.InventoryType != -1;
+                var hasInvtype = (int) item.InventoryType != -1;
 
                 stream.WriteBit(hasInvtype);
 

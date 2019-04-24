@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Uchu>
+    <Postgres>
+        <Database>uchu</Database>
+        <Host>localhost</Host>
+        <Username>postgres</Username>
+        <Password>postgres</Password>
+    </Postgres>
+    <!--
+    <Tls>
+        <Certificate></Certificate>
+        <Key></Key>
+    </Tls>
+    -->
+    <Character>
+        <Port>2002</Port>
+    </Character>
+    <World>
+        <Port>2003</Port>
+    </World>
+    <Chat>
+        <Port>2004</Port>
+    </Chat>
+</Uchu>

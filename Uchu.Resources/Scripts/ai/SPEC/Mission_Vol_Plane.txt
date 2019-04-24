@@ -1,0 +1,17 @@
+require('o_mis')
+function onStartup(self) 
+ if self:GetVar("MaxTableSkill") == nil then
+             
+                for i = 1, table.maxn (self:GetSkills().skills) do  
+                    self:SetVar("MaxTableSkill", i ) 
+                end 
+                
+            end 
+ 
+        -- set current skill to max entry in table (default behavior)
+        local attackSkillID = self:GetSkills().skills[self:GetVar("MaxTableSkill")]
+     self:CastSkill{skillID = 57, optionalTargetID = self } 
+      self:CastSkill{skillID = attackSkillID } 		
+end
+
+

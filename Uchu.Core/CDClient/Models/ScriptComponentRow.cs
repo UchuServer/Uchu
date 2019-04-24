@@ -8,9 +8,9 @@ namespace Uchu.Core
         public int ScriptId { get; set; }
         
         [Column("script_name")]
-        public string ServerScriptName { get; set; }
+        public string ServerScript { get; set; }
         
         [Column("client_script_name")]
-        public string ClientScriptName { get; set; }
+        public string ClientScript { get; set; }
     }
 }

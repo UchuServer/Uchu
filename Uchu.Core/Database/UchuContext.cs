@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace Uchu.Core
 {
@@ -12,7 +15,22 @@ namespace Uchu.Core
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Database=uchu;Username=postgres;Password=postgres");
+            var serializer = new XmlSerializer(typeof(Configuration));
+
+            Configuration config;
+
+            using (var file = File.OpenRead("config.xml"))
+            {
+                config = (Configuration)serializer.Deserialize(file);
+            }
+
+            optionsBuilder.UseNpgsql(new NpgsqlConnectionStringBuilder
+            {
+                Host = config.Postgres.Host,
+                Database = config.Postgres.Database,
+                Username = config.Postgres.Username,
+                Password = config.Postgres.Password
+            }.ToString());
         }
     }
 }
