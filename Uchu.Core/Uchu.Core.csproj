@@ -23,4 +23,10 @@
       <Folder Include="Scripting\Lua\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="config.default.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
