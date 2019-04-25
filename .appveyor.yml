@@ -16,7 +16,7 @@ only_commits:
     - Uchu.World/
 
 image:
-  - Visual Studio 2019 Preview
+  - Visual Studio 2017
   - Ubuntu
 
 clone_depth: 1
@@ -26,15 +26,18 @@ cache:
 
 install:
   - git submodule update --init --recursive
+  - dotnet restore
+
+configuration: Release
 
 build:
   parallel: true
   project: Uchu.sln
 
 artifacts:
-  - path: Uchu.Auth\bin\$(configuration)
+  - path: Uchu.Auth\bin\
     name: UchuAuth
-  - path: Uchu.Char\bin\$(configuration)
+  - path: Uchu.Char\bin\
     name: UchuChar
-  - path: Uchu.World\bin\$(configuration)
+  - path: Uchu.World\bin\
     name: UchuWorld

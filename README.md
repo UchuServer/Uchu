@@ -1,4 +1,4 @@
-# Uchu
+# Uchu ![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/dev.svg?style=flat-square&logo=appveyor)
 
 LEGO Universe server written in C#
 
