@@ -1,0 +1,40 @@
+version: '{build}-{branch}'
+
+branches:
+  only:
+    - dev
+
+skip_tags: true
+
+only_commits:
+  files:
+    - RakDotNet/
+    - Uchu.Auth/
+    - Uchu.Char/
+    - Uchu.Core/
+    - Uchu.Resources/
+    - Uchu.World/
+
+image:
+  - Visual Studio 2019 Preview
+  - Ubuntu
+
+clone_depth: 1
+
+cache:
+  - packages -> **\*.csproj
+
+install:
+  - git submodule update --init --recursive
+
+build:
+  parallel: true
+  project: Uchu.sln
+
+artifacts:
+  - path: Uchu.Auth\bin\$(configuration)
+    name: UchuAuth
+  - path: Uchu.Char\bin\$(configuration)
+    name: UchuChar
+  - path: Uchu.World\bin\$(configuration)
+    name: UchuWorld
