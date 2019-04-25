@@ -39,7 +39,7 @@ namespace Uchu.Core
             var serializer = new XmlSerializer(typeof(Configuration));
             var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
-            using (var file = File.OpenRead(fn))
+            using (var file = File.OpenRead(Path.Combine(FileResources.AssemblyDirectory, fn)))
             {
                 Config = (Configuration)serializer.Deserialize(file);
             }
