@@ -1,0 +1,3 @@
+[submodule "RakDotNet"]
+	path = RakDotNet
+	url = https://github.com/Wincent01/RakDotNet.git

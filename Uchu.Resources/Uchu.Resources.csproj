@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="CDClient.db">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Names\first.txt" />
+      <EmbeddedResource Include="Names\first.txt" />
+      <None Remove="Names\last.txt" />
+      <EmbeddedResource Include="Names\last.txt" />
+      <None Remove="Names\middle.txt" />
+      <EmbeddedResource Include="Names\middle.txt" />
+    </ItemGroup>
+
+</Project>

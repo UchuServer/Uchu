@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BCrypt.Net-Next" Version="3.1.3" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
+      <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\RakDotNet\RakDotNet\RakDotNet.csproj" />
+      <ProjectReference Include="..\Uchu.Resources\Uchu.Resources.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="CdClient\Models" />
+      <Folder Include="Packets\Server" />
+    </ItemGroup>
+
+</Project>
