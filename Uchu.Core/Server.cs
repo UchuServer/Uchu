@@ -15,12 +15,10 @@ using Uchu.Core.IO;
 namespace Uchu.Core
 {
     using HandlerMap = Dictionary<RemoteConnectionType, Dictionary<uint, List<Handler>>>;
-    using GameMessageHandlerMap = Dictionary<ushort, List<Handler>>;
 
     public class Server
     {
-        private readonly HandlerMap _handlerMap;
-        private readonly GameMessageHandlerMap _gameMessageHandlerMap;
+        protected readonly HandlerMap HandlerMap;
         
         public readonly IRakNetServer RakNetServer;
 
@@ -29,6 +27,8 @@ namespace Uchu.Core
         public readonly AssemblyResources Resources;
         
         public readonly int Port;
+
+        protected event Action<long, ushort, BitReader, IPEndPoint> OnGameMessage;
 
         private bool _running;
 
@@ -40,17 +40,16 @@ namespace Uchu.Core
             SessionCache = new RedisSessionCache();
             Resources = new AssemblyResources("Uchu.Resources.dll");
             
-            _handlerMap = new HandlerMap();
-            _gameMessageHandlerMap = new GameMessageHandlerMap();
-            
-            RegisterAssembly(Assembly.GetExecutingAssembly());
-            RegisterAssembly(Assembly.GetEntryAssembly());
+            HandlerMap = new HandlerMap();
             
             Logger.Information($"Server created on port: {port}, password: {password}, protocol: {RakNetServer.Protocol}");
         }
 
         public void Start()
         {
+            RegisterAssembly(Assembly.GetExecutingAssembly());
+            RegisterAssembly(Assembly.GetEntryAssembly());
+            
             Logger.Information("Starting...");
             
             RakNetServer.Start();
@@ -377,7 +376,7 @@ namespace Uchu.Core
         
         #endregion
 
-        private void RegisterAssembly(Assembly assembly)
+        protected virtual void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
 
@@ -398,30 +397,16 @@ namespace Uchu.Core
 
                     if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
                     {
-                        var msg = (IGameMessage) packet;
-
-                        if (!_gameMessageHandlerMap.ContainsKey(msg.GameMessageId))
-                            _gameMessageHandlerMap[msg.GameMessageId] = new List<Handler>();
-
-                        _gameMessageHandlerMap[msg.GameMessageId].Add(new Handler
-                        {
-                            Group = instance,
-                            Info = method,
-                            Packet = packet
-                        });
-
-                        Logger.Debug($"Registered handler for game message {packet}");
-
                         continue;
                     }
 
                     var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
                     var packetId = attr.PacketId ?? packet.PacketId;
 
-                    if (!_handlerMap.ContainsKey(remoteConnectionType))
-                        _handlerMap[remoteConnectionType] = new Dictionary<uint, List<Handler>>();
+                    if (!HandlerMap.ContainsKey(remoteConnectionType))
+                        HandlerMap[remoteConnectionType] = new Dictionary<uint, List<Handler>>();
 
-                    var handlers = _handlerMap[remoteConnectionType];
+                    var handlers = HandlerMap[remoteConnectionType];
 
                     if (!handlers.ContainsKey(packetId))
                         handlers[packetId] = new List<Handler>();
@@ -461,35 +446,8 @@ namespace Uchu.Core
                     var objectId = reader.Read<long>();
                     var messageId = reader.Read<ushort>();
 
-                    if (!_gameMessageHandlerMap.TryGetValue(messageId, out var messageHandler))
-                    {
-                        Logger.Warning($"No handler registered for GameMessage (0x{messageId:x})!");
-                        
-                        return;
-                    }
-                    
-                    Logger.Debug($"Received {messageHandler[0].Packet.GetType().FullName}");
+                    OnGameMessage?.Invoke(objectId, messageId, reader, endPoint);
 
-                    foreach (var handler in messageHandler)
-                    {
-                        reader.BaseStream.Position = 18;
-
-                        ((IGameMessage) handler.Packet).ObjectId = objectId;
-
-                        try
-                        {
-                            reader.Read(handler.Packet);
-                            Logger.Debug($"Invoked handler for GameMessage {messageHandler[0].Packet.GetType().FullName}");
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Error(e);
-                            throw;
-                        }
-                        
-                        InvokeHandler(handler, endPoint);
-                    }
-                    
                     return;
                 }
 
@@ -497,7 +455,7 @@ namespace Uchu.Core
                 // Regular Packet
                 //
                 
-                if (!_handlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
+                if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
                     !temp.TryGetValue(header.PacketId, out var handlers))
                 {
                     Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
