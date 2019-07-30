@@ -1,6 +1,4 @@
-﻿using Uchu.Core;
-
-namespace Uchu.World
+﻿namespace Uchu.World
 {
     internal static class Program
     {

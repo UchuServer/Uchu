@@ -7,12 +7,12 @@ namespace Uchu.Core.IO
     public class AssemblyResources
     {
         private readonly Assembly _assembly;
-        private readonly string _namespace;
+        public readonly string Namespace;
 
         public AssemblyResources(string dll)
         {
             _assembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetCallingAssembly().Location), dll));
-            _namespace = Path.GetFileNameWithoutExtension(dll);
+            Namespace = Path.GetFileNameWithoutExtension(dll);
         }
 
         public async Task<string> ReadTextAsync(string path)
@@ -35,12 +35,29 @@ namespace Uchu.Core.IO
                 return bytes;
             }
         }
+        
+        public byte[] ReadBytes(string path, bool includeNamespace = true)
+        {
+            using (var stream = GetStream(path, includeNamespace))
+            {
+                var bytes = new byte[stream.Length];
 
-        public Stream GetStream(string path)
+                stream.Read(bytes, 0, (int) stream.Length);
+
+                return bytes;
+            }
+        }
+
+        public Stream GetStream(string path, bool includeNamespace = true)
         {
             path = path.Replace('/', '.').Replace('\\', '.');
 
-            return _assembly.GetManifestResourceStream($@"{_namespace}.{path}");
+            return _assembly.GetManifestResourceStream(includeNamespace ? $@"{Namespace}.{path}" : path);
+        }
+
+        public string[] GetAllPaths()
+        {
+            return _assembly.GetManifestResourceNames();
         }
     }
 }

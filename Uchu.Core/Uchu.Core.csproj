@@ -19,7 +19,6 @@
 
     <ItemGroup>
       <Folder Include="CdClient\Models" />
-      <Folder Include="Packets\Server" />
     </ItemGroup>
 
 </Project>

@@ -11,12 +11,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Names\first.txt" />
-      <EmbeddedResource Include="Names\first.txt" />
-      <None Remove="Names\last.txt" />
-      <EmbeddedResource Include="Names\last.txt" />
-      <None Remove="Names\middle.txt" />
-      <EmbeddedResource Include="Names\middle.txt" />
+        <EmbeddedResource Include="Names\**\*" />
+        <EmbeddedResource Include="Maps\**\*" />
     </ItemGroup>
 
 </Project>

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -236,6 +238,27 @@ namespace Uchu.Char.Handlers
 
                 await SendCharacterList(endPoint, session.UserId);
             }
+        }
+
+        [PacketHandler]
+        public void JoinWorld(JoinWorldRequest packet, IPEndPoint endPoint)
+        {
+            Server.SessionCache.SetCharacter(endPoint, packet.CharacterId);
+
+            var addresses = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(i => (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
+                             i.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
+                            i.OperationalStatus == OperationalStatus.Up)
+                .SelectMany(i => i.GetIPProperties().UnicastAddresses).Select(a => a.Address)
+                .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
+
+            var address = endPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
+
+            Server.Send(new ServerRedirectionPacket
+            {
+                Address = address,
+                Port = 2003
+            }, endPoint);
         }
     }
 }
