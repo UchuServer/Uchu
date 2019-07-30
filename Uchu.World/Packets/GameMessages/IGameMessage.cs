@@ -1,9 +1,11 @@
-namespace Uchu.Core
+using Uchu.Core;
+
+namespace Uchu.World
 {
     public interface IGameMessage : IPacket
     {
         ushort GameMessageId { get; }
 
-        long ObjectId { get; set; }
+        GameObject Associate { get; set; }
     }
 }

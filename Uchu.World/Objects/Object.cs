@@ -7,11 +7,13 @@ namespace Uchu.World
     {
         public Zone Zone;
 
+        public Server Server => Zone.Server;
+        
         public event Action OnCreated;
 
         public event Action OnDestroyed;
         
-        public static Object Create(Type type, Zone zone)
+        public static Object Instantiate(Type type, Zone zone)
         {
             if (Activator.CreateInstance(type) is Object instance)
             {
@@ -29,7 +31,7 @@ namespace Uchu.World
 
         public static T Create<T>(Zone zone) where T : Object
         {
-            return Create(typeof(T), zone) as T;
+            return Instantiate(typeof(T), zone) as T;
         }
 
         public static void Destroy(Object obj)

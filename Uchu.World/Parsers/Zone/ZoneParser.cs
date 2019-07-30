@@ -46,7 +46,7 @@ namespace Uchu.World.Parsers
                     if (luzFiles.All(l => l != $"{_resources.Namespace}.{path}")) continue;
                     if (zone.ZoneID == null || !Enum.IsDefined(typeof(ZoneId), (ushort) zone.ZoneID.Value)) continue;
                     
-                    Zones.Add((ZoneId) zone.ZoneID, $"{_resources.Namespace}.{path}");
+                    Zones.Add((ZoneId) zone.ZoneID, $"{path}");
                     Logger.Debug($"Found {(ZoneId) zone.ZoneID}!");
                 }
             }
@@ -96,7 +96,11 @@ namespace Uchu.World.Parsers
 
                     scene.Name = reader.ReadString(reader.Read<byte>());
 
-                    var dir = Path.GetDirectoryName(path);
+                    var parts = path.Split('.').ToList();
+                    parts.RemoveAt(parts.Count - 1);
+                    parts.RemoveAt(parts.Count - 1);
+
+                    var dir = string.Join('.', parts.ToArray()).Replace('.', '/');
 
                     scene.Objects = await LevelParser.ParseAsync(Path.Combine(dir, filename));
 

@@ -37,6 +37,6 @@ namespace Uchu.World
             }
         }
 
-        public Transform[] Children { get; private set; }
+        public Transform[] Children { get; private set; } = new Transform[0];
     }
 }

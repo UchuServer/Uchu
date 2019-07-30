@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
@@ -14,18 +16,35 @@ namespace Uchu.World
     public class WorldServer : Server
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
+
+        private readonly List<Zone> _zones = new List<Zone>();
         
-        public readonly ReplicaManager ReplicaManager;
+        private readonly ZoneParser _parser;
         
         public WorldServer(int port, string password = "3.25 ND1") : base(port, password)
         {
-            ReplicaManager = new ReplicaManager(RakNetServer);
-            
             _gameMessageHandlerMap = new GameMessageHandlerMap();
+
+            _parser = new ZoneParser(Resources);
 
             OnGameMessage += HandleGameMessage;
         }
 
+        public async Task<Zone> GetZone(ZoneId zoneId)
+        {
+            if (_zones.Any(z => z.ZoneInfo.ZoneId == (uint) zoneId))
+                return _zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+            
+            var info = await _parser.ParseAsync(ZoneParser.Zones[zoneId]);
+
+            // Create new Zone
+            var zone = new Zone(info, this);
+            _zones.Add(zone);
+            zone.Initialize();
+
+            return _zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+        }
+        
         protected override void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
@@ -47,20 +66,6 @@ namespace Uchu.World
 
                     if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
                     {
-                        var msg = (IGameMessage) packet;
-
-                        if (!_gameMessageHandlerMap.ContainsKey(msg.GameMessageId))
-                            _gameMessageHandlerMap[msg.GameMessageId] = new List<Handler>();
-
-                        _gameMessageHandlerMap[msg.GameMessageId].Add(new Handler
-                        {
-                            Group = instance,
-                            Info = method,
-                            Packet = packet
-                        });
-
-                        Logger.Debug($"Registered handler for game message {packet}");
-
                         continue;
                     }
 
@@ -68,22 +73,19 @@ namespace Uchu.World
                     var packetId = attr.PacketId ?? packet.PacketId;
 
                     if (!HandlerMap.ContainsKey(remoteConnectionType))
-                        HandlerMap[remoteConnectionType] = new Dictionary<uint, List<Handler>>();
+                        HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
 
                     var handlers = HandlerMap[remoteConnectionType];
-
-                    if (!handlers.ContainsKey(packetId))
-                        handlers[packetId] = new List<Handler>();
-
-                    handlers[packetId].Add(new Handler
+                    
+                    Logger.Debug(!handlers.ContainsKey(packetId) ? $"Registered handler for packet {packet}" : $"Handler for packet {packet} overwritten");
+                    
+                    handlers[packetId] = new Handler
                     {
                         Group = instance,
                         Info = method,
                         Packet = packet,
                         RunTask = attr.RunTask
-                    });
-
-                    Logger.Debug($"Registered handler for packet {packet}");
+                    };
                 }
             }
         }
@@ -103,7 +105,7 @@ namespace Uchu.World
             {
                 reader.BaseStream.Position = 18;
 
-                ((IGameMessage) handler.Packet).ObjectId = objectId;
+                //((IGameMessage) handler.Packet).ObjectId = objectId;
 
                 try
                 {

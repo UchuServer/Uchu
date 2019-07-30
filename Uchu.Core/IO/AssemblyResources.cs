@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -51,11 +52,11 @@ namespace Uchu.Core.IO
         public Stream GetStream(string path, bool includeNamespace = true)
         {
             path = path.Replace('/', '.').Replace('\\', '.');
-
+            
             return _assembly.GetManifestResourceStream(includeNamespace ? $@"{Namespace}.{path}" : path);
         }
 
-        public string[] GetAllPaths()
+        public IEnumerable<string> GetAllPaths()
         {
             return _assembly.GetManifestResourceNames();
         }

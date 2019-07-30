@@ -19,7 +19,7 @@ namespace Uchu.World
         
         public uint MaxImagination { get; set; }
         
-        public int[] Factions { get; set; }
+        public int[] Factions { get; set; } = new int[0];
 
         public bool Smashable { get; set; } = false;
         

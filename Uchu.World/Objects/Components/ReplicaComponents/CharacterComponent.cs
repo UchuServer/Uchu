@@ -20,8 +20,8 @@ namespace Uchu.World
         public byte GameMasterLevel { get; set; }
         
         public CharacterActivity Activity { get; set; }
-        
-        public long GuildId { get; set; }
+
+        public long GuildId { get; set; } = -1;
         
         public string GuildName { get; set; }
         

@@ -14,7 +14,7 @@ using Uchu.Core.IO;
 
 namespace Uchu.Core
 {
-    using HandlerMap = Dictionary<RemoteConnectionType, Dictionary<uint, List<Handler>>>;
+    using HandlerMap = Dictionary<RemoteConnectionType, Dictionary<uint, Handler>>;
 
     public class Server
     {
@@ -395,31 +395,23 @@ namespace Uchu.Core
                         !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType)) continue;
                     var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
 
-                    if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
-                    {
-                        continue;
-                    }
-
                     var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
                     var packetId = attr.PacketId ?? packet.PacketId;
 
                     if (!HandlerMap.ContainsKey(remoteConnectionType))
-                        HandlerMap[remoteConnectionType] = new Dictionary<uint, List<Handler>>();
+                        HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
 
                     var handlers = HandlerMap[remoteConnectionType];
-
-                    if (!handlers.ContainsKey(packetId))
-                        handlers[packetId] = new List<Handler>();
-
-                    handlers[packetId].Add(new Handler
+                    
+                    Logger.Debug(!handlers.ContainsKey(packetId) ? $"Registered handler for packet {packet}" : $"Handler for packet {packet} overwritten");
+                    
+                    handlers[packetId] = new Handler
                     {
                         Group = instance,
                         Info = method,
                         Packet = packet,
                         RunTask = attr.RunTask
-                    });
-
-                    Logger.Debug($"Registered handler for packet {packet}");
+                    };
                 }
             }
         }
@@ -456,31 +448,26 @@ namespace Uchu.Core
                 //
                 
                 if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
-                    !temp.TryGetValue(header.PacketId, out var handlers))
+                    !temp.TryGetValue(header.PacketId, out var handler))
                 {
                     Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
                     
                     return;
                 };
 
-                Logger.Debug($"Received {handlers[0].Packet.GetType().FullName}");
+                Logger.Debug($"Received {handler.Packet.GetType().FullName}");
 
-                foreach (var handler in handlers)
+                reader.BaseStream.Position = 8;
+
+                try
                 {
-                    reader.BaseStream.Position = 8;
-
-                    try
-                    {
-                        reader.Read(handler.Packet);
-                        Logger.Debug($"Invoked handler for packet {handlers[0].Packet.GetType().FullName}");
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                        continue;
-                    }
-
+                    reader.Read(handler.Packet);
                     InvokeHandler(handler, endPoint);
+                    Logger.Debug($"Invoked handler for packet {handler.Packet.GetType().FullName}");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
                 }
             }
         }
