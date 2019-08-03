@@ -416,7 +416,7 @@ namespace Uchu.Core
             }
         }
 
-        private void HandlePacket(IPEndPoint endPoint, byte[] data)
+        public void HandlePacket(IPEndPoint endPoint, byte[] data)
         {
             Logger.Debug($"Received packet from {endPoint}");
             var stream = new MemoryStream(data);

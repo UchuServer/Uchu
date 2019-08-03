@@ -13,7 +13,7 @@ namespace Uchu.World
             return @this.Write(gameObject == null ? -1 : gameObject.ObjectId);
         }
         
-        public static void WriteLDFCompressed(this BitWriter @this, LegoDataDictionary dict)
+        public static void WriteLdfCompressed(this BitWriter @this, LegoDataDictionary dict)
         {
             var stream = new MemoryStream();
 
@@ -27,7 +27,7 @@ namespace Uchu.World
 
                 @this.Write((uint) (compressed.Length + 9));
 
-                @this.Write(1);
+                @this.Write<byte>(1);
                 @this.Write((uint) buffer.Length);
                 @this.Write((uint) compressed.Length);
                 @this.Write(compressed);

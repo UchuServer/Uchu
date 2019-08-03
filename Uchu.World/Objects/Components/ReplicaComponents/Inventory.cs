@@ -29,15 +29,15 @@ namespace Uchu.World
 
                 writer.WriteBit(false);
 
-                var stack = Items.Length > 1;
+                var stack = item.Count > 1;
 
-                writer.Write(stack);
+                writer.WriteBit(stack);
 
                 if (stack) writer.Write((uint) item.Count);
 
                 var hasSlot = item.Slot != -1;
 
-                writer.Write(hasSlot);
+                writer.WriteBit(hasSlot);
 
                 if (hasSlot) writer.Write((ushort) item.Slot);
 
@@ -51,7 +51,7 @@ namespace Uchu.World
 
                 writer.WriteBit(hasExtraData);
 
-                if (hasExtraData) writer.WriteLDFCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ","));
+                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ","));
 
                 writer.WriteBit(true);
             }

@@ -82,9 +82,10 @@ namespace Uchu.World
                 }
                 else
                 {
-                    netId = (ushort) _networkIds.Count;
+                    netId = (ushort) (_networkIds.Count + 1);
                 }
 
+                Logger.Debug($"Construction [{gameObject.Lot}] {gameObject} [{netId}]");
                 _networkIds.Add(gameObject, netId);
             }
 

@@ -131,7 +131,7 @@ namespace Uchu.World.Collections
                         break;
 
                     case 7:
-                        writer.Write((bool) value);
+                        writer.WriteBit((bool) value);
                         break;
 
                     case 8:

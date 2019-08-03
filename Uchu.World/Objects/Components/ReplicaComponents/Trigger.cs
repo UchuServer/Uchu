@@ -18,7 +18,7 @@ namespace Uchu.World
         {
             var hasId = TriggerId != -1;
 
-            writer.Write(hasId);
+            writer.WriteBit(hasId);
 
             if (hasId) writer.Write(TriggerId);
         }

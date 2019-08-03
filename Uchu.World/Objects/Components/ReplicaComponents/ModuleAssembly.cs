@@ -9,7 +9,7 @@ namespace Uchu.World
         
         public override void Construct(BitWriter writer)
         {
-            writer.Write(false);
+            writer.WriteBit(false);
         }
 
         public override void Serialize(BitWriter writer)

@@ -40,7 +40,7 @@ namespace Uchu.World
 
             var hasPath = PathName != null;
 
-            writer.Write(hasPath);
+            writer.WriteBit(hasPath);
 
             if (hasPath)
             {
@@ -48,7 +48,7 @@ namespace Uchu.World
                 writer.Write((ushort) PathName.Length);
                 writer.WriteString(PathName, PathName.Length, true);
                 writer.Write(PathStart);
-                writer.Write(false);
+                writer.WriteBit(false);
             }
 
             var hasPlatform = Type != PlatformType.None;

@@ -212,41 +212,48 @@ namespace Uchu.World.Handlers
                     }
                 };
 
-                using (var ms = new MemoryStream())
+                var ms = new MemoryStream();
+                
                 using (var writer = new StreamWriter(ms, Encoding.UTF8))
                 {
                     Serializer.Serialize(writer, xmlData);
-
-                    var bytes = ms.ToArray();
-                    var xml = new byte[bytes.Length - 3];
-
-                    Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
-
-                    var ldf = new LegoDataDictionary
-                    {
-                        ["accountId"] = session.UserId,
-                        ["objid", 9] = character.CharacterId,
-                        ["name"] = character.Name,
-                        ["template"] = 1,
-                        ["xmlData"] = xml
-                    };
-
-                    Server.Send(new DetailedUserInfoPacket {Data = ldf}, endPoint);
-
-                    var player = Player.Create(character, endPoint, zone);
-
-                    if (character.LandingByRocket)
-                    {
-                        character.LandingByRocket = false;
-                        character.Rocket = null;
-
-                        await ctx.SaveChangesAsync();
-                    }
-
-                    player.Message(new DoneLoadingObjectsMessage {Associate = player});
-                    player.Message(new PlayerReadyMessage {Associate = player});
                 }
+
+                var bytes = ms.ToArray();
+                var xml = new byte[bytes.Length - 3];
+
+                Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
+
+                var ldf = new LegoDataDictionary
+                {
+                    ["accountId"] = session.UserId,
+                    ["objid", 9] = character.CharacterId,
+                    ["name"] = character.Name,
+                    ["template"] = 1,
+                    ["xmlData"] = xml
+                };
+
+                Server.Send(new DetailedUserInfoPacket {Data = ldf}, endPoint);
+
+                var player = Player.Create(character, endPoint, zone);
+
+                if (character.LandingByRocket)
+                {
+                    character.LandingByRocket = false;
+                    character.Rocket = null;
+
+                    await ctx.SaveChangesAsync();
+                }
+
+                player.Message(new DoneLoadingObjectsMessage {Associate = player});
+                player.Message(new PlayerReadyMessage {Associate = player});
             }
+        }
+
+        [PacketHandler(RunTask = true)]
+        public void HandleRoutedPacket(ClientRoutedPacket packet, IPEndPoint endPoint)
+        {
+            Server.HandlePacket(endPoint, packet.Packet);
         }
     }
 }

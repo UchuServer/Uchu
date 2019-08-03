@@ -22,7 +22,7 @@ namespace Uchu.World
             writer.WriteBit(false);
             writer.WriteBit(false);
 
-            writer.Write(HasPosition);
+            writer.WriteBit(HasPosition);
             
             if (!HasPosition) return;
 

@@ -22,7 +22,7 @@ namespace Uchu.World
             writer.WriteBit(true);
             writer.Write<uint>(0);
             writer.Write<uint>(0);
-            writer.Write(false);
+            writer.WriteBit(false);
 
             var hasOwner = Owner != null;
 

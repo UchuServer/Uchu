@@ -14,7 +14,7 @@ namespace Uchu.World
 
         public override void SerializePacket(BitWriter writer)
         {
-            writer.WriteLDFCompressed(Data);
+            writer.WriteLdfCompressed(Data);
         }
     }
 }

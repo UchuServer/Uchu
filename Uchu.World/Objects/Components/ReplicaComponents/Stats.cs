@@ -27,9 +27,12 @@ namespace Uchu.World
         
         public override void Construct(BitWriter writer)
         {
-            writer.Write(true);
+            writer.WriteBit(true);
 
-            writer.Write(new byte[9 * 4], 9 * 4 * 8);
+            for (var i = 0; i < 9; i++)
+            {
+                writer.Write<uint>(0);
+            }
 
             WriteStats(writer);
 
@@ -59,7 +62,7 @@ namespace Uchu.World
 
         private void WriteStats(BitWriter writer)
         {
-            writer.Write(HasStats);
+            writer.WriteBit(HasStats);
             
             if (!HasStats) return;
 
@@ -73,9 +76,9 @@ namespace Uchu.World
             writer.Write<float>(CurrentImagination);
 
             writer.Write<uint>(0);
-            writer.Write(true);
-            writer.Write(false);
-            writer.Write(false);
+            writer.WriteBit(true);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
 
             writer.Write<float>(MaxHealth);
             writer.Write<float>(MaxArmor);

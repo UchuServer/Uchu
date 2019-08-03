@@ -15,7 +15,7 @@ namespace Uchu.World
             var hasData = Data != null;
             writer.WriteBit(hasData);
 
-            if (hasData) writer.WriteLDFCompressed(Data);
+            if (hasData) writer.WriteLdfCompressed(Data);
         }
 
         public override void Serialize(BitWriter writer)

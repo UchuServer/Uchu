@@ -33,10 +33,10 @@ namespace Uchu.World
             WritePart2(writer);
             WritePart3(writer);
 
-            writer.Write(false);
-            writer.Write(false);
-            writer.Write(false);
-            writer.Write(false);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
 
             writer.Write((uint) Character.HairColor);
             writer.Write((uint) Character.HairStyle);
@@ -119,35 +119,35 @@ namespace Uchu.World
         {
             var hasLevel = Level != 0;
 
-            writer.Write(hasLevel);
+            writer.WriteBit(hasLevel);
 
             if (hasLevel) writer.Write(Level);
         }
         
         private void WritePart3(BitWriter writer)
         {
-            writer.Write(true);
-            writer.Write(false);
-            writer.Write(true);
+            writer.WriteBit(true);
+            writer.WriteBit(false);
+            writer.WriteBit(true);
         }
         
         private void WritePart4(BitWriter writer)
         {
-            writer.Write(true);
+            writer.WriteBit(true);
             
-            writer.Write(IsPvP);
-            writer.Write(IsGameMaster);
+            writer.WriteBit(IsPvP);
+            writer.WriteBit(IsGameMaster);
             writer.Write(GameMasterLevel);
             
-            writer.Write(false);
+            writer.WriteBit(false);
             writer.Write<byte>(0);
 
-            writer.Write(true);
+            writer.WriteBit(true);
             writer.Write((uint) Activity);
 
             var hasGuild = GuildId != -1;
 
-            writer.Write(hasGuild);
+            writer.WriteBit(hasGuild);
             
             if (!hasGuild) return;
 

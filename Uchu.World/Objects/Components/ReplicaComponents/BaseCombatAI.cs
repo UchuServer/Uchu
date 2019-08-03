@@ -20,7 +20,7 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.Write(PerformingAction);
+            writer.WriteBit(PerformingAction);
 
             if (!PerformingAction) return;
             writer.Write((uint) Action);

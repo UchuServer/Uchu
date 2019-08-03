@@ -37,8 +37,12 @@ namespace Uchu.World
                 writer.WriteBit(false);
             }
 
-            writer.Write(true);
-            writer.Write(new byte[7 * 4], 7 * 4 * 8);
+            writer.WriteBit(true);
+
+            for (var i = 0; i < 7; i++)
+            {
+                writer.Write<uint>(0);
+            }
 
             WritePhysics(writer);
         }
@@ -47,7 +51,7 @@ namespace Uchu.World
         {
             WritePhysics(writer);
 
-            writer.Write(false);
+            writer.WriteBit(false);
         }
 
         public void WritePhysics(BitWriter writer)
@@ -73,15 +77,19 @@ namespace Uchu.World
 
             var hasVelocity = Velocity != null;
 
+            writer.WriteBit(hasVelocity);
+            
             if (hasVelocity) writer.Write(Velocity.Value);
 
             var hasAngularVelocity = AngularVelocity != null;
 
-            if (hasAngularVelocity) writer.Write(AngularVelocity.Value * (NegativeAngularVelocity ? -1 : 1));
+            writer.WriteBit(hasAngularVelocity);
+
+            if (hasAngularVelocity) writer.Write(AngularVelocity.Value);
 
             var hasPlatform = Platform != null;
 
-            writer.Write(hasPlatform);
+            writer.WriteBit(hasPlatform);
             
             if (!hasPlatform) return;
 

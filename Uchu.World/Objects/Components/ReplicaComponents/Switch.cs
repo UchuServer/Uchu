@@ -15,7 +15,7 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.Write(State);
+            writer.WriteBit(State);
         }
     }
 }

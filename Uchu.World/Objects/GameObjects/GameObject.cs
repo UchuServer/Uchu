@@ -30,6 +30,8 @@ namespace Uchu.World
 
         private readonly List<Component> _components = new List<Component>();
 
+        private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
+
         #region Component Management
         
         public Component AddComponent(Type type)
@@ -45,6 +47,8 @@ namespace Uchu.World
                 component.GameObject = this;
                 
                 _components.Add(component);
+
+                if (component is ReplicaComponent replicaComponent) _replicaComponents.Add(replicaComponent);
 
                 foreach (var required in type.GetCustomAttributes<RequireComponentAttribute>()
                     .Where(a => GetComponent(a.Type) == null))
@@ -76,7 +80,7 @@ namespace Uchu.World
 
         public void RemoveComponent(Type type)
         {
-            if (type.GetCustomAttribute<EssentialAttribute>() != null)
+            if (type.GetCustomAttribute<EssentialAttribute>() != null || type.IsAssignableFrom(typeof(ReplicaComponent)))
             {
                 Logger.Error($"{type} Component on {this} is Essential and cannot be removed.");
             }
@@ -236,9 +240,56 @@ namespace Uchu.World
 
         #region Replica
 
-        private void WriteReplica(BitWriter writer)
+        public void WriteConstruct(BitWriter writer)
         {
-            writer.Write(true);
+            writer.Write(ObjectId);
+
+            writer.Write(Lot);
+
+            writer.Write((byte) Name.Length);
+            writer.WriteString(Name, Name.Length, true);
+
+            writer.Write<uint>(0); // TODO: Add creation time?
+
+            writer.WriteBit(false); // TODO: figure this out
+
+            var trigger = GetComponent<Trigger>();
+
+            var hasTriggerId = !ReferenceEquals(trigger, null) && trigger.TriggerId != -1;
+
+            writer.WriteBit(hasTriggerId);
+
+            var hasSpawner = Spawner != null;
+
+            writer.WriteBit(hasSpawner);
+
+            if (hasSpawner)
+                writer.Write(Spawner);
+
+            var hasSpawnerNode = SpawnerNode != default;
+
+            writer.WriteBit(hasSpawnerNode);
+
+            if (hasSpawnerNode)
+                writer.Write(SpawnerNode);
+
+            var hasScale = !Transform.Scale.Equals(-1);
+            
+            writer.WriteBit(hasScale);
+
+            if (hasScale)
+                writer.Write(Transform.Scale);
+
+            writer.WriteBit(false); // TODO: Add World State
+            
+            writer.WriteBit(false); // TODO: Add GM Level
+
+            WriteSerialize(writer);
+        }
+        
+        public void WriteSerialize(BitWriter writer)
+        {
+            writer.WriteBit(true);
 
             var hasParent = Transform.Parent != null;
 
@@ -254,73 +305,25 @@ namespace Uchu.World
 
             writer.WriteBit(hasChildren);
 
-            if (!hasChildren) return;
-            writer.Write((ushort) Transform.Children.Length);
-
-            foreach (var child in Transform.Children)
+            if (hasChildren)
             {
-                writer.Write(child.GameObject);
+                writer.Write((ushort) Transform.Children.Length);
+
+                foreach (var child in Transform.Children)
+                {
+                    writer.Write(child.GameObject);
+                }
             }
-        }
-        
-        public void WriteConstruct(BitWriter writer)
-        {
-            writer.Write(this);
 
-            writer.Write(Lot);
+            //
+            // Construct replica components.
+            //
 
-            writer.Write((byte) Name.Length);
-            writer.WriteString(Name, Name.Length, true);
-
-            writer.Write<uint>(0); // TODO: Add creation time?
-
-            writer.Write(false); // TODO: figure this out
-
-            var trigger = GetComponent<Trigger>();
-
-            var hasTriggerId = !ReferenceEquals(trigger, null) && trigger.TriggerId != -1;
-
-            writer.Write(hasTriggerId);
-
-            var hasSpawner = Spawner != null;
-
-            writer.Write(hasSpawner);
-
-            var hasSpawnerNode = SpawnerNode != default;
-
-            writer.Write(hasSpawnerNode);
-
-            if (hasSpawnerNode)
-                writer.Write(SpawnerNode);
-
-            var hasScale = Math.Abs(Transform.Scale - -1f) > 0.01f;
-            
-            writer.WriteBit(hasScale);
-
-            if (hasScale)
-                writer.Write(Transform.Scale);
-
-            writer.Write(false); // TODO: Add World State
-            
-            writer.Write(false); // TODO: Add GM Level
-
-            WriteSerialize(writer);
-        }
-        
-        public void WriteSerialize(BitWriter writer)
-        {
-            WriteReplica(writer);
-
-            var order = (int[]) Enum.GetValues(typeof(ReplicaComponentsId));
-            
-            var replicas = _components.OfType<ReplicaComponent>().ToList();
-            replicas.Sort((c1, c2) => order.IndexOf((int) c1.Id) - order.IndexOf((int) c2.Id));
-
-            foreach (var replica in replicas)
+            foreach (var replicaComponent in _replicaComponents)
             {
-                Logger.Log($"Replica: {replica.Id} [{order.IndexOf((int) replica.Id)}]");
+                Logger.Information(replicaComponent);
 
-                replica.Construct(writer);
+                replicaComponent.Construct(writer);
             }
         }
         
