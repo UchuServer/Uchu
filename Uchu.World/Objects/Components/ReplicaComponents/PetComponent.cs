@@ -1,5 +1,6 @@
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
@@ -11,7 +12,12 @@ namespace Uchu.World
         public uint ModerationStatus { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Pet;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

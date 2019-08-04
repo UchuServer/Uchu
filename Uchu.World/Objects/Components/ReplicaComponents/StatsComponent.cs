@@ -1,9 +1,10 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class Stats : ReplicaComponent
+    public class StatsComponent : ReplicaComponent
     {
         public bool HasStats { get; set; } = true;
 
@@ -18,13 +19,18 @@ namespace Uchu.World
         public uint MaxArmor { get; set; }
         
         public uint MaxImagination { get; set; }
-        
-        public int[] Factions { get; set; } = new int[0];
+
+        public int[] Factions { get; set; } = {1};
 
         public bool Smashable { get; set; } = false;
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Invalid;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            HasStats = false;
+        }
+
         public override void Construct(BitWriter writer)
         {
             writer.WriteBit(true);

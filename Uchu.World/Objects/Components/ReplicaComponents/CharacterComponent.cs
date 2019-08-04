@@ -1,6 +1,7 @@
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
@@ -26,7 +27,12 @@ namespace Uchu.World
         public string GuildName { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Character;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             WritePart1(writer);
@@ -106,7 +112,7 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            var inVehicle = VehicleObject == null;
+            var inVehicle = VehicleObject != null;
 
             writer.WriteBit(inVehicle);
 

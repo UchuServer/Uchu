@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -38,15 +39,28 @@ namespace Uchu.World
             foreach (var levelObject in ZoneInfo.ScenesInfo.SelectMany(s => s.Objects))
             {
                 var obj = GameObject.Instantiate(levelObject, this);
+
+                if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
+                    levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
+                    levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled) // is this right?
+                    continue;
+                
+                obj.Construct();
+                
+                if (obj is Spawner spawner)
+                    spawner.Spawn();
+                
             }
         }
 
         public void RequestConstruction(Player player)
         {
+            Players.Add(player);
+
             // TODO: Add filters
             foreach (var gameObject in GameObjects.Where(g => g.Constructed))
             {
-                SendConstruction(gameObject, new List<IPEndPoint> {player.EndPoint});
+                Task.Run(() => SendConstruction(gameObject, new List<IPEndPoint> {player.EndPoint}));
             }
         }
 
@@ -64,6 +78,8 @@ namespace Uchu.World
 
         public void DestroyObject(GameObject gameObject)
         {
+            if (gameObject is Player player) Players.Remove(player);
+            
             // TODO: Add filters
             SendDestruction(gameObject, Players.Select(p => p.EndPoint).ToArray());
         }
@@ -71,6 +87,7 @@ namespace Uchu.World
         private void SendConstruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
+            if (!recipients.Any()) return;
 
             if (!_networkIds.ContainsKey(gameObject))
             {
@@ -84,8 +101,7 @@ namespace Uchu.World
                 {
                     netId = (ushort) (_networkIds.Count + 1);
                 }
-
-                Logger.Debug($"Construction [{gameObject.Lot}] {gameObject} [{netId}]");
+                
                 _networkIds.Add(gameObject, netId);
             }
 
@@ -102,7 +118,7 @@ namespace Uchu.World
                 gameObject.WriteConstruct(writer);
             }
 
-            var data = stream.GetBuffer();
+            var data = stream.ToArray();
             foreach (var endPoint in recipients)
             {
                 Server.Send(data, endPoint);

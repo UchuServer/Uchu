@@ -1,14 +1,20 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class SimplePhysics : ReplicaComponent
+    public class SimplePhysicsComponent : ReplicaComponent
     {
         public bool HasPosition { get; set; } = true;
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.SimplePhysics;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             writer.WriteBit(false);

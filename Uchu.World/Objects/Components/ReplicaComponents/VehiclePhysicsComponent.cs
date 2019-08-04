@@ -4,9 +4,9 @@ using Uchu.World.Parsers;
 namespace Uchu.World
 {
     [Essential]
-    public class Component107 : ReplicaComponent
+    public class VehiclePhysicsComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Component107;
+        public override ReplicaComponentsId Id => ReplicaComponentsId.VehiclePhysics;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
@@ -15,6 +15,9 @@ namespace Uchu.World
 
         public override void Construct(BitWriter writer)
         {
+            writer.Write<byte>(0);
+            writer.WriteBit(false);
+
             Serialize(writer);
         }
 

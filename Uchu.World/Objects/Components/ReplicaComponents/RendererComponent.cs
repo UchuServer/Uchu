@@ -1,18 +1,25 @@
 using System;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class Renderer : ReplicaComponent
+    public class RendererComponent : ReplicaComponent
     {
         public bool Disabled { get; set; }
 
         public Effect[] Effects { get; set; } = new Effect[0];
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Render;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            if (levelObject.Settings.TryGetValue("renderDisabled", out var disabled)) Disabled = (bool) disabled;
+            else Disabled = false;
+        }
+
         public override void Construct(BitWriter writer)
         {
             if (Disabled) return;

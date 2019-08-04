@@ -1,12 +1,18 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class RigidBodyPhantomPhysics : ReplicaComponent
+    public class RigidBodyPhantomPhysicsComponent : ReplicaComponent
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.RigidBodyPhantomPhysics;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

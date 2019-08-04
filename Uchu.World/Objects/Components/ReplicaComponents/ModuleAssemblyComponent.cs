@@ -4,9 +4,9 @@ using Uchu.World.Parsers;
 namespace Uchu.World
 {
     [Essential]
-    public class Component107 : ReplicaComponent
+    public class ModuleAssemblyComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Component107;
+        public override ReplicaComponentsId Id => ReplicaComponentsId.ModuleAssembly;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
@@ -15,12 +15,11 @@ namespace Uchu.World
 
         public override void Construct(BitWriter writer)
         {
-            Serialize(writer);
+            writer.WriteBit(false);
         }
 
         public override void Serialize(BitWriter writer)
         {
-            writer.WriteBit(false);
         }
     }
 }

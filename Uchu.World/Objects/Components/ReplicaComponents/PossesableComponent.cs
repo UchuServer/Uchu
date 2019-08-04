@@ -1,13 +1,19 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    public class Possesable : ReplicaComponent
+    public class PossesableComponent : ReplicaComponent
     {
         public GameObject Driver { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Possesable;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

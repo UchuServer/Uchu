@@ -12,7 +12,7 @@ namespace Uchu.Core
         
         public abstract uint PacketId { get; }
 
-        public void Serialize(BitWriter writer)
+        public virtual void Serialize(BitWriter writer)
         {
             writer.Write((byte) MessageIdentifiers.UserPacketEnum);
             writer.Write((ushort) RemoteConnectionType);

@@ -1,13 +1,12 @@
-using System.Collections.Generic;
 using System.Numerics;
 using RakDotNet.IO;
-using Uchu.Core;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    [RequireComponent(typeof(Stats), true)]
-    public class Rebuild : ScriptedActivity
+    [RequireComponent(typeof(StatsComponent), true)]
+    public class RebuildComponent : ScriptedActivityComponent
     {
         public RebuildState State { get; set; } = RebuildState.Open;
         
@@ -22,7 +21,12 @@ namespace Uchu.World
         public Vector3 ActivatorPosition { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Rebuild;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            ActivatorPosition = (Vector3) levelObject.Settings["rebuild_activators"];
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

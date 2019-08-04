@@ -249,11 +249,5 @@ namespace Uchu.World.Handlers
                 player.Message(new PlayerReadyMessage {Associate = player});
             }
         }
-
-        [PacketHandler(RunTask = true)]
-        public void HandleRoutedPacket(ClientRoutedPacket packet, IPEndPoint endPoint)
-        {
-            Server.HandlePacket(endPoint, packet.Packet);
-        }
     }
 }

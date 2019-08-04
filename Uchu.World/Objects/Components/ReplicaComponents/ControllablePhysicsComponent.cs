@@ -1,16 +1,17 @@
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class ControllablePhysics : ReplicaComponent
+    public class ControllablePhysicsComponent : ReplicaComponent
     {
         public uint JetpackEffectId { get; set; }
         
         public bool HasPosition { get; set; }
-        
-        public bool IsOnGround { get; set; }
+
+        public bool IsOnGround { get; set; } = true;
         
         public bool NegativeAngularVelocity { get; set; }
         
@@ -23,7 +24,12 @@ namespace Uchu.World
         public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.ControllablePhysics;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            HasPosition = true;
+        }
+
         public override void Construct(BitWriter writer)
         {
             var hasJetpackEffect = JetpackEffectId != 0;

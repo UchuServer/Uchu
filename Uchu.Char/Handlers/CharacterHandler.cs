@@ -102,7 +102,7 @@ namespace Uchu.Char.Handlers
                 var pantsColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.PantsColor);
                 var pantsName = $"{(pantsColor != null ? pantsColor.Description : "Bright Red")} Pants";
                 var pants = await ctx.ObjectsTable.FirstOrDefaultAsync(o =>
-                    string.Equals(o.Name, shirtName, StringComparison.CurrentCultureIgnoreCase));
+                    string.Equals(o.Name, pantsName, StringComparison.CurrentCultureIgnoreCase));
                 pantsLot = (uint) (pants != null ? pants.Id : 2508); // Select 'Bright Red Pants' if not found.
             }
 

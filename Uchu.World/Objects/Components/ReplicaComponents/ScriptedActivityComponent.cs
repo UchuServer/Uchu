@@ -1,17 +1,23 @@
 using System.Collections.Generic;
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class ScriptedActivity : ReplicaComponent
+    public class ScriptedActivityComponent : ReplicaComponent
     {
         public List<GameObject> Players { get; set; } = new List<GameObject>();
 
         public float[] Parameters { get; set; } = new float[10];
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.ScriptedActivity;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

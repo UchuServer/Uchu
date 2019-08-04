@@ -15,8 +15,4 @@
       </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Packets\GameMessages\General" />
-    </ItemGroup>
-
 </Project>

@@ -3,6 +3,7 @@ namespace Uchu.World
     public enum ReplicaComponentsId
     {
         Invalid, // For components like stats which are not used by itself.
+        Spawner = 10,
         Possesable = 108,
         ModuleAssembly = 61,
         ControllablePhysics = 1,
@@ -11,7 +12,7 @@ namespace Uchu.World
         VehiclePhysics = 30,
         PhantomPhysics = 40,
         Destructible = 7, // Destructible, Stats
-        Collectible = 25, // Stats, Collectible
+        Collectible = 23, // Stats, Collectible
         Pet = 26,
         Character = 4, // Character (Part 1-4)
         Inventory = 17,

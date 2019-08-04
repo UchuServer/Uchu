@@ -17,13 +17,13 @@ namespace Uchu.World
 
             zone.RequestConstruction(instance);
 
-            var controllablePhysics = instance.AddComponent<ControllablePhysics>();
+            var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
 
             controllablePhysics.HasPosition = true;
 
-            instance.AddComponent<Destructible>();
+            instance.AddComponent<DestructibleComponent>();
 
-            var stats = instance.GetComponent<Stats>();
+            var stats = instance.GetComponent<StatsComponent>();
 
             stats.HasStats = true;
             stats.CurrentHealth = (uint) character.CurrentHealth;
@@ -38,13 +38,13 @@ namespace Uchu.World
             characterComponent.Level = (uint) character.Level;
             characterComponent.Character = character;
 
-            var inventory = instance.AddComponent<Inventory>();
+            var inventory = instance.AddComponent<InventoryComponent>();
 
             inventory.Items = character.Items.Where(i => i.IsEquipped).ToArray();
 
-            instance.AddComponent<LuaScript>();
-            instance.AddComponent<Skill>();
-            instance.AddComponent<Renderer>();
+            instance.AddComponent<LuaScriptComponent>();
+            instance.AddComponent<SkillComponent>();
+            instance.AddComponent<RendererComponent>();
             instance.AddComponent<Component107>();
 
             instance.Construct();
@@ -56,6 +56,7 @@ namespace Uchu.World
 
         public void Message(IGameMessage gameMessage)
         {
+            Logger.Debug($"Send {gameMessage} to {EndPoint} from {gameMessage.Associate.ObjectId}");
             Server.Send(gameMessage, EndPoint);
         }
     }

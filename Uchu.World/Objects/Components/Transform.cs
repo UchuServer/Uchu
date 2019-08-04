@@ -12,7 +12,7 @@ namespace Uchu.World
         
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
 
-        public float Scale { get; set; } = 1f;
+        public float Scale { get; set; } = -1;
         
         public Transform Parent
         {

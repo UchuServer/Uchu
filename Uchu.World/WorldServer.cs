@@ -11,7 +11,7 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    using GameMessageHandlerMap = Dictionary<ushort, List<Handler>>;
+    using GameMessageHandlerMap = Dictionary<ushort, Handler>;
     
     public class WorldServer : Server
     {
@@ -66,6 +66,16 @@ namespace Uchu.World
 
                     if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
                     {
+                        var gameMessage = (IGameMessage) packet;
+                        
+                        _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler
+                        {
+                            Group = instance,
+                            Info = method,
+                            Packet = packet,
+                            RunTask = attr.RunTask
+                        });
+                        
                         continue;
                     }
 
@@ -95,28 +105,85 @@ namespace Uchu.World
             if (!_gameMessageHandlerMap.TryGetValue(messageId, out var messageHandler))
             {
                 Logger.Warning($"No handler registered for GameMessage (0x{messageId:x})!");
-                        
+                
                 return;
             }
-                    
-            Logger.Debug($"Received {messageHandler[0].Packet.GetType().FullName}");
 
-            foreach (var handler in messageHandler)
+            var session = SessionCache.GetSession(endPoint);
+            
+            Logger.Debug($"Received {messageHandler.Packet.GetType().FullName}");
+
+            var player = _zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
+                .FirstOrDefault(p => p.EndPoint.Equals(endPoint));
+
+            if (ReferenceEquals(player, null))
             {
-                reader.BaseStream.Position = 18;
+                Logger.Error($"{endPoint} is not logged in but sent a GameMessage.");
+                return;
+            }
+            
+            var associate = player.Zone.GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
 
-                //((IGameMessage) handler.Packet).ObjectId = objectId;
+            if (ReferenceEquals(associate, null))
+            {
+                Logger.Error($"{objectId} is not a valid object in {endPoint}'s zone.");
+                return;
+            }
 
+            var gameMessage = (IGameMessage) messageHandler.Packet;
+
+            gameMessage.Associate = associate;
+
+            reader.BaseStream.Position = 18;
+            
+            reader.Read(gameMessage);
+
+            InvokeHandler(messageHandler, player);
+        }
+        
+        private static void InvokeHandler(Handler handler, Player player)
+        {
+            var task = handler.Info.ReturnType == typeof(Task);
+
+            var parameters = new object[] {handler.Packet, player};
+
+            if (task)
+            {
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await (Task) handler.Info.Invoke(handler.Group, parameters);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                });
+            }
+            else if (handler.RunTask)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        handler.Info.Invoke(handler.Group, parameters);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                });
+            }
+            else
+            {
                 try
                 {
-                    reader.Read(handler.Packet);
-                    // TODO: Invoke handler
-                    Logger.Debug($"Invoked handler for GameMessage {messageHandler[0].Packet.GetType().FullName}");
+                    handler.Info.Invoke(handler.Group, parameters);
                 }
                 catch (Exception e)
                 {
                     Logger.Error(e);
-                    throw;
                 }
             }
         }

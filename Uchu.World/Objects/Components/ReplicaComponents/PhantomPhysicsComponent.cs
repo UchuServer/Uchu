@@ -1,10 +1,11 @@
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class PhantomPhysics : ReplicaComponent
+    public class PhantomPhysicsComponent : ReplicaComponent
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.PhantomPhysics;
 
@@ -15,7 +16,12 @@ namespace Uchu.World
         public float EffectAmount { get; set; }
 
         public Vector3? EffectDirection { get; set; } = null;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

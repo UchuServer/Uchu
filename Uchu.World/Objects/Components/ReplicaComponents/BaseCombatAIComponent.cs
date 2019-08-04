@@ -1,9 +1,10 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class BaseCombatAI : ReplicaComponent
+    public class BaseCombatAIComponent : ReplicaComponent
     {
         public bool PerformingAction { get; set; } = false;
         
@@ -12,7 +13,12 @@ namespace Uchu.World
         public GameObject Target { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.BaseCombatAi;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

@@ -1,14 +1,18 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class MovingPlatform : ReplicaComponent
+    public class MovingPlatformComponent : ReplicaComponent
     {
+        public MovingPlatformPath Path { get; set; }
+        
         public string PathName { get; set; }
         
         public uint PathStart { get; set; }
@@ -28,7 +32,29 @@ namespace Uchu.World
         public float IdleTimeElapsed { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.MovingPlatform;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            PathName = levelObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
+            PathStart = levelObject.Settings.TryGetValue("attached_path_start", out var start)
+                ? (uint) start
+                : 0;
+
+            Path = Zone.ZoneInfo.Paths.FirstOrDefault(p => p is MovingPlatformPath && p.Name == PathName) as
+                MovingPlatformPath;
+            
+            Type = levelObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
+                ? PlatformType.Mover
+                : levelObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
+                  (bool) isSimpleMover
+                    ? PlatformType.SimpleMover
+                    : PlatformType.None;
+
+            CurrentWaypointIndex = PathStart;
+
+            State = PlatformState.Idle;
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

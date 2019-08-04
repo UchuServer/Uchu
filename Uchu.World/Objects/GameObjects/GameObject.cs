@@ -20,9 +20,7 @@ namespace Uchu.World
         
         public bool Constructed { get; private set; }
         
-        public GameObject Spawner { get; private set; }
-        
-        public int SpawnerNode { get; private set; }
+        public Spawner SpawnerObject { get; private set; }
         
         public string Name { get; set; }
         
@@ -143,7 +141,7 @@ namespace Uchu.World
         public void Update()
         {
             Zone.UpdateObject(this);
-        }
+        } 
 
         #region Operators
 
@@ -170,11 +168,10 @@ namespace Uchu.World
 
         #region Static
         
-        public static GameObject Instantiate(Type type, Object parent, string name = default, Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, GameObject spawner = null,
-            int spawnerNode = default)
+        public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
+            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default)
         {
-            if (type.IsSubclassOf(typeof(GameObject)))
+            if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
                 instance.ObjectId = objectId == default ? Utils.GenerateObjectId() : objectId;
@@ -183,8 +180,7 @@ namespace Uchu.World
                 
                 instance.Name = name;
 
-                instance.Spawner = spawner;
-                instance.SpawnerNode = spawnerNode;
+                instance.SpawnerObject = spawner;
                 
                 var transform = instance.AddComponent<Transform>();
                 transform.Position = position;
@@ -202,8 +198,6 @@ namespace Uchu.World
                         transform.Parent = parentTransform;
                         break;
                 }
-
-                Logger.Debug($"{instance.ObjectId} : {name} has been instanced.");
                 
                 return instance;
             }
@@ -212,27 +206,53 @@ namespace Uchu.World
             return null;
         }
 
-        public static T Instantiate<T>(Object parent, string name = default, Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, GameObject spawner = null,
-            int spawnerNode = default) where T : GameObject
+        public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
+            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default) 
+            where T : GameObject
         {
-            return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner, spawnerNode) as T;
+            return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
         }
 
-        public static GameObject Instantiate(LevelObject levelObject, Object parent)
+        public static GameObject Instantiate(LevelObject levelObject, Object parent, Spawner spawner = default)
         {
-            return null;
+            if (levelObject.Settings.TryGetValue("spawntemplate", out _))
+                return Spawner.Instantiate(levelObject, parent);
+            
             using (var ctx = new CdClientContext())
             {
-                var lot = levelObject.LOT;
-
-                if (levelObject.Settings.TryGetValue("spawntemplete", out var spawnTemplate))
-                    lot = (int) spawnTemplate;
+                var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
+                
+                var instance = Instantiate<GameObject>(parent, name, levelObject.Position, levelObject.Rotation,
+                    Utils.GenerateObjectId(), levelObject.LOT);
+                
+                instance.SpawnerObject = spawner;
                 
                 var registryComponents = ctx.ComponentsRegistryTable.Where(r => r.Id == levelObject.LOT).ToList();
-                
-                var order = (int[]) Enum.GetValues(typeof(ReplicaComponentsId));
+
+                var order = ReplicaComponent.ComponentOrder;
                 registryComponents.Sort((c1, c2) => order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype));
+
+                foreach (var component in registryComponents)
+                {
+                    var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+                    
+                    if (type == null) Logger.Warning($"No component of ID {component.Componentid}");
+                    else instance.AddComponent(type);
+                }
+
+                foreach (var component in instance._replicaComponents)
+                {
+                    component.FromLevelObject(levelObject);
+                }
+
+                if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
+                {
+                    var trigger = instance.AddComponent<TriggerComponent>();
+                
+                    trigger.FromLevelObject(levelObject);
+                }
+
+                return instance;
             }
         }
         
@@ -253,25 +273,25 @@ namespace Uchu.World
 
             writer.WriteBit(false); // TODO: figure this out
 
-            var trigger = GetComponent<Trigger>();
+            var trigger = GetComponent<TriggerComponent>();
 
             var hasTriggerId = !ReferenceEquals(trigger, null) && trigger.TriggerId != -1;
 
             writer.WriteBit(hasTriggerId);
 
-            var hasSpawner = Spawner != null;
+            var hasSpawner = SpawnerObject != null;
 
             writer.WriteBit(hasSpawner);
 
             if (hasSpawner)
-                writer.Write(Spawner);
+                writer.Write(SpawnerObject);
 
-            var hasSpawnerNode = SpawnerNode != default;
+            var hasSpawnerNode = SpawnerObject != null && SpawnerObject.SpawnTemplate != 0;
 
             writer.WriteBit(hasSpawnerNode);
 
             if (hasSpawnerNode)
-                writer.Write(SpawnerNode);
+                writer.Write(SpawnerObject.SpawnTemplate);
 
             var hasScale = !Transform.Scale.Equals(-1);
             
@@ -284,10 +304,33 @@ namespace Uchu.World
             
             writer.WriteBit(false); // TODO: Add GM Level
 
-            WriteSerialize(writer);
+            WriteHierarchy(writer);
+
+            //
+            // Construct replica components.
+            //
+
+            foreach (var replicaComponent in _replicaComponents)
+            {
+                replicaComponent.Construct(writer);
+            }
         }
         
         public void WriteSerialize(BitWriter writer)
+        {
+            WriteHierarchy(writer);
+
+            //
+            // Serialize replica components.
+            //
+
+            foreach (var replicaComponent in _replicaComponents)
+            {
+                replicaComponent.Serialize(writer);
+            }
+        }
+
+        private void WriteHierarchy(BitWriter writer)
         {
             writer.WriteBit(true);
 
@@ -305,25 +348,12 @@ namespace Uchu.World
 
             writer.WriteBit(hasChildren);
 
-            if (hasChildren)
+            if (!hasChildren) return;
+            writer.Write((ushort) Transform.Children.Length);
+
+            foreach (var child in Transform.Children)
             {
-                writer.Write((ushort) Transform.Children.Length);
-
-                foreach (var child in Transform.Children)
-                {
-                    writer.Write(child.GameObject);
-                }
-            }
-
-            //
-            // Construct replica components.
-            //
-
-            foreach (var replicaComponent in _replicaComponents)
-            {
-                Logger.Information(replicaComponent);
-
-                replicaComponent.Construct(writer);
+                writer.Write(child.GameObject);
             }
         }
         

@@ -1,12 +1,18 @@
 using RakDotNet.IO;
+using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     [Essential]
-    public class Exhibit : ReplicaComponent
+    public class ExhibitComponent : ReplicaComponent
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.Exhibit;
-        
+
+        public override void FromLevelObject(LevelObject levelObject)
+        {
+            
+        }
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

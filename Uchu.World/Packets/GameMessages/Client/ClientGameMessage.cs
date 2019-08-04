@@ -1,6 +1,6 @@
-using Uchu.World;
+using Uchu.Core;
 
-namespace Uchu.Core.Client
+namespace Uchu.World
 {
     public abstract class ClientGameMessage : Packet, IGameMessage
     {
