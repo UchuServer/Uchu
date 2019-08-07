@@ -60,7 +60,7 @@ namespace Uchu.World
             // TODO: Add filters
             foreach (var gameObject in GameObjects.Where(g => g.Constructed))
             {
-                Task.Run(() => SendConstruction(gameObject, new List<IPEndPoint> {player.EndPoint}));
+                SendConstruction(gameObject, new List<IPEndPoint> {player.EndPoint});
             }
         }
 
@@ -84,7 +84,7 @@ namespace Uchu.World
             SendDestruction(gameObject, Players.Select(p => p.EndPoint).ToArray());
         }
 
-        private void SendConstruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendConstruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
             if (!recipients.Any()) return;
@@ -125,7 +125,7 @@ namespace Uchu.World
             }
         }
 
-        private void SendSerialization(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendSerialization(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
             
@@ -146,7 +146,7 @@ namespace Uchu.World
             }
         }
 
-        private void SendDestruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendDestruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
             

@@ -230,6 +230,17 @@ namespace Uchu.World
                 var registryComponents = ctx.ComponentsRegistryTable.Where(r => r.Id == levelObject.LOT).ToList();
 
                 var order = ReplicaComponent.ComponentOrder;
+                
+                foreach (var component in registryComponents.Where(o => !order.Contains(o.Componenttype.Value)))
+                {
+                    var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+                    
+                    if (type != null)
+                        instance.AddComponent(type);
+                }
+
+                registryComponents = registryComponents.Where(c => order.Contains(c.Componenttype.Value)).ToList();
+                
                 registryComponents.Sort((c1, c2) => order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype));
 
                 foreach (var component in registryComponents)

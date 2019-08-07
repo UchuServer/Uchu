@@ -6,11 +6,11 @@ namespace Uchu.World
     {
         public override ushort GameMessageId => 0x378;
 
-        public long GameObject { get; set; }
+        public GameObject GameObject { get; set; }
 
         public override void Deserialize(BitReader reader)
         {
-            GameObject = reader.Read<long>();
+            GameObject = reader.ReadGameObject(Associate.Zone);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -7,6 +9,15 @@ namespace Uchu.World
     public class Player : GameObject
     {
         public IPEndPoint EndPoint { get; private set; }
+        
+        public async Task<Character> GetCharacterAsync()
+        {
+            using (var ctx = new UchuContext())
+            {
+                return await ctx.Characters.Include(c => c.Missions).ThenInclude(m => m.Tasks)
+                    .SingleAsync(c => c.CharacterId == ObjectId);
+            }
+        }
 
         public static Player Create(Character character, IPEndPoint endPoint, Zone zone)
         {
@@ -48,6 +59,8 @@ namespace Uchu.World
             instance.AddComponent<Component107>();
 
             instance.Construct();
+
+            instance.AddComponent<QuestInventory>();
             
             Logger.Debug($"Player \"{character.Name}\" has been constructed.");
             

@@ -1,0 +1,32 @@
+using RakDotNet.IO;
+
+namespace Uchu.World
+{
+    public class RequestUseMessage : ClientGameMessage
+    {
+        public override ushort GameMessageId => 0x16C;
+        
+        public bool IsMultiInteract { get; set; }
+
+        public uint MultiInteractId { get; set; }
+
+        public int MultiInteractType { get; set; }
+
+        public GameObject TargetObject { get; set; }
+
+        public bool Secondary { get; set; }
+
+        public override void Deserialize(BitReader reader)
+        {
+            IsMultiInteract = reader.ReadBit();
+
+            MultiInteractId = reader.Read<uint>();
+
+            MultiInteractType = reader.Read<int>();
+
+            TargetObject = reader.ReadGameObject(Associate.Zone);
+
+            Secondary = reader.ReadBit();
+        }
+    }
+}

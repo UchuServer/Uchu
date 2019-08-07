@@ -7,7 +7,16 @@ namespace Uchu.World
     {
         public static GameObject ReadGameObject(this BitReader @this, Zone zone)
         {
-            return zone.GameObjects.FirstOrDefault(g => g.ObjectId == @this.Read<long>());
+            var id = @this.Read<long>();
+
+            if (id == -1) return null;
+            
+            foreach (var gameObject in zone.GameObjects)
+            {
+                if (gameObject.ObjectId == id) return gameObject;
+            }
+
+            return null;
         }
     }
 }

@@ -53,7 +53,7 @@ namespace Uchu.World
                 var instance = (ReplicaComponent) Activator.CreateInstance(type);
                 
                 if (instance.Id == ReplicaComponentsId.Invalid) continue;
-
+                
                 Logger.Debug($"[{instance.Id}] {type}");
                 
                 ReplicaById.Add(instance.Id, type);

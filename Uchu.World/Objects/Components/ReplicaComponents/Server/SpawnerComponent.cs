@@ -14,12 +14,10 @@ namespace Uchu.World
 
         public override void Construct(BitWriter writer)
         {
-            
         }
 
         public override void Serialize(BitWriter writer)
         {
-            
         }
     }
 }

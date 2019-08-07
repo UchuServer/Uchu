@@ -15,9 +15,13 @@ namespace Uchu.World
         
         public bool NegativeAngularVelocity { get; set; }
         
-        public Vector3? Velocity { get; set; }
+        public bool HasVelocity { get; set; }
+        
+        public Vector3 Velocity { get; set; }
+        
+        public bool HasAngularVelocity { get; set; }
 
-        public Vector3? AngularVelocity { get; set; }
+        public Vector3 AngularVelocity { get; set; }
 
         public GameObject Platform { get; set; }
 
@@ -39,7 +43,7 @@ namespace Uchu.World
             if (hasJetpackEffect)
             {
                 writer.Write(JetpackEffectId);
-                writer.WriteBit(false);
+                writer.WriteBit(false); // Is in air?
                 writer.WriteBit(false);
             }
 
@@ -76,22 +80,24 @@ namespace Uchu.World
             if (!HasPosition) return;
 
             writer.Write(Transform.Position);
-            writer.Write(Transform.Rotation);
+
+            {
+                writer.Write(Transform.Rotation.Z);
+                writer.Write(Transform.Rotation.Y);
+                writer.Write(Transform.Rotation.X);
+                writer.Write(Transform.Rotation.W);
+            }
 
             writer.WriteBit(IsOnGround);
             writer.WriteBit(NegativeAngularVelocity);
 
-            var hasVelocity = Velocity != null;
-
-            writer.WriteBit(hasVelocity);
+            writer.WriteBit(HasVelocity);
             
-            if (hasVelocity) writer.Write(Velocity.Value);
+            if (HasVelocity) writer.Write(Velocity);
 
-            var hasAngularVelocity = AngularVelocity != null;
+            writer.WriteBit(HasAngularVelocity);
 
-            writer.WriteBit(hasAngularVelocity);
-
-            if (hasAngularVelocity) writer.Write(AngularVelocity.Value);
+            if (HasAngularVelocity) writer.Write(AngularVelocity);
 
             var hasPlatform = Platform != null;
 

@@ -16,10 +16,10 @@ namespace Uchu.World
     public class WorldServer : Server
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
-
-        private readonly List<Zone> _zones = new List<Zone>();
         
         private readonly ZoneParser _parser;
+
+        public readonly List<Zone> Zones = new List<Zone>();
         
         public WorldServer(int port, string password = "3.25 ND1") : base(port, password)
         {
@@ -32,17 +32,17 @@ namespace Uchu.World
 
         public async Task<Zone> GetZone(ZoneId zoneId)
         {
-            if (_zones.Any(z => z.ZoneInfo.ZoneId == (uint) zoneId))
-                return _zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+            if (Zones.Any(z => z.ZoneInfo.ZoneId == (uint) zoneId))
+                return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
             
             var info = await _parser.ParseAsync(ZoneParser.Zones[zoneId]);
 
             // Create new Zone
             var zone = new Zone(info, this);
-            _zones.Add(zone);
+            Zones.Add(zone);
             zone.Initialize();
 
-            return _zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+            return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
         }
         
         protected override void RegisterAssembly(Assembly assembly)
@@ -113,7 +113,7 @@ namespace Uchu.World
             
             Logger.Debug($"Received {messageHandler.Packet.GetType().FullName}");
 
-            var player = _zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
+            var player = Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
                 .FirstOrDefault(p => p.EndPoint.Equals(endPoint));
 
             if (ReferenceEquals(player, null))
@@ -123,7 +123,7 @@ namespace Uchu.World
             }
             
             var associate = player.Zone.GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
-
+            
             if (ReferenceEquals(associate, null))
             {
                 Logger.Error($"{objectId} is not a valid object in {endPoint}'s zone.");
