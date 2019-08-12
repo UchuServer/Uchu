@@ -16,6 +16,8 @@ namespace Uchu.Core.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Username = table.Column<string>(maxLength: 33, nullable: false),
                     Password = table.Column<string>(maxLength: 60, nullable: false),
+                    Banned = table.Column<bool>(nullable: false),
+                    BannedReason = table.Column<string>(nullable: true),
                     CharacterIndex = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -99,6 +101,37 @@ namespace Uchu.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Friends",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    IsAccepted = table.Column<bool>(nullable: false),
+                    IsDeclined = table.Column<bool>(nullable: false),
+                    IsBestFriend = table.Column<bool>(nullable: false),
+                    RequestHasBeenSent = table.Column<bool>(nullable: false),
+                    RequestingBestFriend = table.Column<bool>(nullable: false),
+                    FriendId = table.Column<long>(nullable: false),
+                    FriendTwoId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Friends", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Friends_Characters_FriendId",
+                        column: x => x.FriendId,
+                        principalTable: "Characters",
+                        principalColumn: "CharacterId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Friends_Characters_FriendTwoId",
+                        column: x => x.FriendTwoId,
+                        principalTable: "Characters",
+                        principalColumn: "CharacterId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InventoryItems",
                 columns: table => new
                 {
@@ -174,6 +207,16 @@ namespace Uchu.Core.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Friends_FriendId",
+                table: "Friends",
+                column: "FriendId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Friends_FriendTwoId",
+                table: "Friends",
+                column: "FriendTwoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InventoryItems_CharacterId",
                 table: "InventoryItems",
                 column: "CharacterId");
@@ -191,6 +234,9 @@ namespace Uchu.Core.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Friends");
+
             migrationBuilder.DropTable(
                 name: "InventoryItems");
 

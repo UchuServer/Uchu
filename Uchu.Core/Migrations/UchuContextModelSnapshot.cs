@@ -150,6 +150,34 @@ namespace Uchu.Core.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("Uchu.Core.Friend", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("FriendId");
+
+                    b.Property<long>("FriendTwoId");
+
+                    b.Property<bool>("IsAccepted");
+
+                    b.Property<bool>("IsBestFriend");
+
+                    b.Property<bool>("IsDeclined");
+
+                    b.Property<bool>("RequestHasBeenSent");
+
+                    b.Property<bool>("RequestingBestFriend");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FriendId");
+
+                    b.HasIndex("FriendTwoId");
+
+                    b.ToTable("Friends");
+                });
+
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
                 {
                     b.Property<long>("InventoryItemId")
@@ -248,6 +276,19 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.Friend", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "FriendOne")
+                        .WithMany()
+                        .HasForeignKey("FriendId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Uchu.Core.Character", "FriendTwo")
+                        .WithMany()
+                        .HasForeignKey("FriendTwoId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

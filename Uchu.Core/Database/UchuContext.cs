@@ -13,6 +13,8 @@ namespace Uchu.Core
         public DbSet<Mission> Missions { get; set; }
         
         public DbSet<MissionTask> MissionTasks { get; set; }
+        
+        public DbSet<Friend> Friends { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

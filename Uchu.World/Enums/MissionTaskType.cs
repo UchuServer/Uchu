@@ -1,4 +1,4 @@
-namespace Uchu.Core
+namespace Uchu.World
 {
     public enum MissionTaskType
     {

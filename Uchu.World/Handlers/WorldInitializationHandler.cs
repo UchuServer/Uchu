@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.World.Collections;
+using Uchu.World.Social;
 
 namespace Uchu.World.Handlers
 {
@@ -66,8 +67,11 @@ namespace Uchu.World.Handlers
 
             using (var ctx = new UchuContext())
             {
-                var character = await ctx.Characters.Include(c => c.Items).Include(c => c.User).Include(c => c.Missions)
-                    .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
+                var character = await ctx.Characters
+                .Include(c => c.Items)
+                .Include(c => c.User)
+                .Include(c => c.Missions)
+                .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
 
                 var zoneId = (ZoneId) character.LastZone;
                 
@@ -247,6 +251,19 @@ namespace Uchu.World.Handlers
 
                 player.Message(new DoneLoadingObjectsMessage {Associate = player});
                 player.Message(new PlayerReadyMessage {Associate = player});
+
+                var relations = ctx.Friends.Where(f =>
+                    f.FriendTwoId == character.CharacterId
+                ).ToArray();
+                
+                foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
+                {
+                    Server.Send(new NotifyFriendRequestPacket
+                    {
+                        FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
+                        IsBestFriendRequest = friend.RequestingBestFriend
+                    }, endPoint);
+                }
             }
         }
     }

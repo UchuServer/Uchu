@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -8,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -245,7 +247,10 @@ namespace Uchu.World
 
                 var order = ReplicaComponent.ComponentOrder;
 
-                foreach (var component in registryComponents.Where(o => !order.Contains(o.Componenttype.Value)))
+                foreach (var component in registryComponents.Where(o =>
+                    o.Componenttype != null &&
+                    !order.Contains(o.Componenttype.Value))
+                )
                 {
                     var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
 
@@ -256,7 +261,8 @@ namespace Uchu.World
                 registryComponents = registryComponents.Where(c => order.Contains(c.Componenttype.Value)).ToList();
 
                 registryComponents.Sort((c1, c2) =>
-                    order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype));
+                    order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype)
+                );
 
                 foreach (var component in registryComponents)
                 {
@@ -276,6 +282,20 @@ namespace Uchu.World
                     var trigger = instance.AddComponent<TriggerComponent>();
 
                     trigger.FromLevelObject(levelObject);
+                }
+                
+                if (levelObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) && (bool) spawnActivator)
+                {
+                    var template = Instantiate(new LevelObject
+                    {
+                        Lot = 6604,
+                        Position = (Vector3) levelObject.Settings["rebuild_activators"],
+                        Rotation = Quaternion.Identity,
+                        Scale = -1,
+                        Settings = new LegoDataDictionary()
+                    }, parent);
+
+                    template.Transform.Parent = instance.Transform;
                 }
 
                 return instance;

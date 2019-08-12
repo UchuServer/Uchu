@@ -2,7 +2,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 
-namespace Uchu.World.Chat
+namespace Uchu.World.Social
 {
     public class ChatMessagePacket : Packet
     {

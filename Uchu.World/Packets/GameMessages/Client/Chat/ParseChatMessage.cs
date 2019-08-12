@@ -1,7 +1,7 @@
 using RakDotNet;
 using RakDotNet.IO;
 
-namespace Uchu.World.Chat
+namespace Uchu.World
 {
     public class ParseChatMessage : ClientGameMessage
     {

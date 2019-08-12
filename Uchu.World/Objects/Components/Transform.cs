@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -20,6 +21,8 @@ namespace Uchu.World
             set
             {
                 if (_parent == value) return;
+                _parent = value;
+                
                 var list = _parent.Children.ToList();
                 
                 if (value == null)
@@ -32,7 +35,6 @@ namespace Uchu.World
                 }
                 
                 _parent.Children = list.ToArray();
-                _parent = value;
             }
         }
 

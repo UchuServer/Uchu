@@ -21,23 +21,31 @@ namespace Uchu.World
 
         public readonly ZoneInfo ZoneInfo;
 
+        public readonly ushort InstanceId;
+
+        public readonly uint CloneId;
+
         public new readonly Server Server;
 
         private readonly Dictionary<GameObject, ushort> _networkIds = new Dictionary<GameObject, ushort>();
 
         private readonly List<ushort> _droppedIds = new List<ushort>();
 
-        public Zone(ZoneInfo zoneInfo, Server server)
+        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = 0, uint cloneId = 0)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
             Server = server;
+            InstanceId = instanceId;
+            CloneId = cloneId;
         }
 
         public void Initialize()
         {
             foreach (var levelObject in ZoneInfo.ScenesInfo.SelectMany(s => s.Objects))
             {
+                if (levelObject.Lot == 4768) continue;
+                
                 var obj = GameObject.Instantiate(levelObject, this);
 
                 if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
@@ -46,10 +54,13 @@ namespace Uchu.World
                     continue;
                 
                 obj.Construct();
-                
+
                 if (obj is Spawner spawner)
+                {
+                    // TODO: Fix
+                    if (spawner.SpawnTemplate == 4768) continue;
                     spawner.Spawn();
-                
+                }
             }
         }
 

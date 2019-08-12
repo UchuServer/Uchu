@@ -9,20 +9,17 @@ namespace Uchu.World
     public class Player : GameObject
     {
         public IPEndPoint EndPoint { get; private set; }
-        
-        public async Task<Character> GetCharacterAsync()
-        {
-            using (var ctx = new UchuContext())
-            {
-                return await ctx.Characters.Include(c => c.Missions).ThenInclude(m => m.Tasks)
-                    .SingleAsync(c => c.CharacterId == ObjectId);
-            }
-        }
 
         public static Player Create(Character character, IPEndPoint endPoint, Zone zone)
         {
-            var instance = Instantiate<Player>(zone, character.Name, zone.ZoneInfo.SpawnPosition,
-                zone.ZoneInfo.SpawnRotation, character.CharacterId, 1);
+            var instance = Instantiate<Player>(
+                zone,
+                character.Name,
+                zone.ZoneInfo.SpawnPosition,
+                zone.ZoneInfo.SpawnRotation,
+                character.CharacterId,
+                1
+            );
 
             instance.EndPoint = endPoint;
 
@@ -62,6 +59,7 @@ namespace Uchu.World
 
             instance.AddComponent<QuestInventory>();
             instance.AddComponent<ItemInventory>();
+            instance.AddComponent<TeamPlayer>();
             
             Logger.Debug($"Player \"{character.Name}\" has been constructed.");
             
