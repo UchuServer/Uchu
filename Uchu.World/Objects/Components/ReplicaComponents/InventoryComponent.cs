@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -10,7 +11,7 @@ namespace Uchu.World
     [Essential]
     public class InventoryComponent : ReplicaComponent
     {
-        public InventoryItem[] Items { get; set; } = new InventoryItem[0];
+        public List<InventoryItem> Items { get; set; } = new List<InventoryItem>();
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Inventory;
 
@@ -19,25 +20,65 @@ namespace Uchu.World
             using (var ctx = new CdClientContext())
             {
                 var component = ctx.ComponentsRegistryTable.FirstOrDefault(c =>
-                    c.Id == levelObject.LOT && c.Componenttype == (int) ReplicaComponentsId.Inventory);
+                    c.Id == levelObject.Lot && c.Componenttype == (int) ReplicaComponentsId.Inventory);
 
                 var items = ctx.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
-                Items = new InventoryItem[items.Length];
+                Items = new List<InventoryItem>();
 
-                for (var i = 0; i < items.Length; i++)
+                foreach (var item in items)
                 {
-                    var item = items[i];
-                    Items[i] = new InventoryItem
+                    Items.Add(new InventoryItem
                     {
                         InventoryItemId = Utils.GenerateObjectId(),
                         Count = (long) item.Count,
                         LOT = (int) item.Itemid,
                         Slot = -1,
                         InventoryType = -1
-                    };
+                    });
                 }
             }
+        }
+
+        public void EquipItem(int lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
+        {
+            Items.Add(new InventoryItem
+            {
+                InventoryItemId = Utils.GenerateObjectId(),
+                Count = count,
+                Slot = slot,
+                LOT = lot,
+                InventoryType = (int) inventoryType
+            });
+        }
+
+        public void UnEquipItem(int lot)
+        {
+            var items = Items.Where(i => i.LOT == lot).ToArray();
+
+            if (items.Any())
+            {
+                Logger.Error($"{GameObject} does not have an item of lot: {lot} equipped");
+                return;
+            }
+
+            foreach (var item in items)
+            {
+                Items.Remove(item);
+            }
+        }
+
+        public void UnEquipItem(long id)
+        {
+            var item = Items.FirstOrDefault(i => i.InventoryItemId == id);
+
+            if (item == default)
+            {
+                Logger.Error($"{GameObject} does not have an item of id: {id} equipped");
+                return;
+            }
+
+            Items.Remove(item);
         }
 
         public override void Construct(BitWriter writer)
@@ -49,7 +90,7 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            writer.Write((uint) Items.Length);
+            writer.Write((uint) Items.Count);
 
             foreach (var item in Items)
             {

@@ -6,7 +6,7 @@ namespace Uchu.Core
         Script,
         QuickBuild,
         Collect,
-        GoToNPC,
+        GoToNpc,
         UseEmote,
         UseConsumable = 9,
         UseSkill,

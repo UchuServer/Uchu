@@ -5,14 +5,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="CDClient.db">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
+        <EmbeddedResource Include="Names\**\*" />
+        <EmbeddedResource Include="Maps\**\*" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Names\**\*" />
-        <EmbeddedResource Include="Maps\**\*" />
+        <None Update="CDClient.db">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

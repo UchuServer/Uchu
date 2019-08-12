@@ -34,7 +34,11 @@ namespace Uchu.Auth.Handlers
 
                 if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username))
                 {
-                    info.LoginCode = LoginCode.InvalidLogin;
+                    info.LoginCode = LoginCode.InsufficientPermissions;
+                    info.Error = new ServerLoginInfoPacket.ErrorMessage
+                    {
+                        Message = "We have no records of that Username and Password combination. Please try again."
+                    };
                 }
                 else
                 {
@@ -60,7 +64,11 @@ namespace Uchu.Auth.Handlers
                     }
                     else
                     {
-                        info.LoginCode = LoginCode.InvalidLogin;
+                        info.LoginCode = LoginCode.InsufficientPermissions;
+                        info.Error = new ServerLoginInfoPacket.ErrorMessage
+                        {
+                            Message = "We have no records of that Username and Password combination. Please try again."
+                        };
                     }
                 }
 

@@ -21,8 +21,6 @@ namespace Uchu.World
             SerializeMessage(writer);
         }
 
-        public virtual void SerializeMessage(BitWriter writer)
-        {
-        }
+        public abstract void SerializeMessage(BitWriter writer);
     }
 }

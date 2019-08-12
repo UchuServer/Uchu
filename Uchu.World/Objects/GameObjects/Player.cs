@@ -51,7 +51,7 @@ namespace Uchu.World
 
             var inventory = instance.AddComponent<InventoryComponent>();
 
-            inventory.Items = character.Items.Where(i => i.IsEquipped).ToArray();
+            inventory.Items = character.Items.Where(i => i.IsEquipped).ToList();
 
             instance.AddComponent<LuaScriptComponent>();
             instance.AddComponent<SkillComponent>();
@@ -61,6 +61,7 @@ namespace Uchu.World
             instance.Construct();
 
             instance.AddComponent<QuestInventory>();
+            instance.AddComponent<ItemInventory>();
             
             Logger.Debug($"Player \"{character.Name}\" has been constructed.");
             

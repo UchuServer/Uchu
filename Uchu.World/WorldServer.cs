@@ -44,6 +44,65 @@ namespace Uchu.World
 
             return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
         }
+
+        public async Task<string> AdminCommand(string command, Player player)
+        {
+            var arguments = command?.Split(' ');
+
+            int count;
+            int lot;
+            switch (arguments?[0].ToLower())
+            {
+                case "give":
+                    if (arguments.Length < 2 || arguments.Length > 3)
+                    {
+                        return "give <lot> <count(optional)>";
+                    }
+
+                    if (!int.TryParse(arguments[1], out lot))
+                    {
+                        return "Invalid <lot>";
+                    }
+
+                    count = 1;
+                    if (arguments.Length == 3)
+                    {
+                        if (!int.TryParse(arguments[2], out count))
+                        {
+                            return "Invalid <count(optional)>";
+                        }
+                    }
+
+                    await player.GetComponent<ItemInventory>().AddItemAsync(lot, count);
+
+                    return $"Successfully added {lot} x {count} to your inventory";
+                case "remove":
+                    if (arguments.Length < 2 || arguments.Length > 3)
+                    {
+                        return "remove <lot> <count(optional)>";
+                    }
+
+                    if (!int.TryParse(arguments[1], out lot))
+                    {
+                        return "Invalid <lot>";
+                    }
+
+                    count = 1;
+                    if (arguments.Length == 3)
+                    {
+                        if (!int.TryParse(arguments[2], out count))
+                        {
+                            return "Invalid <count(optional)>";
+                        }
+                    }
+
+                    await player.GetComponent<ItemInventory>().RemoveItemAsync(lot, count);
+                    
+                    return $"Successfully removed {lot} x {count} to your inventory";
+                default:
+                    return AdminCommand(command, false);
+            }
+        }
         
         protected override void RegisterAssembly(Assembly assembly)
         {

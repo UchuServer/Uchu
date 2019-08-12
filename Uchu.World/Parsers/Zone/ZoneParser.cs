@@ -197,7 +197,7 @@ namespace Uchu.World.Parsers
                         case PathType.Spawner:
                             pth = new SpawnerPath
                             {
-                                SpawnLOT = reader.Read<uint>(),
+                                SpawnLot = reader.Read<uint>(),
                                 RespawnTime = reader.Read<uint>(),
                                 MaxSpawnCount = reader.Read<int>(),
                                 MaintainCount = reader.Read<uint>(),

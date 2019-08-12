@@ -33,5 +33,11 @@ namespace Uchu.World
                 @this.Write(compressed);
             }
         }
+
+        public static bool Flag(this BitWriter @this, bool condition)
+        {
+            @this.WriteBit(condition);
+            return condition;
+        }
     }
 }

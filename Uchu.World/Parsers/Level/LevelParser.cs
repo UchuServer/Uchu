@@ -29,7 +29,7 @@ namespace Uchu.World.Parsers
                 var obj = new LevelObject
                 {
                     ObjectId = reader.Read<ulong>() | 70368744177664,
-                    LOT = reader.Read<int>()
+                    Lot = reader.Read<int>()
                 };
 
                 reader.Read<uint>();

@@ -60,7 +60,7 @@ namespace Uchu.World
     public class InventoryNode
     {
         [XmlAttribute("csl")]
-        public int ConsumableSlotLOT { get; set; }
+        public int ConsumableSlotLot { get; set; }
 
         [XmlArray("bag")]
         public BagNode[] Bags { get; set; }
@@ -90,7 +90,7 @@ namespace Uchu.World
         public string GroupId { get; set; }
 
         [XmlAttribute("l")]
-        public string ItemLOTs { get; set; }
+        public string ItemLoTs { get; set; }
 
         [XmlAttribute("n")]
         public string Name { get; set; }
@@ -123,7 +123,7 @@ namespace Uchu.World
         public long ObjectId { get; set; }
 
         [XmlAttribute("l")]
-        public int LOT { get; set; }
+        public int Lot { get; set; }
 
         [XmlAttribute("s")]
         public int Slot { get; set; }
@@ -180,7 +180,7 @@ namespace Uchu.World
         public int FreeToPlay { get; set; } = 0;
 
         [XmlAttribute("gm")]
-        public int GMLevel { get; set; }
+        public int GmLevel { get; set; }
 
         [XmlAttribute("ls")]
         public long UniverseScore { get; set; }

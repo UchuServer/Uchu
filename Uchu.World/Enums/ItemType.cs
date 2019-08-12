@@ -1,0 +1,30 @@
+namespace Uchu.World
+{
+    public enum ItemType
+    {
+        Invalid,
+        Brick,
+        Hat,
+        Hair,
+        Neck,
+        LeftHand,
+        RightHand,
+        Legs,
+        LeftTrinket,
+        RightTrinket,
+        Behavior,
+        Property,
+        Model,
+        Collectable,
+        Consumable,
+        Chest,
+        Egg,
+        PetFood,
+        QuestObject,
+        PetInventoryItem,
+        T20Package,
+        LootModel,
+        Vehicle,
+        Currency
+    }
+}

@@ -9,19 +9,19 @@ namespace Uchu.World
 
         public Server Server => Zone.Server;
         
-        public event Action OnCreated;
+        public event Action OnInstantiated;
 
         public event Action OnDestroyed;
         
-        public static Object Instantiate(Type type, Zone zone)
+        public static Object Instantiate(Type type, Zone zone, bool callInstantiated = true)
         {
             if (Activator.CreateInstance(type) is Object instance)
             {
                 instance.Zone = zone;
                 zone.Objects.Add(instance);
-                instance.OnCreated += instance.Start;
-                instance.OnDestroyed += instance.End;
-                instance.OnCreated?.Invoke();
+
+                if (callInstantiated) instance.Instantiated();
+                
                 return instance;
             }
             
@@ -29,7 +29,7 @@ namespace Uchu.World
             return null;
         }
 
-        public static T Create<T>(Zone zone) where T : Object
+        public static T Instantiate<T>(Zone zone) where T : Object
         {
             return Instantiate(typeof(T), zone) as T;
         }
@@ -39,7 +39,7 @@ namespace Uchu.World
             if (obj.Zone.Objects.Contains(obj))
             {
                 obj.Zone.Objects.Remove(obj);
-                obj.OnDestroyed?.Invoke();
+                obj.End();
             }
             else
                 Logger.Error($"{obj} is already destroyed!");
@@ -57,11 +57,17 @@ namespace Uchu.World
         {
             return !(object1 == object2);
         }
-        
-        protected virtual void Start(){}
-        
-        protected virtual void Update(){}
-        
-        protected virtual void End(){}
+
+        public virtual void Instantiated()
+        {
+            OnInstantiated?.Invoke();
+        }
+
+        public virtual void Update(){}
+
+        public virtual void End()
+        {
+            OnDestroyed?.Invoke();
+        }
     }
 }

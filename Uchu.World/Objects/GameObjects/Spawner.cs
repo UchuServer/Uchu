@@ -24,7 +24,7 @@ namespace Uchu.World
             }
 
             var instance = GameObject.Instantiate<Spawner>(parent, position: levelObject.Position,
-                rotation: levelObject.Rotation, objectId: Utils.GenerateObjectId(), lot: levelObject.LOT);
+                rotation: levelObject.Rotation, objectId: Utils.GenerateObjectId(), lot: levelObject.Lot);
 
             levelObject.Settings.Remove("spawntemplate");
             instance.Settings = levelObject.Settings;
@@ -38,7 +38,7 @@ namespace Uchu.World
         {
             return GameObject.Instantiate(new LevelObject
             {
-                LOT = SpawnTemplate,
+                Lot = SpawnTemplate,
                 ObjectId = (ulong) Utils.GenerateObjectId(),
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,

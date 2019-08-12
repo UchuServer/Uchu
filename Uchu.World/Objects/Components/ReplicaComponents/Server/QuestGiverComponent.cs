@@ -17,7 +17,7 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            Logger.Information($"{levelObject.LOT} is Quest Giver");
+            Logger.Information($"{levelObject.Lot} is Quest Giver");
             using (var ctx = new CdClientContext())
             {
                 var components = ctx.ComponentsRegistryTable.Where(
@@ -50,11 +50,11 @@ namespace Uchu.World
             {
                 foreach (var quest in Quests.Where(q => q.Id == component.MissionID))
                 {
-                    if (quest.IsMission ?? false) continue; // Is achievement
+                    if (!(quest.IsMission ?? false)) continue; // Is achievement
 
                     var playerMissions = questInventory.GetMissions();
 
-                    if (!(component.AcceptsMission ?? false))
+                    if (component.AcceptsMission ?? false)
                     {
                         if (playerMissions.Where(mission => mission.MissionId == quest.Id)
                             .Any(mission => mission.State == (int) MissionState.ReadyToComplete))
@@ -65,10 +65,11 @@ namespace Uchu.World
                         }
                     }
 
-                    if (component.OffersMission ?? false) continue;
+                    if (!(component.OffersMission ?? false)) continue;
                     if (playerMissions.Any(m => m.MissionId == quest.Id) &&
                         playerMissions.First(m => m.MissionId == quest.Id).State != (int) MissionState.Active &&
-                        playerMissions.First(m => m.MissionId == quest.Id).State != (int) MissionState.ReadyToComplete)
+                        playerMissions.First(m => m.MissionId == quest.Id).State !=
+                        (int) MissionState.ReadyToComplete)
                         continue;
 
                     if (!await MissionParser.CheckPrerequiredMissionsAsync(quest.PrereqMissionID,

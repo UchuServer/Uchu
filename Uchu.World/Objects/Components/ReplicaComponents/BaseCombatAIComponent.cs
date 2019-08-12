@@ -4,11 +4,11 @@ using Uchu.World.Parsers;
 namespace Uchu.World
 {
     [Essential]
-    public class BaseCombatAIComponent : ReplicaComponent
+    public class BaseCombatAiComponent : ReplicaComponent
     {
         public bool PerformingAction { get; set; } = false;
         
-        public CombatAIAction Action { get; set; }
+        public CombatAiAction Action { get; set; }
         
         public GameObject Target { get; set; }
         

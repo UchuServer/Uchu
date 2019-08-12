@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public enum CombatAIAction : uint
+    public enum CombatAiAction : uint
     {
         None,
         Attacking,

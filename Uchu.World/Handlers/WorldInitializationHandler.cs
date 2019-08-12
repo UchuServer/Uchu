@@ -122,7 +122,7 @@ namespace Uchu.World.Handlers
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
-                                    LOT = i.LOT,
+                                    Lot = i.LOT,
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
                                     Bound = i.IsBound ? 1 : 0
@@ -135,7 +135,7 @@ namespace Uchu.World.Handlers
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
-                                    LOT = i.LOT,
+                                    Lot = i.LOT,
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
                                     Bound = i.IsBound ? 1 : 0
@@ -148,13 +148,13 @@ namespace Uchu.World.Handlers
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
-                                    LOT = i.LOT,
+                                    Lot = i.LOT,
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
                                     Bound = i.IsBound ? 1 : 0,
                                     ExtraInfo = i.ExtraInfo != null ? new ExtraInfoNode
                                     {
-                                        ModuleAssemblyInfo = "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"].ToString()
+                                        ModuleAssemblyInfo = "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
                                     } : null
                                 }).ToArray()
                             },
@@ -165,7 +165,7 @@ namespace Uchu.World.Handlers
                                 {
                                     Count = (int) i.Count,
                                     Slot = i.Slot,
-                                    LOT = i.LOT,
+                                    Lot = i.LOT,
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
                                     Bound = i.IsBound ? 1 : 0

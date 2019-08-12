@@ -18,5 +18,7 @@ namespace Uchu.World
 
             return null;
         }
+
+        public static bool Flag(this BitReader @this) => @this.ReadBit();
     }
 }

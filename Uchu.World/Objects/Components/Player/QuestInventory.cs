@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -47,7 +48,7 @@ namespace Uchu.World
 
         public void MessageOfferMission(int missionId, GameObject questGiver)
         {
-            ((Player) GameObject).Message(new OfferMissionMessage
+            Player.Message(new OfferMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -68,7 +69,8 @@ namespace Uchu.World
 
                 ctx.SaveChanges();
             }
-            ((Player) GameObject).Message(new NotifyMissionMessage
+           
+            Player.Message(new NotifyMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -79,7 +81,7 @@ namespace Uchu.World
 
         public void MessageMissionTypeState(MissionLockState state, string subType, string type)
         {
-            ((Player) GameObject).Message(new SetMissionTypeStateMessage
+            Player.Message(new SetMissionTypeStateMessage
             {
                 Associate = GameObject,
                 LockState = state,
@@ -90,7 +92,7 @@ namespace Uchu.World
 
         public void MessageUpdateMissionTask(int missionId, int taskIndex, float[] updates)
         {
-            ((Player) GameObject).Message(new NotifyMissionTaskMessage
+            Player.Message(new NotifyMissionTaskMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -226,7 +228,8 @@ namespace Uchu.World
                             break;
                         case MissionTaskType.Script:
                             if (!charTask.Values.Contains(gameObject.Lot)) charTask.Values.Add(gameObject.Lot);
-                            
+
+                            Debug.Assert(task.Id != null, "task.Id != null");
                             MessageUpdateMissionTask((int) task.Id, tasks.IndexOf(task),
                                 new[] {(float) charTask.Values.Count});
 
@@ -240,6 +243,7 @@ namespace Uchu.World
                             if (!charTask.Values.Contains(component.CollectibleId))
                                 charTask.Values.Add(component.CollectibleId);
 
+                            Debug.Assert(task.Id != null, "task.Id != null");
                             MessageUpdateMissionTask(
                                 (int) task.Id, tasks.IndexOf(task),
                                 new [] {(float) (component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8))}
@@ -247,7 +251,7 @@ namespace Uchu.World
                             
                             await ctx.SaveChangesAsync();
                             break;
-                        case MissionTaskType.GoToNPC:
+                        case MissionTaskType.GoToNpc:
                             break;
                         case MissionTaskType.UseEmote:
                             break;
@@ -266,6 +270,7 @@ namespace Uchu.World
                         case MissionTaskType.Interact:
                             if (!charTask.Values.Contains(gameObject.Lot)) charTask.Values.Add(gameObject.Lot);
 
+                            Debug.Assert(task.Id != null, "task.Id != null");
                             MessageUpdateMissionTask((int) task.Id, tasks.IndexOf(task),
                                 new[] {(float) charTask.Values.Count});
 
@@ -315,14 +320,19 @@ namespace Uchu.World
                             continue;
                         }
 
+                        Debug.Assert(mission.Id != null, "mission.Id != null");
                         character.Missions.Add(new Mission
                         {
                             MissionId = (int) mission.Id,
                             State = (int) MissionState.Active,
-                            Tasks = tasks.Select(t => new MissionTask
+                            Tasks = tasks.Select(t =>
                             {
-                                TaskId = (int) t.Uid,
-                                Values = new List<float>()
+                                Debug.Assert(t.Uid != null, "t.Uid != null");
+                                return new MissionTask
+                                {
+                                    TaskId = (int) t.Uid,
+                                    Values = new List<float>()
+                                };
                             }).ToList()
                         });
                     }
@@ -347,6 +357,105 @@ namespace Uchu.World
             }
         }
 
+        public async Task UpdateLotTaskAsync(int lot, MissionTaskType type)
+        {
+            using (var ctx = new UchuContext())
+            using (var cdClient = new CdClientContext())
+            {
+                var character = await ctx.Characters
+                    .Include(c => c.Missions)
+                    .ThenInclude(t => t.Tasks)
+                    .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
+
+                foreach (var mission in character.Missions.Where(mission =>
+                    mission.State == (int) MissionState.Active ||
+                    mission.State == (int) MissionState.CompletedActive))
+                {
+                    var tasks = cdClient.MissionTasksTable.Where(t => t.Id == mission.Id).ToArray();
+
+                    var task = tasks.FirstOrDefault(t =>
+                        MissionParser.GetTargets(t).Contains(lot) &&
+                        mission.Tasks.Exists(a => a.TaskId == t.Uid)
+                    );
+                    
+                    if (task == default) continue;
+
+                    var characterTask = mission.Tasks.Find(t => t.TaskId == task.Uid);
+
+                    if (!characterTask.Values.Contains(lot)) characterTask.Values.Add(lot);
+
+                    Debug.Assert(task.Id != null, "task.Id != null");
+                    MessageUpdateMissionTask(
+                        (int) task.Id,
+                        tasks.IndexOf(task),
+                        new[] {(float) characterTask.Values.Count}
+                    );
+
+                    await ctx.SaveChangesAsync();
+                }
+                
+                var otherTasks = new List<MissionTasks>();
+
+                foreach (var missionTask in cdClient.MissionTasksTable)
+                {
+                    if (MissionParser.GetTargets(missionTask).Contains(lot))
+                        otherTasks.Add(missionTask);
+                }
+
+                foreach (var task in otherTasks)
+                {
+                    var mission = cdClient.MissionsTable.First(m => m.Id == task.Id);
+
+                    if (mission.OfferobjectID != -1 || mission.TargetobjectID != -1 || (mission.IsMission ?? true) ||
+                        task.TaskType != (int) type) continue;
+
+                    var tasks = cdClient.MissionTasksTable.Where(m => m.Id == mission.Id).ToArray();
+
+                    if (!character.Missions.Exists(m => m.MissionId == mission.Id))
+                    {
+                        if (!await MissionParser.CheckPrerequiredMissionsAsync(mission.PrereqMissionID,
+                            GetCompletedMissions()))
+                        {
+                            continue;
+                        }
+
+                        Debug.Assert(mission.Id != null, "mission.Id != null");
+                        character.Missions.Add(new Mission
+                        {
+                            MissionId = (int) mission.Id,
+                            State = (int) MissionState.Active,
+                            Tasks = tasks.Select(t =>
+                            {
+                                Debug.Assert(t.Uid != null, "t.Uid != null");
+                                return new MissionTask
+                                {
+                                    TaskId = (int) t.Uid,
+                                    Values = new List<float>()
+                                };
+                            }).ToList()
+                        });
+                    }
+
+                    var charMission = character.Missions.Find(m => m.MissionId == mission.Id);
+
+                    if (charMission.State != (int) MissionState.Active ||
+                        charMission.State != (int) MissionState.CompletedActive) continue;
+
+                    var charTask = charMission.Tasks.Find(t => t.TaskId == task.Uid);
+
+                    if (!charTask.Values.Contains(lot)) charTask.Values.Add(lot);
+
+                    await ctx.SaveChangesAsync();
+
+                    MessageUpdateMissionTask(charMission.MissionId, tasks.IndexOf(task),
+                        new[] {(float) charTask.Values.Count});
+
+                    if (await MissionParser.AllTasksCompletedAsync(charMission))
+                        await CompleteMissionAsync(charMission.MissionId);
+                }
+            }
+        }
+
         private static MissionTask GetTask(Character character, MissionTasks t)
         {
             var values = new List<float>();
@@ -357,6 +466,7 @@ namespace Uchu.World
                 .Where(lot => lot is int && character.Items.Exists(i => i.LOT == (int) lot))
                 .Select(lot => (float) (int) lot));
 
+            Debug.Assert(t.Uid != null, "t.Uid != null");
             return new MissionTask
             {
                 TaskId = t.Uid.Value,

@@ -4,8 +4,12 @@ namespace Uchu.World
     {
         Invalid, // For components like stats which are not used by itself.
         
+        //
+        // Server only
+        //
         Spawner = 10,
         QuestGiver = 73,
+        Item = 11,
         
         Possesable = 108,
         ModuleAssembly = 61,

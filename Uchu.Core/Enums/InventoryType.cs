@@ -2,6 +2,7 @@ namespace Uchu.Core
 {
     public enum InventoryType
     {
+        None = -1,
         Items,
         VaultItems,
         Bricks,

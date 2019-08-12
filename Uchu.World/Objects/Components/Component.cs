@@ -4,9 +4,11 @@ namespace Uchu.World
     {
         public GameObject GameObject { get; set; }
 
+        public Player Player => GameObject as Player;
+
         public Transform Transform => GameObject.Transform;
 
-        protected override void End()
+        public override void End()
         {
             base.End();
 

@@ -9,7 +9,7 @@ namespace Uchu.World.Parsers
         public PathBehavior Behavior { get; set; }
         public IPathWaypoint[] Waypoints { get; set; }
 
-        public uint SpawnLOT { get; set; }
+        public uint SpawnLot { get; set; }
         public uint RespawnTime { get; set; }
         public int MaxSpawnCount { get; set; }
         public uint MaintainCount { get; set; }

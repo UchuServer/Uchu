@@ -15,15 +15,15 @@ namespace Uchu.World
     public class GameObject : Object
     {
         public long ObjectId { get; private set; }
-        
+
         public int Lot { get; private set; }
-        
+
         public bool Constructed { get; private set; }
-        
+
         public Spawner SpawnerObject { get; private set; }
-        
+
         public string Name { get; set; }
-        
+
         public Transform Transform => _components.First(c => c is Transform) as Transform;
 
         private readonly List<Component> _components = new List<Component>();
@@ -31,7 +31,7 @@ namespace Uchu.World
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
 
         #region Component Management
-        
+
         public Component AddComponent(Type type)
         {
             if (_components.Any(c => c.GetType() == type))
@@ -39,11 +39,11 @@ namespace Uchu.World
                 Logger.Warning($"{type.FullName} Component is already on {ObjectId} \"{Name}\"");
                 return null;
             }
-            
-            if (Object.Instantiate(type, Zone) is Component component)
+
+            if (Object.Instantiate(type, Zone, false) is Component component)
             {
                 component.GameObject = this;
-                
+
                 _components.Add(component);
 
                 if (component is ReplicaComponent replicaComponent) _replicaComponents.Add(replicaComponent);
@@ -54,9 +54,11 @@ namespace Uchu.World
                     AddComponent(required.Type);
                 }
 
+                component.Instantiated();
+
                 return component;
             }
-            
+
             Logger.Error($"{type.FullName} does not inherit form Components but is being Created as one.");
             return null;
         }
@@ -78,7 +80,8 @@ namespace Uchu.World
 
         public void RemoveComponent(Type type)
         {
-            if (type.GetCustomAttribute<EssentialAttribute>() != null || type.IsAssignableFrom(typeof(ReplicaComponent)))
+            if (type.GetCustomAttribute<EssentialAttribute>() != null ||
+                type.IsAssignableFrom(typeof(ReplicaComponent)))
             {
                 Logger.Error($"{type} Component on {this} is Essential and cannot be removed.");
             }
@@ -97,7 +100,7 @@ namespace Uchu.World
 
             var comp = GetComponent(type);
             _components.Remove(comp);
-            
+
             Destroy(comp);
         }
 
@@ -110,21 +113,26 @@ namespace Uchu.World
         {
             if (_components.Contains(component)) RemoveComponent(component.GetType());
         }
-        
+
         #endregion
 
-        protected override void Start()
+        public override void Instantiated()
         {
             Zone.GameObjects.Add(this);
         }
-        
-        protected override void End()
+
+        public override void Update()
+        {
+            Zone.UpdateObject(this);
+        }
+
+        public override void End()
         {
             Zone.DestroyObject(this);
-            
+
             Zone.GameObjects.Remove(this);
         }
-        
+
         public void Construct()
         {
             if (Constructed)
@@ -132,16 +140,11 @@ namespace Uchu.World
                 Logger.Error($"{ObjectId} : {Name} has already been constructed.");
                 return;
             }
-            
+
             Constructed = true;
 
             Zone.ConstructObject(this);
         }
-
-        public void Update()
-        {
-            Zone.UpdateObject(this);
-        } 
 
         #region Operators
 
@@ -149,7 +152,7 @@ namespace Uchu.World
         {
             if (ReferenceEquals(object1, null)) return ReferenceEquals(object2, null);
             if (ReferenceEquals(object2, null)) return object1.Zone.Objects.Contains(object1);
-            
+
             return object1.ObjectId == object2.ObjectId;
         }
 
@@ -163,25 +166,34 @@ namespace Uchu.World
             if (gameObject == null) return -1;
             return gameObject.ObjectId;
         }
-        
+
+        #endregion
+
+        #region Utils
+
+        public override string ToString()
+        {
+            return $"[{ObjectId}] \"{Name}\"";
+        }
+
         #endregion
 
         #region Static
-        
+
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
             Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default)
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
-                var instance = (GameObject) Object.Instantiate(type, parent.Zone);
+                var instance = (GameObject) Object.Instantiate(type, parent.Zone, false);
                 instance.ObjectId = objectId == default ? Utils.GenerateObjectId() : objectId;
 
                 instance.Lot = lot;
-                
+
                 instance.Name = name;
 
                 instance.SpawnerObject = spawner;
-                
+
                 var transform = instance.AddComponent<Transform>();
                 transform.Position = position;
                 transform.Rotation = rotation;
@@ -198,16 +210,18 @@ namespace Uchu.World
                         transform.Parent = parentTransform;
                         break;
                 }
-                
+
+                instance.Instantiated();
+
                 return instance;
             }
-            
+
             Logger.Error($"{type.FullName} does not inherit from GameObject but is being Instantiated as one.");
             return null;
         }
 
         public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default) 
+            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default)
             where T : GameObject
         {
             return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
@@ -217,36 +231,37 @@ namespace Uchu.World
         {
             if (levelObject.Settings.TryGetValue("spawntemplate", out _))
                 return Spawner.Instantiate(levelObject, parent);
-            
+
             using (var ctx = new CdClientContext())
             {
                 var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
-                
+
                 var instance = Instantiate<GameObject>(parent, name, levelObject.Position, levelObject.Rotation,
-                    Utils.GenerateObjectId(), levelObject.LOT);
-                
+                    Utils.GenerateObjectId(), levelObject.Lot);
+
                 instance.SpawnerObject = spawner;
-                
-                var registryComponents = ctx.ComponentsRegistryTable.Where(r => r.Id == levelObject.LOT).ToList();
+
+                var registryComponents = ctx.ComponentsRegistryTable.Where(r => r.Id == levelObject.Lot).ToList();
 
                 var order = ReplicaComponent.ComponentOrder;
-                
+
                 foreach (var component in registryComponents.Where(o => !order.Contains(o.Componenttype.Value)))
                 {
                     var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
-                    
+
                     if (type != null)
                         instance.AddComponent(type);
                 }
 
                 registryComponents = registryComponents.Where(c => order.Contains(c.Componenttype.Value)).ToList();
-                
-                registryComponents.Sort((c1, c2) => order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype));
+
+                registryComponents.Sort((c1, c2) =>
+                    order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype));
 
                 foreach (var component in registryComponents)
                 {
                     var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
-                    
+
                     if (type == null) Logger.Warning($"No component of ID {component.Componentid}");
                     else instance.AddComponent(type);
                 }
@@ -259,14 +274,14 @@ namespace Uchu.World
                 if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
                 {
                     var trigger = instance.AddComponent<TriggerComponent>();
-                
+
                     trigger.FromLevelObject(levelObject);
                 }
 
                 return instance;
             }
         }
-        
+
         #endregion
 
         #region Replica
@@ -305,14 +320,14 @@ namespace Uchu.World
                 writer.Write(SpawnerObject.SpawnTemplate);
 
             var hasScale = !Transform.Scale.Equals(-1);
-            
+
             writer.WriteBit(hasScale);
 
             if (hasScale)
                 writer.Write(Transform.Scale);
 
             writer.WriteBit(false); // TODO: Add World State
-            
+
             writer.WriteBit(false); // TODO: Add GM Level
 
             WriteHierarchy(writer);
@@ -326,7 +341,7 @@ namespace Uchu.World
                 replicaComponent.Construct(writer);
             }
         }
-        
+
         public void WriteSerialize(BitWriter writer)
         {
             WriteHierarchy(writer);
@@ -367,7 +382,7 @@ namespace Uchu.World
                 writer.Write(child.GameObject);
             }
         }
-        
+
         #endregion
     }
 }
