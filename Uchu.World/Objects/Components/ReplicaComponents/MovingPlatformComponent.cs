@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
+using System.Timers;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -33,6 +35,26 @@ namespace Uchu.World
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.MovingPlatform;
 
+        /// <summary>
+        ///     Current timer.
+        /// </summary>
+        private Timer _timer;
+        
+        /// <summary>
+        ///     Next Path Index
+        /// </summary>
+        private uint NextIndex => CurrentWaypointIndex + 1 > Path.Waypoints.Length - 1 ? 0 : CurrentWaypointIndex + 1;
+
+        /// <summary>
+        ///     Current WayPoint
+        /// </summary>
+        public MovingPlatformWaypoint WayPoint => Path.Waypoints[CurrentWaypointIndex] as MovingPlatformWaypoint;
+
+        /// <summary>
+        ///     Next WayPoint
+        /// </summary>
+        public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
+
         public override void FromLevelObject(LevelObject levelObject)
         {
             PathName = levelObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
@@ -53,6 +75,8 @@ namespace Uchu.World
             CurrentWaypointIndex = PathStart;
 
             State = PlatformState.Idle;
+
+            Task.Run(WaitPoint);
         }
 
         public override void Construct(BitWriter writer)
@@ -121,6 +145,67 @@ namespace Uchu.World
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void MovePlatform()
+        {
+            /*
+             * Update Object in world.
+             */
+            //PathName = Path.Name;
+            State = PlatformState.Move;
+            TargetPosition = WayPoint.Position;
+            TargetRotation = WayPoint.Rotation;
+            NextWaypointIndex = NextIndex;
+
+            GameObject.Serialize();
+            
+            Logger.Information($"Moving Platform Speed: {WayPoint.Speed}...");
+            
+            /*
+             * Start Waiting after completing path.
+             */
+            _timer = new Timer
+            {
+                AutoReset = false,
+                Interval = WayPoint.Speed * 1000
+            };
+
+            _timer.Elapsed += (sender, args) => { WaitPoint(); };
+
+            Task.Run(() => _timer.Start());
+        }
+
+        private void WaitPoint()
+        {
+            // Move to next path index.
+            CurrentWaypointIndex = NextIndex;
+
+            /*
+             * Update Object in world.
+             */
+            //PathName = null;
+            State = PlatformState.Idle;
+            TargetPosition = WayPoint.Position;
+            TargetRotation = WayPoint.Rotation;
+            NextWaypointIndex = NextIndex;
+
+            GameObject.Serialize();
+            
+            Logger.Information($"Waiting Platform WaitTime: {WayPoint.WaitTime}...");
+
+            /*
+             * Start Waiting after waiting.
+             */
+            _timer = new Timer
+            {
+                AutoReset = false,
+                Interval = WayPoint.WaitTime * 1000
+            };
+
+            _timer.Elapsed += (sender, args) => { MovePlatform(); };
+
+            Task.Run(() => _timer.Start());
         }
     }
 }

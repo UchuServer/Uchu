@@ -22,7 +22,7 @@ namespace Uchu.World
 
         public bool Constructed { get; private set; }
 
-        public Spawner SpawnerObject { get; private set; }
+        public SpawnerComponent SpawnerObject { get; private set; }
 
         public string Name { get; set; }
 
@@ -80,6 +80,18 @@ namespace Uchu.World
             return _components.FirstOrDefault(c => c is T) as T;
         }
 
+        public bool TryGetComponent(Type type, out Component result)
+        {
+            result = GetComponent(type);
+            return result != default;
+        }
+        
+        public bool TryGetComponent<T>(out T result) where T : Component
+        {
+            result = GetComponent<T>();
+            return result != default;
+        }
+        
         public void RemoveComponent(Type type)
         {
             if (type.GetCustomAttribute<EssentialAttribute>() != null ||
@@ -88,16 +100,13 @@ namespace Uchu.World
                 Logger.Error($"{type} Component on {this} is Essential and cannot be removed.");
             }
 
-            foreach (var component in _components)
+            foreach (var required in from component in _components
+                from required in component.GetType().GetCustomAttributes<RequireComponentAttribute>()
+                where required.Type == type
+                select required)
             {
-                foreach (var required in component.GetType().GetCustomAttributes<RequireComponentAttribute>())
-                {
-                    if (required.Type == type)
-                    {
-                        Logger.Error(
-                            $"{type} Component on {this} is Required by {required.Type} and cannot be removed.");
-                    }
-                }
+                Logger.Error(
+                    $"{type} Component on {this} is Required by {required.Type} and cannot be removed.");
             }
 
             var comp = GetComponent(type);
@@ -123,7 +132,7 @@ namespace Uchu.World
             Zone.GameObjects.Add(this);
         }
 
-        public override void Update()
+        public override void Serialize()
         {
             Zone.UpdateObject(this);
         }
@@ -152,9 +161,14 @@ namespace Uchu.World
 
         public static bool operator ==(GameObject object1, GameObject object2)
         {
-            if (ReferenceEquals(object1, null)) return ReferenceEquals(object2, null);
-            if (ReferenceEquals(object2, null)) return object1.Zone.Objects.Contains(object1);
+            if (ReferenceEquals(object2, null))
+            {
+                return ReferenceEquals(object1, null) ||
+                       object1.Zone.GameObjects.Any(g => g.ObjectId == object1.ObjectId);
+            }
 
+            if (ReferenceEquals(object1, null)) return false;
+            
             return object1.ObjectId == object2.ObjectId;
         }
 
@@ -183,7 +197,7 @@ namespace Uchu.World
         #region Static
 
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default)
+            Quaternion rotation = default, long objectId = default, int lot = default, SpawnerComponent spawner = default)
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
@@ -223,16 +237,16 @@ namespace Uchu.World
         }
 
         public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, Spawner spawner = default)
+            Quaternion rotation = default, long objectId = default, int lot = default, SpawnerComponent spawner = default)
             where T : GameObject
         {
             return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
         }
 
-        public static GameObject Instantiate(LevelObject levelObject, Object parent, Spawner spawner = default)
+        public static GameObject Instantiate(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
         {
             if (levelObject.Settings.TryGetValue("spawntemplate", out _))
-                return Spawner.Instantiate(levelObject, parent);
+                return InstancingUtil.Spawner(levelObject, parent);
 
             using (var ctx = new CdClientContext())
             {
@@ -330,7 +344,7 @@ namespace Uchu.World
             writer.WriteBit(hasSpawner);
 
             if (hasSpawner)
-                writer.Write(SpawnerObject);
+                writer.Write(SpawnerObject.GameObject);
 
             var hasSpawnerNode = SpawnerObject != null && SpawnerObject.SpawnTemplate != 0;
 

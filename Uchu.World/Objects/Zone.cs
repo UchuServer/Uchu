@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Timers;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -31,7 +34,16 @@ namespace Uchu.World
 
         private readonly List<ushort> _droppedIds = new List<ushort>();
 
-        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = 0, uint cloneId = 0)
+        private int _ticks;
+
+        private long _passedTickTime;
+
+        /// <summary>
+        /// This should be set to something the server can sustain.
+        /// </summary>
+        public const int TicksPerSecondLimit = 60;
+
+        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
@@ -42,10 +54,10 @@ namespace Uchu.World
 
         public void Initialize()
         {
-            foreach (var levelObject in ZoneInfo.ScenesInfo.SelectMany(s => s.Objects))
+            var objects = ZoneInfo.ScenesInfo.SelectMany(s => s.Objects).ToArray();
+            
+            foreach (var levelObject in objects)
             {
-                if (levelObject.Lot == 4768) continue;
-                
                 var obj = GameObject.Instantiate(levelObject, this);
 
                 if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
@@ -53,15 +65,13 @@ namespace Uchu.World
                     levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled) // is this right?
                     continue;
                 
-                obj.Construct();
+                if (obj.GetType().GetCustomAttribute<Unconstructed>() == null) obj.Construct();
 
-                if (obj is Spawner spawner)
-                {
-                    // TODO: Fix
-                    if (spawner.SpawnTemplate == 4768) continue;
-                    spawner.Spawn();
-                }
+                var spawner = obj.GetComponent<SpawnerComponent>();
+                spawner?.Spawn();
             }
+
+            Task.Run(async () => { await ExecuteUpdate(); });
         }
 
         public void RequestConstruction(Player player)
@@ -188,6 +198,41 @@ namespace Uchu.World
             var values = Enum.GetValues(typeof(ZoneChecksum));
 
             return (ZoneChecksum) values.GetValue(names.ToList().IndexOf(name));
+        }
+
+        private async Task ExecuteUpdate()
+        {
+            var timer = new Timer(1000);
+
+            timer.Elapsed += (sender, args) =>
+            {
+                Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
+                _passedTickTime = default;
+                _ticks = default;
+            };
+            
+            timer.Start();
+
+            var stopWatch = new Stopwatch();
+
+            stopWatch.Start();
+            
+            while (true)
+            {
+                if (_ticks >= TicksPerSecondLimit) continue;
+                
+                await Task.Delay(1000 / TicksPerSecondLimit);
+
+                foreach (var obj in Objects)
+                {
+                    obj.Update();
+                }
+
+                _ticks++;
+                _passedTickTime += stopWatch.ElapsedMilliseconds;
+
+                stopWatch.Restart();
+            }
         }
     }
 }

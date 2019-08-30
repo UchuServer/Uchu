@@ -39,11 +39,14 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
-            writer.Flag(IsBound);
-            writer.Flag(IsBoundOnEquip);
-            writer.Flag(IsBoundOnPickup);
+            writer.WriteBit(IsBound);
+            writer.WriteBit(IsBoundOnEquip);
+            writer.WriteBit(IsBoundOnPickup);
 
-            if (writer.Flag(Source != -1))
+            var hasSource = Source != -1;
+
+            writer.WriteBit(hasSource);
+            if (hasSource)
             {
                 writer.Write(Source);
             }
@@ -69,33 +72,34 @@ namespace Uchu.World
 
             writer.Write(ItemLot);
 
-            if (writer.Flag(SubKey != -1))
+            var hasSubKey = SubKey != -1;
+            writer.WriteBit(hasSubKey);
+            
+            if (hasSubKey)
             {
                 writer.Write(SubKey);
             }
+            
+            //
+            // The defaults are not worth calculating.
+            //
 
-            if (writer.Flag(Inventory != -1))
-            {
-                writer.Write(Inventory);
-            }
+            writer.WriteBit(true);
+            writer.Write(Inventory);
 
-            if (writer.Flag(ItemCount != 1))
-            {
-                writer.Write(ItemCount);
-            }
-
-            if (writer.Flag(TotalItems != 0))
-            {
-                writer.Write(TotalItems);
-            }
+            writer.WriteBit(true);
+            writer.Write(ItemCount);
+            
+            writer.WriteBit(true);
+            writer.Write(TotalItems);
             
             writer.Write(ItemObjectId);
 
             writer.Write(FlyingLootPosition);
+            
+            writer.WriteBit(ShowFlyingLoot);
 
-            writer.Flag(ShowFlyingLoot);
-
-            writer.Write(Slot);
+            writer.Write((uint) Slot);
         }
     }
 }

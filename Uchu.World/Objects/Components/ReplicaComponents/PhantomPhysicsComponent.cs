@@ -9,6 +9,8 @@ namespace Uchu.World
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.PhantomPhysics;
 
+        public bool HasPosition { get; set; } = false;
+        
         public bool IsEffectActive { get; set; } = false;
         
         public uint EffectType { get; set; }
@@ -29,10 +31,13 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.WriteBit(true);
+            writer.WriteBit(HasPosition);
 
-            writer.Write(Transform.Position);
-            writer.Write(Transform.Rotation);
+            if (HasPosition)
+            {
+                writer.Write(Transform.Position);
+                writer.Write(Transform.Rotation);
+            }
 
             writer.WriteBit(true);
             writer.WriteBit(IsEffectActive);

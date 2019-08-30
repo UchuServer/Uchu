@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -9,16 +10,56 @@ using Uchu.World.Collections;
 namespace Uchu.World
 {
     [Essential]
-    public class ItemInventory : Component
+    public class InventoryManager : Component
     {
         private InventoryComponent _inventoryComponent;
+
+        private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
 
         public override void Instantiated()
         {
             base.Instantiated();
 
             _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
+
+            foreach (var value in Enum.GetValues(typeof(InventoryType)))
+            {
+                var id = (InventoryType) value;
+
+                _inventories.Add(id, new Inventory(id, this));
+            }
         }
+
+        public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
+
+        public Item GetItem(long id)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var item = ctx.InventoryItems.FirstOrDefault(
+                    i => i.InventoryItemId == id && i.CharacterId == Player.ObjectId
+                );
+
+                if (item == default)
+                {
+                    Logger.Error($"{id} is not an item on {Player}");
+                    return null;
+                }
+
+                var managedItem = _inventories[(InventoryType) item.InventoryType].Items.FirstOrDefault(
+                    i => i.ObjectId == id
+                );
+
+                if (managedItem == default)
+                {
+                    Logger.Error($"{id} is not managed on {Player}");
+                }
+
+                return managedItem;
+            }
+        }
+
+        #region To Refactor
 
         private void MessageAddItem(InventoryItem inventoryItem, ItemComponent itemComponent, int toAdd, int source)
         {
@@ -94,7 +135,7 @@ namespace Uchu.World
 
                 if (inventoryType == InventoryType.Invalid)
                 {
-                    inventoryType = GetItemInventoryType((ItemType) (component.ItemType ?? (int) ItemType.Consumable));
+                    inventoryType = ((ItemType) (component.ItemType ?? (int) ItemType.Consumable)).GetInventoryType();
                 }
                 
                 var stackSize = component.StackSize ?? 1;
@@ -299,63 +340,19 @@ namespace Uchu.World
 
                         await AddItemAsync(
                             lot, 1,
-                            GetItemInventoryType((ItemType) (component.ItemType ?? (int) ItemType.Brick)),
+                            ((ItemType) (component.ItemType ?? (int) ItemType.Brick)).GetInventoryType(),
                             inventoryItem.LOT
                         );
                     }
                 }
             }
         }
+        
+        #endregion
 
         private static int Min(params int[] nums)
         {
             return nums.Min();
-        }
-        
-        public static InventoryType GetItemInventoryType(ItemType type)
-        {
-            switch (type)
-            {
-                case ItemType.Behavior:
-                    return InventoryType.Behaviors;
-
-                case ItemType.Brick:
-                    return InventoryType.Bricks;
-
-                case ItemType.Property:
-                    return InventoryType.PropertyDeeds;
-
-                case ItemType.Model:
-                case ItemType.LootModel:
-                case ItemType.Vehicle:
-                    return InventoryType.Models;
-
-                case ItemType.Hat:
-                case ItemType.Hair:
-                case ItemType.Neck:
-                case ItemType.Chest:
-                case ItemType.LeftHand:
-                case ItemType.RightHand:
-                case ItemType.LeftTrinket:
-                case ItemType.RightTrinket:
-                case ItemType.Legs:
-                case ItemType.Collectable:
-                case ItemType.Consumable:
-                case ItemType.Egg:
-                case ItemType.PetFood:
-                case ItemType.T20Package:
-                case ItemType.PetInventoryItem:
-                case ItemType.Currency:
-                    return InventoryType.Items;
-
-                case ItemType.QuestObject:
-                    return InventoryType.Hidden;
-
-                case ItemType.Invalid:
-                    return InventoryType.Invalid;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
         }
     }
 }

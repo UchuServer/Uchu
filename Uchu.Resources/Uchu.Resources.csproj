@@ -10,8 +10,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="CDClient.db">
+        <None Update="scripts\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="CDClient.db">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

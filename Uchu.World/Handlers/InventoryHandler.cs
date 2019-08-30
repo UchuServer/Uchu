@@ -15,7 +15,7 @@ namespace Uchu.World.Handlers
                 $"Moving item {message.ItemId} to {message.DestinationInventoryType}:{message.NewSlot} with Code: {message.ResponseCode}"
             );
             
-            await player.GetComponent<ItemInventory>().SyncItemMoveAsync(
+            await player.GetComponent<InventoryManager>().SyncItemMoveAsync(
                 message.ItemId, message.NewSlot, message.DestinationInventoryType
             );
         }

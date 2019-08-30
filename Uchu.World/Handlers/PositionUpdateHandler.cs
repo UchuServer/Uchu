@@ -46,7 +46,7 @@ namespace Uchu.World.Handlers
             physics.Platform = player.Zone.GameObjects.Find(o => o.ObjectId == packet.PlatformObjectId);
             physics.PlatformPosition = packet.PlatformPosition;
             
-            player.Update();
+            player.Serialize();
         }
     }
 }

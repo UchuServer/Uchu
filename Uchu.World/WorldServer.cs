@@ -73,7 +73,7 @@ namespace Uchu.World
                         }
                     }
 
-                    await player.GetComponent<ItemInventory>().AddItemAsync(lot, count);
+                    await player.GetComponent<InventoryManager>().AddItemAsync(lot, count);
 
                     return $"Successfully added {lot} x {count} to your inventory";
                 case "remove":
@@ -96,9 +96,23 @@ namespace Uchu.World
                         }
                     }
 
-                    await player.GetComponent<ItemInventory>().RemoveItemAsync(lot, count);
+                    await player.GetComponent<InventoryManager>().RemoveItemAsync(lot, count);
                     
                     return $"Successfully removed {lot} x {count} to your inventory";
+                case "coin":
+                    if (arguments.Length != 2)
+                    {
+                        return "coin <delta>";
+                    }
+
+                    if (!int.TryParse(arguments[1], out var delta) || delta == default)
+                    {
+                        return "Invalid <delta>";
+                    }
+
+                    player.Currency += delta;
+
+                    return $"Successfully {(delta > 0 ? "added" : "removed")} coins";
                 default:
                     return AdminCommand(command, false);
             }

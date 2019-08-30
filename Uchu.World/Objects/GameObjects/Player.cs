@@ -10,6 +10,20 @@ namespace Uchu.World
     {
         public IPEndPoint EndPoint { get; private set; }
 
+        public long Currency
+        {
+            get
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+
+                    return character.Currency;
+                }
+            }
+            set { Task.Run(async () => { await SetCurrency(value); }); }
+        }
+
         public static Player Create(Character character, IPEndPoint endPoint, Zone zone)
         {
             var instance = Instantiate<Player>(
@@ -58,7 +72,7 @@ namespace Uchu.World
             instance.Construct();
 
             instance.AddComponent<QuestInventory>();
-            instance.AddComponent<ItemInventory>();
+            instance.AddComponent<InventoryManager>();
             instance.AddComponent<TeamPlayer>();
             
             Logger.Debug($"Player \"{character.Name}\" has been constructed.");
@@ -70,6 +84,25 @@ namespace Uchu.World
         {
             Logger.Debug($"Send {gameMessage} to {EndPoint} from {gameMessage.Associate.ObjectId}");
             Server.Send(gameMessage, EndPoint);
+        }
+
+        private async Task SetCurrency(long currency)
+        {
+            using (var ctx = new UchuContext())
+            {
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+                
+                character.Currency = currency;
+                character.TotalCurrencyCollected += currency;
+
+                await ctx.SaveChangesAsync();
+            }
+            
+            Message(new SetCurrencyMessage
+            {
+                Associate = this,
+                Currency = currency
+            });
         }
     }
 }

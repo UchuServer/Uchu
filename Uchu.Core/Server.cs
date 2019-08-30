@@ -418,7 +418,6 @@ namespace Uchu.Core
 
         public void HandlePacket(IPEndPoint endPoint, byte[] data)
         {
-            Logger.Debug($"Received packet from {endPoint}");
             var stream = new MemoryStream(data);
 
             using (var reader = new BitReader(stream))
@@ -463,7 +462,6 @@ namespace Uchu.Core
                 {
                     reader.Read(handler.Packet);
                     InvokeHandler(handler, endPoint);
-                    Logger.Debug($"Invoked handler for packet {handler.Packet.GetType().FullName}");
                 }
                 catch (Exception e)
                 {

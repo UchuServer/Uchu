@@ -326,6 +326,12 @@ namespace Uchu.World.Handlers
             var author = zone.Players.First(p => p.ObjectId == packet.InviterObjectId);
             
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");
+
+            author.GetComponent<TeamPlayer>().MessageAddPlayer(player);
+            
+            var playerTeam = player.GetComponent<TeamPlayer>();
+            playerTeam.MessageAddPlayer(author);
+            playerTeam.MessageSetLeader(author);
         }
     }
 }

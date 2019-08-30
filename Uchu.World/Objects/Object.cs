@@ -47,10 +47,12 @@ namespace Uchu.World
 
         public static bool operator ==(Object object1, Object object2)
         {
-            if (ReferenceEquals(object1, null)) return ReferenceEquals(object2, null);
-            return ReferenceEquals(object2, null)
-                ? object1.Zone.Objects.Contains(object1)
-                : ReferenceEquals(object1, object2);
+            if (ReferenceEquals(object2, null))
+            {
+                return ReferenceEquals(object1, null) || object1.Zone.Objects.Contains(object1);
+            }
+
+            return ReferenceEquals(object1, object2);
         }
 
         public static bool operator !=(Object object1, Object object2)
@@ -62,6 +64,8 @@ namespace Uchu.World
         {
             OnInstantiated?.Invoke();
         }
+
+        public virtual void Serialize(){}
 
         public virtual void Update(){}
 
