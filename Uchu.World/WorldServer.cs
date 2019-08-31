@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -28,6 +30,19 @@ namespace Uchu.World
             _parser = new ZoneParser(Resources);
 
             OnGameMessage += HandleGameMessage;
+
+            RakNetServer.Disconnection += point =>
+            {
+                Logger.Information($"{point} disconnected");
+                foreach (var player in Zones
+                    .Select(zone => zone.Players.FirstOrDefault(p => p.EndPoint.Equals(point)))
+                    .Where(player => !ReferenceEquals(player, default)))
+                {
+                    Object.Destroy(player);
+
+                    break;
+                }
+            };
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)
@@ -49,7 +64,7 @@ namespace Uchu.World
         {
             var arguments = command?.Split(' ');
 
-            int count;
+            uint count;
             int lot;
             switch (arguments?[0].ToLower())
             {
@@ -67,7 +82,7 @@ namespace Uchu.World
                     count = 1;
                     if (arguments.Length == 3)
                     {
-                        if (!int.TryParse(arguments[2], out count))
+                        if (!uint.TryParse(arguments[2], out count))
                         {
                             return "Invalid <count(optional)>";
                         }
@@ -90,14 +105,14 @@ namespace Uchu.World
                     count = 1;
                     if (arguments.Length == 3)
                     {
-                        if (!int.TryParse(arguments[2], out count))
+                        if (!uint.TryParse(arguments[2], out count))
                         {
                             return "Invalid <count(optional)>";
                         }
                     }
 
                     await player.GetComponent<InventoryManager>().RemoveItemAsync(lot, count);
-                    
+
                     return $"Successfully removed {lot} x {count} to your inventory";
                 case "coin":
                     if (arguments.Length != 2)
@@ -113,6 +128,55 @@ namespace Uchu.World
                     player.Currency += delta;
 
                     return $"Successfully {(delta > 0 ? "added" : "removed")} coins";
+                case "spawn":
+                    if (arguments.Length != 2 || arguments.Length > 8)
+                    {
+                        return "spawn <lot> <x(optional)> <y(optional)> <z(optional)>";
+                    }
+
+                    arguments = arguments.Select(a => a.Replace('.', ',')).ToArray();
+
+                    if (!int.TryParse(arguments[1], out lot))
+                    {
+                        return "Invalid <lot>";
+                    }
+                    
+                    var position = player.Transform.Position;
+                    if (arguments.Length >= 5)
+                    {
+                        try
+                        {
+                            position = new Vector3
+                            {
+                                X = float.Parse(arguments[2]),
+                                Y = float.Parse(arguments[3]),
+                                Z = float.Parse(arguments[4])
+                            };
+                        }
+                        catch
+                        {
+                            return "Invalid <x(optional)> or <y(optional)> or <z(optional)>";
+                        }
+                    }
+
+                    var rotation = player.Transform.Rotation;
+
+                    var obj = GameObject.Instantiate(new LevelObject
+                    {
+                        Lot = lot,
+                        Position = position,
+                        Rotation = rotation,
+                        Scale = 1,
+                        Settings = new LegoDataDictionary()
+                    }, player.Zone);
+                    
+                    obj.Construct();
+
+                    return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
+                case "position":
+                    return $"{player.Transform.Position}";
+                case "rotation":
+                    return $"{player.Transform.Rotation}";
                 default:
                     return AdminCommand(command, false);
             }

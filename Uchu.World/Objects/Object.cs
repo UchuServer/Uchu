@@ -45,21 +45,6 @@ namespace Uchu.World
                 Logger.Error($"{obj} is already destroyed!");
         }
 
-        public static bool operator ==(Object object1, Object object2)
-        {
-            if (ReferenceEquals(object2, null))
-            {
-                return ReferenceEquals(object1, null) || object1.Zone.Objects.Contains(object1);
-            }
-
-            return ReferenceEquals(object1, object2);
-        }
-
-        public static bool operator !=(Object object1, Object object2)
-        {
-            return !(object1 == object2);
-        }
-
         public virtual void Instantiated()
         {
             OnInstantiated?.Invoke();

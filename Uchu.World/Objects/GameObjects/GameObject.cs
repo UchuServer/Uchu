@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -83,13 +82,13 @@ namespace Uchu.World
         public bool TryGetComponent(Type type, out Component result)
         {
             result = GetComponent(type);
-            return result != default;
+            return ReferenceEquals(result, default);
         }
         
         public bool TryGetComponent<T>(out T result) where T : Component
         {
             result = GetComponent<T>();
-            return result != default;
+            return ReferenceEquals(result, default);
         }
         
         public void RemoveComponent(Type type)
@@ -139,6 +138,13 @@ namespace Uchu.World
 
         public override void End()
         {
+            foreach (var component in _components)
+            {
+                Zone.Objects.Remove(component);
+            }
+            
+            _components.Clear();
+            
             Zone.DestroyObject(this);
 
             Zone.GameObjects.Remove(this);
@@ -148,34 +154,22 @@ namespace Uchu.World
         {
             if (Constructed)
             {
-                Logger.Error($"{ObjectId} : {Name} has already been constructed.");
+                Logger.Error($"{this} has already been constructed.");
                 return;
             }
 
+            if (GetType().GetCustomAttribute<UnconstructedAttribute>() != null)
+            {
+                Logger.Error($"{this} is Unconstructed, it cannot be construed.");
+                return;
+            }
+            
             Constructed = true;
 
             Zone.ConstructObject(this);
         }
 
         #region Operators
-
-        public static bool operator ==(GameObject object1, GameObject object2)
-        {
-            if (ReferenceEquals(object2, null))
-            {
-                return ReferenceEquals(object1, null) ||
-                       object1.Zone.GameObjects.Any(g => g.ObjectId == object1.ObjectId);
-            }
-
-            if (ReferenceEquals(object1, null)) return false;
-            
-            return object1.ObjectId == object2.ObjectId;
-        }
-
-        public static bool operator !=(GameObject object1, GameObject object2)
-        {
-            return !(object1 == object2);
-        }
 
         public static implicit operator long(GameObject gameObject)
         {
@@ -243,8 +237,25 @@ namespace Uchu.World
             return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
         }
 
+        public static GameObject Instantiate(Object parent, int lot, Vector3 position = default,
+            Quaternion rotation = default)
+        {
+            return Instantiate(new LevelObject
+            {
+                Lot = lot,
+                Position = position,
+                Rotation = rotation,
+                Scale = 1,
+                Settings = new LegoDataDictionary()
+            }, parent);
+        }
+
         public static GameObject Instantiate(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
         {
+            //
+            // Check if spawner
+            //
+            
             if (levelObject.Settings.TryGetValue("spawntemplate", out _))
                 return InstancingUtil.Spawner(levelObject, parent);
 

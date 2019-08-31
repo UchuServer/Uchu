@@ -1,12 +1,11 @@
-using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers
 {
     public class InventoryHandler : HandlerGroup
     {
-        [PacketHandler]
-        public async Task HandleItemMovement(MoveItemInInventoryMessage message, Player player)
+        [PacketHandler(RunTask = true)]
+        public void HandleItemMovement(MoveItemInInventoryMessage message, Player player)
         {
             if (message.DestinationInventoryType == InventoryType.Invalid)
                 message.DestinationInventoryType = message.CurrentInventoryType;
@@ -15,9 +14,26 @@ namespace Uchu.World.Handlers
                 $"Moving item {message.ItemId} to {message.DestinationInventoryType}:{message.NewSlot} with Code: {message.ResponseCode}"
             );
             
-            await player.GetComponent<InventoryManager>().SyncItemMoveAsync(
-                message.ItemId, message.NewSlot, message.DestinationInventoryType
+            player.GetComponent<InventoryManager>().SyncItemMove(
+                message.ItemId, message.NewSlot, message.CurrentInventoryType, message.DestinationInventoryType
             );
+        }
+
+        [PacketHandler(RunTask = true)]
+        public void HandleEquipItem(EquipItemMessage message, Player player)
+        {
+            player.GetComponent<InventoryComponent>().EquipItem(message.Item);
+        }
+        
+        [PacketHandler(RunTask = true)]
+        public void HandleUnEquipItem(UnEquipItemMessage message, Player player)
+        {
+            var inventoryComponent = player.GetComponent<InventoryComponent>();
+            
+            inventoryComponent.UnEquipItem(message.ItemToUnEquip);
+            
+            if (message.ReplacementItem != null)
+                inventoryComponent.EquipItem(message.ReplacementItem);
         }
     }
 }

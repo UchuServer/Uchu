@@ -15,7 +15,7 @@ namespace Uchu.World
 
         public bool OutSuccess { get; set; } = false;
 
-        public InventoryType InventoryType { get; set; } = InventoryType.Items;
+        public int InventoryType { get; set; }
         
         public ItemType ItemType { get; set; }
         
@@ -25,9 +25,9 @@ namespace Uchu.World
         
         public long LootTypeSourceId { get; set; }
         
-        public long ObjId { get; set; }
+        public long ItemObjectId { get; set; }
         
-        public int Lot { get; set; }
+        public int ItemLot { get; set; }
         
         public long RequestingObjId { get; set; }
 
@@ -45,9 +45,9 @@ namespace Uchu.World
             writer.Flag(DeleteItem);
             writer.Flag(OutSuccess);
 
-            if (writer.Flag(InventoryType != InventoryType.Items))
+            if (writer.Flag(InventoryType != default))
             {
-                writer.Write((int) InventoryType);
+                writer.Write(InventoryType);
             }
 
             if (writer.Flag(ItemType != ItemType.Invalid))
@@ -71,14 +71,14 @@ namespace Uchu.World
                 writer.Write(LootTypeSourceId);
             }
 
-            if (writer.Flag(ObjId != -1))
+            if (writer.Flag(ItemObjectId != -1))
             {
-                writer.Write(ObjId);
+                writer.Write(ItemObjectId);
             }
 
-            if (writer.Flag(Lot != -1))
+            if (writer.Flag(ItemLot != -1))
             {
-                writer.Write(Lot);
+                writer.Write(ItemLot);
             }
 
             if (writer.Flag(RequestingObjId != -1))
@@ -115,7 +115,7 @@ namespace Uchu.World
 
             if (reader.Flag())
             {
-                InventoryType = (InventoryType) reader.Read<int>();
+                InventoryType = reader.Read<int>();
             }
 
             if (reader.Flag())
@@ -139,7 +139,7 @@ namespace Uchu.World
 
             if (reader.Flag())
             {
-                ObjId = reader.Read<long>();
+                ItemObjectId = reader.Read<long>();
             }
 
             if (reader.Flag())

@@ -39,6 +39,11 @@ namespace Uchu.World
         private long _passedTickTime;
 
         /// <summary>
+        /// Fractions of a second passed during the last tick. Should be used to fit actions with the TPS
+        /// </summary>
+        public float TimeDelta { get; private set; }
+        
+        /// <summary>
         /// This should be set to something the server can sustain.
         /// </summary>
         public const int TicksPerSecondLimit = 60;
@@ -62,10 +67,10 @@ namespace Uchu.World
 
                 if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
                     levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
-                    levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled) // is this right?
+                    levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
                     continue;
                 
-                if (obj.GetType().GetCustomAttribute<Unconstructed>() == null) obj.Construct();
+                if (obj.GetType().GetCustomAttribute<UnconstructedAttribute>() == null) obj.Construct();
 
                 var spawner = obj.GetComponent<SpawnerComponent>();
                 spawner?.Spawn();
@@ -223,13 +228,25 @@ namespace Uchu.World
                 
                 await Task.Delay(1000 / TicksPerSecondLimit);
 
-                foreach (var obj in Objects)
+                Task.WaitAll(Objects.Select(o => Task.Run(() =>
                 {
-                    obj.Update();
-                }
-
+                    try
+                    {
+                        o.Update();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                })).ToArray());
+                
                 _ticks++;
-                _passedTickTime += stopWatch.ElapsedMilliseconds;
+
+                var passedMs = stopWatch.ElapsedMilliseconds;
+                
+                TimeDelta = passedMs / 1000f;
+                
+                _passedTickTime += passedMs;
 
                 stopWatch.Restart();
             }

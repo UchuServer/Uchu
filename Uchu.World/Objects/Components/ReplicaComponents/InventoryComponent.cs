@@ -40,7 +40,7 @@ namespace Uchu.World
             }
         }
 
-        public void EquipItem(int lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
+        public void EquipUnmanagedItem(int lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
         {
             Items.Add(new InventoryItem
             {
@@ -52,11 +52,25 @@ namespace Uchu.World
             });
         }
 
+        public void EquipItem(Item item)
+        {
+            // TODO: UnEquip current item.
+            
+            Items.Add(item.InventoryItem);
+            
+            GameObject.Serialize();
+        }
+        
+        public void UnEquipItem(Item item)
+        {
+            UnEquipItem(item.ObjectId);
+        }
+
         public void UnEquipItem(int lot)
         {
             var items = Items.Where(i => i.LOT == lot).ToArray();
 
-            if (items.Any())
+            if (!items.Any())
             {
                 Logger.Error($"{GameObject} does not have an item of lot: {lot} equipped");
                 return;
@@ -66,6 +80,8 @@ namespace Uchu.World
             {
                 Items.Remove(item);
             }
+            
+            GameObject.Serialize();
         }
 
         public void UnEquipItem(long id)
@@ -79,6 +95,8 @@ namespace Uchu.World
             }
 
             Items.Remove(item);
+            
+            GameObject.Serialize();
         }
 
         public override void Construct(BitWriter writer)

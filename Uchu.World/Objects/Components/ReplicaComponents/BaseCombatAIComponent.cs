@@ -1,4 +1,5 @@
 using RakDotNet.IO;
+using Uchu.World.Experimental;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -6,7 +7,7 @@ namespace Uchu.World
     [Essential]
     public class BaseCombatAiComponent : ReplicaComponent
     {
-        public bool PerformingAction { get; set; } = false;
+        public bool PerformingAction { get; set; }
         
         public CombatAiAction Action { get; set; }
         
@@ -16,7 +17,11 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
+            GameObject.AddComponent<EnemyAi>();
+            if (levelObject.Lot == 11218)
+            {
+                GameObject.AddComponent<PainElemental>();
+            }
         }
 
         public override void Construct(BitWriter writer)
@@ -30,7 +35,7 @@ namespace Uchu.World
 
             if (!PerformingAction) return;
             writer.Write((uint) Action);
-            writer.Write(Target);
+            writer.Write(Target.ObjectId);
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -22,20 +23,34 @@ namespace Uchu.World
 
             using (var ctx = new UchuContext())
             {
-                var items = ctx.InventoryItems.Where(
-                    i => i.CharacterId == manager.Player.ObjectId && i.InventoryType == (int) inventoryType
-                );
+                var playerCharacter = ctx.Characters
+                    .Include(c => c.Items)
+                    .First(c => c.CharacterId == manager.Player.ObjectId);
 
-                _items = items.Select(
+                var inventoryItems = playerCharacter.Items
+                    .Where(item => (InventoryType) item.InventoryType == inventoryType)
+                    .ToList();
+
+                _items = inventoryItems.Select(
                     i => Item.Instantiate(i.InventoryItemId, this)
-                ).Where(i => i != default).ToList();
+                ).Where(item => !ReferenceEquals(item, default)).ToList();
+
+                foreach (var item in _items)
+                {
+                    Logger.Information($"\t-> {item}");
+                    item.OnDestroyed += () => { _items.Remove(item); };
+                }
             }
         }
 
-        public Item this[uint slot]
+        public void ManageItem(Item item)
         {
-            get => Items.FirstOrDefault(s => s.Slot == slot);
-            set => value.Slot = slot;
+            _items.Add(item);
+            Logger.Debug($"Item {item} is now managed.");
         }
+        
+        public Item this[uint slot] => Items.FirstOrDefault(i => i.Slot == slot);
+        
+        public Item this[long id] => Items.FirstOrDefault(i => i.ObjectId == id);
     }
 }

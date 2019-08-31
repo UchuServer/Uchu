@@ -22,6 +22,17 @@ namespace Uchu.World
         public Inventory Inventory { get; private set; }
         
         public Player Player { get; private set; }
+
+        public InventoryItem InventoryItem
+        {
+            get
+            {
+                using (var ctx = new UchuContext())
+                {
+                    return ctx.InventoryItems.FirstOrDefault(i => i.InventoryItemId == ObjectId);
+                }
+            }
+        }
         
         public uint Count
         {
@@ -117,12 +128,24 @@ namespace Uchu.World
                 instance.ItemComponent = itemComponent;
                 instance.Inventory = inventory;
                 instance.Player = inventory.Manager.Player;
-
+                
                 return instance;
             }
         }
 
         public static Item Instantiate(int lot, Inventory inventory, uint count)
+        {
+            uint slot = default;
+            foreach (var item in inventory.Items)
+            {
+                if (item.Slot != slot) break;
+                slot++;
+            }
+
+            return Instantiate(lot, inventory, count, slot);
+        }
+        
+        public static Item Instantiate(int lot, Inventory inventory, uint count, uint slot)
         {
             using (var cdClient = new CdClientContext())
             using (var ctx = new UchuContext())
@@ -149,14 +172,40 @@ namespace Uchu.World
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry.Componentid
                 );
+
+                var playerCharacter = ctx.Characters.Include(c => c.Items).First(
+                    c => c.CharacterId == inventory.Manager.Player.ObjectId
+                );
+                
+                var inventoryItem = new InventoryItem
+                {
+                    Count = count,
+                    InventoryType = (int) inventory.InventoryType,
+                    InventoryItemId = instance.ObjectId,
+                    IsBound = itemComponent.IsBOP ?? false,
+                    Slot = (int) slot,
+                    LOT = lot
+                };
+
+                playerCharacter.Items.Add(inventoryItem);
+
+                ctx.SaveChanges();
                 
                 inventory.Manager.Player.Message(new AddItemToInventoryMessage
                 {
                     Associate = inventory.Manager.Player,
                     Inventory = (int) inventory.InventoryType,
                     ItemCount = count,
-                    TotalItems = count
+                    TotalItems = count,
+                    Slot = (int) slot,
+                    ItemLot = lot,
+                    IsBoundOnEquip = itemComponent.IsBOE ?? false,
+                    IsBoundOnPickup = itemComponent.IsBOP ?? false,
+                    IsBound = inventoryItem.IsBound,
+                    ItemObjectId = inventoryItem.InventoryItemId
                 });
+
+                inventory.ManageItem(instance);
 
                 return instance;
             }
@@ -164,12 +213,6 @@ namespace Uchu.World
         
         private async Task UpdateCount()
         {
-            if (_count == default)
-            {
-                Destroy(this);
-                return;
-            }
-            
             using (var ctx = new UchuContext())
             {
                 if (_count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
@@ -181,12 +224,21 @@ namespace Uchu.World
                     _count = (uint) ItemComponent.StackSize;
                 }
                 
+                Logger.Information($"Setting {this} count {_count}");
+                
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
                 if (_count > item.Count) await AddCount(_count);
                 else await RemoveCount(_count);
                 
                 item.Count = _count;
+
+                await ctx.SaveChangesAsync();
+            }
+            
+            if (_count == default)
+            {
+                Destroy(this);
             }
         }
 
@@ -199,8 +251,12 @@ namespace Uchu.World
                 Player.Message(new AddItemToInventoryMessage
                 {
                     Associate = Player,
-                    Inventory = item.InventoryType,
+                    ItemObjectId = ObjectId,
+                    ItemLot = Lot,
                     ItemCount = (uint) (count - item.Count),
+                    Slot = (int) Slot,
+                    Inventory = (int) Inventory.InventoryType,
+                    ShowFlyingLoot = count != default,
                     TotalItems = count
                 });
             }
@@ -215,14 +271,15 @@ namespace Uchu.World
                 Player.Message(new RemoveItemToInventoryMessage
                 {
                     Associate = Player,
+                    ItemObjectId = ObjectId,
+                    ItemLot = Lot,
+                    InventoryType = (int) Inventory.InventoryType,
+                    StackCount = (uint) (count - item.Count),
+                    StackRemaining = count,
                     Confirmed = true,
                     DeleteItem = count == default,
                     ForceDeletion = true,
-                    InventoryType = (InventoryType) item.InventoryType,
-                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
-                    ObjId = ObjectId,
-                    StackCount = (uint) (count - item.Count),
-                    StackRemaining = count
+                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1)
                 });
             }
         }

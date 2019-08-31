@@ -8,8 +8,8 @@ namespace Uchu.World
     public class ControllablePhysicsComponent : ReplicaComponent
     {
         public uint JetpackEffectId { get; set; }
-        
-        public bool HasPosition { get; set; }
+
+        public bool HasPosition { get; set; } = true;
 
         public bool IsOnGround { get; set; } = true;
         
@@ -31,7 +31,6 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            HasPosition = true;
         }
 
         public override void Construct(BitWriter writer)
@@ -80,7 +79,6 @@ namespace Uchu.World
             if (!HasPosition) return;
 
             writer.Write(Transform.Position);
-
             {
                 writer.Write(Transform.Rotation.Z);
                 writer.Write(Transform.Rotation.Y);
