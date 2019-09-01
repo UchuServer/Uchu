@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 
 namespace Uchu.World
 {
@@ -24,6 +26,8 @@ namespace Uchu.World
             set { Task.Run(async () => { await SetCurrency(value); }); }
         }
 
+        public long EntitledCurrency { get; set; }
+        
         public static Player Create(Character character, IPEndPoint endPoint, Zone zone)
         {
             var instance = Instantiate<Player>(
@@ -62,7 +66,39 @@ namespace Uchu.World
 
             var inventory = instance.AddComponent<InventoryComponent>();
 
-            inventory.Items = character.Items.Where(i => i.IsEquipped).ToList();
+            //
+            // Equip items
+            //
+            
+            var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
+
+            using (var cdClient = new CdClientContext())
+            {
+                foreach (var item in character.Items.Where(i => i.IsEquipped))
+                {
+                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                        o => o.Id == item.LOT
+                    );
+
+                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                        r => r.Id == item.LOT && r.Componenttype == 11
+                    );
+
+                    if (cdClientObject == default || itemRegistryEntry == default)
+                    {
+                        Logger.Error($"{item.LOT} is not a valid item");
+                        continue;
+                    }
+
+                    var itemComponent = cdClient.ItemComponentTable.First(
+                        i => i.Id == itemRegistryEntry.Componentid
+                    );
+
+                    equippedItems.Add(itemComponent.EquipLocation, item);
+                }
+            }
+
+            inventory.Items = equippedItems;
 
             instance.AddComponent<LuaScriptComponent>();
             instance.AddComponent<SkillComponent>();

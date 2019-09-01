@@ -12,7 +12,7 @@ namespace Uchu.World
         
         public GameObject Receiver { get; set; }
         
-        public int RewardItem { get; set; }
+        public Lot RewardItem { get; set; }
 
         public override void Deserialize(BitReader reader)
         {

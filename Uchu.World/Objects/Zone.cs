@@ -79,6 +79,8 @@ namespace Uchu.World
             Task.Run(async () => { await ExecuteUpdate(); });
         }
 
+        #region Object Mangement
+
         public void RequestConstruction(Player player)
         {
             Players.Add(player);
@@ -192,6 +194,24 @@ namespace Uchu.World
             foreach (var endPoint in recipients)
             {
                 Server.Send(data, endPoint);
+            }
+        }
+
+        #endregion
+
+        public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
+        {
+            foreach (var player in players)
+            {
+                player.Message(message);
+            }
+        }
+        
+        public void BroadcastMessage(IGameMessage message)
+        {
+            foreach (var player in Players)
+            {
+                player.Message(message);
             }
         }
         

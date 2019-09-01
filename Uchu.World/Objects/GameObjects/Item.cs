@@ -103,9 +103,7 @@ namespace Uchu.World
                     o => o.Id == item.LOT
                 );
 
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                    r => r.Id == item.LOT && r.Componenttype == 11
-                );
+                var itemRegistryEntry = ((Lot) item.LOT).GetComponentId(ReplicaComponentsId.Item);
 
                 if (cdClientObject == default || itemRegistryEntry == default)
                 {
@@ -119,7 +117,7 @@ namespace Uchu.World
                 );
                 
                 var itemComponent = cdClient.ItemComponentTable.First(
-                    i => i.Id == itemRegistryEntry.Componentid
+                    i => i.Id == itemRegistryEntry
                 );
                 
                 instance._count = (uint) item.Count;
@@ -133,7 +131,7 @@ namespace Uchu.World
             }
         }
 
-        public static Item Instantiate(int lot, Inventory inventory, uint count)
+        public static Item Instantiate(Lot lot, Inventory inventory, uint count)
         {
             uint slot = default;
             foreach (var item in inventory.Items)
@@ -145,7 +143,7 @@ namespace Uchu.World
             return Instantiate(lot, inventory, count, slot);
         }
         
-        public static Item Instantiate(int lot, Inventory inventory, uint count, uint slot)
+        public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot)
         {
             using (var cdClient = new CdClientContext())
             using (var ctx = new UchuContext())
@@ -195,7 +193,7 @@ namespace Uchu.World
                 {
                     Associate = inventory.Manager.Player,
                     Inventory = (int) inventory.InventoryType,
-                    ItemCount = count,
+                    Count = count,
                     TotalItems = count,
                     Slot = (int) slot,
                     ItemLot = lot,
@@ -253,7 +251,7 @@ namespace Uchu.World
                     Associate = Player,
                     ItemObjectId = ObjectId,
                     ItemLot = Lot,
-                    ItemCount = (uint) (count - item.Count),
+                    Count = (uint) (count - item.Count),
                     Slot = (int) Slot,
                     Inventory = (int) Inventory.InventoryType,
                     ShowFlyingLoot = count != default,

@@ -17,7 +17,7 @@ namespace Uchu.World
     {
         public long ObjectId { get; private set; }
 
-        public int Lot { get; private set; }
+        public Lot Lot { get; private set; }
 
         public bool Constructed { get; private set; }
 
@@ -231,13 +231,13 @@ namespace Uchu.World
         }
 
         public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, SpawnerComponent spawner = default)
+            Quaternion rotation = default, long objectId = default, Lot lot = default, SpawnerComponent spawner = default)
             where T : GameObject
         {
             return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
         }
 
-        public static GameObject Instantiate(Object parent, int lot, Vector3 position = default,
+        public static GameObject Instantiate(Object parent, Lot lot, Vector3 position = default,
             Quaternion rotation = default)
         {
             return Instantiate(new LevelObject

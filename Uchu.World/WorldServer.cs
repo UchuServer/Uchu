@@ -177,6 +177,9 @@ namespace Uchu.World
                     return $"{player.Transform.Position}";
                 case "rotation":
                     return $"{player.Transform.Rotation}";
+                case "die":
+                    player.GetComponent<DestructibleComponent>().Smash(player, player);
+                    return "You smashed yourself.";
                 default:
                     return AdminCommand(command, false);
             }

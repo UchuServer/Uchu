@@ -13,7 +13,7 @@ namespace Uchu.World
         
         public Vector3 Position { get; set; }
 
-        public int SourceLot { get; set; } = -1;
+        public Lot SourceLot { get; set; } = -1;
         
         public GameObject SourceGameObject { get; set; }
 

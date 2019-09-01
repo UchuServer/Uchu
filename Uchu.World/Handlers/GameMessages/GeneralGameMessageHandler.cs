@@ -16,7 +16,7 @@ namespace Uchu.World.Handlers.GameMessages
                 // Multi-interact is mission
                 //
                 
-                if (message.MultiInteractType == 0x0)
+                if (message.MultiInteractType == default)
                 {
                     player.GetComponent<QuestInventory>().MessageOfferMission(
                         (int) message.MultiInteractId,
@@ -29,6 +29,18 @@ namespace Uchu.World.Handlers.GameMessages
                 var questGiver = message.TargetObject.GetComponent<QuestGiverComponent>();
                 if (!ReferenceEquals(questGiver, null)) await questGiver.OfferMissionAsync(player);
             }
+        }
+
+        [PacketHandler(RunTask = true)]
+        public void RequestResurrectHandler(RequestResurrectMessage message, Player player)
+        {
+            player.GetComponent<DestructibleComponent>().Resurrect();
+        }
+
+        [PacketHandler(RunTask = true)]
+        public void RequestSmashHandler(RequestSmashPlayer message, Player player)
+        {
+            player.GetComponent<DestructibleComponent>().Smash(player, player);
         }
     }
 }

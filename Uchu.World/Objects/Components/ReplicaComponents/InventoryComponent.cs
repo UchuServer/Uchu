@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -11,24 +13,42 @@ namespace Uchu.World
     [Essential]
     public class InventoryComponent : ReplicaComponent
     {
-        public List<InventoryItem> Items { get; set; } = new List<InventoryItem>();
+        public Dictionary<EquipLocation, InventoryItem> Items { get; set; } = new Dictionary<EquipLocation, InventoryItem>();
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Inventory;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            using (var ctx = new CdClientContext())
+            using (var cdClient = new CdClientContext())
             {
-                var component = ctx.ComponentsRegistryTable.FirstOrDefault(c =>
+                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == levelObject.Lot && c.Componenttype == (int) ReplicaComponentsId.Inventory);
 
-                var items = ctx.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
+                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
-                Items = new List<InventoryItem>();
+                Items = new Dictionary<EquipLocation, InventoryItem>();
 
                 foreach (var item in items)
                 {
-                    Items.Add(new InventoryItem
+                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                        o => o.Id == item.Itemid
+                    );
+
+                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                        r => r.Id == item.Itemid && r.Componenttype == 11
+                    );
+
+                    if (cdClientObject == default || itemRegistryEntry == default)
+                    {
+                        Logger.Error($"{item.Itemid} is not a valid item");
+                        continue;
+                    }
+                    
+                    var itemComponent = cdClient.ItemComponentTable.First(
+                        i => i.Id == itemRegistryEntry.Componentid
+                    );
+                    
+                    Items.Add(itemComponent.EquipLocation, new InventoryItem
                     {
                         InventoryItemId = Utils.GenerateObjectId(),
                         Count = (long) item.Count,
@@ -40,23 +60,51 @@ namespace Uchu.World
             }
         }
 
-        public void EquipUnmanagedItem(int lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
+        public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
         {
-            Items.Add(new InventoryItem
+            using (var cdClient = new CdClientContext())
             {
-                InventoryItemId = Utils.GenerateObjectId(),
-                Count = count,
-                Slot = slot,
-                LOT = lot,
-                InventoryType = (int) inventoryType
-            });
+                var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                    o => o.Id == lot
+                );
+
+                var itemRegistryEntry = lot.GetComponentId(ReplicaComponentsId.Item);
+
+                if (cdClientObject == default || itemRegistryEntry == default)
+                {
+                    Logger.Error($"{lot} is not a valid item");
+                    return;
+                }
+                
+                var itemComponent = cdClient.ItemComponentTable.First(
+                    i => i.Id == itemRegistryEntry
+                );
+                
+                Items.Add(itemComponent.EquipLocation, new InventoryItem
+                {
+                    InventoryItemId = Utils.GenerateObjectId(),
+                    Count = count,
+                    Slot = slot,
+                    LOT = lot,
+                    InventoryType = (int) inventoryType
+                });
+            }
         }
 
         public void EquipItem(Item item)
         {
-            // TODO: UnEquip current item.
+            var items = Items.Select(i => (i.Key, i.Value)).ToArray();
+            foreach (var (equipLocation, value) in items)
+            {
+                if (equipLocation.Equals(item.ItemComponent.EquipLocation))
+                {
+                    UnEquipItem(value.InventoryItemId);
+                }
+            }
             
-            Items.Add(item.InventoryItem);
+            Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
+
+            Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true); });
             
             GameObject.Serialize();
         }
@@ -66,39 +114,38 @@ namespace Uchu.World
             UnEquipItem(item.ObjectId);
         }
 
-        public void UnEquipItem(int lot)
-        {
-            var items = Items.Where(i => i.LOT == lot).ToArray();
-
-            if (!items.Any())
-            {
-                Logger.Error($"{GameObject} does not have an item of lot: {lot} equipped");
-                return;
-            }
-
-            foreach (var item in items)
-            {
-                Items.Remove(item);
-            }
-            
-            GameObject.Serialize();
-        }
-
         public void UnEquipItem(long id)
         {
-            var item = Items.FirstOrDefault(i => i.InventoryItemId == id);
+            var (equipLocation, value) = Items.FirstOrDefault(i => i.Value.InventoryItemId == id);
 
-            if (item == default)
+            if (value == default)
             {
                 Logger.Error($"{GameObject} does not have an item of id: {id} equipped");
                 return;
             }
 
-            Items.Remove(item);
+            Items.Remove(equipLocation);
+
+            Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(id, false); });
             
             GameObject.Serialize();
         }
 
+        private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
+        {
+            if (Player != null)
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
+
+                    inventoryItem.IsEquipped = equipped;
+
+                    await ctx.SaveChangesAsync();
+                }
+            }
+        }
+        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);
@@ -110,7 +157,7 @@ namespace Uchu.World
 
             writer.Write((uint) Items.Count);
 
-            foreach (var item in Items)
+            foreach (var (_, item) in Items)
             {
                 writer.Write(item.InventoryItemId);
                 writer.Write(item.LOT);

@@ -19,7 +19,7 @@ namespace Uchu.World
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
             
             spawnerComponent.Settings = levelObject.Settings;
-            spawnerComponent.SpawnTemplate = (int) spawnTemplate;
+            spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
             
             levelObject.Settings.Remove("spawntemplate");
             

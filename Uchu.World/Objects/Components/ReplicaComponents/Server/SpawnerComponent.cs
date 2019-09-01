@@ -8,7 +8,7 @@ namespace Uchu.World
 {
     public class SpawnerComponent : ReplicaComponent
     {
-        public int SpawnTemplate { get; set; }
+        public Lot SpawnTemplate { get; set; }
         
         public uint SpawnNodeId { get; set; }
         

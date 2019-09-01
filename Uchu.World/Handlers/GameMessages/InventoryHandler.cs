@@ -1,6 +1,6 @@
 using Uchu.Core;
 
-namespace Uchu.World.Handlers
+namespace Uchu.World.Handlers.GameMessages
 {
     public class InventoryHandler : HandlerGroup
     {

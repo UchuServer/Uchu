@@ -19,13 +19,13 @@ namespace Uchu.World
         
         public LegoDataDictionary ExtraInfo { get; set; }
         
-        public int ItemLot { get; set; }
+        public Lot ItemLot { get; set; }
         
         public long SubKey { get; set; } = -1;
         
         public int Inventory { get; set; } = -1;
         
-        public uint ItemCount { get; set; } = 1;
+        public uint Count { get; set; } = 1;
         
         public uint TotalItems { get; set; }
         
@@ -88,7 +88,7 @@ namespace Uchu.World
             writer.Write(Inventory);
 
             writer.WriteBit(true);
-            writer.Write(ItemCount);
+            writer.Write(Count);
             
             writer.WriteBit(true);
             writer.Write(TotalItems);

@@ -1,4 +1,5 @@
 using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -19,6 +20,8 @@ namespace Uchu.World
             var v = str.Substring(colonIndex + 1);
 
             TriggerId = int.Parse(v);
+
+            Logger.Information($"{GameObject} is a trigger [{triggerId}]");
         }
 
         public override void Construct(BitWriter writer)

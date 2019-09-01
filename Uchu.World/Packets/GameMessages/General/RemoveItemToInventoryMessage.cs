@@ -27,7 +27,7 @@ namespace Uchu.World
         
         public long ItemObjectId { get; set; }
         
-        public int ItemLot { get; set; }
+        public Lot ItemLot { get; set; }
         
         public long RequestingObjId { get; set; }
 
