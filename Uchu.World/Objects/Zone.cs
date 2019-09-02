@@ -177,12 +177,13 @@ namespace Uchu.World
         public void SendDestruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
-            
-            var stream = new MemoryStream();
 
-            var netId = _networkIds[gameObject];
+            if (!_networkIds.TryGetValue(gameObject, out var netId)) return;
+            
             _droppedIds.Add(netId);
             _networkIds.Remove(gameObject);
+            
+            var stream = new MemoryStream();
             
             using (var writer = new BitWriter(stream))
             {
@@ -202,6 +203,14 @@ namespace Uchu.World
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
         {
             foreach (var player in players)
+            {
+                player.Message(message);
+            }
+        }
+
+        public void ExcludingMessage(IGameMessage message, Player excluded)
+        {
+            foreach (var player in Players.Where(p => p != excluded))
             {
                 player.Message(message);
             }

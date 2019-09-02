@@ -40,27 +40,14 @@ namespace Uchu.World
             return Id == other.Id;
         }
 
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
+
         public override int GetHashCode()
         {
             return Id;
-        }
-
-        public int[] GetComponentIds(ReplicaComponentsId componentType)
-        {
-            return GetComponentIds((int) componentType);
-        }
-        
-        public int[] GetComponentIds(int componentType)
-        {
-            var id = Id;
-            using (var cdClient = new CdClientContext())
-            {
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
-                    r => r.Id == id && r.Componenttype == componentType
-                );
-
-                return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
-            }
         }
         
         public int GetComponentId(ReplicaComponentsId componentType)
@@ -78,6 +65,24 @@ namespace Uchu.World
                 );
 
                 return itemRegistryEntry?.Componentid ?? 0;
+            }
+        }
+
+        public int[] GetComponentIds(ReplicaComponentsId componentType)
+        {
+            return GetComponentIds((int) componentType);
+        }
+        
+        public int[] GetComponentIds(int componentType)
+        {
+            var id = Id;
+            using (var cdClient = new CdClientContext())
+            {
+                var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
+                    r => r.Id == id && r.Componenttype == componentType
+                );
+
+                return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
             }
         }
     }

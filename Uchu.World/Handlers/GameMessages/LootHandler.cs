@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -15,6 +16,20 @@ namespace Uchu.World.Handlers.GameMessages
 
             player.EntitledCurrency -= message.Currency;
             player.Currency += message.Currency;
+        }
+
+        [PacketHandler]
+        public async Task PickupItemHandle(PickupItemMessage message, Player player)
+        {
+            if (message.Loot == default)
+            {
+                Logger.Error($"{player} is trying to pick up invalid item.");
+                return;
+            }
+
+            Object.Destroy(message.Loot);
+            
+            await player.GetComponent<InventoryManager>().AddItemAsync(message.Loot.Lot, 1);
         }
     }
 }

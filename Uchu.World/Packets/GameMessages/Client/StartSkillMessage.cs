@@ -19,7 +19,7 @@ namespace Uchu.World
         
         public GameObject OptionalOriginator { get; set; }
         
-        public GameObject OptionalTargetId { get; set; }
+        public GameObject OptionalTarget { get; set; }
         
         public Quaternion OriginatorRotation { get; set; } = Quaternion.Identity;
         
@@ -27,7 +27,7 @@ namespace Uchu.World
         
         public int SkillId { get; set; }
         
-        public uint UiSkillHandle { get; set; }
+        public uint SkillHandle { get; set; }
         
         public override void Deserialize(BitReader reader)
         {
@@ -48,7 +48,7 @@ namespace Uchu.World
             OptionalOriginator = reader.ReadGameObject(Associate.Zone);
 
             if (reader.ReadBit())
-                OptionalTargetId = reader.ReadGameObject(Associate.Zone);
+                OptionalTarget = reader.ReadGameObject(Associate.Zone);
 
             if (reader.ReadBit())
                 OriginatorRotation = reader.Read<Quaternion>();
@@ -63,7 +63,7 @@ namespace Uchu.World
             SkillId = reader.Read<int>();
 
             if (reader.ReadBit())
-                UiSkillHandle = reader.Read<uint>();
+                SkillHandle = reader.Read<uint>();
         }
     }
 }

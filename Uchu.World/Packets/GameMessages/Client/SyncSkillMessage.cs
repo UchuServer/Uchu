@@ -10,9 +10,9 @@ namespace Uchu.World
         
         public byte[] Content { get; set; }
         
-        public uint UiBehaviourHandle { get; set; }
+        public uint BehaviourHandle { get; set; }
         
-        public uint UiSkillHandle { get; set; }
+        public uint SkillHandle { get; set; }
 
         public override void Deserialize(BitReader reader)
         {
@@ -25,8 +25,8 @@ namespace Uchu.World
                 Content[i] = reader.Read<byte>();
             }
 
-            UiBehaviourHandle = reader.Read<uint>();
-            UiSkillHandle = reader.Read<uint>();
+            BehaviourHandle = reader.Read<uint>();
+            SkillHandle = reader.Read<uint>();
         }
     }
 }

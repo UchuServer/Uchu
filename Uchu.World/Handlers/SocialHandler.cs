@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.World.Social;
 
@@ -81,7 +80,6 @@ namespace Uchu.World.Handlers
 
                 Logger.Information($"Sending friend request from {player.Name} to {packet.PlayerName}!");
                 
-
                 var invite = relations.FirstOrDefault(relation =>
                     relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId
                 );
