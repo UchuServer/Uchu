@@ -32,8 +32,8 @@ namespace Uchu.World
         public override void Construct(BitWriter writer)
         {
             var hasData = Data != null;
+            
             writer.WriteBit(hasData);
-
             if (hasData) writer.WriteLdfCompressed(Data);
         }
 
@@ -45,6 +45,8 @@ namespace Uchu.World
         {
             base.Instantiated();
 
+            return;
+            
             using (var cdClient = new CdClientContext())
             {
                 var scriptComponentRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(

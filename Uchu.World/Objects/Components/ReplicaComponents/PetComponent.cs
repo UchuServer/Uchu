@@ -11,6 +11,8 @@ namespace Uchu.World
 
         public uint ModerationStatus { get; set; }
         
+        public GameObject PetInteractionObject { get; set; }
+        
         public override ReplicaComponentsId Id => ReplicaComponentsId.Pet;
 
         public override void FromLevelObject(LevelObject levelObject)
@@ -28,12 +30,13 @@ namespace Uchu.World
             writer.WriteBit(true);
             writer.Write<uint>(0);
             writer.Write<uint>(0);
-            writer.WriteBit(false);
+
+            var hasPetInteraction = PetInteractionObject != null;
+            writer.WriteBit(hasPetInteraction);
+            if (hasPetInteraction) writer.Write(PetInteractionObject);
 
             var hasOwner = Owner != null;
-
             writer.WriteBit(hasOwner);
-
             if (hasOwner) writer.Write(Owner);
 
             writer.WriteBit(true);

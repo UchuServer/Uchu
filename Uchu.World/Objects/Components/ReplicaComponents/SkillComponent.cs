@@ -16,6 +16,7 @@ namespace Uchu.World
     public class SkillComponent : ReplicaComponent
     {
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
+        public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Skill;
 
@@ -45,7 +46,7 @@ namespace Uchu.World
 
                 if (behavior?.BehaviorID == default)
                 {
-                    Logger.Error($"{GameObject} is trying to use invalid skill {message.SkillId}");
+                    Logger.Error($"{GameObject} is trying to use an invalid skill {message.SkillId}");
                     return;
                 }
 
@@ -71,7 +72,7 @@ namespace Uchu.World
                         Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
                     );
 
-                    HandledBehaviors.Add(message.SkillHandle, instance);
+                    HandledSkills.Add(message.SkillHandle, instance);
                     
                     instance.Executioner = executioner;
                     instance.BehaviorId = (int) behavior.BehaviorID;
@@ -119,7 +120,7 @@ namespace Uchu.World
                 if (message.Done)
                 {
                     head.Executioner.Execute();
-                    //HandledBehaviors.Remove(message.BehaviourHandle);
+                    HandledBehaviors.Remove(message.BehaviourHandle);
                 }
 
                 var template = await Behavior.GetTemplate(head.BehaviorId);
@@ -137,14 +138,14 @@ namespace Uchu.World
                     await head.StartBranch(head.BehaviorId, reader);
                 }
             }
-            else if (HandledBehaviors.TryGetValue(message.SkillHandle, out head))
+            else if (HandledSkills.TryGetValue(message.SkillHandle, out head))
             {
                 Logger.Debug($"Syncing skill Done = {message.Done}, Handle = {message.SkillHandle}");
 
                 if (message.Done)
                 {
                     head.Executioner.Execute();
-                    //HandledBehaviors.Remove(message.SkillHandle);
+                    HandledBehaviors.Remove(message.SkillHandle);
                 }
 
                 var template = await Behavior.GetTemplate(head.BehaviorId);

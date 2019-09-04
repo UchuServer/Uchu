@@ -24,9 +24,7 @@ namespace Uchu.World
             writer.Write(true);
 
             var hasDriver = Driver != null;
-
             writer.WriteBit(hasDriver);
-
             if (hasDriver) writer.Write(Driver);
 
             writer.WriteBit(false);

@@ -4,10 +4,12 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
@@ -21,10 +23,14 @@ namespace Uchu.World
         
         private readonly ZoneParser _parser;
 
+        private readonly ZoneId[] _zoneIds;
+        
         public readonly List<Zone> Zones = new List<Zone>();
         
-        public WorldServer(int port, string password = "3.25 ND1") : base(port, password)
+        public WorldServer(int port, ZoneId[] zones = default, bool preload = false, string password = "3.25 ND1") : base(port, password)
         {
+            _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
+            
             _gameMessageHandlerMap = new GameMessageHandlerMap();
 
             _parser = new ZoneParser(Resources);
@@ -43,12 +49,25 @@ namespace Uchu.World
                     break;
                 }
             };
+            
+            if (!preload || zones == default) return;
+
+            foreach (var zoneId in zones)
+            {
+                Task.Run(async () => { await GetZone(zoneId); });
+            }
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)
         {
-            if (Zones.Any(z => z.ZoneInfo.ZoneId == (uint) zoneId))
-                return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+            if (!_zoneIds.Contains(zoneId))
+            {
+                Logger.Error($"{zoneId} is not in the Zone Table for this server.");
+                return default;
+            }
+            
+            if (Zones.Any(z => z.ZoneId == zoneId))
+                return Zones.First(z => z.ZoneId == zoneId);
             
             var info = await _parser.ParseAsync(ZoneParser.Zones[zoneId]);
 
@@ -180,6 +199,75 @@ namespace Uchu.World
                 case "die":
                     player.GetComponent<DestructibleComponent>().Smash(player, player);
                     return "You smashed yourself.";
+                case "freecam":
+                    player.Message(new ToggleFreeCamModeMessage
+                    {
+                        Associate = player
+                    });
+                    return "Toggled freecam.";
+                case "fly":
+                    if (arguments.Length != 2)
+                    {
+                        return "fly <state(on/off)>";
+                    }
+
+                    bool state;
+                    switch (arguments[1].ToLower())
+                    {
+                        case "true":
+                        case "on":
+                            state = true;
+                            break;
+                        case "false":
+                        case "off":
+                            state = false;
+                            break;
+                        default:
+                            return "Invalid <state(on/off)>";
+                    }
+                    
+                    player.Message(new SetJetPackModeMessage
+                    {
+                        Associate = player,
+                        BypassChecks = true,
+                        Use = state,
+                        EffectId = 36
+                    });
+
+                    return $"Toggled jetpack state: {state}";
+                case "near":
+                    var current = player.Zone.GameObjects[0];
+
+                    foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+                    {
+                        if (gameObject.Transform == default || gameObject.GetComponent<SpawnerComponent>() != null) continue;
+
+                        if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
+                            Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                        {
+                            current = gameObject;
+                        }
+                    }
+
+                    if (current == default) return "No objects in this zone.";
+
+                    var info = new StringBuilder();
+
+                    using (var cdClient = new CdClientContext())
+                    {
+                        var cdClientObject = cdClient.ObjectsTable.First(o => o.Id == current.Lot);
+
+                        info.Append($"[{current.ObjectId}] [{current.Lot}] \"{cdClientObject.Name}\"");
+
+                        var components = current.GetAllComponents().OfType<ReplicaComponent>().ToArray();
+                        for (var index = 0; index < components.Length; index++)
+                        {
+                            var component = components[index];
+                            info.Append($"\n[{index}] {component.Id}");
+                        }
+
+                        return info.ToString();
+                    }
                 default:
                     return AdminCommand(command, false);
             }

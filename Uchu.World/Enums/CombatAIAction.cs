@@ -2,8 +2,10 @@ namespace Uchu.World
 {
     public enum CombatAiAction : uint
     {
-        None,
+        Idle,
         Attacking,
-        Releasing
+        Tether,
+        Spawn,
+        Dead
     }
 }

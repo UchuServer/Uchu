@@ -79,6 +79,11 @@ namespace Uchu.World
             return _components.FirstOrDefault(c => c is T) as T;
         }
 
+        public Component[] GetAllComponents()
+        {
+            return _components.ToArray();
+        }
+
         public bool TryGetComponent(Type type, out Component result)
         {
             result = GetComponent(type);
@@ -141,6 +146,7 @@ namespace Uchu.World
             foreach (var component in _components)
             {
                 Zone.Objects.Remove(component);
+                component.End();
             }
             
             _components.Clear();
@@ -165,7 +171,7 @@ namespace Uchu.World
             }
             
             Constructed = true;
-
+            
             Zone.ConstructObject(this);
         }
 
@@ -255,7 +261,7 @@ namespace Uchu.World
             //
             // Check if spawner
             //
-            
+
             if (levelObject.Settings.TryGetValue("spawntemplate", out _))
                 return InstancingUtil.Spawner(levelObject, parent);
 
@@ -304,6 +310,8 @@ namespace Uchu.World
 
                 if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
                 {
+                    Logger.Information($"{instance} is trigger!");
+                    
                     var trigger = instance.AddComponent<TriggerComponent>();
 
                     trigger.FromLevelObject(levelObject);
@@ -346,7 +354,7 @@ namespace Uchu.World
 
             var trigger = GetComponent<TriggerComponent>();
 
-            var hasTriggerId = !ReferenceEquals(trigger, null) && trigger.TriggerId != -1;
+            var hasTriggerId = trigger != null && trigger.TriggerId != -1;
 
             writer.WriteBit(hasTriggerId);
 

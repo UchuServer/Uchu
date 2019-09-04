@@ -32,7 +32,9 @@ namespace Uchu.World
             Serialize(writer);
 
             writer.WriteBit(false);
+            
             writer.Write(ActivatorPosition);
+            
             writer.WriteBit(false);
         }
 
@@ -41,9 +43,12 @@ namespace Uchu.World
             base.Serialize(writer);
             
             writer.WriteBit(true);
+            
             writer.Write((uint) State);
+            
             writer.WriteBit(Success);
             writer.WriteBit(Enabled);
+            
             writer.Write(TimeSinceStart);
             writer.Write(PauseTime);
         }

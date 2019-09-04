@@ -18,7 +18,7 @@ namespace Uchu.World
         public override void Construct(BitWriter writer)
         {
             writer.WriteBit(false);
-            writer.Write(0f);
+            writer.Write(0);
             
             Serialize(writer);
         }

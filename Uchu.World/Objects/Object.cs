@@ -51,7 +51,7 @@ namespace Uchu.World
         }
 
         public virtual void Serialize(){}
-
+        
         public virtual void Update(){}
 
         public virtual void End()

@@ -14,13 +14,14 @@ namespace Uchu.World.Parsers
     {
         private static bool Check(bool a, bool b, Mode mode)
         {
+            Logger.Information($"Checking {a} {b} with {mode}");
             switch (mode)
             {
                 case Mode.And:
-                    return a || b;
+                    return a && b;
 
                 case Mode.Or:
-                    return a && b;
+                    return a || b;
 
                 case Mode.None:
                     return false;
@@ -30,8 +31,10 @@ namespace Uchu.World.Parsers
             }
         }
 
-        private static async Task<bool> IsCompletedAsync(string str, IEnumerable<Mission> completed)
+        private static bool IsCompletedAsync(string str, Mission[] completed)
         {
+            Logger.Information($"Complete: {str} ANY {string.Join(' ', completed.Select(s => s.Id))}");
+            
             if (string.IsNullOrWhiteSpace(str)) return true;
             
             if (str.Contains(':'))
@@ -42,12 +45,12 @@ namespace Uchu.World.Parsers
 
                 var chrMis = completed.FirstOrDefault(m => m.MissionId == misId);
 
-                if (chrMis == null)
+                if (chrMis == default)
                     return false;
 
-                using (var ctx = new CdClientContext())
+                using (var cdClient = new CdClientContext())
                 {
-                    var tasks = ctx.MissionTasksTable.Where(m => m.Id == misId).ToArray();
+                    var tasks = cdClient.MissionTasksTable.Where(m => m.Id == misId).ToArray();
                     
                     var task = tasks[taskIndex];
                     var chrTask = chrMis.Tasks[taskIndex];
@@ -57,20 +60,25 @@ namespace Uchu.World.Parsers
             }
 
             Logger.Debug($"Required mission {str}");
+            
             var id = int.Parse(str);
 
             return completed.Any(c => c.MissionId == id);
         }
 
-        public static async Task<bool> CheckPrerequiredMissionsAsync(string missions, ICollection<Mission> completed)
+        public static bool CheckPrerequiredMissionsAsync(string missions, Mission[] completed)
         {
             if (string.IsNullOrWhiteSpace(missions)) return true;
+
+            Logger.Information($"Pre: {missions}");
+
+            missions = missions.Replace(" ", "");
             
             var cur = new StringBuilder();
             var res = true;
             var mode = Mode.And;
 
-            for (var i = 0; i < completed.Count; i++)
+            for (var i = 0; i < missions.Length; i++)
             {
                 var chr = missions[i];
 
@@ -82,7 +90,7 @@ namespace Uchu.World.Parsers
                     case '&':
                     case ',':
                     {
-                        res = Check(res, await IsCompletedAsync(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
 
                         cur.Clear();
 
@@ -95,7 +103,7 @@ namespace Uchu.World.Parsers
 
                     case '|':
                     {
-                        res = Check(res, await IsCompletedAsync(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
 
                         cur.Clear();
 
@@ -104,11 +112,11 @@ namespace Uchu.World.Parsers
                     }
 
                     case '(':
-                        res = Check(res, await CheckPrerequiredMissionsAsync(missions.Substring(i + 1), completed), mode);
+                        res = Check(res, CheckPrerequiredMissionsAsync(missions.Substring(i + 1), completed), mode);
                         break;
 
                     case ')':
-                        return Check(res, await IsCompletedAsync(cur.ToString(), completed), mode);
+                        return Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
 
                     case '0':
                     case '1':
@@ -126,7 +134,7 @@ namespace Uchu.World.Parsers
                 }
             }
 
-            res = Check(res, await IsCompletedAsync(cur.ToString(), completed), mode);
+            res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
 
             return res;
         }
@@ -135,26 +143,44 @@ namespace Uchu.World.Parsers
         {
             using (var ctx = new CdClientContext())
             {
+                //
+                // Get all tasks this mission have to have completed to be handed in.
+                //
+                
                 var tasks = ctx.MissionTasksTable.Where(m => m.Id == mission.MissionId);
 
+                //
+                // Check tasks count to their required values.
+                //
+                
                 return await tasks.AllAsync(t =>
-                    mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue);
+                    mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue
+                );
             }
         }
 
-        public static object[] GetTargets(MissionTasks missionTask)
+        public static Lot[] GetTargets(MissionTasks missionTask)
         {
-            var targets = new List<object>();
+            var targets = new List<Lot>();
 
             if (missionTask.Target != null)
             {
-                targets.Add(missionTask.Target);
+                targets.Add(missionTask.Target ?? 0);
             }
 
-            if (missionTask.TargetGroup != null)
+            if (missionTask.TargetGroup == null) return targets.ToArray();
+            
+            var rawTargets = missionTask.TargetGroup
+                .Replace(" ", "")
+                .Split(',')
+                .Where(c => !string.IsNullOrEmpty(c));
+
+            foreach (var rawTarget in rawTargets)
             {
-                targets.AddRange(missionTask.TargetGroup.Trim().Split(',').Where(c => !string.IsNullOrEmpty(c))
-                    .Select(c => int.TryParse(c.Trim(), out var num) ? (object) num : c.Trim()));
+                if (int.TryParse(rawTarget, out var target))
+                {
+                    targets.Add(target);
+                }
             }
 
             return targets.ToArray();

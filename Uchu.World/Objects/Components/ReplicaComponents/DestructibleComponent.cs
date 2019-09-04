@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -13,9 +14,11 @@ namespace Uchu.World
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.Destructible;
 
-        public Core.CdClient.DestructibleComponent CdClientComponent;
+        public bool Alive { get; private set; } = true;
 
-        public Random _random;
+        private Core.CdClient.DestructibleComponent _cdClientComponent;
+
+        private Random _random;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
@@ -25,9 +28,9 @@ namespace Uchu.World
             {
                 var entry = GameObject.Lot.GetComponentId(ReplicaComponentsId.Destructible);
 
-                CdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(c => c.Id == entry);
+                _cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(c => c.Id == entry);
 
-                if (CdClientComponent == default)
+                if (_cdClientComponent == default)
                 {
                     Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
                 }
@@ -47,6 +50,8 @@ namespace Uchu.World
 
         public void Smash(GameObject killer, GameObject lootOwner = default, string animation = default)
         {
+            Alive = false;
+            
             if (Player != null)
             {
                 Zone.BroadcastMessage(new DieMessage
@@ -70,12 +75,14 @@ namespace Uchu.World
                     Source = Player,
                     SpawnPosition = Player.Transform.Position
                 });
+                
+                return;
             }
-
+            
             using (var cdClient = new CdClientContext())
             {
                 var matrices = cdClient.LootMatrixTable.Where(l =>
-                    l.LootMatrixIndex == CdClientComponent.LootMatrixIndex).ToArray();
+                    l.LootMatrixIndex == _cdClientComponent.LootMatrixIndex).ToArray();
                 
                 foreach (var matrix in matrices)
                 {
@@ -94,11 +101,23 @@ namespace Uchu.World
                         
                         if (item.Itemid == null) continue;
 
-                        var drop = GameObject.Instantiate(Zone, item.Itemid.Value);
+                        var drop = GameObject.Instantiate(
+                            Zone,
+                            item.Itemid.Value,
+                            Transform.Position,
+                            Transform.Rotation
+                        );
 
-                        var finalPosition = Transform.Position;
-                        finalPosition.X += ((float) _random.NextDouble() % 1f - 0.5f) * 20f;
-                        finalPosition.Z += ((float) _random.NextDouble() % 1f - 0.5f) * 20f;
+                        var finalPosition = new Vector3
+                        {
+                            X = drop.Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
+                            Y = drop.Transform.Position.Y,
+                            Z = drop.Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
+                        };
+
+                        // TODO: Look into weird spawning location
+                        
+                        Logger.Debug($"Spawning {drop} [{drop.Lot}] at {drop.Transform.Position}");
                         
                         Zone.BroadcastMessage(new DropClientLootMessage
                         {
@@ -108,9 +127,9 @@ namespace Uchu.World
                             Currency = default,
                             Lot = drop.Lot,
                             LootObjectId = drop.ObjectId,
-                            Owner = killer as Player,
+                            Owner = (lootOwner ?? killer) as Player,
                             Source = GameObject,
-                            SpawnPosition = Transform.Position
+                            SpawnPosition = drop.Transform.Position
                         });
                     }
                 }
@@ -119,6 +138,8 @@ namespace Uchu.World
 
         public void Resurrect()
         {
+            Alive = true;
+            
             if (Player != null)
             {
                 Zone.BroadcastMessage(new ResurrectMessage

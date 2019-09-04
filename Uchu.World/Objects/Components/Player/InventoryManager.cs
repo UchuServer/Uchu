@@ -14,6 +14,8 @@ namespace Uchu.World
     {
         private InventoryComponent _inventoryComponent;
 
+        private object _lock;
+
         private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
 
         public override void Instantiated()
@@ -21,13 +23,14 @@ namespace Uchu.World
             base.Instantiated();
 
             _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
-
+            _lock = new object();
+            
             foreach (var value in Enum.GetValues(typeof(InventoryType)))
             {
                 var id = (InventoryType) value;
                 
                 Logger.Information($"[{id}]");
-
+                
                 _inventories.Add(id, new Inventory(id, this));
             }
         }
@@ -49,9 +52,9 @@ namespace Uchu.World
                 }
 
                 var managedItem = _inventories[(InventoryType) item.InventoryType][id];
-                
+
                 Logger.Information($"Getting item: {id} -> {managedItem}");
-                
+
                 if (managedItem == null)
                 {
                     Logger.Error($"{item.InventoryItemId} is not managed on {Player}");
@@ -89,81 +92,90 @@ namespace Uchu.World
 
                 Debug.Assert(component.ItemType != null, "component.ItemType != null");
                 
-                await AddItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType());
+                AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType());
             }
         }
         
-        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType)
+        public void AddItem(int lot, uint count, InventoryType inventoryType)
         {
-            using (var cdClient = new CdClientContext())
+            // The math here cannot be executed asynchronously
+            lock (_lock)
             {
-                var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                    r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
-                );
-
-                if (componentId == default)
+                using (var cdClient = new CdClientContext())
                 {
-                    Logger.Error($"{lot} does not have a Item component");
-                    return;
-                }
-
-                var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
-                    i => i.Id == componentId.Componentid
-                );
-
-                if (component == default)
-                {
-                    Logger.Error(
-                        $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                    var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                        r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
                     );
-                    return;
-                }
 
-                var stackSize = component.StackSize ?? 1;
+                    if (componentId == default)
+                    {
+                        Logger.Error($"{lot} does not have a Item component");
+                        return;
+                    }
 
-                var inventory = _inventories[inventoryType];
-                
-                //
-                // Update quest tasks
-                //
-                
-                var questInventory = Player.GetComponent<QuestInventory>();
+                    var component = cdClient.ItemComponentTable.FirstOrDefault(
+                        i => i.Id == componentId.Componentid
+                    );
 
-                for (var i = 0; i < count; i++)
-                {
-                    await questInventory.UpdateLotTaskAsync(lot, MissionTaskType.ObtainItem);
-                }
-                
-                //
-                // Fill stacks
-                //
-                
-                foreach (var item in inventory.Items.Where(i => i.Lot == lot))
-                {
-                    if (item.Count == stackSize) continue;
+                    if (component == default)
+                    {
+                        Logger.Error(
+                            $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                        );
+                        return;
+                    }
 
-                    var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
+                    var stackSize = component.StackSize ?? 1;
 
-                    item.Count += toAdd;
+                    var inventory = _inventories[inventoryType];
 
-                    count -= toAdd;
+                    //
+                    // Update quest tasks
+                    //
 
-                    if (count == default) return;
-                }
+                    var questInventory = Player.GetComponent<QuestInventory>();
 
-                //
-                // Create new stacks
-                //
-                
-                var toCreate = Min(stackSize, (int) count);
+                    for (var i = 0; i < count; i++)
+                    {
+#pragma warning disable 4014
+                        Task.Run(async () =>
+#pragma warning restore 4014
+                        {
+                            await questInventory.UpdateLotTaskAsync(lot, MissionTaskType.ObtainItem);
+                        });
+                    }
 
-                while (toCreate != default)
-                {
-                    var toAdd = Min(stackSize, toCreate);
-                    
-                    Item.Instantiate(lot, inventory, (uint) toAdd);
-                    
-                    toCreate -= toAdd;
+                    //
+                    // Fill stacks
+                    //
+
+                    foreach (var item in inventory.Items.Where(i => i.Lot == lot))
+                    {
+                        if (item.Count == stackSize) continue;
+
+                        var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
+
+                        item.Count += toAdd;
+
+                        count -= toAdd;
+
+                        if (count == default) return;
+                    }
+
+                    //
+                    // Create new stacks
+                    //
+
+                    var toCreate = Min(stackSize, (int) count);
+
+                    while (toCreate != default)
+                    {
+                        var toAdd = Min(stackSize, toCreate);
+
+                        Item.Instantiate(lot, inventory, (uint) toAdd);
+
+                        toCreate -= toAdd;
+                    }
                 }
             }
         }
@@ -270,6 +282,14 @@ namespace Uchu.World
             }
             
             item.Slot = (uint) newSlot;
+        }
+
+        public override void End()
+        {
+            foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items))
+            {
+                Destroy(item);
+            }
         }
 
         private static int Min(params int[] nums)

@@ -6,7 +6,7 @@ namespace Uchu.World
     [Essential]
     public class BouncerComponent : ReplicaComponent
     {
-        public bool PetRequired { get; set; } = false;
+        public bool PetRequired { get; set; }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.Bouncer;
 

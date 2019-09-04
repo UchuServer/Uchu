@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace Uchu.Core
@@ -13,10 +14,14 @@ namespace Uchu.Core
         private static LogLevel _consoleMinLevel;
 
         private static string _file;
+
+        private static object _lock;
         
         static Logger()
         {
             ReloadConfig();
+
+            _lock = new object();
         }
         
         private static string GetConfigFile()
@@ -88,45 +93,49 @@ namespace Uchu.Core
 
         public static void Debug(object obj)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            InternalLog(obj.ToString(), LogLevel.Debug);
+            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Debug, ConsoleColor.Green); });
         }
 
         public static void Information(object obj)
         {
-            Console.ResetColor();
-            InternalLog(obj.ToString(), LogLevel.Information);
+            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Information, ConsoleColor.White, true); });
         }
 
         public static void Warning(object obj)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            InternalLog(obj.ToString(), LogLevel.Warning);
+            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Warning, ConsoleColor.Yellow); });
         }
 
         public static void Error(object obj)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            InternalLog(obj.ToString(), LogLevel.Error);
+            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Error, ConsoleColor.Red); });
         }
 
-        private static void InternalLog(string message, LogLevel logLevel)
+        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, bool clearColor = false)
         {
-            message = $"[{logLevel}] {message}";
-            
-            if (_fileMinLevel <= logLevel)
+            lock (_lock)
             {
-                var path = Path.GetDirectoryName(_file);
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-                if (!File.Exists(_file)) File.Create(_file).Dispose();
-                File.AppendAllTextAsync(_file, $"{DateTime.Now} {message}\n");
-            }
+                if (clearColor)
+                    Console.ResetColor();
+                else
+                    Console.ForegroundColor = color;
 
-            if (_consoleMinLevel <= logLevel)
-            {
-                Console.WriteLine(message);
-                Console.ResetColor();
+                message = $"[{logLevel}] {message}";
+
+                if (_fileMinLevel <= logLevel)
+                {
+                    var path = Path.GetDirectoryName(_file);
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+                    if (!File.Exists(_file)) File.Create(_file).Dispose();
+                    File.AppendAllTextAsync(_file, $"{DateTime.Now} {message}\n");
+                }
+
+                if (_consoleMinLevel <= logLevel)
+                {
+                    Console.WriteLine(message);
+                    Console.ResetColor();
+                }
             }
         }
     }

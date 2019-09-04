@@ -55,6 +55,8 @@ namespace Uchu.World
         /// </summary>
         public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
 
+        private bool _started;
+        
         public override void FromLevelObject(LevelObject levelObject)
         {
             PathName = levelObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
@@ -75,8 +77,6 @@ namespace Uchu.World
             CurrentWaypointIndex = PathStart;
 
             State = PlatformState.Idle;
-
-            Task.Run(WaitPoint);
         }
 
         public override void Construct(BitWriter writer)
@@ -147,20 +147,27 @@ namespace Uchu.World
             }
         }
 
+        public override void Update()
+        {
+            if (_started || !GameObject.Constructed) return;
+
+            _started = true;
+
+            Task.Run(WaitPoint);
+        }
+
         private void MovePlatform()
         {
             /*
              * Update Object in world.
              */
-            //PathName = Path.Name;
+            PathName = Path.Name;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
 
             GameObject.Serialize();
-            
-            Logger.Information($"Moving Platform Speed: {WayPoint.Speed}...");
             
             /*
              * Start Waiting after completing path.
@@ -184,15 +191,13 @@ namespace Uchu.World
             /*
              * Update Object in world.
              */
-            //PathName = null;
+            PathName = null;
             State = PlatformState.Idle;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
 
             GameObject.Serialize();
-            
-            Logger.Information($"Waiting Platform WaitTime: {WayPoint.WaitTime}...");
 
             /*
              * Start Waiting after waiting.

@@ -15,7 +15,7 @@ namespace Uchu.World
         
         public bool IsBoundOnPickup { get; set; }
         
-        public int Source { get; set; } = -1;
+        public Lot Source { get; set; } = -1;
         
         public LegoDataDictionary ExtraInfo { get; set; }
         
@@ -28,8 +28,8 @@ namespace Uchu.World
         public uint Count { get; set; } = 1;
         
         public uint TotalItems { get; set; }
-        
-        public long ItemObjectId { get; set; }
+
+        public long ItemObjectId { get; set; } = -1;
         
         public Vector3 FlyingLootPosition { get; set; } = Vector3.Zero;
         
@@ -44,12 +44,8 @@ namespace Uchu.World
             writer.WriteBit(IsBoundOnPickup);
 
             var hasSource = Source != -1;
-
             writer.WriteBit(hasSource);
-            if (hasSource)
-            {
-                writer.Write(Source);
-            }
+            if (hasSource) writer.Write(Source);
 
             if (ExtraInfo != null)
             {
@@ -74,11 +70,7 @@ namespace Uchu.World
 
             var hasSubKey = SubKey != -1;
             writer.WriteBit(hasSubKey);
-            
-            if (hasSubKey)
-            {
-                writer.Write(SubKey);
-            }
+            if (hasSubKey) writer.Write(SubKey);
             
             //
             // The defaults are not worth calculating.
@@ -99,7 +91,7 @@ namespace Uchu.World
             
             writer.WriteBit(ShowFlyingLoot);
 
-            writer.Write((uint) Slot);
+            writer.Write(Slot);
         }
     }
 }

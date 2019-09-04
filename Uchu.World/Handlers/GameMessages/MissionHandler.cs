@@ -3,7 +3,7 @@ using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
 {
-    public class QuestGameMessageHandler : HandlerGroup
+    public class MissionHandler : HandlerGroup
     {
         [PacketHandler]
         public async Task RespondToMissionHandler(RespondToMissionMessage message, Player player)

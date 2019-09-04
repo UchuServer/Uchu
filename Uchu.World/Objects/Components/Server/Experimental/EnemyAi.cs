@@ -49,7 +49,7 @@ namespace Uchu.World.Experimental
                 if (ReferenceEquals(target, default))
                 {
                     _baseCombatAi.PerformingAction = false;
-                    _baseCombatAi.Action = CombatAiAction.None;
+                    _baseCombatAi.Action = CombatAiAction.Idle;
                     return;
                 }
                 

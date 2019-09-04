@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -116,6 +117,11 @@ namespace Uchu.World
             return instance;
         }
 
+        public override void Update()
+        {
+            CheckDeathZone();
+        }
+
         public void Message(IGameMessage gameMessage)
         {
             Logger.Debug($"Send {gameMessage} to {EndPoint} from {gameMessage.Associate.ObjectId}");
@@ -139,6 +145,91 @@ namespace Uchu.World
                 Associate = this,
                 Currency = currency
             });
+        }
+
+        private void CheckDeathZone()
+        {
+            // TODO: Remove
+            
+            var smashable = GetComponent<DestructibleComponent>();
+            
+            if (smashable == null || !smashable.Alive) return;
+            
+            switch ((ZoneId) Zone.ZoneInfo.ZoneId)
+            {
+                case ZoneId.VentureExplorerCinematic:
+                    break;
+                case ZoneId.VentureExplorer:
+                    if (Transform.Position.Y <= 560)
+                    {
+                        smashable.Smash(this, this);
+                    }
+                    break;
+                case ZoneId.ReturnToVentureExplorer:
+                    break;
+                case ZoneId.AvantGardens:
+                    break;
+                case ZoneId.AvantGardensSurvival:
+                    break;
+                case ZoneId.SpiderQueenBattle:
+                    break;
+                case ZoneId.BlockYard:
+                    break;
+                case ZoneId.AvantGrove:
+                    break;
+                case ZoneId.NimbusStation:
+                    break;
+                case ZoneId.PetCove:
+                    break;
+                case ZoneId.VertigoLoopRacetrack:
+                    break;
+                case ZoneId.BattleOfNimbusStation:
+                    break;
+                case ZoneId.NimbusRock:
+                    break;
+                case ZoneId.NimbusIsle:
+                    break;
+                case ZoneId.FrostBurgh:
+                    break;
+                case ZoneId.GnarledForest:
+                    break;
+                case ZoneId.CanyonCove:
+                    break;
+                case ZoneId.KeelhaulCanyon:
+                    break;
+                case ZoneId.ChanteyShantey:
+                    break;
+                case ZoneId.ForbiddenValley:
+                    break;
+                case ZoneId.ForbiddenValleyDragon:
+                    break;
+                case ZoneId.DragonmawChasm:
+                    break;
+                case ZoneId.RavenBluff:
+                    break;
+                case ZoneId.Starbase3001:
+                    break;
+                case ZoneId.DeepFreeze:
+                    break;
+                case ZoneId.RobotCity:
+                    break;
+                case ZoneId.MoonBase:
+                    break;
+                case ZoneId.Portabello:
+                    break;
+                case ZoneId.LegoClub:
+                    break;
+                case ZoneId.CruxPrime:
+                    break;
+                case ZoneId.NexusTower:
+                    break;
+                case ZoneId.Ninjago:
+                    break;
+                case ZoneId.FrakjawBattle:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }

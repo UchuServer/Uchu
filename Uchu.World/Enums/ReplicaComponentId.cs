@@ -22,6 +22,7 @@ namespace Uchu.World
         Collectible = 23, // Stats, Collectible
         Pet = 26,
         Character = 4, // Character (Part 1-4)
+        ShootingGallery = 19,
         Inventory = 17,
         Script = 5,
         Skill = 9,

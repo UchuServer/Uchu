@@ -48,6 +48,8 @@ namespace Uchu.World
         /// </summary>
         public const int TicksPerSecondLimit = 60;
 
+        public ZoneId ZoneId => (ZoneId) ZoneInfo.ZoneId;
+
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
@@ -162,7 +164,14 @@ namespace Uchu.World
             using (var writer = new BitWriter(stream))
             {
                 writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
-                writer.Write(_networkIds[gameObject]);
+
+                if (!_networkIds.TryGetValue(gameObject, out var networkId))
+                {
+                    Logger.Error($"Trying to serialize {gameObject}, an object which is not jet constructed,");
+                    return;
+                }
+                
+                writer.Write(networkId);
 
                 gameObject.WriteSerialize(writer);
             }

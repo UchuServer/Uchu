@@ -23,6 +23,7 @@ namespace Uchu.World
         public override void Construct(BitWriter writer)
         {
             if (Disabled) return;
+            
             writer.Write((uint) Effects.Length);
 
             foreach (var effect in Effects)
