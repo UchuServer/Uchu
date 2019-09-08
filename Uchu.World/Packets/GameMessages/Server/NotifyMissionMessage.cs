@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class NotifyMissionMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0xFE;
+        public override GameMessageId GameMessageId => GameMessageId.NotifyMission;
         
         public int MissionId { get; set; }
 

@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class ResurrectMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0xA0;
+        public override GameMessageId GameMessageId => GameMessageId.Resurrect;
 
         public bool ResurrectImminently { get; set; }
         

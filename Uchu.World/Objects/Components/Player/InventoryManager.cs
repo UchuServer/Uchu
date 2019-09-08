@@ -141,7 +141,7 @@ namespace Uchu.World
                         Task.Run(async () =>
 #pragma warning restore 4014
                         {
-                            await questInventory.UpdateLotTaskAsync(lot, MissionTaskType.ObtainItem);
+                            await questInventory.UpdateObjectTaskAsync(MissionTaskType.ObtainItem, lot);
                         });
                     }
 

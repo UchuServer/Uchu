@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class ParseChatMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x352;
+        public override GameMessageId GameMessageId => GameMessageId.ParseChatMessage;
 
         public int ClientState { get; set; }
         

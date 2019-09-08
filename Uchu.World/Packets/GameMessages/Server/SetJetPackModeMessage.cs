@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class SetJetPackModeMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x231;
+        public override GameMessageId GameMessageId => GameMessageId.SetJetPackMode;
         
         public bool BypassChecks { get; set; }
         

@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class SyncSkillMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x479;
+        public override GameMessageId GameMessageId => GameMessageId.SyncSkill;
         
         public bool Done { get; set; }
         

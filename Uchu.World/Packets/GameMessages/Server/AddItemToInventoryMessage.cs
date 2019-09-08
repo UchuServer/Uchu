@@ -7,7 +7,7 @@ namespace Uchu.World
 {
     public class AddItemToInventoryMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0xE3;
+        public override GameMessageId GameMessageId => GameMessageId.AddItemToInventoryClientSync;
         
         public bool IsBound { get; set; }
         

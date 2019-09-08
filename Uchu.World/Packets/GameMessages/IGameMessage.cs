@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public interface IGameMessage : IPacket
     {
-        ushort GameMessageId { get; }
+        GameMessageId GameMessageId { get; }
 
         GameObject Associate { get; set; }
     }

@@ -248,9 +248,9 @@ namespace Uchu.World
             }
         }
 
-        public async Task UpdateObjectTask(MissionTaskType type, GameObject gameObject)
+        public async Task UpdateObjectTaskAsync(MissionTaskType type, Lot lot, GameObject gameObject = default)
         {
-            Logger.Information($"{type} {gameObject}");
+            Logger.Information($"{type} {lot}");
             
             using (var ctx = new UchuContext())
             using (var cdClient = new CdClientContext())
@@ -291,7 +291,7 @@ namespace Uchu.World
                     //
                     
                     var task = tasks.FirstOrDefault(missionTask =>
-                        MissionParser.GetTargets(missionTask).Contains(gameObject.Lot) &&
+                        MissionParser.GetTargets(missionTask).Contains(lot) &&
                         mission.Tasks.Exists(a => a.TaskId == missionTask.Uid)
                     );
 
@@ -318,8 +318,8 @@ namespace Uchu.World
                         case MissionTaskType.Script:
                             
                             // Start this task value array
-                            if (!characterTask.Values.Contains(gameObject.Lot))
-                                characterTask.Values.Add(gameObject.Lot);
+                            if (!characterTask.Values.Contains(lot))
+                                characterTask.Values.Add(lot);
 
                             // Send update to client
                             MessageUpdateMissionTask(
@@ -331,6 +331,12 @@ namespace Uchu.World
                         case MissionTaskType.QuickBuild:
                             break;
                         case MissionTaskType.Collect:
+                            if (gameObject == default)
+                            {
+                                Logger.Error($"{type} is only valid then {nameof(gameObject)} != null");
+                                return;
+                            };
+                            
                             var component = gameObject.GetComponent<CollectibleComponent>();
 
                             // Start this task value array
@@ -345,28 +351,22 @@ namespace Uchu.World
                                     (float) (component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8))
                                 }
                             );
-                            
-                            break;
-                        case MissionTaskType.GoToNpc:
-                            break;
-                        case MissionTaskType.UseEmote:
-                            break;
-                        case MissionTaskType.UseConsumable:
-                            break;
-                        case MissionTaskType.UseSkill:
-                            break;
-                        case MissionTaskType.ObtainItem:
+
                             break;
                         case MissionTaskType.Discover:
                             break;
                         case MissionTaskType.None:
                             break;
+                        case MissionTaskType.GoToNpc:
                         case MissionTaskType.MinigameAchievement:
-                            break;
+                        case MissionTaskType.UseEmote:
+                        case MissionTaskType.UseConsumable:
+                        case MissionTaskType.UseSkill:
+                        case MissionTaskType.ObtainItem:
                         case MissionTaskType.Interact:
                             // Start this task value array
-                            if (!characterTask.Values.Contains(gameObject.Lot))
-                                characterTask.Values.Add(gameObject.Lot);
+                            if (!characterTask.Values.Contains(lot))
+                                characterTask.Values.Add(lot);
 
                             // Send update to client
                             MessageUpdateMissionTask(
@@ -409,7 +409,7 @@ namespace Uchu.World
                 // ReSharper disable once LoopCanBeConvertedToQuery
                 foreach (var missionTask in cdClient.MissionTasksTable)
                 {
-                    if (MissionParser.GetTargets(missionTask).Contains(gameObject.Lot))
+                    if (MissionParser.GetTargets(missionTask).Contains(lot))
                         otherTasks.Add(missionTask);
                 }
 
@@ -506,7 +506,7 @@ namespace Uchu.World
                     var characterTask = characterMission.Tasks.Find(t => t.TaskId == task.Uid);
                     
                     // Start this task value array
-                    if (!characterTask.Values.Contains(gameObject.Lot)) characterTask.Values.Add(gameObject.Lot);
+                    if (!characterTask.Values.Contains(lot)) characterTask.Values.Add(lot);
 
                     await ctx.SaveChangesAsync();
 
@@ -530,119 +530,20 @@ namespace Uchu.World
             }
         }
 
-        public async Task UpdateLotTaskAsync(Lot lot, MissionTaskType type)
-        {
-            using (var ctx = new UchuContext())
-            using (var cdClient = new CdClientContext())
-            {
-                var character = await ctx.Characters
-                    .Include(c => c.Missions)
-                    .ThenInclude(t => t.Tasks)
-                    .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
-
-                foreach (var mission in character.Missions.Where(mission =>
-                    mission.State == (int) MissionState.Active ||
-                    mission.State == (int) MissionState.CompletedActive))
-                {
-                    var tasks = cdClient.MissionTasksTable.Where(t => t.Id == mission.Id).ToArray();
-
-                    var task = tasks.FirstOrDefault(t =>
-                        MissionParser.GetTargets(t).Contains(lot) &&
-                        mission.Tasks.Exists(a => a.TaskId == t.Uid)
-                    );
-                    
-                    if (task == default) continue;
-
-                    var characterTask = mission.Tasks.Find(t => t.TaskId == task.Uid);
-
-                    if (!characterTask.Values.Contains(lot)) characterTask.Values.Add(lot);
-
-                    Debug.Assert(task.Id != null, "task.Id != null");
-                    MessageUpdateMissionTask(
-                        (int) task.Id,
-                        tasks.IndexOf(task),
-                        new[] {(float) characterTask.Values.Count}
-                    );
-
-                    await ctx.SaveChangesAsync();
-                }
-                
-                var otherTasks = new List<MissionTasks>();
-
-                foreach (var missionTask in cdClient.MissionTasksTable)
-                {
-                    if (MissionParser.GetTargets(missionTask).Contains(lot))
-                        otherTasks.Add(missionTask);
-                }
-
-                foreach (var task in otherTasks)
-                {
-                    var mission = cdClient.MissionsTable.First(m => m.Id == task.Id);
-
-                    if (mission.OfferobjectID != -1 || mission.TargetobjectID != -1 || (mission.IsMission ?? true) ||
-                        task.TaskType != (int) type) continue;
-
-                    var tasks = cdClient.MissionTasksTable.Where(m => m.Id == mission.Id).ToArray();
-
-                    if (!character.Missions.Exists(m => m.MissionId == mission.Id))
-                    {
-                        if (!MissionParser.CheckPrerequiredMissionsAsync(mission.PrereqMissionID,
-                            GetCompletedMissions()))
-                        {
-                            continue;
-                        }
-
-                        Debug.Assert(mission.Id != null, "mission.Id != null");
-                        character.Missions.Add(new Mission
-                        {
-                            MissionId = (int) mission.Id,
-                            State = (int) MissionState.Active,
-                            Tasks = tasks.Select(t =>
-                            {
-                                Debug.Assert(t.Uid != null, "t.Uid != null");
-                                return new MissionTask
-                                {
-                                    TaskId = (int) t.Uid,
-                                    Values = new List<float>()
-                                };
-                            }).ToList()
-                        });
-                    }
-
-                    var charMission = character.Missions.Find(m => m.MissionId == mission.Id);
-
-                    if (charMission.State != (int) MissionState.Active ||
-                        charMission.State != (int) MissionState.CompletedActive) continue;
-
-                    var charTask = charMission.Tasks.Find(t => t.TaskId == task.Uid);
-
-                    if (!charTask.Values.Contains(lot)) charTask.Values.Add(lot);
-
-                    await ctx.SaveChangesAsync();
-
-                    MessageUpdateMissionTask(charMission.MissionId, tasks.IndexOf(task),
-                        new[] {(float) charTask.Values.Count});
-
-                    if (await MissionParser.AllTasksCompletedAsync(charMission))
-                        await CompleteMissionAsync(charMission.MissionId);
-                }
-            }
-        }
-
-        private static MissionTask GetTask(Character character, MissionTasks t)
+        private static MissionTask GetTask(Character character, MissionTasks task)
         {
             var values = new List<float>();
 
-            var targets = MissionParser.GetTargets(t);
+            var targets = MissionParser.GetTargets(task);
 
             values.AddRange(targets
                 .Where(lot => character.Items.Exists(i => i.LOT == lot))
                 .Select(lot => (float) (int) lot));
 
-            Debug.Assert(t.Uid != null, "t.Uid != null");
+            Debug.Assert(task.Uid != null, "t.Uid != null");
             return new MissionTask
             {
-                TaskId = t.Uid.Value,
+                TaskId = task.Uid.Value,
                 Values = values
             };
         }

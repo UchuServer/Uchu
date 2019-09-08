@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -18,7 +17,6 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            Logger.Information($"{levelObject.Lot} is Quest Giver");
             using (var ctx = new CdClientContext())
             {
                 var components = ctx.ComponentsRegistryTable.Where(

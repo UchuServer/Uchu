@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+using System.Timers;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -9,8 +11,27 @@ namespace Uchu.World.Behaviors
         
         public override async Task Serialize(BitReader reader)
         {
-            // TODO
+            // TODO: Fix
             return;
+            
+            var time = await GetParameter(BehaviorId, "new_delay");
+
+            var timer = new Timer
+            {
+                Interval = (time.Value ?? 0) * 1000,
+                AutoReset = false
+            };
+
+            timer.Elapsed += Executioner.ActiveChainCallback;
+            
+            Executioner.ActiveChainTimer.Enabled = false;
+            Executioner.ActiveChainTimer.Dispose();
+
+            Executioner.ActiveChainTimer = timer;
+
+            timer.Start();
+
+            Logger.Debug($"Changed chain timer to {timer.Interval}");
         }
     }
 }

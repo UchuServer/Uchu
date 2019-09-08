@@ -8,7 +8,11 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)
         {
-            await player.GetComponent<QuestInventory>().UpdateObjectTask(MissionTaskType.Interact, message.TargetObject);
+            await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                MissionTaskType.Interact,
+                message.TargetObject.Lot,
+                message.TargetObject
+            );
             
             if (message.IsMultiInteract)
             {

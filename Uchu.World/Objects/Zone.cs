@@ -63,6 +63,8 @@ namespace Uchu.World
         {
             var objects = ZoneInfo.ScenesInfo.SelectMany(s => s.Objects).ToArray();
             
+            Logger.Information($"Loading {objects.Length} objects for {ZoneId}");
+            
             foreach (var levelObject in objects)
             {
                 var obj = GameObject.Instantiate(levelObject, this);
@@ -77,6 +79,8 @@ namespace Uchu.World
                 var spawner = obj.GetComponent<SpawnerComponent>();
                 spawner?.Spawn();
             }
+            
+            Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
 
             Task.Run(async () => { await ExecuteUpdate(); });
         }
@@ -117,7 +121,6 @@ namespace Uchu.World
         public void SendConstruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
         {
             if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
-            if (!recipients.Any()) return;
 
             if (!_networkIds.ContainsKey(gameObject))
             {
@@ -149,6 +152,7 @@ namespace Uchu.World
             }
 
             var data = stream.ToArray();
+            
             foreach (var endPoint in recipients)
             {
                 Server.Send(data, endPoint);
@@ -164,10 +168,10 @@ namespace Uchu.World
             using (var writer = new BitWriter(stream))
             {
                 writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
-
+                
                 if (!_networkIds.TryGetValue(gameObject, out var networkId))
                 {
-                    Logger.Error($"Trying to serialize {gameObject}, an object which is not jet constructed,");
+                    Logger.Error($"Trying to serialize unconstructed object {gameObject}");
                     return;
                 }
                 

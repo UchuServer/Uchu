@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Client;
         
-        public abstract ushort GameMessageId { get; }
+        public abstract GameMessageId GameMessageId { get; }
         
         public GameObject Associate { get; set; }
 
@@ -27,7 +27,7 @@ namespace Uchu.World
         public override void SerializePacket(BitWriter writer)
         {
             writer.Write(Associate);
-            writer.Write(GameMessageId);
+            writer.Write((ushort) GameMessageId);
 
             SerializeMessage(writer);
         }

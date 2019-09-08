@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class PickupItemMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x8B;
+        public override GameMessageId GameMessageId => GameMessageId.PickupItem;
 
         public GameObject Loot { get; set; }
         

@@ -96,18 +96,18 @@ namespace Uchu.World
                     await instance.Serialize(reader);
                 }
 
-                await Player.GetComponent<QuestInventory>().UpdateLotTaskAsync(
-                    message.SkillId, MissionTaskType.UseSkill
+                await Player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                    MissionTaskType.UseSkill, message.SkillId
                 );
             }
         }
 
         public async Task SyncUserSkillAsync(SyncSkillMessage message)
         {
-            Zone.BroadcastMessage(new SyncSkillMessage
+            Zone.BroadcastMessage(new EchoSyncSkillMessage
             {
                 Associate = GameObject,
-                BehaviourHandle = message.BehaviourHandle,
+                BehaviorHandle = message.BehaviourHandle,
                 Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle

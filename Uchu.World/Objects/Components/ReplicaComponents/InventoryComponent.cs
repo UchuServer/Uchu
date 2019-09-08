@@ -48,7 +48,7 @@ namespace Uchu.World
                         i => i.Id == itemRegistryEntry.Componentid
                     );
                     
-                    Items.Add(itemComponent.EquipLocation, new InventoryItem
+                    Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
                     {
                         InventoryItemId = Utils.GenerateObjectId(),
                         Count = (long) item.Count,

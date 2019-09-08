@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class RequestDieMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x26;
+        public override GameMessageId GameMessageId => GameMessageId.RequestDie;
         
         public bool UnknownFlag { get; set; }
 

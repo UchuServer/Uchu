@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class ToggleFreeCamModeMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x1F8;
+        public override GameMessageId GameMessageId => GameMessageId.ToggleFreeCamMode;
         
         public override void SerializeMessage(BitWriter writer)
         {

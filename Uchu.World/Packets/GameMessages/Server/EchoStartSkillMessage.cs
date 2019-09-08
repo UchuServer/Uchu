@@ -6,7 +6,7 @@ namespace Uchu.World
 {
     public class EchoStartSkillMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x76;
+        public override GameMessageId GameMessageId => GameMessageId.EchoStartSkill;
         
         public bool UsedMouse { get; set; }
         

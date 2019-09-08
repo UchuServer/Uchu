@@ -24,7 +24,9 @@ namespace Uchu.World
         public SpawnerComponent SpawnerObject { get; private set; }
 
         public string Name { get; set; }
-
+        
+        public string ClientName { get; private set; }
+        
         public Transform Transform => _components.First(c => c is Transform) as Transform;
 
         private readonly List<Component> _components = new List<Component>();
@@ -189,7 +191,7 @@ namespace Uchu.World
 
         public override string ToString()
         {
-            return $"[{ObjectId}] \"{Name}\"";
+            return $"[{ObjectId}] \"{(Name == "" ? ClientName : Name)}\"";
         }
 
         #endregion
@@ -197,7 +199,7 @@ namespace Uchu.World
         #region Static
 
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, int lot = default, SpawnerComponent spawner = default)
+            Quaternion rotation = default, long objectId = default, Lot lot = default, SpawnerComponent spawner = default)
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
@@ -207,6 +209,12 @@ namespace Uchu.World
                 instance.Lot = lot;
 
                 instance.Name = name;
+
+                using (var cdClient = new CdClientContext())
+                {
+                    var obj = cdClient.ObjectsTable.FirstOrDefault(o => o.Id == lot);
+                    instance.ClientName = obj?.Name;
+                }
 
                 instance.SpawnerObject = spawner;
 

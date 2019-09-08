@@ -46,16 +46,18 @@ namespace Uchu.World.Handlers
                     
                     return;
                 }
-
+                
                 var zoneId = (ZoneId) character.LastZone;
 
                 if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
                 
+                var worldServer = (WorldServer) Server;
+
                 Server.Send(new WorldInfoPacket
                 {
                     ZoneId = zoneId,
                     Checksum = Zone.GetChecksum(zoneId),
-                    SpawnPosition = (await ((WorldServer) Server).GetZone(zoneId)).ZoneInfo.SpawnPosition
+                    SpawnPosition = (await worldServer.GetZone(zoneId)).ZoneInfo.SpawnPosition
                 }, endPoint);
             }
         }

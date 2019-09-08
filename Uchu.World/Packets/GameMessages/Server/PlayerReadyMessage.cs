@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class PlayerReadyMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x1FD;
+        public override GameMessageId GameMessageId => GameMessageId.PlayerReady;
         
         public override void SerializeMessage(BitWriter writer)
         {

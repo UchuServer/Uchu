@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class DieMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x25;
+        public override GameMessageId GameMessageId => GameMessageId.Die;
         
         public bool ClientDeath { get; set; }
 

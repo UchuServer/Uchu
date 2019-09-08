@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class EquipItemMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0xE7;
+        public override GameMessageId GameMessageId => GameMessageId.EquipInventory;
         
         public bool IgnoreCooldown { get; set; }
         

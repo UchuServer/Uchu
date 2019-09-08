@@ -25,9 +25,9 @@ namespace Uchu.Core.IO
             }
         }
 
-        public async Task<byte[]> ReadBytesAsync(string path)
+        public async Task<byte[]> ReadBytesAsync(string path, bool includeNameSpace = true)
         {
-            using (var stream = GetStream(path))
+            using (var stream = GetStream(path, includeNameSpace))
             {
                 var bytes = new byte[stream.Length];
 

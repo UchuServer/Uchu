@@ -9,14 +9,14 @@ namespace Uchu.World
 
         public override uint PacketId => 0xC;
         
-        public abstract ushort GameMessageId { get; }
+        public abstract GameMessageId GameMessageId { get; }
         
         public GameObject Associate { get; set; }
 
         public override void SerializePacket(BitWriter writer)
         {
             writer.Write(Associate);
-            writer.Write(GameMessageId);
+            writer.Write((ushort) GameMessageId);
 
             SerializeMessage(writer);
         }

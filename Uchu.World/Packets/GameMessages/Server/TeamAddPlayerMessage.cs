@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class TeamAddPlayerMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x617;
+        public override GameMessageId GameMessageId => GameMessageId.TeamAddPlayer;
         
         public bool IsFreeTrail { get; set; }
         

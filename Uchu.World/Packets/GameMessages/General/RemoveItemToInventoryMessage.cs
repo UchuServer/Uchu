@@ -6,7 +6,7 @@ namespace Uchu.World
 {
     public class RemoveItemToInventoryMessage : GeneralGameMessage
     {
-        public override ushort GameMessageId => 0xE6;
+        public override GameMessageId GameMessageId => GameMessageId.RemoveItemFromInventory;
         
         public bool Confirmed { get; set; } = false;
 

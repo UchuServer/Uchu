@@ -34,6 +34,7 @@ namespace Uchu.Core
         CruxPrime = 1800,
         NexusTower = 1900,
         Ninjago = 2000,
-        FrakjawBattle
+        FrakjawBattle,
+        NimbusStationWinterRacetrack = 1261
     }
 }

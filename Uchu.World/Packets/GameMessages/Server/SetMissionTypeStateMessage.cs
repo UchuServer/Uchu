@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class SetMissionTypeStateMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x353;
+        public override GameMessageId GameMessageId => GameMessageId.SetMissionTypeState;
 
         public MissionLockState LockState { get; set; } = MissionLockState.New;
         

@@ -61,7 +61,7 @@ namespace Uchu.World.Parsers
 
         public async Task<LevelObject[]> ParseAsync(string path)
         {
-            var data = await _resources.ReadBytesAsync(path);
+            var data = await _resources.ReadBytesAsync(path, false);
             var objects = new List<LevelObject>();
             var stream = new MemoryStream(data);
 
@@ -101,7 +101,7 @@ namespace Uchu.World.Parsers
                 }
                 else
                 {
-                    Logger.Error($"{path} is not a valid LvL file.");
+                    return objects.ToArray();
                 }
             }
 

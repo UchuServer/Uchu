@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Timers;
 using RakDotNet.IO;
 using Uchu.Core;
 
@@ -19,9 +19,22 @@ namespace Uchu.World.Behaviors
             
             Logger.Debug($"Chain: {delay.Value}s delay");
 
-            // await Task.Delay((int) ((delay.Value ?? 0) * 1000));
+            var timer = new Timer
+            {
+                Interval = (delay.Value ?? 0) * 1000,
+                AutoReset = false
+            };
 
-            if (behaviorParam.Value != null) await StartBranch((int) behaviorParam.Value, reader);
+            Executioner.ActiveChainCallback = async (sender, args) =>
+            {
+                if (behaviorParam.Value != null) await StartBranch((int) behaviorParam.Value, reader);
+            };
+
+            timer.Elapsed += Executioner.ActiveChainCallback;
+
+            Executioner.ActiveChainTimer = timer;
+
+            timer.Start();
         }
     }
 }

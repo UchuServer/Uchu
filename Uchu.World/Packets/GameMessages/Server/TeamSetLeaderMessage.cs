@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class TeamSetLeaderMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x615;
+        public override GameMessageId GameMessageId => GameMessageId.TeamSetLeader;
         
         public Player NewLeader { get; set; }
         

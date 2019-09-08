@@ -15,7 +15,7 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    using GameMessageHandlerMap = Dictionary<ushort, Handler>;
+    using GameMessageHandlerMap = Dictionary<GameMessageId, Handler>;
     
     public class WorldServer : Server
     {
@@ -49,13 +49,28 @@ namespace Uchu.World
                     break;
                 }
             };
-            
-            if (!preload || zones == default) return;
 
-            foreach (var zoneId in zones)
+            Task.Run(async () =>
             {
-                Task.Run(async () => { await GetZone(zoneId); });
-            }
+                await _parser.LoadZoneData();
+                
+                if (!preload)
+                {
+                    foreach (var zoneId in _parser.Zones.Keys.Where(_zoneIds.Contains))
+                    {
+                        Logger.Information($"Ready to load {zoneId}");
+                    }
+                    
+                    return;
+                }
+
+                foreach (var zoneId in _parser.Zones.Keys.Where(_zoneIds.Contains))
+                {
+                    Logger.Information($"Preloading {zoneId}");
+
+                    await GetZone(zoneId);
+                }
+            });
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)
@@ -65,12 +80,17 @@ namespace Uchu.World
                 Logger.Error($"{zoneId} is not in the Zone Table for this server.");
                 return default;
             }
-            
+
             if (Zones.Any(z => z.ZoneId == zoneId))
                 return Zones.First(z => z.ZoneId == zoneId);
             
-            var info = await _parser.ParseAsync(ZoneParser.Zones[zoneId]);
+            Logger.Information($"Starting {zoneId}");
 
+            if (_parser.Zones == default)
+                await _parser.LoadZoneData();
+            
+            var info = _parser.Zones[zoneId];
+            
             // Create new Zone
             var zone = new Zone(info, this);
             Zones.Add(zone);
@@ -330,21 +350,21 @@ namespace Uchu.World
 
         private void HandleGameMessage(long objectId, ushort messageId, BitReader reader, IPEndPoint endPoint)
         {
-            if (!_gameMessageHandlerMap.TryGetValue(messageId, out var messageHandler))
+            if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
-                Logger.Warning($"No handler registered for GameMessage (0x{messageId:x})!");
+                Logger.Warning($"No handler registered for GameMessage: {(GameMessageId) messageId}!");
                 
                 return;
             }
 
             var session = SessionCache.GetSession(endPoint);
             
-            Logger.Debug($"Received {messageHandler.Packet.GetType().FullName}");
+            Logger.Debug($"Received {((IGameMessage) messageHandler.Packet).GameMessageId}");
 
             var player = Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
                 .FirstOrDefault(p => p.EndPoint.Equals(endPoint));
 
-            if (ReferenceEquals(player, null))
+            if (player == default)
             {
                 Logger.Error($"{endPoint} is not logged in but sent a GameMessage.");
                 return;
@@ -352,7 +372,7 @@ namespace Uchu.World
             
             var associate = player.Zone.GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
             
-            if (ReferenceEquals(associate, null))
+            if (associate == default)
             {
                 Logger.Error($"{objectId} is not a valid object in {endPoint}'s zone.");
                 return;

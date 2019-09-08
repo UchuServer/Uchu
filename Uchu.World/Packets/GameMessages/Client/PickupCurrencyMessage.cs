@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class PickupCurrencyMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x89;
+        public override GameMessageId GameMessageId => GameMessageId.PickupCurrency;
         
         public uint Currency { get; set; }
         

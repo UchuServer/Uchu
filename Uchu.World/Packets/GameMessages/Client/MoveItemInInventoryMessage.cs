@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class MoveItemInInventoryMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0XE0;
+        public override GameMessageId GameMessageId => GameMessageId.MoveItemInInventory;
 
         public InventoryType DestinationInventoryType { get; set; } = InventoryType.Invalid;
         

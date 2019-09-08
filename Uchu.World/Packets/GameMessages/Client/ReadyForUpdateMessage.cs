@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class ReadyForUpdateMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0x378;
+        public override GameMessageId GameMessageId => GameMessageId.ReadyForUpdates;
 
         public GameObject GameObject { get; set; }
 

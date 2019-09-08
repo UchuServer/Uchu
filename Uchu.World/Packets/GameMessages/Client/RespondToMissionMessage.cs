@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class RespondToMissionMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0xF9;
+        public override GameMessageId GameMessageId => GameMessageId.RespondToMission;
         
         public int MissionId { get; set; }
         

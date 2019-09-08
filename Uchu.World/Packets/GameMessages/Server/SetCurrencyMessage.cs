@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class SetCurrencyMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x85;
+        public override GameMessageId GameMessageId => GameMessageId.SetCurrency;
         
         public long Currency { get; set; }
 

@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class UnEquipItemMessage : ClientGameMessage
     {
-        public override ushort GameMessageId => 0xE9;
+        public override GameMessageId GameMessageId => GameMessageId.UnEquipInventory;
         
         public bool EvenIfDead { get; set; }
         

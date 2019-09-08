@@ -7,7 +7,7 @@ namespace Uchu.World
 {
     public class TransferToZoneMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x204;
+        public override GameMessageId GameMessageId => GameMessageId.TransferToZone;
         
         public bool CheckTransferAllowed { get; set; }
         

@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class DropClientLootMessage : ServerGameMessage
     {
-        public override ushort GameMessageId => 0x1E;
+        public override GameMessageId GameMessageId => GameMessageId.DropClientLoot;
         
         public bool UsePosition { get; set; }
         
