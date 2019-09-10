@@ -10,8 +10,6 @@ namespace Uchu.World
     {
         public GameObject VehicleObject { get; set; }
 
-        public uint Level { get; set; }
-        
         public Character Character { get; set; }
 
         public bool IsPvP { get; set; } = false;
@@ -123,11 +121,11 @@ namespace Uchu.World
         
         private void WritePart2(BitWriter writer)
         {
-            var hasLevel = Level != 0;
+            var hasLevel = Player.Level != 0;
 
             writer.WriteBit(hasLevel);
 
-            if (hasLevel) writer.Write(Level);
+            if (hasLevel) writer.Write((uint) Player.Level);
         }
         
         private void WritePart3(BitWriter writer)

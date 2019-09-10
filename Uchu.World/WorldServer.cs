@@ -105,6 +105,8 @@ namespace Uchu.World
 
             uint count;
             int lot;
+            int delta;
+            bool state;
             switch (arguments?[0].ToLower())
             {
                 case "give":
@@ -159,14 +161,14 @@ namespace Uchu.World
                         return "coin <delta>";
                     }
 
-                    if (!int.TryParse(arguments[1], out var delta) || delta == default)
+                    if (!int.TryParse(arguments[1], out delta) || delta == default)
                     {
                         return "Invalid <delta>";
                     }
 
                     player.Currency += delta;
 
-                    return $"Successfully {(delta > 0 ? "added" : "removed")} coins";
+                    return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} coins";
                 case "spawn":
                     if (arguments.Length != 2 || arguments.Length > 8)
                     {
@@ -231,7 +233,6 @@ namespace Uchu.World
                         return "fly <state(on/off)>";
                     }
 
-                    bool state;
                     switch (arguments[1].ToLower())
                     {
                         case "true":
@@ -288,6 +289,104 @@ namespace Uchu.World
 
                         return info.ToString();
                     }
+                case "score":
+                    if (arguments.Length != 2)
+                    {
+                        return "score <delta>";
+                    }
+                    
+                    if (!int.TryParse(arguments[1], out delta))
+                    {
+                        return "Invalid <delta>";
+                    }
+
+                    player.UniverseScore += delta;
+                    
+                    player.Serialize();
+                    
+                    return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} score";
+                case "level":
+                    if (arguments.Length != 2)
+                    {
+                        return "level <level>";
+                    }
+                    
+                    if (!long.TryParse(arguments[1], out var level))
+                    {
+                        return "Invalid <level>";
+                    }
+
+                    player.Level = level;
+                    
+                    player.Serialize();
+
+                    return $"Successfully set your level to {level}";
+                case "pvp":
+                    if (arguments.Length != 2)
+                    {
+                        return "pvp <state(on/off)>";
+                    }
+
+                    switch (arguments[1].ToLower())
+                    {
+                        case "true":
+                        case "on":
+                            state = true;
+                            break;
+                        case "false":
+                        case "off":
+                            state = false;
+                            break;
+                        default:
+                            return "Invalid <state(on/off)>";
+                    }
+
+                    player.GetComponent<CharacterComponent>().IsPvP = state;
+                    
+                    player.Serialize();
+
+                    return $"Successfully set your pvp state to {state}";
+                case "gm":
+                    if (arguments.Length != 2)
+                    {
+                        return "gm <state(on/off)>";
+                    }
+
+                    switch (arguments[1].ToLower())
+                    {
+                        case "true":
+                        case "on":
+                            state = true;
+                            break;
+                        case "false":
+                        case "off":
+                            state = false;
+                            break;
+                        default:
+                            return "Invalid <state(on/off)>";
+                    }
+                    
+                    player.GetComponent<CharacterComponent>().IsGameMaster = state;
+                    
+                    player.Serialize();
+                    
+                    return $"Successfully set your GameMaster state to {state}";
+                case "gmlevel":
+                    if (arguments.Length != 2)
+                    {
+                        return "gmlevel <level>";
+                    }
+
+                    if (!byte.TryParse(arguments[1], out var gmlevel))
+                    {
+                        return "Invalid <level>";
+                    }
+
+                    player.GetComponent<CharacterComponent>().GameMasterLevel = gmlevel;
+                    
+                    player.Serialize();
+
+                    return $"Successfully set your GameMaster level to {gmlevel}";
                 default:
                     return AdminCommand(command, false);
             }

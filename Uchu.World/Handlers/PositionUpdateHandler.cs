@@ -48,8 +48,6 @@ namespace Uchu.World.Handlers
 
             player.Zone.SendSerialization(player, player.Zone.Players.Where(
                 p => p != player
-            ).Select(
-                p => p.EndPoint
             ).ToArray());
         }
     }

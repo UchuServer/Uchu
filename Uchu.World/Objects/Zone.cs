@@ -29,11 +29,7 @@ namespace Uchu.World
         public readonly uint CloneId;
 
         public new readonly Server Server;
-
-        private readonly Dictionary<GameObject, ushort> _networkIds = new Dictionary<GameObject, ushort>();
-
-        private readonly List<ushort> _droppedIds = new List<ushort>();
-
+        
         private int _ticks;
 
         private long _passedTickTime;
@@ -91,123 +87,96 @@ namespace Uchu.World
         {
             Players.Add(player);
 
-            // TODO: Add filters
             foreach (var gameObject in GameObjects.Where(g => g.Constructed))
             {
-                SendConstruction(gameObject, new List<IPEndPoint> {player.EndPoint});
+                SendConstruction(gameObject, new [] {player});
             }
         }
 
         public void ConstructObject(GameObject gameObject)
         {
-            // TODO: Add filters
-            SendConstruction(gameObject, Players.Select(p => p.EndPoint).ToArray());
+            SendConstruction(gameObject, Players);
         }
 
         public void UpdateObject(GameObject gameObject)
         {
-            // TODO: Add filters
-            SendSerialization(gameObject, Players.Select(p => p.EndPoint).ToArray());
+            SendSerialization(gameObject, Players);
         }
 
         public void DestroyObject(GameObject gameObject)
         {
             if (gameObject is Player player) Players.Remove(player);
             
-            // TODO: Add filters
-            SendDestruction(gameObject, Players.Select(p => p.EndPoint).ToArray());
+            SendDestruction(gameObject, Players);
         }
 
-        public void SendConstruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendConstruction(GameObject gameObject, ICollection<Player> recipients = null)
         {
-            if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
+            if (recipients == null) recipients = Players;
 
-            if (!_networkIds.ContainsKey(gameObject))
+            foreach (var recipient in recipients)
             {
-                ushort netId;
-                if (_droppedIds.Any())
-                {
-                    netId = _droppedIds.First();
-                    _droppedIds.RemoveAt(0);
-                }
-                else
-                {
-                    netId = (ushort) (_networkIds.Count + 1);
-                }
+                var id = recipient.Perspective.Reveal(gameObject);
                 
-                _networkIds.Add(gameObject, netId);
-            }
-
-            var networkId = _networkIds[gameObject];
+                var stream = new MemoryStream();
             
-            var stream = new MemoryStream();
-            
-            using (var writer = new BitWriter(stream))
-            {
-                writer.Write((byte) MessageIdentifiers.ReplicaManagerConstruction);
-                writer.WriteBit(true);
-                writer.Write(networkId);
+                using (var writer = new BitWriter(stream))
+                {
+                    writer.Write((byte) MessageIdentifiers.ReplicaManagerConstruction);
+                    
+                    writer.WriteBit(true);
+                    writer.Write(id);
 
-                gameObject.WriteConstruct(writer);
-            }
+                    gameObject.WriteConstruct(writer);
+                }
 
-            var data = stream.ToArray();
-            
-            foreach (var endPoint in recipients)
-            {
-                Server.Send(data, endPoint);
+                Server.Send(stream, recipient.EndPoint);
             }
         }
 
-        public void SendSerialization(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendSerialization(GameObject gameObject, ICollection<Player> recipients = null)
         {
-            if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
+            if (recipients == null) recipients = Players;
             
-            var stream = new MemoryStream();
-
-            using (var writer = new BitWriter(stream))
+            foreach (var recipient in recipients)
             {
-                writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
+                if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
                 
-                if (!_networkIds.TryGetValue(gameObject, out var networkId))
+                var stream = new MemoryStream();
+            
+                using (var writer = new BitWriter(stream))
                 {
-                    Logger.Error($"Trying to serialize unconstructed object {gameObject}");
-                    return;
+                    writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
+                    
+                    writer.Write(id);
+
+                    gameObject.WriteSerialize(writer);
                 }
-                
-                writer.Write(networkId);
 
-                gameObject.WriteSerialize(writer);
-            }
-
-            var data = stream.GetBuffer();
-            foreach (var endPoint in recipients)
-            {
-                Server.Send(data, endPoint);
+                Server.Send(stream, recipient.EndPoint);
             }
         }
 
-        public void SendDestruction(GameObject gameObject, ICollection<IPEndPoint> recipients = null)
+        public void SendDestruction(GameObject gameObject, ICollection<Player> recipients = null)
         {
-            if (recipients == null) recipients = Players.Select(p => p.EndPoint).ToArray();
+            if (recipients == null) recipients = Players;
 
-            if (!_networkIds.TryGetValue(gameObject, out var netId)) return;
-            
-            _droppedIds.Add(netId);
-            _networkIds.Remove(gameObject);
-            
-            var stream = new MemoryStream();
-            
-            using (var writer = new BitWriter(stream))
+            foreach (var recipient in recipients)
             {
-                writer.Write((byte) MessageIdentifiers.ReplicaManagerDestruction);
-                writer.Write(netId);
-            }
+                if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
+                
+                var stream = new MemoryStream();
+            
+                using (var writer = new BitWriter(stream))
+                {
+                    writer.Write((byte) MessageIdentifiers.ReplicaManagerDestruction);
+                    
+                    writer.Write(id);
+                }
 
-            var data = stream.GetBuffer();
-            foreach (var endPoint in recipients)
-            {
-                Server.Send(data, endPoint);
+                Server.Send(stream, recipient.EndPoint);
+
+                recipient.Perspective.Drop(gameObject);
             }
         }
 

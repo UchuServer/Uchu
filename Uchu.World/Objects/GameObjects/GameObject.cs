@@ -27,7 +27,7 @@ namespace Uchu.World
         
         public string ClientName { get; private set; }
         
-        public Transform Transform => _components.First(c => c is Transform) as Transform;
+        public virtual Transform Transform => _components.First(c => c is Transform) as Transform;
 
         private readonly List<Component> _components = new List<Component>();
 
@@ -143,6 +143,14 @@ namespace Uchu.World
             Zone.UpdateObject(this);
         }
 
+        /// <summary>
+        /// Called when this GameObject is constructed for the first time.
+        /// </summary>
+        public virtual void Start()
+        {
+            
+        }
+        
         public override void End()
         {
             foreach (var component in _components)
@@ -175,6 +183,13 @@ namespace Uchu.World
             Constructed = true;
             
             Zone.ConstructObject(this);
+            
+            Start();
+
+            foreach (var component in _components)
+            {
+                component.Start();
+            }
         }
 
         #region Operators
@@ -196,8 +211,10 @@ namespace Uchu.World
 
         #endregion
 
-        #region Static
-
+        #region Instaniate
+        
+        #region From Raw
+        
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
             Quaternion rotation = default, long objectId = default, Lot lot = default, SpawnerComponent spawner = default)
         {
@@ -250,11 +267,15 @@ namespace Uchu.World
         {
             return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
         }
+        
+        #endregion
+        
+        #region From Template
 
-        public static GameObject Instantiate(Object parent, Lot lot, Vector3 position = default,
+        public static GameObject Instantiate(Type type, Object parent, Lot lot, Vector3 position = default,
             Quaternion rotation = default)
         {
-            return Instantiate(new LevelObject
+            return Instantiate(type, new LevelObject
             {
                 Lot = lot,
                 Position = position,
@@ -264,7 +285,23 @@ namespace Uchu.World
             }, parent);
         }
 
-        public static GameObject Instantiate(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
+        public static T Instantiate<T>(Object parent, Lot lot, Vector3 position = default,
+            Quaternion rotation = default) where T : GameObject
+        {
+            return Instantiate(typeof(T), parent, lot, position, rotation) as T;
+        }
+        
+        public static GameObject Instantiate(Object parent, Lot lot, Vector3 position = default,
+            Quaternion rotation = default)
+        {
+            return Instantiate(typeof(GameObject), parent, lot, position, rotation);
+        }
+        
+        #endregion
+        
+        #region From LevelObject
+
+        public static GameObject Instantiate(Type type, LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
         {
             //
             // Check if spawner
@@ -277,8 +314,15 @@ namespace Uchu.World
             {
                 var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
 
-                var instance = Instantiate<GameObject>(parent, name, levelObject.Position, levelObject.Rotation,
-                    Utils.GenerateObjectId(), levelObject.Lot);
+                var instance = Instantiate(
+                    type,
+                    parent,
+                    name,
+                    levelObject.Position,
+                    levelObject.Rotation,
+                    Utils.GenerateObjectId(),
+                    levelObject.Lot
+                );
 
                 instance.SpawnerObject = spawner;
 
@@ -286,15 +330,16 @@ namespace Uchu.World
 
                 var order = ReplicaComponent.ComponentOrder;
 
-                foreach (var component in registryComponents.Where(o =>
-                    o.Componenttype != null &&
-                    !order.Contains(o.Componenttype.Value))
-                )
+                var componentEntries = registryComponents.Where(o =>
+                    o.Componenttype != null && !order.Contains(o.Componenttype.Value)
+                );
+                
+                foreach (var component in componentEntries)
                 {
-                    var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+                    var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
 
-                    if (type != null)
-                        instance.AddComponent(type);
+                    if (componentType != null)
+                        instance.AddComponent(componentType);
                 }
 
                 registryComponents = registryComponents.Where(c => order.Contains(c.Componenttype.Value)).ToList();
@@ -305,10 +350,10 @@ namespace Uchu.World
 
                 foreach (var component in registryComponents)
                 {
-                    var type = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+                    var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
 
-                    if (type == null) Logger.Warning($"No component of ID {component.Componentid}");
-                    else instance.AddComponent(type);
+                    if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
+                    else instance.AddComponent(componentType);
                 }
 
                 foreach (var component in instance._replicaComponents)
@@ -343,6 +388,18 @@ namespace Uchu.World
             }
         }
 
+        public static T Instantiate<T>(LevelObject levelObject, Object parent, SpawnerComponent spawner = default) where T : GameObject
+        {
+            return Instantiate(typeof(T), levelObject, parent, spawner) as T;
+        }
+        
+        public static GameObject Instantiate(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
+        {
+            return Instantiate(typeof(GameObject), levelObject, parent, spawner);
+        }
+        
+        #endregion
+        
         #endregion
 
         #region Replica

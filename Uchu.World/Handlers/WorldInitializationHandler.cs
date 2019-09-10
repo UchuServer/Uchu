@@ -241,7 +241,7 @@ namespace Uchu.World.Handlers
 
                 Server.Send(new DetailedUserInfoPacket {Data = ldf}, endPoint);
 
-                var player = Player.Create(character, endPoint, zone);
+                var player = Player.Construct(character, endPoint, zone);
 
                 if (character.LandingByRocket)
                 {

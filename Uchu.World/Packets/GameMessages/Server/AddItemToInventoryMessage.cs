@@ -9,27 +9,27 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.AddItemToInventoryClientSync;
         
-        public bool IsBound { get; set; }
+        public bool IsBound { get; set; } = false;
         
-        public bool IsBoundOnEquip { get; set; }
+        public bool IsBoundOnEquip { get; set; } = false;
         
-        public bool IsBoundOnPickup { get; set; }
+        public bool IsBoundOnPickup { get; set; } = false;
         
-        public Lot Source { get; set; } = -1;
+        public int Source { get; set; } = -1;
         
-        public LegoDataDictionary ExtraInfo { get; set; }
+        public LegoDataDictionary ExtraInfo { get; set; } = null;
         
-        public Lot ItemLot { get; set; }
+        public int ItemLot { get; set; }
         
         public long SubKey { get; set; } = -1;
         
-        public int Inventory { get; set; } = -1;
+        public int InventoryType { get; set; } = -1;
         
-        public uint Count { get; set; } = 1;
+        public uint ItemCount { get; set; } = 1;
         
-        public uint TotalItems { get; set; }
-
-        public long ItemObjectId { get; set; } = -1;
+        public uint TotalItems { get; set; } = 0;
+        
+        public long ItemObjectId { get; set; }
         
         public Vector3 FlyingLootPosition { get; set; } = Vector3.Zero;
         
@@ -44,8 +44,11 @@ namespace Uchu.World
             writer.WriteBit(IsBoundOnPickup);
 
             var hasSource = Source != -1;
+
             writer.WriteBit(hasSource);
-            if (hasSource) writer.Write(Source);
+
+            if (hasSource)
+                writer.Write(Source);
 
             if (ExtraInfo != null)
             {
@@ -57,38 +60,51 @@ namespace Uchu.World
                 {
                     writer.WriteString(ldf, ldf.Length, true);
 
-                    writer.Write<byte>(0);
-                    writer.Write<byte>(0);
+                    writer.Write((byte) 0);
+                    writer.Write((byte) 0);
                 }
             }
             else
             {
-                writer.Write<uint>(0);
+                writer.Write(0u);
             }
 
             writer.Write(ItemLot);
 
             var hasSubKey = SubKey != -1;
+
             writer.WriteBit(hasSubKey);
-            if (hasSubKey) writer.Write(SubKey);
-            
-            //
-            // The defaults are not worth calculating.
-            //
 
-            writer.WriteBit(true);
-            writer.Write(Inventory);
+            if (hasSubKey)
+                writer.Write(SubKey);
 
-            writer.WriteBit(true);
-            writer.Write(Count);
-            
-            writer.WriteBit(true);
-            writer.Write(TotalItems);
-            
+            var hasInvType = InventoryType != -1;
+
+            writer.WriteBit(hasInvType);
+
+            if (hasInvType)
+                writer.Write(InventoryType);
+
+            var hasCount = ItemCount != 1;
+
+            writer.WriteBit(hasCount);
+
+            if (hasCount)
+                writer.Write(ItemCount);
+
+            var hasTotal = TotalItems != 0;
+
+            writer.WriteBit(hasTotal);
+
+            if (hasTotal)
+                writer.Write(TotalItems);
+
             writer.Write(ItemObjectId);
 
-            writer.Write(FlyingLootPosition);
-            
+            writer.Write(FlyingLootPosition.X);
+            writer.Write(FlyingLootPosition.Y);
+            writer.Write(FlyingLootPosition.Z);
+
             writer.WriteBit(ShowFlyingLoot);
 
             writer.Write(Slot);

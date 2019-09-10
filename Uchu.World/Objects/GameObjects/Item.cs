@@ -39,6 +39,8 @@ namespace Uchu.World
             get => _count;
             set
             {
+                Logger.Information($"Trying to set {this} count to {_count}");
+
                 _count = value;
 
                 Task.Run(UpdateCount);
@@ -122,6 +124,7 @@ namespace Uchu.World
                 
                 instance._count = (uint) item.Count;
                 instance._equipped = item.IsEquipped;
+                instance._slot = (uint) item.Slot;
                 
                 instance.ItemComponent = itemComponent;
                 instance.Inventory = inventory;
@@ -188,12 +191,12 @@ namespace Uchu.World
                 playerCharacter.Items.Add(inventoryItem);
 
                 ctx.SaveChanges();
-                
-                inventory.Manager.Player.Message(new AddItemToInventoryMessage
+
+                var message = new AddItemToInventoryMessage
                 {
                     Associate = inventory.Manager.Player,
-                    Inventory = (int) inventory.InventoryType,
-                    Count = count,
+                    InventoryType = (int) inventory.InventoryType,
+                    ItemCount = count,
                     TotalItems = count,
                     Slot = (int) slot,
                     ItemLot = lot,
@@ -201,8 +204,15 @@ namespace Uchu.World
                     IsBoundOnPickup = itemComponent.IsBOP ?? false,
                     IsBound = inventoryItem.IsBound,
                     ItemObjectId = inventoryItem.InventoryItemId
-                });
-
+                };
+                
+                foreach (var property in message.GetType().GetProperties())
+                {
+                    Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
+                }
+                
+                inventory.Manager.Player.Message(message);
+                
                 inventory.ManageItem(instance);
 
                 return instance;
@@ -222,15 +232,15 @@ namespace Uchu.World
                     _count = (uint) ItemComponent.StackSize;
                 }
                 
-                Logger.Information($"Setting {this} count {_count}");
+                Logger.Information($"Setting {this} count to {_count}");
                 
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
-
-                if (_count > item.Count) await AddCount(_count);
+                
+                if (_count > item.Count) await AddCount();
                 else await RemoveCount(_count);
                 
                 item.Count = _count;
-
+                
                 await ctx.SaveChangesAsync();
             }
             
@@ -240,23 +250,30 @@ namespace Uchu.World
             }
         }
 
-        private async Task AddCount(uint count)
+        private async Task AddCount()
         {
             using (var ctx = new UchuContext())
             {
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
-                
-                Player.Message(new AddItemToInventoryMessage
+
+                var message = new AddItemToInventoryMessage
                 {
                     Associate = Player,
                     ItemObjectId = ObjectId,
                     ItemLot = Lot,
-                    Count = (uint) (count - item.Count),
+                    ItemCount = (uint) (_count - item.Count),
                     Slot = (int) Slot,
-                    Inventory = (int) Inventory.InventoryType,
-                    ShowFlyingLoot = count != default,
-                    TotalItems = count
-                });
+                    InventoryType = (int) Inventory.InventoryType,
+                    ShowFlyingLoot = _count != default,
+                    TotalItems = _count
+                };
+
+                foreach (var property in message.GetType().GetProperties())
+                {
+                    Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
+                }
+                
+                Player.Message(message);
             }
         }
 

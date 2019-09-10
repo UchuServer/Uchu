@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace Uchu.World
     {
         public IPEndPoint EndPoint { get; private set; }
 
+        public readonly Perspective Perspective = new Perspective();
+
         public long Currency
         {
             get
@@ -24,12 +27,40 @@ namespace Uchu.World
                     return character.Currency;
                 }
             }
-            set { Task.Run(async () => { await SetCurrency(value); }); }
+            set => Task.Run(async () => { await SetCurrency(value); });
         }
 
         public long EntitledCurrency { get; set; }
+
+        public long UniverseScore
+        {
+            get
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+
+                    return character.UniverseScore;
+                }
+            }
+            set => Task.Run(async () => { await SetUniverseScore(value); });
+        }
+
+        public long Level
+        {
+            get
+            {
+                using (var ctx = new UchuContext())
+                {
+                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+
+                    return character.Level;
+                }
+            }
+            set => Task.Run(async () => { await SetLevel(value); });
+        }
         
-        public static Player Create(Character character, IPEndPoint endPoint, Zone zone)
+        public static Player Construct(Character character, IPEndPoint endPoint, Zone zone)
         {
             var instance = Instantiate<Player>(
                 zone,
@@ -62,7 +93,6 @@ namespace Uchu.World
 
             var characterComponent = instance.AddComponent<CharacterComponent>();
 
-            characterComponent.Level = (uint) character.Level;
             characterComponent.Character = character;
 
             var inventory = instance.AddComponent<InventoryComponent>();
@@ -145,6 +175,65 @@ namespace Uchu.World
                 Associate = this,
                 Currency = currency
             });
+        }
+
+        private async Task SetUniverseScore(long score)
+        {
+            using (var ctx = new UchuContext())
+            using (var cdClient = new CdClientContext())
+            {
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+                character.UniverseScore = score;
+
+                foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+                {
+                    if (levelProgressionLookup.RequiredUScore > score) break;
+
+                    Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
+                    
+                    character.Level = levelProgressionLookup.Id.Value;
+                }
+
+                Message(new ModifyLegoScoreMessage
+                {
+                    Associate = this,
+                    Score = character.UniverseScore
+                });
+                
+                await ctx.SaveChangesAsync();
+            }
+        }
+
+        private async Task SetLevel(long level)
+        {
+            using (var ctx = new UchuContext())
+            using (var cdClient = new CdClientContext())
+            {
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+                var lookup = await cdClient.LevelProgressionLookupTable.FirstOrDefaultAsync(l => l.Id == level);
+
+                if (lookup == default)
+                {
+                    Logger.Error($"Trying to set {this} level to a level that does not exist.");
+                    return;
+                }
+                
+                character.Level = level;
+
+                Debug.Assert(lookup.RequiredUScore != null, "lookup.RequiredUScore != null");
+                
+                character.UniverseScore = lookup.RequiredUScore.Value;
+                
+                Message(new ModifyLegoScoreMessage
+                {
+                    Associate = this,
+                    Score = character.UniverseScore
+                });
+                
+                await ctx.SaveChangesAsync();
+            }
         }
 
         private void CheckDeathZone()

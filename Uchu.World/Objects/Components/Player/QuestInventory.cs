@@ -224,21 +224,22 @@ namespace Uchu.World
                     });
                 }
                 
-                var charMissions = character.Missions.Find(m => m.MissionId == missionId);
+                var characterMissions = character.Missions.Find(m => m.MissionId == missionId);
 
                 MessageMissionState(missionId, MissionState.Unavailable, true);
 
-                charMissions.CompletionCount++;
+                characterMissions.CompletionCount++;
 
-                charMissions.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
+                characterMissions.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 if (character.MaximumImagination == 0 && mission.Rewardmaximagination > 0)
                 {
                     await CompleteMissionAsync(664);
                 }
-
-                character.Currency += mission.Rewardcurrency ?? 0;
-                character.UniverseScore += mission.LegoScore ?? 0;
+                
+                Player.Currency += mission.Rewardcurrency ?? 0;
+                Player.UniverseScore += mission.LegoScore ?? 0;
+                
                 character.MaximumHealth += mission.Rewardmaxhealth ?? 0;
                 character.MaximumImagination += mission.Rewardmaximagination ?? 0;
 
@@ -333,7 +334,7 @@ namespace Uchu.World
                         case MissionTaskType.Collect:
                             if (gameObject == default)
                             {
-                                Logger.Error($"{type} is only valid then {nameof(gameObject)} != null");
+                                Logger.Error($"{type} is only valid when {nameof(gameObject)} != null");
                                 return;
                             };
                             
