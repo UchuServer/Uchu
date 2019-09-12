@@ -3,7 +3,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class ModelComponent : ReplicaComponent
     {
         // TODO: Look into this

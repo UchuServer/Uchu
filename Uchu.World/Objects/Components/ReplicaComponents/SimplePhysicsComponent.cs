@@ -3,7 +3,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class SimplePhysicsComponent : ReplicaComponent
     {
         public bool HasPosition { get; set; } = true;

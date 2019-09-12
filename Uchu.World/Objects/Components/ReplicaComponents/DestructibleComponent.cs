@@ -8,7 +8,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     [RequireComponent(typeof(StatsComponent))]
     public class DestructibleComponent : ReplicaComponent
     {
@@ -110,27 +109,22 @@ namespace Uchu.World
 
                         var finalPosition = new Vector3
                         {
-                            X = drop.Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
-                            Y = drop.Transform.Position.Y,
-                            Z = drop.Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
+                            X = Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
+                            Y = Transform.Position.Y,
+                            Z = Transform.Position.Z + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
                         };
-
-                        // TODO: Look into weird spawning location
-                        
-                        Logger.Debug($"Spawning {drop} [{drop.Lot}] at {drop.Transform.Position}");
                         
                         Zone.BroadcastMessage(new DropClientLootMessage
                         {
                             Associate = killer,
-                            UsePosition = true,
-                            FinalPosition = finalPosition,
-                            Currency = default,
+                            Currency = 0,
                             Lot = drop.Lot,
-                            LootObjectId = drop.ObjectId,
-                            Owner = (lootOwner ?? killer) as Player,
+                            Loot = drop,
+                            Owner = killer as Player,
                             Source = GameObject,
-                            SpawnPosition = drop.Transform.Position
-                        });
+                            SpawnPosition = drop.Transform.Position + Vector3.UnitY,
+                            FinalPosition = finalPosition
+                        }); 
                     }
                 }
             }

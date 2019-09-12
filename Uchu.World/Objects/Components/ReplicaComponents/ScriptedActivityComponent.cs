@@ -4,7 +4,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class ScriptedActivityComponent : ReplicaComponent
     {
         public List<GameObject> Players { get; set; } = new List<GameObject>();

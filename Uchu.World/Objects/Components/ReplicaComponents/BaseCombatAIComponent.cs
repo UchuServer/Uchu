@@ -4,7 +4,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class BaseCombatAiComponent : ReplicaComponent
     {
         public bool PerformingAction { get; set; }

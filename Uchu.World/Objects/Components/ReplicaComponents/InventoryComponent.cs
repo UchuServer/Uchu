@@ -10,7 +10,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class InventoryComponent : ReplicaComponent
     {
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } = new Dictionary<EquipLocation, InventoryItem>();

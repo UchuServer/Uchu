@@ -4,7 +4,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class PetComponent : ReplicaComponent
     {
         public GameObject Owner { get; set; }

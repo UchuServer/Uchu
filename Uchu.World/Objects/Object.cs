@@ -41,8 +41,7 @@ namespace Uchu.World
                 obj.Zone.Objects.Remove(obj);
                 obj.End();
             }
-            else
-                Logger.Error($"{obj} is already destroyed!");
+            else Logger.Error($"{obj} is already destroyed!");
         }
 
         public virtual void Instantiated()

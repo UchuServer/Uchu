@@ -4,7 +4,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class ControllablePhysicsComponent : ReplicaComponent
     {
         public uint JetpackEffectId { get; set; }

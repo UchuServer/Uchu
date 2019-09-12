@@ -11,7 +11,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class LuaScriptComponent : ReplicaComponent
     {
         public LegoDataDictionary Data { get; set; }

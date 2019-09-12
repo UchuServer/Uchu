@@ -203,7 +203,7 @@ namespace Uchu.World
                     IsBoundOnEquip = itemComponent.IsBOE ?? false,
                     IsBoundOnPickup = itemComponent.IsBOP ?? false,
                     IsBound = inventoryItem.IsBound,
-                    ItemObjectId = inventoryItem.InventoryItemId
+                    Item = instance
                 };
                 
                 foreach (var property in message.GetType().GetProperties())
@@ -259,7 +259,7 @@ namespace Uchu.World
                 var message = new AddItemToInventoryMessage
                 {
                     Associate = Player,
-                    ItemObjectId = ObjectId,
+                    Item = this,
                     ItemLot = Lot,
                     ItemCount = (uint) (_count - item.Count),
                     Slot = (int) Slot,
@@ -267,7 +267,7 @@ namespace Uchu.World
                     ShowFlyingLoot = _count != default,
                     TotalItems = _count
                 };
-
+                
                 foreach (var property in message.GetType().GetProperties())
                 {
                     Logger.Information($"\t{property.Name} = {property.GetValue(message)}");

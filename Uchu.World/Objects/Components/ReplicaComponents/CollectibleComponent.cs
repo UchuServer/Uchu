@@ -3,7 +3,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     [RequireComponent(typeof(StatsComponent), true)]
     public class CollectibleComponent : ReplicaComponent
     {

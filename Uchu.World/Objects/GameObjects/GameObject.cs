@@ -29,6 +29,8 @@ namespace Uchu.World
         
         public virtual Transform Transform => _components.First(c => c is Transform) as Transform;
 
+        public bool Alive => Zone?.TryGetGameObject(ObjectId, out _) ?? false;
+
         private readonly List<Component> _components = new List<Component>();
 
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
@@ -100,12 +102,6 @@ namespace Uchu.World
         
         public void RemoveComponent(Type type)
         {
-            if (type.GetCustomAttribute<EssentialAttribute>() != null ||
-                type.IsAssignableFrom(typeof(ReplicaComponent)))
-            {
-                Logger.Error($"{type} Component on {this} is Essential and cannot be removed.");
-            }
-
             foreach (var required in from component in _components
                 from required in component.GetType().GetCustomAttributes<RequireComponentAttribute>()
                 where required.Type == type
@@ -153,12 +149,13 @@ namespace Uchu.World
         
         public override void End()
         {
-            foreach (var component in _components)
+            for (var index = 0; index < _components.Count; index++)
             {
+                var component = _components[index];
                 Zone.Objects.Remove(component);
                 component.End();
             }
-            
+
             _components.Clear();
             
             Zone.DestroyObject(this);

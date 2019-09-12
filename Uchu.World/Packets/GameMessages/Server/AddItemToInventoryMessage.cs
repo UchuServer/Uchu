@@ -1,6 +1,7 @@
 using System.Numerics;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.World.Collections;
 
 namespace Uchu.World
@@ -9,11 +10,11 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.AddItemToInventoryClientSync;
         
-        public bool IsBound { get; set; } = false;
+        public bool IsBound { get; set; }
         
-        public bool IsBoundOnEquip { get; set; } = false;
+        public bool IsBoundOnEquip { get; set; }
         
-        public bool IsBoundOnPickup { get; set; } = false;
+        public bool IsBoundOnPickup { get; set; }
         
         public int Source { get; set; } = -1;
         
@@ -27,9 +28,9 @@ namespace Uchu.World
         
         public uint ItemCount { get; set; } = 1;
         
-        public uint TotalItems { get; set; } = 0;
+        public uint TotalItems { get; set; }
         
-        public long ItemObjectId { get; set; }
+        public Item Item { get; set; }
         
         public Vector3 FlyingLootPosition { get; set; } = Vector3.Zero;
         
@@ -39,16 +40,15 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
+            /*
+             * I don't know why this is not working... you can add new stacks, but cannot add to existent once.
+             */
+            
             writer.WriteBit(IsBound);
             writer.WriteBit(IsBoundOnEquip);
             writer.WriteBit(IsBoundOnPickup);
 
-            var hasSource = Source != -1;
-
-            writer.WriteBit(hasSource);
-
-            if (hasSource)
-                writer.Write(Source);
+            writer.WriteBit(false);
 
             if (ExtraInfo != null)
             {
@@ -70,43 +70,24 @@ namespace Uchu.World
             }
 
             writer.Write(ItemLot);
+            
+            writer.WriteBit(false);
 
-            var hasSubKey = SubKey != -1;
+            writer.WriteBit(true);
+            writer.Write(InventoryType);
+            
+            writer.WriteBit(true);
+            writer.Write(ItemCount);
 
-            writer.WriteBit(hasSubKey);
+            writer.WriteBit(true);
+            writer.Write(TotalItems);
+            
+            writer.Write(Item.ObjectId);
 
-            if (hasSubKey)
-                writer.Write(SubKey);
-
-            var hasInvType = InventoryType != -1;
-
-            writer.WriteBit(hasInvType);
-
-            if (hasInvType)
-                writer.Write(InventoryType);
-
-            var hasCount = ItemCount != 1;
-
-            writer.WriteBit(hasCount);
-
-            if (hasCount)
-                writer.Write(ItemCount);
-
-            var hasTotal = TotalItems != 0;
-
-            writer.WriteBit(hasTotal);
-
-            if (hasTotal)
-                writer.Write(TotalItems);
-
-            writer.Write(ItemObjectId);
-
-            writer.Write(FlyingLootPosition.X);
-            writer.Write(FlyingLootPosition.Y);
-            writer.Write(FlyingLootPosition.Z);
+            writer.Write(FlyingLootPosition);
 
             writer.WriteBit(ShowFlyingLoot);
-
+            
             writer.Write(Slot);
         }
     }

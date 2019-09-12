@@ -11,7 +11,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class QuestInventory : Component
     {
         public Mission[] GetCompletedMissions()

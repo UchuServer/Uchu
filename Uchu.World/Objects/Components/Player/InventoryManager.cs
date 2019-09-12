@@ -9,7 +9,6 @@ using Uchu.Core.CdClient;
 
 namespace Uchu.World
 {
-    [Essential]
     public class InventoryManager : Component
     {
         private InventoryComponent _inventoryComponent;

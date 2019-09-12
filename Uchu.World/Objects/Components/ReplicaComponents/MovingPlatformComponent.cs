@@ -10,7 +10,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class MovingPlatformComponent : ReplicaComponent
     {
         public MovingPlatformPath Path { get; set; }

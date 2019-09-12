@@ -3,7 +3,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class SwitchComponent : ReplicaComponent
     {
         public bool State { get; set; }

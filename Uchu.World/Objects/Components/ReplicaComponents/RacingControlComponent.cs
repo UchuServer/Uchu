@@ -2,7 +2,6 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    [Essential]
     public class RacingControlComponent : ScriptedActivityComponent
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.RacingControl;

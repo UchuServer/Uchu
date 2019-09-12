@@ -3,7 +3,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class ExhibitComponent : ReplicaComponent
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.Exhibit;

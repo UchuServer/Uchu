@@ -5,7 +5,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class RendererComponent : ReplicaComponent
     {
         public bool Disabled { get; set; }

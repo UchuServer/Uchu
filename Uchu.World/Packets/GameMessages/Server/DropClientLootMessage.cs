@@ -15,7 +15,7 @@ namespace Uchu.World
         
         public Lot Lot { get; set; }
         
-        public long LootObjectId { get; set; }
+        public GameObject Loot { get; set; }
         
         public Player Owner { get; set; }
         
@@ -32,10 +32,9 @@ namespace Uchu.World
             if (hasFinalPosition) writer.Write(FinalPosition);
 
             writer.Write(Currency);
+            writer.Write(Lot.Id);
 
-            writer.Write(Lot);
-
-            writer.Write(LootObjectId);
+            writer.Write(Loot);
             writer.Write(Owner);
             writer.Write(Source);
 

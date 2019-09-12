@@ -3,7 +3,6 @@ using System.Numerics;
 
 namespace Uchu.World
 {
-    [Essential]
     public class Transform : Component
     {
         private Transform _parent;

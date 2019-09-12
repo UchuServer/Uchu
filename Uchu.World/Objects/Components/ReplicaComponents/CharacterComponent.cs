@@ -5,7 +5,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class CharacterComponent : ReplicaComponent
     {
         public GameObject VehicleObject { get; set; }

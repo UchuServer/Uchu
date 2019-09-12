@@ -206,6 +206,28 @@ namespace Uchu.World
             }
         }
         
+        public GameObject GetGameObject(long objectId)
+        {
+            return GameObjects.First(o => o.ObjectId == objectId);
+        }
+        
+        public bool TryGetGameObject(long objectId, out GameObject result)
+        {
+            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
+            return result != default;
+        }
+        
+        public T GetGameObject<T>(long objectId) where T : GameObject
+        {
+            return GameObjects.First(o => o.ObjectId == objectId) as T;
+        }
+        
+        public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
+        {
+            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId) as T;
+            return result != default;
+        }
+        
         public static ZoneChecksum GetChecksum(ZoneId id)
         {
             var name = Enum.GetName(typeof(ZoneId), id);

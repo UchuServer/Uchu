@@ -8,7 +8,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public abstract class ReplicaComponent : Component
     {
         public static readonly int[] ComponentOrder =

@@ -4,7 +4,6 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [Essential]
     public class TriggerComponent : ReplicaComponent
     {
         public int TriggerId { get; set; } = -1;
