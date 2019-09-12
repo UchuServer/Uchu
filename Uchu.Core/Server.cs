@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,10 +16,14 @@ using Uchu.Core.IO;
 namespace Uchu.Core
 {
     using HandlerMap = Dictionary<RemoteConnectionType, Dictionary<uint, Handler>>;
+    
+    using CommandHandleMap = Dictionary<char, Dictionary<string, CommandHandler>>;
 
     public class Server
     {
         protected readonly HandlerMap HandlerMap;
+
+        protected readonly CommandHandleMap CommandHandleMap;
         
         public readonly IRakNetServer RakNetServer;
 
@@ -41,6 +46,7 @@ namespace Uchu.Core
             Resources = new AssemblyResources("Uchu.Resources.dll");
             
             HandlerMap = new HandlerMap();
+            CommandHandleMap = new CommandHandleMap();
             
             Logger.Information($"Server created on port: {port}, password: {password}, protocol: {RakNetServer.Protocol}");
         }
@@ -61,7 +67,10 @@ namespace Uchu.Core
             {
                 var command = Console.ReadLine();
 
-                Console.WriteLine(AdminCommand(command, true));
+                Task.Run(async () =>
+                {
+                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
+                });
             }
         }
 
@@ -73,280 +82,6 @@ namespace Uchu.Core
 
             _running = false;
         }
-
-        #region Admin
-
-        public string AdminCommand(string command, bool fromConsole)
-        {
-            if (!fromConsole) Logger.Information($"Admin Command: \"{command}\" is executing in chat mode");
-            
-            var arguments = command?.Split(' ');
-
-            string name;
-            switch (arguments?[0].ToLower())
-            {
-                case "exit":
-                case "quit":
-                case "stop":
-                    Stop();
-                    return "Stopped the server.";
-                case "adduser":
-                    if (!fromConsole) return "This command is not supported in chat mode.";
-                    
-                    if (arguments.Length != 2)
-                    {
-                        return "adduser <name>";
-                    }
-
-                    name = arguments[1];
-                    
-                    if (name.Length > 33)
-                    {
-                        return "Usernames with more than 33 characters is not supported";
-                    }
-
-                    using (var ctx = new UchuContext())
-                    {
-                        if (ctx.Users.Any(u => u.Username == name))
-                        {
-                            return "A user with that username already exists";
-                        }
-                        
-                        Console.Write("Password: ");
-                        var password = GetPassword();
-
-                        if (password.Length > 42)
-                        {
-                            return "Passwords with more than 42 characters is not supported";
-                        }
-
-                        ctx.Users.Add(new User
-                        {
-                            Username = name,
-                            Password = BCrypt.Net.BCrypt.EnhancedHashPassword(password),
-                            CharacterIndex = 0
-                        });
-
-                        ctx.SaveChanges();
-
-                        return $"\nSuccessfully added user: {name}!";
-                    }
-                    
-                case "deleteuser":
-                    if (!fromConsole) return "This command is not supported in chat mode.";
-                    
-                    if (arguments.Length != 2)
-                    {
-                        return "removeuser <name>";
-                    }
-
-                    name = arguments[1];
-
-                    using (var ctx = new UchuContext())
-                    {
-                        var user = ctx.Users.FirstOrDefault(u => u.Username == name);
-
-                        if (user == null)
-                        {
-                            return $"No user with the username of: {name}";
-                        }
-
-                        Console.Write("Write the username again to confirm deletion: ");
-                        if (Console.ReadLine() != name) return "Deletion aborted";
-                        
-                        ctx.Remove(user);
-                        ctx.SaveChanges();
-                            
-                        return $"Successfully deleted user: {name}";
-
-                    }
-                
-                case "ban":
-                case "suspend":
-                    if (arguments.Length != 3)
-                    {
-                        return $"{arguments[0]} <name> <reason>";
-                    }
-
-                    name = arguments[1];
-                    var reason = arguments[2];
-                    
-                    using (var ctx = new UchuContext())
-                    {
-                        var user = ctx.Users.FirstOrDefault(u => u.Username == name);
-                        
-                        if (user == null)
-                        {
-                            return $"No user with the username of: {name}";
-                        }
-
-                        user.Banned = true;
-                        user.BannedReason = reason;
-
-                        ctx.SaveChanges();
-
-                        return $"Successfully banned {name}!";
-                    }
-                
-                case "unban":
-                case "pardon":
-                    if (arguments.Length != 2)
-                    {
-                        return $"{arguments[0]} <name>";
-                    }
-                    
-                    name = arguments[1];
-
-                    using (var ctx = new UchuContext())
-                    {
-                        var user = ctx.Users.FirstOrDefault(u => u.Username == name);
-                        
-                        if (user == null)
-                        {
-                            return $"No user with the username of: {name}";
-                        }
-
-                        user.Banned = false;
-                        user.BannedReason = null;
-
-                        ctx.SaveChanges();
-                        
-                        return $"Successfully pardoned {name}!";
-                    }
-                    
-                case "users":
-                    using (var ctx = new UchuContext())
-                    {
-                        var users = ctx.Users;
-                        return !users.Any()
-                            ? "No registered users"
-                            : string.Join("\n", users.Select(s => s.Username));
-                    }
-                    
-                case "approve":
-                    using (var ctx = new UchuContext())
-                    {
-                        if (arguments.Length == 1 || arguments[1].ToLower() == "all")
-                        {
-                            var unApproved = ctx.Characters.Where(c => !c.NameRejected && c.Name != c.CustomName && !string.IsNullOrEmpty(c.CustomName));
-
-                            if (arguments.Length == 2 && arguments[1] == "all")
-                            {
-                                foreach (var character in unApproved)
-                                {
-                                    character.Name = character.CustomName;
-                                    character.CustomName = "";
-                                }
-
-                                ctx.SaveChanges();
-
-                                return "Successfully approved all names!";
-                            }
-
-                            return string.Join("\n", unApproved.Select(s => s.CustomName)) + "\napprove <name> / all";
-                        }
-
-                        var selectedCharacter = ctx.Characters.FirstOrDefault(c => c.CustomName == arguments[1] && !c.NameRejected);
-
-                        if (selectedCharacter == null)
-                        {
-                            return $"No unapproved character with name: \"{arguments[1]}\"";
-                        }
-                        
-                        selectedCharacter.Name = selectedCharacter.CustomName;
-                        selectedCharacter.CustomName = "";
-
-                        ctx.SaveChanges();
-
-                        return $"Successfully approved \"{selectedCharacter.Name}\"!";
-                    }
-                    
-                case "reject":
-                    using (var ctx = new UchuContext())
-                    {
-                        if (arguments.Length == 1 || arguments[1].ToLower() == "all")
-                        {
-                            var unApproved = ctx.Characters.Where(c => !c.NameRejected && c.Name != c.CustomName && !string.IsNullOrEmpty(c.CustomName));
-
-                            if (arguments.Length == 2 && arguments[1] == "all")
-                            {
-                                foreach (var character in unApproved)
-                                {
-                                    character.NameRejected = true;
-                                }
-
-                                ctx.SaveChanges();
-
-                                return "Successfully rejected all names!";
-                            }
-
-                            return string.Join("\n", unApproved.Select(s => s.CustomName)) + "\nreject <name> / all";
-                        }
-
-                        var selectedCharacter = ctx.Characters.FirstOrDefault(c => c.CustomName == arguments[1] && !c.NameRejected);
-
-                        if (selectedCharacter == null)
-                        {
-                            return $"No unapproved character with name: \"{arguments[1]}\"";
-                        }
-
-                        selectedCharacter.NameRejected = true;
-                        
-                        ctx.SaveChanges();
-
-                        return $"Successfully rejected \"{selectedCharacter.CustomName}\"!";
-                    }
-                    
-                
-                case "clear":
-                    if (!fromConsole) return "This command is not supported in chat mode.";
-                    Console.Clear();
-                    return "";
-                
-                case "help":
-                    const string help = "stop                        Stop the server\n" +
-                                        "users                       Displays all users\n" + 
-                                        "adduser <name>              Add a new user\n" +
-                                        "deleteuser <name>           Delete user\n" +
-                                        "suspend <name> <reason>     Suspend a user\n" +
-                                        "pardon <name>               Pardon a user\n" +
-                                        "approve <name> / all        Approve names\n" +
-                                        "reject <name> / all         Reject names\n" +
-                                        "help                        Displays this message";
-                    return help;
-                default:
-                    return "Unknown command, type \"help\" for a list of commands.";
-            }
-        }
-
-        public static string GetPassword()
-        {
-            var pwd = new StringBuilder();
-            while (true)
-            {
-                var i = Console.ReadKey(true);
-                if (i.Key == ConsoleKey.Enter)
-                {
-                    break;
-                }
-
-                if (i.Key == ConsoleKey.Backspace)
-                {
-                    if (pwd.Length <= 0) continue;
-                    pwd.Length--;
-                    Console.Write("\b \b");
-                }
-                else if (i.KeyChar != '\u0000')
-                {
-                    pwd.Append(i.KeyChar);
-                    Console.Write("*");
-                }
-            }
-
-            return pwd.ToString();
-        }
-
-        #endregion
 
         #region Management
 
@@ -388,30 +123,52 @@ namespace Uchu.Core
                 foreach (var method in group.GetMethods().Where(m => !m.IsStatic && !m.IsAbstract))
                 {
                     var attr = method.GetCustomAttribute<PacketHandlerAttribute>();
-                    if (attr == null) continue;
-
-                    var parameters = method.GetParameters();
-                    if (parameters.Length == 0 ||
-                        !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType)) continue;
-                    var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
-
-                    var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
-                    var packetId = attr.PacketId ?? packet.PacketId;
-
-                    if (!HandlerMap.ContainsKey(remoteConnectionType))
-                        HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
-
-                    var handlers = HandlerMap[remoteConnectionType];
-                    
-                    Logger.Debug(!handlers.ContainsKey(packetId) ? $"Registered handler for packet {packet}" : $"Handler for packet {packet} overwritten");
-                    
-                    handlers[packetId] = new Handler
+                    if (attr != null)
                     {
-                        Group = instance,
-                        Info = method,
-                        Packet = packet,
-                        RunTask = attr.RunTask
-                    };
+                        var parameters = method.GetParameters();
+                        if (parameters.Length == 0 ||
+                            !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType)) continue;
+                        var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
+
+                        var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
+                        var packetId = attr.PacketId ?? packet.PacketId;
+
+                        if (!HandlerMap.ContainsKey(remoteConnectionType))
+                            HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
+
+                        var handlers = HandlerMap[remoteConnectionType];
+
+                        Logger.Debug(!handlers.ContainsKey(packetId)
+                            ? $"Registered handler for packet {packet}"
+                            : $"Handler for packet {packet} overwritten"
+                        );
+
+                        handlers[packetId] = new Handler
+                        {
+                            Group = instance,
+                            Info = method,
+                            Packet = packet,
+                            RunTask = attr.RunTask
+                        };
+                    }
+                    else
+                    {
+                        var cmdAttr = method.GetCustomAttribute<CommandHandlerAttribute>();
+                        if (cmdAttr == null) continue;
+
+                        if (!CommandHandleMap.ContainsKey(cmdAttr.Prefix))
+                            CommandHandleMap[cmdAttr.Prefix] = new Dictionary<string, CommandHandler>();
+                        
+                        CommandHandleMap[cmdAttr.Prefix][cmdAttr.Signature] = new CommandHandler
+                        {
+                            Group = instance,
+                            Info = method,
+                            GameMasterLevel = cmdAttr.GameMasterLevel,
+                            Help = cmdAttr.Help,
+                            Signature = cmdAttr.Signature,
+                            ConsoleCommand = method.GetParameters().Length != 2
+                        };
+                    }
                 }
             }
         }
@@ -470,6 +227,67 @@ namespace Uchu.Core
             }
         }
 
+        public async Task<string> HandleCommandAsync(string command, object author, GameMasterLevel gameMasterLevel)
+        {
+            var prefix = command.First();
+            
+            if (!CommandHandleMap.TryGetValue(prefix, out var group)) return "Invalid prefix";
+
+            command = command.Remove(0, 1);
+
+            var arguments = command.Split(' ').ToList();
+
+            if (!group.TryGetValue(arguments[0].ToLower(), out var handler))
+            {
+                var help = new StringBuilder();
+
+                foreach (var handlerInfo in group.Values.Where(handlerInfo => gameMasterLevel >= handlerInfo.GameMasterLevel))
+                {
+                    if (author == null && !handlerInfo.ConsoleCommand) continue;
+                    
+                    help.AppendLine($"{prefix}{handlerInfo.Signature}" +
+                                    $"{(string.Concat(Enumerable.Repeat(" ", 20 - handlerInfo.Signature.Length)))}" +
+                                    $"{handlerInfo.Help}");
+                }
+                
+                return help.ToString();
+            }
+
+            if (gameMasterLevel < handler.GameMasterLevel) return "You don't have permission to run this command";
+
+            arguments.RemoveAt(0);
+
+            var paramLength = handler.Info.GetParameters().Length;
+
+            object returnValue;
+            
+            switch (paramLength)
+            {
+                case 0:
+                    returnValue = handler.Info.Invoke(handler.Group, new object[0]);
+                    break;
+                case 1:
+                    returnValue = handler.Info.Invoke(handler.Group, new object[] {arguments.ToArray()});
+                    break;
+                default:
+                    returnValue = handler.Info.Invoke(handler.Group, new[] {arguments.ToArray(), author});
+                    break;
+            }
+
+            switch (returnValue)
+            {
+                case string s:
+                    return s;
+                case Task<string> s:
+                    return await s;
+                case Task t:
+                    await t;
+                    break;
+            }
+
+            return "";
+        }
+        
         private static void InvokeHandler(Handler handler, IPEndPoint endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);

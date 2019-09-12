@@ -21,7 +21,7 @@ namespace Uchu.World
             if (!_droppedIds.TryPop(out var networkId))
             {
                 if (_networkDictionary.Any()) networkId = (ushort) (_networkDictionary.Values.Max() + 1);
-                else networkId = 0;
+                else networkId = 1;
             }
 
             _networkDictionary.Add(gameObject, networkId);

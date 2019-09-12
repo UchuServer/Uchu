@@ -258,6 +258,8 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("CharacterIndex");
 
+                    b.Property<int>("GameMasterLevel");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(60);

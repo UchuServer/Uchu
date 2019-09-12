@@ -16,7 +16,9 @@ namespace Uchu.Core
         public bool Banned { get; set; }
         
         public string BannedReason { get; set; }
-
+        
+        public int GameMasterLevel { get; set; }
+        
         [Required]
         public int CharacterIndex { get; set; }
 

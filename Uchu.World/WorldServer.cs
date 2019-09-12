@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -10,6 +11,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Client;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
@@ -99,299 +101,6 @@ namespace Uchu.World
             return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
         }
 
-        public async Task<string> AdminCommand(string command, Player player)
-        {
-            var arguments = command?.Split(' ');
-
-            uint count;
-            int lot;
-            int delta;
-            bool state;
-            switch (arguments?[0].ToLower())
-            {
-                case "give":
-                    if (arguments.Length < 2 || arguments.Length > 3)
-                    {
-                        return "give <lot> <count(optional)>";
-                    }
-
-                    if (!int.TryParse(arguments[1], out lot))
-                    {
-                        return "Invalid <lot>";
-                    }
-
-                    count = 1;
-                    if (arguments.Length == 3)
-                    {
-                        if (!uint.TryParse(arguments[2], out count))
-                        {
-                            return "Invalid <count(optional)>";
-                        }
-                    }
-
-                    await player.GetComponent<InventoryManager>().AddItemAsync(lot, count);
-
-                    return $"Successfully added {lot} x {count} to your inventory";
-                case "remove":
-                    if (arguments.Length < 2 || arguments.Length > 3)
-                    {
-                        return "remove <lot> <count(optional)>";
-                    }
-
-                    if (!int.TryParse(arguments[1], out lot))
-                    {
-                        return "Invalid <lot>";
-                    }
-
-                    count = 1;
-                    if (arguments.Length == 3)
-                    {
-                        if (!uint.TryParse(arguments[2], out count))
-                        {
-                            return "Invalid <count(optional)>";
-                        }
-                    }
-
-                    await player.GetComponent<InventoryManager>().RemoveItemAsync(lot, count);
-
-                    return $"Successfully removed {lot} x {count} to your inventory";
-                case "coin":
-                    if (arguments.Length != 2)
-                    {
-                        return "coin <delta>";
-                    }
-
-                    if (!int.TryParse(arguments[1], out delta) || delta == default)
-                    {
-                        return "Invalid <delta>";
-                    }
-
-                    player.Currency += delta;
-
-                    return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} coins";
-                case "spawn":
-                    if (arguments.Length != 2 || arguments.Length > 8)
-                    {
-                        return "spawn <lot> <x(optional)> <y(optional)> <z(optional)>";
-                    }
-
-                    arguments = arguments.Select(a => a.Replace('.', ',')).ToArray();
-
-                    if (!int.TryParse(arguments[1], out lot))
-                    {
-                        return "Invalid <lot>";
-                    }
-                    
-                    var position = player.Transform.Position;
-                    if (arguments.Length >= 5)
-                    {
-                        try
-                        {
-                            position = new Vector3
-                            {
-                                X = float.Parse(arguments[2]),
-                                Y = float.Parse(arguments[3]),
-                                Z = float.Parse(arguments[4])
-                            };
-                        }
-                        catch
-                        {
-                            return "Invalid <x(optional)> or <y(optional)> or <z(optional)>";
-                        }
-                    }
-
-                    var rotation = player.Transform.Rotation;
-
-                    var obj = GameObject.Instantiate(new LevelObject
-                    {
-                        Lot = lot,
-                        Position = position,
-                        Rotation = rotation,
-                        Scale = 1,
-                        Settings = new LegoDataDictionary()
-                    }, player.Zone);
-                    
-                    obj.Construct();
-
-                    return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
-                case "position":
-                    return $"{player.Transform.Position}";
-                case "rotation":
-                    return $"{player.Transform.Rotation}";
-                case "die":
-                    player.GetComponent<DestructibleComponent>().Smash(player, player);
-                    return "You smashed yourself.";
-                case "freecam":
-                    player.Message(new ToggleFreeCamModeMessage
-                    {
-                        Associate = player
-                    });
-                    return "Toggled freecam.";
-                case "fly":
-                    if (arguments.Length != 2)
-                    {
-                        return "fly <state(on/off)>";
-                    }
-
-                    switch (arguments[1].ToLower())
-                    {
-                        case "true":
-                        case "on":
-                            state = true;
-                            break;
-                        case "false":
-                        case "off":
-                            state = false;
-                            break;
-                        default:
-                            return "Invalid <state(on/off)>";
-                    }
-                    
-                    player.Message(new SetJetPackModeMessage
-                    {
-                        Associate = player,
-                        BypassChecks = true,
-                        Use = state,
-                        EffectId = 36
-                    });
-
-                    return $"Toggled jetpack state: {state}";
-                case "near":
-                    var current = player.Zone.GameObjects[0];
-
-                    foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
-                    {
-                        if (gameObject.Transform == default || gameObject.GetComponent<SpawnerComponent>() != null) continue;
-
-                        if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
-                            Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
-                        {
-                            current = gameObject;
-                        }
-                    }
-
-                    if (current == default) return "No objects in this zone.";
-
-                    var info = new StringBuilder();
-
-                    using (var cdClient = new CdClientContext())
-                    {
-                        var cdClientObject = cdClient.ObjectsTable.First(o => o.Id == current.Lot);
-
-                        info.Append($"[{current.ObjectId}] [{current.Lot}] \"{cdClientObject.Name}\"");
-
-                        var components = current.GetAllComponents().OfType<ReplicaComponent>().ToArray();
-                        for (var index = 0; index < components.Length; index++)
-                        {
-                            var component = components[index];
-                            info.Append($"\n[{index}] {component.Id}");
-                        }
-
-                        return info.ToString();
-                    }
-                case "score":
-                    if (arguments.Length != 2)
-                    {
-                        return "score <delta>";
-                    }
-                    
-                    if (!int.TryParse(arguments[1], out delta))
-                    {
-                        return "Invalid <delta>";
-                    }
-
-                    player.UniverseScore += delta;
-                    
-                    player.Serialize();
-                    
-                    return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} score";
-                case "level":
-                    if (arguments.Length != 2)
-                    {
-                        return "level <level>";
-                    }
-                    
-                    if (!long.TryParse(arguments[1], out var level))
-                    {
-                        return "Invalid <level>";
-                    }
-
-                    player.Level = level;
-                    
-                    player.Serialize();
-
-                    return $"Successfully set your level to {level}";
-                case "pvp":
-                    if (arguments.Length != 2)
-                    {
-                        return "pvp <state(on/off)>";
-                    }
-
-                    switch (arguments[1].ToLower())
-                    {
-                        case "true":
-                        case "on":
-                            state = true;
-                            break;
-                        case "false":
-                        case "off":
-                            state = false;
-                            break;
-                        default:
-                            return "Invalid <state(on/off)>";
-                    }
-
-                    player.GetComponent<CharacterComponent>().IsPvP = state;
-                    
-                    player.Serialize();
-
-                    return $"Successfully set your pvp state to {state}";
-                case "gm":
-                    if (arguments.Length != 2)
-                    {
-                        return "gm <state(on/off)>";
-                    }
-
-                    switch (arguments[1].ToLower())
-                    {
-                        case "true":
-                        case "on":
-                            state = true;
-                            break;
-                        case "false":
-                        case "off":
-                            state = false;
-                            break;
-                        default:
-                            return "Invalid <state(on/off)>";
-                    }
-                    
-                    player.GetComponent<CharacterComponent>().IsGameMaster = state;
-                    
-                    player.Serialize();
-                    
-                    return $"Successfully set your GameMaster state to {state}";
-                case "gmlevel":
-                    if (arguments.Length != 2)
-                    {
-                        return "gmlevel <level>";
-                    }
-
-                    if (!byte.TryParse(arguments[1], out var gmlevel))
-                    {
-                        return "Invalid <level>";
-                    }
-
-                    player.GetComponent<CharacterComponent>().GameMasterLevel = gmlevel;
-                    
-                    player.Serialize();
-
-                    return $"Successfully set your GameMaster level to {gmlevel}";
-                default:
-                    return AdminCommand(command, false);
-            }
-        }
-        
         protected override void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
@@ -404,45 +113,66 @@ namespace Uchu.World
                 foreach (var method in group.GetMethods().Where(m => !m.IsStatic && !m.IsAbstract))
                 {
                     var attr = method.GetCustomAttribute<PacketHandlerAttribute>();
-                    if (attr == null) continue;
-
-                    var parameters = method.GetParameters();
-                    if (parameters.Length == 0 ||
-                        !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType)) continue;
-                    var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
-
-                    if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                    if (attr != null)
                     {
-                        var gameMessage = (IGameMessage) packet;
-                        
-                        _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler
+                        var parameters = method.GetParameters();
+                        if (parameters.Length == 0 ||
+                            !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType)) continue;
+                        var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
+
+                        if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                        {
+                            var gameMessage = (IGameMessage) packet;
+
+                            _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler
+                            {
+                                Group = instance,
+                                Info = method,
+                                Packet = packet,
+                                RunTask = attr.RunTask
+                            });
+
+                            continue;
+                        }
+
+                        var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
+                        var packetId = attr.PacketId ?? packet.PacketId;
+
+                        if (!HandlerMap.ContainsKey(remoteConnectionType))
+                            HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
+
+                        var handlers = HandlerMap[remoteConnectionType];
+
+                        Logger.Debug(!handlers.ContainsKey(packetId)
+                            ? $"Registered handler for packet {packet}"
+                            : $"Handler for packet {packet} overwritten");
+
+                        handlers[packetId] = new Handler
                         {
                             Group = instance,
                             Info = method,
                             Packet = packet,
                             RunTask = attr.RunTask
-                        });
-                        
-                        continue;
+                        };
                     }
-
-                    var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
-                    var packetId = attr.PacketId ?? packet.PacketId;
-
-                    if (!HandlerMap.ContainsKey(remoteConnectionType))
-                        HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
-
-                    var handlers = HandlerMap[remoteConnectionType];
-                    
-                    Logger.Debug(!handlers.ContainsKey(packetId) ? $"Registered handler for packet {packet}" : $"Handler for packet {packet} overwritten");
-                    
-                    handlers[packetId] = new Handler
+                    else
                     {
-                        Group = instance,
-                        Info = method,
-                        Packet = packet,
-                        RunTask = attr.RunTask
-                    };
+                        var cmdAttr = method.GetCustomAttribute<CommandHandlerAttribute>();
+                        if (cmdAttr == null) continue;
+
+                        if (!CommandHandleMap.ContainsKey(cmdAttr.Prefix))
+                            CommandHandleMap[cmdAttr.Prefix] = new Dictionary<string, CommandHandler>();
+                        
+                        CommandHandleMap[cmdAttr.Prefix][cmdAttr.Signature] = new CommandHandler
+                        {
+                            Group = instance,
+                            Info = method,
+                            GameMasterLevel = cmdAttr.GameMasterLevel,
+                            Help = cmdAttr.Help,
+                            Signature = cmdAttr.Signature,
+                            ConsoleCommand = method.GetParameters().Length != 2
+                        };
+                    }
                 }
             }
         }

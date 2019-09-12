@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.World.Social;
 
@@ -13,17 +14,24 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
-            if (!message.Message.StartsWith('/'))
-                return;
-            
-            var command = message.Message.Remove(0, 1);
-
-            var response = await ((WorldServer) Server).AdminCommand(command, player);
-
-            Server.Send(new ChatMessagePacket
+            using (var ctx = new UchuContext())
             {
-                Message = $"{response}\0"
-            }, player.EndPoint);
+                var character = await ctx.Characters.Include(c => c.User)
+                    .FirstAsync(c => c.CharacterId == player.ObjectId);
+
+                Logger.Debug($"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
+                
+                var response = await Server.HandleCommandAsync(
+                    message.Message,
+                    player,
+                    (GameMasterLevel) character.User.GameMasterLevel
+                );
+
+                Server.Send(new ChatMessagePacket
+                {
+                    Message = $"{response}\0"
+                }, player.EndPoint);
+            }
         }
 
         [PacketHandler]

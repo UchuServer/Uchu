@@ -18,7 +18,6 @@ namespace Uchu.Core
             return Math.Abs(res % (max - min)) + min;
         }
 
-        public static long GenerateObjectId()
-            => RandomLong(1000000000000000000, 1999999999999999999);
+        public static long GenerateObjectId() => RandomLong(1000000000000000000, 1999999999999999999);
     }
 }

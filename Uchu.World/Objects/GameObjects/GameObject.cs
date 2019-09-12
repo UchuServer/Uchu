@@ -89,13 +89,13 @@ namespace Uchu.World
         public bool TryGetComponent(Type type, out Component result)
         {
             result = GetComponent(type);
-            return ReferenceEquals(result, default);
+            return result != default;
         }
         
         public bool TryGetComponent<T>(out T result) where T : Component
         {
             result = GetComponent<T>();
-            return ReferenceEquals(result, default);
+            return result != default;
         }
         
         public void RemoveComponent(Type type)
@@ -164,6 +164,7 @@ namespace Uchu.World
             Zone.DestroyObject(this);
 
             Zone.GameObjects.Remove(this);
+            Zone.Objects.Remove(this);
         }
 
         public void Construct()

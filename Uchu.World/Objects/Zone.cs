@@ -143,7 +143,7 @@ namespace Uchu.World
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
                 
                 var stream = new MemoryStream();
-            
+                
                 using (var writer = new BitWriter(stream))
                 {
                     writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
