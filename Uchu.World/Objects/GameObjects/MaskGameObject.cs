@@ -14,10 +14,5 @@ namespace Uchu.World
 
             return instance;
         }
-
-        public override void Start()
-        {
-            
-        }
     }
 }

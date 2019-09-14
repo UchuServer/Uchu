@@ -14,19 +14,24 @@ namespace Uchu.World.Experimental
         private Random _random;
 
         private float _soulTimer;
-        
-        public override void Instantiated()
+
+        public PainElemental()
         {
-            _ai = GameObject.GetComponent<EnemyAi>();
-            _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
-
-            _ai.Speed = 15;
-            _ai.FallowPlayer = true;
-
             _random = new Random();
+
+            OnStart += () =>
+            {
+                _ai = GameObject.GetComponent<EnemyAi>();
+                _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
+
+                _ai.Speed = 15;
+                _ai.FallowPlayer = true;
+            };
+
+            OnTick += Tick;
         }
 
-        public override void Update()
+        private void Tick()
         {
             if (ReferenceEquals(_baseCombatAi.Target, null))
             {
@@ -38,7 +43,7 @@ namespace Uchu.World.Experimental
 
             if (_soulTimer < 3)
             {
-                _soulTimer += Zone.TimeDelta;
+                _soulTimer += Zone.DeltaTime;
                 return;
             }
 
@@ -61,8 +66,8 @@ namespace Uchu.World.Experimental
 
                     lostSoulAi.Speed = 90;
                     lostSoulAi.FallowPlayer = true;
-                    
-                    lostSoul.Construct();
+
+                    Update(GameObject);
 
                     Task.Run(async () =>
                     {

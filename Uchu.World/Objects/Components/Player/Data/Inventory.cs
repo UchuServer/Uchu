@@ -37,7 +37,10 @@ namespace Uchu.World
 
                 foreach (var item in _items)
                 {
+                    Object.Start(item);
+                    
                     Logger.Information($"\t-> {item}");
+                    
                     item.OnDestroyed += () => { _items.Remove(item); };
                 }
             }

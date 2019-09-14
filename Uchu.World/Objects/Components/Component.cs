@@ -8,20 +8,9 @@ namespace Uchu.World
 
         public Transform Transform => GameObject.Transform;
 
-        /// <summary>
-        /// Called when the GameObject is constructed for the first time.
-        /// </summary>
-        public virtual void Start()
+        public Component()
         {
-            
-        }
-        
-        public override void End()
-        {
-            base.End();
-
-            // Ensure this component is removed.
-            GameObject.RemoveComponent(this);
+            OnDestroyed += () => { GameObject.RemoveComponent(this); };
         }
     }
 }

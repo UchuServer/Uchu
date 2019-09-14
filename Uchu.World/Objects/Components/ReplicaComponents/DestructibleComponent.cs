@@ -22,6 +22,8 @@ namespace Uchu.World
         public override void FromLevelObject(LevelObject levelObject)
         {
             _random = new Random();
+
+            GameObject.Layer = Layer.Smashable;
             
             using (var cdClient = new CdClientContext())
             {
@@ -124,7 +126,9 @@ namespace Uchu.World
                             Source = GameObject,
                             SpawnPosition = drop.Transform.Position + Vector3.UnitY,
                             FinalPosition = finalPosition
-                        }); 
+                        });
+
+                        Start(drop);
                     }
                 }
             }

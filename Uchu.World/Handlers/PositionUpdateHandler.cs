@@ -42,8 +42,9 @@ namespace Uchu.World.Handlers
             physics.HasAngularVelocity = packet.HasAngularVelocity;
 
             physics.AngularVelocity = packet.AngularVelocity;
+
+            physics.Platform = player.Zone.GetGameObject(packet.PlatformObjectId);
             
-            physics.Platform = player.Zone.GameObjects.Find(o => o.ObjectId == packet.PlatformObjectId);
             physics.PlatformPosition = packet.PlatformPosition;
 
             player.Zone.SendSerialization(player, player.Zone.Players.Where(

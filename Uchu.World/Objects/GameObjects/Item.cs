@@ -16,6 +16,11 @@ namespace Uchu.World
         private bool _bound;
 
         private uint _slot;
+
+        public Item()
+        {
+            OnDestroyed += () => { Task.Run(RemoveFromInventory); };
+        }
         
         public ItemComponent ItemComponent { get; private set; }
         
@@ -345,11 +350,6 @@ namespace Uchu.World
 
                 await ctx.SaveChangesAsync();
             }
-        }
-
-        public override void End()
-        {
-            Task.Run(RemoveFromInventory);
         }
     }
 }

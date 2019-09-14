@@ -31,6 +31,11 @@ namespace Uchu.World
         public uint NextWaypointIndex { get; set; }
         
         public float IdleTimeElapsed { get; set; }
+
+        public MovingPlatformComponent()
+        {
+            OnStart += () => { Task.Run(WaitPoint); };
+        }
         
         public override ReplicaComponentsId Id => ReplicaComponentsId.MovingPlatform;
 
@@ -146,15 +151,6 @@ namespace Uchu.World
             }
         }
 
-        public override void Update()
-        {
-            if (_started || !GameObject.Constructed) return;
-
-            _started = true;
-
-            Task.Run(WaitPoint);
-        }
-
         private void MovePlatform()
         {
             /*
@@ -166,7 +162,7 @@ namespace Uchu.World
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
 
-            GameObject.Serialize();
+            Update(GameObject);
             
             /*
              * Start Waiting after completing path.
@@ -196,7 +192,7 @@ namespace Uchu.World
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
 
-            GameObject.Serialize();
+            Update(GameObject);
 
             /*
              * Start Waiting after waiting.

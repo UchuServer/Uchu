@@ -40,6 +40,7 @@ namespace Uchu.World
         {
         }
 
+        /*
         public override void Instantiated()
         {
             base.Instantiated();
@@ -108,5 +109,6 @@ namespace Uchu.World
             }
             else Logger.Debug($"No features on {scriptName} [{GameObject.Lot}]");
         }
+        */
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet;
 using RakDotNet.IO;
@@ -15,11 +16,47 @@ namespace Uchu.World
 {
     public class GameObject : Object
     {
+        private Mask _layer = new Mask(World.Layer.Default);
+        
         public long ObjectId { get; private set; }
 
         public Lot Lot { get; private set; }
 
-        public bool Constructed { get; private set; }
+        public GameObject()
+        {
+            OnStart += () =>
+            {
+                Zone.RegisterGameObject(this);
+
+                foreach (var component in _components.ToArray())
+                {
+                    Start(component);
+                }
+            };
+            
+            OnDestroyed += () =>
+            {
+                Zone.UnRegisterGameObject(this);
+
+                foreach (var component in _components.ToArray())
+                {
+                    Destroy(component);
+                }
+
+                Zone.SendDestruction(this);
+            };
+        }
+        
+        public Mask Layer
+        {
+            get => _layer;
+            set
+            {
+                _layer = value;
+                
+                OnLayerChanged?.Invoke(_layer);
+            }
+        }
 
         public SpawnerComponent SpawnerObject { get; private set; }
 
@@ -35,6 +72,8 @@ namespace Uchu.World
 
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
 
+        public event Action<Mask> OnLayerChanged;
+
         #region Component Management
 
         public Component AddComponent(Type type)
@@ -45,7 +84,7 @@ namespace Uchu.World
                 return null;
             }
 
-            if (Object.Instantiate(type, Zone, false) is Component component)
+            if (Object.Instantiate(type, Zone) is Component component)
             {
                 component.GameObject = this;
 
@@ -59,7 +98,7 @@ namespace Uchu.World
                     AddComponent(required.Type);
                 }
 
-                component.Instantiated();
+                Start(component);
 
                 return component;
             }
@@ -129,67 +168,6 @@ namespace Uchu.World
 
         #endregion
 
-        public override void Instantiated()
-        {
-            Zone.GameObjects.Add(this);
-        }
-
-        public override void Serialize()
-        {
-            Zone.UpdateObject(this);
-        }
-
-        /// <summary>
-        /// Called when this GameObject is constructed for the first time.
-        /// </summary>
-        public virtual void Start()
-        {
-            
-        }
-        
-        public override void End()
-        {
-            for (var index = 0; index < _components.Count; index++)
-            {
-                var component = _components[index];
-                Zone.Objects.Remove(component);
-                component.End();
-            }
-
-            _components.Clear();
-            
-            Zone.DestroyObject(this);
-
-            Zone.GameObjects.Remove(this);
-            Zone.Objects.Remove(this);
-        }
-
-        public void Construct()
-        {
-            if (Constructed)
-            {
-                Logger.Error($"{this} has already been constructed.");
-                return;
-            }
-
-            if (GetType().GetCustomAttribute<UnconstructedAttribute>() != null)
-            {
-                Logger.Error($"{this} is Unconstructed, it cannot be construed.");
-                return;
-            }
-            
-            Constructed = true;
-            
-            Zone.ConstructObject(this);
-            
-            Start();
-
-            foreach (var component in _components)
-            {
-                component.Start();
-            }
-        }
-
         #region Operators
 
         public static implicit operator long(GameObject gameObject)
@@ -209,6 +187,25 @@ namespace Uchu.World
 
         #endregion
 
+        #region Networking
+        
+        public static void Construct(GameObject gameObject)
+        {
+            gameObject.Zone.SendConstruction(gameObject);
+        }
+        
+        public static void Serialize(GameObject gameObject)
+        {
+            gameObject.Zone.SendSerialization(gameObject);
+        }
+        
+        public static void Destruct(GameObject gameObject)
+        {
+            gameObject.Zone.SendDestruction(gameObject);
+        }
+
+        #endregion
+        
         #region Instaniate
         
         #region From Raw
@@ -218,7 +215,7 @@ namespace Uchu.World
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
-                var instance = (GameObject) Object.Instantiate(type, parent.Zone, false);
+                var instance = (GameObject) Object.Instantiate(type, parent.Zone);
                 instance.ObjectId = objectId == default ? Utils.GenerateObjectId() : objectId;
 
                 instance.Lot = lot;
@@ -249,8 +246,6 @@ namespace Uchu.World
                         transform.Parent = parentTransform;
                         break;
                 }
-
-                instance.Instantiated();
 
                 return instance;
             }
@@ -301,6 +296,8 @@ namespace Uchu.World
 
         public static GameObject Instantiate(Type type, LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
         {
+            // ReSharper disable PossibleInvalidOperationException
+            
             //
             // Check if spawner
             //
@@ -312,6 +309,10 @@ namespace Uchu.World
             {
                 var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
 
+                //
+                // Create GameObject
+                //
+                
                 var instance = Instantiate(
                     type,
                     parent,
@@ -324,26 +325,45 @@ namespace Uchu.World
 
                 instance.SpawnerObject = spawner;
 
-                var registryComponents = ctx.ComponentsRegistryTable.Where(r => r.Id == levelObject.Lot).ToList();
+                //
+                // Collect all the components on this object
+                //
+                
+                var registryComponents = ctx.ComponentsRegistryTable.Where(
+                    r => r.Id == levelObject.Lot
+                ).ToList();
 
-                var order = ReplicaComponent.ComponentOrder;
+                //
+                // Select all the none networked components on this object
+                //
 
                 var componentEntries = registryComponents.Where(o =>
-                    o.Componenttype != null && !order.Contains(o.Componenttype.Value)
+                    o.Componenttype != null && !ReplicaComponent.ComponentOrder.Contains(o.Componenttype.Value)
                 );
                 
                 foreach (var component in componentEntries)
                 {
+                    //
+                    // Add components from the entries
+                    //
+                    
                     var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
 
-                    if (componentType != null)
-                        instance.AddComponent(componentType);
+                    if (componentType != null) instance.AddComponent(componentType);
                 }
 
-                registryComponents = registryComponents.Where(c => order.Contains(c.Componenttype.Value)).ToList();
+                //
+                // Select all the networked components on this object
+                //
+                
+                registryComponents = registryComponents.Where(
+                    c => ReplicaComponent.ComponentOrder.Contains(c.Componenttype.Value)
+                ).ToList();
 
+                // Sort all networked components.
                 registryComponents.Sort((c1, c2) =>
-                    order.IndexOf((int) c1.Componenttype) - order.IndexOf((int) c2.Componenttype)
+                    ReplicaComponent.ComponentOrder.IndexOf((int) c1.Componenttype) - 
+                    ReplicaComponent.ComponentOrder.IndexOf((int) c2.Componenttype)
                 );
 
                 foreach (var component in registryComponents)
@@ -354,23 +374,24 @@ namespace Uchu.World
                     else instance.AddComponent(componentType);
                 }
 
-                foreach (var component in instance._replicaComponents)
-                {
-                    component.FromLevelObject(levelObject);
-                }
-
+                //
+                // Check if this object is a trigger
+                //
+                
                 if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
                 {
                     Logger.Information($"{instance} is trigger!");
                     
-                    var trigger = instance.AddComponent<TriggerComponent>();
-
-                    trigger.FromLevelObject(levelObject);
+                    instance.AddComponent<TriggerComponent>();
                 }
+                
+                //
+                // Check if this object has a spawn activator attached to it
+                //
                 
                 if (levelObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) && (bool) spawnActivator)
                 {
-                    var template = Instantiate(new LevelObject
+                    Instantiate(new LevelObject
                     {
                         Lot = 6604,
                         Position = (Vector3) levelObject.Settings["rebuild_activators"],
@@ -378,10 +399,17 @@ namespace Uchu.World
                         Scale = -1,
                         Settings = new LegoDataDictionary()
                     }, parent);
-
-                    template.Transform.Parent = instance.Transform;
                 }
 
+                //
+                // Setup all the components
+                //
+                
+                foreach (var component in instance._replicaComponents)
+                {
+                    component.FromLevelObject(levelObject);
+                }
+                
                 return instance;
             }
         }

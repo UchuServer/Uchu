@@ -17,7 +17,7 @@ namespace Uchu.World
             IgnoreCooldown = reader.ReadBit();
             OutSuccess = reader.ReadBit();
 
-            Item = reader.ReadGameObject(Associate.Zone) as Item;
+            Item = reader.ReadGameObject<Item>(Associate.Zone);
         }
     }
 }

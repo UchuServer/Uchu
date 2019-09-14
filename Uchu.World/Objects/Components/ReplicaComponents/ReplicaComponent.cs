@@ -54,8 +54,6 @@ namespace Uchu.World
                 
                 if (instance.Id == ReplicaComponentsId.Invalid) continue;
                 
-                Logger.Debug($"[{instance.Id}] {type}");
-                
                 ReplicaById.Add(instance.Id, type);
             }
         }

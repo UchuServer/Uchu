@@ -104,8 +104,8 @@ namespace Uchu.World
             Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
 
             Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true); });
-            
-            GameObject.Serialize();
+
+            GameObject.Serialize(GameObject);
         }
         
         public void UnEquipItem(Item item)
@@ -126,8 +126,8 @@ namespace Uchu.World
             Items.Remove(equipLocation);
 
             Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(id, false); });
-            
-            GameObject.Serialize();
+
+            GameObject.Serialize(GameObject);
         }
 
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)

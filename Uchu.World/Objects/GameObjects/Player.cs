@@ -14,8 +14,13 @@ namespace Uchu.World
     {
         public IPEndPoint EndPoint { get; private set; }
 
-        public readonly Perspective Perspective = new Perspective();
+        public Perspective Perspective { get; private set; }
 
+        public Player()
+        {
+            OnTick += CheckDeathZone;
+        }
+        
         public long Currency
         {
             get
@@ -72,8 +77,6 @@ namespace Uchu.World
             );
 
             instance.EndPoint = endPoint;
-
-            zone.RequestConstruction(instance);
 
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
 
@@ -136,20 +139,19 @@ namespace Uchu.World
             instance.AddComponent<RendererComponent>();
             instance.AddComponent<Component107>();
 
-            instance.Construct();
+            Start(instance);
+            Construct(instance);
 
             instance.AddComponent<QuestInventory>();
             instance.AddComponent<InventoryManager>();
             instance.AddComponent<TeamPlayer>();
+
+            instance.Perspective = new Perspective(instance, World.Layer.All & ~ World.Layer.Hidden);
+            instance.Layer = World.Layer.Player;
             
-            Logger.Debug($"Player \"{character.Name}\" has been constructed.");
+            zone.RequestConstruction(instance);
             
             return instance;
-        }
-
-        public override void Update()
-        {
-            CheckDeathZone();
         }
 
         public void Message(IGameMessage gameMessage)

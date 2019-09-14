@@ -30,6 +30,8 @@ namespace Uchu.World.Handlers.GameMessages
         {
             var inventoryComponent = player.GetComponent<InventoryComponent>();
             
+            Logger.Information($"UnEquip Item: {message.ItemToUnEquip} | {message.ReplacementItem}");
+            
             inventoryComponent.UnEquipItem(message.ItemToUnEquip);
             
             if (message.ReplacementItem != null)

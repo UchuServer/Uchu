@@ -17,21 +17,30 @@ namespace Uchu.World
 
         private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
 
-        public override void Instantiated()
+        public InventoryManager()
         {
-            base.Instantiated();
-
-            _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
-            _lock = new object();
-            
-            foreach (var value in Enum.GetValues(typeof(InventoryType)))
+            OnStart += () =>
             {
-                var id = (InventoryType) value;
-                
-                Logger.Information($"[{id}]");
-                
-                _inventories.Add(id, new Inventory(id, this));
-            }
+                _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
+                _lock = new object();
+
+                foreach (var value in Enum.GetValues(typeof(InventoryType)))
+                {
+                    var id = (InventoryType) value;
+
+                    Logger.Information($"[{id}]");
+
+                    _inventories.Add(id, new Inventory(id, this));
+                }
+            };
+
+            OnDestroyed += () =>
+            {
+                foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items))
+                {
+                    Destroy(item);
+                }
+            };
         }
 
         public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
@@ -171,7 +180,9 @@ namespace Uchu.World
                     {
                         var toAdd = Min(stackSize, toCreate);
 
-                        Item.Instantiate(lot, inventory, (uint) toAdd);
+                        var item = Item.Instantiate(lot, inventory, (uint) toAdd);
+
+                        Start(item);
 
                         toCreate -= toAdd;
                     }
@@ -281,14 +292,6 @@ namespace Uchu.World
             }
             
             item.Slot = (uint) newSlot;
-        }
-
-        public override void End()
-        {
-            foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items))
-            {
-                Destroy(item);
-            }
         }
 
         private static int Min(params int[] nums)

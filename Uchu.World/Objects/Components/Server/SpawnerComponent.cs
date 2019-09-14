@@ -20,7 +20,7 @@ namespace Uchu.World
         
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
+            GameObject.Layer = Layer.Spawner;
         }
 
         public override void Construct(BitWriter writer)
@@ -47,8 +47,8 @@ namespace Uchu.World
         public GameObject Spawn()
         {
             var obj = GetSpawnObject();
-            
-            obj.Construct();
+
+            Start(obj);
 
             ActiveSpawns.Add(obj);
 

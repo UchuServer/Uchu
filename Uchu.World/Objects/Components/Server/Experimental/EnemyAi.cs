@@ -10,6 +10,17 @@ namespace Uchu.World.Experimental
 
         private int _ticks;
 
+        public EnemyAi()
+        {
+            OnStart += () =>
+            {
+                _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
+                _controllablePhysics = GameObject.GetComponent<ControllablePhysicsComponent>();
+            };
+
+            OnTick += PathFind;
+        }
+        
         public bool FallowPlayer { get; set; }
         
         public Vector3 TargetLocation { get; set; }
@@ -18,13 +29,7 @@ namespace Uchu.World.Experimental
         
         public Vector3 FallowLocation { get; private set; }
 
-        public override void Instantiated()
-        {
-            _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
-            _controllablePhysics = GameObject.GetComponent<ControllablePhysicsComponent>();
-        }
-
-        public override void Update()
+        private void PathFind()
         {
             var targetLocation = TargetLocation;
 
@@ -64,7 +69,7 @@ namespace Uchu.World.Experimental
             
             _ticks++;
             
-            Transform.Position = Transform.Position.MoveTowards(targetLocation, Speed * Zone.TimeDelta);
+            Transform.Position = Transform.Position.MoveTowards(targetLocation, Speed * Zone.DeltaTime);
             
             _controllablePhysics.HasPosition = true;
             
@@ -74,7 +79,8 @@ namespace Uchu.World.Experimental
             
             if (_ticks == 5)
             {
-                GameObject.Serialize();
+                Update(GameObject);
+                
                 _ticks = default;
             }
         }

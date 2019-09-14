@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.CdClient;
 using Uchu.World.Collections;
+using Uchu.World.Experimental;
 using Uchu.World.Parsers;
 
 namespace Uchu.World.Handlers.Commands
@@ -127,8 +129,9 @@ namespace Uchu.World.Handlers.Commands
                 Scale = 1,
                 Settings = new LegoDataDictionary()
             }, player.Zone);
-                    
-            obj.Construct();
+
+            Object.Start(obj);
+            GameObject.Construct(obj);
 
             return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
         }
@@ -217,22 +220,38 @@ namespace Uchu.World.Handlers.Commands
             if (current == default) return "No objects in this zone.";
 
             var info = new StringBuilder();
+            
+            var argument = "";
 
-            using (var cdClient = new CdClientContext())
+            if (arguments.Length == 1)
             {
-                var cdClientObject = await cdClient.ObjectsTable.FirstAsync(o => o.Id == current.Lot);
-
-                info.Append($"[{current.ObjectId}] [{current.Lot}] \"{cdClientObject.Name}\"");
-
-                var components = current.GetAllComponents().OfType<ReplicaComponent>().ToArray();
-                for (var index = 0; index < components.Length; index++)
-                {
-                    var component = components[index];
-                    info.Append($"\n[{index}] {component.Id}");
-                }
-
-                return info.ToString();
+                argument = arguments[0];
             }
+
+            switch (argument)
+            {
+                case "-l":
+                    info.Append(Convert.ToString(current.Layer.Value, 2));
+                    break;
+                default:
+                    using (var cdClient = new CdClientContext())
+                    {
+                        var cdClientObject = await cdClient.ObjectsTable.FirstAsync(o => o.Id == current.Lot);
+
+                        info.Append($"[{current.ObjectId}] [{current.Lot}] \"{cdClientObject.Name}\"");
+
+                        var components = current.GetAllComponents().OfType<ReplicaComponent>().ToArray();
+                        for (var index = 0; index < components.Length; index++)
+                        {
+                            var component = components[index];
+                            info.Append($"\n[{index}] {component.Id}");
+                        }
+                    }
+                    
+                    break;
+            }
+            
+            return info.ToString();
         }
 
         [CommandHandler(Signature = "score", Help = "Change your U-score", GameMasterLevel = GameMasterLevel.Admin)]
@@ -250,7 +269,7 @@ namespace Uchu.World.Handlers.Commands
 
             player.UniverseScore += delta;
             
-            player.Serialize();
+            GameObject.Serialize(player);
                     
             return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} score";
         }
@@ -270,7 +289,7 @@ namespace Uchu.World.Handlers.Commands
 
             player.Level = level;
             
-            player.Serialize();
+            GameObject.Serialize(player);
 
             return $"Successfully set your level to {level}";
         }
@@ -300,7 +319,7 @@ namespace Uchu.World.Handlers.Commands
 
             player.GetComponent<CharacterComponent>().IsPvP = state;
                     
-            player.Serialize();
+            GameObject.Serialize(player);
 
             return $"Successfully set your pvp state to {state}";
         }
@@ -329,8 +348,8 @@ namespace Uchu.World.Handlers.Commands
             }
                     
             player.GetComponent<CharacterComponent>().IsGameMaster = state;
-                    
-            player.Serialize();
+            
+            GameObject.Serialize(player);
                     
             return $"Successfully set your GameMaster state to {state}";
         }
@@ -349,10 +368,71 @@ namespace Uchu.World.Handlers.Commands
             }
 
             player.GetComponent<CharacterComponent>().GameMasterLevel = gmlevel;
-                    
-            player.Serialize();
+
+            GameObject.Serialize(player);
 
             return $"Successfully set your GameMaster level to {gmlevel}";
+        }
+
+        [CommandHandler(Signature = "layer", Help = "Change your layer", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Layer(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+            {
+                return "layer <layer>";
+            }
+            
+            if (!long.TryParse(arguments[0], out var layer))
+            {
+                return "Invalid <layer>";
+            }
+
+            if (player.Perspective.ViewMask == layer)
+            {
+                player.Perspective.ViewMask -= layer;
+            }
+            else player.Perspective.ViewMask += layer;
+
+            return $"Layer set to {Convert.ToString(player.Perspective.ViewMask.Value, 2)}";
+        }
+
+        [CommandHandler(Signature = "brick", Help = "Spawns a floating brick", GameMasterLevel = GameMasterLevel.Mythran)]
+        public string Brick(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+            {
+                return "brick <lot>";
+            }
+
+            if (!int.TryParse(arguments[0], out var lot))
+            {
+                return "Invalid <lot>";
+            }
+
+            var baseBrick = GameObject.Instantiate(player.Zone, lot, player.Transform.Position + Vector3.UnitY * 5, Quaternion.Identity);
+            var floating = baseBrick.AddComponent<FloatingBrick>();
+            
+            floating.Target = player.Transform.Position + Vector3.UnitY * 7;
+            floating.Speed = 1;
+            
+            Object.Start(baseBrick);
+            
+            GameObject.Construct(baseBrick);
+
+            for (var i = 0; i < 8; i++)
+            {
+                var brick = GameObject.Instantiate(player.Zone, lot, player.Transform.Position + Vector3.UnitY * 7, Quaternion.Identity);
+                
+                floating = brick.AddComponent<FloatingBrick>();
+                floating.Target = player.Transform.Position + Vector3.UnitY * (9 + i);
+                floating.Speed = 1;
+                
+                Object.Start(brick);
+
+                GameObject.Construct(brick);
+            }
+
+            return $"Spawned floating brick {lot}";
         }
     }
 }

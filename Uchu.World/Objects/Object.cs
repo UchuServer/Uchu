@@ -1,4 +1,6 @@
 using System;
+using System.Reflection;
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -9,18 +11,19 @@ namespace Uchu.World
 
         public Server Server => Zone.Server;
         
-        public event Action OnInstantiated;
+        public event Action OnStart;
 
         public event Action OnDestroyed;
+
+        public event Action OnTick;
         
-        public static Object Instantiate(Type type, Zone zone, bool callInstantiated = true)
+        public static Object Instantiate(Type type, Zone zone)
         {
             if (Activator.CreateInstance(type) is Object instance)
             {
                 instance.Zone = zone;
-                zone.Objects.Add(instance);
-
-                if (callInstantiated) instance.Instantiated();
+                
+                zone.RegisterObject(instance);
                 
                 return instance;
             }
@@ -33,29 +36,38 @@ namespace Uchu.World
         {
             return Instantiate(typeof(T), zone) as T;
         }
-
+        
+        public static void Start(Object obj)
+        {
+            obj.OnStart?.Invoke();
+        }
+        
         public static void Destroy(Object obj)
         {
-            if (obj.Zone.Objects.Contains(obj))
-            {
-                obj.Zone.Objects.Remove(obj);
-                obj.End();
-            }
-            else Logger.Error($"{obj} is already destroyed!");
+            obj.Zone.UnRegisterObject(obj);
+            
+            obj.OnDestroyed?.Invoke();
         }
-
-        public virtual void Instantiated()
-        {
-            OnInstantiated?.Invoke();
-        }
-
-        public virtual void Serialize(){}
         
-        public virtual void Update(){}
-
-        public virtual void End()
+        public static void Destroy(Object obj, float time)
         {
-            OnDestroyed?.Invoke();
+            Task.Run(async () =>
+            {
+                Logger.Debug($"Destroying {obj} in {(int) (time * 1000)} ms");
+                
+                await Task.Delay((int) (time * 1000));
+
+                Logger.Debug($"Destroying {obj}");
+                
+                obj.Zone.UnRegisterObject(obj);
+
+                obj.OnDestroyed?.Invoke();
+            });
+        }
+
+        public static void Update(Object obj)
+        {
+            obj.OnTick?.Invoke();
         }
     }
 }

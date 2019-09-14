@@ -1,3 +1,4 @@
+using System.Linq;
 using RakDotNet.IO;
 
 namespace Uchu.World
@@ -9,13 +10,15 @@ namespace Uchu.World
             var id = @this.Read<long>();
 
             if (id == -1) return null;
-            
-            foreach (var gameObject in zone.GameObjects)
-            {
-                if (gameObject.ObjectId == id) return gameObject;
-            }
 
-            return null;
+            var gameObject = zone.GameObjects.FirstOrDefault(g => g.ObjectId == id);
+            
+            return gameObject;
+        }
+        
+        public static T ReadGameObject<T>(this BitReader @this, Zone zone) where T : GameObject
+        {
+            return @this.ReadGameObject(zone) as T;
         }
 
         public static bool Flag(this BitReader @this) => @this.ReadBit();

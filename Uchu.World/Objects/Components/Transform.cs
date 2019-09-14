@@ -11,6 +11,12 @@ namespace Uchu.World
         
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
 
+        public Vector3 EulerAngles
+        {
+            get => Rotation.ToEuler();
+            set => Rotation = Quaternion.CreateFromYawPitchRoll(value.X, value.Y, value.Z);
+        }
+
         public float Scale { get; set; } = -1;
         
         public Transform Parent
@@ -37,5 +43,7 @@ namespace Uchu.World
         }
 
         public Transform[] Children { get; private set; } = new Transform[0];
+        
+        
     }
 }

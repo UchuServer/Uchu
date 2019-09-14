@@ -21,9 +21,9 @@ namespace Uchu.World
             EvenIfDead = reader.ReadBit();
             IgnoreCooldown = reader.ReadBit();
             OutSuccess = reader.ReadBit();
-            
-            ItemToUnEquip = reader.ReadGameObject(Associate.Zone) as Item;
-            ReplacementItem = reader.ReadGameObject(Associate.Zone) as Item;
+
+            ItemToUnEquip = reader.ReadGameObject<Item>(Associate.Zone);
+            ReplacementItem = reader.ReadGameObject<Item>(Associate.Zone);
         }
     }
 }
