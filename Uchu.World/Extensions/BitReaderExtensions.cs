@@ -12,15 +12,18 @@ namespace Uchu.World
             if (id == -1) return null;
 
             var gameObject = zone.GameObjects.FirstOrDefault(g => g.ObjectId == id);
-            
+
             return gameObject;
         }
-        
+
         public static T ReadGameObject<T>(this BitReader @this, Zone zone) where T : GameObject
         {
             return @this.ReadGameObject(zone) as T;
         }
 
-        public static bool Flag(this BitReader @this) => @this.ReadBit();
+        public static bool Flag(this BitReader @this)
+        {
+            return @this.ReadBit();
+        }
     }
 }

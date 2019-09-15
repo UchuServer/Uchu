@@ -5,16 +5,15 @@ namespace Uchu.World.Experimental
 {
     public class FloatingBrick : Component
     {
-        public Vector3 Target;
-        
-        public float Speed;
-
-        private Vector3 StartPos;
-
         private float MaxDistance;
 
         private float PassedTime;
-        
+
+        public float Speed;
+
+        private Vector3 StartPos;
+        public Vector3 Target;
+
         public FloatingBrick()
         {
             OnStart += () =>
@@ -22,7 +21,7 @@ namespace Uchu.World.Experimental
                 StartPos = Transform.Position;
                 MaxDistance = Vector3.Distance(Target, StartPos);
             };
-            
+
             OnTick += Build;
         }
 
@@ -39,7 +38,7 @@ namespace Uchu.World.Experimental
                 Destroy(GameObject);
                 return;
             }
-            
+
             GameObject.Serialize(GameObject);
         }
     }

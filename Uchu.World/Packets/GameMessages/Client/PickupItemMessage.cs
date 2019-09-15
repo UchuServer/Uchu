@@ -7,7 +7,7 @@ namespace Uchu.World
         public override GameMessageId GameMessageId => GameMessageId.PickupItem;
 
         public GameObject Loot { get; set; }
-        
+
         public Player Player { get; set; }
 
         public override void Deserialize(BitReader reader)

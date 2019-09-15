@@ -6,7 +6,7 @@ namespace Uchu.World
     public class DieMessage : ServerGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.Die;
-        
+
         public bool ClientDeath { get; set; }
 
         public bool SpawnLoot { get; set; } = true;
@@ -18,11 +18,11 @@ namespace Uchu.World
         public float DirectionRelativeAngleY { get; set; }
 
         public float DirectionRelativeForce { get; set; }
-        
+
         public int KillType { get; set; }
-        
+
         public GameObject Killer { get; set; }
-        
+
         public GameObject LootOwner { get; set; }
 
         public override void SerializeMessage(BitWriter writer)

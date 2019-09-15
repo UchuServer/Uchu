@@ -7,9 +7,9 @@ namespace Uchu.World
     public class Perspective
     {
         private readonly Stack<ushort> _droppedIds;
+        private readonly List<GameObject> _hallucinations;
 
         private readonly Dictionary<GameObject, ushort> _networkDictionary;
-        private readonly List<GameObject> _hallucinations;
         private readonly Player _player;
 
         private Mask _viewMask;
@@ -19,7 +19,7 @@ namespace Uchu.World
             _networkDictionary = new Dictionary<GameObject, ushort>();
 
             _hallucinations = new List<GameObject>();
-            
+
             _droppedIds = new Stack<ushort>();
 
             _player = player;
@@ -95,7 +95,7 @@ namespace Uchu.World
         public void Hallucinate(GameObject gameObject)
         {
             if (_networkDictionary.ContainsKey(gameObject)) return;
-            
+
             _hallucinations.Add(gameObject);
             gameObject.Zone.SendConstruction(gameObject, _player);
         }

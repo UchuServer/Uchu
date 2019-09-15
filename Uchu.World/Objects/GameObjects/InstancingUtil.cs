@@ -17,12 +17,12 @@ namespace Uchu.World
                 rotation: levelObject.Rotation, objectId: Utils.GenerateObjectId(), lot: levelObject.Lot);
 
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
-            
+
             spawnerComponent.Settings = levelObject.Settings;
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
-            
+
             levelObject.Settings.Remove("spawntemplate");
-            
+
             return instance;
         }
     }

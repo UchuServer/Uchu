@@ -8,9 +8,9 @@ namespace Uchu.World
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Server;
 
         public override uint PacketId => 0xC;
-        
+
         public abstract GameMessageId GameMessageId { get; }
-        
+
         public GameObject Associate { get; set; }
 
         public override void SerializePacket(BitWriter writer)

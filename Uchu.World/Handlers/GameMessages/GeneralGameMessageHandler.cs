@@ -13,20 +13,18 @@ namespace Uchu.World.Handlers.GameMessages
                 message.TargetObject.Lot,
                 message.TargetObject
             );
-            
+
             if (message.IsMultiInteract)
             {
                 //
                 // Multi-interact is mission
                 //
-                
+
                 if (message.MultiInteractType == default)
-                {
                     player.GetComponent<QuestInventory>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
-                }
             }
             else
             {

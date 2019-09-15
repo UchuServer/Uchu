@@ -14,11 +14,8 @@ namespace Uchu.World.Parsers
 {
     public class ZoneParser
     {
-        public Dictionary<ZoneId, ZoneInfo> Zones;
-
         private readonly AssemblyResources _resources;
-
-        public LevelParser LevelParser { get; }
+        public Dictionary<ZoneId, ZoneInfo> Zones;
 
         public ZoneParser(AssemblyResources resources)
         {
@@ -26,6 +23,8 @@ namespace Uchu.World.Parsers
 
             LevelParser = new LevelParser(resources);
         }
+
+        public LevelParser LevelParser { get; }
 
         public async Task LoadZoneData()
         {
@@ -36,7 +35,6 @@ namespace Uchu.World.Parsers
             var luzFiles = paths.Where(p => p.EndsWith("luz")).ToArray();
 
             foreach (var luzFile in luzFiles)
-            {
                 try
                 {
                     var zoneInfo = await ParseAsync(luzFile);
@@ -47,7 +45,6 @@ namespace Uchu.World.Parsers
                 {
                     Logger.Error($"Failed to parse {luzFile}: {e.Message}\n{e.StackTrace}");
                 }
-            }
         }
 
         private async Task<ZoneInfo> ParseAsync(string path)
@@ -70,9 +67,9 @@ namespace Uchu.World.Parsers
 
                 if (version >= 0x24)
                     reader.Read<uint>();
-                
+
                 var worldId = reader.Read<uint>();
-                
+
                 var zone = new ZoneInfo
                 {
                     ZoneId = worldId,
@@ -81,7 +78,7 @@ namespace Uchu.World.Parsers
                 };
 
                 var sceneCount = version < 0x25 ? reader.Read<byte>() : reader.Read<uint>();
-                
+
                 zone.ScenesInfo = new SceneInfo[sceneCount];
 
                 for (var i = 0; i < sceneCount; i++)
@@ -134,13 +131,11 @@ namespace Uchu.World.Parsers
                         zone.TransitionsInfo[i] = new TransitionInfo[2];
 
                         for (var ii = 0; ii < 2; ii++)
-                        {
                             zone.TransitionsInfo[i][ii] = new TransitionInfo
                             {
                                 SceneId = reader.Read<ulong>(),
                                 Position = reader.Read<Vector3>()
                             };
-                        }
                     }
                 }
 
@@ -157,7 +152,7 @@ namespace Uchu.World.Parsers
                     for (var i = 0; i < pathCount; i++)
                     {
                         IPath pth;
-                        
+
                         var pathVersion = reader.Read<uint>();
                         var pathName = reader.ReadString(reader.Read<byte>(), true);
                         var pathType = (PathType) reader.Read<uint>();
@@ -296,7 +291,7 @@ namespace Uchu.World.Parsers
                                             X = reader.Read<float>(),
                                             Y = reader.Read<float>(),
                                             Z = reader.Read<float>()
-                                        },
+                                        }
                                     };
                                     break;
 
@@ -309,7 +304,7 @@ namespace Uchu.World.Parsers
                                             X = reader.Read<float>(),
                                             Y = reader.Read<float>(),
                                             Z = reader.Read<float>()
-                                        },
+                                        }
                                     };
 
                                     reader.Read<byte>();
@@ -328,7 +323,7 @@ namespace Uchu.World.Parsers
                                             X = reader.Read<float>(),
                                             Y = reader.Read<float>(),
                                             Z = reader.Read<float>()
-                                        },
+                                        }
                                     };
 
                                     if (pathVersion >= 17)

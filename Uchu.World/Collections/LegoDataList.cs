@@ -13,13 +13,9 @@ namespace Uchu.World.Collections
         public const char InfoSeparator = '\u001F';
         private readonly List<(byte, object)> _list;
 
-        public int Count => _list.Count;
-        public bool IsReadOnly => false;
-
-        public object this[int index]
+        public LegoDataList()
         {
-            get => _list[index].Item2;
-            set => Insert(index, value);
+            _list = new List<(byte, object)>();
         }
 
         public object this[int index, byte type]
@@ -28,13 +24,14 @@ namespace Uchu.World.Collections
             set => Insert(index, value, type);
         }
 
-        public LegoDataList()
-        {
-            _list = new List<(byte, object)>();
-        }
+        public int Count => _list.Count;
+        public bool IsReadOnly => false;
 
-        public void Add(object item, byte type)
-            => _list.Add((type, item));
+        public object this[int index]
+        {
+            get => _list[index].Item2;
+            set => Insert(index, value);
+        }
 
         public void Add(object item)
         {
@@ -49,9 +46,6 @@ namespace Uchu.World.Collections
 
             Add(item, (byte) type);
         }
-
-        public void Insert(int index, object item, byte type)
-            => _list.Insert(index, (type, item));
 
         public void Insert(int index, object item)
         {
@@ -68,19 +62,29 @@ namespace Uchu.World.Collections
         }
 
         public void Clear()
-            => _list.Clear();
+        {
+            _list.Clear();
+        }
 
         public bool Contains(object item)
-            => _list.Exists(i => i.Item2 == item);
+        {
+            return _list.Exists(i => i.Item2 == item);
+        }
 
         public void RemoveAt(int index)
-            => _list.RemoveAt(index);
+        {
+            _list.RemoveAt(index);
+        }
 
         public bool Remove(object item)
-            => _list.Remove(_list.Find(i => i.Item2 == item));
+        {
+            return _list.Remove(_list.Find(i => i.Item2 == item));
+        }
 
         public int IndexOf(object item)
-            => _list.FindIndex(i => i.Item2 == item);
+        {
+            return _list.FindIndex(i => i.Item2 == item);
+        }
 
         public void CopyTo(object[] array, int arrayIndex)
         {
@@ -93,10 +97,24 @@ namespace Uchu.World.Collections
         }
 
         IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(object item, byte type)
+        {
+            _list.Add((type, item));
+        }
+
+        public void Insert(int index, object item, byte type)
+        {
+            _list.Insert(index, (type, item));
+        }
 
         public override string ToString()
-            => ToString("+");
+        {
+            return ToString("+");
+        }
 
         public string ToString(string separator)
         {
@@ -197,7 +215,8 @@ namespace Uchu.World.Collections
                         }
                         else if (val.Contains('\u001F'))
                         {
-                            var floats = val.Split('\u001F').Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray();
+                            var floats = val.Split('\u001F').Select(s => float.Parse(s, CultureInfo.InvariantCulture))
+                                .ToArray();
 
                             v =
                                 floats.Length == 1 ? floats[0] :
@@ -210,6 +229,7 @@ namespace Uchu.World.Collections
                         {
                             v = val;
                         }
+
                         break;
                 }
 

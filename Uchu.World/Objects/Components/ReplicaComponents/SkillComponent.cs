@@ -16,12 +16,11 @@ namespace Uchu.World
     {
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
         public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Skill;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
@@ -36,7 +35,7 @@ namespace Uchu.World
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
             if (Player == null) return;
-            
+
             using (var cdClient = new CdClientContext())
             {
                 var behavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
@@ -50,33 +49,34 @@ namespace Uchu.World
                 }
 
                 var template = await Behavior.GetTemplate(behavior.BehaviorID ?? 0);
-                
+
                 var stream = new MemoryStream(message.Content);
-                
+
                 var executioner = new BehaviorExecutioner
                 {
                     Executioner = Player
                 };
-                
+
                 using (var reader = new BitReader(stream))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
-                    
-                    Logger.Debug($"Starting behaviour {(BehaviorTemplateId) template.TemplateID}: Target = {message.OptionalTarget}");
+
+                    Logger.Debug(
+                        $"Starting behaviour {(BehaviorTemplateId) template.TemplateID}: Target = {message.OptionalTarget}");
 
                     if (message.OptionalTarget != null)
                         executioner.Targets.Add(message.OptionalTarget);
-                    
+
                     var instance = (Behavior) Activator.CreateInstance(
                         Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
                     );
 
                     HandledSkills.Add(message.SkillHandle, instance);
-                    
+
                     instance.Executioner = executioner;
                     instance.BehaviorId = (int) behavior.BehaviorID;
                     instance.SkillComponent = this;
-                    
+
                     Zone.BroadcastMessage(new EchoStartSkillMessage
                     {
                         Associate = GameObject,
@@ -91,7 +91,7 @@ namespace Uchu.World
                         SkillId = message.SkillId,
                         UsedMouse = message.UsedMouse
                     });
-                    
+
                     await instance.Serialize(reader);
                 }
 

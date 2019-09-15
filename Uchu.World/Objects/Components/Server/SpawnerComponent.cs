@@ -1,36 +1,26 @@
 using System.Collections.Generic;
-using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    public class SpawnerComponent : ReplicaComponent
+    [ServerComponent(Id = ReplicaComponentsId.Spawner)]
+    public class SpawnerComponent : Component
     {
+        public readonly List<GameObject> ActiveSpawns = new List<GameObject>();
+
+        public SpawnerComponent()
+        {
+            OnStart += () => { GameObject.Layer = Layer.Spawner; };
+        }
+
         public Lot SpawnTemplate { get; set; }
-        
+
         public uint SpawnNodeId { get; set; }
-        
+
         public LegoDataDictionary Settings { get; set; }
 
-        public readonly List<GameObject> ActiveSpawns = new List<GameObject>();
-        
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Spawner;
-        
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-            GameObject.Layer = Layer.Spawner;
-        }
-
-        public override void Construct(BitWriter writer)
-        {
-        }
-
-        public override void Serialize(BitWriter writer)
-        {
-        }
-        
         public GameObject GetSpawnObject()
         {
             return GameObject.Instantiate(new LevelObject
@@ -53,7 +43,7 @@ namespace Uchu.World
             ActiveSpawns.Add(obj);
 
             obj.OnDestroyed += () => { ActiveSpawns.Remove(obj); };
-            
+
             return obj;
         }
     }

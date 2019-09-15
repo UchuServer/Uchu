@@ -25,7 +25,7 @@ namespace Uchu.World.Parsers
 
                 case Mode.None:
                     return false;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
@@ -34,9 +34,9 @@ namespace Uchu.World.Parsers
         private static bool IsCompletedAsync(string str, Mission[] completed)
         {
             Logger.Information($"Complete: {str} ANY {string.Join(' ', completed.Select(s => s.Id))}");
-            
+
             if (string.IsNullOrWhiteSpace(str)) return true;
-            
+
             if (str.Contains(':'))
             {
                 var colonIndex = str.IndexOf(':');
@@ -51,7 +51,7 @@ namespace Uchu.World.Parsers
                 using (var cdClient = new CdClientContext())
                 {
                     var tasks = cdClient.MissionTasksTable.Where(m => m.Id == misId).ToArray();
-                    
+
                     var task = tasks[taskIndex];
                     var chrTask = chrMis.Tasks[taskIndex];
 
@@ -60,7 +60,7 @@ namespace Uchu.World.Parsers
             }
 
             Logger.Debug($"Required mission {str}");
-            
+
             var id = int.Parse(str);
 
             return completed.Any(c => c.MissionId == id);
@@ -73,7 +73,7 @@ namespace Uchu.World.Parsers
             Logger.Information($"Pre: {missions}");
 
             missions = missions.Replace(" ", "");
-            
+
             var cur = new StringBuilder();
             var res = true;
             var mode = Mode.And;
@@ -146,13 +146,13 @@ namespace Uchu.World.Parsers
                 //
                 // Get all tasks this mission have to have completed to be handed in.
                 //
-                
+
                 var tasks = ctx.MissionTasksTable.Where(m => m.Id == mission.MissionId);
 
                 //
                 // Check tasks count to their required values.
                 //
-                
+
                 return await tasks.AllAsync(t =>
                     mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue
                 );
@@ -163,25 +163,18 @@ namespace Uchu.World.Parsers
         {
             var targets = new List<Lot>();
 
-            if (missionTask.Target != null)
-            {
-                targets.Add(missionTask.Target ?? 0);
-            }
+            if (missionTask.Target != null) targets.Add(missionTask.Target ?? 0);
 
             if (missionTask.TargetGroup == null) return targets.ToArray();
-            
+
             var rawTargets = missionTask.TargetGroup
                 .Replace(" ", "")
                 .Split(',')
                 .Where(c => !string.IsNullOrEmpty(c));
 
             foreach (var rawTarget in rawTargets)
-            {
                 if (int.TryParse(rawTarget, out var target))
-                {
                     targets.Add(target);
-                }
-            }
 
             return targets.ToArray();
         }

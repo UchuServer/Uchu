@@ -13,27 +13,27 @@ namespace Uchu.World
         {
             return a.Value | b.Value;
         }
-        
+
         public static Mask operator &(Mask a, Mask b)
         {
             return a.Value & b.Value;
         }
-        
+
         public static Mask operator ~(Mask a)
         {
             return ~a.Value;
         }
-        
+
         public static Mask operator +(Mask a, Mask b)
         {
             return a.Value | b.Value;
         }
-        
+
         public static Mask operator -(Mask a, Mask b)
         {
-            return a.Value &~ b.Value;
+            return a.Value & ~ b.Value;
         }
-        
+
         public static bool operator ==(Mask a, Mask b)
         {
             return (a.Value & b.Value) != 0;
@@ -44,15 +44,21 @@ namespace Uchu.World
             return (a.Value & b.Value) == 0;
         }
 
-        public static implicit operator long(Mask mask) => mask.Value;
-        
-        public static implicit operator Mask(long value) => new Mask(value);
-        
+        public static implicit operator long(Mask mask)
+        {
+            return mask.Value;
+        }
+
+        public static implicit operator Mask(long value)
+        {
+            return new Mask(value);
+        }
+
         public bool Equals(Mask other)
         {
             return Value == other.Value;
         }
-        
+
         public bool Equals(long value)
         {
             return Value == value;

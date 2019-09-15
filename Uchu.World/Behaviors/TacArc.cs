@@ -7,11 +7,11 @@ namespace Uchu.World.Behaviors
     public class TacArc : Behavior
     {
         public bool Hit { get; private set; }
-        
+
         public GameObject[] Targets { get; private set; }
 
         public override BehaviorTemplateId Id => BehaviorTemplateId.TacArc;
-        
+
         public override async Task Serialize(BitReader reader)
         {
             Hit = reader.ReadBit();
@@ -36,15 +36,11 @@ namespace Uchu.World.Behaviors
 
                     // TODO: Damage
                 }
-                
+
                 var action = await GetParameter(BehaviorId, "action");
                 if (action.Value != null)
-                {
                     for (var i = 0; i < Targets.Length; i++)
-                    {
                         await StartBranch((int) action.Value, reader);
-                    }
-                }
             }
         }
     }

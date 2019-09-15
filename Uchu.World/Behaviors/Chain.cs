@@ -8,7 +8,7 @@ namespace Uchu.World.Behaviors
     public class Chain : Behavior
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Chain;
-        
+
         public override async Task Serialize(BitReader reader)
         {
             var index = reader.Read<uint>();
@@ -16,7 +16,7 @@ namespace Uchu.World.Behaviors
             var behaviorParam = await GetParameter(BehaviorId, $"behavior {index}");
 
             var delay = await GetParameter(BehaviorId, "chain_delay");
-            
+
             Logger.Debug($"Chain: {delay.Value}s delay");
 
             var timer = new Timer

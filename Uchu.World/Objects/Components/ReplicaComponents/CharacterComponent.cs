@@ -14,20 +14,19 @@ namespace Uchu.World
         public bool IsPvP { get; set; } = false;
 
         public bool IsGameMaster { get; set; } = false;
-        
+
         public byte GameMasterLevel { get; set; }
-        
+
         public CharacterActivity Activity { get; set; }
 
         public long GuildId { get; set; } = -1;
-        
+
         public string GuildName { get; set; }
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Character;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
@@ -93,7 +92,7 @@ namespace Uchu.World
                 writer.Write((ushort) Character.Rocket.Length);
                 writer.WriteString(Character.Rocket, Character.Rocket.Length, true);
             }
-            
+
             WritePart4(writer);
         }
 
@@ -117,7 +116,7 @@ namespace Uchu.World
 
             writer.Write<byte>(0);
         }
-        
+
         private void WritePart2(BitWriter writer)
         {
             var hasLevel = Player.Level != 0;
@@ -126,22 +125,22 @@ namespace Uchu.World
 
             if (hasLevel) writer.Write((uint) Player.Level);
         }
-        
+
         private void WritePart3(BitWriter writer)
         {
             writer.WriteBit(true);
             writer.WriteBit(false);
             writer.WriteBit(true);
         }
-        
+
         private void WritePart4(BitWriter writer)
         {
             writer.WriteBit(true);
-            
+
             writer.WriteBit(IsPvP);
             writer.WriteBit(IsGameMaster);
             writer.Write(GameMasterLevel);
-            
+
             writer.WriteBit(false);
             writer.Write<byte>(0);
 
@@ -151,7 +150,7 @@ namespace Uchu.World
             var hasGuild = GuildId != -1;
 
             writer.WriteBit(hasGuild);
-            
+
             if (!hasGuild) return;
 
             writer.Write(GuildId);

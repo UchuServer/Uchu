@@ -12,7 +12,8 @@ namespace Uchu.World
 {
     public class InventoryComponent : ReplicaComponent
     {
-        public Dictionary<EquipLocation, InventoryItem> Items { get; set; } = new Dictionary<EquipLocation, InventoryItem>();
+        public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
+            new Dictionary<EquipLocation, InventoryItem>();
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Inventory;
 
@@ -42,11 +43,11 @@ namespace Uchu.World
                         Logger.Error($"{item.Itemid} is not a valid item");
                         continue;
                     }
-                    
+
                     var itemComponent = cdClient.ItemComponentTable.First(
                         i => i.Id == itemRegistryEntry.Componentid
                     );
-                    
+
                     Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
                     {
                         InventoryItemId = Utils.GenerateObjectId(),
@@ -59,7 +60,8 @@ namespace Uchu.World
             }
         }
 
-        public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1, InventoryType inventoryType = InventoryType.None)
+        public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,
+            InventoryType inventoryType = InventoryType.None)
         {
             using (var cdClient = new CdClientContext())
             {
@@ -74,11 +76,11 @@ namespace Uchu.World
                     Logger.Error($"{lot} is not a valid item");
                     return;
                 }
-                
+
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry
                 );
-                
+
                 Items.Add(itemComponent.EquipLocation, new InventoryItem
                 {
                     InventoryItemId = Utils.GenerateObjectId(),
@@ -94,20 +96,16 @@ namespace Uchu.World
         {
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
             foreach (var (equipLocation, value) in items)
-            {
                 if (equipLocation.Equals(item.ItemComponent.EquipLocation))
-                {
                     UnEquipItem(value.InventoryItemId);
-                }
-            }
-            
+
             Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
 
             Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true); });
 
             GameObject.Serialize(GameObject);
         }
-        
+
         public void UnEquipItem(Item item)
         {
             UnEquipItem(item.ObjectId);
@@ -133,7 +131,6 @@ namespace Uchu.World
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
         {
             if (Player != null)
-            {
                 using (var ctx = new UchuContext())
                 {
                     var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
@@ -142,9 +139,8 @@ namespace Uchu.World
 
                     await ctx.SaveChangesAsync();
                 }
-            }
         }
-        
+
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

@@ -11,11 +11,10 @@ namespace Uchu.World
 {
     public class InventoryManager : Component
     {
+        private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
         private InventoryComponent _inventoryComponent;
 
         private object _lock;
-
-        private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
 
         public InventoryManager()
         {
@@ -36,10 +35,7 @@ namespace Uchu.World
 
             OnDestroyed += () =>
             {
-                foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items))
-                {
-                    Destroy(item);
-                }
+                foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items)) Destroy(item);
             };
         }
 
@@ -63,10 +59,7 @@ namespace Uchu.World
 
                 Logger.Information($"Getting item: {id} -> {managedItem}");
 
-                if (managedItem == null)
-                {
-                    Logger.Error($"{item.InventoryItemId} is not managed on {Player}");
-                }
+                if (managedItem == null) Logger.Error($"{item.InventoryItemId} is not managed on {Player}");
 
                 return managedItem;
             }
@@ -99,11 +92,11 @@ namespace Uchu.World
                 }
 
                 Debug.Assert(component.ItemType != null, "component.ItemType != null");
-                
+
                 AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType());
             }
         }
-        
+
         public void AddItem(int lot, uint count, InventoryType inventoryType)
         {
             // The math here cannot be executed asynchronously
@@ -217,11 +210,11 @@ namespace Uchu.World
                 }
 
                 Debug.Assert(component.ItemType != null, "component.ItemType != null");
-                
+
                 await RemoveItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType());
             }
         }
-        
+
         public async Task RemoveItemAsync(int lot, uint count, InventoryType inventoryType)
         {
             using (var ctx = new UchuContext())
@@ -254,21 +247,21 @@ namespace Uchu.World
                 //
                 // Sort to make sure we remove from the stacks with the lowest count first.
                 //
-                
+
                 items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
-                
+
                 foreach (var item in items)
                 {
                     var toRemove = (uint) Min((int) count, (int) item.Count);
 
                     item.Count -= toRemove;
-                    
+
                     count -= toRemove;
 
                     if (count != default) continue;
-                    
+
                     await ctx.SaveChangesAsync();
-                    
+
                     return;
                 }
 
@@ -278,7 +271,8 @@ namespace Uchu.World
             }
         }
 
-        public void SyncItemMove(long itemId, int newSlot, InventoryType sourceInventoryType, InventoryType destinationInventoryType)
+        public void SyncItemMove(long itemId, int newSlot, InventoryType sourceInventoryType,
+            InventoryType destinationInventoryType)
         {
             var item = GetItem(itemId);
 
@@ -287,10 +281,10 @@ namespace Uchu.World
                 Logger.Error(
                     $"Trying to sync an item movement for Item: {itemId} to Slot: {newSlot}, with an item that does not exist"
                 );
-                
+
                 return;
             }
-            
+
             item.Slot = (uint) newSlot;
         }
 

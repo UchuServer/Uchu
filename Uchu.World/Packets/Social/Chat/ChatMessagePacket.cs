@@ -9,15 +9,15 @@ namespace Uchu.World.Social
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Chat;
 
         public override uint PacketId => 0x1;
-        
+
         public ulong UnknownObjectId { get; set; }
-        
+
         public ChatChannel Channel { get; set; } = ChatChannel.Public;
-        
+
         public Player Sender { get; set; }
-        
+
         public bool IsMythran { get; set; }
-        
+
         public string Message { get; set; }
 
         public override void SerializePacket(BitWriter writer)

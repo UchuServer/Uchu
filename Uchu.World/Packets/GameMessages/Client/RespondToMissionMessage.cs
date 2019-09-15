@@ -5,13 +5,13 @@ namespace Uchu.World
     public class RespondToMissionMessage : ClientGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.RespondToMission;
-        
+
         public int MissionId { get; set; }
-        
+
         public Player Player { get; set; }
-        
+
         public GameObject Receiver { get; set; }
-        
+
         public Lot RewardItem { get; set; }
 
         public override void Deserialize(BitReader reader)

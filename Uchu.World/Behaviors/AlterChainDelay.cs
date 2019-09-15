@@ -8,12 +8,12 @@ namespace Uchu.World.Behaviors
     public class AlterChainDelay : Behavior
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AlterChainDelay;
-        
+
         public override async Task Serialize(BitReader reader)
         {
             // TODO: Fix
             return;
-            
+
             var time = await GetParameter(BehaviorId, "new_delay");
 
             var timer = new Timer
@@ -23,7 +23,7 @@ namespace Uchu.World.Behaviors
             };
 
             timer.Elapsed += Executioner.ActiveChainCallback;
-            
+
             Executioner.ActiveChainTimer.Enabled = false;
             Executioner.ActiveChainTimer.Dispose();
 

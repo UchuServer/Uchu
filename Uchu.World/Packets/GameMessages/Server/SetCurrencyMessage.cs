@@ -6,21 +6,21 @@ namespace Uchu.World
     public class SetCurrencyMessage : ServerGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.SetCurrency;
-        
+
         public long Currency { get; set; }
 
         public int LootType { get; set; } = -1;
-        
+
         public Vector3 Position { get; set; }
 
         public Lot SourceLot { get; set; } = -1;
-        
+
         public GameObject SourceGameObject { get; set; }
 
         public long SourceTradeId { get; set; } = -1;
 
         public int SourceType { get; set; } = -1;
-        
+
         public override void SerializeMessage(BitWriter writer)
         {
             writer.Write(Currency);

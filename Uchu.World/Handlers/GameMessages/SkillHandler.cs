@@ -10,7 +10,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             await player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
         }
-        
+
         [PacketHandler]
         public async Task HandleSyncSkill(SyncSkillMessage message, Player player)
         {

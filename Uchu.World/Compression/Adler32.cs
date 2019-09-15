@@ -8,6 +8,12 @@ namespace Uchu.World.Compression
         private int _a;
         private int _b;
 
+        public Adler32()
+        {
+            _a = 1;
+            _b = 0;
+        }
+
         public byte[] Checksum
         {
             get
@@ -18,12 +24,6 @@ namespace Uchu.World.Compression
 
                 return checksum;
             }
-        }
-
-        public Adler32()
-        {
-            _a = 1;
-            _b = 0;
         }
 
         public void Update(byte[] data, int offset, int length)

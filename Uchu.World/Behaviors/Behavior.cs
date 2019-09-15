@@ -11,19 +11,18 @@ namespace Uchu.World.Behaviors
 {
     public abstract class Behavior
     {
-        public BehaviorExecutioner Executioner;
-        
-        public SkillComponent SkillComponent;
-        
-        public GameObject GameObject => SkillComponent.GameObject;
+        private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
         public int BehaviorId;
-        
+        public BehaviorExecutioner Executioner;
+
+        public SkillComponent SkillComponent;
+
+        public GameObject GameObject => SkillComponent.GameObject;
+
         public List<Behavior> Branches { get; set; } = new List<Behavior>();
 
         public Dictionary<uint, Behavior> HandledBehaviors => SkillComponent.HandledBehaviors;
-        
-        private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
         public static Dictionary<BehaviorTemplateId, Type> Behaviors
         {
@@ -38,9 +37,7 @@ namespace Uchu.World.Behaviors
                 ).ToArray();
 
                 foreach (var behavior in behaviors)
-                {
                     _behaviors.Add(((Behavior) Activator.CreateInstance(behavior)).Id, behavior);
-                }
 
                 return _behaviors;
             }
@@ -56,7 +53,7 @@ namespace Uchu.World.Behaviors
             if (templateId != null)
             {
                 var id = (BehaviorTemplateId) templateId;
-            
+
                 Logger.Debug($"Starting Behavior Branch {id}");
 
                 var instance = (Behavior) Activator.CreateInstance(_behaviors[id]);
@@ -80,7 +77,7 @@ namespace Uchu.World.Behaviors
                 );
             }
         }
-        
+
         public static BehaviorParameter[] GetParameters(int behaviourId)
         {
             using (var cdClient = new CdClientContext())
@@ -90,7 +87,7 @@ namespace Uchu.World.Behaviors
                 ).ToArray();
             }
         }
-        
+
         public static async Task<BehaviorTemplate> GetTemplate(int behaviourId)
         {
             using (var cdClient = new CdClientContext())

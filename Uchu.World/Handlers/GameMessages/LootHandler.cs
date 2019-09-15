@@ -28,8 +28,18 @@ namespace Uchu.World.Handlers.GameMessages
             }
 
             Object.Destroy(message.Loot);
-            
+
             await player.GetComponent<InventoryManager>().AddItemAsync(message.Loot.Lot, 1);
+        }
+
+        [PacketHandler]
+        public async Task HasBeenCollectedHandler(HasBeenCollectedMessage message, Player player)
+        {
+            await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                MissionTaskType.Collect,
+                message.Associate.Lot,
+                message.Associate
+            );
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Uchu.World
         public override void Serialize(BitWriter writer)
         {
             base.Serialize(writer);
-            
+
             // TODO: Look into to
         }
     }

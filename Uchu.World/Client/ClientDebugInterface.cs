@@ -6,12 +6,11 @@ namespace Uchu.World.Client
 {
     public class ClientDebugInterface
     {
+        private readonly string _path;
         private readonly WorldServer _worldServer;
 
-        private readonly string _path;
-
         public readonly Process ClientProcess;
-        
+
         public ClientDebugInterface(Process process, Zone zone)
         {
             ClientProcess = process;
@@ -26,12 +25,12 @@ namespace Uchu.World.Client
                     await ProcessOutput(ClientProcess.StandardOutput.ReadLine(), false);
                 }
             });
-            
+
             return;
-            
+
             ClientProcess.OutputDataReceived += async (sender, args) => await ProcessOutput(args.Data, false);
             ClientProcess.ErrorDataReceived += async (sender, args) => await ProcessOutput(args.Data, true);
-            
+
             ClientProcess.BeginOutputReadLine();
             ClientProcess.BeginErrorReadLine();
         }

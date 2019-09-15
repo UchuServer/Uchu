@@ -16,7 +16,7 @@ namespace Uchu.World
         {
             return lot.Id;
         }
-        
+
         public static implicit operator Lot(int id)
         {
             return new Lot(id);
@@ -49,12 +49,12 @@ namespace Uchu.World
         {
             return Id;
         }
-        
+
         public int GetComponentId(ReplicaComponentsId componentType)
         {
             return GetComponentId((int) componentType);
         }
-        
+
         public int GetComponentId(int componentType)
         {
             var id = Id;
@@ -72,7 +72,7 @@ namespace Uchu.World
         {
             return GetComponentIds((int) componentType);
         }
-        
+
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;

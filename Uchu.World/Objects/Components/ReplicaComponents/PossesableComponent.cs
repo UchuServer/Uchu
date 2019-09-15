@@ -6,12 +6,11 @@ namespace Uchu.World
     public class PossesableComponent : ReplicaComponent
     {
         public GameObject Driver { get; set; }
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Possesable;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)

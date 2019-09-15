@@ -8,21 +8,21 @@ namespace Uchu.World
     public class TransferToZoneMessage : ServerGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.TransferToZone;
-        
+
         public bool CheckTransferAllowed { get; set; }
-        
+
         public uint CloneId { get; set; }
 
         public Vector3 Position { get; set; } = Vector3.Zero;
-        
+
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
-        
+
         public string SpawnPoint { get; set; }
-        
+
         public ushort InstanceId { get; set; }
-        
+
         public ZoneId ZoneId { get; set; }
-        
+
         public override void SerializeMessage(BitWriter writer)
         {
             writer.WriteBit(CheckTransferAllowed);

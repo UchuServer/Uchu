@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
-using Uchu.Core;
 using Uchu.Core.IO;
 using Uchu.World.Collections;
 
@@ -72,7 +71,6 @@ namespace Uchu.World.Parsers
                 stream.Position = 0;
 
                 if (header == "CHNK")
-                {
                     while (!(stream.Position >= data.Length))
                     {
                         var startPos = stream.Position;
@@ -98,11 +96,8 @@ namespace Uchu.World.Parsers
 
                         stream.Position = startPos + chunkLength;
                     }
-                }
                 else
-                {
                     return objects.ToArray();
-                }
             }
 
 

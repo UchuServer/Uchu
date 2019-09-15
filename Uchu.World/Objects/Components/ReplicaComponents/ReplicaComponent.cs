@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RakDotNet.IO;
-using Uchu.Core;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -20,7 +19,7 @@ namespace Uchu.World
             30,
             40,
             7,
-            25,
+            23,
             26,
             4,
             19,
@@ -38,6 +37,7 @@ namespace Uchu.World
             75,
             42,
             2,
+            50,
             107,
             69
         };
@@ -47,37 +47,55 @@ namespace Uchu.World
         static ReplicaComponent()
         {
             ReplicaById = new Dictionary<ReplicaComponentsId, Type>();
-            
-            foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsSubclassOf(typeof(ReplicaComponent))))
+
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(Component))))
             {
-                var instance = (ReplicaComponent) Activator.CreateInstance(type);
-                
-                if (instance.Id == ReplicaComponentsId.Invalid) continue;
-                
-                ReplicaById.Add(instance.Id, type);
+                if (type.IsAbstract) continue;
+
+                ReplicaComponentsId id;
+
+                if (type.IsSubclassOf(typeof(ReplicaComponent)))
+                {
+                    var instance = (ReplicaComponent) Activator.CreateInstance(type);
+
+                    if (instance.Id == ReplicaComponentsId.Invalid) continue;
+
+                    id = instance.Id;
+                }
+                else
+                {
+                    var attribute = type.GetCustomAttribute<ServerComponentAttribute>();
+
+                    if (attribute == null) continue;
+
+                    id = attribute.Id;
+                }
+
+                ReplicaById.Add(id, type);
             }
         }
+
+        /// <summary>
+        ///     Id of this ReplicaComponent.
+        /// </summary>
+        public abstract ReplicaComponentsId Id { get; }
 
         public static Type GetReplica(ReplicaComponentsId id)
         {
             return ReplicaById.TryGetValue(id, out var type) ? type : null;
         }
-        
-        /// <summary>
-        /// Id of this ReplicaComponent.
-        /// </summary>
-        public abstract ReplicaComponentsId Id { get; }
 
         public abstract void FromLevelObject(LevelObject levelObject);
-        
+
         /// <summary>
-        /// The data that is only sent once to each client.
+        ///     The data that is only sent once to each client.
         /// </summary>
         /// <param name="writer"></param>
         public abstract void Construct(BitWriter writer);
 
         /// <summary>
-        /// The data that is sent every time an update accrues.
+        ///     The data that is sent every time an update accrues.
         /// </summary>
         /// <param name="writer"></param>
         public abstract void Serialize(BitWriter writer);

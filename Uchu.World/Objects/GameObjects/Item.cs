@@ -9,11 +9,10 @@ namespace Uchu.World
     [Unconstructed]
     public class Item : GameObject
     {
+        private bool _bound;
         private uint _count;
 
         private bool _equipped;
-
-        private bool _bound;
 
         private uint _slot;
 
@@ -21,11 +20,11 @@ namespace Uchu.World
         {
             OnDestroyed += () => { Task.Run(RemoveFromInventory); };
         }
-        
+
         public ItemComponent ItemComponent { get; private set; }
-        
+
         public Inventory Inventory { get; private set; }
-        
+
         public Player Player { get; private set; }
 
         public InventoryItem InventoryItem
@@ -38,7 +37,7 @@ namespace Uchu.World
                 }
             }
         }
-        
+
         public uint Count
         {
             get => _count;
@@ -53,7 +52,7 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Is this item equipped? Warning: Should only be set as a response to a client request!
+        ///     Is this item equipped? Warning: Should only be set as a response to a client request!
         /// </summary>
         public bool Equipped
         {
@@ -78,7 +77,7 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// The slot this item inhabits. Warning: Should only be set as a response to a client request!
+        ///     The slot this item inhabits. Warning: Should only be set as a response to a client request!
         /// </summary>
         public uint Slot
         {
@@ -117,24 +116,24 @@ namespace Uchu.World
                     Logger.Error($"{itemId} [{item.LOT}] is not a valid item");
                     return null;
                 }
-                
+
                 var instance = Instantiate<Item>
                 (
                     inventory.Manager.Zone, cdClientObject.Name, objectId: itemId, lot: item.LOT
                 );
-                
+
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry
                 );
-                
+
                 instance._count = (uint) item.Count;
                 instance._equipped = item.IsEquipped;
                 instance._slot = (uint) item.Slot;
-                
+
                 instance.ItemComponent = itemComponent;
                 instance.Inventory = inventory;
                 instance.Player = inventory.Manager.Player;
-                
+
                 return instance;
             }
         }
@@ -150,7 +149,7 @@ namespace Uchu.World
 
             return Instantiate(lot, inventory, count, slot);
         }
-        
+
         public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot)
         {
             using (var cdClient = new CdClientContext())
@@ -169,12 +168,12 @@ namespace Uchu.World
                     Logger.Error($"<new item> [{lot}] is not a valid item");
                     return null;
                 }
-                
+
                 var instance = Instantiate<Item>
                 (
                     inventory.Manager.Zone, cdClientObject.Name, objectId: Utils.GenerateObjectId(), lot: lot
                 );
-                
+
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry.Componentid
                 );
@@ -182,7 +181,7 @@ namespace Uchu.World
                 var playerCharacter = ctx.Characters.Include(c => c.Items).First(
                     c => c.CharacterId == inventory.Manager.Player.ObjectId
                 );
-                
+
                 var inventoryItem = new InventoryItem
                 {
                     Count = count,
@@ -210,20 +209,18 @@ namespace Uchu.World
                     IsBound = inventoryItem.IsBound,
                     Item = instance
                 };
-                
+
                 foreach (var property in message.GetType().GetProperties())
-                {
                     Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
-                }
-                
+
                 inventory.Manager.Player.Message(message);
-                
+
                 inventory.ManageItem(instance);
 
                 return instance;
             }
         }
-        
+
         private async Task UpdateCount()
         {
             using (var ctx = new UchuContext())
@@ -233,26 +230,23 @@ namespace Uchu.World
                     Logger.Error(
                         $"Trying to set {Lot} count to {_count}, this is beyond the item's stack-size; Setting it to stack-size"
                     );
-                    
+
                     _count = (uint) ItemComponent.StackSize;
                 }
-                
+
                 Logger.Information($"Setting {this} count to {_count}");
-                
+
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
-                
+
                 if (_count > item.Count) await AddCount();
                 else await RemoveCount(_count);
-                
+
                 item.Count = _count;
-                
+
                 await ctx.SaveChangesAsync();
             }
-            
-            if (_count == default)
-            {
-                Destroy(this);
-            }
+
+            if (_count == default) Destroy(this);
         }
 
         private async Task AddCount()
@@ -272,12 +266,10 @@ namespace Uchu.World
                     ShowFlyingLoot = _count != default,
                     TotalItems = _count
                 };
-                
+
                 foreach (var property in message.GetType().GetProperties())
-                {
                     Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
-                }
-                
+
                 Player.Message(message);
             }
         }
@@ -287,7 +279,7 @@ namespace Uchu.World
             using (var ctx = new UchuContext())
             {
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
-                
+
                 Player.Message(new RemoveItemToInventoryMessage
                 {
                     Associate = Player,
@@ -327,7 +319,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             }
         }
-        
+
         private async Task UpdateBoundStatus()
         {
             using (var ctx = new UchuContext())

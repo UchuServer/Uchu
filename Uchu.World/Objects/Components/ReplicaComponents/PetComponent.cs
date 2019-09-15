@@ -9,14 +9,13 @@ namespace Uchu.World
         public GameObject Owner { get; set; }
 
         public uint ModerationStatus { get; set; }
-        
+
         public GameObject PetInteractionObject { get; set; }
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Pet;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
@@ -49,7 +48,10 @@ namespace Uchu.World
                 writer.Write((byte) Owner.Name.Length);
                 writer.WriteString(Owner.Name, Owner.Name.Length, true);
             }
-            else writer.Write<byte>(0);
+            else
+            {
+                writer.Write<byte>(0);
+            }
         }
     }
 }

@@ -12,38 +12,40 @@ namespace Uchu.World
 {
     public class MovingPlatformComponent : ReplicaComponent
     {
-        public MovingPlatformPath Path { get; set; }
-        
-        public string PathName { get; set; }
-        
-        public uint PathStart { get; set; }
-        
-        public PlatformType Type { get; set; }
-
-        public PlatformState State { get; set; } = PlatformState.Idle;
-        
-        public Vector3 TargetPosition { get; set; }
-        
-        public Quaternion TargetRotation { get; set; }
-        
-        public uint CurrentWaypointIndex { get; set; }
-        
-        public uint NextWaypointIndex { get; set; }
-        
-        public float IdleTimeElapsed { get; set; }
-
-        public MovingPlatformComponent()
-        {
-            OnStart += () => { Task.Run(WaitPoint); };
-        }
-        
-        public override ReplicaComponentsId Id => ReplicaComponentsId.MovingPlatform;
+        private bool _started;
 
         /// <summary>
         ///     Current timer.
         /// </summary>
         private Timer _timer;
-        
+
+        public MovingPlatformComponent()
+        {
+            OnStart += () => { Task.Run(WaitPoint); };
+        }
+
+        public MovingPlatformPath Path { get; set; }
+
+        public string PathName { get; set; }
+
+        public uint PathStart { get; set; }
+
+        public PlatformType Type { get; set; }
+
+        public PlatformState State { get; set; } = PlatformState.Idle;
+
+        public Vector3 TargetPosition { get; set; }
+
+        public Quaternion TargetRotation { get; set; }
+
+        public uint CurrentWaypointIndex { get; set; }
+
+        public uint NextWaypointIndex { get; set; }
+
+        public float IdleTimeElapsed { get; set; }
+
+        public override ReplicaComponentsId Id => ReplicaComponentsId.MovingPlatform;
+
         /// <summary>
         ///     Next Path Index
         /// </summary>
@@ -59,8 +61,6 @@ namespace Uchu.World
         /// </summary>
         public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
 
-        private bool _started;
-        
         public override void FromLevelObject(LevelObject levelObject)
         {
             PathName = levelObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
@@ -70,7 +70,7 @@ namespace Uchu.World
 
             Path = Zone.ZoneInfo.Paths.FirstOrDefault(p => p is MovingPlatformPath && p.Name == PathName) as
                 MovingPlatformPath;
-            
+
             Type = levelObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
                 ? PlatformType.Mover
                 : levelObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
@@ -106,9 +106,9 @@ namespace Uchu.World
             }
 
             var hasPlatform = Type != PlatformType.None;
-            
+
             writer.WriteBit(hasPlatform);
-            
+
             if (!hasPlatform) return;
 
             writer.Write((uint) Type);
@@ -117,7 +117,7 @@ namespace Uchu.World
             {
                 case PlatformType.None:
                     break;
-                
+
                 case PlatformType.Mover:
                     writer.WriteBit(true);
 
@@ -136,7 +136,7 @@ namespace Uchu.World
                     writer.Write(IdleTimeElapsed);
                     writer.Write<uint>(0);
                     break;
-                
+
                 case PlatformType.SimpleMover:
                     writer.WriteBit(true);
                     writer.WriteBit(true);
@@ -163,7 +163,7 @@ namespace Uchu.World
             NextWaypointIndex = NextIndex;
 
             Update(GameObject);
-            
+
             /*
              * Start Waiting after completing path.
              */

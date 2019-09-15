@@ -10,7 +10,7 @@ namespace Uchu.World
         public bool Disabled { get; set; }
 
         public Effect[] Effects { get; set; } = new Effect[0];
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Render;
 
         public override void FromLevelObject(LevelObject levelObject)
@@ -22,19 +22,16 @@ namespace Uchu.World
         public override void Construct(BitWriter writer)
         {
             if (Disabled) return;
-            
+
             writer.Write((uint) Effects.Length);
 
-            foreach (var effect in Effects)
-            {
-                writer.Write(effect);
-            }
+            foreach (var effect in Effects) writer.Write(effect);
         }
 
         public override void Serialize(BitWriter writer)
         {
         }
-        
+
         public class Effect : ISerializable
         {
             public string Name { get; set; }
@@ -50,7 +47,7 @@ namespace Uchu.World
             public void Serialize(BitWriter writer)
             {
                 writer.Write((byte) Name.Length);
-                writer.WriteString(Name, Name.Length, false);
+                writer.WriteString(Name, Name.Length);
 
                 writer.Write(EffectId);
 

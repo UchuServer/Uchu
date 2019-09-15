@@ -6,7 +6,7 @@ namespace Uchu.World.Behaviors
     public class MovementSwitch : Behavior
     {
         public MovementType MovementType { get; private set; }
-        
+
         public override BehaviorTemplateId Id => BehaviorTemplateId.MovementSwitch;
 
         public override async Task Serialize(BitReader reader)
@@ -40,7 +40,7 @@ namespace Uchu.World.Behaviors
             var param = await GetParameter(BehaviorId, name);
 
             if (param?.Value == null) return;
-            
+
             await StartBranch((int) param.Value, reader);
         }
     }

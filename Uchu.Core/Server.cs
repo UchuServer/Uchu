@@ -63,14 +63,18 @@ namespace Uchu.Core
 
             _running = true;
 
+            Task.Run(async () =>
+            {
+                while (_running)
+                {
+                    var command = Console.ReadLine();
+
+                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
+                }
+            });
+
             while (_running)
             {
-                var command = Console.ReadLine();
-
-                Task.Run(async () =>
-                {
-                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
-                });
             }
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -12,15 +13,15 @@ namespace Uchu.World
 {
     public class Player : GameObject
     {
-        public IPEndPoint EndPoint { get; private set; }
-
-        public Perspective Perspective { get; private set; }
-
         public Player()
         {
             OnTick += CheckDeathZone;
         }
-        
+
+        public IPEndPoint EndPoint { get; private set; }
+
+        public Perspective Perspective { get; private set; }
+
         public long Currency
         {
             get
@@ -64,7 +65,7 @@ namespace Uchu.World
             }
             set => Task.Run(async () => { await SetLevel(value); });
         }
-        
+
         public static Player Construct(Character character, IPEndPoint endPoint, Zone zone)
         {
             var instance = Instantiate<Player>(
@@ -103,7 +104,7 @@ namespace Uchu.World
             //
             // Equip items
             //
-            
+
             var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
 
             using (var cdClient = new CdClientContext())
@@ -148,10 +149,14 @@ namespace Uchu.World
 
             instance.Perspective = new Perspective(instance, World.Layer.All & ~ World.Layer.Hidden);
             instance.Layer = World.Layer.Player;
-            
+
             zone.RequestConstruction(instance);
-            
+
             return instance;
+        }
+
+        public void Teleport(Vector3 position)
+        {
         }
 
         public void Message(IGameMessage gameMessage)
@@ -165,13 +170,13 @@ namespace Uchu.World
             using (var ctx = new UchuContext())
             {
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
-                
+
                 character.Currency = currency;
                 character.TotalCurrencyCollected += currency;
 
                 await ctx.SaveChangesAsync();
             }
-            
+
             Message(new SetCurrencyMessage
             {
                 Associate = this,
@@ -193,7 +198,7 @@ namespace Uchu.World
                     if (levelProgressionLookup.RequiredUScore > score) break;
 
                     Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
-                    
+
                     character.Level = levelProgressionLookup.Id.Value;
                 }
 
@@ -202,7 +207,7 @@ namespace Uchu.World
                     Associate = this,
                     Score = character.UniverseScore
                 });
-                
+
                 await ctx.SaveChangesAsync();
             }
         }
@@ -221,19 +226,19 @@ namespace Uchu.World
                     Logger.Error($"Trying to set {this} level to a level that does not exist.");
                     return;
                 }
-                
+
                 character.Level = level;
 
                 Debug.Assert(lookup.RequiredUScore != null, "lookup.RequiredUScore != null");
-                
+
                 character.UniverseScore = lookup.RequiredUScore.Value;
-                
+
                 Message(new ModifyLegoScoreMessage
                 {
                     Associate = this,
                     Score = character.UniverseScore
                 });
-                
+
                 await ctx.SaveChangesAsync();
             }
         }
@@ -241,20 +246,17 @@ namespace Uchu.World
         private void CheckDeathZone()
         {
             // TODO: Remove
-            
+
             var smashable = GetComponent<DestructibleComponent>();
-            
+
             if (smashable == null || !smashable.Alive) return;
-            
+
             switch ((ZoneId) Zone.ZoneInfo.ZoneId)
             {
                 case ZoneId.VentureExplorerCinematic:
                     break;
                 case ZoneId.VentureExplorer:
-                    if (Transform.Position.Y <= 560)
-                    {
-                        smashable.Smash(this, this);
-                    }
+                    if (Transform.Position.Y <= 560) smashable.Smash(this, this);
                     break;
                 case ZoneId.ReturnToVentureExplorer:
                     break;

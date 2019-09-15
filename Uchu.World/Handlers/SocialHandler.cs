@@ -19,8 +19,9 @@ namespace Uchu.World.Handlers
                 var character = await ctx.Characters.Include(c => c.User)
                     .FirstAsync(c => c.CharacterId == player.ObjectId);
 
-                Logger.Debug($"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
-                
+                Logger.Debug(
+                    $"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
+
                 var response = await Server.HandleCommandAsync(
                     message.Message,
                     player,
@@ -45,7 +46,7 @@ namespace Uchu.World.Handlers
                 Logger.Error($"Invalid ZoneId for {endPoint}");
                 return;
             }
-            
+
             var player = zone.Players.First(p => p.EndPoint.Equals(endPoint));
 
             using (var ctx = new UchuContext())
@@ -87,11 +88,11 @@ namespace Uchu.World.Handlers
                 }
 
                 Logger.Information($"Sending friend request from {player.Name} to {packet.PlayerName}!");
-                
+
                 var invite = relations.FirstOrDefault(relation =>
                     relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId
                 );
-                
+
                 if (invite == default)
                 {
                     invite = new Friend
@@ -99,7 +100,7 @@ namespace Uchu.World.Handlers
                         FriendId = character.CharacterId,
                         FriendTwoId = friend.CharacterId
                     };
-                    
+
                     ctx.Friends.Add(invite);
                 }
                 else
@@ -112,11 +113,11 @@ namespace Uchu.World.Handlers
                 invite.FriendTwoId = friend.CharacterId;
 
                 var friendPlayer = zone.Players.FirstOrDefault(p => p.ObjectId == invite.FriendTwoId);
-                
+
                 Logger.Information($"{friendPlayer} is getting a friend request from {player.Name}!");
 
                 invite.RequestHasBeenSent = false;
-                
+
                 if (!ReferenceEquals(friendPlayer, null))
                 {
                     Server.Send(new NotifyFriendRequestPacket
@@ -139,7 +140,7 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(endPoint);
             var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
-            
+
             if (zone == default)
             {
                 Logger.Error($"Invalid ZoneId for {endPoint}");
@@ -153,7 +154,7 @@ namespace Uchu.World.Handlers
                 var relations = ctx.Friends.Where(f =>
                     f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
                 ).ToArray();
-                
+
                 var friends = new List<FriendListPacket.Friend>();
                 foreach (var characterFriend in relations)
                 {
@@ -164,7 +165,7 @@ namespace Uchu.World.Handlers
                         : characterFriend.FriendTwoId;
 
                     var friend = ctx.Characters.First(c => c.CharacterId == friendId);
-                    
+
                     var player = zone.Players.FirstOrDefault(p => p.ObjectId == friend.CharacterId);
                     friends.Add(new FriendListPacket.Friend
                     {
@@ -191,13 +192,13 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(endPoint);
             var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
-            
+
             if (zone == default)
             {
                 Logger.Error($"Invalid ZoneId for {endPoint}");
                 return;
             }
-            
+
             using (var ctx = new UchuContext())
             {
                 var thisCharacter = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
@@ -206,11 +207,11 @@ namespace Uchu.World.Handlers
                 var relations = ctx.Friends.Where(f =>
                     f.FriendTwoId == thisCharacter.CharacterId
                 ).ToArray();
-                
+
                 foreach (var characterFriend in relations.Where(c => !c.IsAccepted))
                 {
                     characterFriend.RequestHasBeenSent = true;
-                    
+
                     var player = zone.Players.FirstOrDefault(p => p.ObjectId == friendCharacter.CharacterId);
                     switch (packet.Response)
                     {
@@ -226,9 +227,9 @@ namespace Uchu.World.Handlers
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                    
+
                     var senderPlayer = zone.Players.FirstOrDefault(p => p.Name == packet.FriendName);
-                    
+
                     if (senderPlayer != default)
                     {
                         Server.Send(new NotifyFriendRequestResponsePacket
@@ -250,7 +251,7 @@ namespace Uchu.World.Handlers
                     }
 
                     FriendsListRequestHandler(null, endPoint);
-                    
+
                     await ctx.SaveChangesAsync();
 
                     if (characterFriend.IsDeclined)
@@ -264,17 +265,17 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(endPoint);
             var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
-            
+
             if (zone == default)
             {
                 Logger.Error($"Invalid ZoneId for {endPoint}");
                 return;
             }
-            
+
             using (var ctx = new UchuContext())
             {
                 var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-                
+
                 var relations = ctx.Friends.Where(f =>
                     f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId &&
                     f.FriendOne.Name == packet.FriendName || f.FriendTwo.Name == packet.FriendName
@@ -287,7 +288,7 @@ namespace Uchu.World.Handlers
                         FriendName = packet.FriendName,
                         Success = true
                     }, endPoint);
-                    
+
                     ctx.Friends.Remove(friend);
                 }
 
@@ -306,7 +307,7 @@ namespace Uchu.World.Handlers
                 Logger.Error($"Invalid ZoneId for {endPoint}");
                 return;
             }
-            
+
             var player = zone.Players.First(p => p.EndPoint.Equals(endPoint));
             var invitedPlayer = zone.Players.First(p => p.Name == packet.InvitedPlayer);
 
@@ -327,17 +328,43 @@ namespace Uchu.World.Handlers
                 Logger.Error($"Invalid ZoneId for {endPoint}");
                 return;
             }
-            
+
             var player = zone.Players.First(p => p.EndPoint.Equals(endPoint));
             var author = zone.Players.First(p => p.ObjectId == packet.InviterObjectId);
-            
+
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");
 
             author.GetComponent<TeamPlayer>().MessageAddPlayer(player);
-            
+
             var playerTeam = player.GetComponent<TeamPlayer>();
             playerTeam.MessageAddPlayer(author);
             playerTeam.MessageSetLeader(author);
+        }
+
+        [PacketHandler]
+        public void CheckWhitelistRequestHandler(CheckWhitelistRequestPacket packet, IPEndPoint endPoint)
+        {
+            var session = Server.SessionCache.GetSession(endPoint);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+
+            if (zone == default)
+            {
+                Logger.Error($"Invalid ZoneId for {endPoint}");
+                return;
+            }
+
+            var player = zone.Players.First(p => p.EndPoint.Equals(endPoint));
+
+            Logger.Information(
+                $"Checking whitelist for [{packet.ChatMode}:{packet.RequestId}]: {packet.PrivateReceiver} | [{packet.ChatMessageLength}] {packet.ChatMessage}");
+
+            Server.Send(new ChatModerationResponsePacket
+            {
+                RequestAccepted = true,
+                RequestId = packet.RequestId,
+                ChatMode = packet.ChatMode,
+                PlayerName = player.Name
+            }, endPoint);
         }
     }
 }

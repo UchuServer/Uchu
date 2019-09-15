@@ -11,7 +11,7 @@ namespace Uchu.World.Social
         public override uint PacketId => 0xF;
 
         public string InvitedPlayer { get; set; }
-        
+
         public override void Deserialize(BitReader reader)
         {
             reader.Read<ulong>();

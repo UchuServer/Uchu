@@ -7,27 +7,27 @@ namespace Uchu.World
     public class EchoStartSkillMessage : ServerGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.EchoStartSkill;
-        
+
         public bool UsedMouse { get; set; }
-        
+
         public float CasterLatency { get; set; }
-        
+
         public int CastType { get; set; }
 
         public Vector3 LastClickedPosition { get; set; } = Vector3.Zero;
-        
+
         public GameObject OptionalOriginator { get; set; }
-        
+
         public GameObject OptionalTarget { get; set; }
-        
+
         public Quaternion OriginatorRotation { get; set; } = Quaternion.Identity;
-        
+
         public byte[] Content { get; set; }
-        
+
         public int SkillId { get; set; }
-        
+
         public uint SkillHandle { get; set; }
-        
+
         public override void SerializeMessage(BitWriter writer)
         {
             writer.WriteBit(UsedMouse);
@@ -55,10 +55,7 @@ namespace Uchu.World
             if (hasRotation) writer.Write(OriginatorRotation);
 
             writer.Write((uint) Content.Length);
-            foreach (var b in Content)
-            {
-                writer.Write(b);
-            }
+            foreach (var b in Content) writer.Write(b);
 
             writer.Write(SkillId);
 

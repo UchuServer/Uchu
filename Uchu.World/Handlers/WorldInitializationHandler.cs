@@ -16,7 +16,7 @@ namespace Uchu.World.Handlers
     public class WorldInitializationHandler : HandlerGroup
     {
         public XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
-        
+
         [PacketHandler]
         public async Task ValidateClient(SessionInfoPacket packet, IPEndPoint endPoint)
         {
@@ -26,9 +26,9 @@ namespace Uchu.World.Handlers
                 Logger.Warning($"{endPoint} attempted to connect with an invalid session key");
                 return;
             }
-            
+
             Server.SessionCache.RegisterKey(endPoint, packet.SessionKey);
-            
+
             var session = Server.SessionCache.GetSession(endPoint);
 
             using (var ctx = new UchuContext())
@@ -37,20 +37,21 @@ namespace Uchu.World.Handlers
 
                 if (character == null)
                 {
-                    Logger.Warning($"{endPoint} attempted to connect to world with an invalid character {session.CharacterId}");
+                    Logger.Warning(
+                        $"{endPoint} attempted to connect to world with an invalid character {session.CharacterId}");
 
                     Server.Send(new DisconnectNotifyPacket
                     {
                         DisconnectId = DisconnectId.CharacterCorruption
                     }, endPoint);
-                    
+
                     return;
                 }
-                
+
                 var zoneId = (ZoneId) character.LastZone;
 
                 if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
-                
+
                 var worldServer = (WorldServer) Server;
 
                 Server.Send(new WorldInfoPacket
@@ -70,13 +71,13 @@ namespace Uchu.World.Handlers
             using (var ctx = new UchuContext())
             {
                 var character = await ctx.Characters
-                .Include(c => c.Items)
-                .Include(c => c.User)
-                .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
+                    .Include(c => c.Items)
+                    .Include(c => c.User)
+                    .Include(c => c.Missions)
+                    .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
 
                 var zoneId = (ZoneId) character.LastZone;
-                
+
                 if (zoneId == ZoneId.VentureExplorerCinematic)
                 {
                     zoneId = ZoneId.VentureExplorer;
@@ -89,31 +90,26 @@ namespace Uchu.World.Handlers
 
                 // Zone should already be initialized at this point.
                 var zone = await ((WorldServer) Server).GetZone(zoneId);
-                
+
                 var completed = new List<CompletedMissionNode>();
                 var missions = new List<MissionNode>();
 
                 foreach (var mission in character.Missions)
-                {
                     if (mission.State == (int) MissionState.Completed)
-                    {
                         completed.Add(new CompletedMissionNode
                         {
                             CompletionCount = mission.CompletionCount,
                             LastCompletion = mission.LastCompletion,
                             MissionId = mission.MissionId
                         });
-                    }
                     else
-                    {
                         missions.Add(new MissionNode
                         {
                             MissionId = mission.MissionId,
-                            Progress = mission.Tasks.OrderBy(t => t.TaskId)
-                                .Select(t => new MissionProgressNode {Value = t.Values.Count}).ToArray()
+                            Progress = mission.Tasks.OrderBy(t => t.TaskId).Select(t =>
+                                new MissionProgressNode {Value = t.Values.Count}
+                            ).ToArray()
                         });
-                    }
-                }
 
                 var xmlData = new XmlData
                 {
@@ -158,10 +154,13 @@ namespace Uchu.World.Handlers
                                     ObjectId = i.InventoryItemId,
                                     Equipped = i.IsEquipped ? 1 : 0,
                                     Bound = i.IsBound ? 1 : 0,
-                                    ExtraInfo = i.ExtraInfo != null ? new ExtraInfoNode
-                                    {
-                                        ModuleAssemblyInfo = "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
-                                    } : null
+                                    ExtraInfo = i.ExtraInfo != null
+                                        ? new ExtraInfoNode
+                                        {
+                                            ModuleAssemblyInfo =
+                                                "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
+                                        }
+                                        : null
                                 }).ToArray()
                             },
                             new ItemContainerNode
@@ -219,7 +218,7 @@ namespace Uchu.World.Handlers
                 };
 
                 var ms = new MemoryStream();
-                
+
                 using (var writer = new StreamWriter(ms, Encoding.UTF8))
                 {
                     Serializer.Serialize(writer, xmlData);
@@ -257,15 +256,13 @@ namespace Uchu.World.Handlers
                 var relations = ctx.Friends.Where(f =>
                     f.FriendTwoId == character.CharacterId
                 ).ToArray();
-                
+
                 foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
-                {
                     Server.Send(new NotifyFriendRequestPacket
                     {
                         FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
                         IsBestFriendRequest = friend.RequestingBestFriend
                     }, endPoint);
-                }
             }
         }
     }

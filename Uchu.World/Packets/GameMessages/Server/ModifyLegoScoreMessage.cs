@@ -9,7 +9,7 @@ namespace Uchu.World
         public long Score { get; set; }
 
         public Lot Source { get; set; } = -1;
-        
+
         public override void SerializeMessage(BitWriter writer)
         {
             writer.Write(Score);

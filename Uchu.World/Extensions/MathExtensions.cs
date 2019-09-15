@@ -32,7 +32,7 @@ namespace Uchu.World
             Vector3 euler;
 
             // if the input quaternion is normalized, this is exactly one. Otherwise, this acts as a correction factor for the quaternion's not-normalizedness
-            var unit = (@this.X * @this.X) + (@this.Y * @this.Y) + (@this.Z * @this.Z) + (@this.W * @this.W);
+            var unit = @this.X * @this.X + @this.Y * @this.Y + @this.Z * @this.Z + @this.W * @this.W;
 
             // this will have a magnitude of 0.5 or greater if and only if this is a singularity case
             var test = @this.X * @this.W - @this.Y * @this.Z;
@@ -52,8 +52,10 @@ namespace Uchu.World
             else // no singularity - this is the majority of cases
             {
                 euler.X = (float) Math.Asin(2f * (@this.W * @this.X - @this.Y * @this.Z));
-                euler.Y = (float) Math.Atan2(2f * @this.W * @this.Y + 2f * @this.Z * @this.X, 1 - 2f * (@this.X * @this.X + @this.Y * @this.Y));
-                euler.Z = (float) Math.Atan2(2f * @this.W * @this.Z + 2f * @this.X * @this.Y, 1 - 2f * (@this.Z * @this.Z + @this.X * @this.X));
+                euler.Y = (float) Math.Atan2(2f * @this.W * @this.Y + 2f * @this.Z * @this.X,
+                    1 - 2f * (@this.X * @this.X + @this.Y * @this.Y));
+                euler.Z = (float) Math.Atan2(2f * @this.W * @this.Z + 2f * @this.X * @this.Y,
+                    1 - 2f * (@this.Z * @this.Z + @this.X * @this.X));
             }
 
             // all the math so far has been done in radians. Before returning, we convert to degrees...
@@ -66,24 +68,24 @@ namespace Uchu.World
 
             return euler;
         }
-        
+
         public static Vector3 MoveTowards(this Vector3 current, Vector3 target, float maxDistanceDelta)
         {
             //
             // Stolen from Unity.
             //
-            
+
             var deltaX = target.X - current.X;
             var deltaY = target.Y - current.Y;
             var deltaZ = target.Z - current.Z;
-            
+
             var delta = (float) (deltaX * (double) deltaX + deltaY * (double) deltaY + deltaZ * (double) deltaZ);
-            
+
             if (Math.Abs(delta) < 0.001f || delta <= maxDistanceDelta * (double) maxDistanceDelta)
                 return target;
-            
+
             var change = (float) Math.Sqrt(delta);
-            
+
             return new Vector3(
                 current.X + deltaX / change * maxDistanceDelta,
                 current.Y + deltaY / change * maxDistanceDelta,

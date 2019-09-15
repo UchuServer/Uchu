@@ -6,11 +6,11 @@ namespace Uchu.World
     public class SetJetPackModeMessage : ServerGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.SetJetPackMode;
-        
+
         public bool BypassChecks { get; set; }
-        
+
         public bool DoHover { get; set; }
-        
+
         public bool Use { get; set; }
 
         public int EffectId { get; set; } = -1;
@@ -20,9 +20,9 @@ namespace Uchu.World
         public float MaxAirSpeed { get; set; } = 15;
 
         public float VerticalVelocity { get; set; } = 1;
-        
+
         public int WarningEffectId { get; set; } = -1;
-        
+
         public override void SerializeMessage(BitWriter writer)
         {
             writer.WriteBit(BypassChecks);

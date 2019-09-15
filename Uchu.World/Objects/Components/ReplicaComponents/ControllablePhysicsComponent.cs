@@ -11,13 +11,13 @@ namespace Uchu.World
         public bool HasPosition { get; set; } = true;
 
         public bool IsOnGround { get; set; } = true;
-        
+
         public bool NegativeAngularVelocity { get; set; }
-        
+
         public bool HasVelocity { get; set; }
-        
+
         public Vector3 Velocity { get; set; }
-        
+
         public bool HasAngularVelocity { get; set; }
 
         public Vector3 AngularVelocity { get; set; }
@@ -25,7 +25,7 @@ namespace Uchu.World
         public GameObject Platform { get; set; }
 
         public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.ControllablePhysics;
 
         public override void FromLevelObject(LevelObject levelObject)
@@ -47,10 +47,7 @@ namespace Uchu.World
 
             writer.WriteBit(true);
 
-            for (var i = 0; i < 7; i++)
-            {
-                writer.Write<uint>(0);
-            }
+            for (var i = 0; i < 7; i++) writer.Write<uint>(0);
 
             WritePhysics(writer);
         }
@@ -74,22 +71,17 @@ namespace Uchu.World
             writer.WriteBit(false);
 
             writer.WriteBit(HasPosition);
-            
+
             if (!HasPosition) return;
 
             writer.Write(Transform.Position);
-            {
-                writer.Write(Transform.Rotation.Z);
-                writer.Write(Transform.Rotation.Y);
-                writer.Write(Transform.Rotation.X);
-                writer.Write(Transform.Rotation.W);
-            }
+            writer.Write(Transform.Rotation);
 
             writer.WriteBit(IsOnGround);
             writer.WriteBit(NegativeAngularVelocity);
 
             writer.WriteBit(HasVelocity);
-            
+
             if (HasVelocity) writer.Write(Velocity);
 
             writer.WriteBit(HasAngularVelocity);
@@ -99,7 +91,7 @@ namespace Uchu.World
             var hasPlatform = Platform != null;
 
             writer.WriteBit(hasPlatform);
-            
+
             if (!hasPlatform) return;
 
             writer.Write(Platform);

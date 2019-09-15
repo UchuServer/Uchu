@@ -11,21 +11,21 @@ namespace Uchu.World.Social
         public override uint PacketId => 0x1C;
 
         public ServerFriendRequestResponse Response { get; set; }
-        
+
         public bool IsPlayerOnline { get; set; }
-        
+
         public string PlayerName { get; set; }
 
         public long PlayerId { get; set; } = -1;
-        
+
         public ZoneId ZoneId { get; set; }
-        
+
         public ushort WorldInstance { get; set; }
-        
+
         public uint WorldClone { get; set; }
-        
+
         public bool IsBestFriend { get; set; }
-        
+
         public bool IsFreeToPlay { get; set; }
 
         public override void SerializePacket(BitWriter writer)

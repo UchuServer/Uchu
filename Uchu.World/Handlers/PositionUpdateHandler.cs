@@ -20,23 +20,23 @@ namespace Uchu.World.Handlers
                 Logger.Error($"{endPoint} is not logged in but sent a Position Update packet.");
                 return;
             }
-            
+
             //
             // The server is a slave to the position update packets it gets from the client right now.
             //
-            
+
             player.Transform.Position = packet.Position;
             player.Transform.Rotation = packet.Rotation;
 
             var physics = player.GetComponent<ControllablePhysicsComponent>();
 
             physics.HasPosition = true;
-            
+
             physics.IsOnGround = packet.IsOnGround;
             physics.NegativeAngularVelocity = packet.NegativeAngularVelocity;
 
             physics.HasVelocity = packet.HasVelocity;
-            
+
             physics.Velocity = packet.Velocity;
 
             physics.HasAngularVelocity = packet.HasAngularVelocity;
@@ -44,7 +44,7 @@ namespace Uchu.World.Handlers
             physics.AngularVelocity = packet.AngularVelocity;
 
             physics.Platform = player.Zone.GetGameObject(packet.PlatformObjectId);
-            
+
             physics.PlatformPosition = packet.PlatformPosition;
 
             player.Zone.SendSerialization(player, player.Zone.Players.Where(

@@ -6,9 +6,9 @@ namespace Uchu.World
     public class Transform : Component
     {
         private Transform _parent;
-        
+
         public Vector3 Position { get; set; } = Vector3.Zero;
-        
+
         public Quaternion Rotation { get; set; } = Quaternion.Identity;
 
         public Vector3 EulerAngles
@@ -18,7 +18,7 @@ namespace Uchu.World
         }
 
         public float Scale { get; set; } = -1;
-        
+
         public Transform Parent
         {
             get => _parent;
@@ -26,24 +26,18 @@ namespace Uchu.World
             {
                 if (_parent == value) return;
                 _parent = value;
-                
+
                 var list = _parent.Children.ToList();
-                
+
                 if (value == null)
-                {
                     list.Remove(this);
-                }
                 else
-                {
                     list.Add(this);
-                }
-                
+
                 _parent.Children = list.ToArray();
             }
         }
 
         public Transform[] Children { get; private set; } = new Transform[0];
-        
-        
     }
 }

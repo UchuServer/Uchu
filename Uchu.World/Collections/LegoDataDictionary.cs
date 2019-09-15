@@ -15,6 +15,17 @@ namespace Uchu.World.Collections
         public const char InfoSeparator = '\u001F';
         private readonly Dictionary<string, (byte, object)> _map;
 
+        public LegoDataDictionary()
+        {
+            _map = new Dictionary<string, (byte, object)>();
+        }
+
+        public object this[string key, byte type]
+        {
+            get => _map[key].Item2;
+            set => Add(key, value, type);
+        }
+
         public int Count => _map.Count;
         public bool IsReadOnly => false;
 
@@ -26,20 +37,6 @@ namespace Uchu.World.Collections
             get => _map[key].Item2;
             set => Add(key, value);
         }
-
-        public object this[string key, byte type]
-        {
-            get => _map[key].Item2;
-            set => Add(key, value, type);
-        }
-
-        public LegoDataDictionary()
-        {
-            _map = new Dictionary<string, (byte, object)>();
-        }
-
-        public void Add(string key, object value, byte type)
-            => _map[key] = (type, value);
 
         public void Add(string key, object value)
         {
@@ -56,16 +53,24 @@ namespace Uchu.World.Collections
         }
 
         public void Add(KeyValuePair<string, object> item)
-            => Add(item.Key, item.Value);
+        {
+            Add(item.Key, item.Value);
+        }
 
         public void Clear()
-            => _map.Clear();
+        {
+            _map.Clear();
+        }
 
         public bool ContainsKey(string key)
-            => _map.ContainsKey(key);
+        {
+            return _map.ContainsKey(key);
+        }
 
         public bool Contains(KeyValuePair<string, object> item)
-            => _map.ContainsKey(item.Key) && _map[item.Key].Item2 == item.Value;
+        {
+            return _map.ContainsKey(item.Key) && _map[item.Key].Item2 == item.Value;
+        }
 
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
         {
@@ -73,10 +78,14 @@ namespace Uchu.World.Collections
         }
 
         public bool Remove(string key)
-            => _map.Remove(key);
+        {
+            return _map.Remove(key);
+        }
 
         public bool Remove(KeyValuePair<string, object> item)
-            => _map.Remove(item.Key);
+        {
+            return _map.Remove(item.Key);
+        }
 
         public bool TryGetValue(string key, out object value)
         {
@@ -98,7 +107,9 @@ namespace Uchu.World.Collections
         }
 
         IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        {
+            return GetEnumerator();
+        }
 
         public void Serialize(BitWriter writer)
         {
@@ -184,8 +195,15 @@ namespace Uchu.World.Collections
             throw new NotImplementedException();
         }
 
+        public void Add(string key, object value, byte type)
+        {
+            _map[key] = (type, value);
+        }
+
         public override string ToString()
-            => ToString("\r\n");
+        {
+            return ToString("\r\n");
+        }
 
         public string ToString(string separator)
         {
@@ -289,7 +307,8 @@ namespace Uchu.World.Collections
                         }
                         else if (val.Contains('\u001F'))
                         {
-                            var floats = val.Split('\u001F').Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToArray();
+                            var floats = val.Split('\u001F').Select(s => float.Parse(s, CultureInfo.InvariantCulture))
+                                .ToArray();
 
                             v =
                                 floats.Length == 1 ? floats[0] :
@@ -302,6 +321,7 @@ namespace Uchu.World.Collections
                         {
                             v = val;
                         }
+
                         break;
                 }
 

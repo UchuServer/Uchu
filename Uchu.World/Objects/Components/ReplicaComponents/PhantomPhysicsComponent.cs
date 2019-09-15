@@ -8,19 +8,18 @@ namespace Uchu.World
     {
         public override ReplicaComponentsId Id => ReplicaComponentsId.PhantomPhysics;
 
-        public bool HasPosition { get; set; } = false;
-        
+        public bool HasPosition { get; set; } = true;
+
         public bool IsEffectActive { get; set; } = false;
-        
+
         public uint EffectType { get; set; }
-        
+
         public float EffectAmount { get; set; }
 
         public Vector3? EffectDirection { get; set; } = null;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
@@ -40,7 +39,7 @@ namespace Uchu.World
 
             writer.WriteBit(true);
             writer.WriteBit(IsEffectActive);
-            
+
             if (!IsEffectActive) return;
 
             writer.Write(EffectType);
@@ -50,7 +49,7 @@ namespace Uchu.World
             var hasDirection = EffectDirection != null;
 
             writer.WriteBit(hasDirection);
-            
+
             if (!hasDirection) return;
 
             writer.Write(EffectDirection.Value * EffectAmount);

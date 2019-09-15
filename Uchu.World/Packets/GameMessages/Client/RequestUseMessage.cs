@@ -5,7 +5,7 @@ namespace Uchu.World
     public class RequestUseMessage : ClientGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.RequestUse;
-        
+
         public bool IsMultiInteract { get; set; }
 
         public uint MultiInteractId { get; set; }

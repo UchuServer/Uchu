@@ -1,10 +1,5 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using NLua;
 using RakDotNet.IO;
-using Uchu.Core;
 using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
@@ -13,25 +8,23 @@ namespace Uchu.World
 {
     public class LuaScriptComponent : ReplicaComponent
     {
-        public LegoDataDictionary Data { get; set; }
+        private LuaFunction[] _functions;
+
+        private ScriptComponent _scriptComponent;
 
         private Lua _state;
+        public LegoDataDictionary Data { get; set; }
 
-        private LuaFunction[] _functions;
-        
-        private ScriptComponent _scriptComponent;
-        
         public override ReplicaComponentsId Id => ReplicaComponentsId.Script;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
         {
             var hasData = Data != null;
-            
+
             writer.WriteBit(hasData);
             if (hasData) writer.WriteLdfCompressed(Data);
         }

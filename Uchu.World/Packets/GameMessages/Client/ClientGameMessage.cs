@@ -9,7 +9,7 @@ namespace Uchu.World
         public override uint PacketId => 0x5;
 
         public abstract GameMessageId GameMessageId { get; }
-        
+
         public GameObject Associate { get; set; }
     }
 }

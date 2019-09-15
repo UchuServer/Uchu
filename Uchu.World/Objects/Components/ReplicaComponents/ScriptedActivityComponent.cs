@@ -14,7 +14,6 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)
@@ -31,10 +30,7 @@ namespace Uchu.World
             {
                 writer.Write(contributor);
 
-                foreach (var parameter in Parameters)
-                {
-                    writer.Write(parameter);
-                }
+                foreach (var parameter in Parameters) writer.Write(parameter);
             }
         }
     }

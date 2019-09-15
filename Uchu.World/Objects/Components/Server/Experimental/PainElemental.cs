@@ -11,7 +11,7 @@ namespace Uchu.World.Experimental
 
         private BaseCombatAiComponent _baseCombatAi;
 
-        private Random _random;
+        private readonly Random _random;
 
         private float _soulTimer;
 
@@ -38,7 +38,7 @@ namespace Uchu.World.Experimental
                 _ai.Speed = default;
                 return;
             }
-            
+
             _ai.Speed = Vector3.Distance(Transform.Position, _baseCombatAi.Target.Transform.Position) >= 30 ? 15 : 0;
 
             if (_soulTimer < 3)
@@ -50,7 +50,6 @@ namespace Uchu.World.Experimental
             _soulTimer = default;
 
             if (Vector3.Distance(Transform.Position, _ai.FallowLocation) < 120)
-            {
                 for (var i = 0; i < 1; i++)
                 {
                     var lostSoul = GameObject.Instantiate(Zone, 12379, Transform.Position, Transform.Rotation);
@@ -77,7 +76,6 @@ namespace Uchu.World.Experimental
                         Destroy(lostSoulAi.GameObject);
                     });
                 }
-            }
         }
     }
 }

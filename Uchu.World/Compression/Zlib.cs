@@ -9,7 +9,9 @@ namespace Uchu.World.Compression
     {
         public static async Task<byte[]> CompressBytesAsync(byte[] data,
             CompressionLevel compressionLevel = CompressionLevel.Fastest)
-            => await CompressBytesAsync(data, 0, data.Length, compressionLevel);
+        {
+            return await CompressBytesAsync(data, 0, data.Length, compressionLevel);
+        }
 
         public static async Task<byte[]> CompressBytesAsync(byte[] data, int offset, int length,
             CompressionLevel compressionLevel = CompressionLevel.Fastest)
@@ -42,7 +44,9 @@ namespace Uchu.World.Compression
         }
 
         public static byte[] CompressBytes(byte[] data, CompressionLevel compressionLevel = CompressionLevel.Fastest)
-            => CompressBytes(data, 0, data.Length, compressionLevel);
+        {
+            return CompressBytes(data, 0, data.Length, compressionLevel);
+        }
 
         public static byte[] CompressBytes(byte[] data, int offset, int length,
             CompressionLevel compressionLevel = CompressionLevel.Fastest)

@@ -11,7 +11,7 @@ namespace Uchu.World
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Client;
 
         public override uint PacketId => 0x15;
-        
+
         public byte[] Packet { get; set; }
 
         public override void Deserialize(BitReader reader)

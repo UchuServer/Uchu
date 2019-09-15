@@ -6,7 +6,7 @@ namespace Uchu.World
     public class RequestDieMessage : ClientGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.RequestDie;
-        
+
         public bool UnknownFlag { get; set; }
 
         public string DeathType { get; set; } = "";
@@ -16,13 +16,13 @@ namespace Uchu.World
         public float DirectionRelativeAngleY { get; set; }
 
         public float DirectionRelativeForce { get; set; }
-        
+
         public int KillType { get; set; }
-        
+
         public GameObject Killer { get; set; }
-        
+
         public GameObject LootOwner { get; set; }
-        
+
         public override void Deserialize(BitReader reader)
         {
             UnknownFlag = reader.ReadBit();

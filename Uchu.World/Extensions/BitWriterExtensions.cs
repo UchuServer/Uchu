@@ -12,7 +12,7 @@ namespace Uchu.World
         {
             return @this.Write(gameObject?.ObjectId ?? -1);
         }
-        
+
         public static void WriteLdfCompressed(this BitWriter @this, LegoDataDictionary dict)
         {
             var stream = new MemoryStream();
@@ -22,7 +22,7 @@ namespace Uchu.World
                 temp.Write(dict);
 
                 var buffer = stream.GetBuffer();
-                
+
                 var compressed = Zlib.CompressBytes(buffer);
 
                 @this.Write((uint) (compressed.Length + 9));

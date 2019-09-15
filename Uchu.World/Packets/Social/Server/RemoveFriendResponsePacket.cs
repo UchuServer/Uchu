@@ -11,7 +11,7 @@ namespace Uchu.World.Social
         public override uint PacketId => 0x1D;
 
         public bool Success { get; set; }
-        
+
         public string FriendName { get; set; }
 
         public override void SerializePacket(BitWriter writer)

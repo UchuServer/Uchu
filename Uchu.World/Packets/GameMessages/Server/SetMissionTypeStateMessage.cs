@@ -8,9 +8,9 @@ namespace Uchu.World
         public override GameMessageId GameMessageId => GameMessageId.SetMissionTypeState;
 
         public MissionLockState LockState { get; set; } = MissionLockState.New;
-        
+
         public string SubType { get; set; }
-        
+
         public string Type { get; set; }
 
         public override void SerializeMessage(BitWriter writer)
@@ -23,7 +23,7 @@ namespace Uchu.World
 
             writer.Write((uint) SubType.Length);
             writer.WriteString(SubType, SubType.Length);
-            
+
             writer.Write((uint) Type.Length);
             writer.WriteString(Type, Type.Length);
         }

@@ -8,9 +8,9 @@ namespace Uchu.World
         public override GameMessageId GameMessageId => GameMessageId.ParseChatMessage;
 
         public int ClientState { get; set; }
-        
+
         public string Message { get; set; }
-        
+
         public override void Deserialize(BitReader reader)
         {
             ClientState = reader.Read<int>();

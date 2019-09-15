@@ -6,7 +6,7 @@ namespace Uchu.World.Behaviors
     public class BehaviourAnd : Behavior
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.And;
-        
+
         public override async Task Serialize(BitReader reader)
         {
             var behaviors = GetParameters(BehaviorId);
@@ -14,7 +14,7 @@ namespace Uchu.World.Behaviors
             foreach (var behavior in behaviors)
             {
                 if (behavior.Value == null) continue;
-                
+
                 await StartBranch((int) behavior.Value, reader);
             }
         }

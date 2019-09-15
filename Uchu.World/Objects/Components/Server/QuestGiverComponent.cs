@@ -1,26 +1,29 @@
 using System;
 using System.Linq;
-using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    public class QuestGiverComponent : ReplicaComponent
+    [ServerComponent(Id = ReplicaComponentsId.QuestGiver)]
+    public class QuestGiverComponent : Component
     {
+        public QuestGiverComponent()
+        {
+            OnStart += CollectMissions;
+        }
+
         public MissionNPCComponent[] MissionComponents { get; private set; }
 
         public Missions[] Quests { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.QuestGiver;
-
-        public override void FromLevelObject(LevelObject levelObject)
+        private void CollectMissions()
         {
             using (var ctx = new CdClientContext())
             {
                 var components = ctx.ComponentsRegistryTable.Where(
-                    c => c.Id == GameObject.Lot && c.Componenttype == (int) Id
+                    c => c.Id == GameObject.Lot && c.Componenttype == (int) ReplicaComponentsId.QuestGiver
                 ).ToArray();
 
                 MissionComponents = components.SelectMany(
@@ -31,14 +34,8 @@ namespace Uchu.World
                     component => ctx.MissionsTable.Where(m => m.Id == component.MissionID)
                 ).ToArray();
             }
-        }
 
-        public override void Construct(BitWriter writer)
-        {
-        }
-
-        public override void Serialize(BitWriter writer)
-        {
+            Logger.Information($"{GameObject} is a quest give with {MissionComponents.Length} missions");
         }
 
         public void OfferMissionAsync(Player player)
@@ -47,14 +44,13 @@ namespace Uchu.World
 
             foreach (var component in MissionComponents)
             {
-
                 //
                 // Get all of the missions the player has active, completed, or otherwise interacted with.
                 // I.e Missions not started will not be included.
                 //
-                
+
                 var playerMissions = questInventory.GetMissions();
-                
+
                 foreach (var quest in Quests.Where(q => q.Id == component.MissionID))
                 {
                     if (!(quest.IsMission ?? false)) continue; // Is achievement
@@ -62,35 +58,35 @@ namespace Uchu.World
                     // Get the quest id.
                     if (quest.Id == default) continue;
                     var questId = quest.Id.Value;
-                    
+
                     //
                     // See if the player has interacted with this mission and could passably hand it in.
                     //
-                    
+
                     var playerMission = playerMissions.FirstOrDefault(p => p.MissionId == questId);
 
                     MissionState missionState;
-                    
+
                     if (playerMission != default && (component.AcceptsMission ?? false))
                     {
                         missionState = (MissionState) playerMission.State;
-                        
+
                         //
                         // Check if the player can hand in any missions.
                         //
-                        
+
                         if (missionState == MissionState.ReadyToComplete)
                         {
                             //
                             // Offer mission hand in to the player.
                             //
-                            
+
                             questInventory.MessageOfferMission(questId, GameObject);
 
                             //
                             // Can only hand in one mission at a time.
                             //
-                            
+
                             return;
                         }
                     }
@@ -106,15 +102,15 @@ namespace Uchu.World
                             //
                             // If the mission is available but not started for some reason the mission is ready to be pickup up.
                             //
-                            
+
                             case MissionState.Available:
                             case MissionState.CompletedAvailable:
                                 break;
-                            
+
                             //
                             // If the mission is active in some way or unavailable the player cannot take on this mission.
                             //
-                            
+
                             case MissionState.Active:
                             case MissionState.ReadyToComplete:
                             case MissionState.Unavailable:
@@ -128,7 +124,7 @@ namespace Uchu.World
                                 );
                         }
                     }
-                    
+
                     //
                     // Check if player has completed the required missions to take on this new mission.
                     //
@@ -137,13 +133,13 @@ namespace Uchu.World
                         quest.PrereqMissionID,
                         questInventory.GetCompletedMissions()
                     );
-                    
+
                     if (!hasPrerequisite) continue;
-                    
+
                     //
                     // Offer new mission to the player.
                     //
-                    
+
                     questInventory.MessageOfferMission(questId, GameObject);
 
                     return;

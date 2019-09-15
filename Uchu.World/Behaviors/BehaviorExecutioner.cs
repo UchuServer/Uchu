@@ -6,13 +6,12 @@ namespace Uchu.World.Behaviors
 {
     public class BehaviorExecutioner
     {
-        public Player Executioner;
-        
-        public Timer ActiveChainTimer { get; set; }
-        
-        public ElapsedEventHandler ActiveChainCallback { get; set; }
-        
         public readonly List<GameObject> Targets = new List<GameObject>();
+        public Player Executioner;
+
+        public Timer ActiveChainTimer { get; set; }
+
+        public ElapsedEventHandler ActiveChainCallback { get; set; }
 
         public void Execute()
         {

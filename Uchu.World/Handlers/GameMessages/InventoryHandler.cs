@@ -13,7 +13,7 @@ namespace Uchu.World.Handlers.GameMessages
             Logger.Debug(
                 $"Moving item {message.ItemId} to {message.DestinationInventoryType}:{message.NewSlot} with Code: {message.ResponseCode}"
             );
-            
+
             player.GetComponent<InventoryManager>().SyncItemMove(
                 message.ItemId, message.NewSlot, message.CurrentInventoryType, message.DestinationInventoryType
             );
@@ -24,16 +24,16 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.GetComponent<InventoryComponent>().EquipItem(message.Item);
         }
-        
+
         [PacketHandler(RunTask = true)]
         public void HandleUnEquipItem(UnEquipItemMessage message, Player player)
         {
             var inventoryComponent = player.GetComponent<InventoryComponent>();
-            
+
             Logger.Information($"UnEquip Item: {message.ItemToUnEquip} | {message.ReplacementItem}");
-            
+
             inventoryComponent.UnEquipItem(message.ItemToUnEquip);
-            
+
             if (message.ReplacementItem != null)
                 inventoryComponent.EquipItem(message.ReplacementItem);
         }

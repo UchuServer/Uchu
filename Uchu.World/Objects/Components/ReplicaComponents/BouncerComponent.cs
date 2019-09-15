@@ -6,12 +6,11 @@ namespace Uchu.World
     public class BouncerComponent : ReplicaComponent
     {
         public bool PetRequired { get; set; }
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Bouncer;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            
         }
 
         public override void Construct(BitWriter writer)

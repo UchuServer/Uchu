@@ -10,9 +10,9 @@ namespace Uchu.World.Social
         public override uint PacketId => 0x10;
 
         public bool IsDeclined { get; set; }
-        
+
         public long InviterObjectId { get; set; }
-        
+
         public override void Deserialize(BitReader reader)
         {
             reader.Read<ulong>();
