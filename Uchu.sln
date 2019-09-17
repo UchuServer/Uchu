@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.World", "Uchu.World\Uc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakDotNet\RakDotNet.csproj", "{462E6F13-F218-4AE1-9FDF-1716AB63B04F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{1A764C3F-0906-49BC-8F99-ABA0E71171DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{90AEC059-0EB3-48E9-A80B-ACDC042917EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,9 +44,9 @@ Global
 		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
