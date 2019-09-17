@@ -25,7 +25,7 @@ namespace Uchu.Core
 
         protected readonly CommandHandleMap CommandHandleMap;
         
-        public readonly IRakNetServer RakNetServer;
+        public readonly IRakServer RakNetServer;
 
         public readonly ISessionCache SessionCache;
 
@@ -34,6 +34,8 @@ namespace Uchu.Core
         public readonly int Port;
 
         protected event Action<long, ushort, BitReader, IPEndPoint> OnGameMessage;
+
+        protected event Action OnServerStopped;
 
         private bool _running;
 
@@ -48,18 +50,17 @@ namespace Uchu.Core
             HandlerMap = new HandlerMap();
             CommandHandleMap = new CommandHandleMap();
             
-            Logger.Information($"Server created on port: {port}, password: {password}, protocol: {RakNetServer.Protocol}");
+            Logger.Information($"Server created on port: {port}, password: {password}");
         }
 
-        public void Start()
+        public Task Start()
         {
             RegisterAssembly(Assembly.GetExecutingAssembly());
             RegisterAssembly(Assembly.GetEntryAssembly());
             
             Logger.Information("Starting...");
             
-            RakNetServer.Start();
-            RakNetServer.PacketReceived += HandlePacket;
+            RakNetServer.MessageReceived += HandlePacket;
 
             _running = true;
 
@@ -73,18 +74,18 @@ namespace Uchu.Core
                 }
             });
 
-            while (_running)
-            {
-            }
+            return RakNetServer.RunAsync();
         }
 
-        public void Stop()
+        public Task Stop()
         {
             Logger.Log("Shutting down...");
 
-            RakNetServer.Stop();
-
             _running = false;
+
+            OnServerStopped?.Invoke();
+
+            return RakNetServer.ShutdownAsync();
         }
 
         #region Management
@@ -96,9 +97,9 @@ namespace Uchu.Core
 
         #region Send
 
-        public void Send(byte[] data, IPEndPoint endPoint) => RakNetServer.Send(data, endPoint);
+        public void Send(byte[] data, IPEndPoint endPoint) => RakNetServer.Send(endPoint, data);
 
-        public void Send(Stream stream, IPEndPoint endPoint) => RakNetServer.Send(stream, endPoint);
+        public void Send(MemoryStream stream, IPEndPoint endPoint) => RakNetServer.Send(endPoint, stream.ToArray());
 
         public void Send(ISerializable serializable, IPEndPoint endPoint)
         {
@@ -108,7 +109,7 @@ namespace Uchu.Core
                 writer.Write(serializable);
             }
             
-            RakNetServer.Send(stream, endPoint);
+            RakNetServer.Send(endPoint, stream.ToArray());
             
             Logger.Debug($"Sent {serializable} to {endPoint}");
         }
@@ -177,7 +178,7 @@ namespace Uchu.Core
             }
         }
 
-        public void HandlePacket(IPEndPoint endPoint, byte[] data)
+        public async Task HandlePacket(IPEndPoint endPoint, byte[] data, Reliability reliability)
         {
             var stream = new MemoryStream(data);
 
@@ -186,8 +187,8 @@ namespace Uchu.Core
                 var header = new PacketHeader();
                 reader.Read(header);
 
-                if (header.MessageId != MessageIdentifiers.UserPacketEnum)
-                    throw new ArgumentOutOfRangeException($"Packet is not {nameof(MessageIdentifiers.UserPacketEnum)}");
+                if (header.MessageId != MessageIdentifier.UserPacketEnum)
+                    throw new ArgumentOutOfRangeException($"Packet is not {nameof(MessageIdentifier.UserPacketEnum)}");
 
                 if (header.PacketId == 0x05)
                 {

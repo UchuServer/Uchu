@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var port = 2003;
             List<ZoneId> zoneIds = default;
@@ -59,7 +60,7 @@ namespace Uchu.World
 
             var server = new WorldServer(port, zoneIds?.ToArray(), preload);
 
-            server.Start();
+            await server.Start();
         }
 
         private enum ArgumentState

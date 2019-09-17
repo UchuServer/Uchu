@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -14,7 +15,14 @@ namespace Uchu.World.Behaviors
 
         public override async Task Serialize(BitReader reader)
         {
-            Hit = reader.ReadBit();
+            try
+            {
+                Hit = reader.ReadBit();
+            }
+            catch
+            {
+                return;
+            }
 
             if (Hit)
             {

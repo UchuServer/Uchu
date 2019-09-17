@@ -6,11 +6,11 @@ namespace Uchu.Char
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var server = new Server(2002);
             
-            server.Start();
+            await server.Start();
         }
     }
 }

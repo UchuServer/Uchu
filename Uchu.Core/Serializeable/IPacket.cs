@@ -1,8 +1,9 @@
 using RakDotNet;
+using RakDotNet.IO;
 
 namespace Uchu.Core
 {
-    public interface IPacket : ISerializable
+    public interface IPacket : ISerializable, IDeserializable
     {
         /// <summary>
         ///     Remote connection type

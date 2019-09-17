@@ -33,19 +33,15 @@ namespace Uchu.World
             _parser = new ZoneParser(Resources);
 
             OnGameMessage += HandleGameMessage;
-
-            RakNetServer.Disconnection += point =>
+            OnServerStopped += () =>
             {
-                Logger.Information($"{point} disconnected");
-                foreach (var player in Zones
-                    .Select(zone => zone.Players.FirstOrDefault(p => p.EndPoint.Equals(point)))
-                    .Where(player => !ReferenceEquals(player, default)))
+                foreach (var zone in Zones)
                 {
-                    Object.Destroy(player);
-
-                    break;
+                    Object.Destroy(zone);
                 }
             };
+
+            RakNetServer.ClientDisconnected += HandleDisconnect;
 
             Task.Run(async () =>
             {
@@ -66,6 +62,20 @@ namespace Uchu.World
                     await GetZone(zoneId);
                 }
             });
+        }
+
+        public async Task HandleDisconnect(IPEndPoint point, CloseReason reason)
+        {
+            Logger.Information($"{point} disconnected: {reason}");
+            
+            foreach (var player in Zones
+                .Select(zone => zone.Players.FirstOrDefault(p => p.EndPoint.Equals(point)))
+                .Where(player => !ReferenceEquals(player, default)))
+            {
+                Object.Destroy(player);
+
+                break;
+            }
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)

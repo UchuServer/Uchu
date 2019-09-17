@@ -35,6 +35,8 @@ namespace Uchu.World
 
         private long _passedTickTime;
 
+        private bool _running;
+        
         private int _ticks;
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
@@ -44,6 +46,8 @@ namespace Uchu.World
             Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
+
+            OnDestroyed += () => { _running = false; };
         }
 
         /// <summary>
@@ -150,7 +154,9 @@ namespace Uchu.World
 
             stopWatch.Start();
 
-            while (true)
+            _running = true;
+            
+            while (_running)
             {
                 if (_ticks >= TicksPerSecondLimit) continue;
 
@@ -201,7 +207,7 @@ namespace Uchu.World
 
         public void UnRegisterObject(Object obj)
         {
-            _objects.Remove(obj);
+            if (_objects.Contains(obj)) _objects.Remove(obj);
         }
 
         /// <summary>
@@ -210,8 +216,6 @@ namespace Uchu.World
         /// <param name="gameObject">Unmanaged GameObject</param>
         public void RegisterGameObject(GameObject gameObject)
         {
-            RegisterObject(gameObject);
-
             _gameObjects.Add(gameObject);
         }
 
@@ -247,7 +251,7 @@ namespace Uchu.World
 
                     using (var writer = new BitWriter(stream))
                     {
-                        writer.Write((byte) MessageIdentifiers.ReplicaManagerConstruction);
+                        writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
 
                         writer.WriteBit(true);
                         writer.Write(id);
@@ -279,7 +283,7 @@ namespace Uchu.World
 
                 using (var writer = new BitWriter(stream))
                 {
-                    writer.Write((byte) MessageIdentifiers.ReplicaManagerSerialize);
+                    writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
 
                     writer.Write(id);
 
@@ -310,7 +314,7 @@ namespace Uchu.World
 
                 using (var writer = new BitWriter(stream))
                 {
-                    writer.Write((byte) MessageIdentifiers.ReplicaManagerDestruction);
+                    writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
 
                     writer.Write(id);
                 }

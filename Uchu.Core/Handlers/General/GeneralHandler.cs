@@ -13,7 +13,7 @@ namespace Uchu.Core.Handlers
                 Logger.Warning($"Handshake attempted with client of Game version: {packet.GameVersion}");
                 return;
             }
-            var port = Server.RakNetServer.Protocol == ServerProtocol.TcpUdp ? 21836 : 1001;
+            const int port = 21836;
 
             Server.Send(new HandshakePacket
             {

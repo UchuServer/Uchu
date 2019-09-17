@@ -14,7 +14,7 @@ namespace Uchu.Core
 
         public virtual void Serialize(BitWriter writer)
         {
-            writer.Write((byte) MessageIdentifiers.UserPacketEnum);
+            writer.Write((byte) MessageIdentifier.UserPacketEnum);
             writer.Write((ushort) RemoteConnectionType);
             writer.Write(PacketId);
             writer.Write<byte>( 0);

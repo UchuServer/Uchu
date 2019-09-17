@@ -16,7 +16,7 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.Write((byte) MessageIdentifiers.UserPacketEnum);
+            writer.Write((byte) MessageIdentifier.UserPacketEnum);
             writer.Write((ushort) RemoteConnectionType.Server);
             writer.Write<uint>(0xC);
             writer.Write<byte>(0);

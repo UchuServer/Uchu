@@ -19,7 +19,7 @@ namespace Uchu.World
 
             using (var temp = new BitWriter(stream))
             {
-                temp.Write(dict);
+                Core.BitWriterExtensions.Write(temp, dict);
 
                 var buffer = stream.GetBuffer();
 
@@ -30,7 +30,7 @@ namespace Uchu.World
                 @this.Write<byte>(1);
                 @this.Write((uint) buffer.Length);
                 @this.Write((uint) compressed.Length);
-                @this.Write(compressed);
+                Core.BitWriterExtensions.Write(@this, compressed);
             }
         }
 

@@ -38,6 +38,8 @@ namespace Uchu.World
 
         public static void Start(Object obj)
         {
+            obj.Zone.RegisterObject(obj);
+            
             obj.OnStart?.Invoke();
         }
 

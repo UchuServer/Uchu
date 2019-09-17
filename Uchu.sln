@@ -1,9 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakDotNet\RakDotNet.csproj", "{6EF101A0-E4D7-4D91-AD5F-8CF16F2FC850}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{1D416C10-D62C-4ED4-AEB1-4AB927B03271}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Core", "Uchu.Core\Uchu.Core.csproj", "{1F64F832-AC8D-4C83-B379-F01DE70129A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Auth", "Uchu.Auth\Uchu.Auth.csproj", "{4FF85969-17A4-409C-A6AB-FC55D5C1A783}"
@@ -14,20 +10,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Char", "Uchu.Char\Uchu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.World", "Uchu.World\Uchu.World.csproj", "{E8EA652B-4C25-4CA7-A211-A6E2D6D88897}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakDotNet\RakDotNet.csproj", "{462E6F13-F218-4AE1-9FDF-1716AB63B04F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{1A764C3F-0906-49BC-8F99-ABA0E71171DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6EF101A0-E4D7-4D91-AD5F-8CF16F2FC850}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6EF101A0-E4D7-4D91-AD5F-8CF16F2FC850}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6EF101A0-E4D7-4D91-AD5F-8CF16F2FC850}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6EF101A0-E4D7-4D91-AD5F-8CF16F2FC850}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1D416C10-D62C-4ED4-AEB1-4AB927B03271}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1D416C10-D62C-4ED4-AEB1-4AB927B03271}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1D416C10-D62C-4ED4-AEB1-4AB927B03271}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1D416C10-D62C-4ED4-AEB1-4AB927B03271}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -48,5 +40,13 @@ Global
 		{E8EA652B-4C25-4CA7-A211-A6E2D6D88897}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8EA652B-4C25-4CA7-A211-A6E2D6D88897}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8EA652B-4C25-4CA7-A211-A6E2D6D88897}.Release|Any CPU.Build.0 = Release|Any CPU
+		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{462E6F13-F218-4AE1-9FDF-1716AB63B04F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A764C3F-0906-49BC-8F99-ABA0E71171DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

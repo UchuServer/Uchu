@@ -9,9 +9,9 @@ namespace Uchu.Core.Handlers.Commands
     public class ServerStatusCommandHandler : HandlerGroup
     {
         [CommandHandler(Signature = "stop", Help = "Stops the server")]
-        public void StopServer()
+        public async Task StopServer()
         {
-            Server.Stop();
+            await Server.Stop();
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
