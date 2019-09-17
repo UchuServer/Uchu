@@ -1,4 +1,3 @@
-using System.Net;
 using RakDotNet;
 
 namespace Uchu.Core.Handlers
@@ -6,7 +5,7 @@ namespace Uchu.Core.Handlers
     public class GlobalGeneral : HandlerGroup
     {
         [PacketHandler]
-        public void Handshake(HandshakePacket packet, IPEndPoint endPoint)
+        public void Handshake(HandshakePacket packet, IRakConnection connection)
         {
             if (packet.GameVersion != 171022)
             {
@@ -15,10 +14,10 @@ namespace Uchu.Core.Handlers
             }
             const int port = 21836;
 
-            Server.Send(new HandshakePacket
+            connection.Send(new HandshakePacket
             {
                 ConnectionType = Server.Port == port ? 0x01u : 0x04u
-            }, endPoint);
+            });
         }
     }
 }

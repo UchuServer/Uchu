@@ -7,9 +7,9 @@ namespace Uchu.World.Handlers
     public class RoutedPacketHandler : HandlerGroup
     {
         [PacketHandler(RunTask = true)]
-        public void HandleRoutedPacket(ClientRoutedPacket packet, IPEndPoint endPoint)
+        public void HandleRoutedPacket(ClientRoutedPacket packet, IRakConnection connection)
         {
-            Server.HandlePacket(endPoint, packet.Packet, Reliability.ReliableOrdered);
+            Server.HandlePacket(connection.EndPoint, packet.Packet, Reliability.ReliableOrdered);
         }
     }
 }

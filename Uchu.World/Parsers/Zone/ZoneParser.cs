@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.IO;

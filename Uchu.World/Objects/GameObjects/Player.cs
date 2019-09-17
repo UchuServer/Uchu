@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet;
+using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
 
@@ -18,7 +19,7 @@ namespace Uchu.World
             OnTick += CheckDeathZone;
         }
 
-        public IPEndPoint EndPoint { get; private set; }
+        public IRakConnection Connection { get; private set; }
 
         public Perspective Perspective { get; private set; }
 
@@ -66,7 +67,7 @@ namespace Uchu.World
             set => Task.Run(async () => { await SetLevel(value); });
         }
 
-        public static Player Construct(Character character, IPEndPoint endPoint, Zone zone)
+        public static Player Construct(Character character, IRakConnection connection, Zone zone)
         {
             var instance = Instantiate<Player>(
                 zone,
@@ -77,7 +78,7 @@ namespace Uchu.World
                 1
             );
 
-            instance.EndPoint = endPoint;
+            instance.Connection = connection;
 
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
 
@@ -159,10 +160,11 @@ namespace Uchu.World
         {
         }
 
-        public void Message(IGameMessage gameMessage)
+        public void Message(ISerializable gameMessage)
         {
-            Logger.Debug($"Send {gameMessage} to {EndPoint} from {gameMessage.Associate.ObjectId}");
-            Server.Send(gameMessage, EndPoint);
+            Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g}" : "")}");
+            
+            Connection.Send(gameMessage);
         }
 
         private async Task SetCurrency(long currency)

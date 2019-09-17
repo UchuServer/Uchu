@@ -1,9 +1,9 @@
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet;
 using Uchu.Core;
 
 namespace Uchu.Auth.Handlers
@@ -11,7 +11,7 @@ namespace Uchu.Auth.Handlers
     public class LoginHandler : HandlerGroup
     {
         [PacketHandler]
-        public async Task LoginRequestHandler(ClientLoginInfoPacket packet, IPEndPoint endPoint)
+        public async Task LoginRequestHandler(ClientLoginInfoPacket packet, IRakConnection connection)
         {
             using (var ctx = new UchuContext())
             {
@@ -22,7 +22,7 @@ namespace Uchu.Auth.Handlers
                     .SelectMany(i => i.GetIPProperties().UnicastAddresses).Select(a => a.Address)
                     .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
 
-                var address = endPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
+                var address = connection.EndPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
 
                 var info = new ServerLoginInfoPacket
                 {
@@ -56,7 +56,7 @@ namespace Uchu.Auth.Handlers
                         }
                         else
                         {
-                            var key = Server.SessionCache.CreateSession(endPoint, user.UserId);
+                            var key = Server.SessionCache.CreateSession(user.UserId);
 
                             info.LoginCode = LoginCode.Success;
                             info.UserKey = key;
@@ -72,7 +72,9 @@ namespace Uchu.Auth.Handlers
                     }
                 }
 
-                Server.Send(info, endPoint);
+                connection.Send(info);
+                
+                await connection.CloseAsync();
             }
         }
     }

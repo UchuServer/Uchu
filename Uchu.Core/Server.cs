@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
@@ -33,7 +31,7 @@ namespace Uchu.Core
         
         public readonly int Port;
 
-        protected event Action<long, ushort, BitReader, IPEndPoint> OnGameMessage;
+        protected event Action<long, ushort, BitReader, IRakConnection> OnGameMessage;
 
         protected event Action OnServerStopped;
 
@@ -87,34 +85,6 @@ namespace Uchu.Core
 
             return RakNetServer.ShutdownAsync();
         }
-
-        #region Management
-
-        public void DisconnectClient(IPEndPoint endPoint, DisconnectId disconnectId = DisconnectId.Kick) =>
-            Send(new DisconnectNotifyPacket {DisconnectId = disconnectId}, endPoint);
-
-        #endregion
-
-        #region Send
-
-        public void Send(byte[] data, IPEndPoint endPoint) => RakNetServer.Send(endPoint, data);
-
-        public void Send(MemoryStream stream, IPEndPoint endPoint) => RakNetServer.Send(endPoint, stream.ToArray());
-
-        public void Send(ISerializable serializable, IPEndPoint endPoint)
-        {
-            var stream = new MemoryStream();
-            using (var writer = new BitWriter(stream))
-            {
-                writer.Write(serializable);
-            }
-            
-            RakNetServer.Send(endPoint, stream.ToArray());
-            
-            Logger.Debug($"Sent {serializable} to {endPoint}");
-        }
-        
-        #endregion
 
         protected virtual void RegisterAssembly(Assembly assembly)
         {
@@ -180,6 +150,8 @@ namespace Uchu.Core
 
         public async Task HandlePacket(IPEndPoint endPoint, byte[] data, Reliability reliability)
         {
+            var connection = RakNetServer.GetConnection(endPoint);
+            
             var stream = new MemoryStream(data);
 
             using (var reader = new BitReader(stream))
@@ -199,7 +171,7 @@ namespace Uchu.Core
                     var objectId = reader.Read<long>();
                     var messageId = reader.Read<ushort>();
 
-                    OnGameMessage?.Invoke(objectId, messageId, reader, endPoint);
+                    OnGameMessage?.Invoke(objectId, messageId, reader, connection);
 
                     return;
                 }
@@ -223,7 +195,7 @@ namespace Uchu.Core
                 try
                 {
                     reader.Read(handler.Packet);
-                    InvokeHandler(handler, endPoint);
+                    InvokeHandler(handler, connection);
                 }
                 catch (Exception e)
                 {
@@ -293,9 +265,11 @@ namespace Uchu.Core
             return "";
         }
         
-        private static void InvokeHandler(Handler handler, IPEndPoint endPoint)
+        private static void InvokeHandler(Handler handler, IRakConnection endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);
+            
+            Logger.Debug($"Invoking {handler.Group.GetType().Name}.{handler.Info.Name} for {handler.Packet}");
 
             var parameters = new object[] {handler.Packet, endPoint};
 

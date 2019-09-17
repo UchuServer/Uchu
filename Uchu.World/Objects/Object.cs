@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -48,22 +47,6 @@ namespace Uchu.World
             obj.Zone.UnRegisterObject(obj);
 
             obj.OnDestroyed?.Invoke();
-        }
-
-        public static void Destroy(Object obj, float time)
-        {
-            Task.Run(async () =>
-            {
-                Logger.Debug($"Destroying {obj} in {(int) (time * 1000)} ms");
-
-                await Task.Delay((int) (time * 1000));
-
-                Logger.Debug($"Destroying {obj}");
-
-                obj.Zone.UnRegisterObject(obj);
-
-                obj.OnDestroyed?.Invoke();
-            });
         }
 
         public static void Update(Object obj)

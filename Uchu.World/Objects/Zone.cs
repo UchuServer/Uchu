@@ -123,7 +123,7 @@ namespace Uchu.World
 
         public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
         {
-            result = _gameObjects.FirstOrDefault(o => o.ObjectId == objectId) as T;
+            result = _gameObjects.OfType<T>().FirstOrDefault(o => o.ObjectId == objectId);
             return result != default;
         }
 
@@ -259,7 +259,7 @@ namespace Uchu.World
                         gameObject.WriteConstruct(writer);
                     }
 
-                    Server.Send(stream, recipient.EndPoint);
+                    recipient.Connection.Send(stream);
                 });
         }
 
@@ -290,7 +290,7 @@ namespace Uchu.World
                     gameObject.WriteSerialize(writer);
                 }
 
-                Server.Send(stream, recipient.EndPoint);
+                recipient.Connection.Send(stream);
             }
         }
 
@@ -319,7 +319,7 @@ namespace Uchu.World
                     writer.Write(id);
                 }
 
-                Server.Send(stream, recipient.EndPoint);
+                recipient.Connection.Send(stream);
 
                 recipient.Perspective.Drop(gameObject);
             }

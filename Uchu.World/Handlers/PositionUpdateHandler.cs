@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Net;
+using RakDotNet;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers
@@ -7,17 +8,19 @@ namespace Uchu.World.Handlers
     public class PositionUpdateHandler : HandlerGroup
     {
         [PacketHandler(RunTask = true)]
-        public void HandlePositionUpdate(PositionUpdatePacket packet, IPEndPoint endPoint)
+        public void HandlePositionUpdate(PositionUpdatePacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            var player = ((WorldServer) Server).Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId)
-                .SelectMany(z => z.Players)
-                .FirstOrDefault(p => p.EndPoint.Equals(endPoint));
+            var player = ((WorldServer) Server).Zones.First(
+                z => z.ZoneId == (ZoneId) session.ZoneId
+            ).Players.FirstOrDefault(
+                p => p.Connection.Equals(connection)
+            );
 
             if (ReferenceEquals(player, null))
             {
-                Logger.Error($"{endPoint} is not logged in but sent a Position Update packet.");
+                Logger.Error($"{connection} is not logged in but sent a Position Update packet.");
                 return;
             }
 

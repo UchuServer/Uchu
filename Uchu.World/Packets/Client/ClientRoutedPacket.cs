@@ -1,6 +1,5 @@
 using System.IO;
 using System.Linq;
-using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 

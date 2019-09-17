@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.CdClient;
 
@@ -13,7 +13,7 @@ namespace Uchu.Char.Handlers
 {
     public class CharacterHandler : HandlerGroup
     {
-        public async Task SendCharacterList(IPEndPoint endPoint, long userId)
+        public async Task SendCharacterList(IRakConnection connection, long userId)
         {
             using (var ctx = new UchuContext())
             {
@@ -58,29 +58,29 @@ namespace Uchu.Char.Handlers
                     };
                 }
 
-                Server.Send(new CharacterListResponse
+                connection.Send(new CharacterListResponse
                 {
                     CharacterCount = (byte) charCount,
                     CharacterIndex = (byte) user.CharacterIndex,
                     Characters = chars
-                }, endPoint);
+                });
 
-                Logger.Debug($"Sent character list to {endPoint}");
+                Logger.Debug($"Sent character list to {connection}");
             }
         }
 
         [PacketHandler]
-        public async Task CharacterList(CharacterListRequest packet, IPEndPoint endPoint)
+        public async Task CharacterList(CharacterListRequest packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            await SendCharacterList(endPoint, session.UserId);
+            await SendCharacterList(connection, session.UserId);
         }
 
         [PacketHandler]
-        public async Task CharacterCreate(CharacterCreateRequest packet, IPEndPoint endPoint)
+        public async Task CharacterCreate(CharacterCreateRequest packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             uint shirtLot;
             uint pantsLot;
@@ -118,17 +118,19 @@ namespace Uchu.Char.Handlers
             {
                 if (ctx.Characters.Any(c => c.Name == packet.CharacterName))
                 {
-                    Logger.Debug($"{endPoint} character create rejected due to duplicate name");
-                    Server.Send(new CharacterCreateResponse {ResponseId = CharacterCreationResponse.CustomNameInUse},
-                        endPoint);
+                    Logger.Debug($"{connection} character create rejected due to duplicate name");
+                    connection.Send(new CharacterCreateResponse 
+                            {ResponseId = CharacterCreationResponse.CustomNameInUse}
+                    );
                     return;
                 }
                 
                 if (ctx.Characters.Any(c => c.Name == name))
                 {
-                    Logger.Debug($"{endPoint} character create rejected due to duplicate pre-made name");
-                    Server.Send(new CharacterCreateResponse {ResponseId = CharacterCreationResponse.PredefinedNameInUse},
-                        endPoint);
+                    Logger.Debug($"{connection} character create rejected due to duplicate pre-made name");
+                    connection.Send(new CharacterCreateResponse
+                        {ResponseId = CharacterCreationResponse.PredefinedNameInUse}
+                    );
                     return;
                 }
                 
@@ -182,14 +184,16 @@ namespace Uchu.Char.Handlers
                 
                 await ctx.SaveChangesAsync();
 
-                Server.Send(new CharacterCreateResponse {ResponseId = CharacterCreationResponse.Success}, endPoint);
+                connection.Send(new CharacterCreateResponse
+                    {ResponseId = CharacterCreationResponse.Success}
+                );
 
-                await SendCharacterList(endPoint, session.UserId);
+                await SendCharacterList(connection, session.UserId);
             }
         }
 
         [PacketHandler]
-        public async Task DeleteCharacter(CharacterDeleteRequest packet, IPEndPoint endPoint)
+        public async Task DeleteCharacter(CharacterDeleteRequest packet, IRakConnection connection)
         {
             using (var ctx = new UchuContext())
             {
@@ -198,29 +202,30 @@ namespace Uchu.Char.Handlers
                     ctx.Characters.Remove(await ctx.Characters.FindAsync(packet.CharacterId));
 
                     await ctx.SaveChangesAsync();
-                
-                    Server.Send(new CharacterDeleteResponse(), endPoint);
+
+                    connection.Send(new CharacterDeleteResponse());
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Character deletion failed for {endPoint}'s character {packet.CharacterId}\n{e}");
+                    Logger.Error($"Character deletion failed for {connection}'s character {packet.CharacterId}\n{e}");
                     
-                    Server.Send(new CharacterDeleteResponse {Success = false}, endPoint);
+                    connection.Send(new CharacterDeleteResponse {Success = false});
                 }
             }
         }
 
         [PacketHandler]
-        public async Task RenameCharacter(CharacterRenameRequest packet, IPEndPoint endPoint)
+        public async Task RenameCharacter(CharacterRenameRequest packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
             
             using (var ctx = new UchuContext())
             {
                 if (ctx.Characters.Any(c => c.Name == packet.Name || c.CustomName == packet.Name))
                 {
-                    Server.Send(new CharacterRenameResponse
-                        {ResponseId = CharacterRenamingResponse.NameAlreadyInUse}, endPoint);
+                    connection.Send(new CharacterRenameResponse
+                        {ResponseId = CharacterRenamingResponse.NameAlreadyInUse}
+                    );
                     
                     return;
                 }
@@ -233,17 +238,18 @@ namespace Uchu.Char.Handlers
 
                 await ctx.SaveChangesAsync();
 
-                Server.Send(new CharacterRenameResponse
-                    {ResponseId = CharacterRenamingResponse.Success}, endPoint);
+                connection.Send(new CharacterRenameResponse
+                    {ResponseId = CharacterRenamingResponse.Success}
+                );
 
-                await SendCharacterList(endPoint, session.UserId);
+                await SendCharacterList(connection, session.UserId);
             }
         }
 
         [PacketHandler]
-        public void JoinWorld(JoinWorldRequest packet, IPEndPoint endPoint)
+        public async Task JoinWorld(JoinWorldRequest packet, IRakConnection connection)
         {
-            Server.SessionCache.SetCharacter(endPoint, packet.CharacterId);
+            Server.SessionCache.SetCharacter(connection.EndPoint, packet.CharacterId);
 
             var addresses = NetworkInterface.GetAllNetworkInterfaces()
                 .Where(i => (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
@@ -252,13 +258,15 @@ namespace Uchu.Char.Handlers
                 .SelectMany(i => i.GetIPProperties().UnicastAddresses).Select(a => a.Address)
                 .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
 
-            var address = endPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
+            var address = connection.EndPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
 
-            Server.Send(new ServerRedirectionPacket
+            connection.Send(new ServerRedirectionPacket
             {
                 Address = address,
                 Port = 2003
-            }, endPoint);
+            });
+            
+            await connection.CloseAsync();
         }
     }
 }

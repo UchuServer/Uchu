@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet;
 using Uchu.Core;
 using Uchu.World.Collections;
 using Uchu.World.Social;
@@ -18,18 +18,18 @@ namespace Uchu.World.Handlers
         public XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
 
         [PacketHandler]
-        public async Task ValidateClient(SessionInfoPacket packet, IPEndPoint endPoint)
+        public async Task ValidateClient(SessionInfoPacket packet, IRakConnection connection)
         {
             if (!Server.SessionCache.IsKey(packet.SessionKey))
             {
-                Server.DisconnectClient(endPoint, DisconnectId.InvalidSessionKey);
-                Logger.Warning($"{endPoint} attempted to connect with an invalid session key");
+                await connection.CloseAsync();
+                Logger.Warning($"{connection} attempted to connect with an invalid session key");
                 return;
             }
 
-            Server.SessionCache.RegisterKey(endPoint, packet.SessionKey);
+            Server.SessionCache.RegisterKey(connection.EndPoint, packet.SessionKey);
 
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             using (var ctx = new UchuContext())
             {
@@ -38,12 +38,13 @@ namespace Uchu.World.Handlers
                 if (character == null)
                 {
                     Logger.Warning(
-                        $"{endPoint} attempted to connect to world with an invalid character {session.CharacterId}");
+                        $"{connection} attempted to connect to world with an invalid character {session.CharacterId}"
+                    );
 
-                    Server.Send(new DisconnectNotifyPacket
+                    connection.Send(new DisconnectNotifyPacket
                     {
                         DisconnectId = DisconnectId.CharacterCorruption
-                    }, endPoint);
+                    });
 
                     return;
                 }
@@ -54,19 +55,19 @@ namespace Uchu.World.Handlers
 
                 var worldServer = (WorldServer) Server;
 
-                Server.Send(new WorldInfoPacket
+                connection.Send(new WorldInfoPacket
                 {
                     ZoneId = zoneId,
                     Checksum = Zone.GetChecksum(zoneId),
                     SpawnPosition = (await worldServer.GetZone(zoneId)).ZoneInfo.SpawnPosition
-                }, endPoint);
+                });
             }
         }
 
         [PacketHandler]
-        public async Task ClientLoadComplete(ClientLoadCompletePacket packet, IPEndPoint endPoint)
+        public async Task ClientLoadComplete(ClientLoadCompletePacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             using (var ctx = new UchuContext())
             {
@@ -86,7 +87,7 @@ namespace Uchu.World.Handlers
                     await ctx.SaveChangesAsync();
                 }
 
-                Server.SessionCache.SetZone(endPoint, zoneId);
+                Server.SessionCache.SetZone(connection.EndPoint, zoneId);
 
                 // Zone should already be initialized at this point.
                 var zone = await ((WorldServer) Server).GetZone(zoneId);
@@ -238,9 +239,9 @@ namespace Uchu.World.Handlers
                     ["xmlData"] = xml
                 };
 
-                Server.Send(new DetailedUserInfoPacket {Data = ldf}, endPoint);
+                connection.Send(new DetailedUserInfoPacket {Data = ldf});
 
-                var player = Player.Construct(character, endPoint, zone);
+                var player = Player.Construct(character, connection, zone);
 
                 if (character.LandingByRocket)
                 {
@@ -258,11 +259,11 @@ namespace Uchu.World.Handlers
                 ).ToArray();
 
                 foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
-                    Server.Send(new NotifyFriendRequestPacket
+                    connection.Send(new NotifyFriendRequestPacket
                     {
                         FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
                         IsBestFriendRequest = friend.RequestingBestFriend
-                    }, endPoint);
+                    });
             }
         }
     }

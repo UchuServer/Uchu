@@ -3,7 +3,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
-using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Parsers;

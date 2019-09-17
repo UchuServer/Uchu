@@ -69,7 +69,7 @@ namespace Uchu.World
             Logger.Information($"{point} disconnected: {reason}");
             
             foreach (var player in Zones
-                .Select(zone => zone.Players.FirstOrDefault(p => p.EndPoint.Equals(point)))
+                .Select(zone => zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point)))
                 .Where(player => !ReferenceEquals(player, default)))
             {
                 Object.Destroy(player);
@@ -180,7 +180,7 @@ namespace Uchu.World
             }
         }
 
-        private void HandleGameMessage(long objectId, ushort messageId, BitReader reader, IPEndPoint endPoint)
+        private void HandleGameMessage(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
         {
             if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
@@ -189,16 +189,16 @@ namespace Uchu.World
                 return;
             }
 
-            var session = SessionCache.GetSession(endPoint);
+            var session = SessionCache.GetSession(connection.EndPoint);
 
             Logger.Debug($"Received {((IGameMessage) messageHandler.Packet).GameMessageId}");
 
             var player = Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
-                .FirstOrDefault(p => p.EndPoint.Equals(endPoint));
+                .FirstOrDefault(p => p.Connection.Equals(connection));
 
             if (player == default)
             {
-                Logger.Error($"{endPoint} is not logged in but sent a GameMessage.");
+                Logger.Error($"{connection} is not logged in but sent a GameMessage.");
                 return;
             }
 
@@ -206,7 +206,7 @@ namespace Uchu.World
 
             if (associate == default)
             {
-                Logger.Error($"{objectId} is not a valid object in {endPoint}'s zone.");
+                Logger.Error($"{objectId} is not a valid object in {connection}'s zone.");
                 return;
             }
 

@@ -4,7 +4,7 @@ namespace Uchu.Core
 {
     public interface ISessionCache
     {
-        string CreateSession(IPEndPoint endpoint, long userId);
+        string CreateSession(long userId);
 
         void SetCharacter(IPEndPoint endpoint, long characterId);
 

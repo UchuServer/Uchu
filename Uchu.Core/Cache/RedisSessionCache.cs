@@ -27,7 +27,7 @@ namespace Uchu.Core
             _rng = new RNGCryptoServiceProvider();
         }
 
-        public string CreateSession(IPEndPoint endpoint, long userId)
+        public string CreateSession(long userId)
         {
             var key = GenerateKey();
             

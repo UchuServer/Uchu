@@ -1,20 +1,21 @@
-using System.Net;
+using System.Threading.Tasks;
+using RakDotNet;
 
 namespace Uchu.Core.Handlers
 {
     public class ClientHandler : HandlerGroup
     {
         [PacketHandler]
-        public void ValidateClient(SessionInfoPacket packet, IPEndPoint endPoint)
+        public void ValidateClient(SessionInfoPacket packet, IRakConnection connection)
         {
             if (!Server.SessionCache.IsKey(packet.SessionKey))
             {
-                Server.DisconnectClient(endPoint, DisconnectId.InvalidSessionKey);
-                Logger.Warning($"{endPoint} attempted to connect with an invalid session key");
+                Task.Run(connection.CloseAsync);
+                Logger.Warning($"{connection} attempted to connect with an invalid session key");
                 return;
             }
             
-            Server.SessionCache.RegisterKey(endPoint, packet.SessionKey);
+            Server.SessionCache.RegisterKey(connection.EndPoint, packet.SessionKey);
         }
     }
 }
