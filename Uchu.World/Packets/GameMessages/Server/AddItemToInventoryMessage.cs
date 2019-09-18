@@ -25,7 +25,7 @@ namespace Uchu.World
 
         public int InventoryType { get; set; } = -1;
 
-        public uint ItemCount { get; set; } = 1;
+        public uint Delta { get; set; } = 1;
 
         public uint TotalItems { get; set; }
 
@@ -76,7 +76,7 @@ namespace Uchu.World
             writer.Write(InventoryType);
 
             writer.WriteBit(true);
-            writer.Write(ItemCount);
+            writer.Write(Delta);
 
             writer.WriteBit(true);
             writer.Write(TotalItems);

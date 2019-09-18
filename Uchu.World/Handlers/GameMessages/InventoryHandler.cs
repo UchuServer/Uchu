@@ -19,6 +19,16 @@ namespace Uchu.World.Handlers.GameMessages
             );
         }
 
+        [PacketHandler]
+        public void HandleRemoveItem(RemoveItemToInventoryMessage message, Player player)
+        {
+            if (!message.Confirmed) return;
+            
+            var inventoryManager = player.GetComponent<InventoryManager>();
+
+            inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType);
+        }
+
         [PacketHandler(RunTask = true)]
         public void HandleEquipItem(EquipItemMessage message, Player player)
         {

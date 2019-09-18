@@ -94,6 +94,8 @@ namespace Uchu.World
 
         public void EquipItem(Item item)
         {
+            Logger.Debug($"Equipping {item}");
+            
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
             foreach (var (equipLocation, value) in items)
                 if (equipLocation.Equals(item.ItemComponent.EquipLocation))

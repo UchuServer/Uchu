@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -35,7 +36,7 @@ namespace Uchu.World.Handlers.Commands
         {
             if (arguments.Length == 0 || arguments.Length > 2) return "remove <lot> <count(optional)>";
 
-            if (!int.TryParse(arguments[1], out var lot)) return "Invalid <lot>";
+            if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
             uint count = 1;
             if (arguments.Length == 2)
@@ -326,38 +327,37 @@ namespace Uchu.World.Handlers.Commands
 
         [CommandHandler(Signature = "brick", Help = "Spawns a floating brick",
             GameMasterLevel = GameMasterLevel.Mythran)]
-        public string Brick(string[] arguments, Player player)
+        public async Task<string> Brick(string[] arguments, Player player)
         {
-            if (arguments.Length != 1) return "brick <lot>";
-
-            if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
-
-            var baseBrick = GameObject.Instantiate(player.Zone, lot, player.Transform.Position + Vector3.UnitY * 5,
-                Quaternion.Identity);
-            var floating = baseBrick.AddComponent<FloatingBrick>();
-
-            floating.Target = player.Transform.Position + Vector3.UnitY * 7;
-            floating.Speed = 1;
-
-            Object.Start(baseBrick);
-
-            GameObject.Construct(baseBrick);
-
-            for (var i = 0; i < 8; i++)
+            var bricks = new List<GameObject>();
+            
+            for (var i = 0; i < 10; i++)
             {
-                var brick = GameObject.Instantiate(player.Zone, lot, player.Transform.Position + Vector3.UnitY * 7,
-                    Quaternion.Identity);
-
-                floating = brick.AddComponent<FloatingBrick>();
-                floating.Target = player.Transform.Position + Vector3.UnitY * (9 + i);
-                floating.Speed = 1;
+                var brick = GameObject.Instantiate(
+                    player.Zone,
+                    31,
+                    player.Transform.Position + Vector3.UnitY * (7 + i),
+                    Quaternion.Identity
+                );
 
                 Object.Start(brick);
-
                 GameObject.Construct(brick);
+
+                bricks.Add(brick);
+                
+                await Task.Delay(100 - i * 10);
+                
+                if (i == 0) i++;
             }
 
-            return $"Spawned floating brick {lot}";
+            await Task.Delay(500);
+
+            foreach (var brick in bricks)
+            {
+                Object.Destroy(brick);
+            }
+
+            return $"Spawned thing";
         }
     }
 }

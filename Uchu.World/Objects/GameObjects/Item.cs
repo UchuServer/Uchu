@@ -1,8 +1,10 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Collections;
 
 namespace Uchu.World
 {
@@ -11,9 +13,7 @@ namespace Uchu.World
     {
         private bool _bound;
         private uint _count;
-
         private bool _equipped;
-
         private uint _slot;
 
         public Item()
@@ -43,8 +43,6 @@ namespace Uchu.World
             get => _count;
             set
             {
-                Logger.Information($"Trying to set {this} count to {_count}");
-
                 _count = value;
 
                 Task.Run(UpdateCount);
@@ -141,9 +139,11 @@ namespace Uchu.World
         public static Item Instantiate(Lot lot, Inventory inventory, uint count)
         {
             uint slot = default;
-            foreach (var item in inventory.Items)
+
+            for (var index = 0; index < inventory.Size; index++)
             {
-                if (item.Slot != slot) break;
+                if (inventory.Items.All(i => i.Slot != index)) break;
+
                 slot++;
             }
 
@@ -173,10 +173,17 @@ namespace Uchu.World
                 (
                     inventory.Manager.Zone, cdClientObject.Name, objectId: Utils.GenerateObjectId(), lot: lot
                 );
+                
+                instance._count = count;
+                instance._slot = slot;
 
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry.Componentid
                 );
+
+                instance.ItemComponent = itemComponent;
+                instance.Inventory = inventory;
+                instance.Player = inventory.Manager.Player;
 
                 var playerCharacter = ctx.Characters.Include(c => c.Items).First(
                     c => c.CharacterId == inventory.Manager.Player.ObjectId
@@ -200,7 +207,7 @@ namespace Uchu.World
                 {
                     Associate = inventory.Manager.Player,
                     InventoryType = (int) inventory.InventoryType,
-                    ItemCount = count,
+                    Delta = count,
                     TotalItems = count,
                     Slot = (int) slot,
                     ItemLot = lot,
@@ -209,9 +216,6 @@ namespace Uchu.World
                     IsBound = inventoryItem.IsBound,
                     Item = instance
                 };
-
-                foreach (var property in message.GetType().GetProperties())
-                    Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
 
                 inventory.Manager.Player.Message(message);
 
@@ -234,14 +238,32 @@ namespace Uchu.World
                     _count = (uint) ItemComponent.StackSize;
                 }
 
-                Logger.Information($"Setting {this} count to {_count}");
-
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
-                if (_count > item.Count) await AddCount();
-                else await RemoveCount(_count);
+                if (_count > item.Count)
+                {
+                    await AddCount();
+                }
+                else
+                {
+                    await RemoveCount();
+                }
 
                 item.Count = _count;
+
+                if (item.Count == default)
+                {
+                    ctx.InventoryItems.Remove(item);
+
+                    // Disassemble item.
+                    if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+                    {
+                        foreach (var part in (LegoDataList) list)
+                        {
+                            await Inventory.Manager.AddItemAsync((int) part, 1);
+                        }
+                    }
+                }
 
                 await ctx.SaveChangesAsync();
             }
@@ -260,39 +282,40 @@ namespace Uchu.World
                     Associate = Player,
                     Item = this,
                     ItemLot = Lot,
-                    ItemCount = (uint) (_count - item.Count),
+                    Delta = (uint) (_count - item.Count),
                     Slot = (int) Slot,
                     InventoryType = (int) Inventory.InventoryType,
                     ShowFlyingLoot = _count != default,
-                    TotalItems = _count
+                    TotalItems = _count,
+                    ExtraInfo = null // TODO
                 };
-
-                foreach (var property in message.GetType().GetProperties())
-                    Logger.Information($"\t{property.Name} = {property.GetValue(message)}");
-
+                
                 Player.Message(message);
             }
         }
 
-        private async Task RemoveCount(uint count)
+        private async Task RemoveCount()
         {
             using (var ctx = new UchuContext())
             {
                 var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
-                Player.Message(new RemoveItemToInventoryMessage
+                var message = new RemoveItemToInventoryMessage
                 {
                     Associate = Player,
-                    ItemObjectId = ObjectId,
-                    ItemLot = Lot,
-                    InventoryType = (int) Inventory.InventoryType,
-                    StackCount = (uint) (count - item.Count),
-                    StackRemaining = count,
                     Confirmed = true,
-                    DeleteItem = count == default,
+                    DeleteItem = true,
+                    OutSuccess = false,
+                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
+                    InventoryType = Inventory.InventoryType,
+                    ExtraInfo = null, // TODO
                     ForceDeletion = true,
-                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1)
-                });
+                    Item = this,
+                    Delta = (uint) Math.Abs(_count - item.Count),
+                    TotalItems = _count
+                };
+
+                Player.Message(message);
             }
         }
 

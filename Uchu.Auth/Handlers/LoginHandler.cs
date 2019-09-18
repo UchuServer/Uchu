@@ -74,7 +74,8 @@ namespace Uchu.Auth.Handlers
 
                 connection.Send(info);
                 
-                await connection.CloseAsync();
+                if (info.LoginCode == LoginCode.Success)
+                    await connection.CloseAsync();
             }
         }
     }

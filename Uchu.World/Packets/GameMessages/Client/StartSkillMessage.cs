@@ -1,5 +1,7 @@
+using System.Linq;
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -34,7 +36,7 @@ namespace Uchu.World
             UsedMouse = reader.ReadBit();
 
             if (reader.ReadBit())
-                ConsumableItem = (Item) reader.ReadGameObject(Associate.Zone);
+                ConsumableItem = reader.ReadGameObject<Item>(Associate.Zone);
 
             if (reader.ReadBit())
                 CasterLatency = reader.Read<float>();
@@ -53,9 +55,7 @@ namespace Uchu.World
             if (reader.ReadBit())
                 OriginatorRotation = reader.Read<Quaternion>();
 
-            Content = new byte[reader.Read<uint>()];
-
-            for (var i = 0; i < Content.Length; i++) Content[i] = reader.Read<byte>();
+            Content = reader.ReadBytes((int) reader.Read<uint>()).ToArray();
 
             SkillId = reader.Read<int>();
 

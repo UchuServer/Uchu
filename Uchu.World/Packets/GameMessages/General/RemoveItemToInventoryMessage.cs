@@ -14,62 +14,84 @@ namespace Uchu.World
 
         public bool OutSuccess { get; set; }
 
-        public int InventoryType { get; set; }
+        public InventoryType InventoryType { get; set; } = InventoryType.Items;
 
-        public ItemType ItemType { get; set; }
+        public ItemType ItemType { get; set; } = ItemType.Invalid;
 
         public LegoDataDictionary ExtraInfo { get; set; }
 
         public bool ForceDeletion { get; set; } = true;
 
-        public long LootTypeSourceId { get; set; }
+        public GameObject Source { get; set; }
 
-        public long ItemObjectId { get; set; }
+        public Item Item { get; set; }
 
-        public Lot ItemLot { get; set; }
+        public Lot ItemLot { get; set; } = -1;
 
-        public long RequestingObjId { get; set; }
+        public GameObject Requesting { get; set; }
 
-        public uint StackCount { get; set; } = 1;
+        public uint Delta { get; set; } = 1;
 
-        public uint StackRemaining { get; set; }
+        public uint TotalItems { get; set; }
 
-        public long SubKey { get; set; }
+        public long SubKey { get; set; } = -1;
 
-        public long TradeId { get; set; }
+        public long TradeId { get; set; } = -1;
 
         public override void SerializeMessage(BitWriter writer)
         {
-            writer.Flag(Confirmed);
-            writer.Flag(DeleteItem);
-            writer.Flag(OutSuccess);
+            writer.WriteBit(Confirmed);
+            writer.WriteBit(DeleteItem);
+            writer.WriteBit(OutSuccess);
 
-            if (writer.Flag(InventoryType != default)) writer.Write(InventoryType);
+            writer.WriteBit(true);
+            writer.Write((int) InventoryType);
 
-            if (writer.Flag(ItemType != ItemType.Invalid)) writer.Write((int) ItemType);
+            writer.WriteBit(true);
+            writer.Write((int) ItemType);
 
-            if (writer.Flag(ExtraInfo != default))
+            if (ExtraInfo != null)
+            {
                 writer.Write(ExtraInfo);
+                
+                writer.Write<byte>(0);
+                writer.Write<byte>(0);
+            }
             else
+            {
                 writer.Write<uint>(0);
+            }
 
-            writer.Flag(ForceDeletion);
+            writer.WriteBit(ForceDeletion);
 
-            if (writer.Flag(LootTypeSourceId != -1)) writer.Write(LootTypeSourceId);
+            var hasSource = Source != default;
+            writer.WriteBit(hasSource);
+            if (hasSource) writer.Write(Source);
 
-            if (writer.Flag(ItemObjectId != -1)) writer.Write(ItemObjectId);
+            writer.WriteBit(true);
+            writer.Write(Item);
 
-            if (writer.Flag(ItemLot != -1)) writer.Write(ItemLot);
+            var hasLot = ItemLot != -1;
+            writer.WriteBit(hasLot);
+            if (hasLot) writer.Write(ItemLot);
 
-            if (writer.Flag(RequestingObjId != -1)) writer.Write(RequestingObjId);
+            var hasRequesting = Requesting != default;
+            writer.WriteBit(hasRequesting);
+            if (hasRequesting) writer.Write(Requesting);
 
-            if (writer.Flag(StackCount != 1)) writer.Write(StackCount);
+            writer.WriteBit(true);
+            writer.Write(Delta);
 
-            if (writer.Flag(StackRemaining != 0)) writer.Write(StackRemaining);
+            writer.WriteBit(true);
+            writer.Write(TotalItems);
 
-            if (writer.Flag(SubKey != -1)) writer.Write(SubKey);
+            var hasSubKey = SubKey != -1;
+            writer.WriteBit(hasSubKey);
+            if (hasSubKey) writer.Write(SubKey);
 
-            if (writer.Flag(TradeId != -1)) writer.Write(TradeId);
+            var hasTradeId = TradeId != -1;
+            writer.WriteBit(hasTradeId);
+            if (hasTradeId) writer.Write(TradeId);
         }
 
         public override void Deserialize(BitReader reader)
@@ -78,7 +100,7 @@ namespace Uchu.World
             DeleteItem = reader.Flag();
             OutSuccess = reader.Flag();
 
-            if (reader.Flag()) InventoryType = reader.Read<int>();
+            if (reader.Flag()) InventoryType = (InventoryType) reader.Read<int>();
 
             if (reader.Flag()) ItemType = (ItemType) reader.Read<int>();
 
@@ -91,13 +113,13 @@ namespace Uchu.World
 
             ForceDeletion = reader.Flag();
 
-            if (reader.Flag()) LootTypeSourceId = reader.Read<long>();
+            if (reader.Flag()) Source = reader.ReadGameObject(Associate.Zone);
 
-            if (reader.Flag()) ItemObjectId = reader.Read<long>();
+            if (reader.Flag()) Item = reader.ReadGameObject<Item>(Associate.Zone);
 
-            if (reader.Flag()) RequestingObjId = reader.Read<long>();
+            if (reader.Flag()) Requesting = reader.ReadGameObject(Associate.Zone);
 
-            if (reader.Flag()) StackRemaining = reader.Read<uint>();
+            if (reader.Flag()) TotalItems = reader.Read<uint>();
 
             if (reader.Flag()) SubKey = reader.Read<long>();
 

@@ -9,10 +9,13 @@ namespace Uchu.World
     public class Inventory
     {
         private readonly List<Item> _items;
+        
         public readonly InventoryType InventoryType;
-
         public readonly InventoryManager Manager;
 
+        // TODO: Network & Store in DB
+        public uint Size = 20;
+        
         public Inventory(InventoryType inventoryType, InventoryManager manager)
         {
             InventoryType = inventoryType;
