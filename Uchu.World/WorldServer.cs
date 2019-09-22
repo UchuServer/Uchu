@@ -27,8 +27,8 @@ namespace Uchu.World
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
 
-            OnGameMessage += HandleGameMessage;
-            OnServerStopped += () =>
+            GameMessageReceived += HandleGameMessageAsync;
+            ServerStopped += () =>
             {
                 foreach (var zone in Zones)
                 {
@@ -59,7 +59,7 @@ namespace Uchu.World
             });
         }
 
-        public async Task HandleDisconnect(IPEndPoint point, CloseReason reason)
+        public Task HandleDisconnect(IPEndPoint point, CloseReason reason)
         {
             Logger.Information($"{point} disconnected: {reason}");
             
@@ -71,6 +71,8 @@ namespace Uchu.World
 
                 break;
             }
+
+            return Task.CompletedTask;
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)
@@ -126,8 +128,7 @@ namespace Uchu.World
                             {
                                 Group = instance,
                                 Info = method,
-                                Packet = packet,
-                                RunTask = attr.RunTask
+                                Packet = packet
                             });
 
                             continue;
@@ -149,8 +150,7 @@ namespace Uchu.World
                         {
                             Group = instance,
                             Info = method,
-                            Packet = packet,
-                            RunTask = attr.RunTask
+                            Packet = packet
                         };
                     }
                     else
@@ -175,7 +175,7 @@ namespace Uchu.World
             }
         }
 
-        private void HandleGameMessage(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
+        private async Task HandleGameMessageAsync(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
         {
             if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
@@ -213,48 +213,19 @@ namespace Uchu.World
 
             reader.Read(gameMessage);
 
-            InvokeHandler(messageHandler, player);
+            await InvokeHandlerAsync(messageHandler, player);
         }
 
-        private static void InvokeHandler(Handler handler, Player player)
+        private static async Task InvokeHandlerAsync(Handler handler, Player player)
         {
             var task = handler.Info.ReturnType == typeof(Task);
 
             var parameters = new object[] {handler.Packet, player};
 
+            var res = handler.Info.Invoke(handler.Group, parameters);
+
             if (task)
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        await (Task) handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
-            else if (handler.RunTask)
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
-            else
-                try
-                {
-                    handler.Info.Invoke(handler.Group, parameters);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
+                await (Task)res;
         }
     }
 }

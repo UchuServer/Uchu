@@ -16,10 +16,8 @@ namespace Uchu.World
 
         public override void FromLevelObject(LevelObject levelObject)
         {
-            return;
-
-            GameObject.AddComponent<EnemyAi>();
-            if (levelObject.Lot == 11218) GameObject.AddComponent<PainElemental>();
+            /*GameObject.AddComponent<EnemyAi>();
+            if (levelObject.Lot == 11218) GameObject.AddComponent<PainElemental>();*/
         }
 
         public override void Construct(BitWriter writer)

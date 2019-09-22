@@ -34,13 +34,13 @@ namespace Uchu.World.Handlers.GameMessages
             }
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void RequestResurrectHandler(RequestResurrectMessage message, Player player)
         {
             player.GetComponent<DestructibleComponent>().Resurrect();
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void RequestSmashHandler(RequestSmashPlayer message, Player player)
         {
             player.GetComponent<DestructibleComponent>().Smash(player, player);

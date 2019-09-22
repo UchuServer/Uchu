@@ -128,7 +128,7 @@ namespace Uchu.World
                         UsedMouse = message.UsedMouse
                     });
 
-                    await instance.Serialize(reader);
+                    await instance.SerializeAsync(reader);
                 }
 
                 await Player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(

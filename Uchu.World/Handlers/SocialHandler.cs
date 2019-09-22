@@ -140,7 +140,7 @@ namespace Uchu.World.Handlers
             }
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void FriendsListRequestHandler(GetFriendListPacket packet,IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
@@ -301,7 +301,7 @@ namespace Uchu.World.Handlers
             }
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void TeamInviteHandler(TeamInvitePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
@@ -322,7 +322,7 @@ namespace Uchu.World.Handlers
             });
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void TeamInviteResponseHandler(TeamInviteResponse packet, IPEndPoint endPoint)
         {
             var session = Server.SessionCache.GetSession(endPoint);

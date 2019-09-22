@@ -7,7 +7,7 @@ namespace Uchu.World.Handlers
 {
     public class PositionUpdateHandler : HandlerGroup
     {
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void HandlePositionUpdate(PositionUpdatePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);

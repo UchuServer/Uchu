@@ -5,7 +5,7 @@ namespace Uchu.World.Handlers.GameMessages
 {
     public class LootHandler : HandlerGroup
     {
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void PickupCurrencyHandle(PickupCurrencyMessage message, Player player)
         {
             if (message.Currency > player.EntitledCurrency)

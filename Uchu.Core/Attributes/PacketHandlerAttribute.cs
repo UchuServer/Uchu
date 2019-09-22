@@ -9,6 +9,7 @@ namespace Uchu.Core
         
         public uint? PacketId { get; set; } = null;
         
+        [Obsolete("Handlers are non-blocking by default")]
         public bool RunTask { get; set; } = false;
     }
 }

@@ -13,6 +13,7 @@ namespace Uchu.World
         private ScriptComponent _scriptComponent;
 
         private Lua _state;
+
         public LegoDataDictionary Data { get; set; }
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Script;

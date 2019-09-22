@@ -30,9 +30,9 @@ namespace Uchu.Core
         
         public readonly int Port;
 
-        protected event Action<long, ushort, BitReader, IRakConnection> OnGameMessage;
+        public event Func<long, ushort, BitReader, IRakConnection, Task> GameMessageReceived;
 
-        protected event Action OnServerStopped;
+        public event Action ServerStopped;
 
         private bool _running;
 
@@ -65,7 +65,6 @@ namespace Uchu.Core
                 type == ServerType.Authentication ? 21836 :
                 type == ServerType.Character ? Configuration.Singleton.Character.Port :
                 type == ServerType.World ? Configuration.Singleton.World.Port :
-                type == ServerType.Chat ? Configuration.Singleton.Chat.Port :
                 throw new NotSupportedException();
 
             RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
@@ -84,7 +83,7 @@ namespace Uchu.Core
             
             Logger.Information("Starting...");
             
-            RakNetServer.MessageReceived += HandlePacket;
+            RakNetServer.MessageReceived += HandlePacketAsync;
 
             _running = true;
 
@@ -107,7 +106,7 @@ namespace Uchu.Core
 
             _running = false;
 
-            OnServerStopped?.Invoke();
+            ServerStopped?.Invoke();
 
             return RakNetServer.ShutdownAsync();
         }
@@ -148,8 +147,7 @@ namespace Uchu.Core
                         {
                             Group = instance,
                             Info = method,
-                            Packet = packet,
-                            RunTask = attr.RunTask
+                            Packet = packet
                         };
                     }
                     else
@@ -174,12 +172,11 @@ namespace Uchu.Core
             }
         }
 
-        public async Task HandlePacket(IPEndPoint endPoint, byte[] data, Reliability reliability)
+        public async Task HandlePacketAsync(IPEndPoint endPoint, byte[] data, Reliability reliability)
         {
             var connection = RakNetServer.GetConnection(endPoint);
-            
-            var stream = new MemoryStream(data);
 
+            using (var stream = new MemoryStream(data))
             using (var reader = new BitReader(stream))
             {
                 var header = new PacketHeader();
@@ -197,7 +194,14 @@ namespace Uchu.Core
                     var objectId = reader.Read<long>();
                     var messageId = reader.Read<ushort>();
 
-                    OnGameMessage?.Invoke(objectId, messageId, reader, connection);
+                    try
+                    {
+                        await GameMessageReceived?.Invoke(objectId, messageId, reader, connection);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
 
                     return;
                 }
@@ -221,7 +225,8 @@ namespace Uchu.Core
                 try
                 {
                     reader.Read(handler.Packet);
-                    InvokeHandler(handler, connection);
+
+                    await InvokeHandlerAsync(handler, connection);
                 }
                 catch (Exception e)
                 {
@@ -291,7 +296,7 @@ namespace Uchu.Core
             return "";
         }
         
-        private static void InvokeHandler(Handler handler, IRakConnection endPoint)
+        private static async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);
             
@@ -299,48 +304,10 @@ namespace Uchu.Core
 
             var parameters = new object[] {handler.Packet, endPoint};
 
+            var res = handler.Info.Invoke(handler.Group, parameters);
+
             if (task)
-            {
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        await (Task) handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                        throw;
-                    }
-                });
-            }
-            else if (handler.RunTask)
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                        throw;
-                    }
-                });
-            }
-            else
-            {
-                try
-                {
-                    handler.Info.Invoke(handler.Group, parameters);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                    throw;
-                }
-            }
+                await (Task)res;
         }
     }
 }

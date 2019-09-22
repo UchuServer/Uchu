@@ -9,7 +9,5 @@ namespace Uchu.Core
         public IPacket Packet { get; set; }
         
         public MethodInfo Info { get; set; }
-        
-        public bool RunTask { get; set; }
     }
 }
