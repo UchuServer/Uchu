@@ -21,4 +21,10 @@
       <Folder Include="CdClient\Models" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="CDClient.db">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

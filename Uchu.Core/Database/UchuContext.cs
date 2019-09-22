@@ -18,7 +18,12 @@ namespace Uchu.Core
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Database=uchu;Username=postgres;Password=postgres");
+            optionsBuilder.UseNpgsql(
+                $"Host={Configuration.Singleton.Postgres.Host};" +
+                $"Database={Configuration.Singleton.Postgres.Database};" +
+                $"Username={Configuration.Singleton.Postgres.Username};" +
+                $"Password={Configuration.Singleton.Postgres.Password}"
+            );
         }
     }
 }

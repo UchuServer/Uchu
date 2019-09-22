@@ -282,7 +282,7 @@ namespace Uchu.Core.CdClient
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlite($"Data Source={Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/CDClient.db");
+			optionsBuilder.UseSqlite("Data Source=./CDClient.db");
 		}
 	}
 }

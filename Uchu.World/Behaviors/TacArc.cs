@@ -14,14 +14,7 @@ namespace Uchu.World.Behaviors
 
         public override async Task Serialize(BitReader reader)
         {
-            try
-            {
-                Hit = reader.ReadBit();
-            }
-            catch
-            {
-                return;
-            }
+            Hit = reader.ReadBit();
 
             if (Hit)
             {
@@ -42,6 +35,7 @@ namespace Uchu.World.Behaviors
                         Executioner.Targets.Add(Targets[i]);
 
                     // TODO: Damage
+                    Targets[i].GetComponent<DestructibleComponent>().Smash(GameObject, GameObject);
                 }
 
                 var action = await GetParameter(BehaviorId, "action");

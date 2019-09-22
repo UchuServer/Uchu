@@ -58,7 +58,7 @@ namespace Uchu.World
                 }
             }
 
-            var server = new WorldServer(port, zoneIds?.ToArray(), preload);
+            var server = new WorldServer(zoneIds?.ToArray(), preload);
 
             await server.Start();
         }

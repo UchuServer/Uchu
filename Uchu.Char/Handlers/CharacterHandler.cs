@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.Core.IO;
 
 namespace Uchu.Char.Handlers
 {
@@ -106,9 +107,9 @@ namespace Uchu.Char.Handlers
                 pantsLot = (uint) (pants != null ? pants.Id : 2508); // Select 'Bright Red Pants' if not found.
             }
 
-            var first = (await Server.Resources.ReadTextAsync("Names/first.txt")).Split('\n');
-            var middle = (await Server.Resources.ReadTextAsync("Names/middle.txt")).Split('\n');
-            var last = (await Server.Resources.ReadTextAsync("Names/last.txt")).Split('\n');
+            var first = (await Resources.ReadTextAsync("Names/minifigname_first.txt")).Split('\n');
+            var middle = (await Resources.ReadTextAsync("Names/minifigname_middle.txt")).Split('\n');
+            var last = (await Resources.ReadTextAsync("Names/minifigname_last.txt")).Split('\n');
 
             var name =
                 (first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last])

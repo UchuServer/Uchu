@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -14,6 +16,9 @@ namespace Uchu.World
 {
     public class SkillComponent : ReplicaComponent
     {
+        // This number is taken from  testing and is not concrete.
+        public const float TargetRange = 11.6f;
+        
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
         public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
 
@@ -32,6 +37,10 @@ namespace Uchu.World
         {
         }
 
+        /*
+         * TODO: don't leave streams open
+         */
+        
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
             if (Player == null) return;
@@ -57,15 +66,42 @@ namespace Uchu.World
                     Executioner = Player
                 };
 
-                using (var reader = new BitReader(stream))
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
                     Logger.Debug(
-                        $"Starting behaviour {(BehaviorTemplateId) template.TemplateID}: Target = {message.OptionalTarget}");
+                        $"Starting behaviour {(BehaviorTemplateId) template.TemplateID}: Target = {message.OptionalTarget}"
+                    );
 
-                    if (message.OptionalTarget != null)
-                        executioner.Targets.Add(message.OptionalTarget);
+                    // Remove player check for *tap to die* :P
+                    // TODO: Remove, replace with PvP checks
+                    if (message.OptionalTarget != null && !(message.OptionalTarget is Player))
+                    {
+                        var distance = Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position);
+                        
+                        foreach (var gameObject in Zone.GameObjects.Where(g => g.Layer == Layer.Smashable))
+                        {
+                            if (gameObject == message.OptionalTarget) continue;
+
+                            if (Vector3.Distance(gameObject.Transform.Position, Transform.Position) < distance)
+                            {
+                                //
+                                // Player is closer to another smashable object and should therefore not face this one in game.
+                                //
+                                // Invalid target.
+                                //
+                                goto NoFixedTarget;
+                            }
+                        }
+                        
+                        if (distance < TargetRange) executioner.Targets.Add(message.OptionalTarget);
+                    }
+                    
+                    //
+                    // No fixed target was specified or could not be verified.
+                    //
+                    NoFixedTarget:
 
                     var instance = (Behavior) Activator.CreateInstance(
                         Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
@@ -114,7 +150,7 @@ namespace Uchu.World
 
             if (HandledBehaviors.TryGetValue(message.BehaviourHandle, out var head))
             {
-                Logger.Debug($"Syncing skill Done = {message.Done}, Handle = {message.BehaviourHandle}");
+                Logger.Debug($"Syncing behaviors done = {message.Done}, Handle = {message.BehaviourHandle}");
 
                 if (message.Done)
                 {
@@ -128,7 +164,7 @@ namespace Uchu.World
 
                 var stream = new MemoryStream(message.Content);
 
-                using (var reader = new BitReader(stream))
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
@@ -153,7 +189,7 @@ namespace Uchu.World
 
                 var stream = new MemoryStream(message.Content);
 
-                using (var reader = new BitReader(stream))
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 

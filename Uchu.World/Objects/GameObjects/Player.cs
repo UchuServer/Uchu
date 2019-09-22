@@ -9,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Social;
 
 namespace Uchu.World
 {
@@ -158,6 +159,20 @@ namespace Uchu.World
 
         public void Teleport(Vector3 position)
         {
+            Message(new TeleportMessage
+            {
+                Associate = this,
+                SkipAllChecks = true,
+                Position = position
+            });
+        }
+
+        public void SendChatMessage(string message)
+        {
+            Message(new ChatMessagePacket
+            {
+                Message = $"{message}\0"
+            });
         }
 
         public void Message(ISerializable gameMessage)

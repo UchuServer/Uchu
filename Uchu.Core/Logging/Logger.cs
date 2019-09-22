@@ -9,63 +9,11 @@ namespace Uchu.Core
 {
     public static class Logger
     {
-        private static LogLevel _fileMinLevel;
-        
-        private static LogLevel _consoleMinLevel;
-
-        private static string _file;
-
-        private static object _lock;
+        private static readonly object Lock;
         
         static Logger()
         {
-            ReloadConfig();
-
-            _lock = new object();
-        }
-        
-        private static string GetConfigFile()
-        {
-            var current = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-            
-            var configFileNames = new[] { "Config/logging.config", "logging.config" };
-
-            var configFile =
-                (from configFileName in configFileNames
-                    where File.Exists($"{current}/{configFileName}")
-                    select $"{current}/{configFileName}").FirstOrDefault();
-
-            if (configFile == null) throw new NullReferenceException("Logging config file not found.");
-
-            return configFile;
-        }
-
-        public static void ReloadConfig()
-        {
-            var document = new XmlDocument();
-            document.Load(GetConfigFile());
-
-            var current = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-            
-            foreach (XmlNode node in document.DocumentElement.ChildNodes)
-            {
-                switch (node.Name)
-                {
-                    case "file":
-                        _file = $"{current}/{node.InnerText.Replace("\n", "").Replace("\t", "").Replace(" ", "")}";
-                        if (!Enum.TryParse(node.Attributes["level"].Value, out _fileMinLevel))
-                        {
-                            throw new ArgumentException($"{node.InnerText} is not a valid LogLevel.");
-                        }
-                        break;
-                    case "console":
-                        if (!Enum.TryParse(node.Attributes["level"].Value, out _consoleMinLevel))
-                        {
-                            throw new ArgumentException($"{node.InnerText} is not a valid LogLevel.");
-                        }
-                        break;
-                }
-            }
+            Lock = new object();
         }
 
         public static void Log(object message, LogLevel logLevel = LogLevel.Information)
@@ -113,7 +61,7 @@ namespace Uchu.Core
 
         private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, bool clearColor = false)
         {
-            lock (_lock)
+            lock (Lock)
             {
                 if (clearColor)
                     Console.ResetColor();
@@ -122,16 +70,17 @@ namespace Uchu.Core
 
                 message = $"[{logLevel}] {message}";
 
-                if (_fileMinLevel <= logLevel)
+                var fileLogLevel = Enum.Parse<LogLevel>(Configuration.Singleton.FileLogging.Level);
+                if (fileLogLevel <= logLevel)
                 {
-                    var path = Path.GetDirectoryName(_file);
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-                    if (!File.Exists(_file)) File.Create(_file).Dispose();
-                    File.AppendAllTextAsync(_file, $"{DateTime.Now} {message}\n");
+                    var file = Configuration.Singleton.FileLogging.Logfile;
+                    
+                    File.AppendAllTextAsync(file, $"{DateTime.Now} {message}\n");
                 }
 
-                if (_consoleMinLevel <= logLevel)
+                var consoleLogLevel = Enum.Parse<LogLevel>(Configuration.Singleton.ConsoleLogging.Level);
+                
+                if (consoleLogLevel <= logLevel)
                 {
                     Console.WriteLine(message);
                     Console.ResetColor();

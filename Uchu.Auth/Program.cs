@@ -7,7 +7,7 @@ namespace Uchu.Auth
     {
         private static async Task Main(string[] args)
         {
-            var server = new Server(21836);
+            var server = new Server(ServerType.Authentication);
             
             await server.Start();
         }

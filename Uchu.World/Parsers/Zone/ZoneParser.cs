@@ -11,27 +11,15 @@ using Uchu.World.Collections;
 
 namespace Uchu.World.Parsers
 {
-    public class ZoneParser
+    public static class ZoneParser
     {
-        private readonly AssemblyResources _resources;
-        public Dictionary<ZoneId, ZoneInfo> Zones;
+        public static Dictionary<ZoneId, ZoneInfo> Zones;
 
-        public ZoneParser(AssemblyResources resources)
-        {
-            _resources = resources;
-
-            LevelParser = new LevelParser(resources);
-        }
-
-        public LevelParser LevelParser { get; }
-
-        public async Task LoadZoneData()
+        public static async Task LoadZoneData()
         {
             Zones = new Dictionary<ZoneId, ZoneInfo>();
 
-            var paths = _resources.GetAllPaths().ToArray();
-
-            var luzFiles = paths.Where(p => p.EndsWith("luz")).ToArray();
+            var luzFiles = Resources.GetAllFilesWithExtenstion("luz");
 
             foreach (var luzFile in luzFiles)
                 try
@@ -46,13 +34,13 @@ namespace Uchu.World.Parsers
                 }
         }
 
-        private async Task<ZoneInfo> ParseAsync(string path)
+        private static async Task<ZoneInfo> ParseAsync(string path)
         {
             MemoryStream stream;
 
             try
             {
-                stream = new MemoryStream(await _resources.ReadBytesAsync(path, false));
+                stream = new MemoryStream(await Resources.ReadBytesAsync(path));
             }
             catch
             {
@@ -94,11 +82,7 @@ namespace Uchu.World.Parsers
 
                     scene.Name = reader.ReadString(reader.Read<byte>());
 
-                    var parts = path.Split('.').ToList();
-                    parts.RemoveAt(parts.Count - 1);
-                    parts.RemoveAt(parts.Count - 1);
-
-                    var dir = string.Join('.', parts.ToArray()).Replace('.', '/');
+                    var dir = Path.GetDirectoryName(path);
 
                     try
                     {

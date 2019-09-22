@@ -6,6 +6,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
@@ -26,8 +27,6 @@ namespace Uchu.Core
         public readonly IRakServer RakNetServer;
 
         public readonly ISessionCache SessionCache;
-
-        public readonly AssemblyResources Resources;
         
         public readonly int Port;
 
@@ -37,18 +36,45 @@ namespace Uchu.Core
 
         private bool _running;
 
-        public Server(int port, string password = "3.25 ND1")
+        public Server(ServerType type)
         {
-            Port = port;
+            var serializer = new XmlSerializer(typeof(Configuration));
+            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
-            RakNetServer = new TcpUdpServer(port, password);
+            if (File.Exists(fn))
+            {
+                using (var file = File.OpenRead(fn))
+                {
+                    Configuration.Singleton = (Configuration) serializer.Deserialize(file);
+                }
+            }
+            else
+            {
+                Configuration.Singleton = new Configuration();
+
+                var backup = File.CreateText("config.default.xml");
+                
+                serializer.Serialize(backup, Configuration.Singleton);
+                
+                backup.Close();
+                
+                Logger.Warning("No config file found, creating default.");
+            }
+            
+            Port =
+                type == ServerType.Authentication ? 21836 :
+                type == ServerType.Character ? Configuration.Singleton.Character.Port :
+                type == ServerType.World ? Configuration.Singleton.World.Port :
+                type == ServerType.Chat ? Configuration.Singleton.Chat.Port :
+                throw new NotSupportedException();
+
+            RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
             SessionCache = new RedisSessionCache();
-            Resources = new AssemblyResources("Uchu.Resources.dll");
             
             HandlerMap = new HandlerMap();
             CommandHandleMap = new CommandHandleMap();
             
-            Logger.Information($"Server created on port: {port}, password: {password}");
+            Logger.Information($"{type} Server created on port: {Port}");
         }
 
         public Task Start()

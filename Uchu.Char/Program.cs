@@ -7,7 +7,7 @@ namespace Uchu.Char
     {
         private static async Task Main(string[] args)
         {
-            var server = new Server(2002);
+            var server = new Server(ServerType.Character);
             
             await server.Start();
         }

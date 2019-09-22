@@ -17,20 +17,15 @@ namespace Uchu.World
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
-        private readonly ZoneParser _parser;
-
         private readonly ZoneId[] _zoneIds;
 
         public readonly List<Zone> Zones = new List<Zone>();
 
-        public WorldServer(int port, ZoneId[] zones = default, bool preload = false, string password = "3.25 ND1") :
-            base(port, password)
+        public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
         {
             _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
-
-            _parser = new ZoneParser(Resources);
 
             OnGameMessage += HandleGameMessage;
             OnServerStopped += () =>
@@ -45,17 +40,17 @@ namespace Uchu.World
 
             Task.Run(async () =>
             {
-                await _parser.LoadZoneData();
+                await ZoneParser.LoadZoneData();
 
                 if (!preload)
                 {
-                    foreach (var zoneId in _parser.Zones.Keys.Where(_zoneIds.Contains))
+                    foreach (var zoneId in ZoneParser.Zones.Keys.Where(_zoneIds.Contains))
                         Logger.Information($"Ready to load {zoneId}");
 
                     return;
                 }
 
-                foreach (var zoneId in _parser.Zones.Keys.Where(_zoneIds.Contains))
+                foreach (var zoneId in ZoneParser.Zones.Keys.Where(_zoneIds.Contains))
                 {
                     Logger.Information($"Preloading {zoneId}");
 
@@ -91,10 +86,10 @@ namespace Uchu.World
 
             Logger.Information($"Starting {zoneId}");
 
-            if (_parser.Zones == default)
-                await _parser.LoadZoneData();
+            if (ZoneParser.Zones == default)
+                await ZoneParser.LoadZoneData();
 
-            var info = _parser.Zones[zoneId];
+            var info = ZoneParser.Zones?[zoneId];
 
             // Create new Zone
             var zone = new Zone(info, this);
