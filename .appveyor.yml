@@ -16,7 +16,9 @@ only_commits:
 
 image:
   - Visual Studio 2017
-  - Ubuntu
+  - Visual Studio 2019
+  - Ubuntu1604
+  - Ubuntu1804
 
 clone_depth: 1
 
