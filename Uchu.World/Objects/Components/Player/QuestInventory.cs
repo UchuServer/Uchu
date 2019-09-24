@@ -196,7 +196,7 @@ namespace Uchu.World
                 // Offer any fallow up missions from the quest giver.
                 //
 
-                questGiver.GetComponent<QuestGiverComponent>().OfferMissionAsync(Player);
+                questGiver.GetComponent<QuestGiverComponent>().OfferMission(Player);
             }
         }
 
@@ -467,7 +467,7 @@ namespace Uchu.World
                         // Check if player has the Prerequisites to start this achievement.
                         //
 
-                        var hasPrerequisites = MissionParser.CheckPrerequiredMissionsAsync(
+                        var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
                             mission.PrereqMissionID,
                             GetCompletedMissions()
                         );

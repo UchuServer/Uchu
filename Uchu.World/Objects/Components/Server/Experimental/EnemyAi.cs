@@ -20,19 +20,19 @@ namespace Uchu.World.Experimental
             OnTick += PathFind;
         }
 
-        public bool FallowPlayer { get; set; }
+        public bool FollowPlayer { get; set; }
 
         public Vector3 TargetLocation { get; set; }
 
         public float Speed { get; set; }
 
-        public Vector3 FallowLocation { get; private set; }
+        public Vector3 FollowLocation { get; private set; }
 
         private void PathFind()
         {
             var targetLocation = TargetLocation;
 
-            if (FallowPlayer)
+            if (FollowPlayer)
             {
                 Player target = default;
 
@@ -74,7 +74,7 @@ namespace Uchu.World.Experimental
 
             _controllablePhysics.Velocity = Vector3.Normalize(Transform.Position - targetLocation);
 
-            FallowLocation = targetLocation;
+            FollowLocation = targetLocation;
 
             if (_ticks == 5)
             {

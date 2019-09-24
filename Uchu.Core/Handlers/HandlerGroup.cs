@@ -5,6 +5,14 @@ namespace Uchu.Core
         /// <summary>
         ///     The server this handler group is attached to.
         /// </summary>
-        public Server Server;
+
+        private readonly object _lock = new object();
+        protected Server Server { get; private set; }
+
+        public void SetServer(Server server)
+        {
+            lock(_lock)
+                Server = server;
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace Uchu.World
             return GameObject.Instantiate(new LevelObject
             {
                 Lot = SpawnTemplate,
-                ObjectId = (ulong) Utils.GenerateObjectId(),
+                ObjectId = (ulong) IdUtils.GenerateObjectId(),
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,
                 Scale = 1,

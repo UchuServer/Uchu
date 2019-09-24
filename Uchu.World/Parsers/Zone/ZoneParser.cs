@@ -11,15 +11,26 @@ using Uchu.World.Collections;
 
 namespace Uchu.World.Parsers
 {
-    public static class ZoneParser
+    public class ZoneParser
     {
-        public static Dictionary<ZoneId, ZoneInfo> Zones;
+        private readonly IFileResources _resources;
 
-        public static async Task LoadZoneData()
+        public readonly LevelParser LevelParser;
+        public readonly Dictionary<ZoneId, ZoneInfo> Zones;
+
+        public ZoneParser(IFileResources resources)
         {
-            Zones = new Dictionary<ZoneId, ZoneInfo>();
+            _resources = resources;
 
-            var luzFiles = Resources.GetAllFilesWithExtenstion("luz");
+            LevelParser = new LevelParser(resources);
+            Zones = new Dictionary<ZoneId, ZoneInfo>();
+        }
+
+        public async Task LoadZoneDataAsync()
+        {
+            Zones.Clear();
+
+            var luzFiles = _resources.GetAllFilesWithExtension("luz");
 
             foreach (var luzFile in luzFiles)
                 try
@@ -34,13 +45,13 @@ namespace Uchu.World.Parsers
                 }
         }
 
-        private static async Task<ZoneInfo> ParseAsync(string path)
+        private async Task<ZoneInfo> ParseAsync(string path)
         {
-            MemoryStream stream;
+            byte[] data;
 
             try
             {
-                stream = new MemoryStream(await Resources.ReadBytesAsync(path));
+                data = await _resources.ReadBytesAsync(path);
             }
             catch
             {
@@ -48,6 +59,7 @@ namespace Uchu.World.Parsers
                 return null;
             }
 
+            using (var stream = new MemoryStream(data))
             using (var reader = new BitReader(stream))
             {
                 var version = reader.Read<uint>();

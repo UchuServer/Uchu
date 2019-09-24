@@ -9,7 +9,7 @@ namespace Uchu.Auth
         {
             var server = new Server(ServerType.Authentication);
             
-            await server.Start();
+            await server.StartAsync();
         }
     }
 }

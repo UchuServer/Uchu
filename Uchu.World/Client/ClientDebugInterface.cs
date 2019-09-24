@@ -6,8 +6,8 @@ namespace Uchu.World.Client
 {
     public class ClientDebugInterface
     {
-        private readonly string _path;
-        private readonly WorldServer _worldServer;
+        //private readonly string _path;
+        //private readonly WorldServer _worldServer;
 
         public readonly Process ClientProcess;
 

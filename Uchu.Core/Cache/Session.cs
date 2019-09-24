@@ -12,21 +12,21 @@ namespace Uchu.Core
 
         public byte[] ToBytes()
         {
-            var stream = new MemoryStream();
+            using (var stream = new MemoryStream())
             using (var writer = new BitWriter(stream))
             {
                 writer.WriteString(Key, wide: true);
                 writer.Write(CharacterId);
                 writer.Write(UserId);
                 writer.Write(ZoneId);
-            }
 
-            return stream.ToArray();
+                return stream.ToArray();
+            }
         }
 
         public static Session FromBytes(byte[] bytes)
         {
-            var stream = new MemoryStream(bytes);
+            using (var stream = new MemoryStream(bytes))
             using (var reader = new BitReader(stream))
             {
                 return new Session

@@ -21,8 +21,12 @@ namespace Uchu.World
 
         public readonly List<Zone> Zones = new List<Zone>();
 
+        public readonly ZoneParser ZoneParser;
+
         public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
         {
+            ZoneParser = new ZoneParser(Resources);
+
             _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
@@ -40,7 +44,7 @@ namespace Uchu.World
 
             Task.Run(async () =>
             {
-                await ZoneParser.LoadZoneData();
+                await ZoneParser.LoadZoneDataAsync();
 
                 if (!preload)
                 {
@@ -62,7 +66,7 @@ namespace Uchu.World
         public Task HandleDisconnect(IPEndPoint point, CloseReason reason)
         {
             Logger.Information($"{point} disconnected: {reason}");
-            
+
             foreach (var player in Zones
                 .Select(zone => zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point)))
                 .Where(player => !ReferenceEquals(player, default)))
@@ -89,7 +93,7 @@ namespace Uchu.World
             Logger.Information($"Starting {zoneId}");
 
             if (ZoneParser.Zones == default)
-                await ZoneParser.LoadZoneData();
+                await ZoneParser.LoadZoneDataAsync();
 
             var info = ZoneParser.Zones?[zoneId];
 
@@ -108,7 +112,8 @@ namespace Uchu.World
             foreach (var group in groups)
             {
                 var instance = (HandlerGroup) Activator.CreateInstance(group);
-                instance.Server = this;
+
+                instance.SetServer(this);
 
                 foreach (var method in group.GetMethods().Where(m => !m.IsStatic && !m.IsAbstract))
                 {

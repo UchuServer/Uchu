@@ -60,7 +60,7 @@ namespace Uchu.World
 
             var server = new WorldServer(zoneIds?.ToArray(), preload);
 
-            await server.Start();
+            await server.StartAsync();
         }
 
         private enum ArgumentState

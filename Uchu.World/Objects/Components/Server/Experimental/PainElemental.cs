@@ -25,7 +25,7 @@ namespace Uchu.World.Experimental
                 _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
 
                 _ai.Speed = 15;
-                _ai.FallowPlayer = true;
+                _ai.FollowPlayer = true;
             };
 
             OnTick += Tick;
@@ -49,7 +49,7 @@ namespace Uchu.World.Experimental
 
             _soulTimer = default;
 
-            if (Vector3.Distance(Transform.Position, _ai.FallowLocation) < 120)
+            if (Vector3.Distance(Transform.Position, _ai.FollowLocation) < 120)
                 for (var i = 0; i < 1; i++)
                 {
                     var lostSoul = GameObject.Instantiate(Zone, 12379, Transform.Position, Transform.Rotation);
@@ -64,7 +64,7 @@ namespace Uchu.World.Experimental
                     };
 
                     lostSoulAi.Speed = 90;
-                    lostSoulAi.FallowPlayer = true;
+                    lostSoulAi.FollowPlayer = true;
 
                     Update(GameObject);
 

@@ -30,7 +30,7 @@ namespace Uchu.World.Handlers.GameMessages
             {
                 var questGiver = message.TargetObject.GetComponent<QuestGiverComponent>();
 
-                questGiver?.OfferMissionAsync(player);
+                questGiver?.OfferMission(player);
             }
         }
 

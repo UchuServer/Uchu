@@ -10,6 +10,8 @@ namespace Uchu.Auth.Handlers
 {
     public class LoginHandler : HandlerGroup
     {
+        public const int CloseDelay = 5000;
+
         [PacketHandler]
         public async Task LoginRequestHandler(ClientLoginInfoPacket packet, IRakConnection connection)
         {
@@ -73,9 +75,13 @@ namespace Uchu.Auth.Handlers
                 }
 
                 connection.Send(info);
-                
+
                 if (info.LoginCode == LoginCode.Success)
+                {
+                    await Task.Delay(CloseDelay);
+
                     await connection.CloseAsync();
+                }
             }
         }
     }

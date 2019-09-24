@@ -9,7 +9,7 @@ namespace Uchu.Core
     public abstract class Packet : IPacket
     {
         public abstract RemoteConnectionType RemoteConnectionType { get; }
-        
+
         public abstract uint PacketId { get; }
 
         public virtual void Serialize(BitWriter writer)
@@ -17,8 +17,8 @@ namespace Uchu.Core
             writer.Write((byte) MessageIdentifier.UserPacketEnum);
             writer.Write((ushort) RemoteConnectionType);
             writer.Write(PacketId);
-            writer.Write<byte>( 0);
-            
+            writer.Write<byte>(0);
+
             SerializePacket(writer);
         }
 

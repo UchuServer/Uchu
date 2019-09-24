@@ -38,13 +38,13 @@ namespace Uchu.World
         public static void Start(Object obj)
         {
             obj.Zone.RegisterObject(obj);
-            
+
             obj.OnStart?.Invoke();
         }
 
         public static void Destroy(Object obj)
         {
-            obj.Zone.UnRegisterObject(obj);
+            obj.Zone.UnregisterObject(obj);
 
             obj.OnDestroyed?.Invoke();
         }

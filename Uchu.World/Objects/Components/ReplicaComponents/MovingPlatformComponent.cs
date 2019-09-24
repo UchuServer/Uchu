@@ -11,8 +11,6 @@ namespace Uchu.World
 {
     public class MovingPlatformComponent : ReplicaComponent
     {
-        private bool _started;
-
         /// <summary>
         ///     Current timer.
         /// </summary>
