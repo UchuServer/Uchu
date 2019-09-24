@@ -1,3 +1,4 @@
+using System;
 using System.Xml.Serialization;
 
 namespace Uchu.Core
@@ -5,8 +6,9 @@ namespace Uchu.Core
     [XmlRoot("Uchu")]
     public class Configuration
     {
+        [Obsolete("Use the Config property provided by the server, or instantiate your own", true)]
         public static Configuration Singleton;
-        
+
         [XmlElement]
         public DatabaseConfiguration Postgres { get; set; } = new DatabaseConfiguration
         {
@@ -21,20 +23,20 @@ namespace Uchu.Core
         {
             Level = LogLevel.Debug.ToString()
         };
-        
+
         [XmlElement]
         public LoggingConfiguration FileLogging { get; set; } = new LoggingConfiguration
         {
-            Level = LogLevel.Debug.ToString(),
+            Level = LogLevel.None.ToString(),
             Logfile = "uchu.log"
         };
-        
+
         [XmlElement]
         public ServerConfiguration Character { get; set; } = new ServerConfiguration {Port = 2002};
-        
+
         [XmlElement]
         public ServerConfiguration World { get; set; } = new ServerConfiguration {Port = 2003};
-        
+
         [XmlElement]
         public ServerConfiguration Chat { get; set; } = new ServerConfiguration {Port = 2004};
 
@@ -62,18 +64,18 @@ namespace Uchu.Core
         [XmlElement]
         public string Logfile;
     }
-    
+
     public class DatabaseConfiguration
     {
         [XmlElement]
         public string Database { get; set; }
-        
+
         [XmlElement]
         public string Host { get; set; }
-        
+
         [XmlElement]
         public string Username { get; set; }
-        
+
         [XmlElement]
         public string Password { get; set; }
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -30,7 +29,7 @@ namespace Uchu.World
 
             OnDestroyed += () =>
             {
-                Zone.UnRegisterGameObject(this);
+                Zone.UnregisterGameObject(this);
 
                 foreach (var component in _components.ToArray()) Destroy(component);
 
@@ -224,7 +223,7 @@ namespace Uchu.World
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
-                instance.ObjectId = objectId == default ? Utils.GenerateObjectId() : objectId;
+                instance.ObjectId = objectId == default ? IdUtils.GenerateObjectId() : objectId;
 
                 instance.Lot = lot;
 
@@ -329,7 +328,7 @@ namespace Uchu.World
                     name,
                     levelObject.Position,
                     levelObject.Rotation,
-                    Utils.GenerateObjectId(),
+                    IdUtils.GenerateObjectId(),
                     levelObject.Lot
                 );
 

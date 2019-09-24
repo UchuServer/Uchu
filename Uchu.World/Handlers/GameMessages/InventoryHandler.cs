@@ -4,7 +4,7 @@ namespace Uchu.World.Handlers.GameMessages
 {
     public class InventoryHandler : HandlerGroup
     {
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void HandleItemMovement(MoveItemInInventoryMessage message, Player player)
         {
             if (message.DestinationInventoryType == InventoryType.Invalid)
@@ -29,13 +29,13 @@ namespace Uchu.World.Handlers.GameMessages
             inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType, true);
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void HandleEquipItem(EquipItemMessage message, Player player)
         {
             player.GetComponent<InventoryComponent>().EquipItem(message.Item);
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void HandleUnEquipItem(UnEquipItemMessage message, Player player)
         {
             var inventoryComponent = player.GetComponent<InventoryComponent>();

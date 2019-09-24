@@ -9,7 +9,7 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Chain;
 
-        public override async Task Serialize(BitReader reader)
+        public override async Task SerializeAsync(BitReader reader)
         {
             var index = reader.Read<uint>();
 

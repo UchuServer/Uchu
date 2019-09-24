@@ -7,7 +7,7 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Duration;
 
-        public override async Task Serialize(BitReader reader)
+        public override async Task SerializeAsync(BitReader reader)
         {
             var action = await GetParameter(BehaviorId, "action");
 

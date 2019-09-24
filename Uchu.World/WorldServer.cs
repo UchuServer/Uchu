@@ -21,16 +21,14 @@ namespace Uchu.World
 
         public readonly List<Zone> Zones = new List<Zone>();
 
-        public event Action<Zone> OnZoneLoaded;
-
         public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
         {
             _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
 
-            OnGameMessage += HandleGameMessage;
-            OnServerStopped += () =>
+            GameMessageReceived += HandleGameMessageAsync;
+            ServerStopped += () =>
             {
                 foreach (var zone in Zones)
                 {
@@ -42,7 +40,7 @@ namespace Uchu.World
 
             Task.Run(async () =>
             {
-                await ZoneParser.LoadZoneData();
+                await ZoneParser.LoadZoneDataAsync();
 
                 if (!preload)
                 {
@@ -61,10 +59,10 @@ namespace Uchu.World
             });
         }
 
-        public async Task HandleDisconnect(IPEndPoint point, CloseReason reason)
+        public Task HandleDisconnect(IPEndPoint point, CloseReason reason)
         {
             Logger.Information($"{point} disconnected: {reason}");
-            
+
             foreach (var player in Zones
                 .Select(zone => zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point)))
                 .Where(player => !ReferenceEquals(player, default)))
@@ -73,6 +71,8 @@ namespace Uchu.World
 
                 break;
             }
+
+            return Task.CompletedTask;
         }
 
         public async Task<Zone> GetZone(ZoneId zoneId)
@@ -89,17 +89,14 @@ namespace Uchu.World
             Logger.Information($"Starting {zoneId}");
 
             if (ZoneParser.Zones == default)
-                await ZoneParser.LoadZoneData();
+                await ZoneParser.LoadZoneDataAsync();
 
             var info = ZoneParser.Zones?[zoneId];
 
             // Create new Zone
             var zone = new Zone(info, this);
             Zones.Add(zone);
-            
             zone.Initialize();
-
-            OnZoneLoaded?.Invoke(zone);
 
             return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
         }
@@ -111,7 +108,8 @@ namespace Uchu.World
             foreach (var group in groups)
             {
                 var instance = (HandlerGroup) Activator.CreateInstance(group);
-                instance.Server = this;
+
+                instance.SetServer(this);
 
                 foreach (var method in group.GetMethods().Where(m => !m.IsStatic && !m.IsAbstract))
                 {
@@ -131,8 +129,7 @@ namespace Uchu.World
                             {
                                 Group = instance,
                                 Info = method,
-                                Packet = packet,
-                                RunTask = attr.RunTask
+                                Packet = packet
                             });
 
                             continue;
@@ -154,8 +151,7 @@ namespace Uchu.World
                         {
                             Group = instance,
                             Info = method,
-                            Packet = packet,
-                            RunTask = attr.RunTask
+                            Packet = packet
                         };
                     }
                     else
@@ -180,7 +176,7 @@ namespace Uchu.World
             }
         }
 
-        private void HandleGameMessage(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
+        private async Task HandleGameMessageAsync(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
         {
             if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
@@ -218,48 +214,19 @@ namespace Uchu.World
 
             reader.Read(gameMessage);
 
-            InvokeHandler(messageHandler, player);
+            await InvokeHandlerAsync(messageHandler, player);
         }
 
-        private static void InvokeHandler(Handler handler, Player player)
+        private static async Task InvokeHandlerAsync(Handler handler, Player player)
         {
             var task = handler.Info.ReturnType == typeof(Task);
 
             var parameters = new object[] {handler.Packet, player};
 
+            var res = handler.Info.Invoke(handler.Group, parameters);
+
             if (task)
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        await (Task) handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
-            else if (handler.RunTask)
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        handler.Info.Invoke(handler.Group, parameters);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
-            else
-                try
-                {
-                    handler.Info.Invoke(handler.Group, parameters);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
+                await (Task)res;
         }
     }
 }

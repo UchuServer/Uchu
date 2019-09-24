@@ -9,7 +9,7 @@ namespace Uchu.Char
         {
             var server = new Server(ServerType.Character);
             
-            await server.Start();
+            await server.StartAsync();
         }
     }
 }

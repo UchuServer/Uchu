@@ -7,11 +7,13 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AirMovement;
 
-        public override async Task Serialize(BitReader reader)
+        public override Task SerializeAsync(BitReader reader)
         {
             var handle = reader.Read<uint>();
 
             HandledBehaviors.TryAdd(handle, this);
+
+            return Task.CompletedTask;
         }
     }
 }

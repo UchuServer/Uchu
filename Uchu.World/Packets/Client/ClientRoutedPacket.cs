@@ -17,17 +17,16 @@ namespace Uchu.World
         {
             var length = reader.Read<uint>();
 
-            var packet = reader.ReadBytes((int) length).ToArray();
+            var packet = reader.ReadBytes((int) length);
 
-            var stream = new MemoryStream();
-
+            using (var stream = new MemoryStream())
             using (var writer = new BitWriter(stream))
             {
                 writer.Write<byte>(0x53);
                 writer.Write(packet);
-            }
 
-            Packet = stream.ToArray();
+                Packet = stream.ToArray();
+            }
         }
     }
 }

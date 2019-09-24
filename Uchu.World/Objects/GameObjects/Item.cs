@@ -18,7 +18,7 @@ namespace Uchu.World
 
         public Item()
         {
-            OnDestroyed += () => { Task.Run(RemoveFromInventory); };
+            OnDestroyed += () => { Task.Run(RemoveFromInventoryAsync); };
         }
 
         public ItemComponent ItemComponent { get; private set; }
@@ -45,7 +45,7 @@ namespace Uchu.World
             {
                 _count = value;
 
-                Task.Run(UpdateCount);
+                Task.Run(UpdateCountAsync);
             }
         }
 
@@ -59,7 +59,7 @@ namespace Uchu.World
             {
                 _equipped = value;
 
-                Task.Run(UpdateEquippedStatus);
+                Task.Run(UpdateEquippedStatusAsync);
             }
         }
 
@@ -70,7 +70,7 @@ namespace Uchu.World
             {
                 _bound = value;
 
-                Task.Run(UpdateBoundStatus);
+                Task.Run(UpdateBoundStatusAsync);
             }
         }
 
@@ -84,7 +84,7 @@ namespace Uchu.World
             {
                 _slot = value;
 
-                Task.Run(UpdateSlot);
+                Task.Run(UpdateSlotAsync);
             }
         }
 
@@ -171,9 +171,9 @@ namespace Uchu.World
 
                 var instance = Instantiate<Item>
                 (
-                    inventory.Manager.Zone, cdClientObject.Name, objectId: Utils.GenerateObjectId(), lot: lot
+                    inventory.Manager.Zone, cdClientObject.Name, objectId: IdUtils.GenerateObjectId(), lot: lot
                 );
-                
+
                 instance._count = count;
                 instance._slot = slot;
 
@@ -261,7 +261,7 @@ namespace Uchu.World
             }
         }
         
-        private async Task UpdateCount()
+        private async Task UpdateCountAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -278,11 +278,11 @@ namespace Uchu.World
 
                 if (_count > item.Count)
                 {
-                    await AddCount();
+                    await AddCountAsync();
                 }
                 else
                 {
-                    await RemoveCount();
+                    await RemoveCountAsync();
                 }
 
                 item.Count = _count;
@@ -307,7 +307,7 @@ namespace Uchu.World
             if (_count == default) Destroy(this);
         }
 
-        private async Task AddCount()
+        private async Task AddCountAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -330,7 +330,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task RemoveCount()
+        private async Task RemoveCountAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -355,7 +355,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task RemoveFromInventory()
+        private async Task RemoveFromInventoryAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -367,7 +367,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task UpdateEquippedStatus()
+        private async Task UpdateEquippedStatusAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -379,7 +379,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task UpdateBoundStatus()
+        private async Task UpdateBoundStatusAsync()
         {
             using (var ctx = new UchuContext())
             {
@@ -391,7 +391,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task UpdateSlot()
+        private async Task UpdateSlotAsync()
         {
             using (var ctx = new UchuContext())
             {

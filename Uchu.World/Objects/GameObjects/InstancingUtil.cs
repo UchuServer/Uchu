@@ -18,7 +18,7 @@ namespace Uchu.World
             }
 
             var instance = GameObject.Instantiate<GameObject>(parent, position: levelObject.Position,
-                rotation: levelObject.Rotation, objectId: Utils.GenerateObjectId(), lot: levelObject.Lot);
+                rotation: levelObject.Rotation, objectId: IdUtils.GenerateObjectId(), lot: levelObject.Lot);
 
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 

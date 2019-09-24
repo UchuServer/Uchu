@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -16,18 +17,17 @@ namespace Uchu.World.Social
         {
             writer.Write<byte>(0);
 
-            var stream = new MemoryStream();
-
+            using (var stream = new MemoryStream())
             using (var friendWriter = new BitWriter(stream))
             {
                 friendWriter.Write((ushort) Friends.Length);
                 foreach (var friend in Friends) friendWriter.Write(friend);
+
+                var friends = stream.ToArray();
+
+                writer.Write((ushort) (friends.Length - 1));
+                writer.Write(friends);
             }
-
-            var friends = stream.ToArray();
-
-            writer.Write((ushort) (friends.Length - 1));
-            writer.Write(friends);
         }
 
         public class Friend : ISerializable

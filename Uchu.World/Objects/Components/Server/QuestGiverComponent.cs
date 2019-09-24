@@ -38,7 +38,7 @@ namespace Uchu.World
             Logger.Information($"{GameObject} is a quest give with {MissionComponents.Length} missions");
         }
 
-        public void OfferMissionAsync(Player player)
+        public void OfferMission(Player player)
         {
             var questInventory = player.GetComponent<QuestInventory>();
 
@@ -129,7 +129,7 @@ namespace Uchu.World
                     // Check if player has completed the required missions to take on this new mission.
                     //
 
-                    var hasPrerequisite = MissionParser.CheckPrerequiredMissionsAsync(
+                    var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
                         quest.PrereqMissionID,
                         questInventory.GetCompletedMissions()
                     );

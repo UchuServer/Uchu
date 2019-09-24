@@ -107,9 +107,9 @@ namespace Uchu.Char.Handlers
                 pantsLot = (uint) (pants != null ? pants.Id : 2508); // Select 'Bright Red Pants' if not found.
             }
 
-            var first = (await Resources.ReadTextAsync("Names/minifigname_first.txt")).Split('\n');
-            var middle = (await Resources.ReadTextAsync("Names/minifigname_middle.txt")).Split('\n');
-            var last = (await Resources.ReadTextAsync("Names/minifigname_last.txt")).Split('\n');
+            var first = (await Server.Resources.ReadTextAsync("names/minifigname_first.txt")).Split('\n');
+            var middle = (await Server.Resources.ReadTextAsync("names/minifigname_middle.txt")).Split('\n');
+            var last = (await Server.Resources.ReadTextAsync("names/minifigname_last.txt")).Split('\n');
 
             var name =
                 (first[packet.Predefined.First] + middle[packet.Predefined.Middle] + last[packet.Predefined.Last])
@@ -120,12 +120,12 @@ namespace Uchu.Char.Handlers
                 if (ctx.Characters.Any(c => c.Name == packet.CharacterName))
                 {
                     Logger.Debug($"{connection} character create rejected due to duplicate name");
-                    connection.Send(new CharacterCreateResponse 
+                    connection.Send(new CharacterCreateResponse
                             {ResponseId = CharacterCreationResponse.CustomNameInUse}
                     );
                     return;
                 }
-                
+
                 if (ctx.Characters.Any(c => c.Name == name))
                 {
                     Logger.Debug($"{connection} character create rejected due to duplicate pre-made name");
@@ -134,12 +134,12 @@ namespace Uchu.Char.Handlers
                     );
                     return;
                 }
-                
+
                 var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == session.UserId);
 
                 user.Characters.Add(new Character
                 {
-                    CharacterId = Utils.GenerateObjectId(),
+                    CharacterId = IdUtils.GenerateObjectId(),
                     Name = name,
                     CustomName = packet.CharacterName,
                     ShirtColor = packet.ShirtColor,
@@ -160,7 +160,7 @@ namespace Uchu.Char.Handlers
                     {
                         new InventoryItem
                         {
-                            InventoryItemId = Utils.GenerateObjectId(),
+                            InventoryItemId = IdUtils.GenerateObjectId(),
                             LOT = (int) shirtLot,
                             Slot = 0,
                             Count = 1,
@@ -169,7 +169,7 @@ namespace Uchu.Char.Handlers
                         },
                         new InventoryItem
                         {
-                            InventoryItemId = Utils.GenerateObjectId(),
+                            InventoryItemId = IdUtils.GenerateObjectId(),
                             LOT = (int) pantsLot,
                             Slot = 1,
                             Count = 1,
@@ -182,7 +182,7 @@ namespace Uchu.Char.Handlers
                 });
 
                 Logger.Debug($"{user.Username} created character {packet.CharacterName} \"{name}\"");
-                
+
                 await ctx.SaveChangesAsync();
 
                 connection.Send(new CharacterCreateResponse
@@ -209,7 +209,7 @@ namespace Uchu.Char.Handlers
                 catch (Exception e)
                 {
                     Logger.Error($"Character deletion failed for {connection}'s character {packet.CharacterId}\n{e}");
-                    
+
                     connection.Send(new CharacterDeleteResponse {Success = false});
                 }
             }
@@ -219,7 +219,7 @@ namespace Uchu.Char.Handlers
         public async Task RenameCharacter(CharacterRenameRequest packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            
+
             using (var ctx = new UchuContext())
             {
                 if (ctx.Characters.Any(c => c.Name == packet.Name || c.CustomName == packet.Name))
@@ -227,10 +227,10 @@ namespace Uchu.Char.Handlers
                     connection.Send(new CharacterRenameResponse
                         {ResponseId = CharacterRenamingResponse.NameAlreadyInUse}
                     );
-                    
+
                     return;
                 }
-                
+
                 var chr = await ctx.Characters.FindAsync(packet.CharacterId);
 
                 chr.CustomName = packet.Name;
@@ -266,7 +266,7 @@ namespace Uchu.Char.Handlers
                 Address = address,
                 Port = 2003
             });
-            
+
             await connection.CloseAsync();
         }
     }

@@ -10,7 +10,9 @@ namespace Uchu.Core
     public static class Logger
     {
         private static readonly object Lock;
-        
+
+        internal static Configuration Config;
+
         static Logger()
         {
             Lock = new object();
@@ -70,20 +72,21 @@ namespace Uchu.Core
 
                 message = $"[{logLevel}] {message}";
 
-                var fileLogLevel = Enum.Parse<LogLevel>(Configuration.Singleton.FileLogging.Level);
-                if (fileLogLevel <= logLevel)
-                {
-                    var file = Configuration.Singleton.FileLogging.Logfile;
-                    
-                    File.AppendAllTextAsync(file, $"{DateTime.Now} {message}\n");
-                }
+                var consoleLogLevel = Enum.Parse<LogLevel>(Config.ConsoleLogging.Level);
 
-                var consoleLogLevel = Enum.Parse<LogLevel>(Configuration.Singleton.ConsoleLogging.Level);
-                
                 if (consoleLogLevel <= logLevel)
                 {
                     Console.WriteLine(message);
                     Console.ResetColor();
+                }
+
+                var fileLogLevel = Enum.Parse<LogLevel>(Config.FileLogging.Level);
+
+                if (fileLogLevel != LogLevel.None && fileLogLevel <= logLevel)
+                {
+                    var file = Config.FileLogging.Logfile;
+
+                    File.AppendAllTextAsync(file, $"{DateTime.Now} {message}\n");
                 }
             }
         }

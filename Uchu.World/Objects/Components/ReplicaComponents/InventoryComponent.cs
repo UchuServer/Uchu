@@ -50,7 +50,7 @@ namespace Uchu.World
 
                     Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
                     {
-                        InventoryItemId = Utils.GenerateObjectId(),
+                        InventoryItemId = IdUtils.GenerateObjectId(),
                         Count = (long) item.Count,
                         LOT = (int) item.Itemid,
                         Slot = -1,
@@ -83,7 +83,7 @@ namespace Uchu.World
 
                 Items.Add(itemComponent.EquipLocation, new InventoryItem
                 {
-                    InventoryItemId = Utils.GenerateObjectId(),
+                    InventoryItemId = IdUtils.GenerateObjectId(),
                     Count = count,
                     Slot = slot,
                     LOT = lot,

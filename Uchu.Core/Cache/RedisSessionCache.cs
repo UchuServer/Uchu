@@ -18,7 +18,6 @@ namespace Uchu.Core
             {
                 var manager = ConnectionMultiplexer.Connect("localhost");
                 _client = manager.GetDatabase();
-
             }
             catch
             {
@@ -30,7 +29,7 @@ namespace Uchu.Core
         public string CreateSession(long userId)
         {
             var key = GenerateKey();
-            
+
             _client.StringSet(key, new Session
             {
                 Key = key,

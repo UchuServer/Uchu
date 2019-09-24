@@ -8,7 +8,7 @@ namespace Uchu.Core
         Character,
         World,
         
-        [Obsolete("Chat is handled by World")]
+        [Obsolete("Chat is handled by World", true)]
         Chat
     }
 }

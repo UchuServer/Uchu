@@ -11,7 +11,7 @@ namespace Uchu.Core.Handlers.Commands
         [CommandHandler(Signature = "stop", Help = "Stops the server")]
         public async Task StopServer()
         {
-            await Server.Stop();
+            await Server.StopAsync();
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
@@ -23,7 +23,7 @@ namespace Uchu.Core.Handlers.Commands
             }
 
             var name = arguments[0];
-                    
+
             if (name.Length > 33)
             {
                 return "Usernames with more than 33 characters is not supported";
@@ -35,7 +35,7 @@ namespace Uchu.Core.Handlers.Commands
                 {
                     return "A user with that username already exists";
                 }
-                        
+
                 Console.Write("Password: ");
                 var password = GetPassword();
 
@@ -56,7 +56,7 @@ namespace Uchu.Core.Handlers.Commands
                 return $"\nSuccessfully added user: {name}!";
             }
         }
-        
+
         [CommandHandler(Signature = "removeuser", Help = "Remove a user")]
         public string RemoveUser(string[] arguments)
         {
@@ -78,10 +78,10 @@ namespace Uchu.Core.Handlers.Commands
 
                 Console.Write("Write the username again to confirm deletion: ");
                 if (Console.ReadLine() != name) return "Deletion aborted";
-                
+
                 ctx.Remove(user);
                 ctx.SaveChanges();
-                            
+
                 return $"Successfully deleted user: {name}";
             }
         }
@@ -96,11 +96,11 @@ namespace Uchu.Core.Handlers.Commands
 
             var name = arguments[0];
             var reason = arguments[1];
-                    
+
             using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
-                        
+
                 if (user == null)
                 {
                     return $"No user with the username of: {name}";
@@ -122,13 +122,13 @@ namespace Uchu.Core.Handlers.Commands
             {
                 return $"{arguments[0]} <name>";
             }
-            
+
             var name = arguments[0];
-            
+
             using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
-                        
+
                 if (user == null)
                 {
                     return $"No user with the username of: {name}";
@@ -138,7 +138,7 @@ namespace Uchu.Core.Handlers.Commands
                 user.BannedReason = null;
 
                 await ctx.SaveChangesAsync();
-                        
+
                 return $"Successfully pardoned {name}!";
             }
         }
@@ -190,7 +190,7 @@ namespace Uchu.Core.Handlers.Commands
                 {
                     return $"No unapproved character with name: \"{arguments[0]}\"";
                 }
-                        
+
                 selectedCharacter.Name = selectedCharacter.CustomName;
                 selectedCharacter.CustomName = "";
 
@@ -213,7 +213,7 @@ namespace Uchu.Core.Handlers.Commands
                         return string.Join("\n",
                                    unApproved.Select(s => s.CustomName)
                                ) + "\nreject <name> / all";
-                    
+
                     foreach (var character in unApproved)
                     {
                         character.NameRejected = true;
@@ -232,9 +232,9 @@ namespace Uchu.Core.Handlers.Commands
                 }
 
                 selectedCharacter.NameRejected = true;
-                
+
                 await ctx.SaveChangesAsync();
-                
+
                 return $"Successfully rejected \"{selectedCharacter.CustomName}\"!";
             }
         }
@@ -271,7 +271,7 @@ namespace Uchu.Core.Handlers.Commands
                       $"level to {(GameMasterLevel) user.GameMasterLevel}";
             }
         }
-        
+
         private static string GetPassword()
         {
             var pwd = new StringBuilder();

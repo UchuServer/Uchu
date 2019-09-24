@@ -7,9 +7,11 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AttackDelay;
 
-        public override async Task Serialize(BitReader reader)
+        public override Task SerializeAsync(BitReader reader)
         {
             // TODO
+
+            return Task.CompletedTask;
         }
     }
 }

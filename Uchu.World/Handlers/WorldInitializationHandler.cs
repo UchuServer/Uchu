@@ -218,28 +218,27 @@ namespace Uchu.World.Handlers
                     }
                 };
 
-                var ms = new MemoryStream();
-
+                using (var ms = new MemoryStream())
                 using (var writer = new StreamWriter(ms, Encoding.UTF8))
                 {
                     Serializer.Serialize(writer, xmlData);
+
+                    var bytes = ms.ToArray();
+                    var xml = new byte[bytes.Length - 3];
+
+                    Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
+
+                    var ldf = new LegoDataDictionary
+                    {
+                        ["accountId"] = session.UserId,
+                        ["objid", 9] = character.CharacterId,
+                        ["name"] = character.Name,
+                        ["template"] = 1,
+                        ["xmlData"] = xml
+                    };
+
+                    connection.Send(new DetailedUserInfoPacket {Data = ldf});
                 }
-
-                var bytes = ms.ToArray();
-                var xml = new byte[bytes.Length - 3];
-
-                Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
-
-                var ldf = new LegoDataDictionary
-                {
-                    ["accountId"] = session.UserId,
-                    ["objid", 9] = character.CharacterId,
-                    ["name"] = character.Name,
-                    ["template"] = 1,
-                    ["xmlData"] = xml
-                };
-
-                connection.Send(new DetailedUserInfoPacket {Data = ldf});
 
                 var player = Player.Construct(character, connection, zone);
 
@@ -259,11 +258,13 @@ namespace Uchu.World.Handlers
                 ).ToArray();
 
                 foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
+                {
                     connection.Send(new NotifyFriendRequestPacket
                     {
                         FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
                         IsBestFriendRequest = friend.RequestingBestFriend
                     });
+                }
             }
         }
 

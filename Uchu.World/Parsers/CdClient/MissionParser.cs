@@ -31,7 +31,7 @@ namespace Uchu.World.Parsers
             }
         }
 
-        private static bool IsCompletedAsync(string str, Mission[] completed)
+        private static bool IsCompleted(string str, Mission[] completed)
         {
             Logger.Information($"Complete: {str} ANY {string.Join(' ', completed.Select(s => s.Id))}");
 
@@ -66,7 +66,7 @@ namespace Uchu.World.Parsers
             return completed.Any(c => c.MissionId == id);
         }
 
-        public static bool CheckPrerequiredMissionsAsync(string missions, Mission[] completed)
+        public static bool CheckPrerequiredMissions(string missions, Mission[] completed)
         {
             if (string.IsNullOrWhiteSpace(missions)) return true;
 
@@ -90,7 +90,7 @@ namespace Uchu.World.Parsers
                     case '&':
                     case ',':
                     {
-                        res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompleted(cur.ToString(), completed), mode);
 
                         cur.Clear();
 
@@ -103,7 +103,7 @@ namespace Uchu.World.Parsers
 
                     case '|':
                     {
-                        res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompleted(cur.ToString(), completed), mode);
 
                         cur.Clear();
 
@@ -112,11 +112,11 @@ namespace Uchu.World.Parsers
                     }
 
                     case '(':
-                        res = Check(res, CheckPrerequiredMissionsAsync(missions.Substring(i + 1), completed), mode);
+                        res = Check(res, CheckPrerequiredMissions(missions.Substring(i + 1), completed), mode);
                         break;
 
                     case ')':
-                        return Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
+                        return Check(res, IsCompleted(cur.ToString(), completed), mode);
 
                     case '0':
                     case '1':
@@ -134,7 +134,7 @@ namespace Uchu.World.Parsers
                 }
             }
 
-            res = Check(res, IsCompletedAsync(cur.ToString(), completed), mode);
+            res = Check(res, IsCompleted(cur.ToString(), completed), mode);
 
             return res;
         }

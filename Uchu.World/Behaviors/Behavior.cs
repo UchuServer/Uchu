@@ -45,7 +45,7 @@ namespace Uchu.World.Behaviors
 
         public abstract BehaviorTemplateId Id { get; }
 
-        public abstract Task Serialize(BitReader reader);
+        public abstract Task SerializeAsync(BitReader reader);
 
         public async Task StartBranch(int behaviorId, BitReader reader)
         {
@@ -62,7 +62,7 @@ namespace Uchu.World.Behaviors
                 instance.BehaviorId = behaviorId;
                 instance.SkillComponent = SkillComponent;
 
-                await instance.Serialize(reader);
+                await instance.SerializeAsync(reader);
 
                 Branches.Add(instance);
             }

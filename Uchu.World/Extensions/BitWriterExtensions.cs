@@ -14,13 +14,12 @@ namespace Uchu.World
 
         public static void WriteLdfCompressed(this BitWriter @this, LegoDataDictionary dict)
         {
-            var stream = new MemoryStream();
-
+            using (var stream = new MemoryStream())
             using (var temp = new BitWriter(stream))
             {
                 Core.BitWriterExtensions.Write(temp, dict);
 
-                var buffer = stream.GetBuffer();
+                var buffer = stream.ToArray();
 
                 var compressed = Zlib.CompressBytes(buffer);
 

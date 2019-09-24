@@ -35,7 +35,7 @@ namespace Uchu.World
                     return character.Currency;
                 }
             }
-            set => Task.Run(async () => { await SetCurrency(value); });
+            set => Task.Run(async () => { await SetCurrencyAsync(value); });
         }
 
         public long EntitledCurrency { get; set; }
@@ -51,7 +51,7 @@ namespace Uchu.World
                     return character.UniverseScore;
                 }
             }
-            set => Task.Run(async () => { await SetUniverseScore(value); });
+            set => Task.Run(async () => { await SetUniverseScoreAsync(value); });
         }
 
         public long Level
@@ -65,7 +65,7 @@ namespace Uchu.World
                     return character.Level;
                 }
             }
-            set => Task.Run(async () => { await SetLevel(value); });
+            set => Task.Run(async () => { await SetLevelAsync(value); });
         }
 
         public static Player Construct(Character character, IRakConnection connection, Zone zone)
@@ -172,11 +172,11 @@ namespace Uchu.World
         public void Message(ISerializable gameMessage)
         {
             Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g}" : "")}");
-            
+
             Connection.Send(gameMessage);
         }
 
-        private async Task SetCurrency(long currency)
+        private async Task SetCurrencyAsync(long currency)
         {
             using (var ctx = new UchuContext())
             {
@@ -195,7 +195,7 @@ namespace Uchu.World
             });
         }
 
-        private async Task SetUniverseScore(long score)
+        private async Task SetUniverseScoreAsync(long score)
         {
             using (var ctx = new UchuContext())
             using (var cdClient = new CdClientContext())
@@ -223,7 +223,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task SetLevel(long level)
+        private async Task SetLevelAsync(long level)
         {
             using (var ctx = new UchuContext())
             using (var cdClient = new CdClientContext())

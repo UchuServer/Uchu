@@ -18,7 +18,7 @@ namespace Uchu.World
     {
         // This number is taken from  testing and is not concrete.
         public const float TargetRange = 11.6f;
-        
+
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
         public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
 
@@ -37,10 +37,6 @@ namespace Uchu.World
         {
         }
 
-        /*
-         * TODO: don't leave streams open
-         */
-        
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
             if (Player == null) return;
@@ -59,14 +55,13 @@ namespace Uchu.World
 
                 var template = await Behavior.GetTemplate(behavior.BehaviorID ?? 0);
 
-                var stream = new MemoryStream(message.Content);
-
                 var executioner = new BehaviorExecutioner
                 {
                     Executioner = Player
                 };
 
-                using (var reader = new BitReader(stream, leaveOpen: true))
+                using (var stream = new MemoryStream(message.Content))
+                using (var reader = new BitReader(stream))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
@@ -79,7 +74,7 @@ namespace Uchu.World
                     if (message.OptionalTarget != null && !(message.OptionalTarget is Player))
                     {
                         var distance = Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position);
-                        
+
                         foreach (var gameObject in Zone.GameObjects.Where(g => g.Layer == Layer.Smashable))
                         {
                             if (gameObject == message.OptionalTarget) continue;
@@ -94,10 +89,10 @@ namespace Uchu.World
                                 goto NoFixedTarget;
                             }
                         }
-                        
+
                         if (distance < TargetRange) executioner.Targets.Add(message.OptionalTarget);
                     }
-                    
+
                     //
                     // No fixed target was specified or could not be verified.
                     //
@@ -128,7 +123,7 @@ namespace Uchu.World
                         UsedMouse = message.UsedMouse
                     });
 
-                    await instance.Serialize(reader);
+                    await instance.SerializeAsync(reader);
                 }
 
                 await Player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
@@ -162,9 +157,8 @@ namespace Uchu.World
 
                 if (message.Content.Length == default) return;
 
-                var stream = new MemoryStream(message.Content);
-
-                using (var reader = new BitReader(stream, leaveOpen: true))
+                using (var stream = new MemoryStream(message.Content))
+                using (var reader = new BitReader(stream))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
@@ -187,9 +181,8 @@ namespace Uchu.World
 
                 if (message.Content.Length == default) return;
 
-                var stream = new MemoryStream(message.Content);
-
-                using (var reader = new BitReader(stream, leaveOpen: true))
+                using (var stream = new MemoryStream(message.Content))
+                using (var reader = new BitReader(stream))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 

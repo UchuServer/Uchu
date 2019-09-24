@@ -36,7 +36,7 @@ namespace Uchu.World
         private long _passedTickTime;
 
         private bool _running;
-        
+
         private int _ticks;
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
@@ -87,7 +87,7 @@ namespace Uchu.World
 
             Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
 
-            Task.Run(async () => { await ExecuteUpdate(); });
+            Task.Run(async () => { await ExecuteUpdateAsync(); });
         }
 
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
@@ -137,53 +137,60 @@ namespace Uchu.World
             return (ZoneChecksum) values.GetValue(names.ToList().IndexOf(name));
         }
 
-        private async Task ExecuteUpdate()
+        private Task ExecuteUpdateAsync()
         {
-            var timer = new Timer(1000);
+            var timer = new Timer
+            {
+                Interval = 1000,
+                AutoReset = true
+            };
 
             timer.Elapsed += (sender, args) =>
             {
                 Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
-                _passedTickTime = default;
-                _ticks = default;
+                _passedTickTime = 0;
+                _ticks = 0;
             };
 
             timer.Start();
 
-            var stopWatch = new Stopwatch();
-
-            stopWatch.Start();
-
-            _running = true;
-            
-            while (_running)
+            return Task.Run(async () =>
             {
-                if (_ticks >= TicksPerSecondLimit) continue;
+                var stopWatch = new Stopwatch();
 
-                await Task.Delay(1000 / TicksPerSecondLimit);
+                stopWatch.Start();
 
-                Task.WaitAll(_objects.Select(o => Task.Run(() =>
+                _running = true;
+
+                while (_running)
                 {
-                    try
+                    if (_ticks >= TicksPerSecondLimit) continue;
+
+                    await Task.Delay(1000 / TicksPerSecondLimit);
+
+                    foreach (var obj in _objects)
                     {
-                        Update(o);
+                        try
+                        {
+                            Update(obj);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                })).ToArray());
 
-                _ticks++;
+                    _ticks++;
 
-                var passedMs = stopWatch.ElapsedMilliseconds;
+                    var passedMs = stopWatch.ElapsedMilliseconds;
 
-                DeltaTime = passedMs / 1000f;
+                    DeltaTime = passedMs / 1000f;
 
-                _passedTickTime += passedMs;
+                    _passedTickTime += passedMs;
 
-                stopWatch.Restart();
-            }
+                    stopWatch.Restart();
+                }
+            });
         }
 
         #region Object Mangement
@@ -205,7 +212,7 @@ namespace Uchu.World
             _objects.Add(obj);
         }
 
-        public void UnRegisterObject(Object obj)
+        public void UnregisterObject(Object obj)
         {
             if (_objects.Contains(obj)) _objects.Remove(obj);
         }
@@ -223,9 +230,9 @@ namespace Uchu.World
         ///     Remove a GameObject from the managed GameObjects of this zone.
         /// </summary>
         /// <param name="gameObject">Managed GameObject</param>
-        public void UnRegisterGameObject(GameObject gameObject)
+        public void UnregisterGameObject(GameObject gameObject)
         {
-            UnRegisterObject(gameObject);
+            UnregisterObject(gameObject);
 
             _gameObjects.Remove(gameObject);
 
@@ -245,10 +252,10 @@ namespace Uchu.World
         public void SendConstruction(GameObject gameObject, IEnumerable<Player> recipients)
         {
             foreach (var recipient in recipients)
+            {
                 recipient.Perspective.Reveal(gameObject, id =>
                 {
-                    var stream = new MemoryStream();
-
+                    using (var stream = new MemoryStream())
                     using (var writer = new BitWriter(stream))
                     {
                         writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
@@ -257,10 +264,11 @@ namespace Uchu.World
                         writer.Write(id);
 
                         gameObject.WriteConstruct(writer);
-                    }
 
-                    recipient.Connection.Send(stream);
+                        recipient.Connection.Send(stream);
+                    }
                 });
+            }
         }
 
         public void SendSerialization(GameObject gameObject)
@@ -279,8 +287,7 @@ namespace Uchu.World
             {
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                var stream = new MemoryStream();
-
+                using (var stream = new MemoryStream())
                 using (var writer = new BitWriter(stream))
                 {
                     writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
@@ -288,9 +295,9 @@ namespace Uchu.World
                     writer.Write(id);
 
                     gameObject.WriteSerialize(writer);
-                }
 
-                recipient.Connection.Send(stream);
+                    recipient.Connection.Send(stream);
+                }
             }
         }
 
@@ -310,16 +317,15 @@ namespace Uchu.World
             {
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                var stream = new MemoryStream();
-
+                using (var stream = new MemoryStream())
                 using (var writer = new BitWriter(stream))
                 {
                     writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
 
                     writer.Write(id);
-                }
 
-                recipient.Connection.Send(stream);
+                    recipient.Connection.Send(stream);
+                }
 
                 recipient.Perspective.Drop(gameObject);
             }

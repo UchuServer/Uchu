@@ -9,13 +9,13 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AlterChainDelay;
 
-        public override async Task Serialize(BitReader reader)
+        public override async Task SerializeAsync(BitReader reader)
         {
-            // TODO: Fix
-            return;
-
             var time = await GetParameter(BehaviorId, "new_delay");
 
+            // TODO: Fix
+
+            /*
             var timer = new Timer
             {
                 Interval = (time.Value ?? 0) * 1000,
@@ -32,6 +32,7 @@ namespace Uchu.World.Behaviors
             timer.Start();
 
             Logger.Debug($"Changed chain timer to {timer.Interval}");
+            */
         }
     }
 }

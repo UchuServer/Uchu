@@ -9,9 +9,16 @@ using Uchu.World.Collections;
 
 namespace Uchu.World.Parsers
 {
-    public static class LevelParser
+    public class LevelParser
     {
-        private static IEnumerable<LevelObject> ParseChunk2001(BitReader reader)
+        private readonly IFileResources _resources;
+
+        public LevelParser(IFileResources resources)
+        {
+            _resources = resources;
+        }
+
+        private IEnumerable<LevelObject> ParseChunk2001(BitReader reader)
         {
             var objCount = reader.Read<uint>();
             var objects = new LevelObject[objCount];
@@ -51,12 +58,12 @@ namespace Uchu.World.Parsers
             return objects;
         }
 
-        public static async Task<LevelObject[]> ParseAsync(string path)
+        public async Task<LevelObject[]> ParseAsync(string path)
         {
-            var data = await Resources.ReadBytesAsync(path);
+            var data = await _resources.ReadBytesAsync(path);
             var objects = new List<LevelObject>();
-            var stream = new MemoryStream(data);
 
+            using (var stream = new MemoryStream(data))
             using (var reader = new BitReader(stream))
             {
                 var header = reader.ReadString(4);

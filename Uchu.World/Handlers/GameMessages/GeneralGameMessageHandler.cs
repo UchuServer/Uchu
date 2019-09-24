@@ -30,17 +30,17 @@ namespace Uchu.World.Handlers.GameMessages
             {
                 var questGiver = message.TargetObject.GetComponent<QuestGiverComponent>();
 
-                questGiver?.OfferMissionAsync(player);
+                questGiver?.OfferMission(player);
             }
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void RequestResurrectHandler(RequestResurrectMessage message, Player player)
         {
             player.GetComponent<DestructibleComponent>().Resurrect();
         }
 
-        [PacketHandler(RunTask = true)]
+        [PacketHandler]
         public void RequestSmashHandler(RequestSmashPlayer message, Player player)
         {
             player.GetComponent<DestructibleComponent>().Smash(player, player);

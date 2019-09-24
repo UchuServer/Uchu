@@ -1,0 +1,44 @@
+version: '{branch}-{build}'
+
+branches:
+  only:
+    - rewrite
+
+skip_tags: true
+
+only_commits:
+  files:
+    - RakDotNet/
+    - Uchu.Auth/
+    - Uchu.Char/
+    - Uchu.Core/
+    - Uchu.World/
+
+image:
+  - Visual Studio 2017
+  - Visual Studio 2019
+  - Ubuntu1604
+  - Ubuntu1804
+
+clone_depth: 1
+
+cache:
+  - packages -> **\*.csproj
+
+install:
+  - git submodule update --init --recursive
+  - dotnet restore
+
+configuration: Release
+
+build:
+  parallel: true
+  project: Uchu.sln
+
+artifacts:
+  - path: Uchu.Auth\bin\
+    name: UchuAuth
+  - path: Uchu.Char\bin\
+    name: UchuChar
+  - path: Uchu.World\bin\
+    name: UchuWorld
