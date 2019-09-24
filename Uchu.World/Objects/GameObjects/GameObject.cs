@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
