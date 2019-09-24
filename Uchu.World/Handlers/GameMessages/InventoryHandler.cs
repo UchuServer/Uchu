@@ -26,7 +26,7 @@ namespace Uchu.World.Handlers.GameMessages
             
             var inventoryManager = player.GetComponent<InventoryManager>();
 
-            inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType);
+            inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType, true);
         }
 
         [PacketHandler(RunTask = true)]

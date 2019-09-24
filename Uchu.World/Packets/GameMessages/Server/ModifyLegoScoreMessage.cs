@@ -14,7 +14,7 @@ namespace Uchu.World
         {
             writer.Write(Score);
 
-            var hasSource = Source != -1;
+            var hasSource = !Source.Equals(-1);
             writer.Write(hasSource);
             if (hasSource) writer.Write(Source);
         }

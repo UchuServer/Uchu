@@ -225,6 +225,42 @@ namespace Uchu.World
             }
         }
 
+        public async Task SetCountSilentAsync(uint count)
+        {
+            using (var ctx = new UchuContext())
+            {
+                if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
+                {
+                    Logger.Error(
+                        $"Trying to set {Lot} count to {_count}, this is beyond the item's stack-size; Setting it to stack-size"
+                    );
+
+                    count = (uint) ItemComponent.StackSize;
+                }
+
+                var item = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
+                
+                _count = count;
+                item.Count = _count;
+                
+                if (item.Count == default)
+                {
+                    ctx.InventoryItems.Remove(item);
+
+                    // Disassemble item.
+                    if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+                    {
+                        foreach (var part in (LegoDataList) list)
+                        {
+                            await Inventory.Manager.AddItemAsync((int) part, 1);
+                        }
+                    }
+                }
+                
+                await ctx.SaveChangesAsync();
+            }
+        }
+        
         private async Task UpdateCount()
         {
             using (var ctx = new UchuContext())

@@ -203,6 +203,11 @@ namespace Uchu.World.Handlers.Commands
             {
                 info.Append($"\n{component.GetType().Name}");
 
+                if (component is StatsComponent stats)
+                {
+                    info.Append($" {stats.HasStats}");
+                }
+
                 if (!arguments.Contains("-p")) continue;
 
                 foreach (var property in component.GetType().GetProperties())
@@ -228,7 +233,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} score";
         }
 
-        [CommandHandler(Signature = "level", Help = "Set your U-score", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "level", Help = "Set your level", GameMasterLevel = GameMasterLevel.Admin)]
         public string Level(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "level <level>";
@@ -241,7 +246,46 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Successfully set your level to {level}";
         }
+        
+        [CommandHandler(Signature = "stat", Help = "Set a stat", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Stat(string[] arguments, Player player)
+        {
+            if (arguments.Length != 2) return "stat <stat> <value>";
 
+            if (!long.TryParse(arguments[1], out var value)) return "Invalid <value>";
+
+            var stats = player.GetComponent<Stats>();
+
+            var stat = arguments[0].ToLower().Replace("-", "").Replace("_", "");
+            switch (stat)
+            {
+                case "health":
+                    stats.Health = (uint) value;
+                    break;
+                case "maxhealth":
+                    stats.MaxHealth = (uint) value;
+                    break;
+                case "armor":
+                    stats.Armor = (uint) value;
+                    break;
+                case "maxarmor":
+                    stats.MaxArmor = (uint) value;
+                    break;
+                case "imagination":
+                    stats.Imagination = (uint) value;
+                    break;
+                case "maximagination":
+                    stats.MaxImagination = (uint) value;
+                    break;
+                default:
+                    return $"{stat} is not a valid <stat>";
+            }
+            
+            GameObject.Serialize(player);
+
+            return $"Successfully set {arguments[0]} to {value}";
+        }
+        
         [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Admin)]
         public string Pvp(string[] arguments, Player player)
         {

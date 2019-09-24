@@ -266,5 +266,22 @@ namespace Uchu.World.Handlers
                     });
             }
         }
+
+        [PacketHandler]
+        public async Task PlayerLoaded(PlayerLoadedMessage message, Player player)
+        {
+            if (player != message.Player)
+            {
+                Logger.Error($"{player} sent invalid {nameof(PlayerLoadedMessage)} player id");
+
+                await player.Connection.CloseAsync();
+                
+                return;
+            }
+
+            player.Message(
+                new RestoreToPostLoadStatsMessage {Associate = player}
+            );
+        }
     }
 }

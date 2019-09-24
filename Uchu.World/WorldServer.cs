@@ -21,6 +21,8 @@ namespace Uchu.World
 
         public readonly List<Zone> Zones = new List<Zone>();
 
+        public event Action<Zone> OnZoneLoaded;
+
         public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
         {
             _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
@@ -94,7 +96,10 @@ namespace Uchu.World
             // Create new Zone
             var zone = new Zone(info, this);
             Zones.Add(zone);
+            
             zone.Initialize();
+
+            OnZoneLoaded?.Invoke(zone);
 
             return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
         }

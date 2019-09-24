@@ -35,7 +35,7 @@ namespace Uchu.World.Behaviors
                         Executioner.Targets.Add(Targets[i]);
 
                     // TODO: Damage
-                    Targets[i].GetComponent<DestructibleComponent>().Smash(GameObject, GameObject);
+                    Targets[i].GetComponent<DestructibleComponent>().Smash(GameObject);
                 }
 
                 var action = await GetParameter(BehaviorId, "action");

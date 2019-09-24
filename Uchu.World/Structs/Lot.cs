@@ -50,6 +50,18 @@ namespace Uchu.World
             return Id;
         }
 
+        public Objects Object
+        {
+            get
+            {
+                using (var cdClient = new CdClientContext())
+                {
+                    var id = Id;
+                    return cdClient.ObjectsTable.FirstOrDefault(o => o.Id == id);
+                }
+            }
+        }
+
         public int GetComponentId(ReplicaComponentsId componentType)
         {
             return GetComponentId((int) componentType);

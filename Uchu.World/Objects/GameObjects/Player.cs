@@ -90,13 +90,7 @@ namespace Uchu.World
             var stats = instance.GetComponent<StatsComponent>();
 
             stats.HasStats = true;
-            stats.CurrentHealth = (uint) character.CurrentHealth;
-            stats.CurrentArmor = (uint) character.CurrentArmor;
-            stats.CurrentImagination = (uint) character.CurrentImagination;
-            stats.MaxHealth = (uint) character.MaximumHealth;
-            stats.MaxArmor = (uint) character.MaximumArmor;
-            stats.MaxImagination = (uint) character.MaximumImagination;
-
+            
             var characterComponent = instance.AddComponent<CharacterComponent>();
 
             characterComponent.Character = character;
@@ -266,7 +260,7 @@ namespace Uchu.World
 
             var smashable = GetComponent<DestructibleComponent>();
 
-            if (smashable == null || !smashable.Alive) return;
+            if (smashable == null || !smashable.CanDrop) return;
 
             switch ((ZoneId) Zone.ZoneInfo.ZoneId)
             {

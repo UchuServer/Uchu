@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -12,14 +13,28 @@ namespace Uchu.World
     public class DestructibleComponent : ReplicaComponent
     {
         private Core.CdClient.DestructibleComponent _cdClientComponent;
-
         private Random _random;
+        
         public override ReplicaComponentsId Id => ReplicaComponentsId.Destructible;
 
-        public bool Alive { get; private set; } = true;
+        public bool CanDrop { get; private set; } = true;
+
+        public float ResurrectTime;
+
+        /// <summary>
+        /// Killer, Loot Owner
+        /// </summary>
+        public event Action<GameObject, Player> OnSmashed;
+
+        public event Action OnResurrect;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
+            if (levelObject.Settings.TryGetValue("respawn", out var resTimer))
+            {
+                ResurrectTime = (float) resTimer;
+            }
+            
             _random = new Random();
 
             GameObject.Layer = Layer.Smashable;
@@ -47,10 +62,16 @@ namespace Uchu.World
         {
         }
 
-        public void Smash(GameObject killer, GameObject lootOwner = default, string animation = default)
+        public void Smash(GameObject killer, Player lootOwner = default, string animation = default)
         {
-            Alive = false;
-
+            if (!CanDrop) return;
+            
+            lootOwner = lootOwner ?? killer as Player;
+            
+            OnSmashed?.Invoke(killer, lootOwner);
+            
+            CanDrop = false;
+            
             if (Player != null)
             {
                 Zone.BroadcastMessage(new DieMessage
@@ -64,24 +85,32 @@ namespace Uchu.World
 
                 var coinToDrop = Math.Min((long) Math.Round(Player.Currency * 0.1), 10000);
                 Player.Currency -= coinToDrop;
-                Player.EntitledCurrency += coinToDrop;
-
-                Player.Message(new DropClientLootMessage
-                {
-                    Associate = Player,
-                    Currency = (int) coinToDrop,
-                    Owner = Player,
-                    Source = Player,
-                    SpawnPosition = Player.Transform.Position
-                });
+                
+                InstancingUtil.Currency((int) coinToDrop, lootOwner, lootOwner, Transform.Position);
 
                 return;
             }
 
+            if (lootOwner == default) return;
+            
+            GameObject.Layer -= Layer.Smashable;
+            GameObject.Layer += Layer.Hidden;
+
+            Task.Run(async () =>
+            {
+                await Task.Delay((int) (ResurrectTime * 1000)); 
+                    
+                CanDrop = true;
+                
+                GameObject.Layer += Layer.Smashable;
+                GameObject.Layer -= Layer.Hidden;
+            });
+
             using (var cdClient = new CdClientContext())
             {
                 var matrices = cdClient.LootMatrixTable.Where(l =>
-                    l.LootMatrixIndex == _cdClientComponent.LootMatrixIndex).ToArray();
+                    l.LootMatrixIndex == _cdClientComponent.LootMatrixIndex
+                ).ToArray();
 
                 foreach (var matrix in matrices)
                 {
@@ -100,47 +129,37 @@ namespace Uchu.World
 
                         if (item.Itemid == null) continue;
 
-                        var drop = GameObject.Instantiate(
-                            Zone,
-                            item.Itemid.Value,
-                            Transform.Position,
-                            Transform.Rotation
-                        );
-
-                        var finalPosition = new Vector3
-                        {
-                            X = Transform.Position.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
-                            Y = Transform.Position.Y,
-                            Z = Transform.Position.Z + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
-                        };
-
-                        Zone.BroadcastMessage(new DropClientLootMessage
-                        {
-                            Associate = killer,
-                            Currency = 0,
-                            Lot = drop.Lot,
-                            Loot = drop,
-                            Owner = killer as Player,
-                            Source = GameObject,
-                            SpawnPosition = drop.Transform.Position + Vector3.UnitY,
-                            FinalPosition = finalPosition
-                        });
-
+                        var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
                         Start(drop);
                     }
+                }
+
+                var currencies = cdClient.CurrencyTableTable.Where(
+                    c => c.CurrencyIndex == _cdClientComponent.CurrencyIndex
+                );
+
+                foreach (var currency in currencies)
+                {
+                    if (currency.Npcminlevel > _cdClientComponent.Level) continue;
+
+                    var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
+                    
+                    InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
                 }
             }
         }
 
         public void Resurrect()
         {
-            Alive = true;
-
             if (Player != null)
+            {
                 Zone.BroadcastMessage(new ResurrectMessage
                 {
                     Associate = Player
                 });
+            }
+            
+            OnResurrect?.Invoke();
         }
     }
 }

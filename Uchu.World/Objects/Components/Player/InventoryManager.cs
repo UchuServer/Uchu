@@ -57,8 +57,6 @@ namespace Uchu.World
 
                 var managedItem = _inventories[(InventoryType) item.InventoryType][id];
 
-                Logger.Information($"Getting item: {id} -> {managedItem}");
-
                 if (managedItem == null) Logger.Error($"{item.InventoryItemId} is not managed on {Player}");
 
                 return managedItem;
@@ -99,6 +97,8 @@ namespace Uchu.World
 
         public void AddItem(int lot, uint count, InventoryType inventoryType)
         {
+            var inventory = _inventories[inventoryType];
+            
             // The math here cannot be executed in parallel
             lock (_lock)
             {
@@ -131,8 +131,6 @@ namespace Uchu.World
                     // Bricks and alike does not have a stack limit.
                     if (stackSize == default) stackSize = int.MaxValue;
 
-                    var inventory = _inventories[inventoryType];
-
                     //
                     // Update quest tasks
                     //
@@ -159,8 +157,6 @@ namespace Uchu.World
 
                         var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
 
-                        Logger.Debug($"Stack Math: {stackSize}, {count}, ({stackSize} - {item.Count}): {stackSize - item.Count} ; Min = {toAdd}");
-                        
                         item.Count += toAdd;
 
                         count -= toAdd;
@@ -188,7 +184,7 @@ namespace Uchu.World
             }
         }
 
-        public async Task RemoveItemAsync(int lot, uint count)
+        public async Task RemoveItemAsync(int lot, uint count, bool silent = false)
         {
             using (var cdClient = new CdClientContext())
             {
@@ -216,11 +212,11 @@ namespace Uchu.World
 
                 Debug.Assert(component.ItemType != null, "component.ItemType != null");
 
-                RemoveItem(lot, count, ((ItemType) component.ItemType).GetInventoryType());
+                RemoveItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), silent);
             }
         }
 
-        public void RemoveItem(int lot, uint count, InventoryType inventoryType)
+        public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
             // The math here cannot be executed in parallel
             lock (_lock)
@@ -261,7 +257,12 @@ namespace Uchu.World
                     {
                         var toRemove = (uint) Min((int) count, (int) item.Count);
 
-                        item.Count -= toRemove;
+                        if (!silent) item.Count -= toRemove;
+                        else
+                        {
+                            var storedCount = count;
+                            Task.Run(async () => { await item.SetCountSilentAsync(storedCount); });
+                        }
 
                         count -= toRemove;
 

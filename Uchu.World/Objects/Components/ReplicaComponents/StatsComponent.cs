@@ -5,26 +5,24 @@ namespace Uchu.World
 {
     public class StatsComponent : ReplicaComponent
     {
+        private Stats _stats;
+        
         public bool HasStats { get; set; } = true;
-
-        public uint CurrentHealth { get; set; } = 4;
-
-        public uint CurrentArmor { get; set; }
-
-        public uint CurrentImagination { get; set; }
-
-        public uint MaxHealth { get; set; } = 4;
-
-        public uint MaxArmor { get; set; }
-
-        public uint MaxImagination { get; set; }
 
         public int[] Factions { get; set; } = {1};
 
-        public bool Smashable { get; set; } = false;
-
         public override ReplicaComponentsId Id => ReplicaComponentsId.Invalid;
 
+        public StatsComponent()
+        {
+            OnStart += () =>
+            {
+                // Stats should be centralized
+                if (!GameObject.TryGetComponent(out _stats))
+                    _stats = GameObject.AddComponent<Stats>();
+            };
+        }
+        
         public override void FromLevelObject(LevelObject levelObject)
         {
             HasStats = false;
@@ -43,7 +41,7 @@ namespace Uchu.World
                 writer.WriteBit(false);
                 writer.WriteBit(false);
 
-                if (Smashable)
+                if (_stats.Smashable)
                 {
                     writer.WriteBit(false);
                     writer.WriteBit(false);
@@ -68,29 +66,29 @@ namespace Uchu.World
 
             if (!HasStats) return;
 
-            writer.Write(CurrentHealth);
-            writer.Write<float>(MaxHealth);
+            writer.Write(_stats.Health);
+            writer.Write<float>(_stats.MaxHealth);
 
-            writer.Write(CurrentArmor);
-            writer.Write<float>(MaxArmor);
+            writer.Write(_stats.Armor);
+            writer.Write<float>(_stats.Armor);
 
-            writer.Write(CurrentImagination);
-            writer.Write<float>(MaxImagination);
+            writer.Write(_stats.Imagination);
+            writer.Write<float>(_stats.Imagination);
 
             writer.Write<uint>(0);
             writer.WriteBit(true);
             writer.WriteBit(false);
             writer.WriteBit(false);
 
-            writer.Write<float>(MaxHealth);
-            writer.Write<float>(MaxArmor);
-            writer.Write<float>(MaxImagination);
+            writer.Write<float>(_stats.Health);
+            writer.Write<float>(_stats.Armor);
+            writer.Write<float>(_stats.Imagination);
 
             writer.Write((uint) Factions.Length);
 
             foreach (var faction in Factions) writer.Write(faction);
 
-            writer.WriteBit(Smashable);
+            writer.WriteBit(_stats.Smashable);
         }
     }
 }
