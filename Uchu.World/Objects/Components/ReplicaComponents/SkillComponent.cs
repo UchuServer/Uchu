@@ -16,7 +16,14 @@ namespace Uchu.World
 {
     public class SkillComponent : ReplicaComponent
     {
-        // This number is taken from  testing and is not concrete.
+        /*
+         * TODO: Rework
+         * 
+         * Right now the contents of skill packages are kept in stream which may be accessed later, no they cannot be
+         * closed. This has to be fixed.
+         */
+        
+        // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
 
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
@@ -60,8 +67,8 @@ namespace Uchu.World
                     Executioner = Player
                 };
 
-                using (var stream = new MemoryStream(message.Content))
-                using (var reader = new BitReader(stream))
+                var stream = new MemoryStream(message.Content);
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
@@ -157,8 +164,8 @@ namespace Uchu.World
 
                 if (message.Content.Length == default) return;
 
-                using (var stream = new MemoryStream(message.Content))
-                using (var reader = new BitReader(stream))
+                var stream = new MemoryStream(message.Content);
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
@@ -181,8 +188,8 @@ namespace Uchu.World
 
                 if (message.Content.Length == default) return;
 
-                using (var stream = new MemoryStream(message.Content))
-                using (var reader = new BitReader(stream))
+                var stream = new MemoryStream(message.Content);
+                using (var reader = new BitReader(stream, leaveOpen: true))
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 

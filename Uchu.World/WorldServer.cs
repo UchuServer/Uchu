@@ -20,9 +20,13 @@ namespace Uchu.World
         private readonly ZoneId[] _zoneIds;
 
         public readonly List<Zone> Zones = new List<Zone>();
+        
+        public readonly ZoneParser ZoneParser;
 
         public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
         {
+            ZoneParser = new ZoneParser(Resources);
+            
             _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
@@ -59,7 +63,7 @@ namespace Uchu.World
             });
         }
 
-        public Task HandleDisconnect(IPEndPoint point, CloseReason reason)
+        private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
         {
             Logger.Information($"{point} disconnected: {reason}");
 

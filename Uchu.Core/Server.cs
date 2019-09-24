@@ -72,13 +72,21 @@ namespace Uchu.Core
                 Logger.Warning("No config file found, creating default.");
             }
 
+            if (!string.IsNullOrWhiteSpace(Config.ResourcesConfiguration?.GameResourceFolder))
+            {
+                Logger.Information($"Using Local Resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
+                Resources = new LocalResources(Config);
+            }
 
 
-            Port =
-                type == ServerType.Authentication ? 21836 :
-                type == ServerType.Character ? Config.Character.Port :
-                type == ServerType.World ? Config.World.Port :
-                throw new NotSupportedException();
+            
+            Port = type switch
+            {
+                ServerType.Authentication => 21836,
+                ServerType.Character => Config.Character.Port,
+                ServerType.World => Config.World.Port,
+                _ => throw new NotSupportedException($"{type} is not a supported ServerType")
+            };
 
             RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
             SessionCache = new RedisSessionCache();
