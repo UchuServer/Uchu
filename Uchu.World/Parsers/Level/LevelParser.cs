@@ -62,8 +62,8 @@ namespace Uchu.World.Parsers
         {
             var data = await _resources.ReadBytesAsync(path);
             var objects = new List<LevelObject>();
-            var stream = new MemoryStream(data);
 
+            using (var stream = new MemoryStream(data))
             using (var reader = new BitReader(stream))
             {
                 var header = reader.ReadString(4);

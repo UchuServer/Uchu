@@ -9,13 +9,15 @@ namespace Uchu.Core
     {
         public static void Read(this BitReader @this, IDeserializable serializable) => serializable.Deserialize(@this);
 
-        public static IEnumerable<byte> ReadBytes(this BitReader @this, int bytes)
+        public static byte[] ReadBytes(this BitReader @this, int bytes)
         {
             Span<byte> buf = stackalloc byte[bytes];
+
             @this.Read(buf, buf.Length * 8);
+
             return buf.ToArray();
         }
-        
+
         public static string ReadString(this BitReader @this, int length = 33, bool wide = false)
         {
             var builder = new StringBuilder();
