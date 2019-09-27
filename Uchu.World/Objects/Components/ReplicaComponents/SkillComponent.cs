@@ -72,10 +72,6 @@ namespace Uchu.World
                 {
                     Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
-                    Logger.Debug(
-                        $"Starting behaviour {(BehaviorTemplateId) template.TemplateID}: Target = {message.OptionalTarget}"
-                    );
-
                     // Remove player check for *tap to die* :P
                     // TODO: Remove, replace with PvP checks
                     if (message.OptionalTarget != null && !(message.OptionalTarget is Player))
@@ -109,6 +105,8 @@ namespace Uchu.World
                         Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
                     );
 
+                    Logger.Information($"{GameObject} is starting skill {message.SkillHandle}");
+                    
                     HandledSkills.Add(message.SkillHandle, instance);
 
                     instance.Executioner = executioner;
@@ -174,7 +172,8 @@ namespace Uchu.World
                     await head.StartBranch(head.BehaviorId, reader);
                 }
             }
-            else if (HandledSkills.TryGetValue(message.SkillHandle, out head))
+            
+            if (HandledSkills.TryGetValue(message.SkillHandle, out head))
             {
                 Logger.Debug($"Syncing skill Done = {message.Done}, Handle = {message.SkillHandle}");
 

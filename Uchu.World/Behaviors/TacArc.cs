@@ -7,6 +7,8 @@ namespace Uchu.World.Behaviors
     public class TacArc : Behavior
     {
         public bool Hit { get; private set; }
+        
+        public bool EnvironmentCheck { get; private set; }
 
         public GameObject[] Targets { get; private set; }
 
@@ -16,26 +18,34 @@ namespace Uchu.World.Behaviors
         {
             Hit = reader.ReadBit();
 
+            Logger.Debug($"TacArc.Hit = {Hit}");
+            
             if (Hit)
             {
                 var param = await GetParameter(BehaviorId, "check_env");
 
                 if (param.Value > 0)
-                    reader.ReadBit();
+                    EnvironmentCheck = reader.ReadBit();
+                
+                Logger.Debug($"TacArc.EnvironmentCheck = {EnvironmentCheck}");
 
                 Targets = new GameObject[reader.Read<uint>()];
 
                 for (var i = 0; i < Targets.Length; i++)
                 {
-                    Targets[i] = reader.ReadGameObject(GameObject.Zone);
+                    var target = reader.ReadGameObject(GameObject.Zone);
+                    
+                    if (target == default) continue;
 
-                    Logger.Debug($"{GameObject} hit {Targets[i]}");
+                    Logger.Debug($"{GameObject} hit {target}");
 
-                    if (!Executioner.Targets.Contains(Targets[i]))
-                        Executioner.Targets.Add(Targets[i]);
+                    if (!Executioner.Targets.Contains(target))
+                        Executioner.Targets.Add(target);
 
                     // TODO: Damage
-                    Targets[i].GetComponent<DestructibleComponent>().Smash(GameObject);
+                    target.GetComponent<DestructibleComponent>().Smash(GameObject);
+
+                    Targets[i] = target;
                 }
 
                 var action = await GetParameter(BehaviorId, "action");

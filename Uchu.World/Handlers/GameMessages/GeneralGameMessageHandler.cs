@@ -28,9 +28,7 @@ namespace Uchu.World.Handlers.GameMessages
             }
             else
             {
-                var questGiver = message.TargetObject.GetComponent<QuestGiverComponent>();
-
-                questGiver?.OfferMission(player);
+                message.TargetObject.Interact(player);
             }
         }
 

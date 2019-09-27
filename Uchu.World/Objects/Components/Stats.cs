@@ -29,7 +29,7 @@ namespace Uchu.World
                 
                 if (value == _health) return;
                 
-                OnHealthChanged?.Invoke(value, (int) (value - _health));
+                OnHealthChanged?.Invoke(value, (int) ((int) value - _health));
                 
                 _health = value;
 
@@ -42,7 +42,7 @@ namespace Uchu.World
             get => _maxHealth;
             set
             {
-                OnMaxHealthChanged?.Invoke(value, (int) (value - _maxHealth));
+                OnMaxHealthChanged?.Invoke(value,  (int) ((int) value -  _maxHealth));
 
                 _maxHealth = value;
             }
@@ -57,7 +57,7 @@ namespace Uchu.World
                 
                 if (value == _armor) return;
                 
-                OnArmorChanged?.Invoke(value, (int) (value - _armor));
+                OnArmorChanged?.Invoke(value, (int) ((int) value - _armor));
 
                 _armor = value;
             }
@@ -68,7 +68,7 @@ namespace Uchu.World
             get => _maxArmor;
             set
             {
-                OnMaxArmorChanged?.Invoke(value, (int) (value - _maxArmor));
+                OnMaxArmorChanged?.Invoke(value, (int) ((int) value - _maxArmor));
 
                 _maxArmor = value;
             }
@@ -83,7 +83,7 @@ namespace Uchu.World
                 
                 if (value == _imagination) return;
                 
-                OnImaginationChanged?.Invoke(value, (int) (value - _imagination));
+                OnImaginationChanged?.Invoke(value, (int) ((int) value - _imagination));
 
                 _imagination = value;
             }
@@ -94,7 +94,7 @@ namespace Uchu.World
             get => _maxImagination;
             set
             {
-                OnMaxImaginationChanged?.Invoke(value, (int) (value - _maxImagination));
+                OnMaxImaginationChanged?.Invoke(value, (int) ((int) value - _maxImagination));
 
                 _maxImagination = value;
             }

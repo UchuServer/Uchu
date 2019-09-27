@@ -1,7 +1,6 @@
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using RakDotNet.IO;
-using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -9,30 +8,29 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AlterChainDelay;
 
+        public float Delay { get; private set; }
+
         public override async Task SerializeAsync(BitReader reader)
         {
-            var time = await GetParameter(BehaviorId, "new_delay");
+            Delay = (await GetParameter(BehaviorId, "new_delay")).Value ?? 0;
+            
+            var source = new CancellationTokenSource();
+            var token = source.Token;
+            
+            Executioner.ChainCancellationToken.Cancel();
 
-            // TODO: Fix
-
-            /*
-            var timer = new Timer
+            Task.Run(async () =>
             {
-                Interval = (time.Value ?? 0) * 1000,
-                AutoReset = false
-            };
+                await Task.Delay((int) (Delay * 1000), token);
+                
+                if (token.IsCancellationRequested) return;
 
-            timer.Elapsed += Executioner.ActiveChainCallback;
+                Executioner.ChainAction();
 
-            Executioner.ActiveChainTimer.Enabled = false;
-            Executioner.ActiveChainTimer.Dispose();
+                Executioner.ChainAction = null;
+            }, token);
 
-            Executioner.ActiveChainTimer = timer;
-
-            timer.Start();
-
-            Logger.Debug($"Changed chain timer to {timer.Interval}");
-            */
+            Executioner.ChainCancellationToken = source;
         }
     }
 }

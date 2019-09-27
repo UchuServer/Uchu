@@ -66,6 +66,8 @@ namespace Uchu.World
 
         public event Action<Mask> OnLayerChanged;
 
+        public event Action<Player> OnInteract;
+
         #region Operators
 
         public static implicit operator long(GameObject gameObject)
@@ -76,6 +78,15 @@ namespace Uchu.World
 
         #endregion
 
+        #region Events
+
+        public void Interact(Player player)
+        {
+            OnInteract?.Invoke(player);
+        }
+
+        #endregion
+        
         #region Utils
 
         public override string ToString()

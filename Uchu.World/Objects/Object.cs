@@ -5,6 +5,8 @@ namespace Uchu.World
 {
     public abstract class Object
     {
+        private bool _started;
+        
         public Zone Zone;
 
         public Server Server => Zone.Server;
@@ -37,6 +39,9 @@ namespace Uchu.World
 
         public static void Start(Object obj)
         {
+            if (obj._started) return;
+            obj._started = true;
+            
             obj.Zone.RegisterObject(obj);
 
             obj.OnStart?.Invoke();

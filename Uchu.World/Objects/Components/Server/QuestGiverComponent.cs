@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Uchu.Core;
 using Uchu.Core.CdClient;
@@ -11,12 +12,15 @@ namespace Uchu.World
     {
         public QuestGiverComponent()
         {
-            OnStart += CollectMissions;
+            OnStart += () =>
+            {
+                CollectMissions();
+
+                GameObject.OnInteract += OfferMission;
+            };
         }
 
-        public MissionNPCComponent[] MissionComponents { get; private set; }
-
-        public Missions[] Quests { get; set; }
+        public (Missions, MissionNPCComponent)[] Quests { get; set; }
 
         private void CollectMissions()
         {
@@ -26,34 +30,37 @@ namespace Uchu.World
                     c => c.Id == GameObject.Lot && c.Componenttype == (int) ReplicaComponentsId.QuestGiver
                 ).ToArray();
 
-                MissionComponents = components.SelectMany(
+                var missionComponents = components.SelectMany(
                     component => ctx.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
                 ).ToArray();
 
-                Quests = MissionComponents.SelectMany(
-                    component => ctx.MissionsTable.Where(m => m.Id == component.MissionID)
+                Quests = missionComponents.Select(
+                    component => (ctx.MissionsTable.First(m => m.Id == component.MissionID), component)
                 ).ToArray();
             }
 
-            Logger.Information($"{GameObject} is a quest give with {MissionComponents.Length} missions");
+            Logger.Information(
+                $"{GameObject} is a quest give with: {string.Join(" ", Quests.Select(s => s.Item1.Id))}");
         }
 
         public void OfferMission(Player player)
         {
             var questInventory = player.GetComponent<QuestInventory>();
 
-            foreach (var component in MissionComponents)
+            player.SendChatMessage($"\n\n\nInteracting with {GameObject.ClientName} [{Quests.Length}]\n");
+
+            try
             {
-                //
-                // Get all of the missions the player has active, completed, or otherwise interacted with.
-                // I.e Missions not started will not be included.
-                //
-
-                var playerMissions = questInventory.GetMissions();
-
-                foreach (var quest in Quests.Where(q => q.Id == component.MissionID))
+                foreach (var (quest, component) in Quests)
                 {
-                    if (!(quest.IsMission ?? false)) continue; // Is achievement
+                    //
+                    // Get all of the missions the player has active, completed, or otherwise interacted with.
+                    // I.e Missions not started will not be included.
+                    //
+
+                    var playerMissions = questInventory.GetMissions();
+
+                    player.SendChatMessage($"Checking: {quest.Id}");
 
                     // Get the quest id.
                     if (quest.Id == default) continue;
@@ -77,6 +84,8 @@ namespace Uchu.World
 
                         if (missionState == MissionState.ReadyToComplete)
                         {
+                            player.SendChatMessage($"Can complete: {quest.Id}");
+
                             //
                             // Offer mission hand in to the player.
                             //
@@ -117,7 +126,8 @@ namespace Uchu.World
                             case MissionState.Completed:
                             case MissionState.CompletedActive:
                             case MissionState.CompletedReadyToComplete:
-                                return;
+                                player.SendChatMessage($"Unavailable mission: {quest.Id} [{missionState}]");
+                                continue;
                             default:
                                 throw new ArgumentOutOfRangeException(
                                     nameof(missionState), $"{missionState} is not a valid {nameof(MissionState)}"
@@ -134,6 +144,8 @@ namespace Uchu.World
                         questInventory.GetCompletedMissions()
                     );
 
+                    player.SendChatMessage($"Prerequisite for: {quest.Id} [{hasPrerequisite}]");
+
                     if (!hasPrerequisite) continue;
 
                     //
@@ -144,6 +156,10 @@ namespace Uchu.World
 
                     return;
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
             }
         }
     }

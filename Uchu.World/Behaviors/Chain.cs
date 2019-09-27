@@ -1,5 +1,5 @@
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using RakDotNet.IO;
 using Uchu.Core;
 
@@ -8,6 +8,8 @@ namespace Uchu.World.Behaviors
     public class Chain : Behavior
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Chain;
+        
+        public float Delay { get; private set; }
 
         public override async Task SerializeAsync(BitReader reader)
         {
@@ -15,26 +17,30 @@ namespace Uchu.World.Behaviors
 
             var behaviorParam = await GetParameter(BehaviorId, $"behavior {index}");
 
-            var delay = await GetParameter(BehaviorId, "chain_delay");
+            Delay = (await GetParameter(BehaviorId, "chain_delay")).Value ?? 0;
 
-            Logger.Debug($"Chain: {delay.Value}s delay");
+            Logger.Debug($"Chain: {Delay}s delay");
 
-            var timer = new Timer
-            {
-                Interval = (delay.Value ?? 0) * 1000,
-                AutoReset = false
-            };
+            var source = new CancellationTokenSource();
+            var token = source.Token;
 
-            Executioner.ActiveChainCallback = async (sender, args) =>
+            Executioner.ChainAction = async () =>
             {
                 if (behaviorParam.Value != null) await StartBranch((int) behaviorParam.Value, reader);
             };
+            
+            Task.Run(async () =>
+            {
+                await Task.Delay((int) (Delay * 1000), token);
+                
+                if (token.IsCancellationRequested) return;
 
-            timer.Elapsed += Executioner.ActiveChainCallback;
+                Executioner.ChainAction();
 
-            Executioner.ActiveChainTimer = timer;
+                Executioner.ChainAction = null;
+            }, token);
 
-            timer.Start();
+            Executioner.ChainCancellationToken = source;
         }
     }
 }

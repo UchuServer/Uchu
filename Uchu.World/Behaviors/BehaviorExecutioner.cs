@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Timers;
 using Uchu.Core;
 
@@ -9,9 +11,9 @@ namespace Uchu.World.Behaviors
         public readonly List<GameObject> Targets = new List<GameObject>();
         public Player Executioner;
 
-        public Timer ActiveChainTimer { get; set; }
+        public CancellationTokenSource ChainCancellationToken;
 
-        public ElapsedEventHandler ActiveChainCallback { get; set; }
+        public Action ChainAction;
 
         public void Execute()
         {
