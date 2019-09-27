@@ -52,11 +52,13 @@ namespace Uchu.World
             }
         }
 
-        public SpawnerComponent SpawnerObject { get; private set; }
-
         public string Name { get; set; }
+        
+        public LegoDataDictionary Settings { get; set; } = new LegoDataDictionary();
 
         public string ClientName { get; private set; }
+
+        public SpawnerComponent SpawnerObject { get; private set; }
 
         public virtual Transform Transform => _components.First(c => c is Transform) as Transform;
 
@@ -344,6 +346,7 @@ namespace Uchu.World
                 );
 
                 instance.SpawnerObject = spawner;
+                instance.Settings = levelObject.Settings;
 
                 //
                 // Collect all the components on this object
@@ -413,16 +416,6 @@ namespace Uchu.World
                 //
                 // Check if this object has a spawn activator attached to it
                 //
-
-                if (levelObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) && (bool) spawnActivator)
-                    Instantiate(new LevelObject
-                    {
-                        Lot = 6604,
-                        Position = (Vector3) levelObject.Settings["rebuild_activators"],
-                        Rotation = Quaternion.Identity,
-                        Scale = -1,
-                        Settings = new LegoDataDictionary()
-                    }, parent);
 
                 //
                 // Setup all the components

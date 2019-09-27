@@ -6,7 +6,7 @@ namespace Uchu.World
 {
     public class ScriptedActivityComponent : ReplicaComponent
     {
-        public List<GameObject> Players { get; set; } = new List<GameObject>();
+        public readonly List<GameObject> Participants = new List<GameObject>();
 
         public float[] Parameters { get; set; } = new float[10];
 
@@ -24,9 +24,9 @@ namespace Uchu.World
         public override void Serialize(BitWriter writer)
         {
             writer.WriteBit(true);
-            writer.Write((uint) Players.Count);
+            writer.Write((uint) Participants.Count);
 
-            foreach (var contributor in Players)
+            foreach (var contributor in Participants)
             {
                 writer.Write(contributor);
 

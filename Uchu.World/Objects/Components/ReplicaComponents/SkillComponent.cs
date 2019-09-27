@@ -46,7 +46,7 @@ namespace Uchu.World
 
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
-            if (Player == null) return;
+            if (As<Player>() == null) return;
 
             using (var cdClient = new CdClientContext())
             {
@@ -64,7 +64,7 @@ namespace Uchu.World
 
                 var executioner = new BehaviorExecutioner
                 {
-                    Executioner = Player
+                    Executioner = As<Player>()
                 };
 
                 var stream = new MemoryStream(message.Content);
@@ -131,7 +131,7 @@ namespace Uchu.World
                     await instance.SerializeAsync(reader);
                 }
 
-                await Player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                await As<Player>().GetComponent<QuestInventory>().UpdateObjectTaskAsync(
                     MissionTaskType.UseSkill, message.SkillId
                 );
             }

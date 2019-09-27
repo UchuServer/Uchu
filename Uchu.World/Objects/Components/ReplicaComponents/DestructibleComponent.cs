@@ -66,25 +66,25 @@ namespace Uchu.World
         {
             if (!CanDrop) return;
             
-            lootOwner = lootOwner ?? killer as Player;
+            lootOwner ??= killer as Player;
             
             OnSmashed?.Invoke(killer, lootOwner);
             
             CanDrop = false;
             
-            if (Player != null)
+            if (As<Player>() != null)
             {
                 Zone.BroadcastMessage(new DieMessage
                 {
-                    Associate = Player,
+                    Associate = As<Player>(),
                     DeathType = animation ?? "",
                     Killer = killer,
                     SpawnLoot = false,
-                    LootOwner = lootOwner ?? Player
+                    LootOwner = lootOwner ?? As<Player>()
                 });
 
-                var coinToDrop = Math.Min((long) Math.Round(Player.Currency * 0.1), 10000);
-                Player.Currency -= coinToDrop;
+                var coinToDrop = Math.Min((long) Math.Round(As<Player>().Currency * 0.1), 10000);
+                As<Player>().Currency -= coinToDrop;
                 
                 InstancingUtil.Currency((int) coinToDrop, lootOwner, lootOwner, Transform.Position);
 
@@ -106,56 +106,54 @@ namespace Uchu.World
                 GameObject.Layer -= Layer.Hidden;
             });
 
-            using (var cdClient = new CdClientContext())
+            using var cdClient = new CdClientContext();
+            var matrices = cdClient.LootMatrixTable.Where(l =>
+                l.LootMatrixIndex == _cdClientComponent.LootMatrixIndex
+            ).ToArray();
+
+            foreach (var matrix in matrices)
             {
-                var matrices = cdClient.LootMatrixTable.Where(l =>
-                    l.LootMatrixIndex == _cdClientComponent.LootMatrixIndex
-                ).ToArray();
+                var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
-                foreach (var matrix in matrices)
+                var items = cdClient.LootTableTable.Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
+
+                for (var i = 0; i < count; i++)
                 {
-                    var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
+                    var proc = _random.NextDouble();
 
-                    var items = cdClient.LootTableTable.Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
+                    if (!(proc <= matrix.Percent)) continue;
 
-                    for (var i = 0; i < count; i++)
-                    {
-                        var proc = _random.NextDouble();
+                    var item = items[_random.Next(0, items.Count)];
+                    items.Remove(item);
 
-                        if (!(proc <= matrix.Percent)) continue;
+                    if (item.Itemid == null) continue;
 
-                        var item = items[_random.Next(0, items.Count)];
-                        items.Remove(item);
-
-                        if (item.Itemid == null) continue;
-
-                        var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
-                        Start(drop);
-                    }
+                    var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
+                    Start(drop);
                 }
+            }
 
-                var currencies = cdClient.CurrencyTableTable.Where(
-                    c => c.CurrencyIndex == _cdClientComponent.CurrencyIndex
-                );
+            var currencies = cdClient.CurrencyTableTable.Where(
+                c => c.CurrencyIndex == _cdClientComponent.CurrencyIndex
+            );
 
-                foreach (var currency in currencies)
-                {
-                    if (currency.Npcminlevel > _cdClientComponent.Level) continue;
+            foreach (var currency in currencies)
+            {
+                if (currency.Npcminlevel > _cdClientComponent.Level) continue;
 
-                    var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
+                var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
                     
-                    InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
-                }
+                InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
             }
         }
 
         public void Resurrect()
         {
-            if (Player != null)
+            if (As<Player>() != null)
             {
                 Zone.BroadcastMessage(new ResurrectMessage
                 {
-                    Associate = Player
+                    Associate = As<Player>()
                 });
             }
             

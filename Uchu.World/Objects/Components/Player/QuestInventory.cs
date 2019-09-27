@@ -40,7 +40,7 @@ namespace Uchu.World
 
         public void MessageOfferMission(int missionId, GameObject questGiver)
         {
-            Player.Message(new OfferMissionMessage
+            As<Player>().Message(new OfferMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -65,7 +65,7 @@ namespace Uchu.World
 
             if (state == MissionState.ReadyToComplete) state = MissionState.Active;
 
-            Player.Message(new NotifyMissionMessage
+            As<Player>().Message(new NotifyMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -76,7 +76,7 @@ namespace Uchu.World
 
         public void MessageMissionTypeState(MissionLockState state, string subType, string type)
         {
-            Player.Message(new SetMissionTypeStateMessage
+            As<Player>().Message(new SetMissionTypeStateMessage
             {
                 Associate = GameObject,
                 LockState = state,
@@ -87,7 +87,7 @@ namespace Uchu.World
 
         public void MessageUpdateMissionTask(int missionId, int taskIndex, float[] updates)
         {
-            Player.Message(new NotifyMissionTaskMessage
+            As<Player>().Message(new NotifyMissionTaskMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
@@ -189,7 +189,7 @@ namespace Uchu.World
             // Offer any fallow up missions from the quest giver.
             //
 
-            questGiver.GetComponent<QuestGiverComponent>().OfferMission(Player);
+            questGiver.GetComponent<QuestGiverComponent>().OfferMission(As<Player>());
         }
 
         public async Task CompleteMissionAsync(int missionId)
@@ -258,8 +258,8 @@ namespace Uchu.World
             // Update player based on rewards.
             //
             
-            Player.Currency += mission.Rewardcurrency ?? 0;
-            Player.UniverseScore += mission.LegoScore ?? 0;
+            As<Player>().Currency += mission.Rewardcurrency ?? 0;
+            As<Player>().UniverseScore += mission.LegoScore ?? 0;
 
             character.MaximumHealth += mission.Rewardmaxhealth ?? 0;
             character.MaximumImagination += mission.Rewardmaximagination ?? 0;
@@ -386,7 +386,7 @@ namespace Uchu.World
 
                         if (task.TargetValue > characterTask.Values.Count)
                         {
-                            Logger.Information($"{Player} collected {component.CollectibleId}");
+                            Logger.Information($"{GameObject} collected {component.CollectibleId}");
 
                             characterTask.Values.Add(component.CollectibleId);
                         }

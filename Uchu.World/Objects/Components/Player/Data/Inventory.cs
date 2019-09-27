@@ -25,7 +25,7 @@ namespace Uchu.World
             {
                 var playerCharacter = ctx.Characters
                     .Include(c => c.Items)
-                    .First(c => c.CharacterId == manager.Player.ObjectId);
+                    .First(c => c.CharacterId == manager.GameObject.ObjectId);
 
                 var inventoryItems = playerCharacter.Items
                     .Where(item => (InventoryType) item.InventoryType == inventoryType)

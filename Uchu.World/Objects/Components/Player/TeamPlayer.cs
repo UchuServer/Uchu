@@ -4,18 +4,18 @@ namespace Uchu.World
     {
         public void MessageSetLeader(Player player)
         {
-            Player.Message(new TeamSetLeaderMessage
+            As<Player>().Message(new TeamSetLeaderMessage
             {
-                Associate = Player,
+                Associate = GameObject,
                 NewLeader = player
             });
         }
 
         public void MessageAddPlayer(Player player)
         {
-            Player.Message(new TeamAddPlayerMessage
+            As<Player>().Message(new TeamAddPlayerMessage
             {
-                Associate = Player,
+                Associate = GameObject,
                 Player = player
             });
         }

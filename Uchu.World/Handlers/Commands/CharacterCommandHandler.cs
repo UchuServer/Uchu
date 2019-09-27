@@ -193,6 +193,8 @@ namespace Uchu.World.Handlers.Commands
 
             info.Append($"[{current.Lot}] \"{current.ClientName}\"");
 
+            if (arguments.Contains("-s")) info.Append($"\n{current.Settings}");
+
             if (arguments.Contains("-l")) info.Append($"\nLayers: {Convert.ToString(current.Layer.Value, 2)}");
 
             var components = arguments.Contains("-r") ? current.ReplicaComponents : current.GetAllComponents();

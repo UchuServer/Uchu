@@ -43,5 +43,14 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.GetComponent<DestructibleComponent>().Smash(player, player);
         }
+
+        [PacketHandler]
+        public void RebuildCancel(RebuildCancelMessage message, Player player)
+        {
+            if (message.Associate.TryGetComponent<RebuildComponent>(out var rebuild))
+            {
+                rebuild.StopRebuild(player, RebuildFailReason.Unknown);
+            }
+        }
     }
 }

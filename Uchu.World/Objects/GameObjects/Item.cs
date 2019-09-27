@@ -94,12 +94,12 @@ namespace Uchu.World
             using (var ctx = new UchuContext())
             {
                 var item = ctx.InventoryItems.FirstOrDefault(
-                    i => i.InventoryItemId == itemId && i.Character.CharacterId == inventory.Manager.Player.ObjectId
+                    i => i.InventoryItemId == itemId && i.Character.CharacterId == inventory.Manager.GameObject.ObjectId
                 );
 
                 if (item == default)
                 {
-                    Logger.Error($"{itemId} is not an item on {inventory.Manager.Player}");
+                    Logger.Error($"{itemId} is not an item on {inventory.Manager.GameObject}");
                     return null;
                 }
 
@@ -130,7 +130,7 @@ namespace Uchu.World
 
                 instance.ItemComponent = itemComponent;
                 instance.Inventory = inventory;
-                instance.Player = inventory.Manager.Player;
+                instance.Player = inventory.Manager.GameObject as Player;
 
                 return instance;
             }
@@ -183,10 +183,10 @@ namespace Uchu.World
 
                 instance.ItemComponent = itemComponent;
                 instance.Inventory = inventory;
-                instance.Player = inventory.Manager.Player;
+                instance.Player = inventory.Manager.GameObject as Player;
 
                 var playerCharacter = ctx.Characters.Include(c => c.Items).First(
-                    c => c.CharacterId == inventory.Manager.Player.ObjectId
+                    c => c.CharacterId == inventory.Manager.GameObject.ObjectId
                 );
 
                 var inventoryItem = new InventoryItem
@@ -205,7 +205,7 @@ namespace Uchu.World
 
                 var message = new AddItemToInventoryMessage
                 {
-                    Associate = inventory.Manager.Player,
+                    Associate = inventory.Manager.GameObject,
                     InventoryType = (int) inventory.InventoryType,
                     Delta = count,
                     TotalItems = count,
@@ -217,7 +217,7 @@ namespace Uchu.World
                     Item = instance
                 };
 
-                inventory.Manager.Player.Message(message);
+                (inventory.Manager.GameObject as Player)?.Message(message);
 
                 inventory.ManageItem(instance);
 

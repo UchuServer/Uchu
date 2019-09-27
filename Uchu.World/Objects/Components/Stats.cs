@@ -34,6 +34,8 @@ namespace Uchu.World
                 _health = value;
 
                 if (_health == default) OnDeath?.Invoke();
+                
+                GameObject.Serialize(GameObject);
             }
         }
 
@@ -45,6 +47,8 @@ namespace Uchu.World
                 OnMaxHealthChanged?.Invoke(value,  (int) ((int) value -  _maxHealth));
 
                 _maxHealth = value;
+                
+                GameObject.Serialize(GameObject);
             }
         }
         
@@ -60,6 +64,8 @@ namespace Uchu.World
                 OnArmorChanged?.Invoke(value, (int) ((int) value - _armor));
 
                 _armor = value;
+                
+                GameObject.Serialize(GameObject);
             }
         }
 
@@ -71,6 +77,8 @@ namespace Uchu.World
                 OnMaxArmorChanged?.Invoke(value, (int) ((int) value - _maxArmor));
 
                 _maxArmor = value;
+                
+                GameObject.Serialize(GameObject);
             }
         }
 
@@ -86,6 +94,8 @@ namespace Uchu.World
                 OnImaginationChanged?.Invoke(value, (int) ((int) value - _imagination));
 
                 _imagination = value;
+                
+                GameObject.Serialize(GameObject);
             }
         }
 
@@ -97,6 +107,8 @@ namespace Uchu.World
                 OnMaxImaginationChanged?.Invoke(value, (int) ((int) value - _maxImagination));
 
                 _maxImagination = value;
+
+                GameObject.Serialize(GameObject);
             }
         }
 
@@ -142,13 +154,13 @@ namespace Uchu.World
                 else CollectObjectStats();
             };
             
-            if (Player == default) return;
+            if (As<Player>() == default) return;
 
             OnHealthChanged += async (total, delta) =>
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.CurrentHealth = (int) total;
                     
@@ -160,7 +172,7 @@ namespace Uchu.World
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.CurrentArmor = (int) total;
                     
@@ -172,7 +184,7 @@ namespace Uchu.World
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.CurrentImagination = (int) total;
                     
@@ -184,7 +196,7 @@ namespace Uchu.World
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.MaximumHealth = (int) total;
                     
@@ -196,7 +208,7 @@ namespace Uchu.World
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.MaximumArmor = (int) total;
                     
@@ -208,7 +220,7 @@ namespace Uchu.World
             {
                 using (var ctx = new UchuContext())
                 {
-                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == Player.ObjectId);
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                     character.MaximumImagination = (int) total;
 
@@ -265,7 +277,7 @@ namespace Uchu.World
         {
             using (var ctx = new UchuContext())
             {
-                var character = ctx.Characters.First(c => c.CharacterId == Player.ObjectId);
+                var character = ctx.Characters.First(c => c.CharacterId == As<Player>().ObjectId);
 
                 _health = (uint) character.CurrentHealth;
                 _maxHealth = (uint) character.MaximumHealth;
