@@ -23,7 +23,7 @@ namespace Uchu.World
         public IRakConnection Connection { get; private set; }
 
         public Perspective Perspective { get; private set; }
-
+        
         public long Currency
         {
             get
@@ -142,6 +142,7 @@ namespace Uchu.World
             instance.AddComponent<QuestInventory>();
             instance.AddComponent<InventoryManager>();
             instance.AddComponent<TeamPlayer>();
+            instance.AddComponent<ModularBuilder>();
 
             instance.Perspective = new Perspective(instance, World.Layer.All & ~ World.Layer.Hidden);
             instance.Layer = World.Layer.Player;
@@ -156,7 +157,6 @@ namespace Uchu.World
             Message(new TeleportMessage
             {
                 Associate = this,
-                SkipAllChecks = true,
                 Position = position
             });
         }
@@ -216,7 +216,7 @@ namespace Uchu.World
                 Message(new ModifyLegoScoreMessage
                 {
                     Associate = this,
-                    Score = character.UniverseScore
+                    Score = character.UniverseScore - UniverseScore
                 });
 
                 await ctx.SaveChangesAsync();
@@ -247,7 +247,7 @@ namespace Uchu.World
                 Message(new ModifyLegoScoreMessage
                 {
                     Associate = this,
-                    Score = character.UniverseScore
+                    Score = character.UniverseScore - UniverseScore
                 });
 
                 await ctx.SaveChangesAsync();

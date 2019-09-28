@@ -88,6 +88,8 @@ namespace Uchu.World
             }
         }
 
+        public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
+
         public static Item Instantiate(long itemId, Inventory inventory)
         {
             using (var cdClient = new CdClientContext())
@@ -120,6 +122,9 @@ namespace Uchu.World
                     inventory.Manager.Zone, cdClientObject.Name, objectId: itemId, lot: item.LOT
                 );
 
+                if (!string.IsNullOrWhiteSpace(item.ExtraInfo)) 
+                    instance.Settings = LegoDataDictionary.FromString(item.ExtraInfo);
+
                 var itemComponent = cdClient.ItemComponentTable.First(
                     i => i.Id == itemRegistryEntry
                 );
@@ -136,7 +141,7 @@ namespace Uchu.World
             }
         }
 
-        public static Item Instantiate(Lot lot, Inventory inventory, uint count)
+        public static Item Instantiate(Lot lot, Inventory inventory, uint count, LegoDataDictionary extraInfo = default)
         {
             uint slot = default;
 
@@ -147,10 +152,10 @@ namespace Uchu.World
                 slot++;
             }
 
-            return Instantiate(lot, inventory, count, slot);
+            return Instantiate(lot, inventory, count, slot, extraInfo);
         }
 
-        public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot)
+        public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot, LegoDataDictionary extraInfo = default)
         {
             using (var cdClient = new CdClientContext())
             using (var ctx = new UchuContext())
@@ -196,7 +201,8 @@ namespace Uchu.World
                     InventoryItemId = instance.ObjectId,
                     IsBound = itemComponent.IsBOP ?? false,
                     Slot = (int) slot,
-                    LOT = lot
+                    LOT = lot,
+                    ExtraInfo = extraInfo?.ToString()
                 };
 
                 playerCharacter.Items.Add(inventoryItem);
@@ -214,7 +220,8 @@ namespace Uchu.World
                     IsBoundOnEquip = itemComponent.IsBOE ?? false,
                     IsBoundOnPickup = itemComponent.IsBOP ?? false,
                     IsBound = inventoryItem.IsBound,
-                    Item = instance
+                    Item = instance,
+                    ExtraInfo = extraInfo
                 };
 
                 (inventory.Manager.GameObject as Player)?.Message(message);

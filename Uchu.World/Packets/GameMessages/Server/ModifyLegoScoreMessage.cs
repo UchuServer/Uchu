@@ -8,15 +8,12 @@ namespace Uchu.World
 
         public long Score { get; set; }
 
-        public Lot Source { get; set; } = -1;
-
         public override void SerializeMessage(BitWriter writer)
         {
             writer.Write(Score);
 
-            var hasSource = !Source.Equals(-1);
-            writer.Write(hasSource);
-            if (hasSource) writer.Write(Source);
+            writer.WriteBit(true);
+            writer.Write(2);
         }
     }
 }

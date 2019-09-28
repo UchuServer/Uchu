@@ -96,7 +96,7 @@ namespace Uchu.World
             });
         }
 
-        public async Task RespondToMissionAsync(int missionId, GameObject questGiver)
+        public async Task RespondToMissionAsync(int missionId, GameObject questGiver, Lot rewardItem)
         {
             Logger.Information($"Responding {missionId}");
 
@@ -183,7 +183,7 @@ namespace Uchu.World
             // Complete mission.
             //
 
-            await CompleteMissionAsync(missionId);
+            await CompleteMissionAsync(missionId, rewardItem);
 
             //
             // Offer any fallow up missions from the quest giver.
@@ -192,7 +192,7 @@ namespace Uchu.World
             questGiver.GetComponent<QuestGiverComponent>().OfferMission(As<Player>());
         }
 
-        public async Task CompleteMissionAsync(int missionId)
+        public async Task CompleteMissionAsync(int missionId, Lot rewardItem = default)
         {
             Logger.Information($"Completing mission {missionId}");
 
@@ -243,10 +243,11 @@ namespace Uchu.World
             // Get character mission to complete.
             //
             
-            var characterMissions = character.Missions.Find(m => m.MissionId == missionId);
+            var characterMission = character.Missions.Find(m => m.MissionId == missionId);
             
-            characterMissions.CompletionCount++;
-            characterMissions.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var repeat = characterMission.CompletionCount != 0;
+            characterMission.CompletionCount++;
+            characterMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
             // TODO: Remove/Move
             if (character.MaximumImagination == 0 && mission.Rewardmaximagination > 0)
@@ -267,12 +268,54 @@ namespace Uchu.World
             if (mission.Rewardmaximagination > 0)
             {
                 //
-                // Make the client understand it not got imagination
+                // Make the client understand it not got imagination.
                 //
             
                 character.CurrentImagination += mission.Rewardmaximagination ?? 0;
 
                 GameObject.Serialize(GameObject);
+            }
+            
+            //
+            // Get item rewards.
+            //
+
+            Logger.Debug($"{GameObject} chose item: {rewardItem}");
+
+            var inventory = GameObject.GetComponent<InventoryManager>();
+            
+            var rewards = new (Lot, int)[]
+            {
+                ((repeat ? mission.Rewarditem1repeatable : mission.Rewarditem1) ?? 0, 
+                    (repeat ? mission.Rewarditem1repeatcount : mission.Rewarditem1count) ?? 1),
+                
+                ((repeat ? mission.Rewarditem2repeatable : mission.Rewarditem2) ?? 0, 
+                    (repeat ? mission.Rewarditem2repeatcount : mission.Rewarditem2count) ?? 1),
+                
+                ((repeat ? mission.Rewarditem3repeatable : mission.Rewarditem3) ?? 0, 
+                    (repeat ? mission.Rewarditem3repeatcount : mission.Rewarditem3count) ?? 1),
+                
+                ((repeat ? mission.Rewarditem4repeatable : mission.Rewarditem4) ?? 0, 
+                    (repeat ? mission.Rewarditem4repeatcount : mission.Rewarditem4count) ?? 1),
+            };
+
+            if (rewardItem == -1)
+            {
+                foreach (var (lot, count) in rewards)
+                {
+                    Logger.Debug($"Reward: {lot} x {count}");
+                    
+                    if (lot == default || count == default) continue;
+                    
+                    await inventory.AddItemAsync(lot, (uint) count);
+                }
+            }
+            else
+            {
+                var (lot, count) = rewards[rewardItem];
+                
+                if (lot != default && count != default)
+                    await inventory.AddItemAsync(lot, (uint) count);
             }
 
             //
@@ -414,6 +457,7 @@ namespace Uchu.World
                     case MissionTaskType.UseSkill:
                     case MissionTaskType.ObtainItem:
                     case MissionTaskType.Interact:
+                    case MissionTaskType.Flag:
                         // Start this task value array
                         if (!characterTask.Values.Contains(lot))
                             characterTask.Values.Add(lot);
@@ -430,8 +474,6 @@ namespace Uchu.World
                     case MissionTaskType.TamePet:
                         break;
                     case MissionTaskType.Racing:
-                        break;
-                    case MissionTaskType.Flag:
                         break;
                     case MissionTaskType.NexusTowerBrickDonation:
                         break;

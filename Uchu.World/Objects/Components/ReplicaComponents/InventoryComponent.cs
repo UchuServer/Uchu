@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,6 +13,10 @@ namespace Uchu.World
 {
     public class InventoryComponent : ReplicaComponent
     {
+        public event Action<Item> OnEquipped;
+        
+        public event Action<Item> OnUnEquipped;
+        
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();
 
@@ -94,6 +99,20 @@ namespace Uchu.World
 
         public void EquipItem(Item item)
         {
+            if (item == default) return;
+
+            var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
+
+            if (!As<Player>().GetComponent<ModularBuilder>().IsBuilding)
+            {
+                if (itemType == ItemType.Model || itemType == ItemType.LootModel || item.Lot == 6086)
+                {
+                    return;
+                }
+            }
+
+            OnEquipped?.Invoke(item);
+            
             Logger.Debug($"Equipping {item}");
             
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
@@ -111,6 +130,8 @@ namespace Uchu.World
         public void UnEquipItem(Item item)
         {
             UnEquipItem(item.ObjectId);
+
+            OnUnEquipped?.Invoke(item);
         }
 
         public void UnEquipItem(long id)
@@ -119,7 +140,9 @@ namespace Uchu.World
 
             if (value == default)
             {
-                Logger.Error($"{GameObject} does not have an item of id: {id} equipped");
+                //
+                // It's quite common for the client to send un-equip requests for items that it uses or whatever.
+                //
                 return;
             }
 

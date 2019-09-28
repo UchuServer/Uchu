@@ -9,7 +9,7 @@ namespace Uchu.World
 
         public InventoryType DestinationInventoryType { get; set; } = InventoryType.Invalid;
 
-        public long ItemId { get; set; }
+        public Item Item { get; set; }
 
         public InventoryType CurrentInventoryType { get; set; }
 
@@ -21,7 +21,7 @@ namespace Uchu.World
         {
             if (reader.ReadBit()) DestinationInventoryType = (InventoryType) reader.Read<int>();
 
-            ItemId = reader.Read<long>();
+            Item = reader.ReadGameObject<Item>(Associate.Zone);
 
             CurrentInventoryType = (InventoryType) reader.Read<int>();
 

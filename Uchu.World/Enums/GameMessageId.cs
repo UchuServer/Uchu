@@ -194,6 +194,7 @@ namespace Uchu.World
         SpawnModelBricks = 0x436,
         NotifyClientFailedPrecondition = 0x439,
         MoveItemBetweenInventoryTypes = 0x445,
+        ModularBuildMoveAndEquip = 0x448,
         ModularBuildFinish = 0x449,
         MissionDialogueCancelled = 0x469,
         ModuleAssemblyDBDataForClient = 0x46b,

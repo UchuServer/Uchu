@@ -58,11 +58,6 @@ namespace Uchu.World
 
                 writer.Write(Secondary);
             }
-
-            public void Deserialize(BitReader reader)
-            {
-                throw new NotSupportedException();
-            }
         }
     }
 }

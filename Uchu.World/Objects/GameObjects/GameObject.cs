@@ -327,104 +327,103 @@ namespace Uchu.World
             if (levelObject.Settings.TryGetValue("spawntemplate", out _))
                 return InstancingUtil.Spawner(levelObject, parent);
 
-            using (var ctx = new CdClientContext())
+            using var ctx = new CdClientContext();
+            
+            var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
+
+            //
+            // Create GameObject
+            //
+
+            var instance = Instantiate(
+                type,
+                parent,
+                name,
+                levelObject.Position,
+                levelObject.Rotation,
+                IdUtils.GenerateObjectId(),
+                levelObject.Lot
+            );
+
+            instance.SpawnerObject = spawner;
+            instance.Settings = levelObject.Settings;
+
+            //
+            // Collect all the components on this object
+            //
+
+            var registryComponents = ctx.ComponentsRegistryTable.Where(
+                r => r.Id == levelObject.Lot
+            ).ToArray();
+
+            //
+            // Select all the none networked components on this object
+            //
+
+            var componentEntries = registryComponents.Where(o =>
+                o.Componenttype != null && !ReplicaComponent.ComponentOrder.Contains(o.Componenttype.Value)
+            ).ToArray();
+
+            foreach (var component in componentEntries)
             {
-                var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
-
                 //
-                // Create GameObject
+                // Add components from the entries
                 //
 
-                var instance = Instantiate(
-                    type,
-                    parent,
-                    name,
-                    levelObject.Position,
-                    levelObject.Rotation,
-                    IdUtils.GenerateObjectId(),
-                    levelObject.Lot
-                );
+                if ((ReplicaComponentsId) (int) component.Componenttype == ReplicaComponentsId.QuestGiver)
+                    Logger.Information($"{instance} has a Quest Giver component.");
 
-                instance.SpawnerObject = spawner;
-                instance.Settings = levelObject.Settings;
+                var componentType =
+                    ReplicaComponent.GetReplica((ReplicaComponentsId) (int) component.Componenttype);
 
-                //
-                // Collect all the components on this object
-                //
-
-                var registryComponents = ctx.ComponentsRegistryTable.Where(
-                    r => r.Id == levelObject.Lot
-                ).ToArray();
-
-                //
-                // Select all the none networked components on this object
-                //
-
-                var componentEntries = registryComponents.Where(o =>
-                    o.Componenttype != null && !ReplicaComponent.ComponentOrder.Contains(o.Componenttype.Value)
-                ).ToArray();
-
-                foreach (var component in componentEntries)
-                {
-                    //
-                    // Add components from the entries
-                    //
-
-                    if ((ReplicaComponentsId) (int) component.Componenttype == ReplicaComponentsId.QuestGiver)
-                        Logger.Information($"{instance} has a Quest Giver component.");
-
-                    var componentType =
-                        ReplicaComponent.GetReplica((ReplicaComponentsId) (int) component.Componenttype);
-
-                    if (componentType != default) instance.AddComponent(componentType);
-                }
-
-                //
-                // Select all the networked components on this object
-                //
-
-                registryComponents = registryComponents.Where(
-                    c => ReplicaComponent.ComponentOrder.Contains(c.Componenttype.Value)
-                ).ToArray();
-
-                // Sort components
-
-                Array.Sort(registryComponents, (c1, c2) =>
-                    ReplicaComponent.ComponentOrder.IndexOf((int) c1.Componenttype)
-                        .CompareTo(ReplicaComponent.ComponentOrder.IndexOf((int) c2.Componenttype))
-                );
-
-                foreach (var component in registryComponents)
-                {
-                    var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
-
-                    if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
-                    else instance.AddComponent(componentType);
-                }
-
-                //
-                // Check if this object is a trigger
-                //
-
-                if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
-                {
-                    Logger.Information($"{instance} is trigger!");
-
-                    instance.AddComponent<TriggerComponent>();
-                }
-
-                //
-                // Check if this object has a spawn activator attached to it
-                //
-
-                //
-                // Setup all the components
-                //
-
-                foreach (var component in instance._replicaComponents) component.FromLevelObject(levelObject);
-
-                return instance;
+                if (componentType != default) instance.AddComponent(componentType);
             }
+
+            //
+            // Select all the networked components on this object
+            //
+
+            registryComponents = registryComponents.Where(
+                c => ReplicaComponent.ComponentOrder.Contains(c.Componenttype.Value)
+            ).ToArray();
+
+            // Sort components
+
+            Array.Sort(registryComponents, (c1, c2) =>
+                ReplicaComponent.ComponentOrder.IndexOf((int) c1.Componenttype)
+                    .CompareTo(ReplicaComponent.ComponentOrder.IndexOf((int) c2.Componenttype))
+            );
+
+            foreach (var component in registryComponents)
+            {
+                var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+
+                if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
+                else instance.AddComponent(componentType);
+            }
+
+            //
+            // Check if this object is a trigger
+            //
+
+            if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
+            {
+                Logger.Information($"{instance} is trigger!");
+
+                instance.AddComponent<TriggerComponent>();
+            }
+
+            //
+            // Check if this object has a spawn activator attached to it
+            //
+
+            //
+            // Setup all the components
+            //
+
+            foreach (var component in instance._replicaComponents) component.FromLevelObject(levelObject);
+
+            return instance;
         }
 
         public static T Instantiate<T>(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)

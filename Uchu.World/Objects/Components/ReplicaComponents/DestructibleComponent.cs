@@ -14,7 +14,7 @@ namespace Uchu.World
     {
         private Core.CdClient.DestructibleComponent _cdClientComponent;
         private Random _random;
-        
+
         public override ReplicaComponentsId Id => ReplicaComponentsId.Destructible;
 
         public bool CanDrop { get; private set; } = true;
@@ -34,7 +34,7 @@ namespace Uchu.World
             {
                 ResurrectTime = (float) resTimer;
             }
-            
+
             _random = new Random();
 
             GameObject.Layer = Layer.Smashable;
@@ -65,13 +65,13 @@ namespace Uchu.World
         public void Smash(GameObject killer, Player lootOwner = default, string animation = default)
         {
             if (!CanDrop) return;
-            
+
             lootOwner ??= killer as Player;
-            
+
             OnSmashed?.Invoke(killer, lootOwner);
-            
+
             CanDrop = false;
-            
+
             if (As<Player>() != null)
             {
                 Zone.BroadcastMessage(new DieMessage
@@ -85,23 +85,23 @@ namespace Uchu.World
 
                 var coinToDrop = Math.Min((long) Math.Round(As<Player>().Currency * 0.1), 10000);
                 As<Player>().Currency -= coinToDrop;
-                
+
                 InstancingUtil.Currency((int) coinToDrop, lootOwner, lootOwner, Transform.Position);
 
                 return;
             }
 
             if (lootOwner == default) return;
-            
+
             GameObject.Layer -= Layer.Smashable;
             GameObject.Layer += Layer.Hidden;
 
             Task.Run(async () =>
             {
-                await Task.Delay((int) (ResurrectTime * 1000)); 
-                    
+                await Task.Delay((int) (ResurrectTime * 1000));
+
                 CanDrop = true;
-                
+
                 GameObject.Layer += Layer.Smashable;
                 GameObject.Layer -= Layer.Hidden;
             });
@@ -142,7 +142,7 @@ namespace Uchu.World
                 if (currency.Npcminlevel > _cdClientComponent.Level) continue;
 
                 var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
-                    
+
                 InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
             }
         }
@@ -156,7 +156,7 @@ namespace Uchu.World
                     Associate = As<Player>()
                 });
             }
-            
+
             OnResurrect?.Invoke();
         }
     }

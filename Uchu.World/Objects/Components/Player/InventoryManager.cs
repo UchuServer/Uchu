@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Collections;
 
 namespace Uchu.World
 {
@@ -63,7 +64,7 @@ namespace Uchu.World
             }
         }
 
-        public async Task AddItemAsync(int lot, uint count)
+        public async Task AddItemAsync(int lot, uint count, LegoDataDictionary extraInfo = default)
         {
             using (var cdClient = new CdClientContext())
             {
@@ -91,11 +92,11 @@ namespace Uchu.World
 
                 Debug.Assert(component.ItemType != null, "component.ItemType != null");
 
-                AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType());
+                AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
             }
         }
 
-        public void AddItem(int lot, uint count, InventoryType inventoryType)
+        public void AddItem(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
         {
             var inventory = _inventories[inventoryType];
             
@@ -174,7 +175,7 @@ namespace Uchu.World
                     {
                         var toAdd = (uint) Min(stackSize, (int) toCreate);
 
-                        var item = Item.Instantiate(lot, inventory, toAdd);
+                        var item = Item.Instantiate(lot, inventory, toAdd, extraInfo);
 
                         Start(item);
 
@@ -278,23 +279,28 @@ namespace Uchu.World
             }
         }
 
-        public void SyncItemMove(long itemId, int newSlot, InventoryType sourceInventoryType,
-            InventoryType destinationInventoryType)
+        public void MoveItemsBetweenInventories(Item item, Lot lot, uint count, InventoryType source, InventoryType destination, bool silent = false)
         {
-            var item = GetItem(itemId);
-
-            if (item == null)
+            if (item?.Settings != null)
             {
-                Logger.Error(
-                    $"Trying to sync an item movement for Item: {itemId} to Slot: {newSlot}, with an item that does not exist"
-                );
+                if (count != 1 || item.Count != 1)
+                {
+                    Logger.Error($"Invalid special item {item}");
+                    return;
+                }
+                
+                Destroy(item);
 
+                AddItem(item.Lot, count, destination, item.Settings);
+                
                 return;
             }
+            
+            RemoveItem(item?.Lot ?? lot, count, source, silent);
 
-            item.Slot = (uint) newSlot;
+            AddItem(item?.Lot ?? lot, count, destination);
         }
-
+        
         private static int Min(params int[] nums)
         {
             return nums.Min();

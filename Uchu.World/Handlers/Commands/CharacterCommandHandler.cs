@@ -405,5 +405,48 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Spawned thing";
         }
+
+        [CommandHandler(Signature = "tp", Help = "Teleport", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Teleport(string[] arguments, Player player)
+        {
+            if (arguments.Length == default)
+                return "tp <target>/<x> <y> <z>";
+
+            Vector3 position;
+
+            var relativeX = arguments[0].StartsWith('~');
+            if (relativeX) arguments[0] = arguments[0].Remove(default, 1);
+
+            if (!relativeX && !float.TryParse(arguments[0], out _))
+            {
+                var target = player.Zone.Players.FirstOrDefault(p => p.Name == arguments[0]);
+
+                if (target == default) return $"No player named {arguments[0]}";
+                
+                player.Teleport(target.Transform.Position);
+
+                return $"Going to {player.Name}";
+            }
+
+            if (arguments.Length != 3) return "tp <x> <y> <z>";
+            
+            var relativeY = arguments[1].StartsWith('~');
+            if (relativeY) arguments[1] = arguments[1].Remove(default, 1);
+            
+            var relativeZ = arguments[2].StartsWith('~');
+            if (relativeZ) arguments[2] = arguments[2].Remove(default, 1);
+
+            if (!float.TryParse(arguments[0], out position.X)) return "Invalid <x>";
+            if (!float.TryParse(arguments[1], out position.Y)) return "Invalid <y>";
+            if (!float.TryParse(arguments[2], out position.Z)) return "Invalid <z>";
+            
+            if (relativeX) position.X += player.Transform.Position.X;
+            if (relativeY) position.Y += player.Transform.Position.Y;
+            if (relativeZ) position.Z += player.Transform.Position.Z;
+            
+            player.Teleport(position);
+
+            return $"Going to {position}";
+        }
     }
 }

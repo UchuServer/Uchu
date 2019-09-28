@@ -55,7 +55,11 @@ namespace Uchu.World
         public void ManageItem(Item item)
         {
             _items.Add(item);
-            Logger.Debug($"Item {item} is now managed.");
+        }
+        
+        public void UnManageItem(Item item)
+        {
+            _items.Remove(item);
         }
     }
 }

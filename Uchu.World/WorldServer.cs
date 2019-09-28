@@ -184,7 +184,10 @@ namespace Uchu.World
         {
             if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
-                Logger.Warning($"No handler registered for GameMessage: {(GameMessageId) messageId}!");
+                Logger.Warning(Enum.IsDefined(typeof(GameMessageId), messageId)
+                    ? $"No handler registered for GameMessage: {(GameMessageId) messageId}!"
+                    : $"Undocumented GameMessage: 0x{messageId:x8}!"
+                );
 
                 return;
             }

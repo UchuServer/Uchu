@@ -10,12 +10,22 @@ namespace Uchu.World.Handlers.GameMessages
             if (message.DestinationInventoryType == InventoryType.Invalid)
                 message.DestinationInventoryType = message.CurrentInventoryType;
 
-            Logger.Debug(
-                $"Moving item {message.ItemId} to {message.DestinationInventoryType}:{message.NewSlot} with Code: {message.ResponseCode}"
-            );
+            if (message.Item.Inventory.Manager.GameObject != player) return;
+            
+            message.Item.Slot = (uint) message.NewSlot;
+        }
+        
+        [PacketHandler]
+        public void HandleItemMoveBetweenInventories(MoveItemBetweenInventoryTypesMessage message, Player player)
+        {
+            player.SendChatMessage($"{message.Item?.Lot ?? message.Lot} {message.SourceInventory} -> {message.DestinationInventory}");
 
-            player.GetComponent<InventoryManager>().SyncItemMove(
-                message.ItemId, message.NewSlot, message.CurrentInventoryType, message.DestinationInventoryType
+            player.GetComponent<InventoryManager>().MoveItemsBetweenInventories(
+                message.Item,
+                message.Lot,
+                message.StackCount,
+                message.SourceInventory,
+                message.DestinationInventory
             );
         }
 
@@ -32,6 +42,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void HandleEquipItem(EquipItemMessage message, Player player)
         {
+            if (message.Item == default) return;
+            
             player.GetComponent<InventoryComponent>().EquipItem(message.Item);
         }
 
