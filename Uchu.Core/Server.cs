@@ -21,8 +21,6 @@ namespace Uchu.Core
 
     public class Server
     {
-        private readonly CancellationTokenSource _runCts;
-
         private Task _runTask;
 
         protected readonly HandlerMap HandlerMap;
@@ -47,8 +45,6 @@ namespace Uchu.Core
 
         public Server(ServerType type)
         {
-            _runCts = new CancellationTokenSource();
-
             var serializer = new XmlSerializer(typeof(Configuration));
             var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
@@ -118,7 +114,7 @@ namespace Uchu.Core
                 }
             });
 
-            return _runTask = RakNetServer.RunAsync(_runCts.Token);
+            return _runTask = RakNetServer.RunAsync();
         }
 
         public Task StopAsync()
@@ -128,8 +124,6 @@ namespace Uchu.Core
             _running = false;
 
             ServerStopped?.Invoke();
-
-            _runCts.Cancel();
 
             return RakNetServer.ShutdownAsync();
         }
