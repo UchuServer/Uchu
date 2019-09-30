@@ -18,12 +18,13 @@ namespace Uchu.World
             }
 
             var instance = GameObject.Instantiate<GameObject>(parent, position: levelObject.Position,
-                rotation: levelObject.Rotation, objectId: IdUtils.GenerateObjectId(), lot: levelObject.Lot);
+                rotation: levelObject.Rotation, scale: -1, objectId: IdUtils.GenerateObjectId(), lot: levelObject.Lot);
 
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 
             spawnerComponent.Settings = levelObject.Settings;
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
+            spawnerComponent.LevelObject = levelObject;
 
             levelObject.Settings.Remove("spawntemplate");
 

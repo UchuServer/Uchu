@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -116,9 +115,11 @@ namespace Uchu.World
                 var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
                 var items = cdClient.LootTableTable.Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
-
+                
                 for (var i = 0; i < count; i++)
                 {
+                    if (items.Count == default) break;
+                    
                     var proc = _random.NextDouble();
 
                     if (!(proc <= matrix.Percent)) continue;

@@ -27,5 +27,11 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.GetComponent<ModularBuilder>().Pickup(message.Lot);
         }
+
+        [PacketHandler]
+        public void ModelPrefabHandler(StartArrangingWithModelMessage message, Player player)
+        {
+            
+        }
     }
 }

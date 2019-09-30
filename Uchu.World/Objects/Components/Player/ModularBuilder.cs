@@ -58,7 +58,9 @@ namespace Uchu.World
 
         public void StartBuilding(StartBuildingWithItemMessage message)
         {
-            As<Player>().SendChatMessage($"START: {message.Source}\t{message.Target}");
+            As<Player>().SendChatMessage(
+                $"{string.Join('\n', typeof(StartBuildingWithItemMessage).GetProperties().Select(p => $"{p.Name} = {p.GetValue(message)}"))}"
+            );
             
             IsBuilding = true;
             
@@ -97,10 +99,10 @@ namespace Uchu.World
                 SourceLot = item.Lot,
                 SourceType = 8, // TODO: find out how to get this
                 
-                Target = item,
-                TargetLot = item.Lot,
-                TargetPosition = Transform.Position,
-                TargetType = 8
+                Target = null,
+                TargetLot = BasePlate.Lot,
+                TargetPosition = BasePlate.Transform.Position,
+                TargetType = 0
             });
         }
         

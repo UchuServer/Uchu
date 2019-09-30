@@ -230,7 +230,7 @@ namespace Uchu.World
         #region From Raw
 
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, Lot lot = default,
+            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
             SpawnerComponent spawner = default)
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
@@ -253,6 +253,7 @@ namespace Uchu.World
                 var transform = instance.AddComponent<Transform>();
                 transform.Position = position;
                 transform.Rotation = rotation;
+                transform.Scale = scale;
 
                 switch (parent)
                 {
@@ -275,11 +276,11 @@ namespace Uchu.World
         }
 
         public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, long objectId = default, Lot lot = default,
+            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
             SpawnerComponent spawner = default)
             where T : GameObject
         {
-            return Instantiate(typeof(T), parent, name, position, rotation, objectId, lot, spawner) as T;
+            return Instantiate(typeof(T), parent, name, position, rotation, scale, objectId, lot, spawner) as T;
         }
 
         #endregion
@@ -341,6 +342,7 @@ namespace Uchu.World
                 name,
                 levelObject.Position,
                 levelObject.Rotation,
+                levelObject.Scale,
                 IdUtils.GenerateObjectId(),
                 levelObject.Lot
             );

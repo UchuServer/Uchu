@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Timers;
 using Uchu.Core;
 
 namespace Uchu.World.Behaviors

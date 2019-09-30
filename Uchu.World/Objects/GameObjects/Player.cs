@@ -75,6 +75,7 @@ namespace Uchu.World
                 character.Name,
                 zone.ZoneInfo.SpawnPosition,
                 zone.ZoneInfo.SpawnRotation,
+                1,
                 character.CharacterId,
                 1
             );

@@ -34,9 +34,22 @@ namespace Uchu.World
                     component => ctx.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
                 ).ToArray();
 
-                Quests = missionComponents.Select(
-                    component => (ctx.MissionsTable.First(m => m.Id == component.MissionID), component)
-                ).ToArray();
+                var quests = new List<(Missions, MissionNPCComponent)>();
+                
+                foreach (var npcComponent in missionComponents)
+                {
+                    var quest = ctx.MissionsTable.FirstOrDefault(m => m.Id == npcComponent.MissionID);
+
+                    if (quest == default)
+                    {
+                        Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: [{npcComponent.Id}] {npcComponent.MissionID}");
+                        continue;
+                    }
+                    
+                    quests.Add((quest, npcComponent));
+                }
+
+                Quests = quests.ToArray();
             }
 
             Logger.Information(

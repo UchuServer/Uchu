@@ -291,6 +291,9 @@ namespace Uchu.World
         ServerCancelMoveSkill = 0x6d2,
         ClientCancelMoveSkill = 0x6d3,
         DismountComplete = 0x6dc,
-        MarkInventoryItemAsActive = 0x6e7
+        MarkInventoryItemAsActive = 0x6e7,
+        
+        // Undocumented?
+        StartArrangingWithModel = 0x483
     }
 }

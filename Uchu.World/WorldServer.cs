@@ -182,6 +182,8 @@ namespace Uchu.World
 
         private async Task HandleGameMessageAsync(long objectId, ushort messageId, BitReader reader, IRakConnection connection)
         {
+            if (messageId == (int) GameMessageId.ReadyForUpdates) return;
+            
             if (!_gameMessageHandlerMap.TryGetValue((GameMessageId) messageId, out var messageHandler))
             {
                 Logger.Warning(Enum.IsDefined(typeof(GameMessageId), messageId)

@@ -262,18 +262,18 @@ namespace Uchu.World
             As<Player>().Currency += mission.Rewardcurrency ?? 0;
             As<Player>().UniverseScore += mission.LegoScore ?? 0;
 
-            character.MaximumHealth += mission.Rewardmaxhealth ?? 0;
-            character.MaximumImagination += mission.Rewardmaximagination ?? 0;
+            var stats = GameObject.GetComponent<Stats>();
+            
+            stats.MaxHealth += (uint) (mission.Rewardmaxhealth ?? 0);
+            stats.MaxImagination += (uint) (mission.Rewardmaximagination ?? 0);
 
             if (mission.Rewardmaximagination > 0)
             {
                 //
                 // Make the client understand it not got imagination.
                 //
-            
-                character.CurrentImagination += mission.Rewardmaximagination ?? 0;
-
-                GameObject.Serialize(GameObject);
+                
+                stats.Imagination = stats.MaxImagination;
             }
             
             //

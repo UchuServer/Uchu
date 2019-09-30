@@ -10,6 +10,8 @@ namespace Uchu.World
     {
         public readonly List<GameObject> ActiveSpawns = new List<GameObject>();
 
+        public LevelObject LevelObject;
+        
         public SpawnerComponent()
         {
             OnStart += () => { GameObject.Layer = Layer.Spawner; };
@@ -26,10 +28,9 @@ namespace Uchu.World
             return GameObject.Instantiate(new LevelObject
             {
                 Lot = SpawnTemplate,
-                ObjectId = (ulong) IdUtils.GenerateObjectId(),
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,
-                Scale = 1,
+                Scale = LevelObject.Scale,
                 Settings = Settings
             }, Zone, this);
         }

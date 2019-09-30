@@ -10,6 +10,14 @@ namespace Uchu.World
         public bool HasStats { get; set; } = true;
 
         public int[] Factions { get; set; } = {1};
+        
+        public uint DamageAbsorptionPoints { get; set; }
+        
+        public bool Immune { get; set; }
+        
+        public bool GameMasterImmune { get; set; }
+        
+        public bool Shielded { get; set; }
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Invalid;
 
@@ -70,19 +78,19 @@ namespace Uchu.World
             writer.Write<float>(_stats.MaxHealth);
 
             writer.Write(_stats.Armor);
-            writer.Write<float>(_stats.Armor);
+            writer.Write<float>(_stats.MaxArmor);
 
             writer.Write(_stats.Imagination);
-            writer.Write<float>(_stats.Imagination);
+            writer.Write<float>(_stats.MaxImagination);
 
-            writer.Write<uint>(0);
-            writer.WriteBit(true);
-            writer.WriteBit(false);
-            writer.WriteBit(false);
+            writer.Write(DamageAbsorptionPoints);
+            writer.WriteBit(Immune);
+            writer.WriteBit(GameMasterImmune);
+            writer.WriteBit(Shielded);
 
-            writer.Write<float>(_stats.Health);
-            writer.Write<float>(_stats.Armor);
-            writer.Write<float>(_stats.Imagination);
+            writer.Write<float>(_stats.MaxHealth);
+            writer.Write<float>(_stats.MaxArmor);
+            writer.Write<float>(_stats.MaxImagination);
 
             writer.Write((uint) Factions.Length);
 
