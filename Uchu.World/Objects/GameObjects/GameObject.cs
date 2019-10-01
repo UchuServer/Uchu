@@ -469,7 +469,7 @@ namespace Uchu.World
             writer.WriteBit(hasSpawner);
 
             if (hasSpawner)
-                writer.Write(SpawnerObject.GameObject);
+                writer.Write(SpawnerObject.GameObject.ObjectId);
 
             var hasSpawnerNode = SpawnerObject != null && SpawnerObject.SpawnTemplate != 0;
 
