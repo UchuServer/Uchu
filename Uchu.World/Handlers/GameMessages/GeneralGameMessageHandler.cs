@@ -39,7 +39,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void RequestSmashHandler(RequestSmashPlayer message, Player player)
+        public void RequestSmashHandler(RequestSmashPlayerMessage message, Player player)
         {
             player.GetComponent<DestructibleComponent>().Smash(player, player);
         }

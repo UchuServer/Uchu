@@ -42,7 +42,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void HandleEquipItem(EquipItemMessage message, Player player)
         {
-            if (message.Item == default) return;
+            if (message.Item == null) return;
             
             player.GetComponent<InventoryComponent>().EquipItem(message.Item);
         }
