@@ -147,7 +147,8 @@ namespace Uchu.World
 
             timer.Elapsed += (sender, args) =>
             {
-                Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
+                if (_ticks > 0)
+                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
             };
