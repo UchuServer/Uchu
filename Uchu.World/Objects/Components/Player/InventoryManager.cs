@@ -19,7 +19,7 @@ namespace Uchu.World
 
         public InventoryManager()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
                 _lock = new object();
@@ -32,12 +32,12 @@ namespace Uchu.World
 
                     _inventories.Add(id, new Inventory(id, this));
                 }
-            };
+            });
 
-            OnDestroyed += () =>
+            OnDestroyed.AddListener(() =>
             {
                 foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items)) Destroy(item);
-            };
+            });
         }
 
         public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];

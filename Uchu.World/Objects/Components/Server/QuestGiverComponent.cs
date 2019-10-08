@@ -12,12 +12,12 @@ namespace Uchu.World
     {
         public QuestGiverComponent()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 CollectMissions();
 
-                GameObject.OnInteract += OfferMission;
-            };
+                GameObject.OnInteract.AddListener(OfferMission);
+            });
         }
 
         public (Missions, MissionNPCComponent)[] Quests { get; set; }

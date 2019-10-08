@@ -9,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
+using Uchu.World.Experimental;
 using Uchu.World.Social;
 
 namespace Uchu.World
@@ -17,12 +18,14 @@ namespace Uchu.World
     {
         public Player()
         {
-            OnTick += CheckDeathZone;
+            OnTick.AddListener(CheckDeathZone);
         }
 
         public IRakConnection Connection { get; private set; }
 
         public Perspective Perspective { get; private set; }
+
+        private bool _disconnected;
         
         public long Currency
         {
@@ -150,6 +153,13 @@ namespace Uchu.World
 
             zone.RequestConstruction(instance);
 
+            connection.Disconnected += delegate
+            {
+                instance._disconnected = true;
+                
+                return Task.CompletedTask;
+            };
+
             return instance;
         }
 
@@ -172,6 +182,8 @@ namespace Uchu.World
 
         public void Message(ISerializable gameMessage)
         {
+            if (_disconnected) return;
+            
             Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g}" : "")}");
 
             Connection.Send(gameMessage);
@@ -261,7 +273,7 @@ namespace Uchu.World
 
             var smashable = GetComponent<DestructibleComponent>();
 
-            if (smashable == null || !smashable.CanDrop) return;
+            if (smashable == null || !smashable.Alive) return;
 
             switch ((ZoneId) Zone.ZoneInfo.ZoneId)
             {

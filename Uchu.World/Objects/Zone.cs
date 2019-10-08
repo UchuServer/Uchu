@@ -22,7 +22,6 @@ namespace Uchu.World
 
         private readonly List<GameObject> _gameObjects = new List<GameObject>();
         private readonly List<Object> _objects = new List<Object>();
-
         private readonly List<Player> _players = new List<Player>();
 
         public readonly uint CloneId;
@@ -47,7 +46,7 @@ namespace Uchu.World
             InstanceId = instanceId;
             CloneId = cloneId;
 
-            OnDestroyed += () => { _running = false; };
+            OnDestroyed.AddListener(() => { _running = false; });
         }
 
         /// <summary>

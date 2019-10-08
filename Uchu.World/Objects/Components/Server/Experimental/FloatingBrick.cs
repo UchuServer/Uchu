@@ -16,13 +16,13 @@ namespace Uchu.World.Experimental
 
         public FloatingBrick()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 StartPos = Transform.Position;
                 MaxDistance = Vector3.Distance(Target, StartPos);
-            };
+            });
 
-            OnTick += Build;
+            OnTick.AddListener(Build);
         }
 
         private void Build()

@@ -1,3 +1,4 @@
+using System.Numerics;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Parsers;
@@ -35,6 +36,13 @@ namespace Uchu.World
             writer.WriteBit(hasId);
 
             if (hasId) writer.Write(TriggerId);
+        }
+
+        public bool CheckCollision(Transform transform) => CheckCollision(transform.Position);
+
+        public bool CheckCollision(Vector3 position)
+        {
+            return false;
         }
     }
 }

@@ -11,11 +11,11 @@ namespace Uchu.World
 
         public Server Server => Zone.Server;
 
-        public event Action OnStart;
+        public readonly Event OnStart = new Event();
 
-        public event Action OnDestroyed;
+        public readonly Event OnDestroyed = new Event();
 
-        public event Action OnTick;
+        public readonly Event OnTick = new Event();
 
         public static Object Instantiate(Type type, Zone zone)
         {
@@ -51,12 +51,16 @@ namespace Uchu.World
         {
             obj.Zone.UnregisterObject(obj);
 
-            obj.OnDestroyed?.Invoke();
+            obj.OnDestroyed.Invoke();
+            
+            obj.OnStart.Clear();
+            obj.OnDestroyed.Clear();
+            obj.OnTick.Clear();
         }
 
         public static void Update(Object obj)
         {
-            obj.OnTick?.Invoke();
+            obj.OnTick.Invoke();
         }
     }
 }

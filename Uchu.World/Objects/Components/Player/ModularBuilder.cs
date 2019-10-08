@@ -12,19 +12,19 @@ namespace Uchu.World
 
         public ModularBuilder()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 var inventory = GameObject.GetComponent<InventoryComponent>();
 
-                inventory.OnEquipped += item =>
+                inventory.OnEquipped.AddListener(item =>
                 {
                     Logger.Information($"Equipped {item.ItemType} item");
                     if (item.ItemType == ItemType.LootModel)
                     {
                         StartBuildingWithItem(item);
                     }
-                };
-            };
+                });
+            });
         }
         
         public bool IsBuilding

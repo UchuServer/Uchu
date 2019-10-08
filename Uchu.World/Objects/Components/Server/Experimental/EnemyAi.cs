@@ -11,13 +11,13 @@ namespace Uchu.World.Experimental
 
         public EnemyAi()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
                 _controllablePhysics = GameObject.GetComponent<ControllablePhysicsComponent>();
-            };
+            });
 
-            OnTick += PathFind;
+            OnTick.AddListener(PathFind);
         }
 
         public bool FollowPlayer { get; set; }

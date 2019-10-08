@@ -18,7 +18,7 @@ namespace Uchu.World
         {
             MissionId = reader.Read<int>();
 
-            Player = (Player) reader.ReadGameObject(Associate.Zone);
+            Player = reader.ReadGameObject<Player>(Associate.Zone);
 
             Receiver = reader.ReadGameObject(Associate.Zone);
 

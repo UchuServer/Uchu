@@ -447,5 +447,35 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Going to {position}";
         }
+
+        [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
+        public string Animate(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+                return "animate <animationId>";
+            
+            player.Message(new PlayAnimationMessage
+            {
+                Associate = player,
+                AnimationsId = arguments[0]
+            });
+
+            return $"Attempting to play {arguments[0]} animation";
+        }
+
+        [CommandHandler(Signature = "addcomponent", Help = "Add a component to an object", GameMasterLevel = GameMasterLevel.Admin)]
+        public string AddComponent(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+                return "addcomponent <type>";
+
+            var type = Type.GetType(arguments[0]);
+
+            if (type == default) return "Invalid <type>";
+
+            player.AddComponent(type);
+
+            return $"Successfully added {type.Name} to {player}";
+        }
     }
 }

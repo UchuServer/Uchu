@@ -13,19 +13,41 @@ namespace Uchu.World
     {
         private Core.CdClient.DestructibleComponent _cdClientComponent;
         private Random _random;
+        private Stats _stats;
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Destructible;
 
-        public bool CanDrop { get; private set; } = true;
+        /// <summary>
+        ///     Warning: Should not be used as a definitive client state. Could be unreliable.
+        /// </summary>
+        public bool Alive { get; private set; } = true;
 
         public float ResurrectTime;
 
         /// <summary>
         /// Killer, Loot Owner
         /// </summary>
-        public event Action<GameObject, Player> OnSmashed;
+        public readonly Event<GameObject, Player> OnSmashed = new Event<GameObject, Player>();
 
-        public event Action OnResurrect;
+        public readonly Event OnResurrect = new Event();
+
+        public DestructibleComponent()
+        {
+            OnStart.AddListener(() =>
+            {
+                if (GameObject.TryGetComponent(out _stats))
+                {
+                    _stats.OnDeath.AddListener(() =>
+                    {
+                        Smash(_stats.LatestDamageSource, _stats.LatestDamageSource is Player player ? player : null);
+                    });
+                    
+                    return;
+                }
+                
+                Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} with a {nameof(Stats)} component.");
+            });
+        }
 
         public override void FromLevelObject(LevelObject levelObject)
         {
@@ -63,33 +85,41 @@ namespace Uchu.World
 
         public void Smash(GameObject killer, Player lootOwner = default, string animation = default)
         {
-            if (!CanDrop) return;
+            if (!Alive) return;
 
             lootOwner ??= killer as Player;
 
-            OnSmashed?.Invoke(killer, lootOwner);
+            OnSmashed.Invoke(killer, lootOwner);
 
-            CanDrop = false;
+            Alive = false;
 
             if (As<Player>() != null)
             {
-                Zone.BroadcastMessage(new DieMessage
-                {
-                    Associate = As<Player>(),
-                    DeathType = animation ?? "",
-                    Killer = killer,
-                    SpawnLoot = false,
-                    LootOwner = lootOwner ?? As<Player>()
-                });
-
+                //
+                // Player
+                //
+                
                 var coinToDrop = Math.Min((long) Math.Round(As<Player>().Currency * 0.1), 10000);
                 As<Player>().Currency -= coinToDrop;
 
                 InstancingUtil.Currency((int) coinToDrop, lootOwner, lootOwner, Transform.Position);
+                
+                Zone.BroadcastMessage(new DieMessage
+                {
+                    Associate = GameObject,
+                    DeathType = animation ?? "",
+                    Killer = killer,
+                    SpawnLoot = false,
+                    LootOwner = lootOwner ?? GameObject
+                });
 
                 return;
             }
 
+            //
+            // Normal Smashable
+            //
+            
             if (lootOwner == default) return;
 
             GameObject.Layer -= Layer.Smashable;
@@ -98,11 +128,17 @@ namespace Uchu.World
             Task.Run(async () =>
             {
                 await Task.Delay((int) (ResurrectTime * 1000));
+                
+                //
+                // Re-Spawn Smashable 
+                //
 
-                CanDrop = true;
+                Alive = true;
 
                 GameObject.Layer += Layer.Smashable;
                 GameObject.Layer -= Layer.Hidden;
+            
+                _stats.Health = _stats.MaxHealth;
             });
 
             using var cdClient = new CdClientContext();
@@ -152,13 +188,17 @@ namespace Uchu.World
         {
             if (As<Player>() != null)
             {
+                Alive = true;
+                
                 Zone.BroadcastMessage(new ResurrectMessage
                 {
                     Associate = As<Player>()
                 });
             }
 
-            OnResurrect?.Invoke();
+            OnResurrect.Invoke();
+            
+            _stats.Health = Math.Min(_stats.MaxHealth, 4);
         }
     }
 }

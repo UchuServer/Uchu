@@ -7,7 +7,7 @@ namespace Uchu.World
 {
     public static class InstancingUtil
     {
-        private static readonly Random _random = new Random(); 
+        private static readonly Random Random = new Random(); 
         
         public static GameObject Spawner(LevelObject levelObject, Object parent)
         {
@@ -21,8 +21,9 @@ namespace Uchu.World
                 position: levelObject.Position,
                 rotation: levelObject.Rotation,
                 scale: -1,
-                objectId: (long)levelObject.ObjectId,
-                lot: levelObject.Lot);
+                objectId: (long) levelObject.ObjectId,
+                lot: levelObject.Lot
+            );
 
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 
@@ -45,9 +46,9 @@ namespace Uchu.World
 
             var finalPosition = new Vector3
             {
-                X = spawn.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
+                X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
                 Y = spawn.Y,
-                Z = spawn.Z + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
+                Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
             };
 
             owner.Zone.BroadcastMessage(new DropClientLootMessage
@@ -69,9 +70,9 @@ namespace Uchu.World
         {
             var finalPosition = new Vector3
             {
-                X = spawn.X + ((float) _random.NextDouble() % 1f - 0.5f) * 20f,
+                X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
                 Y = spawn.Y,
-                Z = spawn.Z + ((float) _random.NextDouble() % 1f - 0.5f) * 20f
+                Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
             };
 
             owner.Message(new DropClientLootMessage

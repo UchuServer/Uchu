@@ -14,7 +14,7 @@ namespace Uchu.World
         
         public SpawnerComponent()
         {
-            OnStart += () => { GameObject.Layer = Layer.Spawner; };
+            OnStart.AddListener(() => { GameObject.Layer = Layer.Spawner; });
         }
 
         public Lot SpawnTemplate { get; set; }
@@ -43,7 +43,7 @@ namespace Uchu.World
 
             ActiveSpawns.Add(obj);
 
-            obj.OnDestroyed += () => { ActiveSpawns.Remove(obj); };
+            obj.OnDestroyed.AddListener(() => { ActiveSpawns.Remove(obj); });
 
             return obj;
         }

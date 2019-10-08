@@ -41,7 +41,7 @@ namespace Uchu.World
 
                     Logger.Information($"\t-> {item}");
 
-                    item.OnDestroyed += () => { _items.Remove(item); };
+                    item.OnDestroyed.AddListener(() => { _items.Remove(item); });
                 }
             }
         }

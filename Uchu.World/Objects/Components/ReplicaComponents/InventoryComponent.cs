@@ -13,15 +13,24 @@ namespace Uchu.World
 {
     public class InventoryComponent : ReplicaComponent
     {
-        public event Action<Item> OnEquipped;
+        public readonly Event<Item> OnEquipped = new Event<Item>();
         
-        public event Action<Item> OnUnEquipped;
+        public readonly Event<Item> OnUnEquipped = new Event<Item>();
         
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();
 
         public override ReplicaComponentsId Id => ReplicaComponentsId.Inventory;
 
+        public InventoryComponent()
+        {
+            OnDestroyed.AddListener(() =>
+            {
+                OnEquipped.Clear();
+                OnUnEquipped.Clear();
+            });
+        }
+        
         public override void FromLevelObject(LevelObject levelObject)
         {
             using (var cdClient = new CdClientContext())
@@ -111,7 +120,7 @@ namespace Uchu.World
                 }
             }
 
-            OnEquipped?.Invoke(item);
+            OnEquipped.Invoke(item);
             
             Logger.Debug($"Equipping {item}");
             

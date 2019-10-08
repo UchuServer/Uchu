@@ -23,12 +23,12 @@ namespace Uchu.World
 
         public StatsComponent()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 // Stats should be centralized
                 if (!GameObject.TryGetComponent(out _stats))
                     _stats = GameObject.AddComponent<Stats>();
-            };
+            });
         }
         
         public override void FromLevelObject(LevelObject levelObject)

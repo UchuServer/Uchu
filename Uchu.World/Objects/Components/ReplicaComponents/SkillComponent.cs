@@ -81,6 +81,11 @@ namespace Uchu.World
                         foreach (var gameObject in Zone.GameObjects.Where(g => g.Layer == Layer.Smashable))
                         {
                             if (gameObject == message.OptionalTarget) continue;
+                            
+                            if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructible) || 
+                                !gameObject.TryGetComponent<Stats>(out var stats)) continue;
+                            
+                            if (!destructible.Alive || !stats.Smashable) continue;
 
                             if (Vector3.Distance(gameObject.Transform.Position, Transform.Position) < distance)
                             {
@@ -89,6 +94,7 @@ namespace Uchu.World
                                 //
                                 // Invalid target.
                                 //
+                                
                                 goto NoFixedTarget;
                             }
                         }

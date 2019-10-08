@@ -18,7 +18,7 @@ namespace Uchu.World
 
         public Item()
         {
-            OnDestroyed += () => { Task.Run(RemoveFromInventoryAsync); };
+            OnDestroyed.AddListener(() => Task.Run(RemoveFromInventoryAsync));
         }
 
         public ItemComponent ItemComponent { get; private set; }

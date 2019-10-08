@@ -181,7 +181,7 @@ namespace Uchu.Char.Handlers
                     MaximumImagination = 0
                 });
 
-                Logger.Debug($"{user.Username} created character {packet.CharacterName} \"{name}\"");
+                Logger.Debug($"{user.Username} created character \"{packet.CharacterName}\" with the pre-made name of \"{name}\"");
 
                 await ctx.SaveChangesAsync();
 

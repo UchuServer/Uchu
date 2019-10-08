@@ -42,7 +42,7 @@ namespace Uchu.World
 
         public RebuildComponent()
         {
-            OnStart += async () =>
+            OnStart.AddListener(async () =>
             {
                 using var cdClient = new CdClientContext();
 
@@ -89,8 +89,8 @@ namespace Uchu.World
                     
                 GameObject.Serialize(GameObject);
 
-                GameObject.OnInteract += StartRebuild;
-            };
+                GameObject.OnInteract.AddListener(StartRebuild);
+            });
         }
         
         public override void FromLevelObject(LevelObject levelObject)

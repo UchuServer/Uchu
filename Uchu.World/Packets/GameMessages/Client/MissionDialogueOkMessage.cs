@@ -1,7 +1,7 @@
 ﻿using RakDotNet.IO;
 using Uchu.Core;
 
-namespace Uchu.World.Packets.GameMessages.Client
+namespace Uchu.World
 {
     public class MissionDialogueOkMessage : ClientGameMessage
     {
@@ -19,7 +19,7 @@ namespace Uchu.World.Packets.GameMessages.Client
         {
             IsComplete = reader.ReadBit();
 
-            MissionState = (MissionState)reader.Read<int>();
+            MissionState = (MissionState) reader.Read<int>();
 
             MissionId = reader.Read<int>();
 

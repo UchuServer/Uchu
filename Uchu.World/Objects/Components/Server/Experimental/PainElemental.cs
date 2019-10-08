@@ -19,16 +19,16 @@ namespace Uchu.World.Experimental
         {
             _random = new Random();
 
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 _ai = GameObject.GetComponent<EnemyAi>();
                 _baseCombatAi = GameObject.GetComponent<BaseCombatAiComponent>();
 
                 _ai.Speed = 15;
                 _ai.FollowPlayer = true;
-            };
+            });
 
-            OnTick += Tick;
+            OnTick.AddListener(Tick);
         }
 
         private void Tick()
@@ -49,33 +49,34 @@ namespace Uchu.World.Experimental
 
             _soulTimer = default;
 
-            if (Vector3.Distance(Transform.Position, _ai.FollowLocation) < 120)
-                for (var i = 0; i < 1; i++)
+            if (!(Vector3.Distance(Transform.Position, _ai.FollowLocation) < 120)) return;
+            
+            for (var i = 0; i < 1; i++)
+            {
+                var lostSoul = GameObject.Instantiate(Zone, 12379, Transform.Position, Transform.Rotation);
+
+                var lostSoulAi = lostSoul.GetComponent<EnemyAi>();
+
+                lostSoulAi.TargetLocation = _baseCombatAi.Transform.Position + new Vector3
                 {
-                    var lostSoul = GameObject.Instantiate(Zone, 12379, Transform.Position, Transform.Rotation);
+                    X = (float) _random.NextDouble() * 3,
+                    Y = (float) _random.NextDouble() * 3,
+                    Z = (float) _random.NextDouble() * 3
+                };
 
-                    var lostSoulAi = lostSoul.GetComponent<EnemyAi>();
+                lostSoulAi.Speed = 90;
+                lostSoulAi.FollowPlayer = true;
 
-                    lostSoulAi.TargetLocation = _baseCombatAi.Transform.Position + new Vector3
-                    {
-                        X = (float) _random.NextDouble() * 3,
-                        Y = (float) _random.NextDouble() * 3,
-                        Z = (float) _random.NextDouble() * 3
-                    };
+                Update(GameObject);
 
-                    lostSoulAi.Speed = 90;
-                    lostSoulAi.FollowPlayer = true;
+                Task.Run(async () =>
+                {
+                    await Task.Delay(2000);
 
-                    Update(GameObject);
-
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(2000);
-
-                        Logger.Debug("Destroying Soul");
-                        Destroy(lostSoulAi.GameObject);
-                    });
-                }
+                    Logger.Debug("Destroying Soul");
+                    Destroy(lostSoulAi.GameObject);
+                });
+            }
         }
     }
 }

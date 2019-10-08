@@ -18,7 +18,7 @@ namespace Uchu.World
 
         public MovingPlatformComponent()
         {
-            OnStart += () => { Task.Run(WaitPoint); };
+            OnStart.AddListener(() => { Task.Run(WaitPoint); });
         }
 
         public MovingPlatformPath Path { get; set; }

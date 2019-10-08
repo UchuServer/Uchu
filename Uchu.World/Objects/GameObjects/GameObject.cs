@@ -20,21 +20,25 @@ namespace Uchu.World
 
         public GameObject()
         {
-            OnStart += () =>
+            OnStart.AddListener(() =>
             {
                 Zone.RegisterGameObject(this);
 
                 foreach (var component in _components.ToArray()) Start(component);
-            };
+            });
 
-            OnDestroyed += () =>
+            OnDestroyed.AddListener(() =>
             {
+                OnLayerChanged.Clear();
+                
+                OnInteract.Clear();
+                
                 Zone.UnregisterGameObject(this);
 
                 foreach (var component in _components.ToArray()) Destroy(component);
 
                 Zone.SendDestruction(this);
-            };
+            });
         }
 
         public long ObjectId { get; private set; }
@@ -66,9 +70,9 @@ namespace Uchu.World
 
         public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
 
-        public event Action<Mask> OnLayerChanged;
+        public readonly Event<Mask> OnLayerChanged = new Event<Mask>();
 
-        public event Action<Player> OnInteract;
+        public readonly Event<Player> OnInteract = new Event<Player>();
 
         #region Operators
 

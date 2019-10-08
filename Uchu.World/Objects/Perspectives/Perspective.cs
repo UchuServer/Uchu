@@ -56,19 +56,19 @@ namespace Uchu.World
 
             if (ViewMask != gameObject.Layer)
             {
-                gameObject.OnLayerChanged += layer =>
+                gameObject.OnLayerChanged.AddListener(layer =>
                 {
                     if (ViewMask == layer) Reveal(gameObject, callback);
-                };
+                });
 
                 return;
             }
 
-            gameObject.OnLayerChanged += layer =>
+            gameObject.OnLayerChanged.AddListener(layer =>
             {
                 if (ViewMask != layer) gameObject.Zone.SendDestruction(gameObject, _player);
                 else Reveal(gameObject, callback);
-            };
+            });
 
             if (!_droppedIds.TryPop(out var networkId))
             {
