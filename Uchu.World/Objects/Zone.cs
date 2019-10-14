@@ -61,6 +61,8 @@ namespace Uchu.World
         public GameObject[] GameObjects => _gameObjects.ToArray();
 
         public Player[] Players => _players.ToArray();
+        
+        public bool Loaded { get; private set; }
 
         public void Initialize()
         {
@@ -86,6 +88,8 @@ namespace Uchu.World
 
             Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
 
+            Loaded = true;
+            
             Task.Run(async () => { await ExecuteUpdateAsync(); });
         }
 
@@ -106,7 +110,7 @@ namespace Uchu.World
 
         public GameObject GetGameObject(long objectId)
         {
-            return objectId == -1 ? null : _gameObjects.First(o => o.ObjectId == objectId);
+            return objectId == -1 ? null : _gameObjects.FirstOrDefault(o => o.ObjectId == objectId);
         }
 
         public bool TryGetGameObject(long objectId, out GameObject result)
@@ -150,6 +154,14 @@ namespace Uchu.World
                     Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
+                
+                //
+                // Set player count
+                //
+
+                var worldServer = (WorldServer) Server;
+
+                worldServer.ActiveUserCount = (uint) worldServer.Zones.Sum(z => z.Players.Length);
             };
 
             timer.Start();
@@ -255,18 +267,17 @@ namespace Uchu.World
             {
                 recipient.Perspective.Reveal(gameObject, id =>
                 {
-                    using (var stream = new MemoryStream())
-                    using (var writer = new BitWriter(stream))
-                    {
-                        writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
+                    using var stream = new MemoryStream();
+                    using var writer = new BitWriter(stream);
+                    
+                    writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
 
-                        writer.WriteBit(true);
-                        writer.Write(id);
+                    writer.WriteBit(true);
+                    writer.Write(id);
 
-                        gameObject.WriteConstruct(writer);
+                    gameObject.WriteConstruct(writer);
 
-                        recipient.Connection.Send(stream);
-                    }
+                    recipient.Connection.Send(stream);
                 });
             }
         }
@@ -287,17 +298,16 @@ namespace Uchu.World
             {
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                using (var stream = new MemoryStream())
-                using (var writer = new BitWriter(stream))
-                {
-                    writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
+                using var stream = new MemoryStream();
+                using var writer = new BitWriter(stream);
+                
+                writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
 
-                    writer.Write(id);
+                writer.Write(id);
 
-                    gameObject.WriteSerialize(writer);
+                gameObject.WriteSerialize(writer);
 
-                    recipient.Connection.Send(stream);
-                }
+                recipient.Connection.Send(stream);
             }
         }
 

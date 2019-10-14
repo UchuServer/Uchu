@@ -8,6 +8,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)
         {
+            player.SendChatMessage($"Interacted with {message.TargetObject}");
+            
             await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
                 MissionTaskType.Interact,
                 message.TargetObject.Lot,
@@ -49,7 +51,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (message.Associate.TryGetComponent<RebuildComponent>(out var rebuild))
             {
-                rebuild.StopRebuild(player, RebuildFailReason.Unknown);
+                rebuild.StopRebuild(player, RebuildFailReason.Canceled);
             }
         }
     }

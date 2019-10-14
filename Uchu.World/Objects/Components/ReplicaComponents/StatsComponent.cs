@@ -19,7 +19,7 @@ namespace Uchu.World
         
         public bool Shielded { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Invalid;
+        public override ComponentId Id => ComponentId.Invalid;
 
         public StatsComponent()
         {

@@ -6,7 +6,7 @@ namespace Uchu.World
 {
     public class ShootingGalleryComponent : ScriptedActivityComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.ShootingGallery;
+        public override ComponentId Id => ComponentId.ShootingGallery;
 
         public Vector3 ActivityCameraPosition { get; set; }
 

@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class ExhibitComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Exhibit;
+        public override ComponentId Id => ComponentId.Exhibit;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

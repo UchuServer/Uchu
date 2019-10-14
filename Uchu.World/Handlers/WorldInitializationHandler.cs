@@ -20,6 +20,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ValidateClient(SessionInfoPacket packet, IRakConnection connection)
         {
+            Logger.Information($"Validating client for world!");
+            
             if (!Server.SessionCache.IsKey(packet.SessionKey))
             {
                 await connection.CloseAsync();
@@ -31,37 +33,42 @@ namespace Uchu.World.Handlers
 
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            
+            var character = await ctx.Characters.FindAsync(session.CharacterId);
+
+            if (character == null)
             {
-                var character = await ctx.Characters.FindAsync(session.CharacterId);
+                Logger.Warning(
+                    $"{connection} attempted to connect to world with an invalid character {session.CharacterId}"
+                );
 
-                if (character == null)
+                connection.Send(new DisconnectNotifyPacket
                 {
-                    Logger.Warning(
-                        $"{connection} attempted to connect to world with an invalid character {session.CharacterId}"
-                    );
-
-                    connection.Send(new DisconnectNotifyPacket
-                    {
-                        DisconnectId = DisconnectId.CharacterCorruption
-                    });
-
-                    return;
-                }
-
-                var zoneId = (ZoneId) character.LastZone;
-
-                if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
-
-                var worldServer = (WorldServer) Server;
-
-                connection.Send(new WorldInfoPacket
-                {
-                    ZoneId = zoneId,
-                    Checksum = Zone.GetChecksum(zoneId),
-                    SpawnPosition = (await worldServer.GetZone(zoneId)).ZoneInfo.SpawnPosition
+                    DisconnectId = DisconnectId.CharacterCorruption
                 });
+
+                return;
             }
+
+            var zoneId = (ZoneId) character.LastZone;
+
+            if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
+
+            var worldServer = (WorldServer) Server;
+            
+            Logger.Information($"Sending {nameof(WorldInfoPacket)}, {worldServer}, {connection}");
+
+            var zone = await worldServer.GetZoneAsync(zoneId);
+            
+            Logger.Information($"World loaded");
+            
+            connection.Send(new WorldInfoPacket
+            {
+                ZoneId = zoneId,
+                Checksum = Zone.GetChecksum(zoneId),
+                SpawnPosition = zone.ZoneInfo.SpawnPosition
+            });
         }
 
         [PacketHandler]
@@ -69,202 +76,202 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            
+            var character = await ctx.Characters
+                .Include(c => c.Items)
+                .Include(c => c.User)
+                .Include(c => c.Missions)
+                .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
+
+            var zoneId = (ZoneId) character.LastZone;
+
+            if (zoneId == ZoneId.VentureExplorerCinematic)
             {
-                var character = await ctx.Characters
-                    .Include(c => c.Items)
-                    .Include(c => c.User)
-                    .Include(c => c.Missions)
-                    .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
+                zoneId = ZoneId.VentureExplorer;
+                character.LastZone = (int) zoneId;
 
-                var zoneId = (ZoneId) character.LastZone;
+                await ctx.SaveChangesAsync();
+            }
 
-                if (zoneId == ZoneId.VentureExplorerCinematic)
-                {
-                    zoneId = ZoneId.VentureExplorer;
-                    character.LastZone = (int) zoneId;
+            Server.SessionCache.SetZone(connection.EndPoint, zoneId);
 
-                    await ctx.SaveChangesAsync();
-                }
+            // Zone should already be initialized at this point.
+            var zone = await ((WorldServer) Server).GetZoneAsync(zoneId);
 
-                Server.SessionCache.SetZone(connection.EndPoint, zoneId);
+            var completed = new List<CompletedMissionNode>();
+            var missions = new List<MissionNode>();
 
-                // Zone should already be initialized at this point.
-                var zone = await ((WorldServer) Server).GetZone(zoneId);
-
-                var completed = new List<CompletedMissionNode>();
-                var missions = new List<MissionNode>();
-
-                foreach (var mission in character.Missions)
-                    if (mission.State == (int) MissionState.Completed)
-                        completed.Add(new CompletedMissionNode
-                        {
-                            CompletionCount = mission.CompletionCount,
-                            LastCompletion = mission.LastCompletion,
-                            MissionId = mission.MissionId
-                        });
-                    else
-                        missions.Add(new MissionNode
-                        {
-                            MissionId = mission.MissionId,
-                            Progress = mission.Tasks.OrderBy(t => t.TaskId).Select(t =>
-                                new MissionProgressNode {Value = t.Values.Count}
-                            ).ToArray()
-                        });
-
-                var xmlData = new XmlData
-                {
-                    Inventory = new InventoryNode
+            foreach (var mission in character.Missions)
+                if (mission.State == (int) MissionState.Completed)
+                    completed.Add(new CompletedMissionNode
                     {
-                        ItemContainers = new[]
+                        CompletionCount = mission.CompletionCount,
+                        LastCompletion = mission.LastCompletion,
+                        MissionId = mission.MissionId
+                    });
+                else
+                    missions.Add(new MissionNode
+                    {
+                        MissionId = mission.MissionId,
+                        Progress = mission.Tasks.OrderBy(t => t.TaskId).Select(t =>
+                            new MissionProgressNode {Value = t.Values.Count}
+                        ).ToArray()
+                    });
+
+            var xmlData = new XmlData
+            {
+                Inventory = new InventoryNode
+                {
+                    ItemContainers = new[]
+                    {
+                        new ItemContainerNode
                         {
-                            new ItemContainerNode
+                            Type = 0,
+                            Items = character.Items.Where(i => i.InventoryType == 0).Select(i => new ItemNode
                             {
-                                Type = 0,
-                                Items = character.Items.Where(i => i.InventoryType == 0).Select(i => new ItemNode
-                                {
-                                    Count = (int) i.Count,
-                                    Slot = i.Slot,
-                                    Lot = i.LOT,
-                                    ObjectId = i.InventoryItemId,
-                                    Equipped = i.IsEquipped ? 1 : 0,
-                                    Bound = i.IsBound ? 1 : 0
-                                }).ToArray()
-                            },
-                            new ItemContainerNode
+                                Count = (int) i.Count,
+                                Slot = i.Slot,
+                                Lot = i.LOT,
+                                ObjectId = i.InventoryItemId,
+                                Equipped = i.IsEquipped ? 1 : 0,
+                                Bound = i.IsBound ? 1 : 0
+                            }).ToArray()
+                        },
+                        new ItemContainerNode
+                        {
+                            Type = 2,
+                            Items = character.Items.Where(i => i.InventoryType == 2).Select(i => new ItemNode
                             {
-                                Type = 2,
-                                Items = character.Items.Where(i => i.InventoryType == 2).Select(i => new ItemNode
-                                {
-                                    Count = (int) i.Count,
-                                    Slot = i.Slot,
-                                    Lot = i.LOT,
-                                    ObjectId = i.InventoryItemId,
-                                    Equipped = i.IsEquipped ? 1 : 0,
-                                    Bound = i.IsBound ? 1 : 0
-                                }).ToArray()
-                            },
-                            new ItemContainerNode
+                                Count = (int) i.Count,
+                                Slot = i.Slot,
+                                Lot = i.LOT,
+                                ObjectId = i.InventoryItemId,
+                                Equipped = i.IsEquipped ? 1 : 0,
+                                Bound = i.IsBound ? 1 : 0
+                            }).ToArray()
+                        },
+                        new ItemContainerNode
+                        {
+                            Type = 5,
+                            Items = character.Items.Where(i => i.InventoryType == 5).Select(i => new ItemNode
                             {
-                                Type = 5,
-                                Items = character.Items.Where(i => i.InventoryType == 5).Select(i => new ItemNode
-                                {
-                                    Count = (int) i.Count,
-                                    Slot = i.Slot,
-                                    Lot = i.LOT,
-                                    ObjectId = i.InventoryItemId,
-                                    Equipped = i.IsEquipped ? 1 : 0,
-                                    Bound = i.IsBound ? 1 : 0,
-                                    ExtraInfo = i.ExtraInfo != null
-                                        ? new ExtraInfoNode
-                                        {
-                                            ModuleAssemblyInfo =
-                                                "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
-                                        }
-                                        : null
-                                }).ToArray()
-                            },
-                            new ItemContainerNode
+                                Count = (int) i.Count,
+                                Slot = i.Slot,
+                                Lot = i.LOT,
+                                ObjectId = i.InventoryItemId,
+                                Equipped = i.IsEquipped ? 1 : 0,
+                                Bound = i.IsBound ? 1 : 0,
+                                ExtraInfo = i.ExtraInfo != null
+                                    ? new ExtraInfoNode
+                                    {
+                                        ModuleAssemblyInfo =
+                                            "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
+                                    }
+                                    : null
+                            }).ToArray()
+                        },
+                        new ItemContainerNode
+                        {
+                            Type = 7,
+                            Items = character.Items.Where(i => i.InventoryType == 7).Select(i => new ItemNode
                             {
-                                Type = 7,
-                                Items = character.Items.Where(i => i.InventoryType == 7).Select(i => new ItemNode
-                                {
-                                    Count = (int) i.Count,
-                                    Slot = i.Slot,
-                                    Lot = i.LOT,
-                                    ObjectId = i.InventoryItemId,
-                                    Equipped = i.IsEquipped ? 1 : 0,
-                                    Bound = i.IsBound ? 1 : 0
-                                }).ToArray()
-                            }
+                                Count = (int) i.Count,
+                                Slot = i.Slot,
+                                Lot = i.LOT,
+                                ObjectId = i.InventoryItemId,
+                                Equipped = i.IsEquipped ? 1 : 0,
+                                Bound = i.IsBound ? 1 : 0
+                            }).ToArray()
                         }
-                    },
-                    Character = new CharacterNode
-                    {
-                        AccountId = character.User.UserId,
-                        Currency = character.Currency,
-                        FreeToPlay = character.FreeToPlay ? 1 : 0,
-                        UniverseScore = character.UniverseScore
-                    },
-                    Level = new LevelNode
-                    {
-                        Level = character.Level
-                    },
-                    Missions = new MissionsNode
-                    {
-                        CompletedMissions = completed.ToArray(),
-                        CurrentMissions = missions.ToArray()
-                    },
-                    Minifigure = new MinifigureNode
-                    {
-                        EyebrowStyle = character.EyebrowStyle,
-                        EyeStyle = character.EyeStyle,
-                        HairColor = character.HairColor,
-                        HairStyle = character.HairStyle,
-                        PantsColor = character.PantsColor,
-                        Lh = character.Lh,
-                        MouthStyle = character.MouthStyle,
-                        Rh = character.Rh,
-                        ShirtColor = character.ShirtColor
-                    },
-                    Stats = new DestNode
-                    {
-                        MaximumArmor = character.MaximumArmor,
-                        CurrentArmor = character.CurrentArmor,
-                        MaximumHealth = character.MaximumHealth,
-                        CurrentHealth = character.CurrentHealth,
-                        MaximumImagination = character.MaximumImagination,
-                        CurrentImagination = character.CurrentImagination
                     }
+                },
+                Character = new CharacterNode
+                {
+                    AccountId = character.User.UserId,
+                    Currency = character.Currency,
+                    FreeToPlay = character.FreeToPlay ? 1 : 0,
+                    UniverseScore = character.UniverseScore
+                },
+                Level = new LevelNode
+                {
+                    Level = character.Level
+                },
+                Missions = new MissionsNode
+                {
+                    CompletedMissions = completed.ToArray(),
+                    CurrentMissions = missions.ToArray()
+                },
+                Minifigure = new MinifigureNode
+                {
+                    EyebrowStyle = character.EyebrowStyle,
+                    EyeStyle = character.EyeStyle,
+                    HairColor = character.HairColor,
+                    HairStyle = character.HairStyle,
+                    PantsColor = character.PantsColor,
+                    Lh = character.Lh,
+                    MouthStyle = character.MouthStyle,
+                    Rh = character.Rh,
+                    ShirtColor = character.ShirtColor
+                },
+                Stats = new DestNode
+                {
+                    MaximumArmor = character.MaximumArmor,
+                    CurrentArmor = character.CurrentArmor,
+                    MaximumHealth = character.MaximumHealth,
+                    CurrentHealth = character.CurrentHealth,
+                    MaximumImagination = character.MaximumImagination,
+                    CurrentImagination = character.CurrentImagination
+                }
+            };
+
+            await using (var ms = new MemoryStream())
+            {
+                await using var writer = new StreamWriter(ms, Encoding.UTF8);
+                    
+                Serializer.Serialize(writer, xmlData);
+
+                var bytes = ms.ToArray();
+                var xml = new byte[bytes.Length - 3];
+
+                Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
+
+                var ldf = new LegoDataDictionary
+                {
+                    ["accountId"] = session.UserId,
+                    ["objid", 9] = character.CharacterId,
+                    ["name"] = character.Name,
+                    ["template"] = 1,
+                    ["xmlData"] = xml
                 };
 
-                using (var ms = new MemoryStream())
-                using (var writer = new StreamWriter(ms, Encoding.UTF8))
+                connection.Send(new DetailedUserInfoPacket {Data = ldf});
+            }
+
+            var player = Player.Construct(character, connection, zone);
+
+            if (character.LandingByRocket)
+            {
+                character.LandingByRocket = false;
+                character.Rocket = null;
+
+                await ctx.SaveChangesAsync();
+            }
+
+            player.Message(new DoneLoadingObjectsMessage {Associate = player});
+            player.Message(new PlayerReadyMessage {Associate = player});
+
+            var relations = ctx.Friends.Where(f =>
+                f.FriendTwoId == character.CharacterId
+            ).ToArray();
+
+            foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
+            {
+                connection.Send(new NotifyFriendRequestPacket
                 {
-                    Serializer.Serialize(writer, xmlData);
-
-                    var bytes = ms.ToArray();
-                    var xml = new byte[bytes.Length - 3];
-
-                    Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
-
-                    var ldf = new LegoDataDictionary
-                    {
-                        ["accountId"] = session.UserId,
-                        ["objid", 9] = character.CharacterId,
-                        ["name"] = character.Name,
-                        ["template"] = 1,
-                        ["xmlData"] = xml
-                    };
-
-                    connection.Send(new DetailedUserInfoPacket {Data = ldf});
-                }
-
-                var player = Player.Construct(character, connection, zone);
-
-                if (character.LandingByRocket)
-                {
-                    character.LandingByRocket = false;
-                    character.Rocket = null;
-
-                    await ctx.SaveChangesAsync();
-                }
-
-                player.Message(new DoneLoadingObjectsMessage {Associate = player});
-                player.Message(new PlayerReadyMessage {Associate = player});
-
-                var relations = ctx.Friends.Where(f =>
-                    f.FriendTwoId == character.CharacterId
-                ).ToArray();
-
-                foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
-                {
-                    connection.Send(new NotifyFriendRequestPacket
-                    {
-                        FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
-                        IsBestFriendRequest = friend.RequestingBestFriend
-                    });
-                }
+                    FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
+                    IsBestFriendRequest = friend.RequestingBestFriend
+                });
             }
         }
 

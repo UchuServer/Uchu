@@ -17,17 +17,43 @@ namespace Uchu.World
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
-        private readonly ZoneId[] _zoneIds;
+        private readonly ZoneId _zoneId;
 
         public readonly List<Zone> Zones = new List<Zone>();
         
         public readonly ZoneParser ZoneParser;
 
-        public WorldServer(ZoneId[] zones = default, bool preload = false) : base(ServerType.World)
+        public readonly uint MaxPlayerCount;
+
+        public uint ActiveUserCount
+        {
+            get
+            {
+                using var ctx = new UchuContext();
+                
+                var specification = ctx.Specifications.First(s => s.Id == Id);
+
+                return specification.ActiveUserCount;
+            }
+            set
+            {
+                using var ctx = new UchuContext();
+                
+                var specification = ctx.Specifications.First(s => s.Id == Id);
+
+                specification.ActiveUserCount = value;
+
+                ctx.SaveChanges();
+            }
+        }
+
+        public WorldServer(ServerSpecification specifications, string path) : base(specifications.Id, path)
         {
             ZoneParser = new ZoneParser(Resources);
-            
-            _zoneIds = zones ?? (ZoneId[]) Enum.GetValues(typeof(ZoneId));
+
+            _zoneId = specifications.ZoneId;
+
+            MaxPlayerCount = specifications.MaxUserCount;
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
 
@@ -46,20 +72,9 @@ namespace Uchu.World
             {
                 await ZoneParser.LoadZoneDataAsync();
 
-                if (!preload)
-                {
-                    foreach (var zoneId in ZoneParser.Zones.Keys.Where(_zoneIds.Contains))
-                        Logger.Information($"Ready to load {zoneId}");
+                Logger.Information($"Loading {specifications.ZoneId}");
 
-                    return;
-                }
-
-                foreach (var zoneId in ZoneParser.Zones.Keys.Where(_zoneIds.Contains))
-                {
-                    Logger.Information($"Preloading {zoneId}");
-
-                    await GetZone(zoneId);
-                }
+                await LoadZone(specifications);
             });
         }
 
@@ -79,30 +94,43 @@ namespace Uchu.World
             return Task.CompletedTask;
         }
 
-        public async Task<Zone> GetZone(ZoneId zoneId)
+        public async Task LoadZone(ServerSpecification zone)
         {
-            if (!_zoneIds.Contains(zoneId))
+            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync();
+
+            Logger.Information($"Starting {zone.ZoneId}");
+
+            var info = ZoneParser.Zones?[zone.ZoneId];
+
+            var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
+            
+            Zones.Add(zoneInstance);
+            zoneInstance.Initialize();
+        }
+
+        public async Task<Zone> GetZoneAsync(ZoneId zoneId)
+        {
+            if (_zoneId == zoneId)
             {
-                Logger.Error($"{zoneId} is not in the Zone Table for this server.");
-                return default;
+                //
+                // Wait for zone to load
+                //
+                
+                while (Running)
+                {
+                    var zone = Zones.FirstOrDefault(z => z.ZoneId == zoneId);
+
+                    if (zone?.Loaded ?? false)
+                    {
+                        return zone;
+                    }
+                    
+                    await Task.Delay(1000);
+                }
             }
-
-            if (Zones.Any(z => z.ZoneId == zoneId))
-                return Zones.First(z => z.ZoneId == zoneId);
-
-            Logger.Information($"Starting {zoneId}");
-
-            if (ZoneParser.Zones == default)
-                await ZoneParser.LoadZoneDataAsync();
-
-            var info = ZoneParser.Zones?[zoneId];
-
-            // Create new Zone
-            var zone = new Zone(info, this);
-            Zones.Add(zone);
-            zone.Initialize();
-
-            return Zones.First(z => z.ZoneInfo.ZoneId == (uint) zoneId);
+            
+            Logger.Error($"{zoneId} is not in the Zone Table for this server.");
+            return default;
         }
 
         protected override void RegisterAssembly(Assembly assembly)

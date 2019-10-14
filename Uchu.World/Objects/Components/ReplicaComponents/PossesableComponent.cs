@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         public GameObject Driver { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Possesable;
+        public override ComponentId Id => ComponentId.Possesable;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

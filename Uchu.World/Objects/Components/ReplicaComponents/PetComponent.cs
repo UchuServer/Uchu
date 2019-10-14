@@ -12,7 +12,7 @@ namespace Uchu.World
 
         public GameObject PetInteractionObject { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Pet;
+        public override ComponentId Id => ComponentId.Pet;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

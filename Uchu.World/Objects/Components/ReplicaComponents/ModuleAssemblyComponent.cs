@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class ModuleAssemblyComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.ModuleAssembly;
+        public override ComponentId Id => ComponentId.ModuleAssembly;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

@@ -5,6 +5,6 @@ namespace Uchu.World
     [AttributeUsage(AttributeTargets.Class)]
     public class ServerComponentAttribute : Attribute
     {
-        public ReplicaComponentsId Id { get; set; }
+        public ComponentId Id { get; set; }
     }
 }

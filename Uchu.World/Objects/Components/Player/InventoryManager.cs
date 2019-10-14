@@ -42,7 +42,9 @@ namespace Uchu.World
 
         public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
 
-        public Item GetItem(long id)
+        #region Find Item
+
+        public Item FindItem(long id)
         {
             using (var ctx = new UchuContext())
             {
@@ -63,13 +65,53 @@ namespace Uchu.World
                 return managedItem;
             }
         }
+        
+        public Item FindItem(Lot lot)
+        {
+            return _inventories.Values.Select(
+                inventory => inventory.Items.FirstOrDefault(i => i.Lot == lot)
+            ).FirstOrDefault(item => item != default);
+        }
 
+        public Item FindItem(Lot lot, InventoryType inventoryType)
+        {
+            return _inventories[inventoryType].Items.FirstOrDefault(i => i.Lot == lot);
+        }
+        
+        public bool TryFindItem(Lot lot, out Item item)
+        {
+            item = FindItem(lot);
+
+            return item != default;
+        }
+
+        public bool TryFindItem(Lot lot, InventoryType inventoryType, out Item item)
+        {
+            item = FindItem(lot, inventoryType);
+
+            return item != default;
+        }
+        
+        public Item[] FindItems(Lot lot)
+        {
+            return _inventories.Values.SelectMany(
+                inventory => inventory.Items.Where(i => i.Lot == lot)
+            ).ToArray();
+        }
+
+        public Item[] FindItems(Lot lot, InventoryType inventoryType)
+        {
+            return _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToArray();
+        }
+
+        #endregion
+        
         public async Task AddItemAsync(int lot, uint count, LegoDataDictionary extraInfo = default)
         {
             using (var cdClient = new CdClientContext())
             {
                 var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                    r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
+                    r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
                 );
 
                 if (componentId == default)
@@ -106,7 +148,7 @@ namespace Uchu.World
                 using (var cdClient = new CdClientContext())
                 {
                     var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
+                        r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
                     );
 
                     if (componentId == default)
@@ -190,7 +232,7 @@ namespace Uchu.World
             using (var cdClient = new CdClientContext())
             {
                 var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                    r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
+                    r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
                 );
 
                 if (componentId == default)
@@ -225,7 +267,7 @@ namespace Uchu.World
                 using (var cdClient = new CdClientContext())
                 {
                     var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == lot && r.Componenttype == (int) ReplicaComponentsId.Item
+                        r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
                     );
 
                     if (componentId == default)

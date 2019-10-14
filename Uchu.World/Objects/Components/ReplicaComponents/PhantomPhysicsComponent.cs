@@ -6,7 +6,7 @@ namespace Uchu.World
 {
     public class PhantomPhysicsComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.PhantomPhysics;
+        public override ComponentId Id => ComponentId.PhantomPhysics;
 
         public bool HasPosition { get; set; } = true;
 

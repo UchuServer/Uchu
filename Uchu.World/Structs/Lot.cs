@@ -62,7 +62,7 @@ namespace Uchu.World
             }
         }
 
-        public int GetComponentId(ReplicaComponentsId componentType)
+        public int GetComponentId(ComponentId componentType)
         {
             return GetComponentId((int) componentType);
         }
@@ -80,7 +80,7 @@ namespace Uchu.World
             }
         }
 
-        public int[] GetComponentIds(ReplicaComponentsId componentType)
+        public int[] GetComponentIds(ComponentId componentType)
         {
             return GetComponentIds((int) componentType);
         }
@@ -97,5 +97,11 @@ namespace Uchu.World
                 return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
             }
         }
+
+        #region Consts
+
+        public const int ModularRocket = 6416;
+
+        #endregion
     }
 }

@@ -11,7 +11,7 @@ namespace Uchu.Core
     {
         private static readonly object Lock;
 
-        internal static Configuration Config;
+        public static Configuration Config;
 
         static Logger()
         {

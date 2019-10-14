@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -9,64 +10,34 @@ namespace Uchu.World
     {
         private static async Task Main(string[] args)
         {
-            var port = 2003;
-            List<ZoneId> zoneIds = default;
-            var preload = false;
+            if (args.Length != 2)
+                throw new ArgumentException("Expected 2 argument.");
 
-            var state = ArgumentState.Port;
+            if (!Guid.TryParse(args[0], out var id))
+                throw new ArgumentException($"{args[0]} is not a valid GUID");
 
-            foreach (var arg in args)
+            ServerSpecification specification;
+            
+            using (var ctx = new UchuContext())
             {
-                var normalizedArg = arg.ToLower();
+                specification = await ctx.Specifications.FirstOrDefaultAsync(c => c.Id == id);
 
-                switch (normalizedArg)
-                {
-                    case "-p":
-                    case "-port":
-                        state = ArgumentState.Port;
-                        break;
-                    case "-z":
-                    case "-zones":
-                        if (zoneIds == default) zoneIds = new List<ZoneId>();
-
-                        state = ArgumentState.Zone;
-                        break;
-                    case "-pl":
-                    case "-preload":
-                        preload = true;
-                        break;
-                    default:
-                        switch (state)
-                        {
-                            case ArgumentState.Port:
-                                if (!uint.TryParse(arg, out var argumentPort))
-                                    throw new ArgumentException($"{arg} is not a valid port.");
-
-                                port = (int) argumentPort;
-                                break;
-                            case ArgumentState.Zone:
-                                if (!Enum.TryParse<ZoneId>(arg, out var zone))
-                                    throw new ArgumentException($"{arg} is not a valid zone.");
-
-                                zoneIds?.Add(zone);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-
-                        break;
-                }
+                if (specification == default)
+                    throw new ArgumentException($"{args[0]} is not a valid server specification ID");
             }
 
-            var server = new WorldServer(zoneIds?.ToArray(), preload);
+            var server = new WorldServer(specification, args[1]);
 
             await server.StartAsync();
-        }
 
-        private enum ArgumentState
-        {
-            Port,
-            Zone
+            using (var ctx = new UchuContext())
+            {
+                specification = await ctx.Specifications.FirstAsync(c => c.Id == id);
+
+                ctx.Specifications.Remove(specification);
+
+                await ctx.SaveChangesAsync();
+            }
         }
     }
 }

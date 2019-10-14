@@ -20,7 +20,7 @@ namespace Uchu.World
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Inventory;
+        public override ComponentId Id => ComponentId.Inventory;
 
         public InventoryComponent()
         {
@@ -36,7 +36,7 @@ namespace Uchu.World
             using (var cdClient = new CdClientContext())
             {
                 var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
-                    c.Id == levelObject.Lot && c.Componenttype == (int) ReplicaComponentsId.Inventory);
+                    c.Id == levelObject.Lot && c.Componenttype == (int) ComponentId.Inventory);
 
                 var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
@@ -83,7 +83,7 @@ namespace Uchu.World
                     o => o.Id == lot
                 );
 
-                var itemRegistryEntry = lot.GetComponentId(ReplicaComponentsId.Item);
+                var itemRegistryEntry = lot.GetComponentId(ComponentId.Item);
 
                 if (cdClientObject == default || itemRegistryEntry == default)
                 {
@@ -106,17 +106,20 @@ namespace Uchu.World
             }
         }
 
-        public void EquipItem(Item item)
+        public void EquipItem(Item item, bool ignoreAllChecks = false)
         {
             if (item == default) return;
 
             var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
-            if (!As<Player>().GetComponent<ModularBuilder>().IsBuilding)
+            if (!ignoreAllChecks)
             {
-                if (itemType == ItemType.Model || itemType == ItemType.LootModel || item.Lot == 6086)
+                if (!As<Player>().GetComponent<ModularBuilder>().IsBuilding)
                 {
-                    return;
+                    if (itemType == ItemType.Model || itemType == ItemType.LootModel || item.Lot == 6086)
+                    {
+                        return;
+                    }
                 }
             }
 

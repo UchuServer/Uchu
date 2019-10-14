@@ -29,7 +29,7 @@ namespace Uchu.World
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
         public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Skill;
+        public override ComponentId Id => ComponentId.Skill;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

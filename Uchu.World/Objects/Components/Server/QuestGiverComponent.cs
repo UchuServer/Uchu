@@ -7,7 +7,7 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [ServerComponent(Id = ReplicaComponentsId.QuestGiver)]
+    [ServerComponent(Id = ComponentId.QuestGiver)]
     public class QuestGiverComponent : Component
     {
         public QuestGiverComponent()
@@ -27,7 +27,7 @@ namespace Uchu.World
             using (var ctx = new CdClientContext())
             {
                 var components = ctx.ComponentsRegistryTable.Where(
-                    c => c.Id == GameObject.Lot && c.Componenttype == (int) ReplicaComponentsId.QuestGiver
+                    c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.QuestGiver
                 ).ToArray();
 
                 var missionComponents = components.SelectMany(

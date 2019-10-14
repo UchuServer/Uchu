@@ -11,9 +11,13 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            var player = ((WorldServer) Server).Zones.First(
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(
                 z => z.ZoneId == (ZoneId) session.ZoneId
-            ).Players.FirstOrDefault(
+            );
+            
+            if (zone == default) return;
+            
+            var player = zone.Players.FirstOrDefault(
                 p => p.Connection.Equals(connection)
             );
 

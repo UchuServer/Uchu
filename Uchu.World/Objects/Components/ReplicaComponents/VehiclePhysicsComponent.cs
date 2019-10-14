@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class VehiclePhysicsComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.VehiclePhysics;
+        public override ComponentId Id => ComponentId.VehiclePhysics;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

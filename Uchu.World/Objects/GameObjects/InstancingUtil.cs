@@ -17,7 +17,8 @@ namespace Uchu.World
                 return null;
             }
 
-            var instance = GameObject.Instantiate<GameObject>(parent,
+            var instance = GameObject.Instantiate(
+                parent,
                 position: levelObject.Position,
                 rotation: levelObject.Rotation,
                 scale: -1,

@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{90AEC059-0EB3-48E9-A80B-ACDC042917EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Master", "Uchu.Master\Uchu.Master.csproj", "{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90AEC059-0EB3-48E9-A80B-ACDC042917EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

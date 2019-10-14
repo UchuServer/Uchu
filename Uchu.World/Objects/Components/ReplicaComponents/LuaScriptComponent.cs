@@ -16,7 +16,7 @@ namespace Uchu.World
 
         public LegoDataDictionary Data { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Script;
+        public override ComponentId Id => ComponentId.Script;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

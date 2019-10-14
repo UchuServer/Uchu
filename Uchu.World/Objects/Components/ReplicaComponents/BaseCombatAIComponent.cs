@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public GameObject Target { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.BaseCombatAi;
+        public override ComponentId Id => ComponentId.BaseCombatAi;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class RacingControlComponent : ScriptedActivityComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.RacingControl;
+        public override ComponentId Id => ComponentId.RacingControl;
 
         public override void Construct(BitWriter writer)
         {

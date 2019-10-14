@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class RigidBodyPhantomPhysicsComponent : ReplicaComponent
     {
-        public override ReplicaComponentsId Id => ReplicaComponentsId.RigidBodyPhantomPhysics;
+        public override ComponentId Id => ComponentId.RigidBodyPhantomPhysics;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

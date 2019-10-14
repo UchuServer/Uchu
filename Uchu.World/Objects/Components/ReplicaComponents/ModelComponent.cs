@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         // TODO: Look into this
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Model;
+        public override ComponentId Id => ComponentId.Model;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

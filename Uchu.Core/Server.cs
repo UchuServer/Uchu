@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
@@ -37,82 +40,88 @@ namespace Uchu.Core
 
         public readonly int Port;
 
+        public readonly Guid Id;
+
         public event Func<long, ushort, BitReader, IRakConnection, Task> GameMessageReceived;
 
         public event Action ServerStopped;
 
-        private bool _running;
+        protected bool Running;
 
-        public Server(ServerType type)
+        public Server(Guid id, string configFile)
         {
+            Id = id;
+            
             var serializer = new XmlSerializer(typeof(Configuration));
-            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
-            if (File.Exists(fn))
+            if (!File.Exists(configFile))
             {
-                using (var file = File.OpenRead(fn))
-                {
-                    Logger.Config = Config = (Configuration) serializer.Deserialize(file);
-                }
+                throw new ArgumentException($"{configFile} config file does not exist.");
             }
-            else
+
+            using (var fs = File.OpenRead(configFile))
             {
-                Logger.Config = Config = new Configuration();
-
-                var backup = File.CreateText("config.default.xml");
-
-                serializer.Serialize(backup, Config);
-
-                backup.Close();
-
-                Logger.Warning("No config file found, creating default.");
+                Logger.Config = Config = (Configuration) serializer.Deserialize(fs);
             }
 
             if (!string.IsNullOrWhiteSpace(Config.ResourcesConfiguration?.GameResourceFolder))
             {
-                Logger.Information($"Using Local Resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
                 Resources = new LocalResources(Config);
             }
-
-
             
-            Port = type switch
+            ServerSpecification specification;
+            
+            using (var ctx = new UchuContext())
             {
-                ServerType.Authentication => 21836,
-                ServerType.Character => Config.Character.Port,
-                ServerType.World => Config.World.Port,
-                _ => throw new NotSupportedException($"{type} is not a supported ServerType")
-            };
-
+                specification = ctx.Specifications.First(s => s.Id == id);
+            }
+            
+            Port = specification.Port;
+            
             RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
             SessionCache = new RedisSessionCache();
-
+            
             HandlerMap = new HandlerMap();
             CommandHandleMap = new CommandHandleMap();
-
-            Logger.Information($"{type} Server created on port: {Port}");
+            
+            Logger.Information($"Server {Id} created on port: {Port}");
         }
 
-        public Task StartAsync()
+        public Task StartAsync(bool acceptConsoleCommands = false)
         {
             RegisterAssembly(Assembly.GetExecutingAssembly());
             RegisterAssembly(Assembly.GetEntryAssembly());
 
-            Logger.Information("Starting...");
-
             RakNetServer.MessageReceived += HandlePacketAsync;
 
-            _running = true;
+            Running = true;
 
-            Task.Run(async () =>
+            if (acceptConsoleCommands)
             {
-                while (_running)
+                Task.Run(async () =>
                 {
-                    var command = Console.ReadLine();
+                    while (Running)
+                    {
+                        var command = Console.ReadLine();
+                        
+                        Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
+                    }
+                });
+            }
 
-                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
+            using (var ctx = new UchuContext())
+            {
+                var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
+                
+                if (request != default)
+                {
+                    Logger.Information($"Request found for {Id}");
+                    
+                    request.State = WorldServerRequestState.Complete;
+
+                    ctx.SaveChanges();
                 }
-            });
+            }
 
             return _runTask = RakNetServer.RunAsync();
         }
@@ -121,13 +130,23 @@ namespace Uchu.Core
         {
             Logger.Log("Shutting down...");
 
-            _running = false;
+            Running = false;
 
             ServerStopped?.Invoke();
 
             return RakNetServer.ShutdownAsync();
         }
 
+        public IPAddress[] GetAddresses()
+        {
+            return NetworkInterface.GetAllNetworkInterfaces().Where(i =>
+                (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
+                 i.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
+                i.OperationalStatus == OperationalStatus.Up
+            ).SelectMany(i => i.GetIPProperties().UnicastAddresses
+            ).Select(a => a.Address).Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
+        }
+        
         protected virtual void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
@@ -194,63 +213,64 @@ namespace Uchu.Core
         {
             var connection = RakNetServer.GetConnection(endPoint);
 
-            using (var stream = new MemoryStream(data))
-            using (var reader = new BitReader(stream))
+            await using var stream = new MemoryStream(data);
+            using var reader = new BitReader(stream);
+            
+            var header = new PacketHeader();
+            reader.Read(header);
+
+            if (header.MessageId != MessageIdentifier.UserPacketEnum)
+                throw new ArgumentOutOfRangeException($"Packet is not {nameof(MessageIdentifier.UserPacketEnum)}");
+
+            if (header.PacketId == 0x05)
             {
-                var header = new PacketHeader();
-                reader.Read(header);
-
-                if (header.MessageId != MessageIdentifier.UserPacketEnum)
-                    throw new ArgumentOutOfRangeException($"Packet is not {nameof(MessageIdentifier.UserPacketEnum)}");
-
-                if (header.PacketId == 0x05)
-                {
-                    //
-                    // Game Message
-                    //
-
-                    var objectId = reader.Read<long>();
-                    var messageId = reader.Read<ushort>();
-
-                    try
-                    {
-                        if (GameMessageReceived != null)
-                            await GameMessageReceived(objectId, messageId, reader, connection);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-
-                    return;
-                }
-
                 //
-                // Regular Packet
+                // Game Message
                 //
 
-                if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
-                    !temp.TryGetValue(header.PacketId, out var handler))
-                {
-                    Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
-
-                    return;
-                };
-
-                Logger.Debug($"Received {handler.Packet.GetType().FullName}");
-
-                reader.BaseStream.Position = 8;
+                var objectId = reader.Read<long>();
+                var messageId = reader.Read<ushort>();
 
                 try
                 {
-                    reader.Read(handler.Packet);
-
-                    await InvokeHandlerAsync(handler, connection);
+                    if (GameMessageReceived != null)
+                    {
+                        await GameMessageReceived(objectId, messageId, reader, connection);
+                    }
                 }
                 catch (Exception e)
                 {
                     Logger.Error(e);
                 }
+
+                return;
+            }
+
+            //
+            // Regular Packet
+            //
+
+            if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
+                !temp.TryGetValue(header.PacketId, out var handler))
+            {
+                Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
+
+                return;
+            };
+
+            Logger.Debug($"Received {handler.Packet.GetType().FullName}");
+
+            reader.BaseStream.Position = 8;
+
+            try
+            {
+                reader.Read(handler.Packet);
+
+                await InvokeHandlerAsync(handler, connection);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
             }
         }
 
@@ -286,20 +306,12 @@ namespace Uchu.Core
 
             var paramLength = handler.Info.GetParameters().Length;
 
-            object returnValue;
-
-            switch (paramLength)
+            var returnValue = paramLength switch
             {
-                case 0:
-                    returnValue = handler.Info.Invoke(handler.Group, new object[0]);
-                    break;
-                case 1:
-                    returnValue = handler.Info.Invoke(handler.Group, new object[] {arguments.ToArray()});
-                    break;
-                default:
-                    returnValue = handler.Info.Invoke(handler.Group, new[] {arguments.ToArray(), author});
-                    break;
-            }
+                0 => handler.Info.Invoke(handler.Group, new object[0]),
+                1 => handler.Info.Invoke(handler.Group, new object[] {arguments.ToArray()}),
+                _ => handler.Info.Invoke(handler.Group, new[] {arguments.ToArray(), author})
+            };
 
             switch (returnValue)
             {
@@ -315,11 +327,63 @@ namespace Uchu.Core
             return "";
         }
 
+        public static async Task RequestWorldServer(ZoneId zoneId, Action<int> callback)
+        {
+            var id = Guid.NewGuid();
+            
+            using (var ctx = new UchuContext())
+            {
+                await ctx.WorldServerRequests.AddAsync(new WorldServerRequest
+                {
+                    Id = id,
+                    ZoneId = zoneId
+                });
+
+                await ctx.SaveChangesAsync();
+            }
+
+#pragma warning disable 4014
+            Task.Run(async () =>
+#pragma warning restore 4014
+            {
+                var timeout = 50;
+                
+                while (timeout != default)
+                {
+                    using var ctx = new UchuContext();
+                    
+                    var request = await ctx.WorldServerRequests.FirstAsync(r => r.Id == id);
+
+                    if (request.State != WorldServerRequestState.Complete)
+                    {
+                        timeout--;
+
+                        await Task.Delay(100);
+                        
+                        continue;
+                    }
+
+                    Logger.Information($"Request completed {id} {request.SpecificationId}");
+                    
+                    ctx.WorldServerRequests.Remove(request);
+
+                    await ctx.SaveChangesAsync();
+                    
+                    var specification = await ctx.Specifications.FirstAsync(s => s.Id == request.SpecificationId);
+
+                    callback(specification.Port);
+                    return;
+                }
+                
+                Logger.Error($"Request {id} timed out");
+            });
+        }
+
         private async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);
 
-            Logger.Debug($"Invoking {handler.Group.GetType().Name}.{handler.Info.Name} for {handler.Packet}");
+            Logger.Debug($"[{Port}] Invoking {handler.Group.GetType().Name}.{handler.Info.Name} for {handler.Packet}");
 
             var parameters = new object[] {handler.Packet, endPoint};
 

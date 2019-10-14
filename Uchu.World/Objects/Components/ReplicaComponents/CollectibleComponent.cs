@@ -8,7 +8,7 @@ namespace Uchu.World
     {
         public ushort CollectibleId { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Collectible;
+        public override ComponentId Id => ComponentId.Collectible;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

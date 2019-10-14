@@ -17,6 +17,10 @@ namespace Uchu.Core
         public DbSet<MissionTask> MissionTasks { get; set; }
 
         public DbSet<Friend> Friends { get; set; }
+        
+        public DbSet<ServerSpecification> Specifications { get; set; }
+        
+        public DbSet<WorldServerRequest> WorldServerRequests { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -28,10 +32,9 @@ namespace Uchu.Core
             {
                 var serializer = new XmlSerializer(typeof(Configuration));
 
-                using (var file = File.OpenRead(fn))
-                {
-                    config = (Configuration) serializer.Deserialize(file);
-                }
+                using var file = File.OpenRead(fn);
+                
+                config = (Configuration) serializer.Deserialize(file);
             }
 
             optionsBuilder.UseNpgsql(

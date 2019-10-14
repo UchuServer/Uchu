@@ -477,5 +477,20 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Successfully added {type.Name} to {player}";
         }
+        
+        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Admin)]
+        public string World(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+                return "world <zoneId>";
+
+            if (!Enum.TryParse<ZoneId>(arguments[0], out var id)) return "Invalid <zoneId>";
+
+            if (!Enum.IsDefined(typeof(ZoneId), id)) return "Invalid <zoneId>";
+            
+            player.SendToWorld(id);
+            
+            return $"Requesting transfer to {id}";
+        }
     }
 }

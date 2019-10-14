@@ -143,6 +143,10 @@ namespace Uchu.World
             Start(instance);
             Construct(instance);
 
+            //
+            // Server Components
+            //
+            
             instance.AddComponent<QuestInventory>();
             instance.AddComponent<InventoryManager>();
             instance.AddComponent<TeamPlayer>();
@@ -187,6 +191,30 @@ namespace Uchu.World
             Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g}" : "")}");
 
             Connection.Send(gameMessage);
+        }
+
+        public void SendToWorld(ZoneId zoneId)
+        {
+            using var ctx = new UchuContext();
+            
+            var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+
+            character.LastZone = (int) zoneId;
+
+            ctx.SaveChanges();
+                
+            var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
+                ? "localhost"
+                : Server.GetAddresses()[0].ToString();
+
+            Server.RequestWorldServer(zoneId, port =>
+            {
+                Message(new ServerRedirectionPacket
+                {
+                    Port = (ushort) port,
+                    Address = address
+                });
+            });
         }
 
         private async Task SetCurrencyAsync(long currency)

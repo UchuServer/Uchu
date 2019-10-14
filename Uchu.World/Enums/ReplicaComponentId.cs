@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public enum ReplicaComponentsId
+    public enum ComponentId
     {
         Invalid, // For components like stats which are not used by itself.
 
@@ -10,6 +10,7 @@ namespace Uchu.World
         Spawner = 10,
         QuestGiver = 73,
         Item = 11,
+        RocketLaunchComponent = 67,
 
         Possesable = 108,
         ModuleAssembly = 61,

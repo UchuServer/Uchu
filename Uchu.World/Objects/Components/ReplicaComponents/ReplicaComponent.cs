@@ -42,24 +42,24 @@ namespace Uchu.World
             69
         };
 
-        private static readonly Dictionary<ReplicaComponentsId, Type> ReplicaById;
+        private static readonly Dictionary<ComponentId, Type> ReplicaById;
 
         static ReplicaComponent()
         {
-            ReplicaById = new Dictionary<ReplicaComponentsId, Type>();
+            ReplicaById = new Dictionary<ComponentId, Type>();
 
             foreach (var type in Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.IsSubclassOf(typeof(Component))))
             {
                 if (type.IsAbstract) continue;
 
-                ReplicaComponentsId id;
+                ComponentId id;
 
                 if (type.IsSubclassOf(typeof(ReplicaComponent)))
                 {
                     var instance = (ReplicaComponent) Activator.CreateInstance(type);
 
-                    if (instance.Id == ReplicaComponentsId.Invalid) continue;
+                    if (instance.Id == ComponentId.Invalid) continue;
 
                     id = instance.Id;
                 }
@@ -79,9 +79,9 @@ namespace Uchu.World
         /// <summary>
         ///     Id of this ReplicaComponent.
         /// </summary>
-        public abstract ReplicaComponentsId Id { get; }
+        public abstract ComponentId Id { get; }
 
-        public static Type GetReplica(ReplicaComponentsId id)
+        public static Type GetReplica(ComponentId id)
         {
             return ReplicaById.TryGetValue(id, out var type) ? type : null;
         }

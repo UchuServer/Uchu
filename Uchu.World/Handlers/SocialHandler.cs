@@ -50,94 +50,93 @@ namespace Uchu.World.Handlers
 
             var player = zone.Players.First(p => p.Connection.Equals(connection));
 
-            using (var ctx = new UchuContext())
-            {
-                var friend = ctx.Characters.FirstOrDefault(c => c.Name == packet.PlayerName);
+            using var ctx = new UchuContext();
+            
+            var friend = ctx.Characters.FirstOrDefault(c => c.Name == packet.PlayerName);
 
-                if (friend == default)
-                {
-                    Logger.Information(
-                        $"{player.Name} is trying to be friends with a none existent player {packet.PlayerName}"
-                    );
+            if (friend == default)
+            {
+                Logger.Information(
+                    $"{player.Name} is trying to be friends with a none existent player {packet.PlayerName}"
+                );
                     
+                player.Message(new NotifyFriendRequestResponsePacket
+                {
+                    PlayerName = packet.PlayerName,
+                    Response = ServerFriendRequestResponse.InvalidName
+                });
+                    
+                return;
+            }
+
+            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+
+            var relations = ctx.Friends.Where(f =>
+                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
+            ).ToArray();
+
+            foreach (var relation in relations)
+            {
+                if (!relation.IsAccepted || relation.IsDeclined) continue;
+                if (relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId)
+                {
+                    if (!relation.IsBestFriend && packet.IsRequestingBestFriend) continue;
+                        
                     player.Message(new NotifyFriendRequestResponsePacket
                     {
                         PlayerName = packet.PlayerName,
-                        Response = ServerFriendRequestResponse.InvalidName
+                        Response = ServerFriendRequestResponse.AlreadyFriends
                     });
-                    
+                        
                     return;
                 }
-
-                var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-
-                var relations = ctx.Friends.Where(f =>
-                    f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
-                ).ToArray();
-
-                foreach (var relation in relations)
-                {
-                    if (!relation.IsAccepted || relation.IsDeclined) continue;
-                    if (relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId)
-                    {
-                        if (!relation.IsBestFriend && packet.IsRequestingBestFriend) continue;
-                        
-                        player.Message(new NotifyFriendRequestResponsePacket
-                        {
-                            PlayerName = packet.PlayerName,
-                            Response = ServerFriendRequestResponse.AlreadyFriends
-                        });
-                        
-                        return;
-                    }
-                }
-
-                Logger.Information($"Sending friend request from {player.Name} to {packet.PlayerName}!");
-
-                var invite = relations.FirstOrDefault(relation =>
-                    relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId
-                );
-
-                if (invite == default)
-                {
-                    invite = new Friend
-                    {
-                        FriendId = character.CharacterId,
-                        FriendTwoId = friend.CharacterId
-                    };
-
-                    ctx.Friends.Add(invite);
-                }
-                else
-                {
-                    invite.RequestingBestFriend = true;
-                }
-
-                // Friend one is sender;
-                invite.FriendId = character.CharacterId;
-                invite.FriendTwoId = friend.CharacterId;
-
-                var friendPlayer = zone.Players.FirstOrDefault(p => p.ObjectId == invite.FriendTwoId);
-
-                Logger.Information($"{friendPlayer} is getting a friend request from {player.Name}!");
-
-                invite.RequestHasBeenSent = false;
-
-                if (!ReferenceEquals(friendPlayer, null))
-                {
-                    player.Message(new NotifyFriendRequestPacket
-                    {
-                        FriendName = player.Name,
-                        IsBestFriendRequest = packet.IsRequestingBestFriend
-                    });
-
-                    invite.RequestHasBeenSent = true;
-
-                    Logger.Information($"Friend request sent to {friendPlayer} from {player}");
-                }
-
-                await ctx.SaveChangesAsync();
             }
+
+            Logger.Information($"Sending friend request from {player.Name} to {packet.PlayerName}!");
+
+            var invite = relations.FirstOrDefault(relation =>
+                relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId
+            );
+
+            if (invite == default)
+            {
+                invite = new Friend
+                {
+                    FriendId = character.CharacterId,
+                    FriendTwoId = friend.CharacterId
+                };
+
+                ctx.Friends.Add(invite);
+            }
+            else
+            {
+                invite.RequestingBestFriend = true;
+            }
+
+            // Friend one is sender;
+            invite.FriendId = character.CharacterId;
+            invite.FriendTwoId = friend.CharacterId;
+
+            var friendPlayer = zone.Players.FirstOrDefault(p => p.ObjectId == invite.FriendTwoId);
+
+            Logger.Information($"{friendPlayer} is getting a friend request from {player.Name}!");
+
+            invite.RequestHasBeenSent = false;
+
+            if (!ReferenceEquals(friendPlayer, null))
+            {
+                player.Message(new NotifyFriendRequestPacket
+                {
+                    FriendName = player.Name,
+                    IsBestFriendRequest = packet.IsRequestingBestFriend
+                });
+
+                invite.RequestHasBeenSent = true;
+
+                Logger.Information($"Friend request sent to {friendPlayer} from {player}");
+            }
+
+            await ctx.SaveChangesAsync();
         }
 
         [PacketHandler]

@@ -38,7 +38,7 @@ namespace Uchu.World
 
         public Vector3 ActivatorPosition { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Rebuild;
+        public override ComponentId Id => ComponentId.Rebuild;
 
         public RebuildComponent()
         {
@@ -47,13 +47,13 @@ namespace Uchu.World
                 using var cdClient = new CdClientContext();
 
                 _clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
-                    r => r.Id == GameObject.Lot.GetComponentId(ReplicaComponentsId.Rebuild)
+                    r => r.Id == GameObject.Lot.GetComponentId(ComponentId.Rebuild)
                 );
 
                 if (_clientComponent == default)
                 {
                     Logger.Error(
-                        $"{GameObject} does not have a valid {nameof(ReplicaComponentsId.Rebuild)} component."
+                        $"{GameObject} does not have a valid {nameof(ComponentId.Rebuild)} component."
                     );
                     
                     return;

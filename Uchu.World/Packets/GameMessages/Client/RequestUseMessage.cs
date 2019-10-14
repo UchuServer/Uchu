@@ -1,4 +1,5 @@
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -24,7 +25,15 @@ namespace Uchu.World
 
             MultiInteractType = reader.Read<int>();
 
-            TargetObject = reader.ReadGameObject(Associate.Zone);
+            //
+            // When you interact with a rocket launchpad it returns a none existent id?
+            //
+            
+            var targetId = reader.Read<long>();
+            
+            Logger.Information($"Interact with {targetId}");
+
+            TargetObject = Associate.Zone.GetGameObject(targetId);
 
             Secondary = reader.ReadBit();
         }

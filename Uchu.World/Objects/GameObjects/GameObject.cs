@@ -58,6 +58,9 @@ namespace Uchu.World
 
         public string Name { get; set; }
         
+        /// <summary>
+        ///     Also known as ExtraInfo
+        /// </summary>
         public LegoDataDictionary Settings { get; set; } = new LegoDataDictionary();
 
         public string ClientName { get; private set; }
@@ -286,7 +289,14 @@ namespace Uchu.World
         {
             return Instantiate(typeof(T), parent, name, position, rotation, scale, objectId, lot, spawner) as T;
         }
-
+        
+        public static GameObject Instantiate(Object parent, string name = "", Vector3 position = default,
+            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
+            SpawnerComponent spawner = default)
+        {
+            return Instantiate(typeof(GameObject), parent, name, position, rotation, scale, objectId, lot, spawner);
+        }
+        
         #endregion
 
         #region From Template
@@ -376,11 +386,11 @@ namespace Uchu.World
                 // Add components from the entries
                 //
 
-                if ((ReplicaComponentsId) (int) component.Componenttype == ReplicaComponentsId.QuestGiver)
+                if ((ComponentId) (int) component.Componenttype == ComponentId.QuestGiver)
                     Logger.Information($"{instance} has a Quest Giver component.");
 
                 var componentType =
-                    ReplicaComponent.GetReplica((ReplicaComponentsId) (int) component.Componenttype);
+                    ReplicaComponent.GetReplica((ComponentId) (int) component.Componenttype);
 
                 if (componentType != default) instance.AddComponent(componentType);
             }
@@ -402,7 +412,7 @@ namespace Uchu.World
 
             foreach (var component in registryComponents)
             {
-                var componentType = ReplicaComponent.GetReplica((ReplicaComponentsId) component.Componenttype);
+                var componentType = ReplicaComponent.GetReplica((ComponentId) component.Componenttype);
 
                 if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
                 else instance.AddComponent(componentType);

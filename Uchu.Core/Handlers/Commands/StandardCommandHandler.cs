@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace Uchu.Core.Handlers.Commands
         public async Task StopServer()
         {
             await Server.StopAsync();
+            
+            Process.GetCurrentProcess().Kill();
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]

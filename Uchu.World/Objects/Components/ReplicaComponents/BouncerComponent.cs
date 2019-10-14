@@ -10,7 +10,7 @@ namespace Uchu.World
         
         public Vector3 BouncerDestination { get; set; }
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.Bouncer;
+        public override ComponentId Id => ComponentId.Bouncer;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

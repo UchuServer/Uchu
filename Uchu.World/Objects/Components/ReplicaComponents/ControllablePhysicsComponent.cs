@@ -26,7 +26,7 @@ namespace Uchu.World
 
         public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
 
-        public override ReplicaComponentsId Id => ReplicaComponentsId.ControllablePhysics;
+        public override ComponentId Id => ComponentId.ControllablePhysics;
 
         public override void FromLevelObject(LevelObject levelObject)
         {
