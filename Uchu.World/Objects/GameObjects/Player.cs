@@ -152,7 +152,11 @@ namespace Uchu.World
             instance.AddComponent<TeamPlayer>();
             instance.AddComponent<ModularBuilder>();
 
-            instance.Perspective = new Perspective(instance, World.Layer.All & ~ World.Layer.Hidden);
+            var layer = World.Layer.All;
+            layer -= World.Layer.Hidden;
+            layer -= World.Layer.Spawner;
+
+            instance.Perspective = new Perspective(instance, layer);
             instance.Layer = World.Layer.Player;
 
             zone.RequestConstruction(instance);

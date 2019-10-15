@@ -173,8 +173,7 @@ namespace Uchu.World.Handlers.Commands
             if (!arguments.Contains("-m"))
                 foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
                 {
-                    if (gameObject.Transform == default || gameObject.GetComponent<SpawnerComponent>() != null)
-                        continue;
+                    if (gameObject.Transform == default) continue;
 
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
@@ -490,7 +489,19 @@ namespace Uchu.World.Handlers.Commands
             
             player.SendToWorld(id);
             
-            return $"Requesting transfer to {id}";
+            player.Message(new SetStunnedMessage
+            {
+                Associate = player,
+                CantMove = true,
+                CantJump = true,
+                CantAttack = true,
+                CantTurn = true,
+                CantUseItem = true,
+                CantEquip = true,
+                CantInteract = true
+            });
+            
+            return $"Requesting transfer to {id}, please wait...";
         }
     }
 }

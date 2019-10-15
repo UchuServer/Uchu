@@ -243,7 +243,7 @@ namespace Uchu.World
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
-                instance.ObjectId = objectId == default ? IdUtils.GenerateObjectId() : objectId;
+                instance.ObjectId = objectId == 0 ? IdUtils.GenerateObjectId() : objectId;
 
                 instance.Lot = lot;
 
@@ -350,6 +350,10 @@ namespace Uchu.World
             // Create GameObject
             //
 
+            var id = levelObject.ObjectId == 0 ? IdUtils.GenerateObjectId() : (long) levelObject.ObjectId;
+
+            Logger.Information(id);
+            
             var instance = Instantiate(
                 type,
                 parent,
@@ -357,7 +361,7 @@ namespace Uchu.World
                 levelObject.Position,
                 levelObject.Rotation,
                 levelObject.Scale,
-                IdUtils.GenerateObjectId(),
+                id,
                 levelObject.Lot
             );
 

@@ -53,7 +53,13 @@ namespace Uchu.World
         {
             if (levelObject.Settings.TryGetValue("respawn", out var resTimer))
             {
-                ResurrectTime = (float) resTimer;
+                ResurrectTime = resTimer switch
+                {
+                    uint timer => timer,
+                    float timer => timer,
+                    int timer => timer,
+                    _ => ResurrectTime
+                };
             }
 
             _random = new Random();

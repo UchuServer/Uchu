@@ -84,8 +84,9 @@ namespace Uchu.Master
                         worldServer.EmptyTime++;
                         
                         if (worldServer.EmptyTime != 10000) continue;
-                        
-                        await worldServer.Process.StandardInput.WriteLineAsync("/stop");
+
+                        // Evil, but works
+                        worldServer.Process.Kill();
                         
                         WorldServers.RemoveAt(index);
                     }

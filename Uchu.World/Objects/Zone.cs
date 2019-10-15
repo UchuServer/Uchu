@@ -72,18 +72,14 @@ namespace Uchu.World
 
             foreach (var levelObject in objects)
             {
-                var obj = GameObject.Instantiate(levelObject, this);
-
-                if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
-                    levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
-                    levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
-                    obj.Layer = Layer.Hidden;
-
-                Start(obj);
-
-                if (obj.GetType().GetCustomAttribute<UnconstructedAttribute>() == null) GameObject.Construct(obj);
-
-                if (obj.TryGetComponent<SpawnerComponent>(out var spawner)) spawner.Spawn();
+                try
+                {
+                    SpawnLevelObject(levelObject);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
 
             Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
@@ -91,6 +87,44 @@ namespace Uchu.World
             Loaded = true;
             
             Task.Run(async () => { await ExecuteUpdateAsync(); });
+        }
+
+        private void SpawnLevelObject(LevelObject levelObject)
+        {
+            var obj = GameObject.Instantiate(levelObject, this);
+
+            SpawnerComponent spawner = default;
+                
+            if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
+                levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
+                levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
+            {
+                obj.Layer = Layer.Hidden;
+            }
+            
+            //
+            // Only spawns should get constructed on the client.
+            //
+            
+            else if (!obj.TryGetComponent(out spawner))
+            {
+                obj.Layer = Layer.Hidden;
+            }
+
+            Start(obj);
+            
+            if (obj.Layer == Layer.Hidden) return;
+
+            if (spawner == default)
+            {
+                Logger.Warning($"{obj} is not a spawner but get qualified to spawn");
+                
+                return;
+            }
+            
+            GameObject.Construct(obj);
+            
+            spawner.Spawn();
         }
 
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
