@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         public bool HasPosition { get; set; } = true;
 
-        public override ComponentId Id => ComponentId.SimplePhysics;
+        public override ComponentId Id => ComponentId.SimplePhysicsComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

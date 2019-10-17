@@ -117,12 +117,10 @@ namespace Uchu.World
 
             if (spawner == default)
             {
-                Logger.Warning($"{obj} is not a spawner but get qualified to spawn");
+                Logger.Warning($"{obj} is not a spawner but got qualified to spawn");
                 
                 return;
             }
-            
-            GameObject.Construct(obj);
             
             spawner.Spawn();
         }

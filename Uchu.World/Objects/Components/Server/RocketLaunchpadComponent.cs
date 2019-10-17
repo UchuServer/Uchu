@@ -27,6 +27,8 @@ namespace Uchu.World
                     
                 return;
             }
+            
+            if (rocket == null) return;
 
             player.GetComponent<InventoryComponent>().EquipItem(rocket, true);
                 

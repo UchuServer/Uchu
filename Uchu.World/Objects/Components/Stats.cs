@@ -264,9 +264,9 @@ namespace Uchu.World
             using var cdClient = new CdClientContext();
             
             var stats = cdClient.DestructibleComponentTable.FirstOrDefault(
-                o => o.Id == GameObject.Lot.GetComponentId(ComponentId.Destructible)
+                o => o.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
             );
-                
+            
             if (stats == default) return;
 
             var rawHealth = stats.Life ?? 0;

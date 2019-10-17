@@ -106,36 +106,35 @@ namespace Uchu.World
 
         #endregion
         
-        public async Task AddItemAsync(int lot, uint count, LegoDataDictionary extraInfo = default)
+        public async Task AddItemAsync(Lot lot, uint count, LegoDataDictionary extraInfo = default)
         {
-            using (var cdClient = new CdClientContext())
+            using var cdClient = new CdClientContext();
+            
+            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
+                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
+            );
+
+            if (componentId == default)
             {
-                var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                    r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
-                );
-
-                if (componentId == default)
-                {
-                    Logger.Error($"{lot} does not have a Item component");
-                    return;
-                }
-
-                var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
-                    i => i.Id == componentId.Componentid
-                );
-
-                if (component == default)
-                {
-                    Logger.Error(
-                        $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                    );
-                    return;
-                }
-
-                Debug.Assert(component.ItemType != null, "component.ItemType != null");
-
-                AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
+                Logger.Error($"{lot} does not have a Item component");
+                return;
             }
+
+            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == componentId.Componentid
+            );
+
+            if (component == default)
+            {
+                Logger.Error(
+                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                );
+                return;
+            }
+
+            Debug.Assert(component.ItemType != null, "component.ItemType != null");
+
+            AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
         }
 
         public void AddItem(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
@@ -145,94 +144,10 @@ namespace Uchu.World
             // The math here cannot be executed in parallel
             lock (_lock)
             {
-                using (var cdClient = new CdClientContext())
-                {
-                    var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
-                    );
-
-                    if (componentId == default)
-                    {
-                        Logger.Error($"{lot} does not have a Item component");
-                        return;
-                    }
-
-                    var component = cdClient.ItemComponentTable.FirstOrDefault(
-                        i => i.Id == componentId.Componentid
-                    );
-
-                    if (component == default)
-                    {
-                        Logger.Error(
-                            $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                        );
-                        return;
-                    }
-
-                    var stackSize = component.StackSize ?? 1;
-                    
-                    // Bricks and alike does not have a stack limit.
-                    if (stackSize == default) stackSize = int.MaxValue;
-
-                    //
-                    // Update quest tasks
-                    //
-
-                    var questInventory = GameObject.GetComponent<QuestInventory>();
-
-                    for (var i = 0; i < count; i++)
-                    {
-#pragma warning disable 4014
-                        Task.Run(async () =>
-#pragma warning restore 4014
-                        {
-                            await questInventory.UpdateObjectTaskAsync(MissionTaskType.ObtainItem, lot);
-                        });
-                    }
-
-                    //
-                    // Fill stacks
-                    //
-
-                    foreach (var item in inventory.Items.Where(i => i.Lot == lot))
-                    {
-                        if (item.Count == stackSize) continue;
-
-                        var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
-
-                        item.Count += toAdd;
-
-                        count -= toAdd;
-
-                        if (count <= 0) return;
-                    }
-
-                    //
-                    // Create new stacks
-                    //
-
-                    var toCreate = count;
-
-                    while (toCreate != default)
-                    {
-                        var toAdd = (uint) Min(stackSize, (int) toCreate);
-
-                        var item = Item.Instantiate(lot, inventory, toAdd, extraInfo);
-
-                        Start(item);
-
-                        toCreate -= toAdd;
-                    }
-                }
-            }
-        }
-
-        public async Task RemoveItemAsync(int lot, uint count, bool silent = false)
-        {
-            using (var cdClient = new CdClientContext())
-            {
-                var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                    r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
+                using var cdClient = new CdClientContext();
+                
+                var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                    r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
                 );
 
                 if (componentId == default)
@@ -241,7 +156,7 @@ namespace Uchu.World
                     return;
                 }
 
-                var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+                var component = cdClient.ItemComponentTable.FirstOrDefault(
                     i => i.Id == componentId.Componentid
                 );
 
@@ -253,10 +168,92 @@ namespace Uchu.World
                     return;
                 }
 
-                Debug.Assert(component.ItemType != null, "component.ItemType != null");
+                var stackSize = component.StackSize ?? 1;
+                    
+                // Bricks and alike does not have a stack limit.
+                if (stackSize == default) stackSize = int.MaxValue;
 
-                RemoveItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), silent);
+                //
+                // Update quest tasks
+                //
+
+                var questInventory = GameObject.GetComponent<QuestInventory>();
+
+                for (var i = 0; i < count; i++)
+                {
+#pragma warning disable 4014
+                    Task.Run(async () =>
+#pragma warning restore 4014
+                    {
+                        await questInventory.UpdateObjectTaskAsync(MissionTaskType.ObtainItem, lot);
+                    });
+                }
+
+                //
+                // Fill stacks
+                //
+
+                foreach (var item in inventory.Items.Where(i => i.Lot == lot))
+                {
+                    if (item.Count == stackSize) continue;
+
+                    var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
+
+                    item.Count += toAdd;
+
+                    count -= toAdd;
+
+                    if (count <= 0) return;
+                }
+
+                //
+                // Create new stacks
+                //
+
+                var toCreate = count;
+
+                while (toCreate != default)
+                {
+                    var toAdd = (uint) Min(stackSize, (int) toCreate);
+
+                    var item = Item.Instantiate(lot, inventory, toAdd, extraInfo);
+
+                    Start(item);
+
+                    toCreate -= toAdd;
+                }
             }
+        }
+
+        public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
+        {
+            using var cdClient = new CdClientContext();
+            
+            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
+                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
+            );
+
+            if (componentId == default)
+            {
+                Logger.Error($"{lot} does not have a Item component");
+                return;
+            }
+
+            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == componentId.Componentid
+            );
+
+            if (component == default)
+            {
+                Logger.Error(
+                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                );
+                return;
+            }
+
+            Debug.Assert(component.ItemType != null, "component.ItemType != null");
+
+            RemoveItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), silent);
         }
 
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
@@ -264,60 +261,59 @@ namespace Uchu.World
             // The math here cannot be executed in parallel
             lock (_lock)
             {
-                using (var cdClient = new CdClientContext())
+                using var cdClient = new CdClientContext();
+                
+                var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                    r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
+                );
+
+                if (componentId == default)
                 {
-                    var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == lot && r.Componenttype == (int) ComponentId.Item
-                    );
-
-                    if (componentId == default)
-                    {
-                        Logger.Error($"{lot} does not have a Item component");
-                        return;
-                    }
-
-                    var component = cdClient.ItemComponentTable.FirstOrDefault(
-                        i => i.Id == componentId.Componentid
-                    );
-
-                    if (component == default)
-                    {
-                        Logger.Error(
-                            $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                        );
-                        return;
-                    }
-
-                    var items = _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToList();
-
-                    //
-                    // Sort to make sure we remove from the stacks with the lowest count first.
-                    //
-
-                    items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
-
-                    foreach (var item in items)
-                    {
-                        var toRemove = (uint) Min((int) count, (int) item.Count);
-
-                        if (!silent) item.Count -= toRemove;
-                        else
-                        {
-                            var storedCount = count;
-                            Task.Run(async () => { await item.SetCountSilentAsync(storedCount); });
-                        }
-
-                        count -= toRemove;
-
-                        if (count != default) continue;
-
-                        return;
-                    }
-
-                    Logger.Error(
-                        $"Trying to remove {lot} x {count} when {GameObject} does not have that many of {lot} in their {inventoryType} inventory"
-                    );
+                    Logger.Error($"{lot} does not have a Item component");
+                    return;
                 }
+
+                var component = cdClient.ItemComponentTable.FirstOrDefault(
+                    i => i.Id == componentId.Componentid
+                );
+
+                if (component == default)
+                {
+                    Logger.Error(
+                        $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                    );
+                    return;
+                }
+
+                var items = _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToList();
+
+                //
+                // Sort to make sure we remove from the stacks with the lowest count first.
+                //
+
+                items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
+
+                foreach (var item in items)
+                {
+                    var toRemove = (uint) Min((int) count, (int) item.Count);
+
+                    if (!silent) item.Count -= toRemove;
+                    else
+                    {
+                        var storedCount = count;
+                        Task.Run(async () => { await item.SetCountSilentAsync(storedCount); });
+                    }
+
+                    count -= toRemove;
+
+                    if (count != default) continue;
+
+                    return;
+                }
+
+                Logger.Error(
+                    $"Trying to remove {lot} x {count} when {GameObject} does not have that many of {lot} in their {inventoryType} inventory"
+                );
             }
         }
 

@@ -175,6 +175,8 @@ namespace Uchu.World.Handlers.Commands
                 {
                     if (gameObject.Transform == default) continue;
 
+                    if (!arguments.Contains("-sp") && gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
                         current = gameObject;
@@ -486,6 +488,10 @@ namespace Uchu.World.Handlers.Commands
             if (!Enum.TryParse<ZoneId>(arguments[0], out var id)) return "Invalid <zoneId>";
 
             if (!Enum.IsDefined(typeof(ZoneId), id)) return "Invalid <zoneId>";
+
+            if (player.Zone.ZoneId == id) return $"You are already in {id}";
+
+            if (id == ZoneId.FrostBurgh) return $"Sorry, {id} is disabled in the client...";
             
             player.SendToWorld(id);
             

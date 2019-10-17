@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public Effect[] Effects { get; set; } = new Effect[0];
 
-        public override ComponentId Id => ComponentId.Render;
+        public override ComponentId Id => ComponentId.RenderComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public float[] Parameters { get; set; } = new float[10];
 
-        public override ComponentId Id => ComponentId.ScriptedActivity;
+        public override ComponentId Id => ComponentId.ScriptedActivityComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

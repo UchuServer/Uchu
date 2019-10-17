@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         public bool State { get; set; }
 
-        public override ComponentId Id => ComponentId.Switch;
+        public override ComponentId Id => ComponentId.SwitchComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

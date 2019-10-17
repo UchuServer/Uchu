@@ -58,7 +58,7 @@ namespace Uchu.World
             obj.OnTick.Clear();
         }
 
-        public static void Update(Object obj)
+        protected static void Update(Object obj)
         {
             obj.OnTick.Invoke();
         }

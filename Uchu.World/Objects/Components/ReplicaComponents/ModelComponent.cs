@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         // TODO: Look into this
 
-        public override ComponentId Id => ComponentId.Model;
+        public override ComponentId Id => ComponentId.ModuleComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

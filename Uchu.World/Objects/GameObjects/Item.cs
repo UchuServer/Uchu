@@ -21,7 +21,17 @@ namespace Uchu.World
             OnDestroyed.AddListener(() => Task.Run(RemoveFromInventoryAsync));
         }
 
-        public ItemComponent ItemComponent { get; private set; }
+        public ItemComponent ItemComponent
+        {
+            get
+            {
+                using var cdClient = new CdClientContext();
+
+                var id = Lot.GetComponentId(ComponentId.ItemComponent);
+
+                return cdClient.ItemComponentTable.FirstOrDefault(c => c.Id == id);
+            }
+        }
 
         public Inventory Inventory { get; private set; }
 
@@ -107,7 +117,7 @@ namespace Uchu.World
                 o => o.Id == item.LOT
             );
 
-            var itemRegistryEntry = ((Lot) item.LOT).GetComponentId(ComponentId.Item);
+            var itemRegistryEntry = ((Lot) item.LOT).GetComponentId(ComponentId.ItemComponent);
 
             if (cdClientObject == default || itemRegistryEntry == default)
             {
@@ -123,15 +133,10 @@ namespace Uchu.World
             if (!string.IsNullOrWhiteSpace(item.ExtraInfo)) 
                 instance.Settings = LegoDataDictionary.FromString(item.ExtraInfo);
 
-            var itemComponent = cdClient.ItemComponentTable.First(
-                i => i.Id == itemRegistryEntry
-            );
-
             instance._count = (uint) item.Count;
             instance._equipped = item.IsEquipped;
             instance._slot = (uint) item.Slot;
 
-            instance.ItemComponent = itemComponent;
             instance.Inventory = inventory;
             instance.Player = inventory.Manager.GameObject as Player;
 
@@ -183,7 +188,6 @@ namespace Uchu.World
                 i => i.Id == itemRegistryEntry.Componentid
             );
 
-            instance.ItemComponent = itemComponent;
             instance.Inventory = inventory;
             instance.Player = inventory.Manager.GameObject as Player;
 

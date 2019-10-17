@@ -206,13 +206,20 @@ namespace Uchu.World
             character.LastZone = (int) zoneId;
 
             ctx.SaveChanges();
-                
+            
             var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
             Server.RequestWorldServer(zoneId, port =>
             {
+                if (Server.Port == port)
+                {
+                    Logger.Error("Could not send a player to the same port as it already has");
+                    
+                    return;
+                }
+                
                 Message(new ServerRedirectionPacket
                 {
                     Port = (ushort) port,

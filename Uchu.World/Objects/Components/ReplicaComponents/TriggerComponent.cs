@@ -9,7 +9,7 @@ namespace Uchu.World
     {
         public int TriggerId { get; set; } = -1;
 
-        public override ComponentId Id => ComponentId.Trigger;
+        public override ComponentId Id => ComponentId.TriggerComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

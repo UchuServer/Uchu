@@ -15,7 +15,7 @@ namespace Uchu.World
         private Random _random;
         private Stats _stats;
 
-        public override ComponentId Id => ComponentId.Destructible;
+        public override ComponentId Id => ComponentId.DestructibleComponent;
 
         /// <summary>
         ///     Warning: Should not be used as a definitive client state. Could be unreliable.
@@ -68,7 +68,7 @@ namespace Uchu.World
 
             using (var cdClient = new CdClientContext())
             {
-                var entry = GameObject.Lot.GetComponentId(ComponentId.Destructible);
+                var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
                 _cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(c => c.Id == entry);
 

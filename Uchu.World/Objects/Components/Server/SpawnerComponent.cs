@@ -5,7 +5,7 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    [ServerComponent(Id = ComponentId.Spawner)]
+    [ServerComponent(Id = ComponentId.SpawnerComponent)]
     public class SpawnerComponent : Component
     {
         public readonly List<GameObject> ActiveSpawns = new List<GameObject>();

@@ -1,12 +1,37 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
+using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
     public class VendorComponent : ReplicaComponent
     {
-        public override ComponentId Id => ComponentId.Vendor;
-
+        public override ComponentId Id => ComponentId.VendorComponent;
+        
+        public ShopEntry[] Entries { get; set; }
+        
+        public readonly AsyncEvent<Lot, uint, Player> OnBuy = new AsyncEvent<Lot, uint, Player>();
+        
+        public readonly AsyncEvent<Item, uint, Player> OnSell = new AsyncEvent<Item, uint, Player>();
+        
+        public readonly AsyncEvent<Item, uint, Player> OnBuyback = new AsyncEvent<Item, uint, Player>();
+        
+        public VendorComponent()
+        {
+            OnStart.AddListener(async () =>
+            {
+                await SetupEntries();
+                
+                GameObject.OnInteract.AddListener(OnInteract);
+            });
+        }
+        
         public override void FromLevelObject(LevelObject levelObject)
         {
         }
@@ -19,6 +44,134 @@ namespace Uchu.World
         public override void Serialize(BitWriter writer)
         {
             writer.WriteBit(false);
+        }
+
+        private void OnInteract(Player player)
+        {
+            player.Message(new OpenVendorWindowMessage
+            {
+                Associate = GameObject
+            });
+            
+            player.Message(new VendorStatusUpdateMessage
+            {
+                Associate = GameObject,
+                Entries = Entries
+            });
+        }
+
+        private async Task SetupEntries()
+        {
+            var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
+
+            using var cdClient = new CdClientContext();
+
+            var vendorComponent = await cdClient.VendorComponentTable.FirstAsync(c => c.Id == componentId);
+
+            var matrices =
+                cdClient.LootMatrixTable.Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
+
+            var shopItems = new List<ShopEntry>();
+
+            foreach (var matrix in matrices)
+            {
+                shopItems.AddRange(cdClient.LootTableTable.Where(
+                    l => l.LootTableIndex == matrix.LootTableIndex
+                ).ToArray().Select(lootTable => new ShopEntry
+                {
+                    Lot = new Lot(lootTable.Itemid.Value),
+                    SortPriority = lootTable.SortPriority.Value
+                }));
+            }
+
+            Entries = shopItems.ToArray();
+        }
+
+        public async Task Buy(Lot lot, uint count, Player player)
+        {
+            using var ctx = new CdClientContext();
+
+            var itemComponent = await ctx.ItemComponentTable.FirstAsync(
+                i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (count == default || itemComponent.BaseValue <= 0) return;
+
+            var cost = (uint) ((itemComponent.BaseValue ?? 0) * count);
+            
+            if (cost > player.Currency) return;
+
+            player.Currency -= cost;
+            
+            await player.GetComponent<InventoryManager>().AddItemAsync(lot, count);
+            
+            player.Message(new VendorTransactionResultMessage
+            {
+                Associate = GameObject,
+                Result = TransactionResult.Success
+            });
+
+            await OnBuy.InvokeAsync(lot, count, player);
+        }
+
+        public async Task Sell(Item item, uint count, Player player)
+        {
+            var itemComponent = item.ItemComponent;
+            
+            if (count == default || itemComponent.BaseValue <= 0) return;
+            
+            player.GetComponent<InventoryManager>().MoveItemsBetweenInventories(
+                default,
+                item.Lot,
+                count,
+                item.Inventory.InventoryType,
+                InventoryType.VendorBuyback
+            );
+            
+            var returnCurrency = Math.Floor(
+                                     (itemComponent.BaseValue ?? 0) *
+                                     (itemComponent.SellMultiplier ?? 0.1f)
+                                 ) * count;
+
+            player.Currency += (uint) returnCurrency;
+            
+            player.Message(new VendorTransactionResultMessage
+            {
+                Associate = GameObject,
+                Result = TransactionResult.Success
+            });
+
+            await OnSell.InvokeAsync(item, count, player);
+        }
+
+        public async Task Buyback(Item item, uint count, Player player)
+        {
+            var itemComponent = item.ItemComponent;
+            
+            if (count == default || itemComponent.BaseValue <= 0) return;
+
+            var cost = (uint) Math.Floor(
+                           (itemComponent.BaseValue ?? 0) *
+                           (itemComponent.SellMultiplier ?? 0.1f)
+                       ) * count;
+
+            if (cost > player.Currency) return;
+
+            player.Currency -= cost;
+            
+            var manager = player.GetComponent<InventoryManager>();
+            
+            manager.RemoveItem(item.Lot, count, InventoryType.VendorBuyback);
+            
+            await manager.AddItemAsync(item.Lot, count);
+            
+            player.Message(new VendorTransactionResultMessage
+            {
+                Associate = GameObject,
+                Result = TransactionResult.Success
+            });
+
+            await OnBuyback.InvokeAsync(item, count, player);
         }
     }
 }

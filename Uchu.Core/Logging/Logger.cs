@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -58,7 +59,7 @@ namespace Uchu.Core
 
         public static void Error(object obj)
         {
-            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Error, ConsoleColor.Red); });
+            Task.Run(() => { InternalLog($"{obj}\n{new StackTrace(1)}", LogLevel.Error, ConsoleColor.Red); });
         }
 
         private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, bool clearColor = false)

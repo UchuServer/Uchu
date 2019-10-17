@@ -21,7 +21,8 @@ namespace Uchu.Master
                     Arguments = $"{location} {id} \"{MasterServer.ConfigPath}\"",
                     RedirectStandardOutput = false,
                     UseShellExecute = true,
-                    CreateNoWindow = false
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
                 }
             };
             

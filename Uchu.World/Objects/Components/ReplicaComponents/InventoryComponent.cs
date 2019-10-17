@@ -20,7 +20,7 @@ namespace Uchu.World
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();
 
-        public override ComponentId Id => ComponentId.Inventory;
+        public override ComponentId Id => ComponentId.InventoryComponent;
 
         public InventoryComponent()
         {
@@ -33,44 +33,43 @@ namespace Uchu.World
         
         public override void FromLevelObject(LevelObject levelObject)
         {
-            using (var cdClient = new CdClientContext())
+            using var cdClient = new CdClientContext();
+            
+            var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
+                c.Id == levelObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
+
+            var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
+
+            Items = new Dictionary<EquipLocation, InventoryItem>();
+
+            foreach (var item in items)
             {
-                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
-                    c.Id == levelObject.Lot && c.Componenttype == (int) ComponentId.Inventory);
+                var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                    o => o.Id == item.Itemid
+                );
 
-                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
+                var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                    r => r.Id == item.Itemid && r.Componenttype == 11
+                );
 
-                Items = new Dictionary<EquipLocation, InventoryItem>();
-
-                foreach (var item in items)
+                if (cdClientObject == default || itemRegistryEntry == default)
                 {
-                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                        o => o.Id == item.Itemid
-                    );
-
-                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == item.Itemid && r.Componenttype == 11
-                    );
-
-                    if (cdClientObject == default || itemRegistryEntry == default)
-                    {
-                        Logger.Error($"{item.Itemid} is not a valid item");
-                        continue;
-                    }
-
-                    var itemComponent = cdClient.ItemComponentTable.First(
-                        i => i.Id == itemRegistryEntry.Componentid
-                    );
-
-                    Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
-                    {
-                        InventoryItemId = IdUtils.GenerateObjectId(),
-                        Count = (long) item.Count,
-                        LOT = (int) item.Itemid,
-                        Slot = -1,
-                        InventoryType = -1
-                    });
+                    Logger.Error($"{item.Itemid} is not a valid item");
+                    continue;
                 }
+
+                var itemComponent = cdClient.ItemComponentTable.First(
+                    i => i.Id == itemRegistryEntry.Componentid
+                );
+
+                Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
+                {
+                    InventoryItemId = IdUtils.GenerateObjectId(),
+                    Count = (long) item.Count,
+                    LOT = (int) item.Itemid,
+                    Slot = -1,
+                    InventoryType = -1
+                });
             }
         }
 
@@ -83,7 +82,7 @@ namespace Uchu.World
                     o => o.Id == lot
                 );
 
-                var itemRegistryEntry = lot.GetComponentId(ComponentId.Item);
+                var itemRegistryEntry = lot.GetComponentId(ComponentId.ItemComponent);
 
                 if (cdClientObject == default || itemRegistryEntry == default)
                 {
@@ -108,7 +107,12 @@ namespace Uchu.World
 
         public void EquipItem(Item item, bool ignoreAllChecks = false)
         {
-            if (item == default) return;
+            if (item?.InventoryItem == null)
+            {
+                Logger.Error($"{item} is not a valid item");
+                
+                return;
+            }
 
             var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
 

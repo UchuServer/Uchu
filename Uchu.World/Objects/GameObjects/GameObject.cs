@@ -390,7 +390,7 @@ namespace Uchu.World
                 // Add components from the entries
                 //
 
-                if ((ComponentId) (int) component.Componenttype == ComponentId.QuestGiver)
+                if ((ComponentId) (int) component.Componenttype == ComponentId.MissionNPCComponent)
                     Logger.Information($"{instance} has a Quest Giver component.");
 
                 var componentType =

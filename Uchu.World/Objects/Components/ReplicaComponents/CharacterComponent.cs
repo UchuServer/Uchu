@@ -22,7 +22,7 @@ namespace Uchu.World
 
         public string GuildName { get; set; }
 
-        public override ComponentId Id => ComponentId.Character;
+        public override ComponentId Id => ComponentId.CharacterComponent;
 
         public override void FromLevelObject(LevelObject levelObject)
         {

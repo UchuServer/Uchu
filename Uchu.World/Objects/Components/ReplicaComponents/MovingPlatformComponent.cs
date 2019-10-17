@@ -41,7 +41,7 @@ namespace Uchu.World
 
         public float IdleTimeElapsed { get; set; }
 
-        public override ComponentId Id => ComponentId.MovingPlatform;
+        public override ComponentId Id => ComponentId.MovingPlatformComponent;
 
         /// <summary>
         ///     Next Path Index

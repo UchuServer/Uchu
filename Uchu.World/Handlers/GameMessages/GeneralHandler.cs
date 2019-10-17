@@ -3,7 +3,7 @@ using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
 {
-    public class GeneralGameMessageHandler : HandlerGroup
+    public class GeneralHandler : HandlerGroup
     {
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)

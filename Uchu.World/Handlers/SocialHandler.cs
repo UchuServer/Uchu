@@ -15,25 +15,24 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            
+            var character = await ctx.Characters.Include(c => c.User)
+                .FirstAsync(c => c.CharacterId == player.ObjectId);
+
+            Logger.Debug(
+                $"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
+
+            var response = await Server.HandleCommandAsync(
+                message.Message,
+                player,
+                (GameMasterLevel) character.User.GameMasterLevel
+            );
+
+            player.Message(new ChatMessagePacket
             {
-                var character = await ctx.Characters.Include(c => c.User)
-                    .FirstAsync(c => c.CharacterId == player.ObjectId);
-
-                Logger.Debug(
-                    $"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
-
-                var response = await Server.HandleCommandAsync(
-                    message.Message,
-                    player,
-                    (GameMasterLevel) character.User.GameMasterLevel
-                );
-
-                player.Message(new ChatMessagePacket
-                {
-                    Message = $"{response}\0"
-                });
-            }
+                Message = $"{response}\0"
+            });
         }
 
         [PacketHandler]
