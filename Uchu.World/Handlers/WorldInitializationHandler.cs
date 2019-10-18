@@ -258,7 +258,11 @@ namespace Uchu.World.Handlers
                 await ctx.SaveChangesAsync();
             }
 
-            player.Message(new DoneLoadingObjectsMessage {Associate = player});
+            player.Perspective.OnLoaded.AddListener(() =>
+            {
+                player.Message(new DoneLoadingObjectsMessage {Associate = player});
+            });
+            
             player.Message(new PlayerReadyMessage {Associate = player});
 
             var relations = ctx.Friends.Where(f =>

@@ -122,7 +122,7 @@ namespace Uchu.World
                 return;
             }
             
-            spawner.Spawn();
+            GameObject.Construct(spawner.Spawn());
         }
 
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)

@@ -21,20 +21,20 @@ namespace Uchu.World
         private uint _maxImagination;
 
         public GameObject LatestDamageSource;
-        
+
         public uint Health
         {
             get => _health;
             set
             {
                 value = Math.Min(value, MaxHealth);
-                
+
                 if (value == _health) return;
-                
+
                 OnHealthChanged.Invoke(value, (int) ((int) value - _health));
-                
+
                 _health = value;
-                
+
                 GameObject.Serialize(GameObject);
 
                 if (_health == 0) OnDeath.Invoke();
@@ -46,27 +46,27 @@ namespace Uchu.World
             get => _maxHealth;
             set
             {
-                OnMaxHealthChanged.Invoke(value,  (int) ((int) value -  _maxHealth));
+                OnMaxHealthChanged.Invoke(value, (int) ((int) value - _maxHealth));
 
                 _maxHealth = value;
-                
+
                 GameObject.Serialize(GameObject);
             }
         }
-        
+
         public uint Armor
         {
             get => _armor;
             set
             {
                 value = Math.Min(value, MaxArmor);
-                
+
                 if (value == _armor) return;
-                
+
                 OnArmorChanged.Invoke(value, (int) ((int) value - _armor));
 
                 _armor = value;
-                
+
                 GameObject.Serialize(GameObject);
             }
         }
@@ -79,7 +79,7 @@ namespace Uchu.World
                 OnMaxArmorChanged.Invoke(value, (int) ((int) value - _maxArmor));
 
                 _maxArmor = value;
-                
+
                 GameObject.Serialize(GameObject);
             }
         }
@@ -90,13 +90,13 @@ namespace Uchu.World
             set
             {
                 value = Math.Min(value, MaxImagination);
-                
+
                 if (value == _imagination) return;
-                
+
                 OnImaginationChanged.Invoke(value, (int) ((int) value - _imagination));
 
                 _imagination = value;
-                
+
                 GameObject.Serialize(GameObject);
             }
         }
@@ -120,12 +120,12 @@ namespace Uchu.World
         /// New Health, Delta
         /// </summary>
         public readonly AsyncEvent<uint, int> OnHealthChanged = new AsyncEvent<uint, int>();
-        
+
         /// <summary>
         /// New Armor, Delta
         /// </summary>
         public readonly AsyncEvent<uint, int> OnArmorChanged = new AsyncEvent<uint, int>();
-        
+
         /// <summary>
         /// New Imagination, Delta
         /// </summary>
@@ -135,19 +135,19 @@ namespace Uchu.World
         /// New MaxHealth, Delta
         /// </summary>
         public readonly AsyncEvent<uint, int> OnMaxHealthChanged = new AsyncEvent<uint, int>();
-        
+
         /// <summary>
         /// New MaxArmor, Delta
         /// </summary>
         public readonly AsyncEvent<uint, int> OnMaxArmorChanged = new AsyncEvent<uint, int>();
-        
+
         /// <summary>
         /// New MaxImagination, Delta
         /// </summary>
         public readonly AsyncEvent<uint, int> OnMaxImaginationChanged = new AsyncEvent<uint, int>();
-        
+
         public readonly Event OnDeath = new Event();
-        
+
         public Stats()
         {
             OnStart.AddListener(() =>
@@ -155,7 +155,7 @@ namespace Uchu.World
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
             });
-            
+
             OnDestroyed.AddListener(() =>
             {
                 OnHealthChanged.Clear();
@@ -164,71 +164,71 @@ namespace Uchu.World
                 OnHealthChanged.Clear();
                 OnMaxArmorChanged.Clear();
                 OnMaxImaginationChanged.Clear();
-                
+
                 OnDeath.Clear();
             });
-            
+
             if (As<Player>() == default) return;
 
             OnHealthChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.CurrentHealth = (int) total;
-                    
+
                 await ctx.SaveChangesAsync();
             });
-            
+
             OnArmorChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.CurrentArmor = (int) total;
-                    
+
                 await ctx.SaveChangesAsync();
             });
-            
+
             OnImaginationChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.CurrentImagination = (int) total;
-                    
+
                 await ctx.SaveChangesAsync();
             });
-            
+
             OnMaxHealthChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.MaximumHealth = (int) total;
-                    
+
                 await ctx.SaveChangesAsync();
             });
-            
+
             OnMaxArmorChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.MaximumArmor = (int) total;
-                    
+
                 await ctx.SaveChangesAsync();
             });
-            
+
             OnMaxImaginationChanged.AddListener(async (total, delta) =>
             {
                 using var ctx = new UchuContext();
-                
+
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
                 character.MaximumImagination = (int) total;
@@ -240,7 +240,7 @@ namespace Uchu.World
         public void Damage(uint value, GameObject source)
         {
             var armorDamage = Math.Min(value, Armor);
-            
+
             value -= armorDamage;
             Armor -= armorDamage;
 
@@ -262,17 +262,17 @@ namespace Uchu.World
         private void CollectObjectStats()
         {
             using var cdClient = new CdClientContext();
-            
+
             var stats = cdClient.DestructibleComponentTable.FirstOrDefault(
                 o => o.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
             );
-            
+
             if (stats == default) return;
 
             var rawHealth = stats.Life ?? 0;
             var rawArmor = (int) (stats.Armor ?? 0);
             var rawImagination = stats.Imagination ?? 0;
-                
+
             _health = (uint) (rawHealth != -1 ? rawHealth : 0);
             _armor = (uint) (rawArmor != -1 ? rawArmor : 0);
             _imagination = (uint) (rawImagination != -1 ? rawImagination : 0);
@@ -285,15 +285,15 @@ namespace Uchu.World
         private void CollectPlayerStats()
         {
             using var ctx = new UchuContext();
-            
+
             var character = ctx.Characters.First(c => c.CharacterId == As<Player>().ObjectId);
 
             _health = (uint) character.CurrentHealth;
             _maxHealth = (uint) character.MaximumHealth;
-                
+
             _armor = (uint) character.CurrentArmor;
             _maxArmor = (uint) character.MaximumArmor;
-                
+
             _imagination = (uint) character.CurrentImagination;
             _maxImagination = (uint) character.MaximumImagination;
         }

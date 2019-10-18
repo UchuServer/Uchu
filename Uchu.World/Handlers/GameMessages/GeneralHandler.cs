@@ -54,5 +54,11 @@ namespace Uchu.World.Handlers.GameMessages
                 rebuild.StopRebuild(player, RebuildFailReason.Canceled);
             }
         }
+
+        [PacketHandler]
+        public void ReadyForUpdates(ReadyForUpdateMessage message, Player player)
+        {
+            player.Perspective.ClientLoadedObjectCount++;
+        }
     }
 }

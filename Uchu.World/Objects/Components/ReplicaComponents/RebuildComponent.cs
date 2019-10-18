@@ -10,13 +10,9 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    using ClientComponent = Core.CdClient.RebuildComponent;
-    
     [RequireComponent(typeof(StatsComponent), true)]
     public class RebuildComponent : ScriptedActivityComponent
     {
-        private ClientComponent _clientComponent;
-
         private float _completeTime;
         private int _imaginationCost;
         private float _timeToSmash;
@@ -38,31 +34,33 @@ namespace Uchu.World
 
         public Vector3 ActivatorPosition { get; set; }
 
-        public override ComponentId Id => ComponentId.RebuildComponent;
+        public override ComponentId Id => ComponentId.QuickBuildComponent;
 
         public RebuildComponent()
         {
             OnStart.AddListener(async () =>
             {
+                Logger.Information($"{GameObject} is a rebuild-able!");
+                
                 using var cdClient = new CdClientContext();
 
-                _clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
-                    r => r.Id == GameObject.Lot.GetComponentId(ComponentId.RebuildComponent)
+                var clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
+                    r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)
                 );
 
-                if (_clientComponent == default)
+                if (clientComponent == default)
                 {
                     Logger.Error(
-                        $"{GameObject} does not have a valid {nameof(ComponentId.RebuildComponent)} component."
+                        $"{GameObject} does not have a valid {nameof(ComponentId.QuickBuildComponent)} component."
                     );
                     
                     return;
                 }
 
-                _completeTime = _clientComponent.Completetime ?? 0;
-                _imaginationCost = _clientComponent.Takeimagination ?? 0;
-                _timeToSmash = _clientComponent.Timebeforesmash ?? 0;
-                _resetTime = _clientComponent.Resettime ?? 0;
+                _completeTime = clientComponent.Completetime ?? 0;
+                _imaginationCost = clientComponent.Takeimagination ?? 0;
+                _timeToSmash = clientComponent.Timebeforesmash ?? 0;
+                _resetTime = clientComponent.Resettime ?? 0;
 
                 if (!GameObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) ||
                     !(bool) spawnActivator) return;
@@ -95,6 +93,7 @@ namespace Uchu.World
         
         public override void FromLevelObject(LevelObject levelObject)
         {
+            
             ActivatorPosition = (Vector3) levelObject.Settings["rebuild_activators"];
         }
 

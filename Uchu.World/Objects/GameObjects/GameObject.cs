@@ -352,8 +352,6 @@ namespace Uchu.World
 
             var id = levelObject.ObjectId == 0 ? IdUtils.GenerateObjectId() : (long) levelObject.ObjectId;
 
-            Logger.Information(id);
-            
             var instance = Instantiate(
                 type,
                 parent,

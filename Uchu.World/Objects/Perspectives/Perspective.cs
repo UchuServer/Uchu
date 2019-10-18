@@ -14,6 +14,27 @@ namespace Uchu.World
 
         private Mask _viewMask;
 
+        private uint _clientLoadedObjectCount;
+        
+        public uint ClientLoadedObjectCount
+        {
+            get => _clientLoadedObjectCount;
+            set
+            {
+                if (value == _networkDictionary.Count)
+                {
+                    OnLoaded.Invoke();
+                    OnLoaded.Clear();
+
+                    _clientLoadedObjectCount = default;
+                }
+
+                _clientLoadedObjectCount = value;
+            }
+        }
+
+        public readonly Event OnLoaded = new Event();
+
         public Perspective(Player player, Mask mask)
         {
             _networkDictionary = new Dictionary<GameObject, ushort>();
