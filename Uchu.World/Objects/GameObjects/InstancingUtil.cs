@@ -52,7 +52,7 @@ namespace Uchu.World
                 Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
             };
 
-            owner.Zone.BroadcastMessage(new DropClientLootMessage
+            owner.Message(new DropClientLootMessage
             {
                 Associate = owner,
                 Currency = 0,

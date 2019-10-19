@@ -98,7 +98,16 @@ namespace Uchu.World
             OnSmashed.Invoke(killer, lootOwner);
 
             Alive = false;
-
+            
+            Zone.BroadcastMessage(new DieMessage
+            {
+                Associate = GameObject,
+                DeathType = animation ?? "",
+                Killer = killer,
+                SpawnLoot = false,
+                LootOwner = lootOwner ?? GameObject
+            });
+            
             if (As<Player>() != null)
             {
                 //
@@ -109,15 +118,6 @@ namespace Uchu.World
                 As<Player>().Currency -= coinToDrop;
 
                 InstancingUtil.Currency((int) coinToDrop, lootOwner, lootOwner, Transform.Position);
-                
-                Zone.BroadcastMessage(new DieMessage
-                {
-                    Associate = GameObject,
-                    DeathType = animation ?? "",
-                    Killer = killer,
-                    SpawnLoot = false,
-                    LootOwner = lootOwner ?? GameObject
-                });
 
                 return;
             }
@@ -140,10 +140,10 @@ namespace Uchu.World
                 //
 
                 Alive = true;
-
+                
                 GameObject.Layer += Layer.Smashable;
                 GameObject.Layer -= Layer.Hidden;
-            
+
                 _stats.Health = _stats.MaxHealth;
             });
 

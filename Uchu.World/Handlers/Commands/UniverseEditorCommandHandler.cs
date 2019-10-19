@@ -73,5 +73,26 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Targeted {current}";
         }
+
+        [CommandHandler(Signature = "setname", Help = "Set name of GameObject", GameMasterLevel = GameMasterLevel.Admin)]
+        public string SetName(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1)
+            {
+                return "setname <name>";
+            }
+            
+            if (!player.TryGetComponent<UniverseEditor>(out var editor)) editor = player.AddComponent<UniverseEditor>();
+
+            editor.Target.Name = arguments[0];
+            
+            player.Zone.BroadcastMessage(new SetNameMessage
+            {
+                Associate = editor.Target,
+                Name = arguments[0]
+            });
+
+            return $"Set {editor.Target}'s name to {arguments[0]}";
+        }
     }
 }

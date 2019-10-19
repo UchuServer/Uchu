@@ -8,7 +8,7 @@ namespace Uchu.World.Experimental
         
         private GameObject SelectBrick { get; set; }
 
-        private GameObject Target { get; set; }
+        public GameObject Target { get; set; }
 
         public UniverseEditor()
         {
@@ -33,8 +33,8 @@ namespace Uchu.World.Experimental
                 return;
             }
             
-            SelectBrick.Transform.Position = Target.Transform.Position + Vector3.UnitY * 4;
-
+            SelectBrick.Transform.Position = Target.Transform.Position + Vector3.UnitY * 5;
+            
             GameObject.Serialize(SelectBrick);
         }
 
