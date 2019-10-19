@@ -75,6 +75,13 @@ namespace Uchu.World.Handlers.GameMessages
                 Associate = player,
                 AnimationsId = animation.AnimationName
             });
+            
+            player.Zone.ExcludingMessage(new EmotePlayedMessage
+            {
+                Associate = player,
+                EmoteId = message.EmoteId,
+                Target = message.Target
+            }, player);
         }
     }
 }

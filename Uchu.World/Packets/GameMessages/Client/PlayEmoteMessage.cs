@@ -2,7 +2,7 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    public class PlayEmoteMessage : GeneralGameMessage
+    public class PlayEmoteMessage : ClientGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.PlayEmote;
 
@@ -10,13 +10,6 @@ namespace Uchu.World
         
         public GameObject Target { get; set; }
         
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(EmoteId);
-
-            writer.Write(Target);
-        }
-
         public override void Deserialize(BitReader reader)
         {
             EmoteId = reader.Read<int>();
