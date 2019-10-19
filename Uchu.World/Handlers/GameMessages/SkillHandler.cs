@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 
 namespace Uchu.World.Handlers.GameMessages
 {
@@ -30,6 +32,18 @@ namespace Uchu.World.Handlers.GameMessages
             {
                 Logger.Error($"Skill Syncing failed: {e.Message}\n{e.StackTrace}");
             }
+        }
+
+        [PacketHandler]
+        public void HandleSetConsumeable(SetConsumableItemMessage message, Player player)
+        {
+            player.GetComponent<SkillComponent>().SelectedConsumeable = message.Lot;
+        }
+        
+        [PacketHandler]
+        public void HandleSelectSkill(SelectSkillMessage message, Player player)
+        {
+            player.GetComponent<SkillComponent>().SelectedSkill = message.SkillId;
         }
     }
 }

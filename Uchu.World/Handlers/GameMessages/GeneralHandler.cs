@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 
 namespace Uchu.World.Handlers.GameMessages
 {
@@ -59,6 +61,20 @@ namespace Uchu.World.Handlers.GameMessages
         public void ReadyForUpdates(ReadyForUpdateMessage message, Player player)
         {
             player.Perspective.ClientLoadedObjectCount++;
+        }
+
+        [PacketHandler]
+        public async Task PlayEmote(PlayEmoteMessage message, Player player)
+        {
+            using var ctx = new CdClientContext();
+
+            var animation = await ctx.EmotesTable.FirstOrDefaultAsync(e => e.Id == message.EmoteId);
+            
+            player.Zone.BroadcastMessage(new PlayAnimationMessage
+            {
+                Associate = player,
+                AnimationsId = animation.AnimationName
+            });
         }
     }
 }

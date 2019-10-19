@@ -29,6 +29,10 @@ namespace Uchu.World
         public readonly Dictionary<uint, Behavior> HandledBehaviors = new Dictionary<uint, Behavior>();
         public readonly Dictionary<uint, Behavior> HandledSkills = new Dictionary<uint, Behavior>();
 
+        public Lot SelectedConsumeable { get; set; }
+        
+        public int SelectedSkill { get; set; }
+        
         public override ComponentId Id => ComponentId.SkillComponent;
 
         public override void FromLevelObject(LevelObject levelObject)

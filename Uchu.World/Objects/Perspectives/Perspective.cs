@@ -33,6 +33,8 @@ namespace Uchu.World
             }
         }
 
+        public IReadOnlyCollection<GameObject> LoadedObjects => _networkDictionary.Keys;
+
         public readonly Event OnLoaded = new Event();
 
         public Perspective(Player player, Mask mask)

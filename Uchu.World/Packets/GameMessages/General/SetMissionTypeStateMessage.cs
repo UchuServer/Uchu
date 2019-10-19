@@ -3,7 +3,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class SetMissionTypeStateMessage : ServerGameMessage
+    public class SetMissionTypeStateMessage : GeneralGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.SetMissionTypeState;
 
@@ -26,6 +26,16 @@ namespace Uchu.World
 
             writer.Write((uint) Type.Length);
             writer.WriteString(Type, Type.Length);
+        }
+
+        public override void Deserialize(BitReader reader)
+        {
+            if (reader.ReadBit())
+                LockState = (MissionLockState) reader.Read<int>();
+
+            SubType = reader.ReadString((int) reader.Read<uint>()); 
+            
+            Type = reader.ReadString((int) reader.Read<uint>());
         }
     }
 }

@@ -379,12 +379,10 @@ namespace Uchu.Core
             });
         }
 
-        private async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)
+        private static async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);
-
-            Logger.Debug($"[{Port}] Invoking {handler.Group.GetType().Name}.{handler.Info.Name} for {handler.Packet}");
-
+            
             var parameters = new object[] {handler.Packet, endPoint};
 
             var res = handler.Info.Invoke(handler.Group, parameters);

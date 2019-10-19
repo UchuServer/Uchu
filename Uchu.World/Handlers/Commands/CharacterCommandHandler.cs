@@ -175,7 +175,8 @@ namespace Uchu.World.Handlers.Commands
                 {
                     if (gameObject.Transform == default) continue;
 
-                    if (!arguments.Contains("-sp") && gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                    if (arguments.Contains("-sp"))
+                        if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
 
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
