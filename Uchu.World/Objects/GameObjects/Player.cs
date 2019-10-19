@@ -71,7 +71,7 @@ namespace Uchu.World
             set => Task.Run(async () => { await SetLevelAsync(value); });
         }
 
-        public static Player Construct(Character character, IRakConnection connection, Zone zone)
+        internal static Player Construct(Character character, IRakConnection connection, Zone zone)
         {
             var instance = Instantiate<Player>(
                 zone,
