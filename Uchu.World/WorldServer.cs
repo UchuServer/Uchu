@@ -105,7 +105,8 @@ namespace Uchu.World
             var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
             
             Zones.Add(zoneInstance);
-            zoneInstance.Initialize();
+            
+            await zoneInstance.InitializeAsync();
         }
 
         public async Task<Zone> GetZoneAsync(ZoneId zoneId)

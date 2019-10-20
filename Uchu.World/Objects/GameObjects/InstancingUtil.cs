@@ -37,6 +37,36 @@ namespace Uchu.World
             return instance;
         }
 
+        public static GameObject Spawner(SpawnerPath spawnerPath, Object parent)
+        {
+            var wayPoint = (SpawnerWaypoint) spawnerPath.Waypoints[0];
+
+            var spawner = GameObject.Instantiate(
+                parent,
+                spawnerPath.Name,
+                wayPoint.Position,
+                wayPoint.Rotation,
+                -1,
+                spawnerPath.SpawnerObjectId,
+                Lot.Spawner
+            );
+
+            spawner.Settings = wayPoint.Config;
+
+            spawner.Settings.Add("respawn", spawnerPath.RespawnTime);
+
+            var spawnerComponent = spawner.AddComponent<SpawnerComponent>();
+            
+            spawnerComponent.Settings = spawner.Settings;
+            spawnerComponent.SpawnTemplate = new Lot((int) spawnerPath.SpawnLot);
+            spawnerComponent.LevelObject = new LevelObject
+            {
+                Scale = 1
+            };
+
+            return spawner;
+        }
+
         public static GameObject Loot(Lot lot, Player owner, GameObject source, Vector3 spawn)
         {
             var drop = GameObject.Instantiate(

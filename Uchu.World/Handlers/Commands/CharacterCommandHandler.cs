@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
@@ -175,8 +176,7 @@ namespace Uchu.World.Handlers.Commands
                 {
                     if (gameObject.Transform == default) continue;
 
-                    if (arguments.Contains("-sp"))
-                        if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
 
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
@@ -193,6 +193,12 @@ namespace Uchu.World.Handlers.Commands
                 info.Append($"[{current.ObjectId}] ");
 
             info.Append($"[{current.Lot}] \"{current.ClientName}\"");
+
+            if (arguments.Contains("-cq"))
+            {
+                if (current.TryGetComponent<LuaScriptComponent>(out var scriptComponent))
+                    info.AppendLine($"\nScript: {scriptComponent.ScriptName}");
+            }
 
             if (arguments.Contains("-s")) info.Append($"\n{current.Settings}");
 

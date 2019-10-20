@@ -10,10 +10,11 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Parsers;
+using Uchu.World.Scripting;
 
 namespace Uchu.World
 {
-    public class Zone : Object
+    public partial class Zone : Object
     {
         /// <summary>
         ///     This should be set to something the server can sustain.
@@ -64,7 +65,7 @@ namespace Uchu.World
         
         public bool Loaded { get; private set; }
 
-        public void Initialize()
+        public async Task InitializeAsync()
         {
             var objects = ZoneInfo.ScenesInfo.SelectMany(s => s.Objects).ToArray();
 
@@ -82,11 +83,27 @@ namespace Uchu.World
                 }
             }
 
+            foreach (var path in ZoneInfo.Paths)
+            {
+                if (!(path is SpawnerPath spawnerPath)) continue;
+                
+                try
+                {
+                    SpawnPath(spawnerPath);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
             Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
 
-            Loaded = true;
+            await LoadScripts();
             
-            Task.Run(async () => { await ExecuteUpdateAsync(); });
+            Loaded = true;
+
+            var _ = ExecuteUpdateAsync();
         }
 
         private void SpawnLevelObject(LevelObject levelObject)
@@ -123,6 +140,17 @@ namespace Uchu.World
             }
             
             GameObject.Construct(spawner.Spawn());
+        }
+
+        private void SpawnPath(SpawnerPath spawnerPath)
+        {
+            var obj = InstancingUtil.Spawner(spawnerPath, this);
+
+            Start(obj);
+
+            var spawn = obj.GetComponent<SpawnerComponent>().Spawn();
+
+            GameObject.Construct(spawn);
         }
 
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
@@ -360,8 +388,9 @@ namespace Uchu.World
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
                 using (var stream = new MemoryStream())
-                using (var writer = new BitWriter(stream))
                 {
+                    using var writer = new BitWriter(stream);
+                    
                     writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
 
                     writer.Write(id);

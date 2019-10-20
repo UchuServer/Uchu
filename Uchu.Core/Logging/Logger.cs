@@ -57,9 +57,16 @@ namespace Uchu.Core
             Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Warning, ConsoleColor.Yellow); });
         }
 
-        public static void Error(object obj)
+        public static void Error(object obj, bool stackTrace = false)
         {
-            Task.Run(() => { InternalLog($"{obj}\n{new StackTrace(1)}", LogLevel.Error, ConsoleColor.Red); });
+            if (stackTrace)
+            {
+                Task.Run(() => { InternalLog($"{obj}\n{new StackTrace(1)}", LogLevel.Error, ConsoleColor.Red); });
+            }
+            else
+            {
+                Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Error, ConsoleColor.Red); });
+            }
         }
 
         private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, bool clearColor = false)

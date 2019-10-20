@@ -41,13 +41,17 @@ namespace Uchu.World.Collections
         public void Add(string key, object value)
         {
             var type =
-                value is int ? 1 :
-                value is float ? 3 :
-                value is double ? 4 :
-                value is uint ? 5 :
-                value is bool ? 7 :
-                value is long ? 8 :
-                value is byte[] ? 13 : 0;
+                value switch
+                {
+                    int _ => 1,
+                    float _ => 3,
+                    double _ => 4,
+                    uint _ => 5,
+                    bool _ => 7,
+                    long _ => 8,
+                    byte[] _ => 13,
+                    _ => 0
+                };
 
             Add(key, value, (byte) type);
         }

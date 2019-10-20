@@ -37,6 +37,11 @@ namespace Uchu.Core
     public class ServerDLLSource
     {
         [XmlElement] public string ServerDLLSourcePath { get; set; } = "../../../../";
+
+        [XmlElement] public string[] ScriptDLLSource { get; set; } =
+        {
+            "StandardScripts"
+        };
     }
 
     public class ResourcesConfiguration

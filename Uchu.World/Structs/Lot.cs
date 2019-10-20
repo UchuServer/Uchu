@@ -24,15 +24,12 @@ namespace Uchu.World
 
         public override bool Equals(object obj)
         {
-            switch (obj)
+            return obj switch
             {
-                case int i:
-                    return i == Id;
-                case Lot l:
-                    return l.Id == Id;
-                default:
-                    return false;
-            }
+                int i => (i == Id),
+                Lot l => (l.Id == Id),
+                _ => false
+            };
         }
 
         public bool Equals(Lot other)
@@ -88,19 +85,37 @@ namespace Uchu.World
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-            using (var cdClient = new CdClientContext())
-            {
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
-                    r => r.Id == id && r.Componenttype == componentType
-                );
+            
+            using var cdClient = new CdClientContext();
+            
+            var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
+                r => r.Id == id && r.Componenttype == componentType
+            );
 
-                return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
-            }
+            return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
         }
 
         #region Consts
 
-        public const int ModularRocket = 6416;
+        public static readonly Lot ModularRocket = 6416;
+
+        public static readonly Lot Spawner = 176;
+        
+        public static readonly Lot Imagination = 935;
+        public static readonly Lot TwoImagination = 4035;
+        public static readonly Lot ThreeImagination = 11910;
+        public static readonly Lot FiveImagination = 11911;
+        public static readonly Lot TenImagination = 11918;
+        public static readonly Lot Health = 177;
+        public static readonly Lot TwoHealth = 11915;
+        public static readonly Lot ThreeHealth = 11916;
+        public static readonly Lot FiveHealth = 11917;
+        public static readonly Lot TenHealth = 11920;
+        public static readonly Lot Armor = 6431;
+        public static readonly Lot TwoArmor = 11912;
+        public static readonly Lot ThreeArmor = 11913;
+        public static readonly Lot FiveArmor = 11914;
+        public static readonly Lot TenArmor = 11919;
 
         #endregion
     }
