@@ -1,4 +1,5 @@
 using RakDotNet.IO;
+using Uchu.World.Experimental;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -13,6 +14,14 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BaseCombatAIComponent;
 
+        public BaseCombatAiComponent()
+        {
+            OnStart.AddListener(() =>
+            {
+                GameObject.AddComponent<EnemyAi>();
+            });
+        }
+        
         public override void FromLevelObject(LevelObject levelObject)
         {
         }

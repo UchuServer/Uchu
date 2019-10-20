@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Uchu.Core;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
@@ -14,7 +15,10 @@ namespace Uchu.World
         
         public SpawnerComponent()
         {
-            OnStart.AddListener(() => { GameObject.Layer = Layer.Spawner; });
+            OnStart.AddListener(() =>
+            {
+                GameObject.Layer = Layer.Spawner;
+            });
         }
 
         public Lot SpawnTemplate { get; set; }

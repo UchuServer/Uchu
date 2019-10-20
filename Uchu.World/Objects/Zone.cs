@@ -83,6 +83,20 @@ namespace Uchu.World
                 }
             }
 
+            foreach (var path in ZoneInfo.Paths)
+            {
+                if (!(path is SpawnerPath spawnerPath)) continue;
+                
+                try
+                {
+                    SpawnPath(spawnerPath);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
             Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
 
             await LoadScripts();
@@ -126,6 +140,17 @@ namespace Uchu.World
             }
             
             GameObject.Construct(spawner.Spawn());
+        }
+
+        private void SpawnPath(SpawnerPath spawnerPath)
+        {
+            var obj = InstancingUtil.Spawner(spawnerPath, this);
+
+            Start(obj);
+
+            var spawn = obj.GetComponent<SpawnerComponent>().Spawn();
+
+            GameObject.Construct(spawn);
         }
 
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)

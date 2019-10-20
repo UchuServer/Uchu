@@ -28,7 +28,7 @@ namespace Uchu.World
             ScriptName = script.Scriptname;
             ClientScriptName = script.Clientscriptname;
             
-            Logger.Debug($"{ScriptName}");
+            Logger.Debug($"{GameObject} -> {ScriptName}");
         }
 
         public override void Construct(BitWriter writer)

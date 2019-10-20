@@ -176,8 +176,7 @@ namespace Uchu.World.Handlers.Commands
                 {
                     if (gameObject.Transform == default) continue;
 
-                    if (arguments.Contains("-sp"))
-                        if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
 
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
@@ -194,12 +193,6 @@ namespace Uchu.World.Handlers.Commands
                 info.Append($"[{current.ObjectId}] ");
 
             info.Append($"[{current.Lot}] \"{current.ClientName}\"");
-
-            if (arguments.Contains("-st"))
-            {
-                if (current.TryGetComponent<SpawnerComponent>(out var spawnerComponent))
-                    info.Append($"\nSpawn Template: {spawnerComponent.SpawnTemplate} [{spawnerComponent.SpawnNodeId}]");
-            }
 
             if (arguments.Contains("-cq"))
             {

@@ -457,6 +457,10 @@ namespace Uchu.World
 
         #endregion
 
+        #region From Path
+
+        #endregion
+
         #endregion
 
         #region Replica

@@ -24,15 +24,12 @@ namespace Uchu.World
 
         public override bool Equals(object obj)
         {
-            switch (obj)
+            return obj switch
             {
-                case int i:
-                    return i == Id;
-                case Lot l:
-                    return l.Id == Id;
-                default:
-                    return false;
-            }
+                int i => (i == Id),
+                Lot l => (l.Id == Id),
+                _ => false
+            };
         }
 
         public bool Equals(Lot other)
@@ -88,20 +85,22 @@ namespace Uchu.World
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-            using (var cdClient = new CdClientContext())
-            {
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
-                    r => r.Id == id && r.Componenttype == componentType
-                );
+            
+            using var cdClient = new CdClientContext();
+            
+            var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
+                r => r.Id == id && r.Componenttype == componentType
+            );
 
-                return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
-            }
+            return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
         }
 
         #region Consts
 
         public static readonly Lot ModularRocket = 6416;
 
+        public static readonly Lot Spawner = 176;
+        
         public static readonly Lot Imagination = 935;
         public static readonly Lot TwoImagination = 4035;
         public static readonly Lot ThreeImagination = 11910;
