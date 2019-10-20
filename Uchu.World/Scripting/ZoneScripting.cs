@@ -8,7 +8,7 @@ using Uchu.World.Scripting;
 
 namespace Uchu.World
 {
-    public partial class Zone : Object
+    public partial class Zone
     {
         internal ScriptPack[] ScriptPacks { get; private set; }
 

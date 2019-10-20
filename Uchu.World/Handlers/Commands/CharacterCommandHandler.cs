@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
@@ -193,6 +194,18 @@ namespace Uchu.World.Handlers.Commands
                 info.Append($"[{current.ObjectId}] ");
 
             info.Append($"[{current.Lot}] \"{current.ClientName}\"");
+
+            if (arguments.Contains("-st"))
+            {
+                if (current.TryGetComponent<SpawnerComponent>(out var spawnerComponent))
+                    info.Append($"\nSpawn Template: {spawnerComponent.SpawnTemplate} [{spawnerComponent.SpawnNodeId}]");
+            }
+
+            if (arguments.Contains("-cq"))
+            {
+                if (current.TryGetComponent<LuaScriptComponent>(out var scriptComponent))
+                    info.AppendLine($"\nScript: {scriptComponent.ScriptName}");
+            }
 
             if (arguments.Contains("-s")) info.Append($"\n{current.Settings}");
 
