@@ -29,48 +29,48 @@ namespace Uchu.World
                 OnEquipped.Clear();
                 OnUnEquipped.Clear();
             });
-        }
-        
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-            using var cdClient = new CdClientContext();
             
-            var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
-                c.Id == levelObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-
-            var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
-
-            Items = new Dictionary<EquipLocation, InventoryItem>();
-
-            foreach (var item in items)
+            OnStart.AddListener(() =>
             {
-                var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                    o => o.Id == item.Itemid
-                );
+                using var cdClient = new CdClientContext();
+            
+                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
+                    c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
 
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                    r => r.Id == item.Itemid && r.Componenttype == 11
-                );
+                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
-                if (cdClientObject == default || itemRegistryEntry == default)
+                Items = new Dictionary<EquipLocation, InventoryItem>();
+
+                foreach (var item in items)
                 {
-                    Logger.Error($"{item.Itemid} is not a valid item");
-                    continue;
+                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                        o => o.Id == item.Itemid
+                    );
+
+                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                        r => r.Id == item.Itemid && r.Componenttype == 11
+                    );
+
+                    if (cdClientObject == default || itemRegistryEntry == default)
+                    {
+                        Logger.Error($"{item.Itemid} is not a valid item");
+                        continue;
+                    }
+
+                    var itemComponent = cdClient.ItemComponentTable.First(
+                        i => i.Id == itemRegistryEntry.Componentid
+                    );
+
+                    Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
+                    {
+                        InventoryItemId = IdUtils.GenerateObjectId(),
+                        Count = (long) item.Count,
+                        LOT = (int) item.Itemid,
+                        Slot = -1,
+                        InventoryType = -1
+                    });
                 }
-
-                var itemComponent = cdClient.ItemComponentTable.First(
-                    i => i.Id == itemRegistryEntry.Componentid
-                );
-
-                Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
-                {
-                    InventoryItemId = IdUtils.GenerateObjectId(),
-                    Count = (long) item.Count,
-                    LOT = (int) item.Itemid,
-                    Slot = -1,
-                    InventoryType = -1
-                });
-            }
+            });
         }
 
         public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,

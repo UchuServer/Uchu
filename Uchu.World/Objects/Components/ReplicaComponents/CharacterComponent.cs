@@ -24,10 +24,6 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.CharacterComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
             WritePart1(writer);

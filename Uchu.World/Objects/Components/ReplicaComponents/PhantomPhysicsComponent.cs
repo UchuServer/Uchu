@@ -18,10 +18,6 @@ namespace Uchu.World
 
         public Vector3? EffectDirection { get; set; } = null;
 
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

@@ -9,10 +9,6 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.ModuleComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
         }

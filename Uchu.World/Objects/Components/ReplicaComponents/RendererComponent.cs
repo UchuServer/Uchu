@@ -12,10 +12,13 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.RenderComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
+        public RendererComponent()
         {
-            if (levelObject.Settings.TryGetValue("renderDisabled", out var disabled)) Disabled = (bool) disabled;
-            else Disabled = false;
+            OnStart.AddListener(() =>
+            {
+                if (GameObject.Settings.TryGetValue("renderDisabled", out var disabled)) Disabled = (bool) disabled;
+                else Disabled = false;
+            });
         }
 
         public override void Construct(BitWriter writer)

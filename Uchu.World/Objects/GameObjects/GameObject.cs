@@ -438,9 +438,7 @@ namespace Uchu.World
             //
             // Setup all the components
             //
-
-            foreach (var component in instance._replicaComponents) component.FromLevelObject(levelObject);
-
+            
             return instance;
         }
 

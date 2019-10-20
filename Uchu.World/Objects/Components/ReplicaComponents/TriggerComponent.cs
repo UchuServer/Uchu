@@ -11,17 +11,20 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.TriggerComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
+        public TriggerComponent()
         {
-            if (!levelObject.Settings.TryGetValue("trigger_id", out var triggerId)) return;
+            OnStart.AddListener(() =>
+            {
+                if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerId)) return;
 
-            var str = (string) triggerId;
-            var colonIndex = str.IndexOf(':');
-            var v = str.Substring(colonIndex + 1);
+                var str = (string) triggerId;
+                var colonIndex = str.IndexOf(':');
+                var v = str.Substring(colonIndex + 1);
 
-            TriggerId = int.Parse(v);
+                TriggerId = int.Parse(v);
 
-            Logger.Information($"{GameObject} is a trigger [{triggerId}]");
+                Logger.Information($"{GameObject} is a trigger [{triggerId}]");
+            });
         }
 
         public override void Construct(BitWriter writer)

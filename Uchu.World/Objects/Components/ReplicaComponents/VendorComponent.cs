@@ -31,10 +31,6 @@ namespace Uchu.World
                 GameObject.OnInteract.AddListener(OnInteract);
             });
         }
-        
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
 
         public override void Construct(BitWriter writer)
         {

@@ -86,8 +86,6 @@ namespace Uchu.World
             return ReplicaById.TryGetValue(id, out var type) ? type : null;
         }
 
-        public abstract void FromLevelObject(LevelObject levelObject);
-
         /// <summary>
         ///     The data that is only sent once to each client.
         /// </summary>

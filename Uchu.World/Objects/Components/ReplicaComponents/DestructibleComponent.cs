@@ -35,6 +35,33 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
+                if (GameObject.Settings.TryGetValue("respawn", out var resTimer))
+                {
+                    ResurrectTime = resTimer switch
+                    {
+                        uint timer => timer,
+                        float timer => timer,
+                        int timer => timer,
+                        _ => ResurrectTime
+                    };
+                }
+
+                _random = new Random();
+
+                GameObject.Layer = Layer.Smashable;
+
+                using (var cdClient = new CdClientContext())
+                {
+                    var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
+
+                    _cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(c => c.Id == entry);
+
+                    if (_cdClientComponent == default)
+                        Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
+                }
+
+                foreach (var stats in GameObject.GetComponents<StatsComponent>()) stats.HasStats = false;
+                
                 if (GameObject.TryGetComponent(out _stats))
                 {
                     _stats.OnDeath.AddListener(() =>
@@ -47,36 +74,6 @@ namespace Uchu.World
                 
                 Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} with a {nameof(Stats)} component.");
             });
-        }
-
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-            if (levelObject.Settings.TryGetValue("respawn", out var resTimer))
-            {
-                ResurrectTime = resTimer switch
-                {
-                    uint timer => timer,
-                    float timer => timer,
-                    int timer => timer,
-                    _ => ResurrectTime
-                };
-            }
-
-            _random = new Random();
-
-            GameObject.Layer = Layer.Smashable;
-
-            using (var cdClient = new CdClientContext())
-            {
-                var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-
-                _cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(c => c.Id == entry);
-
-                if (_cdClientComponent == default)
-                    Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
-            }
-
-            foreach (var stats in GameObject.GetComponents<StatsComponent>()) stats.HasStats = false;
         }
 
         public override void Construct(BitWriter writer)

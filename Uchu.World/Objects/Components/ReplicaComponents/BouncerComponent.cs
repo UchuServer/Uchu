@@ -12,9 +12,12 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BouncerComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
+        public BouncerComponent()
         {
-            BouncerDestination = (Vector3) levelObject.Settings["bouncer_destination"];
+            OnStart.AddListener(() =>
+            {
+                BouncerDestination = (Vector3) GameObject.Settings["bouncer_destination"];
+            });
         }
 
         public override void Construct(BitWriter writer)

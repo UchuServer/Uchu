@@ -117,6 +117,10 @@ namespace Uchu.World
         public static readonly Lot FiveArmor = 11914;
         public static readonly Lot TenArmor = 11919;
 
+        public static readonly Lot RocketBuildNosecone = 6904;
+        public static readonly Lot RocketBuildCockpit = 6910;
+        public static readonly Lot RocketBuildTail = 6915;
+
         #endregion
     }
 }

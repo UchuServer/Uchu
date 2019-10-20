@@ -59,7 +59,7 @@ namespace Uchu.World
         public void StartBuilding(StartBuildingWithItemMessage message)
         {
             As<Player>().SendChatMessage(
-                $"{string.Join('\n', typeof(StartBuildingWithItemMessage).GetProperties().Select(p => $"{p.Name} = {p.GetValue(message)}"))}"
+                $"[{IsBuilding}]\n{string.Join('\n', typeof(StartBuildingWithItemMessage).GetProperties().Select(p => $"{p.Name} = {p.GetValue(message)}"))}"
             );
             
             IsBuilding = true;
@@ -76,7 +76,7 @@ namespace Uchu.World
                 SourceBag = message.SourceBag,
                 Source = message.Source,
                 SourceLot = message.SourceLot,
-                SourceType = 8, // TODO: find out how to get this
+                SourceType = message.SourceType,
                 
                 Target = message.Target,
                 TargetLot = message.TargetLot,
@@ -87,6 +87,7 @@ namespace Uchu.World
 
         public void StartBuildingWithItem(Item item)
         {
+            /*
             As<Player>().Message(new StartArrangingWithItemMessage
             {
                 Associate = GameObject,
@@ -104,6 +105,7 @@ namespace Uchu.World
                 TargetPosition = BasePlate.Transform.Position,
                 TargetType = 0
             });
+            */
         }
         
         public void FinishBuilding(Lot[] models)
@@ -121,8 +123,9 @@ namespace Uchu.World
             };
 
             inventory.AddItem(6416, 1, InventoryType.Models, model);
-
+            
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
+            
             GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
             
             IsBuilding = false;
@@ -143,11 +146,13 @@ namespace Uchu.World
             
             GameObject.GetComponent<InventoryComponent>().EquipItem(item);
             
+            /*
             As<Player>().Message(new StartArrangingWithItemMessage
             {
                 Associate = GameObject,
                 FirstTime = false
             });
+            */
         }
     }
 }

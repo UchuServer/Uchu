@@ -10,11 +10,14 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.CollectibleComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
+        public CollectibleComponent()
         {
-            CollectibleId = (ushort) (int) levelObject.Settings["collectible_id"];
+            OnStart.AddListener(() =>
+            {
+                CollectibleId = (ushort) (int) GameObject.Settings["collectible_id"];
 
-            foreach (var stats in GameObject.GetComponents<StatsComponent>()) stats.HasStats = false;
+                foreach (var stats in GameObject.GetComponents<StatsComponent>()) stats.HasStats = false;
+            });
         }
 
         public override void Construct(BitWriter writer)

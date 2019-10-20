@@ -25,15 +25,12 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
+                HasStats = false;
+                
                 // Stats should be centralized
                 if (!GameObject.TryGetComponent(out _stats))
                     _stats = GameObject.AddComponent<Stats>();
             });
-        }
-        
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-            HasStats = false;
         }
 
         public override void Construct(BitWriter writer)

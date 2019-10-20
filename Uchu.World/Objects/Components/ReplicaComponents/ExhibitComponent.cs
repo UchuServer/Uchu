@@ -7,10 +7,6 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.ExhibitComponent;
 
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

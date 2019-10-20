@@ -32,10 +32,6 @@ namespace Uchu.World
 
         public float CannonFoV { get; set; }
 
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
             base.Construct(writer);

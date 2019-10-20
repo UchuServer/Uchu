@@ -22,10 +22,6 @@ namespace Uchu.World
             });
         }
         
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-        }
-
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

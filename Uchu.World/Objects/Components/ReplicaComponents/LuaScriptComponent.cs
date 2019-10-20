@@ -17,18 +17,28 @@ namespace Uchu.World
         
         public string ClientScriptName { get; set; }
 
-        public override void FromLevelObject(LevelObject levelObject)
+        public LuaScriptComponent()
         {
-            using var ctx = new CdClientContext();
+            OnStart.AddListener(() =>
+            {
+                using var ctx = new CdClientContext();
             
-            var scriptId = levelObject.Lot.GetComponentId(ComponentId.ScriptComponent);
+                var scriptId = GameObject.Lot.GetComponentId(ComponentId.ScriptComponent);
 
-            var script = ctx.ScriptComponentTable.First(s => s.Id == scriptId);
+                var script = ctx.ScriptComponentTable.FirstOrDefault(s => s.Id == scriptId);
 
-            ScriptName = script.Scriptname;
-            ClientScriptName = script.Clientscriptname;
+                if (script == default)
+                {
+                    Logger.Warning($"{GameObject} has an invalid script component entry: {scriptId}");
+                    
+                    return;
+                }
+                
+                ScriptName = script.Scriptname;
+                ClientScriptName = script.Clientscriptname;
             
-            Logger.Debug($"{GameObject} -> {ScriptName}");
+                Logger.Debug($"{GameObject} -> {ScriptName}");
+            });
         }
 
         public override void Construct(BitWriter writer)

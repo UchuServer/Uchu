@@ -16,11 +16,6 @@ namespace Uchu.World
         /// </summary>
         private Timer _timer;
 
-        public MovingPlatformComponent()
-        {
-            OnStart.AddListener(() => { Task.Run(WaitPoint); });
-        }
-
         public MovingPlatformPath Path { get; set; }
 
         public string PathName { get; set; }
@@ -57,27 +52,32 @@ namespace Uchu.World
         ///     Next WayPoint
         /// </summary>
         public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
-
-        public override void FromLevelObject(LevelObject levelObject)
+        
+        public MovingPlatformComponent()
         {
-            PathName = levelObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
-            PathStart = levelObject.Settings.TryGetValue("attached_path_start", out var start)
-                ? (uint) start
-                : 0;
+            OnStart.AddListener(() =>
+            {
+                PathName = GameObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
+                PathStart = GameObject.Settings.TryGetValue("attached_path_start", out var start)
+                    ? (uint) start
+                    : 0;
 
-            Path = Zone.ZoneInfo.Paths.FirstOrDefault(p => p is MovingPlatformPath && p.Name == PathName) as
-                MovingPlatformPath;
+                Path = Zone.ZoneInfo.Paths.FirstOrDefault(p => p is MovingPlatformPath && p.Name == PathName) as
+                    MovingPlatformPath;
 
-            Type = levelObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
-                ? PlatformType.Mover
-                : levelObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
-                  (bool) isSimpleMover
-                    ? PlatformType.SimpleMover
-                    : PlatformType.None;
+                Type = GameObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
+                    ? PlatformType.Mover
+                    : GameObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
+                      (bool) isSimpleMover
+                        ? PlatformType.SimpleMover
+                        : PlatformType.None;
 
-            CurrentWaypointIndex = PathStart;
+                CurrentWaypointIndex = PathStart;
 
-            State = PlatformState.Idle;
+                State = PlatformState.Idle;
+                
+                Task.Run(WaitPoint);
+            });
         }
 
         public override void Construct(BitWriter writer)

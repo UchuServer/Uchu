@@ -40,6 +40,8 @@ namespace Uchu.World
         {
             OnStart.AddListener(async () =>
             {
+                ActivatorPosition = (Vector3) GameObject.Settings["rebuild_activators"];
+                
                 Logger.Information($"{GameObject} is a rebuild-able!");
                 
                 using var cdClient = new CdClientContext();
@@ -91,12 +93,6 @@ namespace Uchu.World
             });
         }
         
-        public override void FromLevelObject(LevelObject levelObject)
-        {
-            
-            ActivatorPosition = (Vector3) levelObject.Settings["rebuild_activators"];
-        }
-
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);
