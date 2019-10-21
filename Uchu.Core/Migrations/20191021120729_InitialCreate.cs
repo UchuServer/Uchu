@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,6 +9,24 @@ namespace Uchu.Core.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Specifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    ServerType = table.Column<int>(nullable: false),
+                    Port = table.Column<int>(nullable: false),
+                    MaxUserCount = table.Column<long>(nullable: false),
+                    ActiveUserCount = table.Column<long>(nullable: false),
+                    ZoneId = table.Column<int>(nullable: false),
+                    ZoneCloneId = table.Column<long>(nullable: false),
+                    ZoneInstanceId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Specifications", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
@@ -24,6 +43,20 @@ namespace Uchu.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.UserId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorldServerRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    ZoneId = table.Column<int>(nullable: false),
+                    State = table.Column<int>(nullable: false),
+                    SpecificationId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorldServerRequests", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -243,6 +276,12 @@ namespace Uchu.Core.Migrations
 
             migrationBuilder.DropTable(
                 name: "MissionTasks");
+
+            migrationBuilder.DropTable(
+                name: "Specifications");
+
+            migrationBuilder.DropTable(
+                name: "WorldServerRequests");
 
             migrationBuilder.DropTable(
                 name: "Missions");
