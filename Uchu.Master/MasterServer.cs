@@ -47,7 +47,33 @@ namespace Uchu.Master
             await StartAuthentication();
             await StartCharacter();
 
+            Console.CancelKeyPress += ShutdownProcesses;
+
+            AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
+
             await HandleRequests();
+        }
+
+        private static void ShutdownProcesses(object _, EventArgs ev)
+        {
+            if (!AuthenticationServer.Process.HasExited)
+                AuthenticationServer.Process.Kill();
+
+            if (!CharacterServer.Process.HasExited)
+                CharacterServer.Process.Kill();
+
+            foreach (var server in WorldServers)
+            {
+                if (!server.Process.HasExited)
+                    server.Process.Kill();
+            }
+
+            if (ev is ConsoleCancelEventArgs cancelEv)
+            {
+                cancelEv.Cancel = true;
+
+                Environment.Exit(0);
+            }
         }
 
         private static async Task HandleRequests()
@@ -124,7 +150,7 @@ namespace Uchu.Master
                         // Start new server
                         //
                         
-                        ushort instanceId = default;
+                        ushort instanceId = 0;
 
                         for (var i = 0; i < ushort.MaxValue; i++)
                         {
@@ -184,7 +210,15 @@ namespace Uchu.Master
             }
 
             var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDLLSourcePath);
-            foreach (var file in Directory.GetFiles(searchPath, "*.dll", SearchOption.AllDirectories))
+
+            var matchStr = NormalizePath("/bin/");
+
+            var files = Directory.GetFiles(searchPath, "*.dll", SearchOption.AllDirectories)
+                .Select(f => Path.GetFullPath(f))
+                .Where(f => f.Contains(matchStr)) // hacky solution
+                .ToArray();
+
+            foreach (var file in files)
             {
                 switch (Path.GetFileName(file))
                 {
@@ -284,6 +318,13 @@ namespace Uchu.Master
             await ctx.SaveChangesAsync();
 
             return id;
+        }
+
+        private static string NormalizePath(string path)
+        {
+            var toReplace = (Path.DirectorySeparatorChar != '/') ? '/' : '\\';
+
+            return path.Replace(toReplace, Path.DirectorySeparatorChar);
         }
     }
 }
