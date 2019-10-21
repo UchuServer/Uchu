@@ -16,8 +16,8 @@ namespace Uchu.Char
                 throw new ArgumentException($"{args[0]} is not a valid GUID");
 
             ServerSpecification specification;
-            
-            using (var ctx = new UchuContext())
+
+            await using (var ctx = new UchuContext())
             {
                 specification = await ctx.Specifications.FirstOrDefaultAsync(c => c.Id == id);
 
@@ -29,7 +29,7 @@ namespace Uchu.Char
 
             await server.StartAsync();
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 specification = await ctx.Specifications.FirstAsync(c => c.Id == id);
 

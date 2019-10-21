@@ -76,7 +76,7 @@ namespace Uchu.World
                 SourceBag = message.SourceBag,
                 Source = message.Source,
                 SourceLot = message.SourceLot,
-                SourceType = message.SourceType,
+                SourceType = 8,
                 
                 Target = message.Target,
                 TargetLot = message.TargetLot,
@@ -87,7 +87,6 @@ namespace Uchu.World
 
         public void StartBuildingWithItem(Item item)
         {
-            /*
             As<Player>().Message(new StartArrangingWithItemMessage
             {
                 Associate = GameObject,
@@ -100,12 +99,11 @@ namespace Uchu.World
                 SourceLot = item.Lot,
                 SourceType = 8, // TODO: find out how to get this
                 
-                Target = null,
+                Target = BasePlate,
                 TargetLot = BasePlate.Lot,
                 TargetPosition = BasePlate.Transform.Position,
                 TargetType = 0
             });
-            */
         }
         
         public void FinishBuilding(Lot[] models)

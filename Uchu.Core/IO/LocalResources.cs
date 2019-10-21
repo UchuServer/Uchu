@@ -17,7 +17,7 @@ namespace Uchu.Core.IO
 
         public async Task<string> ReadTextAsync(string path)
         {
-            using (var stream = GetStream(path))
+            await using (var stream = GetStream(path))
             using (var reader = new StreamReader(stream))
             {
                 return await reader.ReadToEndAsync();
@@ -26,7 +26,7 @@ namespace Uchu.Core.IO
 
         public async Task<byte[]> ReadBytesAsync(string path)
         {
-            using (var stream = GetStream(path))
+            await using (var stream = GetStream(path))
             {
                 var bytes = new byte[stream.Length];
 

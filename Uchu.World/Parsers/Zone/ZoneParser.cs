@@ -58,7 +58,7 @@ namespace Uchu.World.Parsers
                 return null;
             }
 
-            using (var stream = new MemoryStream(data))
+            await using (var stream = new MemoryStream(data))
             using (var reader = new BitReader(stream))
             {
                 var version = reader.Read<uint>();

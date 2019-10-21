@@ -100,7 +100,7 @@ namespace Uchu.Core.Handlers.Commands
             var name = arguments[0];
             var reason = arguments[1];
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
 
@@ -128,7 +128,7 @@ namespace Uchu.Core.Handlers.Commands
 
             var name = arguments[0];
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
 
@@ -161,7 +161,7 @@ namespace Uchu.Core.Handlers.Commands
         [CommandHandler(Signature = "approve", Help = "Approve usernames", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> ApproveUsernames(string[] arguments)
         {
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 if (arguments.Length == 0 || arguments[0].ToLower() == "all")
                 {
@@ -206,7 +206,7 @@ namespace Uchu.Core.Handlers.Commands
         [CommandHandler(Signature = "reject", Help = "Reject usernames", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> RejectUserNames(string[] arguments)
         {
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 if (arguments.Length == 0 || arguments[0].ToLower() == "all")
                 {
@@ -252,7 +252,7 @@ namespace Uchu.Core.Handlers.Commands
 
             var username = arguments[0];
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == username);
 

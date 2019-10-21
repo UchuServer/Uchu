@@ -16,9 +16,9 @@ namespace Uchu.World.Compression
         public static async Task<byte[]> CompressBytesAsync(byte[] data, int offset, int length,
             CompressionLevel compressionLevel = CompressionLevel.Fastest)
         {
-            using (var ms = new MemoryStream())
+            await using (var ms = new MemoryStream())
             {
-                using (var ds = new DeflateStream(ms, compressionLevel))
+                await using (var ds = new DeflateStream(ms, compressionLevel))
                 {
                     await ds.WriteAsync(data, offset, length);
                 }

@@ -234,7 +234,7 @@ namespace Uchu.World
 
         public async Task SetCountSilentAsync(uint count)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
             {
@@ -269,7 +269,7 @@ namespace Uchu.World
         
         private async Task UpdateCountAsync()
         {
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 if (_count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
                 {
@@ -315,7 +315,7 @@ namespace Uchu.World
 
         private async Task AddCountAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
@@ -337,7 +337,7 @@ namespace Uchu.World
 
         private async Task RemoveCountAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
@@ -361,7 +361,7 @@ namespace Uchu.World
 
         private async Task RemoveFromInventoryAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
@@ -372,7 +372,7 @@ namespace Uchu.World
 
         private async Task UpdateEquippedStatusAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
@@ -383,7 +383,7 @@ namespace Uchu.World
 
         private async Task UpdateBoundStatusAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 
@@ -394,7 +394,7 @@ namespace Uchu.World
 
         private async Task UpdateSlotAsync()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
 

@@ -43,8 +43,8 @@ namespace Uchu.World
                 ActivatorPosition = (Vector3) GameObject.Settings["rebuild_activators"];
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
-                
-                using var cdClient = new CdClientContext();
+
+                await using var cdClient = new CdClientContext();
 
                 var clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
                     r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)

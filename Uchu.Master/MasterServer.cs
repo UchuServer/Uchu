@@ -28,8 +28,8 @@ namespace Uchu.Master
         private static async Task Main(string[] args)
         {
             await OpenConfig();
-            
-            using (var ctx = new UchuContext())
+
+            await using (var ctx = new UchuContext())
             {
                 foreach (var specification in ctx.Specifications)
                 {
@@ -81,8 +81,8 @@ namespace Uchu.Master
             while (true)
             {
                 await Task.Delay(50);
-                
-                using var ctx = new UchuContext();
+
+                await using var ctx = new UchuContext();
 
                 //
                 // Cleanup
@@ -132,7 +132,7 @@ namespace Uchu.Master
 
                             if (specification.ActiveUserCount >= specification.MaxUserCount) continue;
 
-                            using (var scopeCtx = new UchuContext())
+                            await using (var scopeCtx = new UchuContext())
                             {
                                 var req = await scopeCtx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
                             
@@ -164,7 +164,7 @@ namespace Uchu.Master
                             break;
                         }
 
-                        using (var scopeCtx = new UchuContext())
+                        await using (var scopeCtx = new UchuContext())
                         {
                             var req = await scopeCtx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
 
@@ -256,7 +256,7 @@ namespace Uchu.Master
 
         private static async Task StartAuthentication()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var id = Guid.NewGuid();
 
@@ -274,7 +274,7 @@ namespace Uchu.Master
         
         private static async Task StartCharacter()
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var id = Guid.NewGuid();
 
@@ -292,7 +292,7 @@ namespace Uchu.Master
         
         private static async Task<Guid> StartWorld(ZoneId zoneId, uint cloneId, ushort instanceId)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var id = Guid.NewGuid();
 

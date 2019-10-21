@@ -104,8 +104,8 @@ namespace Uchu.World
             // The player has clicked on the accept or complete button.
             //
 
-            using var ctx = new UchuContext();
-            using var cdClient = new CdClientContext();
+            await using var ctx = new UchuContext();
+            await using var cdClient = new CdClientContext();
             
             //
             // Collect character data.
@@ -196,8 +196,8 @@ namespace Uchu.World
         {
             Logger.Information($"Completing mission {missionId}");
 
-            using var ctx = new UchuContext();
-            using var cdClient = new CdClientContext();
+            await using var ctx = new UchuContext();
+            await using var cdClient = new CdClientContext();
             
             //
             // Get mission information.
@@ -331,8 +331,8 @@ namespace Uchu.World
         {
             Logger.Information($"{type} {lot}");
 
-            using var ctx = new UchuContext();
-            using var cdClient = new CdClientContext();
+            await using var ctx = new UchuContext();
+            await using var cdClient = new CdClientContext();
             
             //
             // Collect character data.

@@ -33,7 +33,7 @@ namespace Uchu.World.Handlers
 
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var character = await ctx.Characters.FindAsync(session.CharacterId);
 
@@ -76,7 +76,7 @@ namespace Uchu.World.Handlers
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var character = await ctx.Characters
                 .Include(c => c.Items)
@@ -284,7 +284,7 @@ namespace Uchu.World.Handlers
         {
             if (player != message.Player)
             {
-                Logger.Error($"{player} sent invalid {nameof(PlayerLoadedMessage)} player id");
+                Logger.Error($"{player} sent invalid {nameof(PlayerLoadedMessage)} player id: {message.Player}");
 
                 await player.Connection.CloseAsync();
                 

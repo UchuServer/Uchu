@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet\R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Master", "Uchu.Master\Uchu.Master.csproj", "{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StandardScripts", "StandardScripts\StandardScripts.csproj", "{9C6A623B-F047-48BB-8E86-C1471B14F7B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.StandardScripts", "Uchu.StandardScripts\Uchu.StandardScripts.csproj", "{9C6A623B-F047-48BB-8E86-C1471B14F7B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

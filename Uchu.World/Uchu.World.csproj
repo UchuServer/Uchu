@@ -10,8 +10,4 @@
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="NLua" Version="1.4.24" />
-    </ItemGroup>
-
 </Project>

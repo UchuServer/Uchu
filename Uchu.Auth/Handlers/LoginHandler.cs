@@ -13,7 +13,7 @@ namespace Uchu.Auth.Handlers
         [PacketHandler]
         public async Task LoginRequestHandler(ClientLoginInfoPacket packet, IRakConnection connection)
         {
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var addresses = NetworkInterface.GetAllNetworkInterfaces()
                     .Where(i => (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||

@@ -60,7 +60,7 @@ namespace Uchu.World
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
 
-            using var cdClient = new CdClientContext();
+            await using var cdClient = new CdClientContext();
 
             var vendorComponent = await cdClient.VendorComponentTable.FirstAsync(c => c.Id == componentId);
 
@@ -85,7 +85,7 @@ namespace Uchu.World
 
         public async Task Buy(Lot lot, uint count, Player player)
         {
-            using var ctx = new CdClientContext();
+            await using var ctx = new CdClientContext();
 
             var itemComponent = await ctx.ItemComponentTable.FirstAsync(
                 i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)

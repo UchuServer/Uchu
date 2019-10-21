@@ -15,7 +15,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var character = await ctx.Characters.Include(c => c.User)
                 .FirstAsync(c => c.CharacterId == player.ObjectId);
@@ -49,7 +49,7 @@ namespace Uchu.World.Handlers
 
             var player = zone.Players.First(p => p.Connection.Equals(connection));
 
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var friend = ctx.Characters.FirstOrDefault(c => c.Name == packet.PlayerName);
 
@@ -202,7 +202,7 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var thisCharacter = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
                 var friendCharacter = ctx.Characters.First(c => c.Name == packet.FriendName);
@@ -275,7 +275,7 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
 

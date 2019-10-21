@@ -108,7 +108,7 @@ namespace Uchu.World
         
         public async Task AddItemAsync(Lot lot, uint count, LegoDataDictionary extraInfo = default)
         {
-            using var cdClient = new CdClientContext();
+            await using var cdClient = new CdClientContext();
             
             var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
@@ -227,7 +227,7 @@ namespace Uchu.World
 
         public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
         {
-            using var cdClient = new CdClientContext();
+            await using var cdClient = new CdClientContext();
             
             var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent

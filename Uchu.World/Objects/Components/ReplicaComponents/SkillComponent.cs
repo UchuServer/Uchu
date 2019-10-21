@@ -48,7 +48,7 @@ namespace Uchu.World
         {
             if (As<Player>() == null) return;
 
-            using (var cdClient = new CdClientContext())
+            await using (var cdClient = new CdClientContext())
             {
                 var behavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
                     s => s.SkillID == message.SkillId

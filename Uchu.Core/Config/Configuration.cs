@@ -40,7 +40,7 @@ namespace Uchu.Core
 
         [XmlElement] public string[] ScriptDLLSource { get; set; } =
         {
-            "StandardScripts"
+            "Uchu.StandardScripts"
         };
     }
 

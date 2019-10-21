@@ -330,8 +330,8 @@ namespace Uchu.Core
         public static async Task RequestWorldServer(ZoneId zoneId, Action<int> callback)
         {
             var id = Guid.NewGuid();
-            
-            using (var ctx = new UchuContext())
+
+            await using (var ctx = new UchuContext())
             {
                 await ctx.WorldServerRequests.AddAsync(new WorldServerRequest
                 {
@@ -350,7 +350,7 @@ namespace Uchu.Core
                 
                 while (timeout != default)
                 {
-                    using var ctx = new UchuContext();
+                    await using var ctx = new UchuContext();
                     
                     var request = await ctx.WorldServerRequests.FirstAsync(r => r.Id == id);
 

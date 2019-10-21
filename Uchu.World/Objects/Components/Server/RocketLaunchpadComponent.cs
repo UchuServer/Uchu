@@ -45,8 +45,8 @@ namespace Uchu.World
                 Target = rocket,
                 Sender = player
             });
-            
-            using var ctx = new UchuContext();
+
+            await using var ctx = new UchuContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
 

@@ -192,7 +192,7 @@ namespace Uchu.World
         {
             if (_disconnected) return;
             
-            Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g}" : "")}");
+            Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g.Associate}" : "")}");
 
             Connection.Send(gameMessage);
         }
@@ -230,7 +230,7 @@ namespace Uchu.World
 
         private async Task SetCurrencyAsync(long currency)
         {
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
@@ -249,61 +249,59 @@ namespace Uchu.World
 
         private async Task SetUniverseScoreAsync(long score)
         {
-            using (var ctx = new UchuContext())
-            using (var cdClient = new CdClientContext())
+            await using var ctx = new UchuContext();
+            await using var cdClient = new CdClientContext();
+            
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+            character.UniverseScore = score;
+
+            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
             {
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+                if (levelProgressionLookup.RequiredUScore > score) break;
 
-                character.UniverseScore = score;
+                Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
 
-                foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
-                {
-                    if (levelProgressionLookup.RequiredUScore > score) break;
-
-                    Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
-
-                    character.Level = levelProgressionLookup.Id.Value;
-                }
-
-                Message(new ModifyLegoScoreMessage
-                {
-                    Associate = this,
-                    Score = character.UniverseScore - UniverseScore
-                });
-
-                await ctx.SaveChangesAsync();
+                character.Level = levelProgressionLookup.Id.Value;
             }
+
+            Message(new ModifyLegoScoreMessage
+            {
+                Associate = this,
+                Score = character.UniverseScore - UniverseScore
+            });
+
+            await ctx.SaveChangesAsync();
         }
 
         private async Task SetLevelAsync(long level)
         {
-            using (var ctx = new UchuContext())
-            using (var cdClient = new CdClientContext())
+            await using var ctx = new UchuContext();
+            await using var cdClient = new CdClientContext();
+            
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+            var lookup = await cdClient.LevelProgressionLookupTable.FirstOrDefaultAsync(l => l.Id == level);
+
+            if (lookup == default)
             {
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
-
-                var lookup = await cdClient.LevelProgressionLookupTable.FirstOrDefaultAsync(l => l.Id == level);
-
-                if (lookup == default)
-                {
-                    Logger.Error($"Trying to set {this} level to a level that does not exist.");
-                    return;
-                }
-
-                character.Level = level;
-
-                Debug.Assert(lookup.RequiredUScore != null, "lookup.RequiredUScore != null");
-
-                character.UniverseScore = lookup.RequiredUScore.Value;
-
-                Message(new ModifyLegoScoreMessage
-                {
-                    Associate = this,
-                    Score = character.UniverseScore - UniverseScore
-                });
-
-                await ctx.SaveChangesAsync();
+                Logger.Error($"Trying to set {this} level to a level that does not exist.");
+                return;
             }
+
+            character.Level = level;
+
+            Debug.Assert(lookup.RequiredUScore != null, "lookup.RequiredUScore != null");
+
+            character.UniverseScore = lookup.RequiredUScore.Value;
+
+            Message(new ModifyLegoScoreMessage
+            {
+                Associate = this,
+                Score = character.UniverseScore - UniverseScore
+            });
+
+            await ctx.SaveChangesAsync();
         }
 
         private void CheckDeathZone()

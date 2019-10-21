@@ -66,7 +66,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task PlayEmote(PlayEmoteMessage message, Player player)
         {
-            using var ctx = new CdClientContext();
+            await using var ctx = new CdClientContext();
 
             var animation = await ctx.EmotesTable.FirstOrDefaultAsync(e => e.Id == message.EmoteId);
             

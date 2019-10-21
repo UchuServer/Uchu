@@ -172,7 +172,7 @@ namespace Uchu.World
 
             OnHealthChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
@@ -183,7 +183,7 @@ namespace Uchu.World
 
             OnArmorChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
@@ -194,7 +194,7 @@ namespace Uchu.World
 
             OnImaginationChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
@@ -205,7 +205,7 @@ namespace Uchu.World
 
             OnMaxHealthChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
@@ -216,7 +216,7 @@ namespace Uchu.World
 
             OnMaxArmorChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 
@@ -227,7 +227,7 @@ namespace Uchu.World
 
             OnMaxImaginationChanged.AddListener(async (total, delta) =>
             {
-                using var ctx = new UchuContext();
+                await using var ctx = new UchuContext();
 
                 var character = await ctx.Characters.FirstAsync(c => c.CharacterId == As<Player>().ObjectId);
 

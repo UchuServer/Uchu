@@ -16,7 +16,7 @@ namespace Uchu.Char.Handlers
     {
         public async Task SendCharacterList(IRakConnection connection, long userId)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
                 .SingleAsync(u => u.UserId == userId);
@@ -85,7 +85,7 @@ namespace Uchu.Char.Handlers
             uint shirtLot;
             uint pantsLot;
 
-            using (var ctx = new CdClientContext())
+            await using (var ctx = new CdClientContext())
             {
                 //
                 //    Shirt
@@ -116,7 +116,7 @@ namespace Uchu.Char.Handlers
                 last[packet.Predefined.Last]
             ).Replace("\r", "");
 
-            using (var ctx = new UchuContext())
+            await using (var ctx = new UchuContext())
             {
                 if (ctx.Characters.Any(c => c.Name == packet.CharacterName))
                 {
@@ -199,7 +199,7 @@ namespace Uchu.Char.Handlers
         [PacketHandler]
         public async Task DeleteCharacter(CharacterDeleteRequest packet, IRakConnection connection)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             try
             {
@@ -222,7 +222,7 @@ namespace Uchu.Char.Handlers
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             if (ctx.Characters.Any(c => c.Name == packet.Name || c.CustomName == packet.Name))
             {
@@ -257,7 +257,7 @@ namespace Uchu.Char.Handlers
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == packet.CharacterId);
 

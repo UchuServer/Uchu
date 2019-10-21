@@ -141,7 +141,7 @@ namespace Uchu.World.Parsers
 
         public static async Task<bool> AllTasksCompletedAsync(Mission mission)
         {
-            using (var ctx = new CdClientContext())
+            await using (var ctx = new CdClientContext())
             {
                 //
                 // Get all tasks this mission have to have completed to be handed in.

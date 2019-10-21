@@ -172,7 +172,7 @@ namespace Uchu.World
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
         {
             if (As<Player>() != null)
-                using (var ctx = new UchuContext())
+                await using (var ctx = new UchuContext())
                 {
                     var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
 
