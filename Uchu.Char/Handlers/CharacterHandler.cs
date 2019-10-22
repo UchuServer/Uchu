@@ -16,7 +16,7 @@ namespace Uchu.Char.Handlers
     {
         public async Task SendCharacterList(IRakConnection connection, long userId)
         {
-            await using var ctx = new UchuContext();
+            using var ctx = new UchuContext();
             
             var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
                 .SingleAsync(u => u.UserId == userId);
@@ -92,7 +92,7 @@ namespace Uchu.Char.Handlers
                 //
                 var shirtColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.ShirtColor);
                 var shirtName = $"{(shirtColor != null ? shirtColor.Description : "Bright Red")} Shirt {packet.ShirtStyle}";
-                var shirt = await ctx.ObjectsTable.FirstOrDefaultAsync(o =>
+                var shirt = ctx.ObjectsTable.ToArray().FirstOrDefault(o =>
                     string.Equals(o.Name, shirtName, StringComparison.CurrentCultureIgnoreCase));
                 shirtLot = (uint) (shirt != null ? shirt.Id : 4049); // Select 'Bright Red Shirt 1' if not found.
 
@@ -101,7 +101,7 @@ namespace Uchu.Char.Handlers
                 //
                 var pantsColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.PantsColor);
                 var pantsName = $"{(pantsColor != null ? pantsColor.Description : "Bright Red")} Pants";
-                var pants = await ctx.ObjectsTable.FirstOrDefaultAsync(o =>
+                var pants = ctx.ObjectsTable.ToArray().FirstOrDefault(o =>
                     string.Equals(o.Name, pantsName, StringComparison.CurrentCultureIgnoreCase));
                 pantsLot = (uint) (pants != null ? pants.Id : 2508); // Select 'Bright Red Pants' if not found.
             }

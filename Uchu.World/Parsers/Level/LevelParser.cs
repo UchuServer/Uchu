@@ -64,8 +64,8 @@ namespace Uchu.World.Parsers
             var objects = new List<LevelObject>();
 
             await using (var stream = new MemoryStream(data))
-            using (var reader = new BitReader(stream))
             {
+                using var reader = new BitReader(stream);
                 var header = reader.ReadString(4);
 
                 stream.Position = 0;

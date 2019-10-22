@@ -48,15 +48,13 @@ namespace Uchu.World.Parsers
                 if (chrMis == default)
                     return false;
 
-                using (var cdClient = new CdClientContext())
-                {
-                    var tasks = cdClient.MissionTasksTable.Where(m => m.Id == misId).ToArray();
+                using var cdClient = new CdClientContext();
+                var tasks = cdClient.MissionTasksTable.Where(m => m.Id == misId).ToArray();
 
-                    var task = tasks[taskIndex];
-                    var chrTask = chrMis.Tasks[taskIndex];
+                var task = tasks[taskIndex];
+                var chrTask = chrMis.Tasks[taskIndex];
 
-                    return chrTask.Values.Count >= task.TargetValue;
-                }
+                return chrTask.Values.Count >= task.TargetValue;
             }
 
             Logger.Debug($"Required mission {str}");
@@ -141,22 +139,20 @@ namespace Uchu.World.Parsers
 
         public static async Task<bool> AllTasksCompletedAsync(Mission mission)
         {
-            await using (var ctx = new CdClientContext())
-            {
-                //
-                // Get all tasks this mission have to have completed to be handed in.
-                //
+            await using var ctx = new CdClientContext();
+            //
+            // Get all tasks this mission have to have completed to be handed in.
+            //
 
-                var tasks = ctx.MissionTasksTable.Where(m => m.Id == mission.MissionId);
+            var tasks = ctx.MissionTasksTable.Where(m => m.Id == mission.MissionId);
 
-                //
-                // Check tasks count to their required values.
-                //
+            //
+            // Check tasks count to their required values.
+            //
 
-                return await tasks.AllAsync(t =>
-                    mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue
-                );
-            }
+            return await tasks.AllAsync(t =>
+                mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue
+            );
         }
 
         public static Lot[] GetTargets(MissionTasks missionTask)

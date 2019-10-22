@@ -150,44 +150,42 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+
+            var relations = ctx.Friends.Where(f =>
+                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
+            ).ToArray();
+
+            var friends = new List<FriendListPacket.Friend>();
+            foreach (var characterFriend in relations)
             {
-                var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+                if (!characterFriend.IsAccepted) continue;
 
-                var relations = ctx.Friends.Where(f =>
-                    f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
-                ).ToArray();
+                var friendId = characterFriend.FriendTwoId == character.CharacterId
+                    ? characterFriend.FriendId
+                    : characterFriend.FriendTwoId;
 
-                var friends = new List<FriendListPacket.Friend>();
-                foreach (var characterFriend in relations)
+                var friend = ctx.Characters.First(c => c.CharacterId == friendId);
+
+                var player = zone.Players.FirstOrDefault(p => p.ObjectId == friend.CharacterId);
+                friends.Add(new FriendListPacket.Friend
                 {
-                    if (!characterFriend.IsAccepted) continue;
-
-                    var friendId = characterFriend.FriendTwoId == character.CharacterId
-                        ? characterFriend.FriendId
-                        : characterFriend.FriendTwoId;
-
-                    var friend = ctx.Characters.First(c => c.CharacterId == friendId);
-
-                    var player = zone.Players.FirstOrDefault(p => p.ObjectId == friend.CharacterId);
-                    friends.Add(new FriendListPacket.Friend
-                    {
-                        IsBestFriend = characterFriend.IsBestFriend,
-                        IsFreeToPlay = friend.FreeToPlay,
-                        IsOnline = player != default,
-                        PlayerId = player?.ObjectId ?? -1,
-                        PlayerName = friend.Name,
-                        ZoneId = (ZoneId) friend.LastZone,
-                        WorldClone = (uint) friend.LastClone,
-                        WorldInstance = (ushort) friend.LastInstance
-                    });
-                }
-
-                connection.Send(new FriendListPacket
-                {
-                    Friends = friends.ToArray()
+                    IsBestFriend = characterFriend.IsBestFriend,
+                    IsFreeToPlay = friend.FreeToPlay,
+                    IsOnline = player != default,
+                    PlayerId = player?.ObjectId ?? -1,
+                    PlayerName = friend.Name,
+                    ZoneId = (ZoneId) friend.LastZone,
+                    WorldClone = (uint) friend.LastClone,
+                    WorldInstance = (ushort) friend.LastInstance
                 });
             }
+
+            connection.Send(new FriendListPacket
+            {
+                Friends = friends.ToArray()
+            });
         }
 
         [PacketHandler]
@@ -202,64 +200,62 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            await using (var ctx = new UchuContext())
+            await using var ctx = new UchuContext();
+            var thisCharacter = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+            var friendCharacter = ctx.Characters.First(c => c.Name == packet.FriendName);
+
+            var relations = ctx.Friends.Where(f =>
+                f.FriendTwoId == thisCharacter.CharacterId
+            ).ToArray();
+
+            foreach (var characterFriend in relations.Where(c => !c.IsAccepted))
             {
-                var thisCharacter = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-                var friendCharacter = ctx.Characters.First(c => c.Name == packet.FriendName);
+                characterFriend.RequestHasBeenSent = true;
 
-                var relations = ctx.Friends.Where(f =>
-                    f.FriendTwoId == thisCharacter.CharacterId
-                ).ToArray();
-
-                foreach (var characterFriend in relations.Where(c => !c.IsAccepted))
+                var player = zone.Players.FirstOrDefault(p => p.ObjectId == friendCharacter.CharacterId);
+                switch (packet.Response)
                 {
-                    characterFriend.RequestHasBeenSent = true;
-
-                    var player = zone.Players.FirstOrDefault(p => p.ObjectId == friendCharacter.CharacterId);
-                    switch (packet.Response)
-                    {
-                        case ClientFriendRequestResponse.Accepted:
-                            characterFriend.IsAccepted = true;
-                            characterFriend.IsBestFriend = characterFriend.RequestingBestFriend;
-                            break;
-                        case ClientFriendRequestResponse.Declined:
-                            characterFriend.IsDeclined = true;
-                            break;
-                        case ClientFriendRequestResponse.InviteWindowClosed:
-                            return;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    var senderPlayer = zone.Players.FirstOrDefault(p => p.Name == packet.FriendName);
-
-                    if (senderPlayer != default)
-                    {
-                        senderPlayer.Connection.Send(new NotifyFriendRequestResponsePacket
-                        {
-                            IsBestFriend = characterFriend.IsBestFriend,
-                            IsFreeToPlay = friendCharacter.FreeToPlay,
-                            IsPlayerOnline = player != default,
-                            PlayerId = player?.ObjectId ?? -1,
-                            PlayerName = friendCharacter.Name,
-                            ZoneId = (ZoneId) friendCharacter.LastZone,
-                            WorldClone = (uint) friendCharacter.LastClone,
-                            WorldInstance = (ushort) friendCharacter.LastInstance,
-                            Response = packet.Response == ClientFriendRequestResponse.Accepted
-                                ? ServerFriendRequestResponse.Accepted
-                                : ServerFriendRequestResponse.Declined
-                        });
-
-                        FriendsListRequestHandler(null, senderPlayer.Connection);
-                    }
-
-                    FriendsListRequestHandler(null, connection);
-
-                    await ctx.SaveChangesAsync();
-
-                    if (characterFriend.IsDeclined)
-                        await RemoveFriendHandler(new RemoveFriendPacket {FriendName = packet.FriendName}, connection);
+                    case ClientFriendRequestResponse.Accepted:
+                        characterFriend.IsAccepted = true;
+                        characterFriend.IsBestFriend = characterFriend.RequestingBestFriend;
+                        break;
+                    case ClientFriendRequestResponse.Declined:
+                        characterFriend.IsDeclined = true;
+                        break;
+                    case ClientFriendRequestResponse.InviteWindowClosed:
+                        return;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
+
+                var senderPlayer = zone.Players.FirstOrDefault(p => p.Name == packet.FriendName);
+
+                if (senderPlayer != default)
+                {
+                    senderPlayer.Connection.Send(new NotifyFriendRequestResponsePacket
+                    {
+                        IsBestFriend = characterFriend.IsBestFriend,
+                        IsFreeToPlay = friendCharacter.FreeToPlay,
+                        IsPlayerOnline = player != default,
+                        PlayerId = player?.ObjectId ?? -1,
+                        PlayerName = friendCharacter.Name,
+                        ZoneId = (ZoneId) friendCharacter.LastZone,
+                        WorldClone = (uint) friendCharacter.LastClone,
+                        WorldInstance = (ushort) friendCharacter.LastInstance,
+                        Response = packet.Response == ClientFriendRequestResponse.Accepted
+                            ? ServerFriendRequestResponse.Accepted
+                            : ServerFriendRequestResponse.Declined
+                    });
+
+                    FriendsListRequestHandler(null, senderPlayer.Connection);
+                }
+
+                FriendsListRequestHandler(null, connection);
+
+                await ctx.SaveChangesAsync();
+
+                if (characterFriend.IsDeclined)
+                    await RemoveFriendHandler(new RemoveFriendPacket {FriendName = packet.FriendName}, connection);
             }
         }
 
@@ -275,28 +271,26 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            await using (var ctx = new UchuContext())
+            await using var ctx = new UchuContext();
+            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+
+            var relations = ctx.Friends.Where(f =>
+                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId &&
+                f.FriendOne.Name == packet.FriendName || f.FriendTwo.Name == packet.FriendName
+            ).ToArray();
+
+            foreach (var friend in relations)
             {
-                var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-
-                var relations = ctx.Friends.Where(f =>
-                    f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId &&
-                    f.FriendOne.Name == packet.FriendName || f.FriendTwo.Name == packet.FriendName
-                ).ToArray();
-
-                foreach (var friend in relations)
+                connection.Send(new RemoveFriendResponsePacket
                 {
-                    connection.Send(new RemoveFriendResponsePacket
-                    {
-                        FriendName = packet.FriendName,
-                        Success = true
-                    });
+                    FriendName = packet.FriendName,
+                    Success = true
+                });
 
-                    ctx.Friends.Remove(friend);
-                }
-
-                await ctx.SaveChangesAsync();
+                ctx.Friends.Remove(friend);
             }
+
+            await ctx.SaveChangesAsync();
         }
 
         [PacketHandler]

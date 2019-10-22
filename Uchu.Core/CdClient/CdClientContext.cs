@@ -1,10 +1,12 @@
+using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.Core.CdClient
 {
-	public class CdClientContext : DbContext
+	public class CdClientContext : DbContext, IAsyncDisposable
 	{
 		public DbSet<AICombatRoles> AICombatRolesTable { get; set; }
 
@@ -283,6 +285,11 @@ namespace Uchu.Core.CdClient
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			optionsBuilder.UseSqlite("Data Source=./CDClient.db");
+		}
+
+		public ValueTask DisposeAsync()
+		{
+			return new ValueTask(Task.CompletedTask);
 		}
 	}
 }

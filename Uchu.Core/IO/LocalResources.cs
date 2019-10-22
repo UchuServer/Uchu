@@ -17,35 +17,29 @@ namespace Uchu.Core.IO
 
         public async Task<string> ReadTextAsync(string path)
         {
-            await using (var stream = GetStream(path))
-            using (var reader = new StreamReader(stream))
-            {
-                return await reader.ReadToEndAsync();
-            }
+            await using var stream = GetStream(path);
+            using var reader = new StreamReader(stream);
+            return await reader.ReadToEndAsync();
         }
 
         public async Task<byte[]> ReadBytesAsync(string path)
         {
-            await using (var stream = GetStream(path))
-            {
-                var bytes = new byte[stream.Length];
+            await using var stream = GetStream(path);
+            var bytes = new byte[stream.Length];
 
-                await stream.ReadAsync(bytes, 0, (int) stream.Length);
+            await stream.ReadAsync(bytes, 0, (int) stream.Length);
 
-                return bytes;
-            }
+            return bytes;
         }
 
         public byte[] ReadBytes(string path)
         {
-            using (var stream = GetStream(path))
-            {
-                var bytes = new byte[stream.Length];
+            using var stream = GetStream(path);
+            var bytes = new byte[stream.Length];
 
-                stream.Read(bytes, 0, (int) stream.Length);
+            stream.Read(bytes, 0, (int) stream.Length);
 
-                return bytes;
-            }
+            return bytes;
         }
 
         public IEnumerable<string> GetAllFilesWithExtension(string extension)

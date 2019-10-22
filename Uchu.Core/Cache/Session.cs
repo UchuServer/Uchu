@@ -12,31 +12,27 @@ namespace Uchu.Core
 
         public byte[] ToBytes()
         {
-            using (var stream = new MemoryStream())
-            using (var writer = new BitWriter(stream))
-            {
-                writer.WriteString(Key, wide: true);
-                writer.Write(CharacterId);
-                writer.Write(UserId);
-                writer.Write(ZoneId);
+            using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+            writer.WriteString(Key, wide: true);
+            writer.Write(CharacterId);
+            writer.Write(UserId);
+            writer.Write(ZoneId);
 
-                return stream.ToArray();
-            }
+            return stream.ToArray();
         }
 
         public static Session FromBytes(byte[] bytes)
         {
-            using (var stream = new MemoryStream(bytes))
-            using (var reader = new BitReader(stream))
+            using var stream = new MemoryStream(bytes);
+            using var reader = new BitReader(stream);
+            return new Session
             {
-                return new Session
-                {
-                    Key = reader.ReadString(wide: true),
-                    CharacterId = reader.Read<long>(),
-                    UserId = reader.Read<long>(),
-                    ZoneId = reader.Read<int>()
-                };
-            }
+                Key = reader.ReadString(wide: true),
+                CharacterId = reader.Read<long>(),
+                UserId = reader.Read<long>(),
+                ZoneId = reader.Read<int>()
+            };
         }
     }
 }

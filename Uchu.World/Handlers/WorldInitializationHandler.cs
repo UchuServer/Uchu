@@ -248,12 +248,11 @@ namespace Uchu.World.Handlers
                 connection.Send(new DetailedUserInfoPacket {Data = ldf});
             }
 
-            var player = Player.Construct(character, connection, zone);
+            var player = await Player.ConstructAsync(character, connection, zone);
 
             if (character.LandingByRocket)
             {
                 character.LandingByRocket = false;
-                character.Rocket = null;
 
                 await ctx.SaveChangesAsync();
             }

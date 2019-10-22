@@ -61,7 +61,7 @@ namespace Uchu.Core
         {
             if (stackTrace)
             {
-                Task.Run(() => { InternalLog($"{obj}\n{new StackTrace(1)}", LogLevel.Error, ConsoleColor.Red); });
+                Task.Run(() => { InternalLog($"{obj}\n{new StackTrace()}", LogLevel.Error, ConsoleColor.Red); });
             }
             else
             {

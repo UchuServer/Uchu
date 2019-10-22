@@ -16,17 +16,16 @@ namespace Uchu.World.Social
         {
             writer.Write<byte>(0);
 
-            using (var stream = new MemoryStream())
-            using (var friendWriter = new BitWriter(stream))
-            {
-                friendWriter.Write((ushort) Friends.Length);
-                foreach (var friend in Friends) friendWriter.Write(friend);
+            using var stream = new MemoryStream();
+            using var friendWriter = new BitWriter(stream);
+            
+            friendWriter.Write((ushort) Friends.Length);
+            foreach (var friend in Friends) friendWriter.Write(friend);
 
-                var friends = stream.ToArray();
+            var friends = stream.ToArray();
 
-                writer.Write((ushort) (friends.Length - 1));
-                writer.Write(friends);
-            }
+            writer.Write((ushort) (friends.Length - 1));
+            writer.Write(friends);
         }
 
         public class Friend : ISerializable

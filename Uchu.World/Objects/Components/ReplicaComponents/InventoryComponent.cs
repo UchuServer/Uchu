@@ -76,33 +76,31 @@ namespace Uchu.World
         public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,
             InventoryType inventoryType = InventoryType.None)
         {
-            using (var cdClient = new CdClientContext())
+            using var cdClient = new CdClientContext();
+            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+                o => o.Id == lot
+            );
+
+            var itemRegistryEntry = lot.GetComponentId(ComponentId.ItemComponent);
+
+            if (cdClientObject == default || itemRegistryEntry == default)
             {
-                var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                    o => o.Id == lot
-                );
-
-                var itemRegistryEntry = lot.GetComponentId(ComponentId.ItemComponent);
-
-                if (cdClientObject == default || itemRegistryEntry == default)
-                {
-                    Logger.Error($"{lot} is not a valid item");
-                    return;
-                }
-
-                var itemComponent = cdClient.ItemComponentTable.First(
-                    i => i.Id == itemRegistryEntry
-                );
-
-                Items.Add(itemComponent.EquipLocation, new InventoryItem
-                {
-                    InventoryItemId = IdUtils.GenerateObjectId(),
-                    Count = count,
-                    Slot = slot,
-                    LOT = lot,
-                    InventoryType = (int) inventoryType
-                });
+                Logger.Error($"{lot} is not a valid item");
+                return;
             }
+
+            var itemComponent = cdClient.ItemComponentTable.First(
+                i => i.Id == itemRegistryEntry
+            );
+
+            Items.Add(itemComponent.EquipLocation, new InventoryItem
+            {
+                InventoryItemId = IdUtils.GenerateObjectId(),
+                Count = count,
+                Slot = slot,
+                LOT = lot,
+                InventoryType = (int) inventoryType
+            });
         }
 
         public void EquipItem(Item item, bool ignoreAllChecks = false)
@@ -145,6 +143,8 @@ namespace Uchu.World
 
         public void UnEquipItem(Item item)
         {
+            if (item == default) return;
+            
             UnEquipItem(item.ObjectId);
 
             OnUnEquipped?.Invoke(item);
@@ -172,14 +172,14 @@ namespace Uchu.World
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
         {
             if (As<Player>() != null)
-                await using (var ctx = new UchuContext())
-                {
-                    var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
+            {
+                await using var ctx = new UchuContext();
+                var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
 
-                    inventoryItem.IsEquipped = equipped;
+                inventoryItem.IsEquipped = equipped;
 
-                    await ctx.SaveChangesAsync();
-                }
+                await ctx.SaveChangesAsync();
+            }
         }
 
         public override void Construct(BitWriter writer)

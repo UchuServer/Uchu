@@ -54,6 +54,8 @@ namespace Uchu.World
         ///     Fractions of a second passed during the last tick. Should be used to fit actions with the TPS
         /// </summary>
         public float DeltaTime { get; private set; }
+        
+        public readonly AsyncEvent<Player> OnPlayerLoad = new AsyncEvent<Player>();
 
         public ZoneId ZoneId => (ZoneId) ZoneInfo.ZoneId;
 
@@ -267,9 +269,11 @@ namespace Uchu.World
 
         #region Object Mangement
 
-        public void RequestConstruction(Player player)
+        public async Task RequestConstruction(Player player)
         {
             _players.Add(player);
+
+            await OnPlayerLoad.InvokeAsync(player);
 
             foreach (var gameObject in GameObjects)
             {

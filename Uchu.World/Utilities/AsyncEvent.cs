@@ -11,7 +11,7 @@ namespace Uchu.World
             Task.Run(InvokeAsync);
         }
         
-        public async void InvokeAsync()
+        public async Task InvokeAsync()
         {
             foreach (var action in Actions)
             {

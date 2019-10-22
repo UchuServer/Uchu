@@ -70,32 +70,26 @@ namespace Uchu.World.Behaviors
 
         public static async Task<BehaviorParameter> GetParameter(int behaviourId, string name)
         {
-            await using (var cdClient = new CdClientContext())
-            {
-                return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
-                    p.BehaviorID == behaviourId && p.ParameterID == name
-                );
-            }
+            await using var cdClient = new CdClientContext();
+            return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
+                p.BehaviorID == behaviourId && p.ParameterID == name
+            );
         }
 
         public static BehaviorParameter[] GetParameters(int behaviourId)
         {
-            using (var cdClient = new CdClientContext())
-            {
-                return cdClient.BehaviorParameterTable.Where(p =>
-                    p.BehaviorID == behaviourId
-                ).ToArray();
-            }
+            using var cdClient = new CdClientContext();
+            return cdClient.BehaviorParameterTable.Where(p =>
+                p.BehaviorID == behaviourId
+            ).ToArray();
         }
 
         public static async Task<BehaviorTemplate> GetTemplate(int behaviourId)
         {
-            await using (var cdClient = new CdClientContext())
-            {
-                return await cdClient.BehaviorTemplateTable.FirstOrDefaultAsync(p =>
-                    p.BehaviorID == behaviourId
-                );
-            }
+            await using var cdClient = new CdClientContext();
+            return await cdClient.BehaviorTemplateTable.FirstOrDefaultAsync(p =>
+                p.BehaviorID == behaviourId
+            );
         }
     }
 }

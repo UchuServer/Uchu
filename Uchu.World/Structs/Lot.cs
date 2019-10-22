@@ -51,11 +51,9 @@ namespace Uchu.World
         {
             get
             {
-                using (var cdClient = new CdClientContext())
-                {
-                    var id = Id;
-                    return cdClient.ObjectsTable.FirstOrDefault(o => o.Id == id);
-                }
+                using var cdClient = new CdClientContext();
+                var id = Id;
+                return cdClient.ObjectsTable.FirstOrDefault(o => o.Id == id);
             }
         }
 
@@ -67,14 +65,12 @@ namespace Uchu.World
         public int GetComponentId(int componentType)
         {
             var id = Id;
-            using (var cdClient = new CdClientContext())
-            {
-                var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                    r => r.Id == id && r.Componenttype == componentType
-                );
+            using var cdClient = new CdClientContext();
+            var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                r => r.Id == id && r.Componenttype == componentType
+            );
 
-                return itemRegistryEntry?.Componentid ?? 0;
-            }
+            return itemRegistryEntry?.Componentid ?? 0;
         }
 
         public int[] GetComponentIds(ComponentId componentType)

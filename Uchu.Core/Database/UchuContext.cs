@@ -1,10 +1,12 @@
+using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.Core
 {
-    public class UchuContext : DbContext
+    public class UchuContext : DbContext, IAsyncDisposable
     {
         public DbSet<User> Users { get; set; }
 
@@ -43,6 +45,11 @@ namespace Uchu.Core
                 $"Username={config.Postgres.Username};" +
                 $"Password={config.Postgres.Password}"
             );
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return new ValueTask(Task.CompletedTask);
         }
     }
 }

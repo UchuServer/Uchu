@@ -1,5 +1,6 @@
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
 namespace Uchu.World
@@ -84,8 +85,12 @@ namespace Uchu.World
 
             if (Character.LandingByRocket)
             {
-                writer.Write((ushort) Character.Rocket.Length);
-                writer.WriteString(Character.Rocket, Character.Rocket.Length, true);
+                var rocketString = Character.Rocket;
+                
+                Logger.Information($"\nROCKET: {rocketString}\n");
+                
+                writer.Write((ushort) rocketString.Length);
+                writer.WriteString(rocketString, rocketString.Length, true);
             }
 
             WritePart4(writer);

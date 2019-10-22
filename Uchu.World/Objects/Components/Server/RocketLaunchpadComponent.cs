@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -21,23 +22,25 @@ namespace Uchu.World
 
         public async Task OnInteract(Player player)
         {
-            if (!player.GetComponent<InventoryManager>().TryFindItem(Lot.ModularRocket, out var rocket))
+            var rocket = player.GetComponent<InventoryManager>()[InventoryType.Models].Items.FirstOrDefault(
+                item => item.Lot == Lot.ModularRocket
+            );
+
+            if (rocket == default)
             {
-                Logger.Error($"{player} attempted to launch a rocket without having one in their inventory.");
-                    
+                Logger.Error($"Could not find a valid rocket for {player}", true);
+                
                 return;
             }
-            
-            if (rocket == null) return;
 
             player.GetComponent<InventoryComponent>().EquipItem(rocket, true);
-                
+            
             player.Message(new ChangeObjectWorldStateMessage
             {
                 Associate = rocket,
                 State = ObjectWorldState.Attached
             });
-                
+            
             player.Message(new FireClientEventMessage
             {
                 Associate = GameObject,

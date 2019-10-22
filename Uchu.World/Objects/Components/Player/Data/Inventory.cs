@@ -21,28 +21,26 @@ namespace Uchu.World
             InventoryType = inventoryType;
             Manager = manager;
 
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            var playerCharacter = ctx.Characters
+                .Include(c => c.Items)
+                .First(c => c.CharacterId == manager.GameObject.ObjectId);
+
+            var inventoryItems = playerCharacter.Items
+                .Where(item => (InventoryType) item.InventoryType == inventoryType)
+                .ToList();
+
+            _items = inventoryItems.Select(
+                i => Item.Instantiate(i.InventoryItemId, this)
+            ).Where(item => !ReferenceEquals(item, default)).ToList();
+
+            foreach (var item in _items)
             {
-                var playerCharacter = ctx.Characters
-                    .Include(c => c.Items)
-                    .First(c => c.CharacterId == manager.GameObject.ObjectId);
+                Object.Start(item);
 
-                var inventoryItems = playerCharacter.Items
-                    .Where(item => (InventoryType) item.InventoryType == inventoryType)
-                    .ToList();
+                Logger.Information($"\t-> {item}");
 
-                _items = inventoryItems.Select(
-                    i => Item.Instantiate(i.InventoryItemId, this)
-                ).Where(item => !ReferenceEquals(item, default)).ToList();
-
-                foreach (var item in _items)
-                {
-                    Object.Start(item);
-
-                    Logger.Information($"\t-> {item}");
-
-                    item.OnDestroyed.AddListener(() => { _items.Remove(item); });
-                }
+                item.OnDestroyed.AddListener(() => { _items.Remove(item); });
             }
         }
 

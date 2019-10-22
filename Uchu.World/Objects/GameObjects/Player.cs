@@ -25,18 +25,19 @@ namespace Uchu.World
 
         public Perspective Perspective { get; private set; }
 
+        public readonly AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent =
+            new AsyncEventDictionary<string, FireServerEventMessage>();
+        
         private bool _disconnected;
         
         public long Currency
         {
             get
             {
-                using (var ctx = new UchuContext())
-                {
-                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                using var ctx = new UchuContext();
+                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
 
-                    return character.Currency;
-                }
+                return character.Currency;
             }
             set => Task.Run(async () => { await SetCurrencyAsync(value); });
         }
@@ -47,12 +48,10 @@ namespace Uchu.World
         {
             get
             {
-                using (var ctx = new UchuContext())
-                {
-                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                using var ctx = new UchuContext();
+                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
 
-                    return character.UniverseScore;
-                }
+                return character.UniverseScore;
             }
             set => Task.Run(async () => { await SetUniverseScoreAsync(value); });
         }
@@ -61,17 +60,15 @@ namespace Uchu.World
         {
             get
             {
-                using (var ctx = new UchuContext())
-                {
-                    var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                using var ctx = new UchuContext();
+                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
 
-                    return character.Level;
-                }
+                return character.Level;
             }
             set => Task.Run(async () => { await SetLevelAsync(value); });
         }
 
-        internal static Player Construct(Character character, IRakConnection connection, Zone zone)
+        internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
             var instance = Instantiate<Player>(
                 zone,
@@ -107,7 +104,7 @@ namespace Uchu.World
 
             var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
 
-            using (var cdClient = new CdClientContext())
+            await using (var cdClient = new CdClientContext())
             {
                 foreach (var item in character.Items.Where(i => i.IsEquipped))
                 {
@@ -159,7 +156,7 @@ namespace Uchu.World
             instance.Perspective = new Perspective(instance, layer);
             instance.Layer = World.Layer.Player;
 
-            zone.RequestConstruction(instance);
+            await zone.RequestConstruction(instance);
 
             connection.Disconnected += delegate
             {

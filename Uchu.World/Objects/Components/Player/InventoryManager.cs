@@ -46,24 +46,22 @@ namespace Uchu.World
 
         public Item FindItem(long id)
         {
-            using (var ctx = new UchuContext())
+            using var ctx = new UchuContext();
+            var item = ctx.InventoryItems.FirstOrDefault(
+                i => i.InventoryItemId == id && i.CharacterId == GameObject.ObjectId
+            );
+
+            if (item == default)
             {
-                var item = ctx.InventoryItems.FirstOrDefault(
-                    i => i.InventoryItemId == id && i.CharacterId == GameObject.ObjectId
-                );
-
-                if (item == default)
-                {
-                    Logger.Error($"{id} is not an item on {GameObject}");
-                    return null;
-                }
-
-                var managedItem = _inventories[(InventoryType) item.InventoryType][id];
-
-                if (managedItem == null) Logger.Error($"{item.InventoryItemId} is not managed on {GameObject}");
-
-                return managedItem;
+                Logger.Error($"{id} is not an item on {GameObject}");
+                return null;
             }
+
+            var managedItem = _inventories[(InventoryType) item.InventoryType][id];
+
+            if (managedItem == null) Logger.Error($"{item.InventoryItemId} is not managed on {GameObject}");
+
+            return managedItem;
         }
         
         public Item FindItem(Lot lot)

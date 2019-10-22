@@ -18,14 +18,13 @@ namespace Uchu.World
 
             var packet = reader.ReadBytes((int) length);
 
-            using (var stream = new MemoryStream())
-            using (var writer = new BitWriter(stream))
-            {
-                writer.Write<byte>(0x53);
-                writer.Write(packet);
+            using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+            
+            writer.Write<byte>(0x53);
+            writer.Write(packet);
 
-                Packet = stream.ToArray();
-            }
+            Packet = stream.ToArray();
         }
     }
 }

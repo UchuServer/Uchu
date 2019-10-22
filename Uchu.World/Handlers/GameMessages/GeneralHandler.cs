@@ -49,7 +49,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void RebuildCancel(RebuildCancelMessage message, Player player)
+        public void RebuildCancelHandler(RebuildCancelMessage message, Player player)
         {
             if (message.Associate.TryGetComponent<RebuildComponent>(out var rebuild))
             {
@@ -58,13 +58,13 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void ReadyForUpdates(ReadyForUpdateMessage message, Player player)
+        public void ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
         {
             player.Perspective.ClientLoadedObjectCount++;
         }
 
         [PacketHandler]
-        public async Task PlayEmote(PlayEmoteMessage message, Player player)
+        public async Task PlayEmoteHandler(PlayEmoteMessage message, Player player)
         {
             await using var ctx = new CdClientContext();
 

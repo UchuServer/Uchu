@@ -5,7 +5,7 @@ namespace Uchu.World.Handlers.GameMessages
     public class InventoryHandler : HandlerGroup
     {
         [PacketHandler]
-        public void HandleItemMovement(MoveItemInInventoryMessage message, Player player)
+        public void ItemMovementHandler(MoveItemInInventoryMessage message, Player player)
         {
             if (message.DestinationInventoryType == InventoryType.Invalid)
                 message.DestinationInventoryType = message.CurrentInventoryType;
@@ -16,7 +16,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
         
         [PacketHandler]
-        public void HandleItemMoveBetweenInventories(MoveItemBetweenInventoryTypesMessage message, Player player)
+        public void ItemMoveBetweenInventoriesHandler(MoveItemBetweenInventoryTypesMessage message, Player player)
         {
             player.SendChatMessage($"{message.Item?.Lot ?? message.Lot} {message.SourceInventory} -> {message.DestinationInventory}");
 
@@ -30,7 +30,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleRemoveItem(RemoveItemToInventoryMessage message, Player player)
+        public void RemoveItemHandler(RemoveItemToInventoryMessage message, Player player)
         {
             if (!message.Confirmed) return;
             
@@ -40,7 +40,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleEquipItem(EquipItemMessage message, Player player)
+        public void EquipItemHandler(EquipItemMessage message, Player player)
         {
             if (message.Item == null) return;
             
@@ -48,7 +48,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleUnEquipItem(UnEquipItemMessage message, Player player)
+        public void UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
             var inventoryComponent = player.GetComponent<InventoryComponent>();
 

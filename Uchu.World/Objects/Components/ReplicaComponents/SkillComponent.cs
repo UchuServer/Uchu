@@ -48,99 +48,97 @@ namespace Uchu.World
         {
             if (As<Player>() == null) return;
 
-            await using (var cdClient = new CdClientContext())
+            await using var cdClient = new CdClientContext();
+            var behavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
+                s => s.SkillID == message.SkillId
+            );
+
+            if (behavior?.BehaviorID == default)
             {
-                var behavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
-                    s => s.SkillID == message.SkillId
-                );
+                Logger.Error($"{GameObject} is trying to use an invalid skill {message.SkillId}");
+                return;
+            }
 
-                if (behavior?.BehaviorID == default)
+            var template = await Behavior.GetTemplate(behavior.BehaviorID ?? 0);
+
+            var executioner = new BehaviorExecutioner
+            {
+                Executioner = As<Player>()
+            };
+
+            var stream = new MemoryStream(message.Content);
+            using (var reader = new BitReader(stream, leaveOpen: true))
+            {
+                Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
+
+                // Remove player check for *tap to die* :P
+                // TODO: Remove, replace with PvP checks
+                if (message.OptionalTarget != null && !(message.OptionalTarget is Player))
                 {
-                    Logger.Error($"{GameObject} is trying to use an invalid skill {message.SkillId}");
-                    return;
-                }
+                    var distance = Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position);
 
-                var template = await Behavior.GetTemplate(behavior.BehaviorID ?? 0);
-
-                var executioner = new BehaviorExecutioner
-                {
-                    Executioner = As<Player>()
-                };
-
-                var stream = new MemoryStream(message.Content);
-                using (var reader = new BitReader(stream, leaveOpen: true))
-                {
-                    Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
-
-                    // Remove player check for *tap to die* :P
-                    // TODO: Remove, replace with PvP checks
-                    if (message.OptionalTarget != null && !(message.OptionalTarget is Player))
+                    foreach (var gameObject in Zone.GameObjects.Where(g => g.Layer == Layer.Smashable))
                     {
-                        var distance = Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position);
+                        if (gameObject == message.OptionalTarget) continue;
+                            
+                        if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructible) || 
+                            !gameObject.TryGetComponent<Stats>(out var stats)) continue;
+                            
+                        if (!destructible.Alive || !stats.Smashable) continue;
 
-                        foreach (var gameObject in Zone.GameObjects.Where(g => g.Layer == Layer.Smashable))
+                        if (Vector3.Distance(gameObject.Transform.Position, Transform.Position) < distance)
                         {
-                            if (gameObject == message.OptionalTarget) continue;
-                            
-                            if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructible) || 
-                                !gameObject.TryGetComponent<Stats>(out var stats)) continue;
-                            
-                            if (!destructible.Alive || !stats.Smashable) continue;
-
-                            if (Vector3.Distance(gameObject.Transform.Position, Transform.Position) < distance)
-                            {
-                                //
-                                // Player is closer to another smashable object and should therefore not face this one in game.
-                                //
-                                // Invalid target.
-                                //
+                            //
+                            // Player is closer to another smashable object and should therefore not face this one in game.
+                            //
+                            // Invalid target.
+                            //
                                 
-                                goto NoFixedTarget;
-                            }
+                            goto NoFixedTarget;
                         }
-
-                        if (distance < TargetRange) executioner.Targets.Add(message.OptionalTarget);
                     }
 
-                    //
-                    // No fixed target was specified or could not be verified.
-                    //
-                    NoFixedTarget:
-
-                    var instance = (Behavior) Activator.CreateInstance(
-                        Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
-                    );
-
-                    Logger.Information($"{GameObject} is starting skill {message.SkillHandle}");
-                    
-                    HandledSkills.Add(message.SkillHandle, instance);
-
-                    instance.Executioner = executioner;
-                    instance.BehaviorId = (int) behavior.BehaviorID;
-                    instance.SkillComponent = this;
-
-                    Zone.BroadcastMessage(new EchoStartSkillMessage
-                    {
-                        Associate = GameObject,
-                        CasterLatency = message.CasterLatency,
-                        CastType = message.CastType,
-                        Content = message.Content,
-                        LastClickedPosition = message.LastClickedPosition,
-                        OptionalOriginator = message.OptionalOriginator,
-                        OptionalTarget = message.OptionalTarget,
-                        OriginatorRotation = message.OriginatorRotation,
-                        SkillHandle = message.SkillHandle,
-                        SkillId = message.SkillId,
-                        UsedMouse = message.UsedMouse
-                    });
-
-                    await instance.SerializeAsync(reader);
+                    if (distance < TargetRange) executioner.Targets.Add(message.OptionalTarget);
                 }
 
-                await As<Player>().GetComponent<QuestInventory>().UpdateObjectTaskAsync(
-                    MissionTaskType.UseSkill, message.SkillId
+                //
+                // No fixed target was specified or could not be verified.
+                //
+                NoFixedTarget:
+
+                var instance = (Behavior) Activator.CreateInstance(
+                    Behavior.Behaviors[(BehaviorTemplateId) template.TemplateID]
                 );
+
+                Logger.Information($"{GameObject} is starting skill {message.SkillHandle}");
+                    
+                HandledSkills.Add(message.SkillHandle, instance);
+
+                instance.Executioner = executioner;
+                instance.BehaviorId = (int) behavior.BehaviorID;
+                instance.SkillComponent = this;
+
+                Zone.BroadcastMessage(new EchoStartSkillMessage
+                {
+                    Associate = GameObject,
+                    CasterLatency = message.CasterLatency,
+                    CastType = message.CastType,
+                    Content = message.Content,
+                    LastClickedPosition = message.LastClickedPosition,
+                    OptionalOriginator = message.OptionalOriginator,
+                    OptionalTarget = message.OptionalTarget,
+                    OriginatorRotation = message.OriginatorRotation,
+                    SkillHandle = message.SkillHandle,
+                    SkillId = message.SkillId,
+                    UsedMouse = message.UsedMouse
+                });
+
+                await instance.SerializeAsync(reader);
             }
+
+            await As<Player>().GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                MissionTaskType.UseSkill, message.SkillId
+            );
         }
 
         public async Task SyncUserSkillAsync(SyncSkillMessage message)
@@ -169,14 +167,12 @@ namespace Uchu.World
                 if (message.Content.Length == default) return;
 
                 var stream = new MemoryStream(message.Content);
-                using (var reader = new BitReader(stream, leaveOpen: true))
-                {
-                    Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
+                using var reader = new BitReader(stream, leaveOpen: true);
+                Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
-                    Logger.Debug($"Syncing behaviour {(BehaviorTemplateId) template.TemplateID}...");
+                Logger.Debug($"Syncing behaviour {(BehaviorTemplateId) template.TemplateID}...");
 
-                    await head.StartBranch(head.BehaviorId, reader);
-                }
+                await head.StartBranch(head.BehaviorId, reader);
             }
             
             if (HandledSkills.TryGetValue(message.SkillHandle, out head))
@@ -194,14 +190,12 @@ namespace Uchu.World
                 if (message.Content.Length == default) return;
 
                 var stream = new MemoryStream(message.Content);
-                using (var reader = new BitReader(stream, leaveOpen: true))
-                {
-                    Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
+                using var reader = new BitReader(stream, leaveOpen: true);
+                Debug.Assert(template.TemplateID != null, "template.TemplateID != null");
 
-                    Logger.Debug($"Syncing behaviour {(BehaviorTemplateId) template.TemplateID}...");
+                Logger.Debug($"Syncing behaviour {(BehaviorTemplateId) template.TemplateID}...");
 
-                    await head.StartBranch(head.BehaviorId, reader);
-                }
+                await head.StartBranch(head.BehaviorId, reader);
             }
         }
     }
