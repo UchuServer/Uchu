@@ -26,7 +26,9 @@ namespace Uchu.World.Handlers.GameMessages
                 Logger.Error($"{player} is trying to pick up invalid item.");
                 return;
             }
-
+            
+            await player.OnLootPickup.InvokeAsync(message.Loot.Lot);
+            
             Object.Destroy(message.Loot);
 
             await player.GetComponent<InventoryManager>().AddItemAsync(message.Loot.Lot, 1);

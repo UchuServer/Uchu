@@ -27,6 +27,8 @@ namespace Uchu.World
 
         public readonly AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent =
             new AsyncEventDictionary<string, FireServerEventMessage>();
+
+        public readonly AsyncEvent<Lot> OnLootPickup = new AsyncEvent<Lot>();
         
         private bool _disconnected;
         

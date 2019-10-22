@@ -81,9 +81,9 @@ namespace Uchu.World
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-            
+
             using var cdClient = new CdClientContext();
-            
+
             var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
                 r => r.Id == id && r.Componenttype == componentType
             );
@@ -96,22 +96,22 @@ namespace Uchu.World
         public static readonly Lot ModularRocket = 6416;
 
         public static readonly Lot Spawner = 176;
-        
-        public static readonly Lot Imagination = 935;
-        public static readonly Lot TwoImagination = 4035;
-        public static readonly Lot ThreeImagination = 11910;
-        public static readonly Lot FiveImagination = 11911;
-        public static readonly Lot TenImagination = 11918;
-        public static readonly Lot Health = 177;
-        public static readonly Lot TwoHealth = 11915;
-        public static readonly Lot ThreeHealth = 11916;
-        public static readonly Lot FiveHealth = 11917;
-        public static readonly Lot TenHealth = 11920;
-        public static readonly Lot Armor = 6431;
-        public static readonly Lot TwoArmor = 11912;
-        public static readonly Lot ThreeArmor = 11913;
-        public static readonly Lot FiveArmor = 11914;
-        public static readonly Lot TenArmor = 11919;
+
+        public const int Imagination = 935;
+        public const int TwoImagination = 4035;
+        public const int ThreeImagination = 11910;
+        public const int FiveImagination = 11911;
+        public const int TenImagination = 11918;
+        public const int Health = 177;
+        public const int TwoHealth = 11915;
+        public const int ThreeHealth = 11916;
+        public const int FiveHealth = 11917;
+        public const int TenHealth = 11920;
+        public const int Armor = 6431;
+        public const int TwoArmor = 11912;
+        public const int ThreeArmor = 11913;
+        public const int FiveArmor = 11914;
+        public const int TenArmor = 11919;
 
         public static readonly Lot RocketBuildNosecone = 6904;
         public static readonly Lot RocketBuildCockpit = 6910;
