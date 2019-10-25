@@ -92,12 +92,12 @@ git checkout rewrite
 ### Execution Prerequisite
 
 #### Build
-Before running Uchu for the first time, build it once to make sure it compiles and to generate config files. Navigate to the Uchu.Auth, Uchu.Char, and Uchu.World directories and run ```dotnet build``` using the terminal.
+Before running Uchu for the first time, build it once to make sure it compiles and to generate config files. Navigate to the Uchu.Auth, Uchu.Char, Uchu.World, and Uchu.Master directories and run ```dotnet build``` using the terminal.
 
 #### Configure Servers
 Uchu is not a LEGO Universe repository and you will have to supply your own game resource files for the servers to work with. 
 1. Navigate to where you have LEGO Universe installed and enter the "/res" directory, copy the full path to it.
-2. For Uchu.Auth, Uchu.Char, and Uchu.World, navigate to where you built the servers. This is commonly /bin/Debug/netcoreapp3.0 but may differ.
+2. For Uchu.Master, navigate to where you built the server. This is commonly /bin/Debug/netcoreapp3.0 but may differ.
 3. Find the "config.default.xml" file, duplicate it, rename the new copy to "config.xml".
 4. Find where you see ```<GameResourceFolder></GameResourceFolder>``` and copy your LEGO Universe "/res" path inbetween the tags.
 
@@ -113,14 +113,17 @@ Make sure a Redis Cache server is running.
 ### Run it!
 Finally after this long and tedius setup process, you are ready to run Uchu!
 
-#### Run Servers
-Navigate to the Uchu.Auth, Uchu.Char, and Uchu.World directories and run ```dotnet run``` using the terminal.
+#### Build Servers
+Navigate to the Uchu.Auth, Uchu.Char, Uchu.World, Uchu.Master, and Uchu.StandardScripts directories and run ```dotnet build``` using the terminal.
+
+#### Run Master Server
+Navigate to the output directory of Uchu.Master and run ```dotnet Uchu.Master.dll``` using the terminal.
 
 #### Create a user
-In any of the running servers, type ```/adduser (username)``` and press enter. You will than have to enter a password which will be displayed as stars (*), and when you are done, press enter.
+In the Uchu.Master console, type ```/adduser (username)``` and press enter. You will than have to enter a password which will be displayed as stars (*), and when you are done, press enter.
 
 #### Login
 Using your LEGO Universe client you may now login and play what parts of LEGO Universe Uchu has to offer :)
 
 #### Extra
-In any of the running servers, type ```/gamemaster (username) 2```. This will make your account an Admin and will give you access to a lot of commands. Type "/" using the ingame chat to have your options displayed to you.
+In the Uchu.Master console, type ```/gamemaster (username) 2```. This will make your account an Admin and will give you access to a lot of commands. Type "/" using the ingame chat to have your options displayed to you.
