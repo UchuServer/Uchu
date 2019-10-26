@@ -2,6 +2,7 @@ namespace Uchu.World
 {
     public enum BehaviorTemplateId
     {
+        Empty = -1,
         BasicAttack = 1,
         TacArc,
         And,

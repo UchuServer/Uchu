@@ -11,7 +11,7 @@ using Uchu.Core;
 namespace Uchu.Core.Migrations
 {
     [DbContext(typeof(UchuContext))]
-    [Migration("20191021120729_InitialCreate")]
+    [Migration("20191026141002_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,10 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("CharacterId")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<int>("BaseHealth");
+
+                    b.Property<int>("BaseImagination");
 
                     b.Property<long>("Currency");
 

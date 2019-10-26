@@ -77,6 +77,9 @@ namespace Uchu.Core
         public int CurrentHealth { get; set; } = 4;
 
         [Required]
+        public int BaseHealth { get; set; } = 4;
+
+        [Required]
         public int MaximumArmor { get; set; } = 0;
 
         [Required]
@@ -87,6 +90,9 @@ namespace Uchu.Core
 
         [Required]
         public int CurrentImagination { get; set; } = 0;
+        
+        [Required]
+        public int BaseImagination { get; set; }
 
         [Required]
         public long TotalCurrencyCollected { get; set; }

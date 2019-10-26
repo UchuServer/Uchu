@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World.Collections;
 
@@ -23,6 +24,8 @@ namespace Uchu.World
                     {
                         StartBuildingWithItem(item);
                     }
+                    
+                    return Task.CompletedTask;
                 });
             });
         }
