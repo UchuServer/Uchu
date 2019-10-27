@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -40,24 +41,24 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void EquipItemHandler(EquipItemMessage message, Player player)
+        public async Task EquipItemHandler(EquipItemMessage message, Player player)
         {
             if (message.Item == null) return;
             
-            player.GetComponent<InventoryComponent>().EquipItem(message.Item);
+            await player.GetComponent<InventoryComponent>().EquipItem(message.Item);
         }
 
         [PacketHandler]
-        public void UnEquipItemHandler(UnEquipItemMessage message, Player player)
+        public async Task UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
             var inventoryComponent = player.GetComponent<InventoryComponent>();
 
             Logger.Information($"UnEquip Item: {message.ItemToUnEquip} | {message.ReplacementItem}");
 
-            inventoryComponent.UnEquipItem(message.ItemToUnEquip);
+            await inventoryComponent.UnEquipItem(message.ItemToUnEquip);
 
             if (message.ReplacementItem != null)
-                inventoryComponent.EquipItem(message.ReplacementItem);
+                await inventoryComponent.EquipItem(message.ReplacementItem);
         }
     }
 }

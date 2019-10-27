@@ -9,20 +9,16 @@ namespace Uchu.World.Behaviors
 {
     public abstract class BehaviorBase
     {
+        public static readonly List<BehaviorBase> Cache = new List<BehaviorBase>();
+        
         public int BehaviorId { get; set; }
-        
-        public BehaviorBase ParentNode { get; set; }
-        
+
         public abstract BehaviorTemplateId Id { get; }
-        
-        public readonly List<BehaviorBase> ChildNodes = new List<BehaviorBase>();
 
         public abstract Task BuildAsync();
 
         public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            (context.Associate as Player)?.SendChatMessage($"{GetType().Name}: {BehaviorId}");
-            
             return Task.CompletedTask;
         }
 
@@ -31,9 +27,9 @@ namespace Uchu.World.Behaviors
             return Task.CompletedTask;
         }
 
-        public async Task<BehaviorBase> BuildBranch(int behaviorId)
+        public static async Task<BehaviorBase> BuildBranch(int behaviorId)
         {
-            var cachedBehavior = ChildNodes.FirstOrDefault(c => c.BehaviorId == behaviorId);
+            var cachedBehavior = Cache.FirstOrDefault(c => c.BehaviorId == behaviorId);
 
             if (cachedBehavior != default) return cachedBehavior;
             
@@ -50,9 +46,8 @@ namespace Uchu.World.Behaviors
             var instance = (BehaviorBase) Activator.CreateInstance(BehaviorTree.Behaviors[id]);
             
             instance.BehaviorId = behaviorId;
-            instance.ParentNode = this;
             
-            ChildNodes.Add(instance);
+            Cache.Add(instance);
 
             await instance.BuildAsync();
 

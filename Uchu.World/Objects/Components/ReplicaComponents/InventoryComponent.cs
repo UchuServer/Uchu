@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +6,6 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
 using Uchu.World.Collections;
-using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
@@ -103,8 +101,10 @@ namespace Uchu.World
             });
         }
 
-        public void EquipItem(Item item, bool ignoreAllChecks = false)
+        public async Task EquipItem(Item item, bool ignoreAllChecks = false)
         {
+            await OnEquipped.InvokeAsync(item);
+            
             if (item?.InventoryItem == null)
             {
                 Logger.Error($"{item} is not a valid item");
@@ -124,33 +124,31 @@ namespace Uchu.World
                     }
                 }
             }
-
-            OnEquipped.Invoke(item);
             
             Logger.Debug($"Equipping {item}");
             
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
             foreach (var (equipLocation, value) in items)
                 if (equipLocation.Equals(item.ItemComponent.EquipLocation))
-                    UnEquipItem(value.InventoryItemId);
+                    await UnEquipItem(value.InventoryItemId);
 
             Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
 
-            Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true); });
+            await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true);
 
             GameObject.Serialize(GameObject);
         }
 
-        public void UnEquipItem(Item item)
+        public async Task UnEquipItem(Item item)
         {
+            OnUnEquipped?.Invoke(item);
+            
             if (item == default) return;
             
-            UnEquipItem(item.ObjectId);
-
-            OnUnEquipped?.Invoke(item);
+            await UnEquipItem(item.ObjectId);
         }
 
-        public void UnEquipItem(long id)
+        public async Task UnEquipItem(long id)
         {
             var (equipLocation, value) = Items.FirstOrDefault(i => i.Value.InventoryItemId == id);
 
@@ -164,7 +162,7 @@ namespace Uchu.World
 
             Items.Remove(equipLocation);
 
-            Task.Run(async () => { await ChangeEquippedSateOnPlayerAsync(id, false); });
+            await ChangeEquippedSateOnPlayerAsync(id, false);
 
             GameObject.Serialize(GameObject);
         }

@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
-using Uchu.World.Parsers;
 
 namespace Uchu.World
 {

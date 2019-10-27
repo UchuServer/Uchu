@@ -8,15 +8,12 @@ namespace Uchu.World
     {
         private readonly Func<Task> _callback;
 
-        private readonly int _delay;
-
         private readonly CancellationTokenSource _cancellation;
 
         public Delay(Func<Task> callback, int delay)
         {
             _cancellation = new CancellationTokenSource();
             _callback = callback;
-            _delay = delay;
 
             var cancellation = _cancellation;
             

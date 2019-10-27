@@ -17,8 +17,8 @@ namespace StandardScripts.General
             {
                 var inventory = player.GetComponent<InventoryComponent>();
                 
-                inventory.OnEquipped.AddListener(_ => CalculateGearStats(player));
-                inventory.OnUnEquipped.AddListener(_ => CalculateGearStats(player));
+                inventory.OnEquipped.AddListener(item => CalculateGearStats(player));
+                inventory.OnUnEquipped.AddListener(item => CalculateGearStats(player));
 
                 await CalculateGearStats(player);
             });

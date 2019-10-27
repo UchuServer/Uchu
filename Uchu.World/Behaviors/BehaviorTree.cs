@@ -12,8 +12,8 @@ namespace Uchu.World.Behaviors
     public class BehaviorTree
     {
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
-        
-        public readonly (int, SkillCastType)[] BehaviorIds;
+
+        public readonly (int behaviorId, SkillCastType castType, int skillId)[] BehaviorIds;
 
         public readonly Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors =
             new Dictionary<SkillCastType, List<BehaviorBase>>();
@@ -46,16 +46,30 @@ namespace Uchu.World.Behaviors
             var objectSkills = cdClient.ObjectSkillsTable.Where(i =>
                 i.ObjectTemplate == lot
             ).ToArray();
+            
+            BehaviorIds = new (int behaviorId, SkillCastType castType, int skillId)[3];
 
-            var skillBehaviors = cdClient.SkillBehaviorTable.Where(
-                b => objectSkills.Any(s => s.SkillID == b.SkillID)
-            ).ToArray();
-
-            BehaviorIds = skillBehaviors.Where(
-                s => s.BehaviorID != null && s.CastTypeDesc != null
-            ).Select(
-                s => (s.BehaviorID.Value, (SkillCastType) s.CastTypeDesc.Value)
-            ).ToArray();
+            for (var index = 0; index < objectSkills.Length; index++)
+            {
+                var objectSkill = objectSkills[index];
+                
+                var behavior = cdClient.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == objectSkill.SkillID);
+                
+                if (behavior == default)
+                {
+                    Logger.Error($"Could not find behavior for skill: {objectSkill.SkillID}");
+                
+                    continue;
+                }
+                
+                Logger.Information($"[{lot}] SKILL: {objectSkill.SkillID} -> {behavior.BehaviorID}");
+                
+                BehaviorIds[index] = (
+                    behavior.BehaviorID.Value,
+                    (SkillCastType) objectSkill.CastOnType.Value,
+                    objectSkill.SkillID.Value
+                );
+            }
         }
         
         public BehaviorTree(int skillId)
@@ -78,39 +92,51 @@ namespace Uchu.World.Behaviors
                 return;
             }
             
-            BehaviorIds = new[] {(behavior.BehaviorID.Value, SkillCastType.Default)};
+            BehaviorIds = new[] {(behavior.BehaviorID.Value, SkillCastType.Default, skillId)};
         }
 
-        public async Task BuildAsync()
+        public async Task<BehaviorInfo[]> BuildAsync()
         {
             await using var ctx = new CdClientContext();
             
-            foreach (var (id, castType) in BehaviorIds)
+            foreach (var (id, castType, _) in BehaviorIds)
             {
-                var behavior = await ctx.BehaviorTemplateTable.FirstOrDefaultAsync(
-                    t => t.BehaviorID == id
-                );
+                var root = BehaviorBase.Cache.FirstOrDefault(b => b.BehaviorId == id);
 
-                if (behavior?.TemplateID == null) continue;
+                if (root == default)
+                {
+                    var behavior = await ctx.BehaviorTemplateTable.FirstOrDefaultAsync(
+                        t => t.BehaviorID == id
+                    );
 
-                var behaviorType = Behaviors[(BehaviorTemplateId) behavior.TemplateID];
+                    if (behavior?.TemplateID == null) continue;
 
-                var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
+                    var behaviorType = Behaviors[(BehaviorTemplateId) behavior.TemplateID];
 
-                instance.BehaviorId = id;
-                instance.ParentNode = new EmptyBehavior();
+                    var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
+
+                    instance.BehaviorId = id;
+
+                    BehaviorBase.Cache.Add(instance);
+                    
+                    await instance.BuildAsync();
+                }
 
                 if (RootBehaviors.TryGetValue(castType, out var list))
                 {
-                    list.Add(instance);
+                    list.Add(root);
                 }
                 else
                 {
-                    RootBehaviors[castType] = new List<BehaviorBase> {instance};
+                    RootBehaviors[castType] = new List<BehaviorBase> {root};
                 }
-                
-                await instance.BuildAsync();
             }
+
+            return BehaviorIds.Select(b => new BehaviorInfo
+            {
+                SkillId = b.skillId,
+                CastType = b.castType
+            }).ToArray();
         }
 
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip)
@@ -141,6 +167,17 @@ namespace Uchu.World.Behaviors
             }
 
             return context;
+        }
+
+        public static async Task<BehaviorInfo[]> GetSkillsForItem(Item item)
+        {
+            var type = item.ItemType.GetBehaviorSlot();
+
+            if (type == BehaviorSlot.Invalid) return new BehaviorInfo[0];
+            
+            var tree = new BehaviorTree(item.Lot);
+            
+            return await tree.BuildAsync();
         }
     }
 }

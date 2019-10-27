@@ -10,7 +10,6 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Parsers;
-using Uchu.World.Scripting;
 
 namespace Uchu.World
 {

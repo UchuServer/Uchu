@@ -9,7 +9,6 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
-using Uchu.World.Experimental;
 using Uchu.World.Social;
 
 namespace Uchu.World

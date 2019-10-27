@@ -79,5 +79,44 @@ namespace Uchu.World
                     return InventoryType.Invalid;
             }
         }
+
+        public static BehaviorSlot GetBehaviorSlot(this ItemType @this)
+        {
+            switch (@this)
+            {
+                case ItemType.Invalid:
+                case ItemType.Brick:
+                case ItemType.Legs:
+                case ItemType.Chest:
+                case ItemType.LeftTrinket:
+                case ItemType.RightTrinket:
+                case ItemType.Behavior:
+                case ItemType.Property:
+                case ItemType.Model:
+                case ItemType.Collectable:
+                case ItemType.PetFood:
+                case ItemType.Egg:
+                case ItemType.QuestObject:
+                case ItemType.PetInventoryItem:
+                case ItemType.T20Package:
+                case ItemType.LootModel:
+                case ItemType.Vehicle:
+                case ItemType.Currency:
+                case ItemType.Hair:
+                    return BehaviorSlot.Invalid;
+                case ItemType.Hat:
+                    return BehaviorSlot.Head;
+                case ItemType.LeftHand:
+                    return BehaviorSlot.LeftHand;
+                case ItemType.RightHand:
+                    return BehaviorSlot.Primary;
+                case ItemType.Consumable:
+                    return BehaviorSlot.Consumeable;
+                case ItemType.Neck:
+                    return BehaviorSlot.Neck;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(@this), @this, null);
+            }
+        }
     }
 }
