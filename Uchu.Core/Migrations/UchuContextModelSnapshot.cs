@@ -25,6 +25,10 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("CharacterId")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<int>("BaseHealth");
+
+                    b.Property<int>("BaseImagination");
+
                     b.Property<long>("Currency");
 
                     b.Property<int>("CurrentArmor");
@@ -56,6 +60,8 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("LastInstance");
 
                     b.Property<int>("LastZone");
+
+                    b.Property<int>("LaunchedRocketFrom");
 
                     b.Property<long>("Level");
 

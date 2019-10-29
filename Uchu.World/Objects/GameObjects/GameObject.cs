@@ -22,7 +22,7 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
-                Zone.RegisterGameObject(this);
+                Zone.ManagedGameObjects.Add(this);
 
                 foreach (var component in _components.ToArray()) Start(component);
             });
@@ -33,11 +33,12 @@ namespace Uchu.World
                 
                 OnInteract.Clear();
                 
+                Zone.UnregisterObject(this);
                 Zone.UnregisterGameObject(this);
 
                 foreach (var component in _components.ToArray()) Destroy(component);
 
-                Zone.SendDestruction(this);
+                Destruct(this);
             });
         }
 
@@ -217,17 +218,17 @@ namespace Uchu.World
 
         public static void Construct(GameObject gameObject)
         {
-            gameObject.Zone.SendConstruction(gameObject);
+            Zone.SendConstruction(gameObject, gameObject.Zone.Players);
         }
 
         public static void Serialize(GameObject gameObject)
         {
-            gameObject.Zone.SendSerialization(gameObject);
+            Zone.SendSerialization(gameObject, gameObject.Zone.Players);
         }
 
         public static void Destruct(GameObject gameObject)
         {
-            gameObject.Zone.SendDestruction(gameObject);
+            Zone.SendDestruction(gameObject, gameObject.Zone.Players);
         }
 
         #endregion

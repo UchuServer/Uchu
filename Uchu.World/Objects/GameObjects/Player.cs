@@ -9,7 +9,6 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
-using Uchu.World.Experimental;
 using Uchu.World.Social;
 
 namespace Uchu.World
@@ -31,6 +30,13 @@ namespace Uchu.World
         public readonly AsyncEvent<Lot> OnLootPickup = new AsyncEvent<Lot>();
         
         private bool _disconnected;
+
+        public async Task<Character> GetCharacterAsync()
+        {
+            await using var ctx = new UchuContext();
+                
+            return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+        }
         
         public long Currency
         {
@@ -72,6 +78,10 @@ namespace Uchu.World
 
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
+            //
+            // Create base gameobject
+            //
+            
             var instance = Instantiate<Player>(
                 zone,
                 character.Name,
@@ -84,26 +94,29 @@ namespace Uchu.World
 
             instance.Connection = connection;
 
-            var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
-
-            controllablePhysics.HasPosition = true;
-
-            instance.AddComponent<DestructibleComponent>();
-
-            var stats = instance.GetComponent<StatsComponent>();
-
-            stats.HasStats = true;
+            //
+            // Add serialized components
+            //
             
+            var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
+            instance.AddComponent<DestructibleComponent>();
+            var stats = instance.GetComponent<StatsComponent>();
             var characterComponent = instance.AddComponent<CharacterComponent>();
-
-            characterComponent.Character = character;
-
             var inventory = instance.AddComponent<InventoryComponent>();
-
+            
+            instance.AddComponent<LuaScriptComponent>();
+            instance.AddComponent<SkillComponent>();
+            instance.AddComponent<RendererComponent>();
+            instance.AddComponent<Component107>();
+            
+            controllablePhysics.HasPosition = true;
+            stats.HasStats = true;
+            characterComponent.Character = character;
+            
             //
             // Equip items
             //
-
+            
             var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
 
             await using (var cdClient = new CdClientContext())
@@ -131,14 +144,13 @@ namespace Uchu.World
                     equippedItems.Add(itemComponent.EquipLocation, item);
                 }
             }
-
+            
             inventory.Items = equippedItems;
-
-            instance.AddComponent<LuaScriptComponent>();
-            instance.AddComponent<SkillComponent>();
-            instance.AddComponent<RendererComponent>();
-            instance.AddComponent<Component107>();
-
+            
+            //
+            // Register player gameobject in zone
+            //
+            
             Start(instance);
             Construct(instance);
 
@@ -147,10 +159,14 @@ namespace Uchu.World
             //
             
             instance.AddComponent<QuestInventory>();
-            instance.AddComponent<InventoryManager>();
+            instance.AddComponent<InventoryManagerComponent>();
             instance.AddComponent<TeamPlayer>();
-            instance.AddComponent<ModularBuilder>();
+            instance.AddComponent<ModularBuilderComponent>();
 
+            //
+            // Setup layers
+            //
+            
             var layer = World.Layer.All;
             layer -= World.Layer.Hidden;
             layer -= World.Layer.Spawner;
@@ -158,9 +174,17 @@ namespace Uchu.World
             instance.Perspective = new Perspective(instance, layer);
             instance.Layer = World.Layer.Player;
 
-            await zone.RequestConstruction(instance);
+            //
+            // Register player as an active in zone
+            //
+            
+            await zone.RegisterPlayer(instance);
 
-            connection.Disconnected += delegate
+            //
+            // Hook up disconnect
+            //
+            
+            connection.Disconnected += reason =>
             {
                 instance._disconnected = true;
                 

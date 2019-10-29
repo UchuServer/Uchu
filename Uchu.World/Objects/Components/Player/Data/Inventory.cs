@@ -11,20 +11,20 @@ namespace Uchu.World
         private readonly List<Item> _items;
         
         public readonly InventoryType InventoryType;
-        public readonly InventoryManager Manager;
+        public readonly InventoryManagerComponent ManagerComponent;
 
         // TODO: Network & Store in DB
         public uint Size = 20;
         
-        public Inventory(InventoryType inventoryType, InventoryManager manager)
+        public Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
             InventoryType = inventoryType;
-            Manager = manager;
+            ManagerComponent = managerComponent;
 
             using var ctx = new UchuContext();
             var playerCharacter = ctx.Characters
                 .Include(c => c.Items)
-                .First(c => c.CharacterId == manager.GameObject.ObjectId);
+                .First(c => c.CharacterId == managerComponent.GameObject.ObjectId);
 
             var inventoryItems = playerCharacter.Items
                 .Where(item => (InventoryType) item.InventoryType == inventoryType)

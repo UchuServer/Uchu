@@ -239,14 +239,14 @@ namespace Uchu.World
 
         public void Damage(uint value, GameObject source)
         {
+            LatestDamageSource = source;
+            
             var armorDamage = Math.Min(value, Armor);
 
             value -= armorDamage;
             Armor -= armorDamage;
 
             Health -= Math.Min(value, Health);
-
-            LatestDamageSource = source;
         }
 
         public void Heal(uint value)

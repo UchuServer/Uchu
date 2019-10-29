@@ -22,7 +22,7 @@ namespace Uchu.World.Handlers.Commands
                     // Add Universe Editor Component
                     //
                     
-                    if (!player.TryGetComponent<UniverseEditor>(out _)) player.AddComponent<UniverseEditor>();
+                    if (!player.TryGetComponent<UniverseEditorComponent>(out _)) player.AddComponent<UniverseEditorComponent>();
 
                     return "Enable Universe Editor";
                 case "off":
@@ -32,7 +32,7 @@ namespace Uchu.World.Handlers.Commands
                     // Remove Universe Editor Component
                     //
 
-                    if (player.TryGetComponent<UniverseEditor>(out var comp)) Object.Destroy(comp);
+                    if (player.TryGetComponent<UniverseEditorComponent>(out var comp)) Object.Destroy(comp);
                     
                     return "Disabled Universe Editor";
                 default:
@@ -43,7 +43,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "target", Help = "Target GameObject", GameMasterLevel = GameMasterLevel.Admin)]
         public string TargetObject(string[] arguments, Player player)
         {
-            if (!player.TryGetComponent<UniverseEditor>(out var editor)) editor = player.AddComponent<UniverseEditor>();
+            if (!player.TryGetComponent<UniverseEditorComponent>(out var editor)) editor = player.AddComponent<UniverseEditorComponent>();
 
             if (arguments.Contains("-z"))
             {
@@ -82,7 +82,7 @@ namespace Uchu.World.Handlers.Commands
                 return "setname <name>";
             }
             
-            if (!player.TryGetComponent<UniverseEditor>(out var editor)) editor = player.AddComponent<UniverseEditor>();
+            if (!player.TryGetComponent<UniverseEditorComponent>(out var editor)) editor = player.AddComponent<UniverseEditorComponent>();
 
             editor.Target.Name = arguments[0];
             

@@ -104,12 +104,12 @@ namespace Uchu.World
             using var ctx = new UchuContext();
             
             var item = ctx.InventoryItems.FirstOrDefault(
-                i => i.InventoryItemId == itemId && i.Character.CharacterId == inventory.Manager.GameObject.ObjectId
+                i => i.InventoryItemId == itemId && i.Character.CharacterId == inventory.ManagerComponent.GameObject.ObjectId
             );
 
             if (item == default)
             {
-                Logger.Error($"{itemId} is not an item on {inventory.Manager.GameObject}");
+                Logger.Error($"{itemId} is not an item on {inventory.ManagerComponent.GameObject}");
                 return null;
             }
 
@@ -127,7 +127,7 @@ namespace Uchu.World
 
             var instance = Instantiate<Item>
             (
-                inventory.Manager.Zone, cdClientObject.Name, objectId: itemId, lot: item.LOT
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: itemId, lot: item.LOT
             );
 
             if (!string.IsNullOrWhiteSpace(item.ExtraInfo)) 
@@ -138,7 +138,7 @@ namespace Uchu.World
             instance._slot = (uint) item.Slot;
 
             instance.Inventory = inventory;
-            instance.Player = inventory.Manager.GameObject as Player;
+            instance.Player = inventory.ManagerComponent.GameObject as Player;
 
             return instance;
         }
@@ -178,7 +178,7 @@ namespace Uchu.World
 
             var instance = Instantiate<Item>
             (
-                inventory.Manager.Zone, cdClientObject.Name, objectId: IdUtils.GenerateObjectId(), lot: lot
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: IdUtils.GenerateObjectId(), lot: lot
             );
 
             instance._count = count;
@@ -190,10 +190,10 @@ namespace Uchu.World
             );
 
             instance.Inventory = inventory;
-            instance.Player = inventory.Manager.GameObject as Player;
+            instance.Player = inventory.ManagerComponent.GameObject as Player;
 
             var playerCharacter = ctx.Characters.Include(c => c.Items).First(
-                c => c.CharacterId == inventory.Manager.GameObject.ObjectId
+                c => c.CharacterId == inventory.ManagerComponent.GameObject.ObjectId
             );
 
             var inventoryItem = new InventoryItem
@@ -213,7 +213,7 @@ namespace Uchu.World
 
             var message = new AddItemToInventoryMessage
             {
-                Associate = inventory.Manager.GameObject,
+                Associate = inventory.ManagerComponent.GameObject,
                 InventoryType = (int) inventory.InventoryType,
                 Delta = count,
                 TotalItems = count,
@@ -226,7 +226,7 @@ namespace Uchu.World
                 ExtraInfo = extraInfo
             };
 
-            (inventory.Manager.GameObject as Player)?.Message(message);
+            (inventory.ManagerComponent.GameObject as Player)?.Message(message);
 
             inventory.ManageItem(instance);
 
@@ -260,7 +260,7 @@ namespace Uchu.World
                 {
                     foreach (var part in (LegoDataList) list)
                     {
-                        await Inventory.Manager.AddItemAsync((int) part, 1);
+                        await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
                     }
                 }
             }
@@ -303,7 +303,7 @@ namespace Uchu.World
                     {
                         foreach (var part in (LegoDataList) list)
                         {
-                            await Inventory.Manager.AddItemAsync((int) part, 1);
+                            await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
                         }
                     }
                 }

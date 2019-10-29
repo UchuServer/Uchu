@@ -21,9 +21,14 @@ namespace Uchu.World
             return @this.ReadGameObject(zone) as T;
         }
 
-        public static bool Flag(this BitReader @this)
+        public static void Align(this BitReader @this)
         {
-            return @this.ReadBit();
+            var toRead = 8 - (((@this.Position - 1) & 7) + 1);
+
+            for (var i = 0; i < toRead; i++)
+            {
+                @this.ReadBit();
+            }
         }
     }
 }

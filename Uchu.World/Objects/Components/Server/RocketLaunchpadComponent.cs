@@ -22,7 +22,7 @@ namespace Uchu.World
 
         public async Task OnInteract(Player player)
         {
-            var rocket = player.GetComponent<InventoryManager>()[InventoryType.Models].Items.FirstOrDefault(
+            var rocket = player.GetComponent<InventoryManagerComponent>()[InventoryType.Models].Items.FirstOrDefault(
                 item => item.Lot == Lot.ModularRocket
             );
 

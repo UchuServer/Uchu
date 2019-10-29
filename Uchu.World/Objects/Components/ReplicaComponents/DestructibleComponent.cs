@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.CdClient;
-using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
@@ -66,7 +65,12 @@ namespace Uchu.World
                 {
                     _stats.OnDeath.AddListener(() =>
                     {
-                        Smash(_stats.LatestDamageSource, _stats.LatestDamageSource is Player player ? player : null);
+                        Logger.Debug($"LATEST: {_stats.LatestDamageSource}");
+                        
+                        Smash(
+                            _stats.LatestDamageSource,
+                            _stats.LatestDamageSource is Player player ? player : default
+                        );
                     });
                     
                     return;

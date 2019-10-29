@@ -62,14 +62,14 @@ namespace Uchu.World
                 ).ToArray();
 
                 foreach (var gameObject in passableGameObjects)
-                    _player.Zone.SendConstruction(gameObject, _player);
+                    Zone.SendConstruction(gameObject, _player);
 
                 var revealedGameObjects = _networkDictionary.Keys.Where(
                     gameObject => gameObject.Layer != _viewMask
                 ).ToArray();
 
                 foreach (var gameObject in revealedGameObjects)
-                    gameObject.Zone.SendDestruction(gameObject, _player);
+                    Zone.SendDestruction(gameObject, _player);
             }
         }
 
@@ -89,7 +89,7 @@ namespace Uchu.World
 
             gameObject.OnLayerChanged.AddListener(layer =>
             {
-                if (ViewMask != layer) gameObject.Zone.SendDestruction(gameObject, _player);
+                if (ViewMask != layer) Zone.SendDestruction(gameObject, _player);
                 else Reveal(gameObject, callback);
             });
 
@@ -120,7 +120,7 @@ namespace Uchu.World
             if (_networkDictionary.ContainsKey(gameObject)) return;
 
             _hallucinations.Add(gameObject);
-            gameObject.Zone.SendConstruction(gameObject, _player);
+            Zone.SendConstruction(gameObject, _player);
         }
 
         public bool TryGetNetworkId(GameObject gameObject, out ushort id)

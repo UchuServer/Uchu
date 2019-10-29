@@ -31,7 +31,7 @@ namespace Uchu.World.Handlers.GameMessages
             
             Object.Destroy(message.Loot);
 
-            await player.GetComponent<InventoryManager>().AddItemAsync(message.Loot.Lot, 1);
+            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(message.Loot.Lot, 1);
         }
 
         [PacketHandler]

@@ -12,6 +12,10 @@ namespace Uchu.World.Handlers
 {
     public class SocialHandler : HandlerGroup
     {
+        //
+        // TODO: Move all of this to a component
+        //
+        
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
@@ -326,7 +330,7 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            var player = zone.Players.First(p => p.Connection.Equals(endPoint));
+            var player = zone.Players.First(p => p.Connection.EndPoint.Equals(endPoint));
             var author = zone.Players.First(p => p.ObjectId == packet.InviterObjectId);
 
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");

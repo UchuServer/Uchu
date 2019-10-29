@@ -1,19 +1,17 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Core.CdClient;
 
 namespace Uchu.World.Handlers.GameMessages
 {
     public class SkillHandler : HandlerGroup
     {
         [PacketHandler]
-        public async Task HandleSkillStart(StartSkillMessage message, Player player)
+        public void SkillStartHandler(StartSkillMessage message, Player player)
         {
             try
             {
-                await player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
+                Task.Run(() => player.GetComponent<SkillComponent>().StartUserSkillAsync(message));
             }
             catch (Exception e)
             {
@@ -22,11 +20,11 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task HandleSyncSkill(SyncSkillMessage message, Player player)
+        public void SyncSkillHandler(SyncSkillMessage message, Player player)
         {
             try
             {
-                await player.GetComponent<SkillComponent>().SyncUserSkillAsync(message);
+                Task.Run(() => player.GetComponent<SkillComponent>().SyncUserSkillAsync(message));
             }
             catch (Exception e)
             {
@@ -35,15 +33,15 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleSetConsumeable(SetConsumableItemMessage message, Player player)
+        public void SetConsumeableHandler(SetConsumableItemMessage message, Player player)
         {
             player.GetComponent<SkillComponent>().SelectedConsumeable = message.Lot;
         }
         
         [PacketHandler]
-        public void HandleSelectSkill(SelectSkillMessage message, Player player)
+        public void SelectSkillHandler(SelectSkillMessage message, Player player)
         {
-            player.GetComponent<SkillComponent>().SelectedSkill = message.SkillId;
+            player.GetComponent<SkillComponent>().SelectedSkill = (uint) message.SkillId;
         }
     }
 }

@@ -40,7 +40,14 @@ namespace Uchu.World
         {
             OnStart.AddListener(async () =>
             {
-                ActivatorPosition = (Vector3) GameObject.Settings["rebuild_activators"];
+                if (GameObject.Settings.TryGetValue("rebuild_activators", out var rebuildActivators))
+                {
+                    ActivatorPosition = (Vector3) rebuildActivators;
+                }
+                else
+                {
+                    ActivatorPosition = Transform.Position;
+                }
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
 

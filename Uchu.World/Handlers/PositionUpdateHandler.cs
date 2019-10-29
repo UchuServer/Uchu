@@ -7,7 +7,7 @@ namespace Uchu.World.Handlers
     public class PositionUpdateHandler : HandlerGroup
     {
         [PacketHandler]
-        public void HandlePositionUpdate(PositionUpdatePacket packet, IRakConnection connection)
+        public void PositionHandler(PositionUpdatePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
@@ -53,7 +53,7 @@ namespace Uchu.World.Handlers
 
             physics.PlatformPosition = packet.PlatformPosition;
 
-            player.Zone.SendSerialization(player, player.Zone.Players.Where(
+            Zone.SendSerialization(player, player.Zone.Players.Where(
                 p => p != player
             ).ToArray());
         }
