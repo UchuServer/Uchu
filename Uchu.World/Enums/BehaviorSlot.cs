@@ -5,9 +5,9 @@ namespace Uchu.World
         Invalid = -2,
         None = -1,
         Primary,
-        Head,
         LeftHand,
         Neck,
+        Head,
         Consumeable
     }
 }

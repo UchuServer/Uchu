@@ -116,7 +116,7 @@ namespace Uchu.World
 
             if (!ignoreAllChecks)
             {
-                if (!As<Player>().GetComponent<ModularBuilder>().IsBuilding)
+                if (!As<Player>().GetComponent<ModularBuilderComponent>().IsBuilding)
                 {
                     if (itemType == ItemType.Model || itemType == ItemType.LootModel || item.Lot == 6086)
                     {

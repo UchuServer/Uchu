@@ -61,6 +61,8 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("LastZone");
 
+                    b.Property<int>("LaunchedRocketFrom");
+
                     b.Property<long>("Level");
 
                     b.Property<long>("Lh");

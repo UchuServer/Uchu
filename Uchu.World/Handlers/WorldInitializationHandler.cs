@@ -18,7 +18,7 @@ namespace Uchu.World.Handlers
         public XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
 
         [PacketHandler]
-        public async Task ValidateClient(SessionInfoPacket packet, IRakConnection connection)
+        public async Task ValidateClientHandler(SessionInfoPacket packet, IRakConnection connection)
         {
             Logger.Information($"Validating client for world!");
             
@@ -57,22 +57,18 @@ namespace Uchu.World.Handlers
 
             var worldServer = (WorldServer) Server;
             
-            Logger.Information($"Sending {nameof(WorldInfoPacket)}, {worldServer}, {connection}");
-
             var zone = await worldServer.GetZoneAsync(zoneId);
-            
-            Logger.Information($"World loaded");
             
             connection.Send(new WorldInfoPacket
             {
                 ZoneId = zoneId,
-                Checksum = Zone.GetChecksum(zoneId),
+                Checksum = zoneId.GetChecksum(),
                 SpawnPosition = zone.ZoneInfo.SpawnPosition
             });
         }
 
         [PacketHandler]
-        public async Task ClientLoadComplete(ClientLoadCompletePacket packet, IRakConnection connection)
+        public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
@@ -89,6 +85,7 @@ namespace Uchu.World.Handlers
             if (zoneId == ZoneId.VentureExplorerCinematic)
             {
                 zoneId = ZoneId.VentureExplorer;
+                
                 character.LastZone = (int) zoneId;
 
                 await ctx.SaveChangesAsync();
@@ -103,14 +100,18 @@ namespace Uchu.World.Handlers
             var missions = new List<MissionNode>();
 
             foreach (var mission in character.Missions)
+            {
                 if (mission.State == (int) MissionState.Completed)
+                {
                     completed.Add(new CompletedMissionNode
                     {
                         CompletionCount = mission.CompletionCount,
                         LastCompletion = mission.LastCompletion,
                         MissionId = mission.MissionId
                     });
+                }
                 else
+                {
                     missions.Add(new MissionNode
                     {
                         MissionId = mission.MissionId,
@@ -118,6 +119,8 @@ namespace Uchu.World.Handlers
                             new MissionProgressNode {Value = t.Values.Count}
                         ).ToArray()
                     });
+                }
+            }
 
             var xmlData = new XmlData
             {
@@ -279,7 +282,7 @@ namespace Uchu.World.Handlers
         }
 
         [PacketHandler]
-        public async Task PlayerLoaded(PlayerLoadedMessage message, Player player)
+        public async Task PlayerLoadedHandler(PlayerLoadedMessage message, Player player)
         {
             if (player != message.Player)
             {

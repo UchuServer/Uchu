@@ -98,7 +98,7 @@ namespace Uchu.World
 
             player.Currency -= cost;
             
-            await player.GetComponent<InventoryManager>().AddItemAsync(lot, count);
+            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -115,7 +115,7 @@ namespace Uchu.World
             
             if (count == default || itemComponent.BaseValue <= 0) return;
             
-            player.GetComponent<InventoryManager>().MoveItemsBetweenInventories(
+            player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventories(
                 default,
                 item.Lot,
                 count,
@@ -154,7 +154,7 @@ namespace Uchu.World
 
             player.Currency -= cost;
             
-            var manager = player.GetComponent<InventoryManager>();
+            var manager = player.GetComponent<InventoryManagerComponent>();
             
             manager.RemoveItem(item.Lot, count, InventoryType.VendorBuyback);
             

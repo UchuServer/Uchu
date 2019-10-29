@@ -30,10 +30,5 @@ namespace Uchu.World
                 @this.ReadBit();
             }
         }
-
-        public static bool Flag(this BitReader @this)
-        {
-            return @this.ReadBit();
-        }
     }
 }

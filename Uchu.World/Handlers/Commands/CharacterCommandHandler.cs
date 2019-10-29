@@ -24,7 +24,7 @@ namespace Uchu.World.Handlers.Commands
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await player.GetComponent<InventoryManager>().AddItemAsync(lot, count);
+            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
 
             return $"Successfully added {lot} x {count} to your inventory";
         }
@@ -42,7 +42,7 @@ namespace Uchu.World.Handlers.Commands
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await player.GetComponent<InventoryManager>().RemoveItemAsync(lot, count);
+            await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(lot, count);
 
             return $"Successfully removed {lot} x {count} to your inventory";
         }

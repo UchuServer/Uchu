@@ -282,7 +282,7 @@ namespace Uchu.World
 
             Logger.Debug($"{GameObject} chose item: {rewardItem}");
 
-            var inventory = GameObject.GetComponent<InventoryManager>();
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             var rewards = new (Lot, int)[]
             {

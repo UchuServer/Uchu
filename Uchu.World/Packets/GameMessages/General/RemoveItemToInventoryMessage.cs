@@ -96,13 +96,13 @@ namespace Uchu.World
 
         public override void Deserialize(BitReader reader)
         {
-            Confirmed = reader.Flag();
-            DeleteItem = reader.Flag();
-            OutSuccess = reader.Flag();
+            Confirmed = reader.ReadBit();
+            DeleteItem = reader.ReadBit();
+            OutSuccess = reader.ReadBit();
 
-            if (reader.Flag()) InventoryType = (InventoryType) reader.Read<int>();
+            if (reader.ReadBit()) InventoryType = (InventoryType) reader.Read<int>();
 
-            if (reader.Flag()) ItemType = (ItemType) reader.Read<int>();
+            if (reader.ReadBit()) ItemType = (ItemType) reader.Read<int>();
 
             var len = reader.Read<uint>();
             if (len > 0)
@@ -111,19 +111,19 @@ namespace Uchu.World
                 ExtraInfo = LegoDataDictionary.FromString(info);
             }
 
-            ForceDeletion = reader.Flag();
+            ForceDeletion = reader.ReadBit();
 
-            if (reader.Flag()) Source = reader.ReadGameObject(Associate.Zone);
+            if (reader.ReadBit()) Source = reader.ReadGameObject(Associate.Zone);
 
-            if (reader.Flag()) Item = reader.ReadGameObject<Item>(Associate.Zone);
+            if (reader.ReadBit()) Item = reader.ReadGameObject<Item>(Associate.Zone);
 
-            if (reader.Flag()) Requesting = reader.ReadGameObject(Associate.Zone);
+            if (reader.ReadBit()) Requesting = reader.ReadGameObject(Associate.Zone);
 
-            if (reader.Flag()) TotalItems = reader.Read<uint>();
+            if (reader.ReadBit()) TotalItems = reader.Read<uint>();
 
-            if (reader.Flag()) SubKey = reader.Read<long>();
+            if (reader.ReadBit()) SubKey = reader.Read<long>();
 
-            if (reader.Flag()) TradeId = reader.Read<long>();
+            if (reader.ReadBit()) TradeId = reader.Read<long>();
         }
     }
 }

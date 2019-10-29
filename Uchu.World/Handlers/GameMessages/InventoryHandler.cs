@@ -11,7 +11,7 @@ namespace Uchu.World.Handlers.GameMessages
             if (message.DestinationInventoryType == InventoryType.Invalid)
                 message.DestinationInventoryType = message.CurrentInventoryType;
 
-            if (message.Item.Inventory.Manager.GameObject != player) return;
+            if (message.Item.Inventory.ManagerComponent.GameObject != player) return;
             
             message.Item.Slot = (uint) message.NewSlot;
         }
@@ -21,7 +21,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.SendChatMessage($"{message.Item?.Lot ?? message.Lot} {message.SourceInventory} -> {message.DestinationInventory}");
 
-            player.GetComponent<InventoryManager>().MoveItemsBetweenInventories(
+            player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventories(
                 message.Item,
                 message.Lot,
                 message.StackCount,
@@ -35,7 +35,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (!message.Confirmed) return;
             
-            var inventoryManager = player.GetComponent<InventoryManager>();
+            var inventoryManager = player.GetComponent<InventoryManagerComponent>();
 
             inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType, true);
         }

@@ -5,13 +5,13 @@ using Uchu.World.Collections;
 
 namespace Uchu.World
 {
-    public class ModularBuilder : Component
+    public class ModularBuilderComponent : Component
     {
         private bool _building;
 
         public GameObject BasePlate;
 
-        public ModularBuilder()
+        public ModularBuilderComponent()
         {
             OnStart.AddListener(() =>
             {
@@ -43,7 +43,7 @@ namespace Uchu.World
 
                 _building = value;
 
-                var inventory = GameObject.GetComponent<InventoryManager>();
+                var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
                 if (value) return;
                 foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
@@ -111,7 +111,7 @@ namespace Uchu.World
         
         public void FinishBuilding(Lot[] models)
         {
-            var inventory = GameObject.GetComponent<InventoryManager>();
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
             foreach (var module in models)
             {
@@ -141,7 +141,7 @@ namespace Uchu.World
         {
             As<Player>().SendChatMessage($"PICKUP: {lot}");
             
-            var inventory = GameObject.GetComponent<InventoryManager>();
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
             

@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -19,11 +20,9 @@ namespace Uchu.World
 
         public static Object Instantiate(Type type, Zone zone)
         {
-            if (Activator.CreateInstance(type) is Object instance)
+            if (Activator.CreateInstance(type, true) is Object instance)
             {
                 instance.Zone = zone;
-
-                zone.RegisterObject(instance);
 
                 return instance;
             }
@@ -42,14 +41,14 @@ namespace Uchu.World
             if (obj._started) return;
             obj._started = true;
             
-            obj.Zone.RegisterObject(obj);
+            obj.Zone.ManagedObjects.Add(obj);
 
             obj.OnStart?.Invoke();
         }
 
         public static void Destroy(Object obj)
         {
-            obj.Zone.UnregisterObject(obj);
+            obj.Zone.ManagedObjects.Remove(obj);
 
             obj.OnDestroyed.Invoke();
             

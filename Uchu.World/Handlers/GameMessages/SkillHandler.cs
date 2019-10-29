@@ -7,7 +7,7 @@ namespace Uchu.World.Handlers.GameMessages
     public class SkillHandler : HandlerGroup
     {
         [PacketHandler]
-        public void HandleSkillStart(StartSkillMessage message, Player player)
+        public void SkillStartHandler(StartSkillMessage message, Player player)
         {
             try
             {
@@ -20,7 +20,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleSyncSkill(SyncSkillMessage message, Player player)
+        public void SyncSkillHandler(SyncSkillMessage message, Player player)
         {
             try
             {
@@ -33,13 +33,13 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void HandleSetConsumeable(SetConsumableItemMessage message, Player player)
+        public void SetConsumeableHandler(SetConsumableItemMessage message, Player player)
         {
             player.GetComponent<SkillComponent>().SelectedConsumeable = message.Lot;
         }
         
         [PacketHandler]
-        public void HandleSelectSkill(SelectSkillMessage message, Player player)
+        public void SelectSkillHandler(SelectSkillMessage message, Player player)
         {
             player.GetComponent<SkillComponent>().SelectedSkill = (uint) message.SkillId;
         }

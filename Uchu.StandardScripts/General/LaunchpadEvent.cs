@@ -36,6 +36,14 @@ namespace StandardScripts.General
                         return;
                     }
 
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+
+                    character.LaunchedRocketFrom = Zone.ZoneId;
+
+                    await ctx.SaveChangesAsync();
+
                     if (launchpadComponent.TargetZone != null)
                     {
                         player.SendToWorld((ZoneId) launchpadComponent.TargetZone);

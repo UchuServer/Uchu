@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace Uchu.World.Experimental
 {
-    public class UniverseEditor : Component
+    public class UniverseEditorComponent : Component
     {
         private const int SelectBrickLot = 32;
         
@@ -10,7 +10,7 @@ namespace Uchu.World.Experimental
 
         public GameObject Target { get; set; }
 
-        public UniverseEditor()
+        public UniverseEditorComponent()
         {
             OnTick.AddListener(FocusBrick);
             

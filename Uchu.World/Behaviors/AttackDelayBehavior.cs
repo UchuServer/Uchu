@@ -32,10 +32,6 @@ namespace Uchu.World.Behaviors
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            (context.Associate as Player)?.SendChatMessage($"DELAY: {Delay}");
-            
-            await Task.Delay(Delay);
-
             await Action.ExecuteAsync(context, branchContext);
         }
     }

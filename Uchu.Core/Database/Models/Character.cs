@@ -178,6 +178,8 @@ namespace Uchu.Core
         [Required]
         public bool LandingByRocket { get; set; }
 
+        public ZoneId LaunchedRocketFrom { get; set; }
+        
         [MaxLength(30)]
         public string Rocket { get; set; }
 

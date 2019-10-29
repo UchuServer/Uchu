@@ -8,19 +8,26 @@ using Uchu.World.Scripting;
 
 namespace Uchu.World
 {
-    public partial class Zone
+    public class ScriptManager
     {
+        private readonly Zone _zone;
+        
         internal ScriptPack[] ScriptPacks { get; private set; }
 
-        private async Task LoadScripts()
+        public ScriptManager(Zone zone)
+        {
+            _zone = zone;
+        }
+        
+        internal async Task LoadScripts()
         {
             var scriptPacks = new List<ScriptPack>();
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), Server.Config.DllSource.ServerDLLSourcePath);
+            var path = Path.Combine(Directory.GetCurrentDirectory(), _zone.Server.Config.DllSource.ServerDLLSourcePath);
 
             var libraries = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
             
-            foreach (var scriptPackName in Server.Config.DllSource.ScriptDLLSource)
+            foreach (var scriptPackName in _zone.Server.Config.DllSource.ScriptDLLSource)
             {
                 string? dll = default;
                 
@@ -42,7 +49,7 @@ namespace Uchu.World
                 {
                     var assembly = Assembly.LoadFile(dll);
 
-                    var scriptPack = new ScriptPack(this, assembly);
+                    var scriptPack = new ScriptPack(_zone, assembly);
 
                     await scriptPack.LoadAsync();
                     

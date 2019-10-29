@@ -71,6 +71,15 @@ namespace Uchu.World.Behaviors
                 p.BehaviorID == BehaviorId && p.ParameterID == name
             );
         }
+        
+        public async Task<T> GetParameter<T>(string name) where T : struct
+        {
+            var param = await GetParameter(name);
+
+            if (param == default) return default;
+            
+            return param.Value.HasValue ? (T) Convert.ChangeType(param.Value.Value, typeof(T)) : default;
+        }
 
         public BehaviorParameter[] GetParameters()
         {

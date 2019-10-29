@@ -10,14 +10,18 @@ using Uchu.World.Collections;
 
 namespace Uchu.World
 {
-    public class InventoryManager : Component
+    public class InventoryManagerComponent : Component
     {
         private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
         private InventoryComponent _inventoryComponent;
 
         private object _lock;
 
-        public InventoryManager()
+        public readonly AsyncEvent<Lot, uint> OnLotAdded = new AsyncEvent<Lot, uint>();
+        
+        public readonly AsyncEvent<Lot, uint> OnLotRemoved = new AsyncEvent<Lot, uint>();
+        
+        public InventoryManagerComponent()
         {
             OnStart.AddListener(() =>
             {
@@ -142,6 +146,8 @@ namespace Uchu.World
             // The math here cannot be executed in parallel
             lock (_lock)
             {
+                OnLotAdded.Invoke(lot, count);
+                
                 using var cdClient = new CdClientContext();
                 
                 var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
@@ -259,6 +265,8 @@ namespace Uchu.World
             // The math here cannot be executed in parallel
             lock (_lock)
             {
+                OnLotRemoved.Invoke(lot, count);
+                
                 using var cdClient = new CdClientContext();
                 
                 var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
