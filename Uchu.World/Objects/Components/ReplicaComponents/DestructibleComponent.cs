@@ -30,7 +30,7 @@ namespace Uchu.World
 
         public readonly Event OnResurrect = new Event();
 
-        public DestructibleComponent()
+        protected DestructibleComponent()
         {
             OnStart.AddListener(() =>
             {

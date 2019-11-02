@@ -49,7 +49,7 @@ namespace Uchu.World.Handlers
 
             physics.AngularVelocity = packet.AngularVelocity;
 
-            physics.Platform = player.Zone.GetGameObject(packet.PlatformObjectId);
+            physics.Platform = player.Zone.GameObjects.FirstOrDefault(g => g.ObjectId == packet.PlatformObjectId);
 
             physics.PlatformPosition = packet.PlatformPosition;
 

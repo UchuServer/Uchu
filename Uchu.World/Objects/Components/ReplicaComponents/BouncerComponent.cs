@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BouncerComponent;
 
-        public BouncerComponent()
+        protected BouncerComponent()
         {
             OnStart.AddListener(() =>
             {

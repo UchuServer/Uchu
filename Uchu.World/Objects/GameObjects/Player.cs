@@ -15,7 +15,7 @@ namespace Uchu.World
 {
     public class Player : GameObject
     {
-        public Player()
+        private Player()
         {
             OnTick.AddListener(CheckDeathZone);
         }

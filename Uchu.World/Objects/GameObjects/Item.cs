@@ -16,7 +16,7 @@ namespace Uchu.World
         private bool _equipped;
         private uint _slot;
 
-        public Item()
+        protected Item()
         {
             OnDestroyed.AddListener(() => Task.Run(RemoveFromInventoryAsync));
         }

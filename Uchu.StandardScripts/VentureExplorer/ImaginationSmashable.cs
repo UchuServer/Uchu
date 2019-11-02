@@ -55,7 +55,7 @@ namespace StandardScripts.VentureExplorer
 
                     Task.Run(async () =>
                     {
-                        await Task.Delay(3500);
+                        await Task.Delay(4000);
 
                         Destroy(chicken);
                     });

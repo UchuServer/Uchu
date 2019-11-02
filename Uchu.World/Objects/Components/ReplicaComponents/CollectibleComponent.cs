@@ -9,7 +9,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.CollectibleComponent;
 
-        public CollectibleComponent()
+        protected CollectibleComponent()
         {
             OnStart.AddListener(() =>
             {

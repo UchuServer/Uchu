@@ -52,8 +52,8 @@ namespace Uchu.World
         ///     Next WayPoint
         /// </summary>
         public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
-        
-        public MovingPlatformComponent()
+
+        protected MovingPlatformComponent()
         {
             OnStart.AddListener(() =>
             {

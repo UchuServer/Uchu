@@ -13,7 +13,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BaseCombatAIComponent;
 
-        public BaseCombatAiComponent()
+        protected BaseCombatAiComponent()
         {
             OnStart.AddListener(() =>
             {

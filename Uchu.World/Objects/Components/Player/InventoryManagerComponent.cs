@@ -20,8 +20,8 @@ namespace Uchu.World
         public readonly AsyncEvent<Lot, uint> OnLotAdded = new AsyncEvent<Lot, uint>();
         
         public readonly AsyncEvent<Lot, uint> OnLotRemoved = new AsyncEvent<Lot, uint>();
-        
-        public InventoryManagerComponent()
+
+        protected InventoryManagerComponent()
         {
             OnStart.AddListener(() =>
             {

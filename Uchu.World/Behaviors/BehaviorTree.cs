@@ -139,7 +139,7 @@ namespace Uchu.World.Behaviors
             }).ToArray();
         }
 
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip)
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
             var context = new ExecutionContext(associate, reader);
             
@@ -151,7 +151,7 @@ namespace Uchu.World.Behaviors
                     
                     (associate as Player)?.SendChatMessage($"EXEC: [{root.GetType().Name}] {root.BehaviorId}");
                     
-                    await root.ExecuteAsync(context, new ExecutionBranchContext(default));
+                    await root.ExecuteAsync(context, new ExecutionBranchContext(target));
                 }
             }
 
@@ -163,7 +163,7 @@ namespace Uchu.World.Behaviors
                 
                 (associate as Player)?.SendChatMessage($"EXEC: [{root.GetType().Name}] {root.BehaviorId}");
                 
-                await root.ExecuteAsync(context, new ExecutionBranchContext(default));
+                await root.ExecuteAsync(context, new ExecutionBranchContext(target));
             }
 
             return context;

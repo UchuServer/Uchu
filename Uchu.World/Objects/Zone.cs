@@ -172,8 +172,8 @@ namespace Uchu.World
 
         #endregion
 
-        #region Object Finder
-
+        #region Messages
+        
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
         {
             foreach (var player in players) player.Message(message);
@@ -189,9 +189,13 @@ namespace Uchu.World
             foreach (var player in ManagedPlayers) player.Message(message);
         }
 
+        #endregion
+        
+        #region Object Finder
+
         public GameObject GetGameObject(long objectId)
         {
-            return objectId == -1 ? null : ManagedGameObjects.FirstOrDefault(o => o.ObjectId == objectId);
+            return objectId == -1 ? null : ManagedGameObjects.First(o => o.ObjectId == objectId);
         }
 
         public bool TryGetGameObject(long objectId, out GameObject result)
@@ -293,8 +297,8 @@ namespace Uchu.World
                 recipient.Connection.Send(stream);
             }
         }
-        
-        public static void SendDestruction(GameObject gameObject, Player player)
+
+        internal static void SendDestruction(GameObject gameObject, Player player)
         {
             SendDestruction(gameObject, new[] {player});
         }

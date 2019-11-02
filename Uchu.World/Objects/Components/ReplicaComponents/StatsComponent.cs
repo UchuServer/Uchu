@@ -20,7 +20,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.Invalid;
 
-        public StatsComponent()
+        protected StatsComponent()
         {
             OnStart.AddListener(() =>
             {

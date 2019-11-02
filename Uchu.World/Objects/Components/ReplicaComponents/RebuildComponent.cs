@@ -38,7 +38,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.QuickBuildComponent;
 
-        public RebuildComponent()
+        protected RebuildComponent()
         {
             OnStart.AddListener(async () =>
             {

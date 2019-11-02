@@ -148,7 +148,7 @@ namespace Uchu.World
 
         public readonly Event OnDeath = new Event();
 
-        public Stats()
+        protected Stats()
         {
             OnStart.AddListener(() =>
             {

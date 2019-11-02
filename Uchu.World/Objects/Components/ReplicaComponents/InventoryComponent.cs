@@ -20,7 +20,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.InventoryComponent;
 
-        public InventoryComponent()
+        protected InventoryComponent()
         {
             OnDestroyed.AddListener(() =>
             {

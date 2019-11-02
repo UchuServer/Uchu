@@ -18,7 +18,7 @@ namespace Uchu.World
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
         private Mask _layer = new Mask(World.Layer.Default);
 
-        public GameObject()
+        protected GameObject()
         {
             OnStart.AddListener(() =>
             {

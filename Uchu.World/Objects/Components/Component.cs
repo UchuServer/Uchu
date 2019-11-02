@@ -2,7 +2,7 @@ namespace Uchu.World
 {
     public abstract class Component : Object
     {
-        public Component()
+        protected Component()
         {
             OnDestroyed.AddListener(() => { GameObject.RemoveComponent(this); });
         }

@@ -20,8 +20,8 @@ namespace Uchu.World
         public readonly AsyncEvent<Item, uint, Player> OnSell = new AsyncEvent<Item, uint, Player>();
         
         public readonly AsyncEvent<Item, uint, Player> OnBuyback = new AsyncEvent<Item, uint, Player>();
-        
-        public VendorComponent()
+
+        protected VendorComponent()
         {
             OnStart.AddListener(async () =>
             {

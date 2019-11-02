@@ -18,6 +18,10 @@ namespace Uchu.World
 
         public readonly Event OnTick = new Event();
 
+        protected Object()
+        {
+        }
+        
         public static Object Instantiate(Type type, Zone zone)
         {
             if (Activator.CreateInstance(type, true) is Object instance)

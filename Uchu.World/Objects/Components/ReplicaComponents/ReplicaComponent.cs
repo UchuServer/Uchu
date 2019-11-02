@@ -56,7 +56,7 @@ namespace Uchu.World
 
                 if (type.IsSubclassOf(typeof(ReplicaComponent)))
                 {
-                    var instance = (ReplicaComponent) Activator.CreateInstance(type);
+                    var instance = (ReplicaComponent) Activator.CreateInstance(type, true);
 
                     if (instance.Id == ComponentId.Invalid) continue;
 

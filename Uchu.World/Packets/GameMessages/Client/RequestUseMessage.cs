@@ -25,15 +25,7 @@ namespace Uchu.World
 
             MultiInteractType = reader.Read<int>();
 
-            //
-            // When you interact with a rocket launchpad it returns a none existent id?
-            //
-            
-            var targetId = reader.Read<long>();
-            
-            Logger.Information($"Interact with {targetId}");
-
-            TargetObject = Associate.Zone.GetGameObject(targetId);
+            TargetObject = reader.ReadGameObject(Associate.Zone);
 
             Secondary = reader.ReadBit();
         }

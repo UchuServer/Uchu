@@ -26,8 +26,7 @@ namespace Uchu.World
         public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
 
         public override ComponentId Id => ComponentId.ControllablePhysicsComponent;
-
-
+        
         public override void Construct(BitWriter writer)
         {
             var hasJetpackEffect = JetpackEffectId != 0;

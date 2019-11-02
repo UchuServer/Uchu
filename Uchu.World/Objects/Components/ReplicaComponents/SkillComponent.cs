@@ -28,7 +28,7 @@ namespace Uchu.World
         
         public override ComponentId Id => ComponentId.SkillComponent;
 
-        public SkillComponent()
+        protected SkillComponent()
         {
             OnStart.AddListener(() =>
             {
@@ -101,7 +101,7 @@ namespace Uchu.World
 
                 await tree.BuildAsync();
 
-                var context = await tree.ExecuteAsync(GameObject, reader, SkillCastType.OnUse);
+                var context = await tree.ExecuteAsync(GameObject, reader, SkillCastType.OnUse, message.OptionalTarget);
 
                 HandledSkills[message.SkillHandle] = context;
             }

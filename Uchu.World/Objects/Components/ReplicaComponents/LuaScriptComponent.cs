@@ -16,7 +16,7 @@ namespace Uchu.World
         
         public string ClientScriptName { get; set; }
 
-        public LuaScriptComponent()
+        protected LuaScriptComponent()
         {
             OnStart.AddListener(() =>
             {

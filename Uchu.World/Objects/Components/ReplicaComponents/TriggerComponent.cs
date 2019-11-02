@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.TriggerComponent;
 
-        public TriggerComponent()
+        protected TriggerComponent()
         {
             OnStart.AddListener(() =>
             {

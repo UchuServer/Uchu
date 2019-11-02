@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.RenderComponent;
 
-        public RendererComponent()
+        protected RendererComponent()
         {
             OnStart.AddListener(() =>
             {

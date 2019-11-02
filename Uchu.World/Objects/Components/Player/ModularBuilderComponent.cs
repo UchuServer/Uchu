@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public GameObject BasePlate;
 
-        public ModularBuilderComponent()
+        protected ModularBuilderComponent()
         {
             OnStart.AddListener(() =>
             {
