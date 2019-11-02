@@ -33,6 +33,8 @@ namespace Uchu.World
         public float PauseTime { get; set; }
 
         public Vector3 ActivatorPosition { get; set; }
+        
+        public GameObject Activator { get; set; }
 
         public override ComponentId Id => ComponentId.QuickBuildComponent;
 
@@ -79,7 +81,7 @@ namespace Uchu.World
                 // It is required to be able to start the quickbuild.
                 //
                 
-                var activator = GameObject.Instantiate(new LevelObject
+                Activator = GameObject.Instantiate(new LevelObject
                 {
                     Lot = 6604,
                     Position = (Vector3) GameObject.Settings["rebuild_activators"],
@@ -88,12 +90,12 @@ namespace Uchu.World
                     Settings = new LegoDataDictionary()
                 }, GameObject);
 
-                Start(activator);
-                GameObject.Construct(activator);
+                Start(Activator);
+                GameObject.Construct(Activator);
                 
                 // Delay to attempt to prevent client from "panic"
                 await Task.Delay(30);
-                    
+                
                 GameObject.Serialize(GameObject);
 
                 GameObject.OnInteract.AddListener(StartRebuild);
@@ -126,24 +128,24 @@ namespace Uchu.World
             writer.Write(PauseTime);
         }
         
-        /*
-         * Rebuildables have five states.
-         * 
-         * Open: The Quickbuild is available and ready to be built.
-         * Complete: The Quickbuild can not be built, does not mean it can not be used.
-         * Resetting: This has to be sent to the client once, but does not have to be on the object for any amount of time.
-         * Building: The Quickbuild is being built.
-         * Incomplete: The Quickbuild is not complete but can be restarted.
-         *
-         * Open -> Building     ->     Complete -> Resetting -> Open
-         *                \\          /           /
-         *                  Incomplete     ->    /
-         * 
-         * All of the changes in the state of the quickbuild has to be notified to the player building and updated
-         * in the world.
-         *
-         * NOTE: Rebuildables in AG are weird.
-         */
+        //
+        // Rebuildables have five states.
+        // 
+        // Open: The Quickbuild is available and ready to be built.
+        // Complete: The Quickbuild can not be built, does not mean it can not be used.
+        // Resetting: This has to be sent to the client once, but does not have to be on the object for any amount of time.
+        // Building: The Quickbuild is being built.
+        // Incomplete: The Quickbuild is not complete but can be restarted.
+        //
+        // Open -> Building     ->     Complete -> Resetting -> Open
+        //                \\          /           /
+        //                  Incomplete     ->    /
+        // 
+        // All of the changes in the state of the quickbuild has to be notified to the player building and updated
+        // in the world.
+        //
+        // NOTE: Rebuildables in AG are weird.
+        //
 
         public void StartRebuild(Player player)
         {
@@ -180,7 +182,7 @@ namespace Uchu.World
             {
                 _timer = new PauseTimer(_completeTime * 1000);
 
-                _timer.Elapsed += (sender, args) => { CompleteBuild(player); };
+                _timer.Elapsed += (sender, args) => {  };
             }
             else
             {
@@ -201,6 +203,8 @@ namespace Uchu.World
                     _imaginationTimer.Dispose();
 
                     StopRebuild(player, RebuildFailReason.OutOfImagination);
+                    
+                    return;
                 }
 
                 if (_taken != _imaginationCost)
@@ -208,6 +212,14 @@ namespace Uchu.World
                     _taken++;
 
                     playerStats.Imagination--;
+
+                    if (_taken == _imaginationCost)
+                    {
+                        _imaginationTimer.Stop();
+                        _imaginationTimer.Dispose();
+                        
+                        CompleteBuild(player);
+                    }
                 }
 
                 if (State == RebuildState.Building) return;
@@ -223,6 +235,8 @@ namespace Uchu.World
         public void StopRebuild(Player player, RebuildFailReason reason)
         {
             if (State != RebuildState.Building) return;
+            
+            _timer.Pause();
             
             Zone.BroadcastMessage(new RebuildNotifyStateMessage
             {
@@ -247,15 +261,15 @@ namespace Uchu.World
             Success = false;
             PauseTime = time;
             TimeSinceStart = time;
-
-            GameObject.Serialize(GameObject);
             
             if (Participants.Contains(player)) Participants.Remove(player);
+
+            GameObject.Serialize(GameObject);
             
             var timer = new Timer
             {
                 AutoReset = false,
-                Interval = _completeTime * 1000
+                Interval = _resetTime * 1000
             };
 
             timer.Elapsed += (sender, args) =>
@@ -267,6 +281,8 @@ namespace Uchu.World
         
         public void CompleteBuild(Player player)
         {
+            Activator.Layer = Layer.Hidden;
+
             /*
              * Stop The timer.
              */
@@ -353,6 +369,8 @@ namespace Uchu.World
 
         public void OpenBuild(Player player)
         {
+            Activator.Layer = Layer.Default;
+            
             _taken = default;
             _timer = default;
             
