@@ -14,9 +14,9 @@ namespace Uchu.Char.Handlers
 {
     public class CharacterHandler : HandlerGroup
     {
-        public async Task SendCharacterList(IRakConnection connection, long userId)
+        private static async Task SendCharacterList(IRakConnection connection, long userId)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
                 .SingleAsync(u => u.UserId == userId);

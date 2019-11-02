@@ -122,6 +122,7 @@ namespace Uchu.Core.Migrations
                     TotalRacesFinished = table.Column<long>(nullable: false),
                     TotalFirstPlaceFinishes = table.Column<long>(nullable: false),
                     LandingByRocket = table.Column<bool>(nullable: false),
+                    LaunchedRocketFrom = table.Column<int>(nullable: false),
                     Rocket = table.Column<string>(maxLength: 30, nullable: true),
                     UserId = table.Column<long>(nullable: false)
                 },
