@@ -320,7 +320,7 @@ namespace Uchu.World
             // Update any mission task that required this quickbuild.
             Task.Run(async () =>
             {
-                await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+                await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
                     MissionTaskType.QuickBuild,
                     GameObject.Lot,
                     GameObject

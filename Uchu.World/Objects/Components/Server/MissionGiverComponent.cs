@@ -8,9 +8,9 @@ using Uchu.World.Parsers;
 namespace Uchu.World
 {
     [ServerComponent(Id = ComponentId.MissionNPCComponent)]
-    public class QuestGiverComponent : Component
+    public class MissionGiverComponent : Component
     {
-        public QuestGiverComponent()
+        public MissionGiverComponent()
         {
             OnStart.AddListener(() =>
             {
@@ -20,7 +20,7 @@ namespace Uchu.World
             });
         }
 
-        public (Missions, MissionNPCComponent)[] Quests { get; set; }
+        public (Missions, MissionNPCComponent)[] Missions { get; set; }
 
         private void CollectMissions()
         {
@@ -34,7 +34,7 @@ namespace Uchu.World
                     component => ctx.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
                 ).ToArray();
 
-                var quests = new List<(Missions, MissionNPCComponent)>();
+                var missions = new List<(Missions, MissionNPCComponent)>();
                 
                 foreach (var npcComponent in missionComponents)
                 {
@@ -46,38 +46,39 @@ namespace Uchu.World
                         continue;
                     }
                     
-                    quests.Add((quest, npcComponent));
+                    missions.Add((quest, npcComponent));
                 }
 
-                Quests = quests.ToArray();
+                Missions = missions.ToArray();
             }
 
             Logger.Information(
-                $"{GameObject} is a quest give with: {string.Join(" ", Quests.Select(s => s.Item1.Id))}");
+                $"{GameObject} is a quest give with: {string.Join(" ", Missions.Select(s => s.Item1.Id))}"
+            );
         }
 
         public void OfferMission(Player player)
         {
-            var questInventory = player.GetComponent<QuestInventory>();
+            var missionInventory = player.GetComponent<MissionInventoryComponent>();
 
-            player.SendChatMessage($"\n\n\nInteracting with {GameObject.ClientName} [{Quests.Length}]\n");
+            player.SendChatMessage($"\n\n\nInteracting with {GameObject.ClientName} [{Missions.Length}]\n");
 
             try
             {
-                foreach (var (quest, component) in Quests)
+                foreach (var (mission, component) in Missions)
                 {
                     //
                     // Get all of the missions the player has active, completed, or otherwise interacted with.
                     // I.e Missions not started will not be included.
                     //
 
-                    var playerMissions = questInventory.GetMissions();
+                    var playerMissions = missionInventory.GetMissions();
 
-                    player.SendChatMessage($"Checking: {quest.Id}");
+                    player.SendChatMessage($"Checking: {mission.Id}");
 
                     // Get the quest id.
-                    if (quest.Id == default) continue;
-                    var questId = quest.Id.Value;
+                    if (mission.Id == default) continue;
+                    var questId = mission.Id.Value;
 
                     //
                     // See if the player has interacted with this mission and could passably hand it in.
@@ -97,13 +98,13 @@ namespace Uchu.World
 
                         if (missionState == MissionState.ReadyToComplete)
                         {
-                            player.SendChatMessage($"Can complete: {quest.Id}");
+                            player.SendChatMessage($"Can complete: {mission.Id}");
 
                             //
                             // Offer mission hand in to the player.
                             //
 
-                            questInventory.MessageOfferMission(questId, GameObject);
+                            missionInventory.MessageOfferMission(questId, GameObject);
 
                             //
                             // Can only hand in one mission at a time.
@@ -134,12 +135,18 @@ namespace Uchu.World
                             //
 
                             case MissionState.Active:
+                            case MissionState.CompletedActive:
+                                player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
+                                    playerMission.MissionId,
+                                    GameObject
+                                );
+                                
+                                continue;
                             case MissionState.ReadyToComplete:
                             case MissionState.Unavailable:
                             case MissionState.Completed:
-                            case MissionState.CompletedActive:
                             case MissionState.CompletedReadyToComplete:
-                                player.SendChatMessage($"Unavailable mission: {quest.Id} [{missionState}]");
+                                player.SendChatMessage($"Unavailable mission: {mission.Id} [{missionState}]");
                                 continue;
                             default:
                                 throw new ArgumentOutOfRangeException(
@@ -153,11 +160,11 @@ namespace Uchu.World
                     //
 
                     var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
-                        quest.PrereqMissionID,
-                        questInventory.GetCompletedMissions()
+                        mission.PrereqMissionID,
+                        missionInventory.GetCompletedMissions()
                     );
 
-                    player.SendChatMessage($"Prerequisite for: {quest.Id} [{hasPrerequisite}]");
+                    player.SendChatMessage($"Prerequisite for: {mission.Id} [{hasPrerequisite}]");
 
                     if (!hasPrerequisite) continue;
 
@@ -165,7 +172,7 @@ namespace Uchu.World
                     // Offer new mission to the player.
                     //
 
-                    questInventory.MessageOfferMission(questId, GameObject);
+                    missionInventory.MessageOfferMission(questId, GameObject);
 
                     return;
                 }

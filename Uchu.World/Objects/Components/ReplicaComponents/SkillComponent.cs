@@ -106,7 +106,7 @@ namespace Uchu.World
                 HandledSkills[message.SkillHandle] = context;
             }
 
-            await As<Player>().GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+            await As<Player>().GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
                 MissionTaskType.UseSkill, message.SkillId
             );
         }

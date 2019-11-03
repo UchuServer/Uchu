@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -72,10 +73,16 @@ namespace Uchu.World
             {
                 shopItems.AddRange(cdClient.LootTableTable.Where(
                     l => l.LootTableIndex == matrix.LootTableIndex
-                ).ToArray().Select(lootTable => new ShopEntry
+                ).ToArray().Select(lootTable =>
                 {
-                    Lot = new Lot(lootTable.Itemid.Value),
-                    SortPriority = lootTable.SortPriority.Value
+                    Debug.Assert(lootTable.Itemid != null, "lootTable.Itemid != null");
+                    Debug.Assert(lootTable.SortPriority != null, "lootTable.SortPriority != null");
+                    
+                    return new ShopEntry
+                    {
+                        Lot = new Lot(lootTable.Itemid.Value),
+                        SortPriority = lootTable.SortPriority.Value
+                    };
                 }));
             }
 
@@ -122,11 +129,12 @@ namespace Uchu.World
                 item.Inventory.InventoryType,
                 InventoryType.VendorBuyback
             );
-            
-            var returnCurrency = Math.Floor(
-                                     (itemComponent.BaseValue ?? 0) *
-                                     (itemComponent.SellMultiplier ?? 0.1f)
-                                 ) * count;
+
+            var returnCurrency =
+                Math.Floor(
+                    (itemComponent.BaseValue ?? 0) *
+                    (itemComponent.SellMultiplier ?? 0.1f)
+                ) * count;
 
             player.Currency += (uint) returnCurrency;
             
@@ -145,10 +153,11 @@ namespace Uchu.World
             
             if (count == default || itemComponent.BaseValue <= 0) return;
 
-            var cost = (uint) Math.Floor(
-                           (itemComponent.BaseValue ?? 0) *
-                           (itemComponent.SellMultiplier ?? 0.1f)
-                       ) * count;
+            var cost =
+                (uint) Math.Floor(
+                    (itemComponent.BaseValue ?? 0) *
+                    (itemComponent.SellMultiplier ?? 0.1f)
+                ) * count;
 
             if (cost > player.Currency) return;
 

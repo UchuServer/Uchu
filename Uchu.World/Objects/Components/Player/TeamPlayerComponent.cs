@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public class TeamPlayer : Component
+    public class TeamPlayerComponent : Component
     {
         public void MessageSetLeader(Player player)
         {

@@ -16,7 +16,7 @@ namespace StandardScripts.AvantGardens
                 
                 if (character.LaunchedRocketFrom != ZoneId.VentureExplorer) return;
 
-                var questInventory = player.GetComponent<QuestInventory>();
+                var questInventory = player.GetComponent<MissionInventoryComponent>();
 
                 await questInventory.UpdateObjectTaskAsync(MissionTaskType.Script, 5652);
             });

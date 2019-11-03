@@ -10,7 +10,7 @@ using Uchu.World.Parsers;
 
 namespace Uchu.World
 {
-    public class QuestInventory : Component
+    public class MissionInventoryComponent : Component
     {
         public Mission[] GetCompletedMissions()
         {
@@ -38,13 +38,13 @@ namespace Uchu.World
             ).ToArray();
         }
 
-        public void MessageOfferMission(int missionId, GameObject questGiver)
+        public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
             As<Player>().Message(new OfferMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
-                QuestGiver = questGiver
+                QuestGiver = missionGiver
             });
         }
 
@@ -96,7 +96,7 @@ namespace Uchu.World
             });
         }
 
-        public async Task RespondToMissionAsync(int missionId, GameObject questGiver, Lot rewardItem)
+        public async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
         {
             Logger.Information($"Responding {missionId}");
 
@@ -176,6 +176,8 @@ namespace Uchu.World
 
                 MessageMissionState(missionId, MissionState.Active);
 
+                MessageOfferMission(missionId, missionGiver);
+
                 return;
             }
 
@@ -184,12 +186,13 @@ namespace Uchu.World
             //
 
             await CompleteMissionAsync(missionId, rewardItem);
+        }
 
-            //
-            // Offer any fallow up missions from the quest giver.
-            //
-
-            questGiver.GetComponent<QuestGiverComponent>().OfferMission(As<Player>());
+        public async Task MissionDialogueOk(MissionDialogueOkMessage message)
+        {
+            Console.WriteLine(
+                $"MISSION OK: {message.Responder} -> {message.MissionId} [{message.IsComplete}:{message.MissionState}]"
+            );
         }
 
         public async Task CompleteMissionAsync(int missionId, Lot rewardItem = default)

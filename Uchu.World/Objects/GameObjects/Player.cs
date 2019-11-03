@@ -158,9 +158,9 @@ namespace Uchu.World
             // Server Components
             //
             
-            instance.AddComponent<QuestInventory>();
+            instance.AddComponent<MissionInventoryComponent>();
             instance.AddComponent<InventoryManagerComponent>();
-            instance.AddComponent<TeamPlayer>();
+            instance.AddComponent<TeamPlayerComponent>();
             instance.AddComponent<ModularBuilderComponent>();
 
             //

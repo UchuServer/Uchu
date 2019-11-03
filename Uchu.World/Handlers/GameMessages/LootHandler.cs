@@ -37,7 +37,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task HasBeenCollectedHandler(HasBeenCollectedMessage message, Player player)
         {
-            await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+            await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
                 MissionTaskType.Collect,
                 message.Associate.Lot,
                 message.Associate

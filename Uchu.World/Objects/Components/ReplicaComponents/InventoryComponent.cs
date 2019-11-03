@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,9 @@ namespace Uchu.World
                         i => i.Id == itemRegistryEntry.Componentid
                     );
 
+                    Debug.Assert(item.Itemid != null, "item.Itemid != null");
+                    Debug.Assert(item.Count != null, "item.Count != null");
+                    
                     Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
                     {
                         InventoryItemId = IdUtils.GenerateObjectId(),
@@ -143,9 +147,9 @@ namespace Uchu.World
         {
             OnUnEquipped?.Invoke(item);
             
-            if (item == default) return;
-            
-            await UnEquipItem(item.ObjectId);
+            if (item?.ObjectId <= 0) return;
+
+            if (item != null) await UnEquipItem(item.ObjectId);
         }
 
         public async Task UnEquipItem(long id)

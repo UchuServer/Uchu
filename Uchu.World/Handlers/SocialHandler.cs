@@ -335,9 +335,9 @@ namespace Uchu.World.Handlers
 
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");
 
-            author.GetComponent<TeamPlayer>().MessageAddPlayer(player);
+            author.GetComponent<TeamPlayerComponent>().MessageAddPlayer(player);
 
-            var playerTeam = player.GetComponent<TeamPlayer>();
+            var playerTeam = player.GetComponent<TeamPlayerComponent>();
             playerTeam.MessageAddPlayer(author);
             playerTeam.MessageSetLeader(author);
         }

@@ -181,7 +181,7 @@ namespace Uchu.World
                 // Update quest tasks
                 //
 
-                var questInventory = GameObject.GetComponent<QuestInventory>();
+                var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
 
                 for (var i = 0; i < count; i++)
                 {

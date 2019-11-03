@@ -8,7 +8,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RespondToMissionHandler(RespondToMissionMessage message, Player player)
         {
-            await player.GetComponent<QuestInventory>().RespondToMissionAsync(
+            await player.GetComponent<MissionInventoryComponent>().RespondToMissionAsync(
                 message.MissionId,
                 message.Receiver,
                 message.RewardItem
@@ -16,9 +16,21 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
+        public async Task MissionDialogueOkHandler(MissionDialogueOkMessage message, Player player)
+        {
+            await player.GetComponent<MissionInventoryComponent>().MissionDialogueOk(message);
+        }
+
+        [PacketHandler]
+        public void RequestLinkedMissionHandler(RequestLinkedMissionMessage message, Player player)
+        {
+            message.Associate.GetComponent<MissionGiverComponent>().OfferMission(player);
+        }
+        
+        [PacketHandler]
         public async Task SetFlagHandler(SetFlagMessage message, Player player)
         {
-            await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(MissionTaskType.Flag, message.FlagId);
+            await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(MissionTaskType.Flag, message.FlagId);
             
             player.Message(new NotifyClientFlagChangeMessage
             {

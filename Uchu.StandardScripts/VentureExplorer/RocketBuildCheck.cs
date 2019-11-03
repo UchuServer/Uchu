@@ -22,7 +22,7 @@ namespace StandardScripts.VentureExplorer
                     
                     Logger.Information($"UPDATING FOR: {lot}");
                     
-                    var questInventory = player.GetComponent<QuestInventory>();
+                    var questInventory = player.GetComponent<MissionInventoryComponent>();
 
                     await questInventory.UpdateObjectTaskAsync(MissionTaskType.Flag, 44);
                 });

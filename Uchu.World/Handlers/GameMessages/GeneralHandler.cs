@@ -12,7 +12,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.SendChatMessage($"Interacted with {message.TargetObject}");
             
-            await player.GetComponent<QuestInventory>().UpdateObjectTaskAsync(
+            await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
                 MissionTaskType.Interact,
                 message.TargetObject.Lot,
                 message.TargetObject
@@ -25,7 +25,7 @@ namespace Uchu.World.Handlers.GameMessages
                 //
 
                 if (message.MultiInteractType == default)
-                    player.GetComponent<QuestInventory>().MessageOfferMission(
+                    player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
