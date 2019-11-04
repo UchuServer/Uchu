@@ -98,6 +98,7 @@ Before running Uchu for the first time, build it once to make sure it compiles a
 Uchu is not a LEGO Universe repository and you will have to supply your own game resource files for the servers to work with. 
 1. Navigate to where you have LEGO Universe installed and enter the "/res" directory, copy the full path to it.
 2. For Uchu.Master, navigate to where you built the server. This is commonly /bin/Debug/netcoreapp3.0 but may differ.
+3. Run ```dotnet run``` using the terminal, this should generate a config file.
 3. Find the "config.default.xml" file, duplicate it, rename the new copy to "config.xml".
 4. Find where you see ```<GameResourceFolder></GameResourceFolder>``` and copy your LEGO Universe "/res" path inbetween the tags.
 
