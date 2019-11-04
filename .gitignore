@@ -566,3 +566,5 @@ fabric.properties
 # Local History for Visual Studio
 
 # End of https://www.gitignore.io/api/rider,csharp,visualstudio
+
+.DS_Store
