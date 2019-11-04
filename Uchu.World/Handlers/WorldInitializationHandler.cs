@@ -15,8 +15,20 @@ namespace Uchu.World.Handlers
 {
     public class WorldInitializationHandler : HandlerGroup
     {
+        /// <summary>
+        /// XML Serializer used for the character data init packet
+        /// </summary>
         public XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
 
+        /// <summary>
+        /// Packet handler for a client request to join a world
+        /// </summary>
+        /// <remarks>
+        /// Handles the request by checking if the provided character exists and then sets up a world info packet.
+        /// If the request was invalid, a diconnect packet is sent.
+        /// </remarks>
+        /// <param name="packet">The request packet</param>
+        /// <param name="connection">The connection with the client</param>
         [PacketHandler]
         public async Task ValidateClientHandler(SessionInfoPacket packet, IRakConnection connection)
         {
@@ -34,6 +46,7 @@ namespace Uchu.World.Handlers
 
             await using var ctx = new UchuContext();
             
+            // Try to find the player, disconnect if the player is invalid
             var character = await ctx.Characters.FindAsync(session.CharacterId);
             if (character == null)
             {
@@ -49,6 +62,7 @@ namespace Uchu.World.Handlers
                 return;
             }
 
+            // Initialize zone for player
             var zoneId = (ZoneId) character.LastZone;
             if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
 
@@ -63,6 +77,15 @@ namespace Uchu.World.Handlers
             });
         }
 
+        /// <summary>
+        /// Packet handler for when a client has finished loading by sending character info and world info to the client
+        /// </summary>
+        /// <remarks>
+        /// This packet is sent when the client has finished loading the information packet.
+        /// Sends the character init packet, constructs the player and sends friend requests that haven't been sent yet
+        /// </remarks>
+        /// <param name="packet">The request packet</param>
+        /// <param name="connection">The client connection</param>
         [PacketHandler]
         public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
@@ -120,6 +143,14 @@ namespace Uchu.World.Handlers
             }
         }
 
+        /// <summary>
+        /// Packet handler for a PlayerLoadedMessage
+        /// </summary>
+        /// <remarks>
+        /// This packet is sent when the DetailedPlayerInfoPacket has been parsed
+        /// </remarks>
+        /// <param name="message">The client message</param>
+        /// <param name="player">The player of the client</param>
         [PacketHandler]
         public async Task PlayerLoadedHandler(PlayerLoadedMessage message, Player player)
         {
@@ -287,6 +318,7 @@ namespace Uchu.World.Handlers
             var completed = new List<CompletedMissionNode>();
             var missions = new List<MissionNode>();
             
+            // For all missions split them into active and completed missions
             foreach (var mission in character.Missions)
             {
                 if (mission.State == (int) MissionState.Completed)
