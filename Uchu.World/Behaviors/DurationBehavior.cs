@@ -25,10 +25,7 @@ namespace Uchu.World.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
             
-            await Action.ExecuteAsync(context, new ExecutionBranchContext(branchContext.Target)
-            {
-                Duration = ActionDuration
-            });
+            await Action.ExecuteAsync(context, branchContext);
         }
     }
 }

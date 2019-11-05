@@ -18,6 +18,18 @@ namespace Uchu.World
         private Player()
         {
             OnTick.AddListener(CheckDeathZone);
+            
+            OnStart.AddListener(() =>
+            {
+                Connection.Disconnected += reason =>
+                {
+                    Destroy(this);
+
+                    Zone.ManagedPlayers.Remove(this);
+                    
+                    return Task.CompletedTask;
+                };
+            });
         }
 
         public IRakConnection Connection { get; private set; }
@@ -29,8 +41,6 @@ namespace Uchu.World
 
         public readonly AsyncEvent<Lot> OnLootPickup = new AsyncEvent<Lot>();
         
-        private bool _disconnected;
-
         public async Task<Character> GetCharacterAsync()
         {
             await using var ctx = new UchuContext();
@@ -180,17 +190,6 @@ namespace Uchu.World
             
             await zone.RegisterPlayer(instance);
 
-            //
-            // Hook up disconnect
-            //
-            
-            connection.Disconnected += reason =>
-            {
-                instance._disconnected = true;
-                
-                return Task.CompletedTask;
-            };
-
             return instance;
         }
 
@@ -213,8 +212,6 @@ namespace Uchu.World
 
         public void Message(ISerializable gameMessage)
         {
-            if (_disconnected) return;
-            
             Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g.Associate}" : "")}");
 
             Connection.Send(gameMessage);

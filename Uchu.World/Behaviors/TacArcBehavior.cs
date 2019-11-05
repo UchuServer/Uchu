@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -39,13 +40,24 @@ namespace Uchu.World.Behaviors
 
                 for (var i = 0; i < targets.Length; i++)
                 {
-                    targets[i] = context.Reader.ReadGameObject(context.Associate.Zone);
+                    var targetId = context.Reader.Read<long>();
+                    
+                    if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                    {
+                        Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
+                        
+                        continue;
+                    }
+                    
+                    targets[i] = target;
                 }
 
                 foreach (var target in targets)
                 {
-                    await ActionBehavior.ExecuteAsync(context, new ExecutionBranchContext(target));
+                    branchContext.AddTarget(target);
                 }
+
+                await ActionBehavior.ExecuteAsync(context, branchContext);
             }
             else
             {

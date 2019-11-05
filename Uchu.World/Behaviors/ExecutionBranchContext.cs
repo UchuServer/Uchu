@@ -1,14 +1,23 @@
+using System.Collections.Generic;
+
 namespace Uchu.World.Behaviors
 {
     public class ExecutionBranchContext
     {
-        public readonly GameObject Target;
+        public readonly List<GameObject> Targets = new List<GameObject>();
 
         public int Duration;
 
-        public ExecutionBranchContext(GameObject target)
+        public void AddTarget(GameObject target)
         {
-            Target = target;
+            if (target == null)
+            {
+                return;
+            }
+            
+            if (Targets.Contains(target)) return;
+            
+            Targets.Add(target);
         }
     }
 }

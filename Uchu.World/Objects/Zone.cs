@@ -245,8 +245,6 @@ namespace Uchu.World
             UnregisterObject(gameObject);
 
             ManagedGameObjects.Remove(gameObject);
-
-            if (gameObject is Player player) ManagedPlayers.Remove(player);
         }
 
         #endregion

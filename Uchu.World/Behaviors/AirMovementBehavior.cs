@@ -28,7 +28,9 @@ namespace Uchu.World.Behaviors
 
             var target = context.Reader.ReadGameObject(context.Associate.Zone);
 
-            await action.ExecuteAsync(context, new ExecutionBranchContext(target));
+            branchContext.Targets.Add(target);
+            
+            await action.ExecuteAsync(context, branchContext);
         }
     }
 }

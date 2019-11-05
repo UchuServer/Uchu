@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -26,10 +28,11 @@ namespace Uchu.World.Behaviors
             context.Reader.Read<uint>();
 
             var damage = context.Reader.Read<uint>();
-            
-            (context.Associate as Player)?.SendChatMessage($"BASIC ATTACK: {damage} -> {branchContext.Target}");
 
-            branchContext.Target.GetComponent<Stats>()?.Damage(damage, context.Associate);
+            foreach (var target in branchContext.Targets)
+            {
+                target.GetComponent<Stats>().Damage(damage, context.Associate);
+            }
         }
     }
 }

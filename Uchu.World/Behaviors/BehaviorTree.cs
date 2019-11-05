@@ -149,9 +149,11 @@ namespace Uchu.World.Behaviors
                 {
                     context.Root = root;
                     
-                    (associate as Player)?.SendChatMessage($"EXEC: [{root.GetType().Name}] {root.BehaviorId}");
-                    
-                    await root.ExecuteAsync(context, new ExecutionBranchContext(target));
+                    var branchContext = new ExecutionBranchContext();
+
+                    branchContext.Targets.Add(target);
+                
+                    await root.ExecuteAsync(context, branchContext);
                 }
             }
 
@@ -161,9 +163,11 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                (associate as Player)?.SendChatMessage($"EXEC: [{root.GetType().Name}] {root.BehaviorId}");
+                var branchContext = new ExecutionBranchContext();
+
+                branchContext.Targets.Add(target);
                 
-                await root.ExecuteAsync(context, new ExecutionBranchContext(target));
+                await root.ExecuteAsync(context, branchContext);
             }
 
             return context;

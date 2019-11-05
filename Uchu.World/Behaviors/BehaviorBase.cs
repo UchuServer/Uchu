@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Core;
 using Uchu.Core.CdClient;
 
 namespace Uchu.World.Behaviors
@@ -54,13 +55,22 @@ namespace Uchu.World.Behaviors
             return instance;
         }
 
-        public void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
+        protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
         {
+            var targets = branchContext.Targets;
+            
             context.BehaviorHandles[handle] = async reader =>
             {
+                var newBranchContext = new ExecutionBranchContext();
+
+                foreach (var target in targets)
+                {
+                    newBranchContext.AddTarget(target);
+                }
+                
                 context.Reader = reader;
                 
-                await SyncAsync(context, branchContext);
+                await SyncAsync(context, newBranchContext);
             };
         }
 
