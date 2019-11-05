@@ -8,6 +8,7 @@ using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Social;
 
@@ -18,7 +19,7 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// XML Serializer used for the character data init packet
         /// </summary>
-        public XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
+        private XmlSerializer Serializer { get; } = new XmlSerializer(typeof(XmlData));
 
         /// <summary>
         /// Packet handler for a client request to join a world
@@ -335,9 +336,7 @@ namespace Uchu.World.Handlers
                     missions.Add(new MissionNode
                     {
                         MissionId = mission.MissionId,
-                        Progress = mission.Tasks.OrderBy(t => t.TaskId).Select(t =>
-                            new MissionProgressNode {Value = t.Values.Count}
-                        ).ToArray()
+                        Progress = _progressArrayForMission(mission)
                     });
                 }
             }
@@ -347,6 +346,35 @@ namespace Uchu.World.Handlers
                 CompletedMissions = completed.ToArray(),
                 CurrentMissions = missions.ToArray()
             };
+        }
+
+        /// <summary>
+        /// Gets all the progress nodes for a mission
+        /// </summary>
+        /// <remarks>
+        /// If a mission task is a collectible, this will also add a separate XML element for each collectible
+        /// </remarks>
+        /// <param name="mission">The mission to create progress nodes for</param>
+        /// <returns>All the progress nodes for a mission</returns>
+        private static MissionProgressNode[] _progressArrayForMission(Mission mission)
+        {
+            return mission.Tasks.OrderBy(task => task.TaskId).Select(task =>
+                {
+                    // Return the mission task progress as list as there might be more nodes for this task
+                    var progressNodes = new List<MissionProgressNode> { new MissionProgressNode { Value = task.Values.Count }};
+
+                    using var cdClient = new CdClientContext();
+                    var cdTask = cdClient.MissionTasksTable.Where(t => t.Uid == task.TaskId).First();
+                    
+                    // If the task type is collectible, also send all collectible ids
+                    if (cdTask.TaskType != null && ((MissionTaskType) cdTask.TaskType) == MissionTaskType.Collect)
+                    {
+                        progressNodes.AddRange(task.Values.Select(value => new MissionProgressNode { Value = value }));
+                    }
+
+                    return progressNodes;
+                }
+            ).SelectMany(pn => pn).ToArray();
         }
 
         /// <summary>
