@@ -26,7 +26,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <remarks>
         /// Handles the request by checking if the provided character exists and then sets up a world info packet.
-        /// If the request was invalid, a diconnect packet is sent.
+        /// If the request was invalid, a disconnect packet is sent.
         /// </remarks>
         /// <param name="packet">The request packet</param>
         /// <param name="connection">The connection with the client</param>
@@ -114,7 +114,7 @@ namespace Uchu.World.Handlers
             var zone = await ((WorldServer) Server).GetZoneAsync(zoneId);
 
             // Send the character init XML data for this world to the client
-            _sendCharacterXMLDataToClient(character, connection, session);
+            SendCharacterXmlDataToClient(character, connection, session);
 
             var player = await Player.ConstructAsync(character, connection, zone);
             if (character.LandingByRocket)
@@ -175,10 +175,10 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
         /// <param name="session">The session cache for the connection</param>
-        private async void _sendCharacterXMLDataToClient(Character character, IRakConnection connection, Session session)
+        private async void SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
-            var xmlData = _generateCharacterXMLData(character);
+            var xmlData = GenerateCharacterXMLData(character);
 
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
@@ -210,16 +210,16 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private XmlData _generateCharacterXMLData(Character character)
+        private XmlData GenerateCharacterXMLData(Character character)
         {
             var xmlData = new XmlData
             {
-                Inventory = _inventoryNode(character),
-                Character = _characterNode(character),
-                Level = _levelNode(character),
-                Missions = _missionsNode(character),
-                Minifigure = _minifigureNode(character),
-                Stats = _statsNode(character)
+                Inventory = InventoryNode(character),
+                Character = CharacterNode(character),
+                Level = LevelNode(character),
+                Missions = MissionsNode(character),
+                Minifigure = MinifigureNode(character),
+                Stats = StatsNode(character)
             };
 
             return xmlData;
@@ -230,16 +230,16 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to generate an inventory for</param>
         /// <returns>An inventory node for the character</returns>
-        private static InventoryNode _inventoryNode(Character character)
+        private static InventoryNode InventoryNode(Character character)
         {
             return new InventoryNode
             {
                 ItemContainers = new[]
                 {
-                    _itemContainerNode(character, InventoryType.Items),
-                    _itemContainerNode(character, InventoryType.Bricks),
-                    _itemContainerNode(character, InventoryType.Models),
-                    _itemContainerNode(character, InventoryType.Behaviors)
+                    ItemContainerNode(character, InventoryType.Items),
+                    ItemContainerNode(character, InventoryType.Bricks),
+                    ItemContainerNode(character, InventoryType.Models),
+                    ItemContainerNode(character, InventoryType.Behaviors)
                 }
             };
         }
@@ -253,7 +253,7 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to create an item container for</param>
         /// <param name="type">The type of container to create, see remarks for extra info</param>
         /// <returns></returns>
-        private static ItemContainerNode _itemContainerNode(Character character, InventoryType type)
+        private static ItemContainerNode ItemContainerNode(Character character, InventoryType type)
         {
             return new ItemContainerNode
             {
@@ -284,7 +284,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to create a node from</param>
         /// <returns>The character node created from the character</returns>
-        private static CharacterNode _characterNode(Character character)
+        private static CharacterNode CharacterNode(Character character)
         {
             return new CharacterNode
             {
@@ -300,7 +300,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to create the level node for</param>
         /// <returns>The level node for the character</returns>
-        private static LevelNode _levelNode(Character character)
+        private static LevelNode LevelNode(Character character)
         {
             return new LevelNode
             {
@@ -313,7 +313,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to create a mission node for</param>
         /// <returns>The missions node for the character</returns>
-        private static MissionsNode _missionsNode(Character character)
+        private static MissionsNode MissionsNode(Character character)
         {
             // Completed and active missions are stored in two separate lists
             var completed = new List<CompletedMissionNode>();
@@ -336,7 +336,7 @@ namespace Uchu.World.Handlers
                     missions.Add(new MissionNode
                     {
                         MissionId = mission.MissionId,
-                        Progress = _progressArrayForMission(mission)
+                        Progress = ProgressArrayForMission(mission)
                     });
                 }
             }
@@ -356,7 +356,7 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="mission">The mission to create progress nodes for</param>
         /// <returns>All the progress nodes for a mission</returns>
-        private static MissionProgressNode[] _progressArrayForMission(Mission mission)
+        private static MissionProgressNode[] ProgressArrayForMission(Mission mission)
         {
             return mission.Tasks.OrderBy(task => task.TaskId).Select(task =>
                 {
@@ -382,7 +382,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character"></param>
         /// <returns></returns>
-        private static MinifigureNode _minifigureNode(Character character)
+        private static MinifigureNode MinifigureNode(Character character)
         {
             return new MinifigureNode
             {
@@ -403,7 +403,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to create the statistics node for</param>
         /// <returns>The statistics node for this character</returns>
-        private static DestNode _statsNode(Character character)
+        private static DestNode StatsNode(Character character)
         {
             return new DestNode
             {
