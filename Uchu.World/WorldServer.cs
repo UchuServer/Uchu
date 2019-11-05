@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -49,6 +50,8 @@ namespace Uchu.World
 
         public WorldServer(ServerSpecification specifications, string path) : base(specifications.Id, path)
         {
+            Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
+            
             ZoneParser = new ZoneParser(Resources);
 
             _zoneId = specifications.ZoneId;

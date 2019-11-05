@@ -430,11 +430,13 @@ namespace Uchu.World
                             }
                             */
 
-                        if (task.TargetValue > characterTask.Values.Count)
+                        // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
+                        var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8);
+                        
+                        if (!characterTask.Values.Contains(shiftedId) && task.TargetValue > characterTask.Values.Count)
                         {
                             Logger.Information($"{GameObject} collected {component.CollectibleId}");
-
-                            characterTask.Values.Add(component.CollectibleId);
+                            characterTask.Values.Add(shiftedId);
                         }
 
                         Logger.Information($"Has collected {characterTask.Values.Count}/{task.TargetValue}");
@@ -444,7 +446,7 @@ namespace Uchu.World
                             taskId, tasks.IndexOf(task),
                             new[]
                             {
-                                (float) (component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8))
+                                shiftedId
                             }
                         );
 

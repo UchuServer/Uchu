@@ -169,7 +169,7 @@ namespace Uchu.World
 
     public class MissionProgressNode
     {
-        [XmlAttribute("v")] public int Value { get; set; }
+        [XmlAttribute("v")] public float Value { get; set; }
 
         public bool ShouldSerializeValue()
         {
