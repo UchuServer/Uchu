@@ -95,7 +95,7 @@ namespace Uchu.World
 
                     var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
 
-                    InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
+                    InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
                 }
             }
         }
