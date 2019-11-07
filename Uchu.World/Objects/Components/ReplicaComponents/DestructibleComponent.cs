@@ -10,8 +10,9 @@ namespace Uchu.World
     [RequireComponent(typeof(StatsComponent))]
     public class DestructibleComponent : ReplicaComponent
     {
+        private readonly Random _random;
+        
         private Core.CdClient.DestructibleComponent _cdClientComponent;
-        private Random _random;
         private Stats _stats;
 
         public override ComponentId Id => ComponentId.DestructibleComponent;
@@ -21,10 +22,10 @@ namespace Uchu.World
         /// </summary>
         public bool Alive { get; private set; } = true;
 
-        public float ResurrectTime;
+        private float _resurrectTime;
 
         /// <summary>
-        /// Killer, Loot Owner
+        ///     Killer, Loot Owner
         /// </summary>
         public readonly Event<GameObject, Player> OnSmashed = new Event<GameObject, Player>();
 
@@ -32,20 +33,20 @@ namespace Uchu.World
 
         protected DestructibleComponent()
         {
+            _random = new Random();
+            
             OnStart.AddListener(() =>
             {
                 if (GameObject.Settings.TryGetValue("respawn", out var resTimer))
                 {
-                    ResurrectTime = resTimer switch
+                    _resurrectTime = resTimer switch
                     {
                         uint timer => timer,
                         float timer => timer,
                         int timer => timer,
-                        _ => ResurrectTime
+                        _ => _resurrectTime
                     };
                 }
-
-                _random = new Random();
 
                 GameObject.Layer = Layer.Smashable;
 
@@ -134,7 +135,7 @@ namespace Uchu.World
 
             Task.Run(async () =>
             {
-                await Task.Delay((int) (ResurrectTime * 1000));
+                await Task.Delay((int) (_resurrectTime * 1000));
                 
                 //
                 // Re-Spawn Smashable 
@@ -173,6 +174,7 @@ namespace Uchu.World
                     if (item.Itemid == null) continue;
 
                     var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
+                    
                     Start(drop);
                 }
             }

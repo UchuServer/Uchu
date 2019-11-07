@@ -67,7 +67,7 @@ namespace Uchu.World
                     
                     return;
                 }
-
+                
                 _completeTime = clientComponent.Completetime ?? 0;
                 _imaginationCost = clientComponent.Takeimagination ?? 0;
                 _timeToSmash = clientComponent.Timebeforesmash ?? 0;
@@ -340,6 +340,8 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
             Task.Run(() => { timer.Start(); });
+
+            Task.Run(async () => await DropLootAsync(player));
         }
 
         public void ResetBuild(Player player)
