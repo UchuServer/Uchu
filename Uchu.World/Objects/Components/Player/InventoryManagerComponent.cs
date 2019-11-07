@@ -252,6 +252,7 @@ namespace Uchu.World
                 Logger.Error(
                     $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
                 );
+                
                 return;
             }
 
