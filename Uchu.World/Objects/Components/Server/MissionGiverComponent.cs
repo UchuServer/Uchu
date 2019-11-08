@@ -10,6 +10,9 @@ namespace Uchu.World
     [ServerComponent(Id = ComponentId.MissionNPCComponent)]
     public class MissionGiverComponent : Component
     {
+        public AsyncEvent<(int missionId, bool isComplete, MissionState state, GameObject responder)> OnMissionOk = 
+            new AsyncEvent<(int missionId, bool isComplete, MissionState state, GameObject responder)>();
+        
         public MissionGiverComponent()
         {
             OnStart.AddListener(() =>

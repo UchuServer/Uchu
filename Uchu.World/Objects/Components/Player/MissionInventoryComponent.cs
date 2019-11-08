@@ -190,13 +190,6 @@ namespace Uchu.World
             CompleteMission(missionId, rewardItem);
         }
 
-        public async Task MissionDialogueOk(MissionDialogueOkMessage message)
-        {
-            Console.WriteLine(
-                $"MISSION OK: {message.Responder} -> {message.MissionId} [{message.IsComplete}:{message.MissionState}]"
-            );
-        }
-
         public void CompleteMission(int missionId, Lot rewardItem = default)
         {
             lock (_lock)
@@ -259,13 +252,7 @@ namespace Uchu.World
                 var repeat = characterMission.CompletionCount != 0;
                 characterMission.CompletionCount++;
                 characterMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
-    
-                // TODO: Remove/Move
-                if (character.MaximumImagination == 0 && mission.Rewardmaximagination > 0)
-                {
-                    CompleteMission(664);
-                }
-    
+
                 //
                 // Update player based on rewards.
                 //
@@ -283,7 +270,7 @@ namespace Uchu.World
                     //
                     // Achievement
                     //
-                    // These currency rewards have the be silent, as the client adds the currency itself.
+                    // These rewards have the be silent, as the client adds them itself.
                     //
     
                     character.Currency += mission.Rewardcurrency ?? 0;
@@ -296,16 +283,7 @@ namespace Uchu.World
                 
                 stats.MaxHealth += (uint) (mission.Rewardmaxhealth ?? 0);
                 stats.MaxImagination += (uint) (mission.Rewardmaximagination ?? 0);
-    
-                if (mission.Rewardmaximagination > 0)
-                {
-                    //
-                    // Make the client understand it now got imagination.
-                    //
-                    
-                    stats.Imagination = stats.MaxImagination;
-                }
-                
+
                 //
                 // Get item rewards.
                 //
