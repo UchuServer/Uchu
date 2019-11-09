@@ -48,3 +48,8 @@ artifacts:
     name: UchuWorld
   - path: Uchu.Master/bin/
     name: UchuMaster
+
+notifications:
+  - provider: Webhook
+    url: https://uchu-builds-webhook.herokuapp.com/webhook/appveyor
+    method: POST
