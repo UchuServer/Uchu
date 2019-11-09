@@ -4,7 +4,9 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
+using Uchu.Core.CdClient;
 using Uchu.World.Collections;
 using Uchu.World.Parsers;
 
@@ -514,6 +516,58 @@ namespace Uchu.World.Handlers.Commands
             });
             
             return $"Requesting transfer to {id}, please wait...";
+        }
+        
+        [CommandHandler(Signature = "getemote", Help = "Unlock an emote", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> GetEmote(string[] arguments, Player player)
+        {
+            if (arguments.Length == default)
+                return "getemote <emote>";
+
+            await using var cdClient = new CdClientContext();
+
+            Emotes emote;
+            
+            if (int.TryParse(arguments[0], out var id))
+            {
+                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.Id == id);
+            }
+            else
+            {
+                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.AnimationName == arguments[0].ToLower());
+            }
+
+            if (emote?.Id == default)
+            {
+                return "Invalid <emote>";
+            }
+
+            var state = false;
+
+            if (arguments.Length == 2)
+            {
+                switch (arguments[1].ToLower())
+                {
+                    case "true":
+                    case "on":
+                        state = true;
+                        break;
+                    case "false":
+                    case "off":
+                        break;
+                    default:
+                        return "Invalid <state(on/off)>";
+                }
+            }
+
+            player.Message(new SetEmoteLockStateMessage
+            {
+                Associate = player,
+                EmoteId = emote.Id.Value,
+                Lock = state
+            });
+
+            return $"Set emote: \"{emote.AnimationName}\" [{emote.Id}] lock state to {state}";
         }
     }
 }

@@ -13,14 +13,6 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BaseCombatAIComponent;
 
-        protected BaseCombatAiComponent()
-        {
-            OnStart.AddListener(() =>
-            {
-                GameObject.AddComponent<EnemyAi>();
-            });
-        }
-        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

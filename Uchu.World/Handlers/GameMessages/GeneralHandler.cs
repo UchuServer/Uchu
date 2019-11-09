@@ -25,10 +25,12 @@ namespace Uchu.World.Handlers.GameMessages
                 //
 
                 if (message.MultiInteractType == default)
+                {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
+                }
             }
             else
             {
@@ -82,6 +84,11 @@ namespace Uchu.World.Handlers.GameMessages
                 EmoteId = message.EmoteId,
                 Target = message.Target
             }, player);
+            
+            if (message.Target != default)
+            {
+                await message.Target.OnEmoteReceived.InvokeAsync(message.EmoteId, player);
+            }
         }
     }
 }
