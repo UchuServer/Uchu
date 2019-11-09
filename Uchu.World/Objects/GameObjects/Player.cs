@@ -48,6 +48,14 @@ namespace Uchu.World
             return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
         }
         
+        /// <summary>
+        ///    Negative offset for the SetCurrency message.
+        /// </summary>
+        /// <remarks>
+        ///    Used when the client adds currency by itself. E.g, achievements.
+        /// </remarks>
+        public long HiddenCurrency { get; set; }
+        
         public long Currency
         {
             get
@@ -263,7 +271,7 @@ namespace Uchu.World
             Message(new SetCurrencyMessage
             {
                 Associate = this,
-                Currency = currency
+                Currency = currency - HiddenCurrency
             });
         }
 

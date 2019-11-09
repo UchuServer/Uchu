@@ -460,13 +460,24 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Animate(string[] arguments, Player player)
         {
-            if (arguments.Length != 1)
+            if (arguments.Length == default)
                 return "animate <animationId>";
+
+            var scale = 1f;
+
+            if (arguments.Length == 2)
+            {
+                if (!float.TryParse(arguments[1], out scale))
+                {
+                    return "Invalid <scale>";
+                }
+            }
             
             player.Message(new PlayAnimationMessage
             {
                 Associate = player,
-                AnimationsId = arguments[0]
+                AnimationsId = arguments[0],
+                Scale = scale
             });
 
             return $"Attempting to play {arguments[0]} animation";

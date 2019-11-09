@@ -12,7 +12,7 @@ namespace Uchu.World
 {
     public class MissionInventoryComponent : Component
     {
-        private object _lock = new object();
+        private readonly object _lock = new object();
 
         public Mission[] GetCompletedMissions()
         {
@@ -275,6 +275,13 @@ namespace Uchu.World
     
                     character.Currency += mission.Rewardcurrency ?? 0;
                     character.UniverseScore += mission.LegoScore ?? 0;
+
+                    //
+                    // The client adds currency rewards as an offset, in my testing. Therefore we
+                    // have to account for this offset.
+                    //
+                    
+                    As<Player>().HiddenCurrency += mission.Rewardcurrency ?? 0;
 
                     ctx.SaveChanges();
                 }
