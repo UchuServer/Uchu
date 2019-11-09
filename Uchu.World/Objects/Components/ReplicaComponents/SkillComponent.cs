@@ -80,7 +80,7 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                Zone.ExcludingMessage(new EchoStartSkillMessage
+                Zone.BroadcastMessage(new EchoStartSkillMessage
                 {
                     Associate = GameObject,
                     CasterLatency = message.CasterLatency,
@@ -93,7 +93,7 @@ namespace Uchu.World
                     SkillHandle = message.SkillHandle,
                     SkillId = message.SkillId,
                     UsedMouse = message.UsedMouse
-                }, As<Player>());
+                });
 
                 As<Player>().SendChatMessage($"START: {message.SkillId}");
                 
@@ -125,14 +125,14 @@ namespace Uchu.World
                 HandledSkills.Remove(message.SkillHandle);
             }
 
-            Zone.ExcludingMessage(new EchoSyncSkillMessage
+            Zone.BroadcastMessage(new EchoSyncSkillMessage
             {
                 Associate = GameObject,
                 BehaviorHandle = message.BehaviourHandle,
                 Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle
-            }, As<Player>());
+            });
         }
 
         public void SetSkill(BehaviorSlot slot, uint skillId)

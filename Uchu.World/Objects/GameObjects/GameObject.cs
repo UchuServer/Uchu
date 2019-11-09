@@ -68,7 +68,7 @@ namespace Uchu.World
 
         public SpawnerComponent SpawnerObject { get; private set; }
 
-        public virtual Transform Transform => _components.First(c => c is Transform) as Transform;
+        public Transform Transform => _components.First(c => c is Transform) as Transform;
 
         public bool Alive => Zone?.TryGetGameObject(ObjectId, out _) ?? false;
 
@@ -77,6 +77,8 @@ namespace Uchu.World
         public readonly Event<Mask> OnLayerChanged = new Event<Mask>();
 
         public readonly Event<Player> OnInteract = new Event<Player>();
+
+        public readonly AsyncEvent<int, Player> OnEmoteReceived = new AsyncEvent<int, Player>();
 
         #region Operators
 

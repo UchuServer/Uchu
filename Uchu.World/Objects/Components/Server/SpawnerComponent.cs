@@ -10,8 +10,8 @@ namespace Uchu.World
         public readonly List<GameObject> ActiveSpawns = new List<GameObject>();
 
         public LevelObject LevelObject;
-        
-        public SpawnerComponent()
+
+        protected SpawnerComponent()
         {
             OnStart.AddListener(() =>
             {

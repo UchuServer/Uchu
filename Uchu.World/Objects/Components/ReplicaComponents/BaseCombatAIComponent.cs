@@ -1,5 +1,4 @@
 using RakDotNet.IO;
-using Uchu.World.Experimental;
 
 namespace Uchu.World
 {
@@ -17,7 +16,14 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
-                GameObject.AddComponent<EnemyAi>();
+                GameObject.GetComponent<DestructibleComponent>().OnSmashed.AddListener(async (killer, owner) =>
+                {
+                    await owner.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
+                        MissionTaskType.KillEnemy,
+                        GameObject.Lot,
+                        GameObject
+                    );
+                });
             });
         }
         
