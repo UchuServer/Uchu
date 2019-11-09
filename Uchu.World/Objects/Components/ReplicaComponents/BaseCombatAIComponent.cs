@@ -1,5 +1,4 @@
 using RakDotNet.IO;
-using Uchu.World.Experimental;
 
 namespace Uchu.World
 {
@@ -13,6 +12,21 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BaseCombatAIComponent;
 
+        protected BaseCombatAiComponent()
+        {
+            OnStart.AddListener(() =>
+            {
+                GameObject.GetComponent<DestructibleComponent>().OnSmashed.AddListener(async (killer, owner) =>
+                {
+                    await owner.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
+                        MissionTaskType.KillEnemy,
+                        GameObject.Lot,
+                        GameObject
+                    );
+                });
+            });
+        }
+        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

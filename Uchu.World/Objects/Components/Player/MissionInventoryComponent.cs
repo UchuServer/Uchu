@@ -428,7 +428,13 @@ namespace Uchu.World
                         );
 
                         break;
-                    case MissionTaskType.KillEnemy: // Other method?
+                    case MissionTaskType.KillEnemy:
+                        if (task.TargetValue > characterTask.Values.Count)
+                        {
+                            characterTask.Values.Add(lot);
+                        }
+
+                        break;
                     case MissionTaskType.QuickBuild:
                     case MissionTaskType.NexusTowerBrickDonation:
                     case MissionTaskType.None:
