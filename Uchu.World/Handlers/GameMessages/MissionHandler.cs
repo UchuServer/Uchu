@@ -18,7 +18,9 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task MissionDialogueOkHandler(MissionDialogueOkMessage message, Player player)
         {
-            await player.GetComponent<MissionInventoryComponent>().MissionDialogueOk(message);
+            await message.Associate.GetComponent<MissionGiverComponent>().OnMissionOk.InvokeAsync(
+                (message.MissionId, message.IsComplete, message.MissionState, message.Responder)
+            );
         }
 
         [PacketHandler]
@@ -30,6 +32,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task SetFlagHandler(SetFlagMessage message, Player player)
         {
+            player.SendChatMessage($"FLAG: {message.FlagId}");
+            
             await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(MissionTaskType.Flag, message.FlagId);
             
             player.Message(new NotifyClientFlagChangeMessage

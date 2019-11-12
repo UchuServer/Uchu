@@ -30,11 +30,20 @@ namespace Uchu.World
             
             OnStart.AddListener(async () =>
             {
-                if (GameObject.Settings.TryGetValue("activityID", out var value))
+                if (!GameObject.Settings.TryGetValue("activityID", out var id))
                 {
-                    var activityId = (int) value;
-                    await using var cdClient = new CdClientContext();
+                    return;
+                }
 
+                var activityId = (int) id;
+                await using var cdClient = new CdClientContext();
+
+                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                    a => a.ActivityID == activityId
+                );
+
+                if (ActivityInfo == default)
+                {
                     ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
                         a => a.ActivityID == activityId
                     );
@@ -97,7 +106,7 @@ namespace Uchu.World
 
                     var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
 
-                    InstancingUtil.Currency(coinToDrop, lootOwner, lootOwner, Transform.Position);
+                    InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
                 }
             }
         }

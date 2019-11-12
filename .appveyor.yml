@@ -12,10 +12,14 @@ only_commits:
     - Uchu.Auth/
     - Uchu.Char/
     - Uchu.Core/
+    - Uchu.Master/
+    - Uchu.StandardScripts/
     - Uchu.World/
+    - .appveyor.yml
+    - .gitmodules
+    - Uchu.sln
 
 image:
-  - Visual Studio 2017
   - Visual Studio 2019
   - Ubuntu1604
   - Ubuntu1804
@@ -23,7 +27,7 @@ image:
 clone_depth: 1
 
 cache:
-  - packages -> **\*.csproj
+  - packages -> **/*.csproj
 
 install:
   - git submodule update --init --recursive
@@ -36,9 +40,16 @@ build:
   project: Uchu.sln
 
 artifacts:
-  - path: Uchu.Auth\bin\
+  - path: Uchu.Auth/bin/
     name: UchuAuth
-  - path: Uchu.Char\bin\
+  - path: Uchu.Char/bin/
     name: UchuChar
-  - path: Uchu.World\bin\
+  - path: Uchu.World/bin/
     name: UchuWorld
+  - path: Uchu.Master/bin/
+    name: UchuMaster
+
+notifications:
+  - provider: Webhook
+    url: https://uchu-builds-webhook.herokuapp.com/webhook/appveyor
+    method: POST

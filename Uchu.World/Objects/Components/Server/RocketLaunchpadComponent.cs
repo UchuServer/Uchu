@@ -9,7 +9,7 @@ namespace Uchu.World
     [ServerComponent(Id = ComponentId.RocketLaunchComponent)]
     public class RocketLaunchpadComponent : Component
     {
-        public RocketLaunchpadComponent()
+        protected RocketLaunchpadComponent()
         {
             OnStart.AddListener(() =>
             {
