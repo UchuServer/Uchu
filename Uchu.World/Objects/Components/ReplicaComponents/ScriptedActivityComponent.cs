@@ -36,7 +36,6 @@ namespace Uchu.World
                 }
 
                 var activityId = (int) id;
-                
                 await using var cdClient = new CdClientContext();
 
                 ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
@@ -45,14 +44,21 @@ namespace Uchu.World
 
                 if (ActivityInfo == default)
                 {
-                    Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
-                    
-                    return;
-                }
+                    ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                        a => a.ActivityID == activityId
+                    );
 
-                Rewards = cdClient.ActivityRewardsTable.Where(
-                    a => a.ObjectTemplate == activityId
-                ).ToArray();
+                    if (ActivityInfo == default)
+                    {
+                        Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
+                        return;
+                    }
+
+                    Rewards = cdClient.ActivityRewardsTable.Where(
+                        a => a.ObjectTemplate == activityId
+                    ).ToArray();
+                }
+                
             });
         }
 
