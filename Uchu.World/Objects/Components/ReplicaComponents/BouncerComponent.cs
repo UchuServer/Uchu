@@ -15,8 +15,7 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
-                object value;
-                if (GameObject.Settings.TryGetValue("bouncer_destination", out value))
+                if (GameObject.Settings.TryGetValue("bouncer_destination", out var value))
                 {
                     BouncerDestination = (Vector3) value;
                 }

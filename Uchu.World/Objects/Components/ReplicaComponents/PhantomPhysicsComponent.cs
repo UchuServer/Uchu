@@ -18,14 +18,6 @@ namespace Uchu.World
         public float EffectAmount { get; set; }
 
         public Vector3? EffectDirection { get; set; } = null;
-
-        protected PhantomPhysicsComponent()
-        {
-            OnStart.AddListener(() =>
-            {
-                Logger.Information($"\nPHANTOM SETTINGS:\n{GameObject.Settings}\n");
-            });
-        }
         
         public override void Construct(BitWriter writer)
         {

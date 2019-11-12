@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -42,29 +41,28 @@ namespace Uchu.World
                     a => a.ActivityID == activityId
                 );
 
+                if (ActivityInfo == default) return;
+                
+                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                    a => a.ActivityID == activityId
+                );
+
                 if (ActivityInfo == default)
                 {
-                    ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
-                        a => a.ActivityID == activityId
-                    );
-
-                    if (ActivityInfo == default)
-                    {
-                        Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
-                        return;
-                    }
-
-                    Rewards = cdClient.ActivityRewardsTable.Where(
-                        a => a.ObjectTemplate == activityId
-                    ).ToArray();
+                    Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
+                    return;
                 }
-                
+
+                Rewards = cdClient.ActivityRewardsTable.Where(
+                    a => a.ObjectTemplate == activityId
+                ).ToArray();
             });
         }
 
         public async Task DropLootAsync(Player lootOwner)
         {
             await using var cdClient = new CdClientContext();
+            
             var matrices = cdClient.LootMatrixTable.Where(l =>
                 Rewards.Any(r => r.LootMatrixIndex == l.LootMatrixIndex)
             ).ToArray();
@@ -88,6 +86,8 @@ namespace Uchu.World
 
                     if (item.Itemid == null) continue;
 
+                    lootOwner.SendChatMessage("Dropping activity item!!!");
+                    
                     var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
                     
                     Start(drop);
@@ -105,7 +105,9 @@ namespace Uchu.World
                     if (currency.Npcminlevel > reward.ChallengeRating) continue;
 
                     var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
-
+                    
+                    lootOwner.SendChatMessage("Dropping activity coin!!!");
+                    
                     InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
                 }
             }
