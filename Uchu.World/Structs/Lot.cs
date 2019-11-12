@@ -1,5 +1,5 @@
 using System.Linq;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {

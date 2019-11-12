@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Core.CdClient;
-using Uchu.World.Parsers;
+using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.Core.IO;
 
 namespace Uchu.Char.Handlers

@@ -1,12 +1,11 @@
-using System.Numerics;
 using RakDotNet.IO;
-using Uchu.Core;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
     public class TriggerComponent : ReplicaComponent
     {
-        public int TriggerId { get; set; } = -1;
+        public Trigger Trigger { get; set; }
 
         public override ComponentId Id => ComponentId.TriggerComponent;
 
@@ -14,15 +13,24 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
-                if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerId)) return;
+                if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerIds)) return;
 
-                var str = (string) triggerId;
-                var colonIndex = str.IndexOf(':');
-                var v = str.Substring(colonIndex + 1);
+                var str = (string) triggerIds;
+                var split = str.Split(':');
 
-                TriggerId = int.Parse(v);
+                if (split.Length != 2) return;
+                
+                var triggerPrimaryId = int.Parse(split[0]);
+                var triggerId = int.Parse(split[1]);
 
-                Logger.Information($"{GameObject} is a trigger [{triggerId}]");
+                foreach (var trigger in Zone.ZoneInfo.Triggers)
+                {
+                    if (trigger.PrimaryId != triggerPrimaryId || trigger.Id != triggerId) continue;
+                    
+                    Trigger = trigger;
+                    
+                    break;
+                }
             });
         }
 
@@ -33,18 +41,11 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            var hasId = TriggerId != -1;
+            var hasId = Trigger != default;
 
             writer.WriteBit(hasId);
 
-            if (hasId) writer.Write(TriggerId);
-        }
-
-        public bool CheckCollision(Transform transform) => CheckCollision(transform.Position);
-
-        public bool CheckCollision(Vector3 position)
-        {
-            return false;
+            if (hasId) writer.Write(Trigger.Id);
         }
     }
 }

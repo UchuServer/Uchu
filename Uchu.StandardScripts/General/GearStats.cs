@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting;
 using InventoryComponent = Uchu.World.InventoryComponent;

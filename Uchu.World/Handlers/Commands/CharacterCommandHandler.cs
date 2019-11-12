@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Collections;
-using Uchu.World.Parsers;
+using Uchu.World.Client;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -198,9 +198,15 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Contains("-cq"))
             {
                 if (current.TryGetComponent<LuaScriptComponent>(out var scriptComponent))
-                    info.AppendLine($"\nScript: {scriptComponent.ScriptName}");
+                    info.AppendLine($"\nServer Script: {scriptComponent.ScriptName}\nClient Script: {scriptComponent.ClientScriptName}");
             }
 
+            if (arguments.Contains("-g"))
+            {
+                if (current.Settings.TryGetValue("groupID", out var group))
+                    info.AppendLine($"\nGroupID: {group}");
+            }
+                
             if (arguments.Contains("-s")) info.Append($"\n{current.Settings}");
 
             if (arguments.Contains("-l")) info.Append($"\nLayers: {Convert.ToString(current.Layer.Value, 2)}");

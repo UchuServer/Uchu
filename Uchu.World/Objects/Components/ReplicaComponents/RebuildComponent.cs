@@ -4,9 +4,9 @@ using System.Timers;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Collections;
-using Uchu.World.Parsers;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {

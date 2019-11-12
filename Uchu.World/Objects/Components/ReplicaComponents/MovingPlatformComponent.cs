@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.World.Parsers;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -159,7 +159,7 @@ namespace Uchu.World
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
 
-            Update(GameObject);
+            GameObject.Serialize(GameObject);
 
             /*
              * Start Waiting after completing path.
@@ -188,8 +188,8 @@ namespace Uchu.World
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
             NextWaypointIndex = NextIndex;
-
-            Update(GameObject);
+            
+            GameObject.Serialize(GameObject);
 
             /*
              * Start Waiting after waiting.

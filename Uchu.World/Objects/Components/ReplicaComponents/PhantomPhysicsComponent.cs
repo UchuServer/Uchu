@@ -1,5 +1,7 @@
+using System;
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -17,6 +19,14 @@ namespace Uchu.World
 
         public Vector3? EffectDirection { get; set; } = null;
 
+        protected PhantomPhysicsComponent()
+        {
+            OnStart.AddListener(() =>
+            {
+                Logger.Information($"\nPHANTOM SETTINGS:\n{GameObject.Settings}\n");
+            });
+        }
+        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

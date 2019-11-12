@@ -13,6 +13,8 @@ namespace Uchu.Core.IO
         byte[] ReadBytes(string path);
 
         IEnumerable<string> GetAllFilesWithExtension(string extension);
+        
+        IEnumerable<string> GetAllFilesWithExtension(string location, string extension);
 
         Stream GetStream(string path);
     }

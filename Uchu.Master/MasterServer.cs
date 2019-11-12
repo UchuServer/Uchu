@@ -214,7 +214,7 @@ namespace Uchu.Master
             var matchStr = NormalizePath("/bin/");
 
             var files = Directory.GetFiles(searchPath, "*.dll", SearchOption.AllDirectories)
-                .Select(f => Path.GetFullPath(f))
+                .Select(Path.GetFullPath)
                 .Where(f => f.Contains(matchStr)) // hacky solution
                 .ToArray();
 
@@ -322,7 +322,7 @@ namespace Uchu.Master
 
         private static string NormalizePath(string path)
         {
-            var toReplace = (Path.DirectorySeparatorChar != '/') ? '/' : '\\';
+            var toReplace = Path.DirectorySeparatorChar != '/' ? '/' : '\\';
 
             return path.Replace(toReplace, Path.DirectorySeparatorChar);
         }

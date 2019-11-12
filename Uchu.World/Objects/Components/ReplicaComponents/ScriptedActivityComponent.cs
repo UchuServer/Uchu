@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {

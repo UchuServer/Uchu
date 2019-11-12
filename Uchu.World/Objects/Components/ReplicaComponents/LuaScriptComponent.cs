@@ -1,7 +1,7 @@
 using System.Linq;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Collections;
 
 namespace Uchu.World
@@ -32,8 +32,16 @@ namespace Uchu.World
                     
                     return;
                 }
+
+                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                {
+                    ScriptName = (string) scriptOverride;
+                }
+                else
+                {
+                    ScriptName = script.Scriptname;
+                }
                 
-                ScriptName = script.Scriptname;
                 ClientScriptName = script.Clientscriptname;
             
                 Logger.Debug($"{GameObject} -> {ScriptName}");

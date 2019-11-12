@@ -85,8 +85,6 @@ namespace Uchu.World
             {
                 var rocketString = Character.Rocket;
                 
-                Logger.Information($"\nROCKET: {rocketString}\n");
-                
                 writer.Write((ushort) rocketString.Length);
                 writer.WriteString(rocketString, rocketString.Length, true);
             }
@@ -124,7 +122,7 @@ namespace Uchu.World
             if (hasLevel) writer.Write((uint) As<Player>().Level);
         }
 
-        private void WritePart3(BitWriter writer)
+        private static void WritePart3(BitWriter writer)
         {
             writer.WriteBit(true);
             writer.WriteBit(false);

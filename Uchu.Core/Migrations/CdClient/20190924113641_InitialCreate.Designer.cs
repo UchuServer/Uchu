@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 
 namespace Uchu.Core.Migrations.CdClient
 {

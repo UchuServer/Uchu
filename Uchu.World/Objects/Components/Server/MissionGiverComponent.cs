@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Uchu.Core;
-using Uchu.Core.CdClient;
-using Uchu.World.Parsers;
+using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -65,6 +66,18 @@ namespace Uchu.Core.IO
 
             return files;
         }
+        
+        public IEnumerable<string> GetAllFilesWithExtension(string location, string extension)
+        {
+            var files = Directory.GetFiles(
+                Path.Combine(_config.ResourcesConfiguration.GameResourceFolder, location),
+                $"*.{extension}",
+                SearchOption.TopDirectoryOnly
+            );
+
+            return files;
+        }
+
 
         public Stream GetStream(string path)
         {

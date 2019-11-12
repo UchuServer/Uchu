@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Social;
 
 namespace Uchu.World
@@ -408,6 +408,8 @@ namespace Uchu.World
                 case ZoneId.Ninjago:
                     break;
                 case ZoneId.FrakjawBattle:
+                    break;
+                case ZoneId.NimbusStationWinterRacetrack:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

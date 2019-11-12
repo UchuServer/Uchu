@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Uchu.World.Collections;
-using Uchu.World.Parsers;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {

@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Collections;
 using Uchu.World.Social;
 

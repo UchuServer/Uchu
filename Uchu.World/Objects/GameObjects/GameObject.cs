@@ -5,9 +5,9 @@ using System.Numerics;
 using System.Reflection;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 using Uchu.World.Collections;
-using Uchu.World.Parsers;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -481,7 +481,7 @@ namespace Uchu.World
 
             var trigger = GetComponent<TriggerComponent>();
 
-            var hasTriggerId = trigger != null && trigger.TriggerId != -1;
+            var hasTriggerId = trigger?.Trigger != null;
 
             writer.WriteBit(hasTriggerId);
 

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {
@@ -12,7 +12,7 @@ namespace Uchu.World
     {
         private readonly Random _random;
         
-        private Core.CdClient.DestructibleComponent _cdClientComponent;
+        private Core.Client.DestructibleComponent _cdClientComponent;
         private Stats _stats;
 
         public override ComponentId Id => ComponentId.DestructibleComponent;

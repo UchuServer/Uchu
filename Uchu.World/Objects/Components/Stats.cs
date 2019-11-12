@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Core.CdClient;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {
