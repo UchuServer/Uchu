@@ -217,6 +217,7 @@ namespace Uchu.World.Handlers
                 Inventory = InventoryNode(character),
                 Character = CharacterNode(character),
                 Level = LevelNode(character),
+                Flags = FlagNodes(character),
                 Missions = MissionsNode(character),
                 Minifigure = MinifigureNode(character),
                 Stats = StatsNode(character)
@@ -309,6 +310,49 @@ namespace Uchu.World.Handlers
         }
 
         /// <summary>
+        /// Creates the flag nodes from a character, containing all the flags a player has obtained
+        /// </summary>
+        /// <param name="character">The character to create the flag nodes for</param>
+        /// <returns>An array of flag nodes</returns>
+        private static FlagNode[] FlagNodes(Character character)
+        {
+            var flags = new Dictionary<int, FlagNode>();
+            using var cdContext = new CdClientContext();
+
+            // Keep a list of all tasks ids that belong to flag tasks
+            var flagTaskIds = cdContext.MissionTasksTable
+                .Where(t => t.TaskType == (int)MissionTaskType.Flag)
+                .Select(t => t.Uid);
+            
+            // Get all the mission task values that correspond to flag values
+            var flagValues = character.Missions
+                .SelectMany(m => m.Tasks
+                    .Where(t => flagTaskIds.Contains(t.TaskId))
+                    .SelectMany(t => t.Values));
+
+            // The flags are stored as one long list of bits by separating them in unsigned longs
+            foreach (var value in flagValues)
+            {
+                // Find the long this flag belongs to
+                var index = (int)Math.Floor(value / 64);
+                ulong shiftedValue = 1;
+                shiftedValue <<= (int)value % 64;
+
+                if (flags.TryAdd(index, new FlagNode()))
+                {
+                    flags[index].Flag = shiftedValue;
+                    flags[index].FlagId = index;
+                }
+                else
+                {
+                    flags[index].Flag |= shiftedValue;
+                }
+            }
+            
+            return flags.Values.OrderBy(f => f.FlagId).ToArray();
+        }
+
+        /// <summary>
         /// Creates the missions node for a character, containing the completed and active missions separately
         /// </summary>
         /// <param name="character">The character to create a mission node for</param>
@@ -336,7 +380,8 @@ namespace Uchu.World.Handlers
                     missions.Add(new MissionNode
                     {
                         MissionId = mission.MissionId,
-                        Progress = ProgressArrayForMission(mission)
+                        Progress = ProgressArrayForMission(mission),
+                        Unknown = mission.MissionId == 1732 ? 751 : -1
                     });
                 }
             }
