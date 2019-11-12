@@ -190,6 +190,6 @@ namespace Uchu.World
     {
         [XmlAttribute("id")] public int FlagId { get; set; }
 
-        [XmlAttribute("v")] public int Flag { get; set; }
+        [XmlAttribute("v")] public ulong Flag { get; set; }
     }
 }
