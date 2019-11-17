@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -26,27 +27,27 @@ namespace Uchu.Core
     {
         private Task _runTask;
 
-        protected readonly HandlerMap HandlerMap;
+        protected HandlerMap HandlerMap { get; }
 
-        protected readonly CommandHandleMap CommandHandleMap;
+        protected CommandHandleMap CommandHandleMap { get; }
 
-        public readonly IRakServer RakNetServer;
+        public IRakServer RakNetServer { get; }
 
-        public readonly ISessionCache SessionCache;
+        public ISessionCache SessionCache { get; }
 
-        public readonly IFileResources Resources;
+        public IFileResources Resources { get; }
 
-        public readonly Configuration Config;
+        public Configuration Config { get; }
 
-        public readonly int Port;
+        public int Port { get; }
 
-        public readonly Guid Id;
+        public Guid Id { get; }
 
         public event Func<long, ushort, BitReader, IRakConnection, Task> GameMessageReceived;
 
         public event Action ServerStopped;
 
-        protected bool Running;
+        protected bool Running { get; private set; }
 
         public Server(Guid id, string configFile)
         {
@@ -104,7 +105,7 @@ namespace Uchu.Core
                     {
                         var command = Console.ReadLine();
                         
-                        Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console));
+                        Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console).ConfigureAwait(false));
                     }
                 });
             }
@@ -112,15 +113,14 @@ namespace Uchu.Core
             using (var ctx = new UchuContext())
             {
                 var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
-                
-                if (request != default)
-                {
-                    Logger.Information($"Request found for {Id}");
-                    
-                    request.State = WorldServerRequestState.Complete;
 
-                    ctx.SaveChanges();
-                }
+                if (request == default) return _runTask = RakNetServer.RunAsync();
+                
+                Logger.Information($"Request found for {Id}");
+                    
+                request.State = WorldServerRequestState.Complete;
+
+                ctx.SaveChanges();
             }
 
             return _runTask = RakNetServer.RunAsync();
@@ -137,7 +137,7 @@ namespace Uchu.Core
             return RakNetServer.ShutdownAsync();
         }
 
-        public IPAddress[] GetAddresses()
+        public static IPAddress[] GetAddresses()
         {
             return NetworkInterface.GetAllNetworkInterfaces().Where(i =>
                 (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
@@ -235,7 +235,7 @@ namespace Uchu.Core
                 {
                     if (GameMessageReceived != null)
                     {
-                        await GameMessageReceived(objectId, messageId, reader, connection);
+                        await GameMessageReceived(objectId, messageId, reader, connection).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e)
@@ -284,7 +284,7 @@ namespace Uchu.Core
 
             var arguments = command.Split(' ').ToList();
 
-            if (!group.TryGetValue(arguments[0].ToLower(), out var handler))
+            if (!group.TryGetValue(arguments[0].ToLower(CultureInfo.CurrentCulture), out var handler))
             {
                 var help = new StringBuilder();
 
@@ -308,7 +308,7 @@ namespace Uchu.Core
 
             var returnValue = paramLength switch
             {
-                0 => handler.Info.Invoke(handler.Group, new object[0]),
+                0 => handler.Info.Invoke(handler.Group, Array.Empty<object>()),
                 1 => handler.Info.Invoke(handler.Group, new object[] {arguments.ToArray()}),
                 _ => handler.Info.Invoke(handler.Group, new[] {arguments.ToArray(), author})
             };
@@ -358,7 +358,7 @@ namespace Uchu.Core
                     {
                         timeout--;
 
-                        await Task.Delay(100);
+                        await Task.Delay(100).ConfigureAwait(false);
                         
                         continue;
                     }
@@ -388,7 +388,7 @@ namespace Uchu.Core
             var res = handler.Info.Invoke(handler.Group, parameters);
 
             if (task)
-                await (Task)res;
+                await ((Task) res).ConfigureAwait(false);
         }
     }
 }

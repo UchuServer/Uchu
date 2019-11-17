@@ -20,7 +20,7 @@ namespace Uchu.World
 
         private uint _maxImagination;
 
-        public GameObject LatestDamageSource;
+        public GameObject LatestDamageSource { get; private set; }
 
         public uint Health
         {

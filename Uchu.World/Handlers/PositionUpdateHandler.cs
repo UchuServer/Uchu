@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using RakDotNet;
 using Uchu.Core;
 
@@ -7,7 +8,7 @@ namespace Uchu.World.Handlers
     public class PositionUpdateHandler : HandlerGroup
     {
         [PacketHandler]
-        public void PositionHandler(PositionUpdatePacket packet, IRakConnection connection)
+        public async Task PositionHandler(PositionUpdatePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
@@ -56,6 +57,8 @@ namespace Uchu.World.Handlers
             Zone.SendSerialization(player, player.Zone.Players.Where(
                 p => p != player
             ).ToArray());
+
+            await player.OnPositionUpdate.InvokeAsync(player.Transform.Position, player.Transform.Rotation);
         }
     }
 }

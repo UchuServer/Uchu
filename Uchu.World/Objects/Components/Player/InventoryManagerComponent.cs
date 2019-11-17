@@ -17,9 +17,9 @@ namespace Uchu.World
 
         private object _lock;
 
-        public readonly AsyncEvent<Lot, uint> OnLotAdded = new AsyncEvent<Lot, uint>();
-        
-        public readonly AsyncEvent<Lot, uint> OnLotRemoved = new AsyncEvent<Lot, uint>();
+        public AsyncEvent<Lot, uint> OnLotAdded { get; } = new AsyncEvent<Lot, uint>();
+
+        public AsyncEvent<Lot, uint> OnLotRemoved { get; } = new AsyncEvent<Lot, uint>();
 
         protected InventoryManagerComponent()
         {

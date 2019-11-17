@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public bool HasPosition { get; set; } = true;
 
-        public bool IsEffectActive { get; set; } = false;
+        public bool IsEffectActive { get; set; }
 
         public uint EffectType { get; set; }
 

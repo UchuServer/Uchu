@@ -9,9 +9,9 @@ namespace Uchu.World
 
         public Character Character { get; set; }
 
-        public bool IsPvP { get; set; } = false;
+        public bool IsPvP { get; set; }
 
-        public bool IsGameMaster { get; set; } = false;
+        public bool IsGameMaster { get; set; }
 
         public byte GameMasterLevel { get; set; }
 

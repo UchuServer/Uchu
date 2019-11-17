@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RakDotNet.IO;
 using Uchu.Core;
 
@@ -7,12 +8,14 @@ namespace Uchu.World
     {
         public bool Disabled { get; set; }
 
-        public Effect[] Effects { get; set; } = new Effect[0];
+        public List<Effect> Effects { get; set; }
 
         public override ComponentId Id => ComponentId.RenderComponent;
 
         protected RendererComponent()
         {
+            Effects = new List<Effect>();
+            
             OnStart.AddListener(() =>
             {
                 if (GameObject.Settings.TryGetValue("renderDisabled", out var disabled)) Disabled = (bool) disabled;
@@ -24,7 +27,7 @@ namespace Uchu.World
         {
             if (Disabled) return;
 
-            writer.Write((uint) Effects.Length);
+            writer.Write((uint) Effects.Count);
 
             foreach (var effect in Effects) writer.Write(effect);
         }

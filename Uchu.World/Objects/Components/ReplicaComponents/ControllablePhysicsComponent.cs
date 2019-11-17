@@ -23,7 +23,7 @@ namespace Uchu.World
 
         public GameObject Platform { get; set; }
 
-        public Vector3 PlatformPosition { get; set; } = Vector3.Zero;
+        public Vector3 PlatformPosition { get; set; }
 
         public override ComponentId Id => ComponentId.ControllablePhysicsComponent;
         

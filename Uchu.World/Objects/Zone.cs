@@ -25,10 +25,10 @@ namespace Uchu.World
         // Zone info
         //
         
-        public readonly uint CloneId;
-        public readonly ushort InstanceId;
-        public readonly ZoneInfo ZoneInfo;
-        public new readonly Server Server;
+        public uint CloneId { get; }
+        public ushort InstanceId { get; }
+        public ZoneInfo ZoneInfo { get; }
+        public new Server Server { get; }
         public bool Loaded { get; private set; }
 
         //

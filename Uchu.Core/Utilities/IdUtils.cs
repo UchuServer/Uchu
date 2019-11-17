@@ -6,7 +6,7 @@ namespace Uchu.Core
     {
         private static readonly Random Random = new Random();
 
-        public static long RandomLong(long min, long max)
+        private static long RandomLong(long min, long max)
         {
             var buf = new byte[8];
 

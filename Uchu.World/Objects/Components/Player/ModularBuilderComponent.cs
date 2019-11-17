@@ -9,7 +9,7 @@ namespace Uchu.World
     {
         private bool _building;
 
-        public GameObject BasePlate;
+        public GameObject BasePlate { get; private set; }
 
         protected ModularBuilderComponent()
         {

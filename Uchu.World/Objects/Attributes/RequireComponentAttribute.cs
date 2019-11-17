@@ -5,8 +5,8 @@ namespace Uchu.World
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class RequireComponentAttribute : Attribute
     {
-        public readonly bool Priority;
-        public readonly Type Type;
+        public bool Priority { get; }
+        public Type Type { get; }
 
         public RequireComponentAttribute(Type type, bool priority = false)
         {

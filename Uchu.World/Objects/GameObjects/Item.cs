@@ -58,8 +58,11 @@ namespace Uchu.World
         }
 
         /// <summary>
-        ///     Is this item equipped? Warning: Should only be set as a response to a client request!
+        ///     Is this item equipped?
         /// </summary>
+        /// <remarks>
+        ///     Should only be set as a response to a client request.
+        /// </remarks>
         public bool Equipped
         {
             get => _equipped;
@@ -83,8 +86,11 @@ namespace Uchu.World
         }
 
         /// <summary>
-        ///     The slot this item inhabits. Warning: Should only be set as a response to a client request!
+        ///     The slot this item inhabits.
         /// </summary>
+        /// <remarks>
+        ///     Should only be set as a response to a client request.
+        /// </remarks>
         public uint Slot
         {
             get => _slot;

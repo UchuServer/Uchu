@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace Uchu.Core
@@ -27,18 +28,19 @@ namespace Uchu.Core
             Logfile = "uchu.log"
         };
 
-        [XmlElement] public ServerDLLSource DllSource { get; set; } = new ServerDLLSource();
+        [XmlElement] public ServerDllSource DllSource { get; set; } = new ServerDllSource();
 
         [XmlElement]
         public ResourcesConfiguration ResourcesConfiguration { get; set; } =
             new ResourcesConfiguration {GameResourceFolder = "/res"};
     }
 
-    public class ServerDLLSource
+    public class ServerDllSource
     {
-        [XmlElement] public string ServerDLLSourcePath { get; set; } = "../../../../";
+        [XmlElement] public string ServerDllSourcePath { get; set; } = "../../../../";
 
-        [XmlElement] public string[] ScriptDLLSource { get; set; } =
+        [XmlElement]
+        public List<string> ScriptDllSource { get; set; } = new List<string>
         {
             "Uchu.StandardScripts"
         };
@@ -51,9 +53,9 @@ namespace Uchu.Core
 
     public class LoggingConfiguration
     {
-        [XmlElement] public string Level;
+        [XmlElement] public string Level { get; set; }
 
-        [XmlElement] public string Logfile;
+        [XmlElement] public string Logfile { get; set; }
     }
 
     public class DatabaseConfiguration

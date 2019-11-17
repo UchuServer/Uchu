@@ -13,10 +13,10 @@ namespace Uchu.World
     {
         private readonly Dictionary<BehaviorSlot, uint> _activeBehaviors = new Dictionary<BehaviorSlot, uint>();
         
+        private readonly Dictionary<uint, ExecutionContext> _handledSkills = new Dictionary<uint, ExecutionContext>();
+        
         // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
-
-        public readonly Dictionary<uint, ExecutionContext> HandledSkills = new Dictionary<uint, ExecutionContext>();
 
         public Lot SelectedConsumeable { get; set; }
 
@@ -103,7 +103,7 @@ namespace Uchu.World
 
                 var context = await tree.ExecuteAsync(GameObject, reader, SkillCastType.OnUse, message.OptionalTarget);
 
-                HandledSkills[message.SkillHandle] = context;
+                _handledSkills[message.SkillHandle] = context;
             }
 
             await As<Player>().GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
@@ -118,11 +118,11 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
 
-            await HandledSkills[message.SkillHandle].SyncAsync(message.BehaviourHandle, reader);
+            await _handledSkills[message.SkillHandle].SyncAsync(message.BehaviourHandle, reader);
 
             if (message.Done)
             {
-                HandledSkills.Remove(message.SkillHandle);
+                _handledSkills.Remove(message.SkillHandle);
             }
 
             Zone.BroadcastMessage(new EchoSyncSkillMessage

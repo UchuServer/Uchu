@@ -16,7 +16,10 @@ namespace Uchu.World
         private readonly List<Component> _components = new List<Component>();
 
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
+        
         private Mask _layer = new Mask(World.Layer.Default);
+
+        private string _name;
 
         protected GameObject()
         {
@@ -57,7 +60,20 @@ namespace Uchu.World
             }
         }
 
-        public string Name { get; set; }
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                
+                Zone.BroadcastMessage(new SetNameMessage
+                {
+                    Associate = this,
+                    Name = value
+                });
+            }
+        }
         
         /// <summary>
         ///     Also known as ExtraInfo
@@ -74,11 +90,11 @@ namespace Uchu.World
 
         public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
 
-        public readonly Event<Mask> OnLayerChanged = new Event<Mask>();
+        public Event<Mask> OnLayerChanged { get; } = new Event<Mask>();
 
-        public readonly Event<Player> OnInteract = new Event<Player>();
+        public Event<Player> OnInteract { get; } = new Event<Player>();
 
-        public readonly AsyncEvent<int, Player> OnEmoteReceived = new AsyncEvent<int, Player>();
+        public AsyncEvent<int, Player> OnEmoteReceived { get; } = new AsyncEvent<int, Player>();
 
         #region Operators
 
@@ -90,15 +106,6 @@ namespace Uchu.World
 
         #endregion
 
-        #region Events
-
-        public void Interact(Player player)
-        {
-            OnInteract?.Invoke(player);
-        }
-
-        #endregion
-        
         #region Utils
 
         public override string ToString()

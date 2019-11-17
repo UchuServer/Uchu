@@ -10,11 +10,11 @@ namespace Uchu.World
     {
         private readonly List<Item> _items;
         
-        public readonly InventoryType InventoryType;
-        public readonly InventoryManagerComponent ManagerComponent;
+        public InventoryType InventoryType { get; }
+        public InventoryManagerComponent ManagerComponent { get; }
 
         // TODO: Network & Store in DB
-        public uint Size = 20;
+        public uint Size { get; set; } = 20;
         
         public Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
@@ -44,7 +44,7 @@ namespace Uchu.World
             }
         }
 
-        public IReadOnlyCollection<Item> Items => Array.AsReadOnly(_items.ToArray());
+        public IEnumerable<Item> Items => Array.AsReadOnly(_items.ToArray());
 
         public Item this[uint slot] => Items.FirstOrDefault(i => i.Slot == slot);
 

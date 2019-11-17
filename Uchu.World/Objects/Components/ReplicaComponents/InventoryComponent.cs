@@ -12,9 +12,9 @@ namespace Uchu.World
 {
     public class InventoryComponent : ReplicaComponent
     {
-        public readonly AsyncEvent<Item> OnEquipped = new AsyncEvent<Item>();
+        public AsyncEvent<Item> OnEquipped { get; } = new AsyncEvent<Item>();
         
-        public readonly AsyncEvent<Item> OnUnEquipped = new AsyncEvent<Item>();
+        public AsyncEvent<Item> OnUnEquipped { get; } = new AsyncEvent<Item>();
         
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();

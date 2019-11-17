@@ -15,6 +15,10 @@ namespace Uchu.World
         private Mask _viewMask;
 
         private uint _clientLoadedObjectCount;
+
+        public IReadOnlyCollection<GameObject> LoadedObjects => _networkDictionary.Keys;
+
+        public Event OnLoaded { get; } = new Event();
         
         public uint ClientLoadedObjectCount
         {
@@ -32,10 +36,6 @@ namespace Uchu.World
                 _clientLoadedObjectCount = value;
             }
         }
-
-        public IReadOnlyCollection<GameObject> LoadedObjects => _networkDictionary.Keys;
-
-        public readonly Event OnLoaded = new Event();
 
         public Perspective(Player player, Mask mask)
         {

@@ -34,7 +34,7 @@ namespace Uchu.World.Handlers.GameMessages
             }
             else
             {
-                message.TargetObject.Interact(player);
+                message.TargetObject?.OnInteract.Invoke(player);
             }
         }
 

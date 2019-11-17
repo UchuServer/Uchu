@@ -16,11 +16,11 @@ namespace Uchu.World
         
         public ShopEntry[] Entries { get; set; }
         
-        public readonly AsyncEvent<Lot, uint, Player> OnBuy = new AsyncEvent<Lot, uint, Player>();
+        public AsyncEvent<Lot, uint, Player> OnBuy { get; } = new AsyncEvent<Lot, uint, Player>();
         
-        public readonly AsyncEvent<Item, uint, Player> OnSell = new AsyncEvent<Item, uint, Player>();
+        public AsyncEvent<Item, uint, Player> OnSell { get; } = new AsyncEvent<Item, uint, Player>();
         
-        public readonly AsyncEvent<Item, uint, Player> OnBuyback = new AsyncEvent<Item, uint, Player>();
+        public AsyncEvent<Item, uint, Player> OnBuyback { get; } = new AsyncEvent<Item, uint, Player>();
 
         protected VendorComponent()
         {

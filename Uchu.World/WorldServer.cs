@@ -20,11 +20,11 @@ namespace Uchu.World
 
         private readonly ZoneId _zoneId;
 
-        public readonly List<Zone> Zones = new List<Zone>();
+        public List<Zone> Zones { get; }
         
-        public readonly ZoneParser ZoneParser;
+        public ZoneParser ZoneParser { get; }
 
-        public readonly uint MaxPlayerCount;
+        public uint MaxPlayerCount { get; }
 
         public uint ActiveUserCount
         {
@@ -51,6 +51,8 @@ namespace Uchu.World
         public WorldServer(ServerSpecification specifications, string path) : base(specifications.Id, path)
         {
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
+            
+            Zones = new List<Zone>();
             
             ZoneParser = new ZoneParser(Resources);
 

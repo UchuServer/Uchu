@@ -5,7 +5,7 @@ namespace Uchu.World
     [RequireComponent(typeof(StatsComponent), true)]
     public class CollectibleComponent : ReplicaComponent
     {
-        public ushort CollectibleId { get; set; }
+        public ushort CollectibleId { get; private set; }
 
         public override ComponentId Id => ComponentId.CollectibleComponent;
 

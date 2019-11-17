@@ -40,6 +40,8 @@ namespace Uchu.World
             new AsyncEventDictionary<string, FireServerEventMessage>();
 
         public readonly AsyncEvent<Lot> OnLootPickup = new AsyncEvent<Lot>();
+
+        public readonly AsyncEvent<Vector3, Quaternion> OnPositionUpdate = new AsyncEvent<Vector3, Quaternion>();
         
         public async Task<Character> GetCharacterAsync()
         {

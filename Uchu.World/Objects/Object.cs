@@ -8,17 +8,17 @@ namespace Uchu.World
     {
         private bool _started;
         
-        public Zone Zone;
+        public Zone Zone { get; protected set; }
 
         public Server Server => Zone.Server;
 
-        public readonly Event OnStart = new Event();
+        public Event OnStart { get; } = new Event();
 
-        public readonly Event OnDestroyed = new Event();
+        public Event OnDestroyed { get; } = new Event();
 
-        public readonly Event OnTick = new Event();
+        public Event OnTick { get; } = new Event();
 
-        protected Object()
+        protected internal Object()
         {
         }
         
@@ -31,7 +31,7 @@ namespace Uchu.World
                 return instance;
             }
 
-            Logger.Error($"{type.FullName} does not inherit from Object but is being Created as one.");
+            Logger.Error($"{type.FullName} does not inherit from Object but is being Instantiated as one.");
             return null;
         }
 

@@ -7,12 +7,14 @@ namespace Uchu.World
     [ServerComponent(Id = ComponentId.SpawnerComponent)]
     public class SpawnerComponent : Component
     {
-        public readonly List<GameObject> ActiveSpawns = new List<GameObject>();
+        public List<GameObject> ActiveSpawns { get; }
 
         public LevelObject LevelObject;
 
         protected SpawnerComponent()
         {
+            ActiveSpawns = new List<GameObject>();
+            
             OnStart.AddListener(() =>
             {
                 GameObject.Layer = Layer.Spawner;

@@ -6,7 +6,7 @@ using StackExchange.Redis;
 
 namespace Uchu.Core
 {
-    public class RedisSessionCache : ISessionCache
+    public sealed class RedisSessionCache : ISessionCache, IDisposable
     {
         private readonly IDatabase _client;
         private readonly RNGCryptoServiceProvider _rng;
@@ -80,6 +80,11 @@ namespace Uchu.Core
             _rng.GetBytes(bytes);
 
             return Convert.ToBase64String(bytes).TrimEnd('=');
+        }
+
+        public void Dispose()
+        {
+            _rng.Dispose();
         }
     }
 }

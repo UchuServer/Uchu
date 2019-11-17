@@ -22,9 +22,9 @@ namespace Uchu.World
         
         public Player Activator { get; set; }
 
-        public readonly AsyncEvent<Player> OnActivated = new AsyncEvent<Player>();
+        public AsyncEvent<Player> OnActivated { get; } = new AsyncEvent<Player>();
         
-        public readonly AsyncEvent OnDeactivated = new AsyncEvent();
+        public AsyncEvent OnDeactivated { get; } = new AsyncEvent();
         
         public override ComponentId Id => ComponentId.SwitchComponent;
 

@@ -23,11 +23,11 @@ namespace Uchu.World
         {
             var scriptPacks = new List<ScriptPack>();
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), _zone.Server.Config.DllSource.ServerDLLSourcePath);
+            var path = Path.Combine(Directory.GetCurrentDirectory(), _zone.Server.Config.DllSource.ServerDllSourcePath);
 
             var libraries = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
             
-            foreach (var scriptPackName in _zone.Server.Config.DllSource.ScriptDLLSource)
+            foreach (var scriptPackName in _zone.Server.Config.DllSource.ScriptDllSource)
             {
                 string? dll = default;
                 

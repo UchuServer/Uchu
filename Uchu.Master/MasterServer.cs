@@ -209,7 +209,7 @@ namespace Uchu.Master
                 Logger.Information($"Using Local Resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
             }
 
-            var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDLLSourcePath);
+            var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDllSourcePath);
 
             var matchStr = NormalizePath("/bin/");
 

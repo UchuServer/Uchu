@@ -22,7 +22,7 @@ namespace Uchu.World
         /// </summary>
         public bool Alive { get; private set; } = true;
 
-        private float _resurrectTime;
+        public float ResurrectTime { get; set; }
 
         /// <summary>
         ///     Killer, Loot Owner
@@ -39,12 +39,12 @@ namespace Uchu.World
             {
                 if (GameObject.Settings.TryGetValue("respawn", out var resTimer))
                 {
-                    _resurrectTime = resTimer switch
+                    ResurrectTime = resTimer switch
                     {
                         uint timer => timer,
                         float timer => timer,
                         int timer => timer,
-                        _ => _resurrectTime
+                        _ => ResurrectTime
                     };
                 }
 
@@ -135,7 +135,7 @@ namespace Uchu.World
 
             Task.Run(async () =>
             {
-                await Task.Delay((int) (_resurrectTime * 1000));
+                await Task.Delay((int) (ResurrectTime * 1000));
                 
                 //
                 // Re-Spawn Smashable 
