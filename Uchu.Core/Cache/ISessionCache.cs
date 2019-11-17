@@ -10,7 +10,7 @@ namespace Uchu.Core
 
         void SetZone(IPEndPoint endpoint, ZoneId zone);
 
-        Session GetSession(IPEndPoint endPoint);
+        Session GetSession(IPEndPoint endpoint);
 
         bool IsKey(string key);
 

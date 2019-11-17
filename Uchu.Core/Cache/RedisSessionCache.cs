@@ -14,15 +14,9 @@ namespace Uchu.Core
 
         public RedisSessionCache()
         {
-            try
-            {
-                var manager = ConnectionMultiplexer.Connect("localhost");
-                _client = manager.GetDatabase();
-            }
-            catch
-            {
-                throw new Exception("Failed to connect to Redis service, place make sure a Redis service is running.");
-            }
+            var manager = ConnectionMultiplexer.Connect("localhost");
+            _client = manager.GetDatabase();
+                
             _rng = new RNGCryptoServiceProvider();
         }
 
@@ -57,8 +51,8 @@ namespace Uchu.Core
             _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
 
-        public Session GetSession(IPEndPoint endPoint)
-            => Session.FromBytes(_client.StringGet(_keys[endPoint.ToString()]));
+        public Session GetSession(IPEndPoint endpoint)
+            => Session.FromBytes(_client.StringGet(_keys[endpoint.ToString()]));
 
         public bool IsKey(string key)
         {

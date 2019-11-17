@@ -278,6 +278,24 @@ namespace Uchu.Core.Migrations
                     b.ToTable("Specifications");
                 });
 
+            modelBuilder.Entity("Uchu.Core.SessionCache", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CharacterId");
+
+                    b.Property<string>("Key");
+
+                    b.Property<long>("UserId");
+
+                    b.Property<int>("ZoneId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SessionCaches");
+                });
+
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
                     b.Property<long>("UserId")

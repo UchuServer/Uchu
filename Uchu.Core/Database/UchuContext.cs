@@ -23,6 +23,8 @@ namespace Uchu.Core
         public DbSet<ServerSpecification> Specifications { get; set; }
         
         public DbSet<WorldServerRequest> WorldServerRequests { get; set; }
+        
+        public DbSet<SessionCache> SessionCaches { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

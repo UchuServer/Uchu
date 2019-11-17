@@ -41,6 +41,11 @@ namespace Uchu.Master
                     ctx.WorldServerRequests.Remove(request);
                 }
 
+                foreach (var session in ctx.SessionCaches)
+                {
+                    ctx.SessionCaches.Remove(session);
+                }
+
                 await ctx.SaveChangesAsync();
             }
 

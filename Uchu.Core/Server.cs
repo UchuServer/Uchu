@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
+using StackExchange.Redis;
 using Uchu.Core.IO;
 
 namespace Uchu.Core
@@ -80,7 +81,17 @@ namespace Uchu.Core
             Port = specification.Port;
             
             RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
-            SessionCache = new RedisSessionCache();
+
+            try
+            {
+                SessionCache = new RedisSessionCache();
+            }
+            catch (RedisConnectionException)
+            {
+                Logger.Error("Failed to establish Redis connection, falling back to database.");
+
+                SessionCache = new DatabaseCache();
+            }
             
             HandlerMap = new HandlerMap();
             CommandHandleMap = new CommandHandleMap();
