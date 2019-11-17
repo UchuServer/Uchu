@@ -33,8 +33,8 @@ https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
 ##### MacOS
 https://postgresapp.com/
 
-#### Redis
-Uchu uses Redis as its Cache service provider. The latest version of Redis is only nativly supported on Linux so setting it up on MacOS or Windows requires some workarounds.
+#### Redis (optional)
+Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only nativly supported on Linux so setting it up on MacOS or Windows requires some workarounds.
 
 ##### Linux (Debian)
 ```
