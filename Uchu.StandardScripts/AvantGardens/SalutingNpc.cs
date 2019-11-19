@@ -23,6 +23,11 @@ namespace StandardScripts.AvantGardens
                     
                     return Task.CompletedTask;
                 });
+                
+                gameObject.OnInteract.AddListener(player =>
+                {
+                    gameObject.Animate("salutePlayer");
+                });
             }
             
             return Task.CompletedTask;

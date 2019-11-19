@@ -108,7 +108,7 @@ namespace Uchu.World
 
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
-            
+
             //
             // Collect character data.
             //
@@ -176,7 +176,7 @@ namespace Uchu.World
                 // Mission is not complete.
                 //
 
-                MessageMissionState(missionId, MissionState.Active);
+                MessageMissionState(missionId, (MissionState) characterMission.State);
 
                 MessageOfferMission(missionId, missionGiver);
 
@@ -198,33 +198,33 @@ namespace Uchu.World
 
                 using var ctx = new UchuContext();
                 using var cdClient = new CdClientContext();
-            
+
                 //
                 // Get mission information.
                 //
-                
+
                 var mission = cdClient.MissionsTable.FirstOrDefault(m => m.Id == missionId);
-    
+
                 if (mission == default) return;
-                
+
                 //
                 // Get character information.
                 //
-                
+
                 var character = ctx.Characters
                     .Include(c => c.Items)
                     .Include(c => c.Missions)
                     .ThenInclude(m => m.Tasks)
                     .Single(c => c.CharacterId == GameObject.ObjectId);
-    
+
                 //
                 // If this mission is not already accepted, accept it and move on to complete it.
                 //
-                
+
                 if (!character.Missions.Exists(m => m.MissionId == missionId))
                 {
                     var tasks = cdClient.MissionTasksTable.Where(t => t.Id == missionId);
-    
+
                     character.Missions.Add(new Mission
                     {
                         MissionId = missionId,
@@ -232,37 +232,47 @@ namespace Uchu.World
                         Tasks = tasks.Select(t => GetTask(character, t)).ToList()
                     });
                 }
-    
+
                 //
                 // Save changes to be able to update its state.
                 //
-                
+
                 ctx.SaveChanges();
-                
+
                 MessageMissionState(missionId, MissionState.Unavailable, true);
-                
+
                 //
                 // Get character mission to complete.
                 //
-                
+
                 var characterMission = character.Missions.Find(m => m.MissionId == missionId);
-                
+
                 if (characterMission.State == (int) MissionState.Completed) return;
-                
+
                 var repeat = characterMission.CompletionCount != 0;
                 characterMission.CompletionCount++;
                 characterMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
 
                 //
+                // Inform the client it's now complete.
+                //
+
+                MessageMissionState(missionId, MissionState.Completed);
+
+                characterMission.State = (int) MissionState.Completed;
+
+                ctx.SaveChanges();
+
+                //
                 // Update player based on rewards.
                 //
-    
+
                 if (mission.IsMission ?? true)
                 {
                     // Mission
-                    
+
                     As<Player>().Currency += mission.Rewardcurrency ?? 0;
-    
+
                     As<Player>().UniverseScore += mission.LegoScore ?? 0;
                 }
                 else
@@ -272,7 +282,7 @@ namespace Uchu.World
                     //
                     // These rewards have the be silent, as the client adds them itself.
                     //
-    
+
                     character.Currency += mission.Rewardcurrency ?? 0;
                     character.UniverseScore += mission.LegoScore ?? 0;
 
@@ -280,64 +290,56 @@ namespace Uchu.World
                     // The client adds currency rewards as an offset, in my testing. Therefore we
                     // have to account for this offset.
                     //
-                    
+
                     As<Player>().HiddenCurrency += mission.Rewardcurrency ?? 0;
 
                     ctx.SaveChanges();
                 }
-    
+
                 var stats = GameObject.GetComponent<Stats>();
-                
+
                 stats.MaxHealth += (uint) (mission.Rewardmaxhealth ?? 0);
                 stats.MaxImagination += (uint) (mission.Rewardmaximagination ?? 0);
 
                 //
                 // Get item rewards.
                 //
-    
+
                 var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-                
+
                 var rewards = new (Lot, int)[]
                 {
-                    ((repeat ? mission.Rewarditem1repeatable : mission.Rewarditem1) ?? 0, 
+                    ((repeat ? mission.Rewarditem1repeatable : mission.Rewarditem1) ?? 0,
                         (repeat ? mission.Rewarditem1repeatcount : mission.Rewarditem1count) ?? 1),
-                    
-                    ((repeat ? mission.Rewarditem2repeatable : mission.Rewarditem2) ?? 0, 
+
+                    ((repeat ? mission.Rewarditem2repeatable : mission.Rewarditem2) ?? 0,
                         (repeat ? mission.Rewarditem2repeatcount : mission.Rewarditem2count) ?? 1),
-                    
-                    ((repeat ? mission.Rewarditem3repeatable : mission.Rewarditem3) ?? 0, 
+
+                    ((repeat ? mission.Rewarditem3repeatable : mission.Rewarditem3) ?? 0,
                         (repeat ? mission.Rewarditem3repeatcount : mission.Rewarditem3count) ?? 1),
-                    
-                    ((repeat ? mission.Rewarditem4repeatable : mission.Rewarditem4) ?? 0, 
+
+                    ((repeat ? mission.Rewarditem4repeatable : mission.Rewarditem4) ?? 0,
                         (repeat ? mission.Rewarditem4repeatcount : mission.Rewarditem4count) ?? 1),
                 };
-    
+
+                As<Player>().SendChatMessage($"REWARD: {rewardItem}");
+                
                 if (rewardItem == -1)
                 {
                     foreach (var (lot, count) in rewards)
                     {
                         if (lot == default || count == default) continue;
-                        
+
                         Task.Run(async () => await inventory.AddItemAsync(lot, (uint) count));
                     }
                 }
                 else
                 {
-                    var (lot, count) = rewards[rewardItem];
-                    
+                    var (lot, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
+
                     if (lot != default && count != default)
                         Task.Run(async () => await inventory.AddItemAsync(lot, (uint) count));
                 }
-    
-                //
-                // Inform the client it's now complete.
-                //
-                
-                MessageMissionState(missionId, MissionState.Completed);
-
-                characterMission.State = (int) MissionState.Completed;
-                
-                ctx.SaveChanges();
             }
         }
 
@@ -345,7 +347,7 @@ namespace Uchu.World
         {
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
-            
+
             //
             // Collect character data.
             //
@@ -416,7 +418,7 @@ namespace Uchu.World
 
                         // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
                         var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8);
-                        
+
                         if (!characterTask.Values.Contains(shiftedId) && task.TargetValue > characterTask.Values.Count)
                         {
                             Logger.Information($"{GameObject} collected {component.CollectibleId}");
@@ -579,7 +581,7 @@ namespace Uchu.World
                 //
 
                 var state = (MissionState) characterMission.State;
-                
+
                 if (state != MissionState.Active && state != MissionState.CompletedActive) continue;
 
                 //
