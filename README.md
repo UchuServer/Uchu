@@ -111,7 +111,7 @@ If you chose something else than "postgres" from your PostgresSQL password, put 
 #### Database Setup
 Make sure a PostgresSQL server is running and run ```dotnet ef database update -c UchuContext``` in the terminal to build the database form the Uchu.Core directory.
 
-#### Redis
+#### Redis (optional)
 Make sure a Redis Cache server is running.
 
 ### Run it!
