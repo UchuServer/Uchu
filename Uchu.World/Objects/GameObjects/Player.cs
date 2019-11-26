@@ -13,7 +13,7 @@ using Uchu.World.Social;
 
 namespace Uchu.World
 {
-    public class Player : GameObject
+    public sealed class Player : GameObject
     {
         private Player()
         {
@@ -32,24 +32,32 @@ namespace Uchu.World
             });
         }
 
+        public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =
+            new AsyncEventDictionary<string, FireServerEventMessage>();
+
+        public AsyncEvent<Lot> OnLootPickup { get; } = new AsyncEvent<Lot>();
+
+        public AsyncEvent<Vector3, Quaternion> OnPositionUpdate { get; } = new AsyncEvent<Vector3, Quaternion>();
+
         public IRakConnection Connection { get; private set; }
 
         public Perspective Perspective { get; private set; }
 
-        public readonly AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent =
-            new AsyncEventDictionary<string, FireServerEventMessage>();
-
-        public readonly AsyncEvent<Lot> OnLootPickup = new AsyncEvent<Lot>();
-
-        public readonly AsyncEvent<Vector3, Quaternion> OnPositionUpdate = new AsyncEvent<Vector3, Quaternion>();
-        
-        public async Task<Character> GetCharacterAsync()
+        public override string Name
         {
-            await using var ctx = new UchuContext();
+            get => ObjectName;
+            set
+            {
+                ObjectName = value;
                 
-            return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+                Zone.BroadcastMessage(new SetNameMessage
+                {
+                    Associate = this,
+                    Name = value
+                });
+            }
         }
-        
+
         /// <summary>
         ///    Negative offset for the SetCurrency message.
         /// </summary>
@@ -57,7 +65,7 @@ namespace Uchu.World
         ///    Used when the client adds currency by itself. E.g, achievements.
         /// </remarks>
         public long HiddenCurrency { get; set; }
-        
+
         public long Currency
         {
             get
@@ -94,6 +102,13 @@ namespace Uchu.World
                 return character.Level;
             }
             set => Task.Run(async () => { await SetLevelAsync(value); });
+        }
+
+        public async Task<Character> GetCharacterAsync()
+        {
+            await using var ctx = new UchuContext();
+                
+            return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
         }
 
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
@@ -187,12 +202,12 @@ namespace Uchu.World
             // Setup layers
             //
             
-            var layer = World.Layer.All;
-            layer -= World.Layer.Hidden;
-            layer -= World.Layer.Spawner;
+            var layer = StandardLayer.All;
+            layer -= StandardLayer.Hidden;
+            layer -= StandardLayer.Spawner;
 
             instance.Perspective = new Perspective(instance, layer);
-            instance.Layer = World.Layer.Player;
+            instance.Layer = StandardLayer.Player;
 
             //
             // Register player as an active in zone

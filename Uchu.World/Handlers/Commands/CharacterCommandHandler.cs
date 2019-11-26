@@ -193,7 +193,7 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Contains("-i"))
                 info.Append($"[{current.ObjectId}] ");
 
-            info.Append($"[{current.Lot}] \"{current.ClientName}\"");
+            info.Append($"[{current.Lot}] \"{(string.IsNullOrWhiteSpace(current.Name) ? current.ClientName : current.Name)}\"");
 
             if (arguments.Contains("-cq"))
             {
@@ -233,6 +233,39 @@ namespace Uchu.World.Handlers.Commands
             finish:
 
             return info.ToString();
+        }
+
+        [CommandHandler(Signature = "setname", Help = "Set name of gameobject", GameMasterLevel = GameMasterLevel.Admin)]
+        public string SetName(string[] arguments, Player player)
+        {
+            if (arguments.Length == default)
+            {
+                return "/setname <name>";
+            }
+            
+            var current = player.Zone.GameObjects[0];
+
+            if (arguments.Length > 1 && arguments.Contains("-m"))
+            {
+                current = player;
+            }
+            else
+            {
+                foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+                {
+                    if (gameObject.Transform == default) continue;
+
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                    if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
+                        Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                        current = gameObject;
+                }
+            }
+
+            current.Name = arguments[0];
+
+            return $"Successfully set name to {arguments[0]}";
         }
 
         [CommandHandler(Signature = "score", Help = "Change your U-score", GameMasterLevel = GameMasterLevel.Admin)]
@@ -356,8 +389,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set your GameMaster state to {state}";
         }
 
-        [CommandHandler(Signature = "gmlevel", Help = "Set GameMaster Level state",
-            GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gmlevel", Help = "Set GameMaster Level state", GameMasterLevel = GameMasterLevel.Admin)]
         public string GmLevel(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "gmlevel <level>";
@@ -366,7 +398,7 @@ namespace Uchu.World.Handlers.Commands
 
             player.GetComponent<CharacterComponent>().GameMasterLevel = gmlevel;
 
-            GameObject.Serialize(player);
+            player.GameMasterLevel = gmlevel;
 
             return $"Successfully set your GameMaster level to {gmlevel}";
         }

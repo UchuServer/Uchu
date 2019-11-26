@@ -11,12 +11,13 @@ namespace Uchu.World
         private readonly List<Item> _items;
         
         public InventoryType InventoryType { get; }
+        
         public InventoryManagerComponent ManagerComponent { get; }
 
         // TODO: Network & Store in DB
         public uint Size { get; set; } = 20;
-        
-        public Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
+
+        internal Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
             InventoryType = inventoryType;
             ManagerComponent = managerComponent;

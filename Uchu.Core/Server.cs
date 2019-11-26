@@ -7,8 +7,8 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -79,8 +79,15 @@ namespace Uchu.Core
             }
             
             Port = specification.Port;
+
+            X509Certificate certificate = default;
+
+            if (Config.Networking?.Certificate != default && File.Exists(Config.Networking.Certificate))
+            {
+                certificate = X509Certificate.CreateFromCertFile(Config.Networking.Certificate);
+            }
             
-            RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
+            RakNetServer = new TcpUdpServer(Port, "3.25 ND1", certificate);
 
             try
             {

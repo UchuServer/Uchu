@@ -48,7 +48,7 @@ namespace Uchu.World
                     };
                 }
 
-                GameObject.Layer = Layer.Smashable;
+                GameObject.Layer = StandardLayer.Smashable;
 
                 using (var cdClient = new CdClientContext())
                 {
@@ -77,7 +77,7 @@ namespace Uchu.World
                     return;
                 }
                 
-                Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} with a {nameof(Stats)} component.");
+                Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} without a {nameof(Stats)} component.");
             });
         }
 
@@ -130,8 +130,8 @@ namespace Uchu.World
             
             if (lootOwner == default) return;
 
-            GameObject.Layer -= Layer.Smashable;
-            GameObject.Layer += Layer.Hidden;
+            GameObject.Layer -= StandardLayer.Smashable;
+            GameObject.Layer += StandardLayer.Hidden;
 
             Task.Run(async () =>
             {
@@ -143,8 +143,8 @@ namespace Uchu.World
 
                 Alive = true;
                 
-                GameObject.Layer += Layer.Smashable;
-                GameObject.Layer -= Layer.Hidden;
+                GameObject.Layer += StandardLayer.Smashable;
+                GameObject.Layer -= StandardLayer.Hidden;
 
                 _stats.Health = _stats.MaxHealth;
             });

@@ -17,7 +17,7 @@ namespace Uchu.World
                 
                 OriginalLayer = Author.Layer;
                 
-                Author.Layer = World.Layer.Hidden;
+                Author.Layer = StandardLayer.Hidden;
             });
             
             OnDestroyed.AddListener(() =>

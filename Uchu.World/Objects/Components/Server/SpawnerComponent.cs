@@ -17,7 +17,7 @@ namespace Uchu.World
             
             OnStart.AddListener(() =>
             {
-                GameObject.Layer = Layer.Spawner;
+                GameObject.Layer = StandardLayer.Spawner;
             });
         }
 

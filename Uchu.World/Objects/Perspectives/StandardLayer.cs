@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public static class Layer
+    public static class StandardLayer
     {
         public const long None = default;
 

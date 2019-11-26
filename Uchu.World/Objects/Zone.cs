@@ -133,16 +133,16 @@ namespace Uchu.World
                 levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
                 levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
             {
-                obj.Layer = Layer.Hidden;
+                obj.Layer = StandardLayer.Hidden;
             }
             else if (!obj.TryGetComponent(out spawner))
             {
-                obj.Layer = Layer.Hidden;
+                obj.Layer = StandardLayer.Hidden;
             }
 
             Start(obj);
 
-            if (obj.Layer == Layer.Hidden)
+            if (obj.Layer == StandardLayer.Hidden)
             {
                 return;
             }

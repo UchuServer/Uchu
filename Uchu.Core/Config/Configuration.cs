@@ -33,6 +33,8 @@ namespace Uchu.Core
         [XmlElement]
         public ResourcesConfiguration ResourcesConfiguration { get; set; } =
             new ResourcesConfiguration {GameResourceFolder = "/res"};
+        
+        [XmlElement] public Networking Networking { get; set; } = new Networking {Certificate = ""};
     }
 
     public class ServerDllSource
@@ -44,6 +46,11 @@ namespace Uchu.Core
         {
             "Uchu.StandardScripts"
         };
+    }
+
+    public class Networking
+    {
+        [XmlElement] public string Certificate { get; set; }
     }
 
     public class ResourcesConfiguration

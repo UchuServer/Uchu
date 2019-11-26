@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -17,12 +18,104 @@ namespace Uchu.World
 
         private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
         
-        private Mask _layer = new Mask(World.Layer.Default);
+        private Mask _layer = new Mask(StandardLayer.Default);
 
-        private string _name;
+        protected string ObjectName { get; set; }
 
+        private ObjectWorldState _worldState;
+        
+        public long ObjectId { get; private set; }
+
+        public Lot Lot { get; private set; }
+        
+        /// <summary>
+        ///     Also known as ExtraInfo
+        /// </summary>
+        public LegoDataDictionary Settings { get; set; }
+
+        public string ClientName { get; private set; }
+
+        public SpawnerComponent SpawnerObject { get; private set; }
+
+        public Mask Layer
+        {
+            get => _layer;
+            set
+            {
+                _layer = value;
+
+                OnLayerChanged?.Invoke(_layer);
+            }
+        }
+
+        public virtual string Name
+        {
+            get => ObjectName;
+            set
+            {
+                ObjectName = value;
+
+                Reload();
+            }
+        }
+
+        public ObjectWorldState WorldState
+        {
+            get => _worldState;
+            set
+            {
+                _worldState = value;
+                
+                Zone.BroadcastMessage(new ChangeObjectWorldStateMessage
+                {
+                    Associate = this,
+                    State = value
+                });
+            }
+        }
+
+        public int GameMasterLevel
+        {
+            get
+            {
+                if (!Settings.TryGetValue("gmlevel", out var level)) return default;
+
+                return (int) level;
+            }
+            set
+            {
+                Settings["gmlevel"] = value;
+
+                Reload();
+            }
+        }
+
+        #region Events
+
+        public Event<Mask> OnLayerChanged { get; } = new Event<Mask>();
+
+        public Event<Player> OnInteract { get; } = new Event<Player>();
+
+        public AsyncEvent<int, Player> OnEmoteReceived { get; } = new AsyncEvent<int, Player>();
+
+        #endregion
+        
+        #region Macro
+
+        public Transform Transform => GetComponent<Transform>();
+
+        public bool Alive => Zone?.TryGetGameObject(ObjectId, out _) ?? false;
+
+        public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
+
+        public Player[] Viewers => Zone.Players.Where(p => p.Perspective.TryGetNetworkId(this, out _)).ToArray();
+
+        #endregion
+        
         protected GameObject()
         {
+            Settings = new LegoDataDictionary();
+        
             OnStart.AddListener(() =>
             {
                 Zone.ManagedGameObjects.Add(this);
@@ -36,6 +129,8 @@ namespace Uchu.World
                 
                 OnInteract.Clear();
                 
+                OnEmoteReceived.Clear();
+                
                 Zone.UnregisterObject(this);
                 Zone.UnregisterGameObject(this);
 
@@ -44,57 +139,6 @@ namespace Uchu.World
                 Destruct(this);
             });
         }
-
-        public long ObjectId { get; private set; }
-
-        public Lot Lot { get; private set; }
-
-        public Mask Layer
-        {
-            get => _layer;
-            set
-            {
-                _layer = value;
-
-                OnLayerChanged?.Invoke(_layer);
-            }
-        }
-
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                
-                Zone.BroadcastMessage(new SetNameMessage
-                {
-                    Associate = this,
-                    Name = value
-                });
-            }
-        }
-        
-        /// <summary>
-        ///     Also known as ExtraInfo
-        /// </summary>
-        public LegoDataDictionary Settings { get; set; } = new LegoDataDictionary();
-
-        public string ClientName { get; private set; }
-
-        public SpawnerComponent SpawnerObject { get; private set; }
-
-        public Transform Transform => _components.First(c => c is Transform) as Transform;
-
-        public bool Alive => Zone?.TryGetGameObject(ObjectId, out _) ?? false;
-
-        public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
-
-        public Event<Mask> OnLayerChanged { get; } = new Event<Mask>();
-
-        public Event<Player> OnInteract { get; } = new Event<Player>();
-
-        public AsyncEvent<int, Player> OnEmoteReceived { get; } = new AsyncEvent<int, Player>();
 
         #region Operators
 
@@ -110,7 +154,7 @@ namespace Uchu.World
 
         public override string ToString()
         {
-            return $"[{ObjectId}] \"{(Name == "" ? ClientName : Name)}\"";
+            return $"[{ObjectId}] \"{(string.IsNullOrWhiteSpace(ObjectName) ? ClientName : Name)}\"";
         }
 
         #endregion
@@ -202,8 +246,11 @@ namespace Uchu.World
                 from required in component.GetType().GetCustomAttributes<RequireComponentAttribute>()
                 where required.Type == type
                 select required)
+            {
                 Logger.Error(
-                    $"{type} Component on {this} is Required by {required.Type} and cannot be removed.");
+                    $"{type} Component on {this} is Required by {required.Type} and cannot be removed."
+                );
+            }
 
             var comp = GetComponent(type);
             _components.Remove(comp);
@@ -238,6 +285,18 @@ namespace Uchu.World
         public static void Destruct(GameObject gameObject)
         {
             Zone.SendDestruction(gameObject, gameObject.Zone.Players);
+        }
+
+        /// <summary>
+        ///     Causes this GameObject to be deconstructed and than reconstructed on all Viewers.
+        /// </summary>
+        public void Reload()
+        {
+            var viewers = Viewers;
+            
+            Zone.SendDestruction(this, viewers);
+
+            Zone.SendConstruction(this, viewers);
         }
 
         #endregion
@@ -436,8 +495,6 @@ namespace Uchu.World
 
             if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
             {
-                Logger.Information($"{instance} is trigger!");
-
                 instance.AddComponent<TriggerComponent>();
             }
 
@@ -465,22 +522,18 @@ namespace Uchu.World
 
         #endregion
 
-        #region From Path
-
-        #endregion
-
         #endregion
 
         #region Replica
 
-        public void WriteConstruct(BitWriter writer)
+        internal void WriteConstruct(BitWriter writer)
         {
             writer.Write(ObjectId);
 
             writer.Write(Lot);
 
-            writer.Write((byte) Name.Length);
-            writer.WriteString(Name, Name.Length, true);
+            writer.Write((byte) ObjectName.Length);
+            writer.WriteString(ObjectName, ObjectName.Length, true);
 
             writer.Write<uint>(0); // TODO: Add creation time?
 
@@ -513,9 +566,15 @@ namespace Uchu.World
             if (hasScale)
                 writer.Write(Transform.Scale);
 
-            writer.WriteBit(false); // TODO: Add World State
+            if (writer.Flag(GameMasterLevel != default))
+            {
+                writer.Write((byte) GameMasterLevel);
+            }
 
-            writer.WriteBit(false); // TODO: Add GM Level
+            if (writer.Flag(WorldState != ObjectWorldState.World))
+            {
+                writer.Write((byte) WorldState);
+            }
 
             WriteHierarchy(writer);
 
@@ -526,7 +585,7 @@ namespace Uchu.World
             foreach (var replicaComponent in _replicaComponents) replicaComponent.Construct(writer);
         }
 
-        public void WriteSerialize(BitWriter writer)
+        internal void WriteSerialize(BitWriter writer)
         {
             WriteHierarchy(writer);
 

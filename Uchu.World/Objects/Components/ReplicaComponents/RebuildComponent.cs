@@ -281,7 +281,7 @@ namespace Uchu.World
         
         public void CompleteBuild(Player player)
         {
-            Activator.Layer = Layer.Hidden;
+            Activator.Layer = StandardLayer.Hidden;
 
             /*
              * Stop The timer.
@@ -371,7 +371,7 @@ namespace Uchu.World
 
         public void OpenBuild(Player player)
         {
-            Activator.Layer = Layer.Default;
+            Activator.Layer = StandardLayer.Default;
             
             _taken = default;
             _timer = default;
