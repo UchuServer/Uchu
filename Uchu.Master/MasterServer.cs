@@ -28,9 +28,15 @@ namespace Uchu.Master
         private static async Task Main(string[] args)
         {
             await OpenConfig();
-
+            
             await using (var ctx = new UchuContext())
             {
+                Logger.Information("Checking for database updates...");
+
+                await ctx.EnsureUpdatedAsync();
+                
+                Logger.Information("Database up to date...");
+                
                 foreach (var specification in ctx.Specifications)
                 {
                     ctx.Specifications.Remove(specification);
@@ -67,18 +73,16 @@ namespace Uchu.Master
             if (!CharacterServer.Process.HasExited)
                 CharacterServer.Process.Kill();
 
-            foreach (var server in WorldServers)
+            foreach (var server in WorldServers.Where(server => !server.Process.HasExited))
             {
-                if (!server.Process.HasExited)
-                    server.Process.Kill();
+                server.Process.Kill();
             }
 
-            if (ev is ConsoleCancelEventArgs cancelEv)
-            {
-                cancelEv.Cancel = true;
+            if (!(ev is ConsoleCancelEventArgs cancelEv)) return;
+            
+            cancelEv.Cancel = true;
 
-                Environment.Exit(0);
-            }
+            Environment.Exit(0);
         }
 
         private static async Task HandleRequests()
@@ -272,7 +276,7 @@ namespace Uchu.Master
                 ServerType = ServerType.Authentication
             });
 
-            AuthenticationServer = new ManagedServer(id, DllLocations[ServerType.Authentication]);
+            AuthenticationServer = new ManagedServer(id, DllLocations[ServerType.Authentication], Config.DllSource.DotNetPath);
 
             await ctx.SaveChangesAsync();
         }
@@ -290,7 +294,7 @@ namespace Uchu.Master
                 ServerType = ServerType.Character
             });
 
-            CharacterServer = new ManagedServer(id, DllLocations[ServerType.Character]);
+            CharacterServer = new ManagedServer(id, DllLocations[ServerType.Character], Config.DllSource.DotNetPath);
             
             await ctx.SaveChangesAsync();
         }
@@ -315,6 +319,7 @@ namespace Uchu.Master
             WorldServers.Add(new ManagedWorldServer(
                 id,
                 DllLocations[ServerType.World],
+                Config.DllSource.DotNetPath,
                 zoneId,
                 cloneId,
                 instanceId

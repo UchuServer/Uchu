@@ -49,6 +49,11 @@ namespace Uchu.Core
             );
         }
 
+        public async Task EnsureUpdatedAsync()
+        {
+            await Database.MigrateAsync().ConfigureAwait(false);
+        }
+
         public ValueTask DisposeAsync()
         {
             return new ValueTask(Task.CompletedTask);

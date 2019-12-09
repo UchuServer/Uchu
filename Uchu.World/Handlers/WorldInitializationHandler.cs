@@ -57,7 +57,7 @@ namespace Uchu.World.Handlers
 
                 connection.Send(new DisconnectNotifyPacket
                 {
-                    DisconnectId = DisconnectId.CharacterCorruption
+                    DisconnectId = DisconnectId.CharacterNotFound
                 });
 
                 return;

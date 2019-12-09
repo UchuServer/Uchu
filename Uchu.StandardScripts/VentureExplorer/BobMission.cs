@@ -19,17 +19,17 @@ namespace StandardScripts.VentureExplorer
 
             foreach (var gameObject in gameObjects)
             {
-                gameObject.GetComponent<MissionGiverComponent>().OnMissionOk.AddListener(message =>
+                gameObject.GetComponent<MissionGiverComponent>().OnMissionOk.AddListener(async message =>
                 {
                     var (missionId, isComplete, _, responder) = message;
-                    
-                    if (missionId != 173 || !isComplete) return Task.CompletedTask;
+
+                    if (missionId != 173 || !isComplete) return;
 
                     responder.GetComponent<Stats>().Imagination = 6;
 
-                    responder.GetComponent<MissionInventoryComponent>().CompleteMission(664);
+                    (responder as Player)?.SendChatMessage("COMPLETING 664");
                     
-                    return Task.CompletedTask;
+                    await responder.GetComponent<MissionInventoryComponent>().CompleteMissionAsync(664);
                 });
             }
 

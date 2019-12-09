@@ -32,11 +32,23 @@ namespace Uchu.World.Scripting
         /// <returns>The results of query</returns>
         protected GameObject[] HasLuaScript(string script)
         {
-            return (from gameObject in Zone.GameObjects
-                let scriptComponent = gameObject.GetComponent<LuaScriptComponent>()
-                where scriptComponent?.ScriptName != null
-                where scriptComponent.ScriptName.ToLower().EndsWith(script.ToLower())
-                select gameObject).ToArray();
+            var list = new List<GameObject>();
+            
+            foreach (var gameObject in Zone.GameObjects)
+            {
+                var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
+                
+                if (scriptComponent?.ScriptName != null)
+                {
+                    if (scriptComponent.ScriptName.ToLower().EndsWith(script.ToLower())) list.Add(gameObject);
+                }
+                else if (gameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                {
+                    if (((string) scriptOverride).ToLower().EndsWith(script.ToLower())) list.Add(gameObject);
+                }
+            }
+
+            return list.ToArray();
         }
 
         protected GameObject[] GetGroup(string group) => GetGroup(Zone, group);

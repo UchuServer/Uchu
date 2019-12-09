@@ -164,6 +164,11 @@ namespace Uchu.World
                     // Check if player has completed the required missions to take on this new mission.
                     //
 
+                    foreach (var completedMission in missionInventory.GetCompletedMissions())
+                    {
+                        player.SendChatMessage($"HAS: {completedMission.MissionId}");
+                    }
+                    
                     var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
                         mission.PrereqMissionID,
                         missionInventory.GetCompletedMissions()

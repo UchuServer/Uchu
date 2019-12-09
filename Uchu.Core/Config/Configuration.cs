@@ -41,6 +41,8 @@ namespace Uchu.Core
     {
         [XmlElement] public string ServerDllSourcePath { get; set; } = "../../../../";
 
+        [XmlElement] public string DotNetPath { get; set; } = "dotnet";
+        
         [XmlElement]
         public List<string> ScriptDllSource { get; set; } = new List<string>
         {

@@ -360,11 +360,9 @@ namespace Uchu.Core
                 await ctx.SaveChangesAsync();
             }
 
-#pragma warning disable 4014
-            Task.Run(async () =>
-#pragma warning restore 4014
+            var _ = Task.Run(async () =>
             {
-                var timeout = 50;
+                var timeout = 1000;
                 
                 while (timeout != default)
                 {

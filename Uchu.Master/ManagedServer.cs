@@ -10,14 +10,14 @@ namespace Uchu.Master
 
         public readonly Guid Id;
 
-        public ManagedServer(Guid id, string location)
+        public ManagedServer(Guid id, string location, string dotnet)
         {
             Id = id;
             Process = new Process
             {
                 StartInfo =
                 {
-                    FileName = "dotnet",
+                    FileName = dotnet,
                     WorkingDirectory = Path.GetDirectoryName(location),
                     Arguments = $"{Path.GetFileName(location)} {id} \"{MasterServer.ConfigPath}\"",
                     RedirectStandardOutput = false,
