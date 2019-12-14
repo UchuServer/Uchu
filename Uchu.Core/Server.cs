@@ -32,15 +32,15 @@ namespace Uchu.Core
 
         protected CommandHandleMap CommandHandleMap { get; }
 
-        public IRakServer RakNetServer { get; }
+        public IRakServer RakNetServer { get; private set; }
 
-        public ISessionCache SessionCache { get; }
+        public ISessionCache SessionCache { get; private set; }
 
-        public IFileResources Resources { get; }
+        public IFileResources Resources { get; private set; }
 
-        public Configuration Config { get; }
+        public Configuration Config { get; private set; }
 
-        public int Port { get; }
+        public int Port { get; private set; }
 
         public Guid Id { get; }
 
@@ -49,11 +49,20 @@ namespace Uchu.Core
         public event Action ServerStopped;
 
         protected bool Running { get; private set; }
+        
+        protected ServerSpecification ServerSpecification { get; private set; }
 
-        public Server(Guid id, string configFile)
+        public Server(Guid id)
         {
             Id = id;
             
+            HandlerMap = new HandlerMap();
+            
+            CommandHandleMap = new CommandHandleMap();
+        }
+
+        public virtual async Task ConfigureAsync(string configFile)
+        {
             var serializer = new XmlSerializer(typeof(Configuration));
 
             if (!File.Exists(configFile))
@@ -61,7 +70,7 @@ namespace Uchu.Core
                 throw new ArgumentException($"{configFile} config file does not exist.");
             }
 
-            using (var fs = File.OpenRead(configFile))
+            await using (var fs = File.OpenRead(configFile))
             {
                 Logger.Config = Config = (Configuration) serializer.Deserialize(fs);
             }
@@ -72,13 +81,15 @@ namespace Uchu.Core
             }
             
             ServerSpecification specification;
-            
-            using (var ctx = new UchuContext())
+
+            await using (var ctx = new UchuContext())
             {
-                specification = ctx.Specifications.First(s => s.Id == id);
+                specification = ctx.Specifications.First(s => s.Id == Id);
             }
             
             Port = specification.Port;
+
+            ServerSpecification = specification;
 
             X509Certificate certificate = default;
 
@@ -100,16 +111,13 @@ namespace Uchu.Core
                 SessionCache = new DatabaseCache();
             }
             
-            HandlerMap = new HandlerMap();
-            CommandHandleMap = new CommandHandleMap();
-            
             Logger.Information($"Server {Id} created on port: {Port}");
         }
 
-        public Task StartAsync(bool acceptConsoleCommands = false)
+        public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
             RegisterAssembly(Assembly.GetExecutingAssembly());
-            RegisterAssembly(Assembly.GetEntryAssembly());
+            RegisterAssembly(assembly);
 
             RakNetServer.MessageReceived += HandlePacketAsync;
 
@@ -117,7 +125,7 @@ namespace Uchu.Core
 
             if (acceptConsoleCommands)
             {
-                Task.Run(async () =>
+                var _ = Task.Run(async () =>
                 {
                     while (Running)
                     {
@@ -127,21 +135,26 @@ namespace Uchu.Core
                     }
                 });
             }
-
-            using (var ctx = new UchuContext())
+            
+            await using (var ctx = new UchuContext())
             {
                 var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
 
-                if (request == default) return _runTask = RakNetServer.RunAsync();
+                if (request == default)
+                {
+                    await RakNetServer.RunAsync().ConfigureAwait(false);
+                    
+                    return;
+                }
                 
                 Logger.Information($"Request found for {Id}");
-                    
+                
                 request.State = WorldServerRequestState.Complete;
 
                 ctx.SaveChanges();
             }
 
-            return _runTask = RakNetServer.RunAsync();
+            await RakNetServer.RunAsync().ConfigureAwait(false);
         }
 
         public Task StopAsync()
@@ -284,7 +297,7 @@ namespace Uchu.Core
             {
                 reader.Read(handler.Packet);
 
-                await InvokeHandlerAsync(handler, connection);
+                await InvokeHandlerAsync(handler, connection).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -336,16 +349,16 @@ namespace Uchu.Core
                 case string s:
                     return s;
                 case Task<string> s:
-                    return await s;
+                    return await s.ConfigureAwait(false);
                 case Task t:
-                    await t;
+                    await t.ConfigureAwait(false);
                     break;
             }
 
             return "";
         }
 
-        public static async Task RequestWorldServer(ZoneId zoneId, Action<int> callback)
+        public static async Task RequestWorldServerAsync(ZoneId zoneId, Action<int> callback)
         {
             var id = Guid.NewGuid();
 
@@ -355,9 +368,9 @@ namespace Uchu.Core
                 {
                     Id = id,
                     ZoneId = zoneId
-                });
+                }).ConfigureAwait(false);
 
-                await ctx.SaveChangesAsync();
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
 
             var _ = Task.Run(async () =>
@@ -368,7 +381,7 @@ namespace Uchu.Core
                 {
                     await using var ctx = new UchuContext();
                     
-                    var request = await ctx.WorldServerRequests.FirstAsync(r => r.Id == id);
+                    var request = await ctx.WorldServerRequests.FirstAsync(r => r.Id == id).ConfigureAwait(false);
 
                     if (request.State != WorldServerRequestState.Complete)
                     {
@@ -383,9 +396,9 @@ namespace Uchu.Core
                     
                     ctx.WorldServerRequests.Remove(request);
 
-                    await ctx.SaveChangesAsync();
+                    await ctx.SaveChangesAsync().ConfigureAwait(false);
                     
-                    var specification = await ctx.Specifications.FirstAsync(s => s.Id == request.SpecificationId);
+                    var specification = await ctx.Specifications.FirstAsync(s => s.Id == request.SpecificationId).ConfigureAwait(false);
 
                     callback(specification.Port);
                     return;

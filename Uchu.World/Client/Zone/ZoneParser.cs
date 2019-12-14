@@ -34,6 +34,9 @@ namespace Uchu.World.Client
             var luzFiles = _resources.GetAllFilesWithExtension("luz");
 
             foreach (var luzFile in luzFiles)
+            {
+                Logger.Information($"Parsing: {luzFile}");
+                
                 try
                 {
                     var zoneInfo = await ParseAsync(luzFile);
@@ -44,6 +47,7 @@ namespace Uchu.World.Client
                 {
                     Logger.Error($"Failed to parse {luzFile}: {e.Message}\n{e.StackTrace}");
                 }
+            }
         }
 
         private async Task<ZoneInfo> ParseAsync(string path)

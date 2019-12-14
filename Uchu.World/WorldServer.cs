@@ -22,7 +22,7 @@ namespace Uchu.World
 
         public List<Zone> Zones { get; }
         
-        public ZoneParser ZoneParser { get; }
+        public ZoneParser ZoneParser { get; private set; }
 
         public uint MaxPlayerCount { get; }
 
@@ -48,20 +48,25 @@ namespace Uchu.World
             }
         }
 
-        public WorldServer(ServerSpecification specifications, string path) : base(specifications.Id, path)
+        public WorldServer(ServerSpecification specifications) : base(specifications.Id)
         {
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
             
             Zones = new List<Zone>();
-            
-            ZoneParser = new ZoneParser(Resources);
 
             _zoneId = specifications.ZoneId;
 
             MaxPlayerCount = specifications.MaxUserCount;
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
+        }
 
+        public override async Task ConfigureAsync(string configFile)
+        {
+            await base.ConfigureAsync(configFile);
+            
+            ZoneParser = new ZoneParser(Resources);
+            
             GameMessageReceived += HandleGameMessageAsync;
             ServerStopped += () =>
             {
@@ -73,14 +78,18 @@ namespace Uchu.World
 
             RakNetServer.ClientDisconnected += HandleDisconnect;
 
-            Task.Run(async () =>
+            var _ = Task.Run(async () =>
             {
+                Logger.Information($"Loading zones...");
+
                 await ZoneParser.LoadZoneDataAsync();
 
-                Logger.Information($"Loading {specifications.ZoneId}");
+                Logger.Information($"Loading {ServerSpecification.ZoneId}");
 
-                await LoadZone(specifications);
+                await LoadZone(ServerSpecification);
             });
+            
+            Logger.Information($"Setting up world server: {ServerSpecification.Id}");
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)

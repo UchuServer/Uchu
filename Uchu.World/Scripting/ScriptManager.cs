@@ -29,7 +29,7 @@ namespace Uchu.World
             
             foreach (var scriptPackName in _zone.Server.Config.DllSource.ScriptDllSource)
             {
-                string? dll = default;
+                string dll = default;
                 
                 foreach (var library in libraries)
                 {
@@ -47,7 +47,9 @@ namespace Uchu.World
 
                 try
                 {
-                    var assembly = Assembly.LoadFile(dll);
+                    Logger.Information($"Loading {scriptPackName} script pack");
+                    
+                    var assembly = Assembly.LoadFrom(dll);
 
                     var scriptPack = new ScriptPack(_zone, assembly);
 

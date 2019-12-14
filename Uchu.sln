@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Core", "Uchu.Core\Uchu.Core.csproj", "{1F64F832-AC8D-4C83-B379-F01DE70129A6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Auth", "Uchu.Auth\Uchu.Auth.csproj", "{4FF85969-17A4-409C-A6AB-FC55D5C1A783}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Char", "Uchu.Char\Uchu.Char.csproj", "{9C19F3E8-D179-4476-826D-7EA029A7C048}"
@@ -17,16 +15,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Master", "Uchu.Master\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.StandardScripts", "Uchu.StandardScripts\Uchu.StandardScripts.csproj", "{9C6A623B-F047-48BB-8E86-C1471B14F7B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Instance", "Uchu.Instance\Uchu.Instance.csproj", "{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Core", "Uchu.Core\Uchu.Core.csproj", "{B6EBC62E-43E6-488F-BA4A-056609601A6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1F64F832-AC8D-4C83-B379-F01DE70129A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FF85969-17A4-409C-A6AB-FC55D5C1A783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FF85969-17A4-409C-A6AB-FC55D5C1A783}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FF85969-17A4-409C-A6AB-FC55D5C1A783}.Release|Any CPU.Build.0 = Release|Any CPU
@@ -55,6 +53,14 @@ Global
 		{9C6A623B-F047-48BB-8E86-C1471B14F7B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C6A623B-F047-48BB-8E86-C1471B14F7B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9C6A623B-F047-48BB-8E86-C1471B14F7B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

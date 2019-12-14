@@ -265,7 +265,7 @@ namespace Uchu.Char.Handlers
 
             var requestZone = zone == ZoneId.VentureExplorerCinematic ? ZoneId.VentureExplorer : zone;
             
-            await Server.RequestWorldServer(requestZone, port =>
+            await Server.RequestWorldServerAsync(requestZone, port =>
             {
                 connection.Send(new ServerRedirectionPacket
                 {

@@ -10,32 +10,31 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
-    public class PlayerMission
+    public class PlayerMission : Object
     {
-        public Player Player { get; }
+        public int MissionId { get; set; }
 
-        public int MissionId { get; }
+        public Player Player { get; set; }
         
-        public bool Achievement { get; }
+        public bool Achievement { get; private set; }
 
-        internal PlayerMission(Player player, int missionId)
+        internal PlayerMission()
         {
-            Player = player;
-
-            MissionId = missionId;
-            
-            using var cdClient = new CdClientContext();
-            
-            var mission = cdClient.MissionsTable.FirstOrDefault(m => m.Id == MissionId);
-
-            if (mission == default)
+            OnStart.AddListener(() =>
             {
-                Logger.Error($"{MissionId} is not a valid mission.");
-                
-                return;
-            }
+                using var cdClient = new CdClientContext();
+            
+                var mission = cdClient.MissionsTable.FirstOrDefault(m => m.Id == MissionId);
 
-            Achievement = !(mission.IsMission ?? false);
+                if (mission == default)
+                {
+                    Logger.Error($"{MissionId} is not a valid mission.");
+                    
+                    return;
+                }
+
+                Achievement = !(mission.IsMission ?? false);
+            });
         }
 
         public async Task<MissionState> GetStateAsync()
@@ -248,6 +247,7 @@ namespace Uchu.World
             var mission = await ctx.Missions.FirstOrDefaultAsync(
                 m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
             );
+            
             return mission;
         }
         

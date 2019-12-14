@@ -256,7 +256,7 @@ namespace Uchu.World
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
-            Server.RequestWorldServer(zoneId, port =>
+            Server.RequestWorldServerAsync(zoneId, port =>
             {
                 if (Server.Port == port)
                 {

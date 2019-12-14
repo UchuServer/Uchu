@@ -11,7 +11,7 @@ namespace Uchu.Master
 {
     internal static class MasterServer
     {
-        public static Dictionary<ServerType, string> DllLocations { get; set; } = new Dictionary<ServerType, string>();
+        public static string DllLocation { get; set; }
 
         public static Configuration Config { get; set; }
         
@@ -231,30 +231,21 @@ namespace Uchu.Master
             {
                 switch (Path.GetFileName(file))
                 {
-                    case "Uchu.Auth.dll":
-                        DllLocations[ServerType.Authentication] = file;
-                        break;
-                    case "Uchu.Char.dll":
-                        DllLocations[ServerType.Character] = file;
-                        break;
-                    case "Uchu.World.dll":
-                        DllLocations[ServerType.World] = file;
+                    case "Uchu.Instance.dll":
+                        DllLocation = file;
                         break;
                     default:
                         continue;
                 }
             }
 
-            foreach (var value in (ServerType[]) Enum.GetValues(typeof(ServerType)))
+            if (DllLocation == default)
             {
-                if (DllLocations.Keys.All(k => k != value))
-                {
-                    throw new DllNotFoundException(
-                        $"Could not find DLL for {value}. Did you forget to build it?"
-                    );
-                }
+                throw new DllNotFoundException(
+                    "Could not find DLL for Uchu.Instance. Did you forget to build it?"
+                );
             }
-            
+
             var source = Directory.GetCurrentDirectory();
             
             ConfigPath = Path.Combine(source, $"{fn}");
@@ -276,7 +267,7 @@ namespace Uchu.Master
                 ServerType = ServerType.Authentication
             });
 
-            AuthenticationServer = new ManagedServer(id, DllLocations[ServerType.Authentication], Config.DllSource.DotNetPath);
+            AuthenticationServer = new ManagedServer(id, DllLocation, Config.DllSource.DotNetPath);
 
             await ctx.SaveChangesAsync();
         }
@@ -294,7 +285,7 @@ namespace Uchu.Master
                 ServerType = ServerType.Character
             });
 
-            CharacterServer = new ManagedServer(id, DllLocations[ServerType.Character], Config.DllSource.DotNetPath);
+            CharacterServer = new ManagedServer(id, DllLocation, Config.DllSource.DotNetPath);
             
             await ctx.SaveChangesAsync();
         }
@@ -318,7 +309,7 @@ namespace Uchu.Master
 
             WorldServers.Add(new ManagedWorldServer(
                 id,
-                DllLocations[ServerType.World],
+                DllLocation,
                 Config.DllSource.DotNetPath,
                 zoneId,
                 cloneId,
