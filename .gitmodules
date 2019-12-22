@@ -1,3 +1,6 @@
 [submodule "RakDotNet"]
 	path = RakDotNet
 	url = https://github.com/yuwui/RakDotNet.git
+[submodule "RakDotNet.IO"]
+	path = RakDotNet.IO
+	url = https://github.com/yuwui/RakDotNet.IO

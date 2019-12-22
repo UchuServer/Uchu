@@ -33,7 +33,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ValidateClientHandler(SessionInfoPacket packet, IRakConnection connection)
         {
-            Logger.Information($"Validating client for world!");
+            Logger.Information($"{connection.EndPoint}'s validating client for world!");
             
             if (!Server.SessionCache.IsKey(packet.SessionKey))
             {
@@ -90,6 +90,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
+            Logger.Information($"{connection.EndPoint}'s client load completed...");
+            
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
@@ -155,6 +157,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task PlayerLoadedHandler(PlayerLoadedMessage message, Player player)
         {
+            Logger.Information($"{player} loaded...");
+            
             if (player != message.Player)
             {
                 Logger.Error($"{player} sent invalid {nameof(PlayerLoadedMessage)} player id: {message.Player}");
