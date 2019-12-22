@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
-using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -373,13 +371,13 @@ namespace Uchu.World
         public static GameObject Instantiate(Type type, Object parent, Lot lot, Vector3 position = default,
             Quaternion rotation = default)
         {
-            return Instantiate(type, new LevelObject
+            return Instantiate(type, new LevelObjectTemplate
             {
                 Lot = lot,
                 Position = position,
                 Rotation = rotation,
                 Scale = 1,
-                Settings = new LegoDataDictionary()
+                LegoInfo = new LegoDataDictionary()
             }, parent);
         }
 
@@ -399,7 +397,7 @@ namespace Uchu.World
 
         #region From LevelObject
 
-        public static GameObject Instantiate(Type type, LevelObject levelObject, Object parent,
+        public static GameObject Instantiate(Type type, LevelObjectTemplate levelObject, Object parent,
             SpawnerComponent spawner = default)
         {
             // ReSharper disable PossibleInvalidOperationException
@@ -408,12 +406,12 @@ namespace Uchu.World
             // Check if spawner
             //
 
-            if (levelObject.Settings.TryGetValue("spawntemplate", out _))
+            if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _))
                 return InstancingUtil.Spawner(levelObject, parent);
 
             using var ctx = new CdClientContext();
             
-            var name = levelObject.Settings.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
+            var name = levelObject.LegoInfo.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
 
             //
             // Create GameObject
@@ -433,7 +431,7 @@ namespace Uchu.World
             );
 
             instance.SpawnerObject = spawner;
-            instance.Settings = levelObject.Settings;
+            instance.Settings = levelObject.LegoInfo;
 
             //
             // Collect all the components on this object
@@ -493,7 +491,7 @@ namespace Uchu.World
             // Check if this object is a trigger
             //
 
-            if (levelObject.Settings.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
+            if (levelObject.LegoInfo.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
             {
                 instance.AddComponent<TriggerComponent>();
             }
@@ -509,13 +507,13 @@ namespace Uchu.World
             return instance;
         }
 
-        public static T Instantiate<T>(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
+        public static T Instantiate<T>(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
             where T : GameObject
         {
             return Instantiate(typeof(T), levelObject, parent, spawner) as T;
         }
 
-        public static GameObject Instantiate(LevelObject levelObject, Object parent, SpawnerComponent spawner = default)
+        public static GameObject Instantiate(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
         {
             return Instantiate(typeof(GameObject), levelObject, parent, spawner);
         }

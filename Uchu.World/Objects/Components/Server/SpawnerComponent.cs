@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using Uchu.World.Collections;
-using Uchu.World.Client;
+using InfectedRose.Lvl;
 
 namespace Uchu.World
 {
@@ -9,7 +8,7 @@ namespace Uchu.World
     {
         public List<GameObject> ActiveSpawns { get; }
 
-        public LevelObject LevelObject;
+        public LevelObjectTemplate LevelObject;
 
         protected SpawnerComponent()
         {
@@ -29,13 +28,13 @@ namespace Uchu.World
 
         public GameObject GetSpawnObject()
         {
-            return GameObject.Instantiate(new LevelObject
+            return GameObject.Instantiate(new LevelObjectTemplate
             {
                 Lot = SpawnTemplate,
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,
                 Scale = LevelObject.Scale,
-                Settings = Settings
+                LegoInfo = Settings
             }, Zone, this);
         }
 

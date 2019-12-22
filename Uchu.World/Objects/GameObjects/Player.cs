@@ -120,8 +120,8 @@ namespace Uchu.World
             var instance = Instantiate<Player>(
                 zone,
                 character.Name,
-                zone.ZoneInfo.SpawnPosition,
-                zone.ZoneInfo.SpawnRotation,
+                zone.ZoneInfo.LuzFile.SpawnPoint,
+                zone.ZoneInfo.LuzFile.SpawnRotation,
                 1,
                 character.CharacterId,
                 1
@@ -357,7 +357,7 @@ namespace Uchu.World
 
             if (smashable == null || !smashable.Alive) return;
 
-            switch ((ZoneId) Zone.ZoneInfo.ZoneId)
+            switch ((ZoneId) Zone.ZoneInfo.LuzFile.WorldId)
             {
                 case ZoneId.VentureExplorerCinematic:
                     break;
@@ -429,7 +429,7 @@ namespace Uchu.World
                 case ZoneId.NimbusStationWinterRacetrack:
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return;
             }
         }
     }

@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
 using Uchu.World.Social;
 
 namespace Uchu.World.Handlers
@@ -74,7 +74,7 @@ namespace Uchu.World.Handlers
             {
                 ZoneId = zoneId,
                 Checksum = zoneId.GetChecksum(),
-                SpawnPosition = zone.ZoneInfo.SpawnPosition
+                SpawnPosition = zone.ZoneInfo.LuzFile.SpawnPoint
             });
         }
 

@@ -421,7 +421,7 @@ namespace Uchu.World
                         var component = gameObject.GetComponent<CollectibleComponent>();
 
                         // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
-                        var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8);
+                        var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.LuzFile.WorldId << 8);
 
                         if (!characterTask.Values.Contains(shiftedId) && task.TargetValue > characterTask.Values.Count)
                         {

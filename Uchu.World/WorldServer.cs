@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
@@ -82,10 +83,9 @@ namespace Uchu.World
             {
                 Logger.Information($"Loading zones...");
 
-                await ZoneParser.LoadZoneDataAsync();
+                await ZoneParser.LoadZoneDataAsync((int) ServerSpecification.ZoneId);
 
                 Logger.Information($"Loading {ServerSpecification.ZoneId}");
-
                 await LoadZone(ServerSpecification);
             });
             
@@ -110,12 +110,18 @@ namespace Uchu.World
 
         public async Task LoadZone(ServerSpecification zone)
         {
-            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync();
+            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync((int) zone.ZoneId);
 
             Logger.Information($"Starting {zone.ZoneId}");
 
             var info = ZoneParser.Zones?[zone.ZoneId];
 
+            if (info == default) throw new Exception($"Failed to find info for {zone.ZoneId}");
+
+            Logger.Debug($"SPAWN: {info.LuzFile.SpawnPoint}");
+
+            info.LuzFile.SpawnPoint += Vector3.UnitY * 1000;
+            
             var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
             
             Zones.Add(zoneInstance);
@@ -239,7 +245,7 @@ namespace Uchu.World
 
             Logger.Debug($"Received {((IGameMessage) messageHandler.Packet).GameMessageId}");
 
-            var player = Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
+            var player = Zones.Where(z => z.ZoneInfo.LuzFile.WorldId == session.ZoneId).SelectMany(z => z.Players)
                 .FirstOrDefault(p => p.Connection.Equals(connection));
 
             if (player == default)

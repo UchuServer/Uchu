@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Luz;
+using InfectedRose.Lvl;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -46,7 +48,7 @@ namespace Uchu.World
         public Object[] Objects => ManagedObjects.ToArray();
         public GameObject[] GameObjects => ManagedGameObjects.ToArray();
         public Player[] Players => ManagedPlayers.ToArray();
-        public ZoneId ZoneId => (ZoneId) ZoneInfo.ZoneId;
+        public ZoneId ZoneId => (ZoneId) ZoneInfo.LuzFile.WorldId;
         
         //
         // Runtime
@@ -82,9 +84,18 @@ namespace Uchu.World
 
         public async Task InitializeAsync()
         {
-            var objects = ZoneInfo.ScenesInfo.SelectMany(s => s.Objects).ToArray();
+            Logger.Information($"Collecting objects for {ZoneId}");
+            
+            var objects = new List<LevelObjectTemplate>();
 
-            Logger.Information($"Loading {objects.Length} objects for {ZoneId}");
+            foreach (var lvlFile in ZoneInfo.LvlFiles)
+            {
+                if (lvlFile.LevelObjects?.Templates == default) continue;
+
+                objects.AddRange(lvlFile.LevelObjects.Templates);
+            }
+
+            Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
             foreach (var levelObject in objects)
             {
@@ -98,7 +109,7 @@ namespace Uchu.World
                 }
             }
 
-            foreach (var path in ZoneInfo.Paths.OfType<SpawnerPath>())
+            foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
             {
                 try
                 {
@@ -110,7 +121,7 @@ namespace Uchu.World
                 }
             }
 
-            Logger.Information($"Loaded {objects.Length} objects for {ZoneId}");
+            Logger.Information($"Loaded {objects.Count} objects for {ZoneId}");
 
             //
             // Load zone scripts
@@ -123,15 +134,15 @@ namespace Uchu.World
             var _ = ExecuteUpdateAsync();
         }
 
-        private void SpawnLevelObject(LevelObject levelObject)
+        private void SpawnLevelObject(LevelObjectTemplate levelObject)
         {
             var obj = GameObject.Instantiate(levelObject, this);
 
             SpawnerComponent spawner = default;
-                
-            if (levelObject.Settings.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
-                levelObject.Settings.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
-                levelObject.Settings.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
+            
+            if (levelObject.LegoInfo.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
+                levelObject.LegoInfo.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
+                levelObject.LegoInfo.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
             {
                 obj.Layer = StandardLayer.Hidden;
             }
@@ -159,7 +170,7 @@ namespace Uchu.World
             GameObject.Construct(spawner.Spawn());
         }
 
-        private void SpawnPath(SpawnerPath spawnerPath)
+        private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
             var obj = InstancingUtil.Spawner(spawnerPath, this);
 

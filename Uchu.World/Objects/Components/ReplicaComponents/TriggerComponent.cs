@@ -1,3 +1,4 @@
+using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.World.Client;
 
@@ -25,7 +26,8 @@ namespace Uchu.World
 
                 foreach (var trigger in Zone.ZoneInfo.Triggers)
                 {
-                    if (trigger.PrimaryId != triggerPrimaryId || trigger.Id != triggerId) continue;
+                    // TODO: Primary id
+                    if (trigger.Id != triggerPrimaryId || trigger.Id != triggerId) continue;
                     
                     Trigger = trigger;
                     

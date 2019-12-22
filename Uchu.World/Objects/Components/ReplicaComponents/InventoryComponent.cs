@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
 
 namespace Uchu.World
 {
@@ -220,11 +220,11 @@ namespace Uchu.World
 
                 if (hasInventoryType) writer.Write((uint) item.InventoryType);
 
-                var hasExtraData = !string.IsNullOrEmpty(item.ExtraInfo);
+                var hasExtraData = !string.IsNullOrWhiteSpace(item.ExtraInfo);
 
                 writer.WriteBit(hasExtraData);
 
-                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ","));
+                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ','));
 
                 writer.WriteBit(true);
             }

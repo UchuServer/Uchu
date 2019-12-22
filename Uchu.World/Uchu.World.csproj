@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\InfectedRose\InfectedRose.Luz\InfectedRose.Luz.csproj" />
+      <ProjectReference Include="..\InfectedRose\InfectedRose.Lvl\InfectedRose.Lvl.csproj" />
+      <ProjectReference Include="..\InfectedRose\InfectedRose.Triggers\InfectedRose.Triggers.csproj" />
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
     </ItemGroup>
 

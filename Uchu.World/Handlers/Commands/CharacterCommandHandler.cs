@@ -4,11 +4,10 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
-using Uchu.World.Client;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -90,13 +89,13 @@ namespace Uchu.World.Handlers.Commands
 
             var rotation = player.Transform.Rotation;
 
-            var obj = GameObject.Instantiate(new LevelObject
+            var obj = GameObject.Instantiate(new LevelObjectTemplate
             {
                 Lot = lot,
                 Position = position,
                 Rotation = rotation,
                 Scale = 1,
-                Settings = new LegoDataDictionary()
+                LegoInfo = new LegoDataDictionary()
             }, player.Zone);
 
             Object.Start(obj);

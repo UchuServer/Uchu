@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Uchu.Core;
-using Uchu.World.Collections;
 
 namespace Uchu.World
 {

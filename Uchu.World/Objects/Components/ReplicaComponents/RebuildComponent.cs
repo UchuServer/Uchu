@@ -1,12 +1,11 @@
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
-using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -81,13 +80,13 @@ namespace Uchu.World
                 // It is required to be able to start the quickbuild.
                 //
                 
-                Activator = GameObject.Instantiate(new LevelObject
+                Activator = GameObject.Instantiate(new LevelObjectTemplate()
                 {
                     Lot = 6604,
                     Position = (Vector3) GameObject.Settings["rebuild_activators"],
                     Rotation = Quaternion.Identity,
                     Scale = -1,
-                    Settings = new LegoDataDictionary()
+                    LegoInfo = new LegoDataDictionary()
                 }, GameObject);
 
                 Start(Activator);

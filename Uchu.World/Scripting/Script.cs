@@ -97,7 +97,7 @@ namespace Uchu.World.Scripting
 
                 foreach (var (primaryId, id) in ids)
                 {
-                    if (triggerComponent.Trigger?.PrimaryId == primaryId && triggerComponent.Trigger?.Id == id)
+                    if (triggerComponent.Trigger?.Id /*TODO: Primary id*/ == primaryId && triggerComponent.Trigger?.Id == id)
                     {
                         triggers.Add(triggerComponent);
                     }
