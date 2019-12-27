@@ -8,6 +8,7 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Filters;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -409,11 +410,13 @@ namespace Uchu.World.Handlers.Commands
 
             if (!long.TryParse(arguments[0], out var layer)) return "Invalid <layer>";
 
-            if (player.Perspective.ViewMask == layer)
-                player.Perspective.ViewMask -= layer;
-            else player.Perspective.ViewMask += layer;
+            if (!player.Perspective.TryGetFilter<MaskFilter>(out var filter)) return $"No {nameof(MaskFilter)} applied";
+            
+            if (filter.ViewMask == layer)
+                filter.ViewMask -= layer;
+            else filter.ViewMask += layer;
 
-            return $"Layer set to {Convert.ToString(player.Perspective.ViewMask.Value, 2)}";
+            return $"Layer set to {Convert.ToString(filter.ViewMask.Value, 2)}";
         }
 
         [CommandHandler(Signature = "brick", Help = "Spawns a floating brick",

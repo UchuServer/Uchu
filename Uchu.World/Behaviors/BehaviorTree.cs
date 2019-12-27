@@ -47,7 +47,7 @@ namespace Uchu.World.Behaviors
                 i.ObjectTemplate == lot
             ).ToArray();
             
-            BehaviorIds = new (int behaviorId, SkillCastType castType, int skillId)[3];
+            BehaviorIds = new (int behaviorId, SkillCastType castType, int skillId)[objectSkills.Length];
 
             for (var index = 0; index < objectSkills.Length; index++)
             {

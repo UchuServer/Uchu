@@ -1,31 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.Internal;
+using Uchu.Core;
+using Uchu.World.Filters;
 
 namespace Uchu.World
 {
     public class Perspective
     {
         private readonly Stack<ushort> _droppedIds;
-        private readonly List<GameObject> _hallucinations;
 
         private readonly Dictionary<GameObject, ushort> _networkDictionary;
         private readonly Player _player;
 
-        private Mask _viewMask;
-
         private uint _clientLoadedObjectCount;
 
-        public IReadOnlyCollection<GameObject> LoadedObjects => _networkDictionary.Keys;
+        public IEnumerable<GameObject> LoadedObjects => _networkDictionary.Keys;
 
         public Event OnLoaded { get; } = new Event();
+
+        private List<IPerspectiveFilter> Filters { get; } = new List<IPerspectiveFilter>();
         
         public uint ClientLoadedObjectCount
         {
             get => _clientLoadedObjectCount;
             set
             {
-                if (value == _networkDictionary.Count)
+                Logger.Debug($"PROGRESS: {value}/{_networkDictionary.Count}");
+                
+                if (value + 10 >= _networkDictionary.Count)
                 {
                     OnLoaded.Invoke();
                     OnLoaded.Clear();
@@ -37,95 +41,120 @@ namespace Uchu.World
             }
         }
 
-        public Perspective(Player player, Mask mask)
+        public Perspective(Player player)
         {
             _networkDictionary = new Dictionary<GameObject, ushort>();
-
-            _hallucinations = new List<GameObject>();
 
             _droppedIds = new Stack<ushort>();
 
             _player = player;
 
-            _viewMask = mask;
-        }
-
-        public Mask ViewMask
-        {
-            get => _viewMask;
-            set
+            player.OnTick.AddListener(() =>
             {
-                _viewMask = value;
-
-                var passableGameObjects = _player.Zone.GameObjects.Where(
-                    g => g.Layer == _viewMask && !_networkDictionary.ContainsKey(g)
-                ).ToArray();
-
-                foreach (var gameObject in passableGameObjects)
-                    Zone.SendConstruction(gameObject, _player);
-
-                var revealedGameObjects = _networkDictionary.Keys.Where(
-                    gameObject => gameObject.Layer != _viewMask
-                ).ToArray();
-
-                foreach (var gameObject in revealedGameObjects)
-                    Zone.SendDestruction(gameObject, _player);
-            }
-        }
-
-        public void Reveal(GameObject gameObject, Action<ushort> callback)
-        {
-            if (!gameObject.Alive || _networkDictionary.ContainsKey(gameObject)) return;
-
-            if (ViewMask != gameObject.Layer)
-            {
-                gameObject.OnLayerChanged.AddListener(layer =>
+                foreach (var gameObject in _player.Zone.GameObjects)
                 {
-                    if (ViewMask == layer) Reveal(gameObject, callback);
-                });
+                    if (Filters.Any(f => !f.View(gameObject)))
+                    {
+                        Zone.SendDestruction(gameObject, _player);
 
-                return;
-            }
+                        continue;
+                    }
 
-            gameObject.OnLayerChanged.AddListener(layer =>
-            {
-                if (ViewMask != layer) Zone.SendDestruction(gameObject, _player);
-                else Reveal(gameObject, callback);
+                    Hallucinate(gameObject);
+                }
             });
+        }
 
-            if (!_droppedIds.TryPop(out var networkId))
+        internal bool Reveal(GameObject gameObject, out ushort networkId)
+        {
+            lock (gameObject)
             {
-                if (_networkDictionary.Any()) networkId = (ushort) (_networkDictionary.Values.Max() + 1);
-                else networkId = 1;
+                if (!gameObject.Alive || _networkDictionary.ContainsKey(gameObject))
+                {
+                    networkId = 0;
+                    
+                    return false;
+                };
+                
+                if (!_droppedIds.TryPop(out networkId))
+                {
+                    if (_networkDictionary.Any()) networkId = (ushort) (_networkDictionary.Values.Max() + 1);
+                    else networkId = 1;
+                }
+
+                _networkDictionary.Add(gameObject, networkId);
+
+                return true;
             }
-
-            _networkDictionary.Add(gameObject, networkId);
-
-            callback(networkId);
         }
 
         public void Drop(GameObject gameObject)
         {
-            if (!_networkDictionary.TryGetValue(gameObject, out var id)) return;
-
-            _droppedIds.Push(id);
-            _networkDictionary.Remove(gameObject);
-
-            if (_hallucinations.Contains(gameObject))
-                _hallucinations.Remove(gameObject);
+            lock (gameObject)
+            {
+                if (!_networkDictionary.TryGetValue(gameObject, out var id)) return;
+                _droppedIds.Push(id);
+                _networkDictionary.Remove(gameObject);
+            }
         }
 
         public void Hallucinate(GameObject gameObject)
         {
-            if (_networkDictionary.ContainsKey(gameObject)) return;
+            lock (gameObject)
+            {
+                if (_networkDictionary.ContainsKey(gameObject)) return;
 
-            _hallucinations.Add(gameObject);
-            Zone.SendConstruction(gameObject, _player);
+                Zone.SendConstruction(gameObject, _player);
+            }
+        }
+
+        public bool View(GameObject gameObject)
+        {
+            return Filters.All(filter => filter.View(gameObject));
         }
 
         public bool TryGetNetworkId(GameObject gameObject, out ushort id)
         {
             return _networkDictionary.TryGetValue(gameObject, out id);
+        }
+
+        public T GetFilter<T>() where T : IPerspectiveFilter => Filters.OfType<T>().First();
+
+        public bool TryGetFilter<T>(out T value) where T : IPerspectiveFilter
+        {
+            value = Filters.OfType<T>().FirstOrDefault();
+
+            return value != null;
+        }
+
+        public T AddFilter<T>() where T : IPerspectiveFilter, new()
+        {
+            if (TryGetFilter<T>(out _)) throw new ArgumentException($"Can only have one {nameof(IPerspectiveFilter)} of {typeof(T)}");
+
+            var instance = new T
+            {
+                Player = _player
+            };
+            
+            instance.Start();
+
+            Filters.Add(instance);
+
+            return instance;
+        }
+
+        public bool TryAddFilter<T>(out T value) where T : IPerspectiveFilter, new()
+        {
+            if (TryGetFilter<T>(out _))
+            {
+                value = default;
+                
+                return false;
+            }
+
+            value = AddFilter<T>();
+
+            return true;
         }
     }
 }

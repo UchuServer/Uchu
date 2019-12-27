@@ -9,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Filters;
 using Uchu.World.Social;
 
 namespace Uchu.World
@@ -202,12 +203,18 @@ namespace Uchu.World
             // Setup layers
             //
             
+            instance.Layer = StandardLayer.Player;
+            
             var layer = StandardLayer.All;
             layer -= StandardLayer.Hidden;
             layer -= StandardLayer.Spawner;
+            
+            instance.Perspective = new Perspective(instance);
 
-            instance.Perspective = new Perspective(instance, layer);
-            instance.Layer = StandardLayer.Player;
+            var maskFilter = instance.Perspective.AddFilter<MaskFilter>();
+            maskFilter.ViewMask = layer;
+
+            instance.Perspective.AddFilter<RenderDistanceFilter>();
 
             //
             // Register player as an active in zone

@@ -62,6 +62,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
         {
+            Logger.Debug($"Loaded: {message.GameObject}");
+            
             player.Perspective.ClientLoadedObjectCount++;
         }
 

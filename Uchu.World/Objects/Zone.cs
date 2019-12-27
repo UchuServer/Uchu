@@ -271,20 +271,23 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
-                recipient.Perspective.Reveal(gameObject, id =>
-                {
-                    using var stream = new MemoryStream();
-                    using var writer = new BitWriter(stream);
+                if (!recipient.Perspective.View(gameObject)) continue;
                     
-                    writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
+                if (!recipient.Perspective.Reveal(gameObject, out var id)) continue;
+                
+                if (id == 0) return;
 
-                    writer.WriteBit(true);
-                    writer.Write(id);
+                using var stream = new MemoryStream();
+                using var writer = new BitWriter(stream);
+                
+                writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
 
-                    gameObject.WriteConstruct(writer);
+                writer.WriteBit(true);
+                writer.Write(id);
 
-                    recipient.Connection.Send(stream);
-                });
+                gameObject.WriteConstruct(writer);
+
+                recipient.Connection.Send(stream);
             }
         }
 
