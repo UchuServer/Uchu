@@ -17,7 +17,7 @@ namespace Uchu.World
         public Mission[] GetCompletedMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId && m.State == (int) MissionState.Completed
             ).ToArray();
         }
@@ -25,7 +25,7 @@ namespace Uchu.World
         public Mission[] GetActiveMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId &&
                      m.State == (int) MissionState.Active ||
                      m.State == (int) MissionState.CompletedActive
@@ -35,7 +35,7 @@ namespace Uchu.World
         public Mission[] GetMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId
             ).ToArray();
         }
@@ -117,6 +117,7 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
@@ -215,6 +216,7 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
@@ -360,6 +362,7 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
@@ -423,13 +426,13 @@ namespace Uchu.World
                         // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
                         var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.LuzFile.WorldId << 8);
 
-                        if (!characterTask.Values.Contains(shiftedId) && task.TargetValue > characterTask.Values.Count)
+                        if (!characterTask.Contains(shiftedId) && task.TargetValue > characterTask.ValueArray().Length)
                         {
                             Logger.Information($"{GameObject} collected {component.CollectibleId}");
-                            characterTask.Values.Add(shiftedId);
+                            characterTask.Add(shiftedId);
                         }
 
-                        Logger.Information($"Has collected {characterTask.Values.Count}/{task.TargetValue}");
+                        Logger.Information($"Has collected {characterTask.ValueArray().Length}/{task.TargetValue}");
 
                         // Send update to client
                         MessageUpdateMissionTask(
@@ -442,9 +445,9 @@ namespace Uchu.World
 
                         break;
                     case MissionTaskType.KillEnemy:
-                        if (task.TargetValue > characterTask.Values.Count)
+                        if (task.TargetValue > characterTask.ValueArray().Length)
                         {
-                            characterTask.Values.Add(lot);
+                            characterTask.Add(lot);
                         }
 
                         break;
@@ -465,13 +468,13 @@ namespace Uchu.World
                     case MissionTaskType.TamePet:
                     case MissionTaskType.Racing:
                         // Start this task value array
-                        if (!characterTask.Values.Contains(lot))
-                            characterTask.Values.Add(lot);
+                        if (!characterTask.Contains(lot))
+                            characterTask.Add(lot);
 
                         // Send update to client
                         MessageUpdateMissionTask(
                             taskId, tasks.IndexOf(task),
-                            new[] {(float) characterTask.Values.Count}
+                            new[] {(float) characterTask.ValueArray().Length}
                         );
 
                         break;
@@ -566,7 +569,7 @@ namespace Uchu.World
                             return new MissionTask
                             {
                                 TaskId = (int) t.Uid,
-                                Values = new List<float>()
+                                Values = new List<MissionTaskValue>()
                             };
                         }).ToList()
                     };
@@ -595,7 +598,7 @@ namespace Uchu.World
                 var characterTask = characterMission.Tasks.Find(t => t.TaskId == task.Uid);
 
                 // Start this task value array
-                if (!characterTask.Values.Contains(lot)) characterTask.Values.Add(lot);
+                if (!characterTask.Contains(lot)) characterTask.Add(lot);
 
                 await ctx.SaveChangesAsync();
 
@@ -634,7 +637,11 @@ namespace Uchu.World
             return new MissionTask
             {
                 TaskId = task.Uid.Value,
-                Values = values
+                Values = values.Select(v => new MissionTaskValue
+                {
+                    Value = v,
+                    Count = 1
+                }).ToList()
             };
         }
     }

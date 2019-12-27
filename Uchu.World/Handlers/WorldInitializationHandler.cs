@@ -263,7 +263,7 @@ namespace Uchu.World.Handlers
             return new ItemContainerNode
             {
                 Type = (int)type,
-                Items = character.Items.Where(i => i.InventoryType == (int)type).Select(i => new ItemNode
+                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i => new ItemNode
                 {
                     Count = (int) i.Count,
                     Slot = i.Slot,
@@ -332,7 +332,7 @@ namespace Uchu.World.Handlers
             var flagValues = character.Missions
                 .SelectMany(m => m.Tasks
                     .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.Values));
+                    .SelectMany(t => t.ValueArray()));
 
             // The flags are stored as one long list of bits by separating them in unsigned longs
             foreach (var value in flagValues)
@@ -413,12 +413,12 @@ namespace Uchu.World.Handlers
                     var progressNodes = new List<MissionProgressNode> { new MissionProgressNode { Value = task.Values.Count }};
 
                     using var cdClient = new CdClientContext();
-                    var cdTask = cdClient.MissionTasksTable.Where(t => t.Uid == task.TaskId).First();
+                    var cdTask = cdClient.MissionTasksTable.First(t => t.Uid == task.TaskId);
                     
                     // If the task type is collectible, also send all collectible ids
                     if (cdTask.TaskType != null && ((MissionTaskType) cdTask.TaskType) == MissionTaskType.Collect)
                     {
-                        progressNodes.AddRange(task.Values.Select(value => new MissionProgressNode { Value = value }));
+                        progressNodes.AddRange(task.ValueArray().Select(value => new MissionProgressNode { Value = value }));
                     }
 
                     return progressNodes;

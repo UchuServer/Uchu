@@ -401,6 +401,7 @@ namespace Uchu.Core
                     var specification = await ctx.Specifications.FirstAsync(s => s.Id == request.SpecificationId).ConfigureAwait(false);
 
                     callback(specification.Port);
+                    
                     return;
                 }
                 

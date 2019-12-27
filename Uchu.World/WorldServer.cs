@@ -120,8 +120,6 @@ namespace Uchu.World
 
             Logger.Debug($"SPAWN: {info.LuzFile.SpawnPoint}");
 
-            info.LuzFile.SpawnPoint += Vector3.UnitY * 1000;
-            
             var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
             
             Zones.Add(zoneInstance);

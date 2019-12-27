@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -224,7 +225,7 @@ namespace Uchu.World
 
                 writer.WriteBit(hasExtraData);
 
-                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo, ','));
+                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo));
 
                 writer.WriteBit(true);
             }

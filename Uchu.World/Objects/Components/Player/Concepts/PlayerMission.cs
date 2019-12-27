@@ -274,7 +274,11 @@ namespace Uchu.World
             return new MissionTask
             {
                 TaskId = task.Uid.Value,
-                Values = values
+                Values = values.Select(v => new MissionTaskValue
+                {
+                    Value = v,
+                    Count = 1
+                }).ToList()
             };
         }
     }

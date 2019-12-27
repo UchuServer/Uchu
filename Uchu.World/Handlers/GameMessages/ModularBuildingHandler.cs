@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -11,9 +12,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void ModularBuildFinishHandler(ModularBuildFinishMessage message, Player player)
+        public async Task ModularBuildFinishHandler(ModularBuildFinishMessage message, Player player)
         {
-            player.GetComponent<ModularBuilderComponent>().FinishBuilding(message.Modules);
+            await player.GetComponent<ModularBuilderComponent>().FinishBuilding(message.Modules);
         }
 
         [PacketHandler]
@@ -23,9 +24,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void PickupModelHandler(ModularBuildMoveAndEquipMessage message, Player player)
+        public async Task PickupModelHandler(ModularBuildMoveAndEquipMessage message, Player player)
         {
-            player.GetComponent<ModularBuilderComponent>().Pickup(message.Lot);
+            await player.GetComponent<ModularBuilderComponent>().Pickup(message.Lot);
         }
 
         [PacketHandler]

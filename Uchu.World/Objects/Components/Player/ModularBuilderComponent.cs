@@ -109,7 +109,7 @@ namespace Uchu.World
             });
         }
         
-        public void FinishBuilding(Lot[] models)
+        public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
@@ -127,7 +127,7 @@ namespace Uchu.World
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
             
-            GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
+            await GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
             
             IsBuilding = false;
         }
@@ -137,7 +137,7 @@ namespace Uchu.World
             As<Player>().SendChatMessage($"DONE: {message.NewSource}\t{message.NewTarget}\t{message.OldSource}");
         }
 
-        public void Pickup(Lot lot)
+        public async Task Pickup(Lot lot)
         {
             As<Player>().SendChatMessage($"PICKUP: {lot}");
             
@@ -145,7 +145,7 @@ namespace Uchu.World
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
             
-            GameObject.GetComponent<InventoryComponent>().EquipItem(item);
+            await GameObject.GetComponent<InventoryComponent>().EquipItem(item);
             
             /*
             As<Player>().Message(new StartArrangingWithItemMessage
