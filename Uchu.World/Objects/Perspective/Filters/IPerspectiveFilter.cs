@@ -2,9 +2,7 @@ namespace Uchu.World.Filters
 {
     public interface IPerspectiveFilter
     {
-        Player Player { get; set; }
-
-        void Start(){}
+        void Initialize(Player player);
         
         /// <summary>
         ///     Should this perspective view this GameObject

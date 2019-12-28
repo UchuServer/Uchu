@@ -10,8 +10,10 @@ namespace Uchu.World.Filters
 
         public Player Player { get; set; }
 
-        public void Start()
+        public void Initialize(Player player)
         {
+            Player = player;
+            
             using var cdClient = new CdClientContext();
 
             var zone = cdClient.ZoneTableTable.FirstOrDefault(z => z.ZoneID == (int) Player.Zone.ZoneId);
@@ -21,6 +23,8 @@ namespace Uchu.World.Filters
         
         public bool View(GameObject gameObject)
         {
+            if (gameObject?.Transform == default) return false;
+            
             return Vector3.Distance(gameObject.Transform.Position, Player.Transform.Position) <= Distance;
         }
     }

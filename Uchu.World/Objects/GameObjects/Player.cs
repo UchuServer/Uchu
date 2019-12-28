@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,15 +17,13 @@ namespace Uchu.World
     {
         private Player()
         {
-            OnTick.AddListener(CheckDeathZone);
-            
             OnStart.AddListener(() =>
             {
                 Connection.Disconnected += reason =>
                 {
+                    Connection = default;
+                    
                     Destroy(this);
-
-                    Zone.ManagedPlayers.Remove(this);
                     
                     return Task.CompletedTask;
                 };
@@ -127,6 +124,27 @@ namespace Uchu.World
                 character.CharacterId,
                 1
             );
+            
+            //
+            // Setup layers
+            //
+            
+            instance.Layer = StandardLayer.Player;
+            
+            var layer = StandardLayer.All;
+            layer -= StandardLayer.Hidden;
+            layer -= StandardLayer.Spawner;
+            
+            instance.Perspective = new Perspective(instance);
+
+            var maskFilter = instance.Perspective.AddFilter<MaskFilter>();
+            maskFilter.ViewMask = layer;
+
+            instance.Perspective.AddFilter<RenderDistanceFilter>();
+            
+            //
+            // Set connection
+            //
 
             instance.Connection = connection;
 
@@ -200,23 +218,6 @@ namespace Uchu.World
             instance.AddComponent<ModularBuilderComponent>();
 
             //
-            // Setup layers
-            //
-            
-            instance.Layer = StandardLayer.Player;
-            
-            var layer = StandardLayer.All;
-            layer -= StandardLayer.Hidden;
-            layer -= StandardLayer.Spawner;
-            
-            instance.Perspective = new Perspective(instance);
-
-            var maskFilter = instance.Perspective.AddFilter<MaskFilter>();
-            maskFilter.ViewMask = layer;
-
-            instance.Perspective.AddFilter<RenderDistanceFilter>();
-
-            //
             // Register player as an active in zone
             //
             
@@ -249,9 +250,9 @@ namespace Uchu.World
             Connection.Send(gameMessage);
         }
 
-        public void SendToWorld(ZoneId zoneId)
+        public async Task SendToWorldAsync(ZoneId zoneId)
         {
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
             
             var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
 
@@ -263,7 +264,7 @@ namespace Uchu.World
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
-            Server.RequestWorldServerAsync(zoneId, port =>
+            await WorldHelper.RequestWorldServerAsync(zoneId, port =>
             {
                 if (Server.Port == port)
                 {
@@ -354,90 +355,6 @@ namespace Uchu.World
             });
 
             await ctx.SaveChangesAsync();
-        }
-
-        private void CheckDeathZone()
-        {
-            // TODO: Remove
-
-            var smashable = GetComponent<DestructibleComponent>();
-
-            if (smashable == null || !smashable.Alive) return;
-
-            switch ((ZoneId) Zone.ZoneInfo.LuzFile.WorldId)
-            {
-                case ZoneId.VentureExplorerCinematic:
-                    break;
-                case ZoneId.VentureExplorer:
-                    if (Transform.Position.Y <= 560) smashable.Smash(this, this);
-                    break;
-                case ZoneId.ReturnToVentureExplorer:
-                    break;
-                case ZoneId.AvantGardens:
-                    break;
-                case ZoneId.AvantGardensSurvival:
-                    break;
-                case ZoneId.SpiderQueenBattle:
-                    break;
-                case ZoneId.BlockYard:
-                    break;
-                case ZoneId.AvantGrove:
-                    break;
-                case ZoneId.NimbusStation:
-                    break;
-                case ZoneId.PetCove:
-                    break;
-                case ZoneId.VertigoLoopRacetrack:
-                    break;
-                case ZoneId.BattleOfNimbusStation:
-                    break;
-                case ZoneId.NimbusRock:
-                    break;
-                case ZoneId.NimbusIsle:
-                    break;
-                case ZoneId.FrostBurgh:
-                    break;
-                case ZoneId.GnarledForest:
-                    break;
-                case ZoneId.CanyonCove:
-                    break;
-                case ZoneId.KeelhaulCanyon:
-                    break;
-                case ZoneId.ChanteyShantey:
-                    break;
-                case ZoneId.ForbiddenValley:
-                    break;
-                case ZoneId.ForbiddenValleyDragon:
-                    break;
-                case ZoneId.DragonmawChasm:
-                    break;
-                case ZoneId.RavenBluff:
-                    break;
-                case ZoneId.Starbase3001:
-                    break;
-                case ZoneId.DeepFreeze:
-                    break;
-                case ZoneId.RobotCity:
-                    break;
-                case ZoneId.MoonBase:
-                    break;
-                case ZoneId.Portabello:
-                    break;
-                case ZoneId.LegoClub:
-                    break;
-                case ZoneId.CruxPrime:
-                    break;
-                case ZoneId.NexusTower:
-                    break;
-                case ZoneId.Ninjago:
-                    break;
-                case ZoneId.FrakjawBattle:
-                    break;
-                case ZoneId.NimbusStationWinterRacetrack:
-                    break;
-                default:
-                    return;
-            }
         }
     }
 }

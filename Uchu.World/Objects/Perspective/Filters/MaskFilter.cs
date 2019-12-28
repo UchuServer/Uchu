@@ -4,7 +4,9 @@ namespace Uchu.World.Filters
     {
         public Mask ViewMask { get; set; }
 
-        public Player Player { get; set; }
+        public void Initialize(Player player)
+        {
+        }
 
         public bool View(GameObject gameObject)
         {

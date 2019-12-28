@@ -21,14 +21,12 @@ namespace Uchu.World
         public Event OnLoaded { get; } = new Event();
 
         private List<IPerspectiveFilter> Filters { get; } = new List<IPerspectiveFilter>();
-        
-        public uint ClientLoadedObjectCount
+
+        internal uint ClientLoadedObjectCount
         {
             get => _clientLoadedObjectCount;
             set
             {
-                Logger.Debug($"PROGRESS: {value}/{_networkDictionary.Count}");
-                
                 if (value + 10 >= _networkDictionary.Count)
                 {
                     OnLoaded.Invoke();
@@ -48,21 +46,6 @@ namespace Uchu.World
             _droppedIds = new Stack<ushort>();
 
             _player = player;
-
-            player.OnTick.AddListener(() =>
-            {
-                foreach (var gameObject in _player.Zone.GameObjects)
-                {
-                    if (Filters.Any(f => !f.View(gameObject)))
-                    {
-                        Zone.SendDestruction(gameObject, _player);
-
-                        continue;
-                    }
-
-                    Hallucinate(gameObject);
-                }
-            });
         }
 
         internal bool Reveal(GameObject gameObject, out ushort networkId)
@@ -88,7 +71,7 @@ namespace Uchu.World
             }
         }
 
-        public void Drop(GameObject gameObject)
+        internal void Drop(GameObject gameObject)
         {
             lock (gameObject)
             {
@@ -98,22 +81,12 @@ namespace Uchu.World
             }
         }
 
-        public void Hallucinate(GameObject gameObject)
-        {
-            lock (gameObject)
-            {
-                if (_networkDictionary.ContainsKey(gameObject)) return;
-
-                Zone.SendConstruction(gameObject, _player);
-            }
-        }
-
-        public bool View(GameObject gameObject)
+        internal bool View(GameObject gameObject)
         {
             return Filters.All(filter => filter.View(gameObject));
         }
 
-        public bool TryGetNetworkId(GameObject gameObject, out ushort id)
+        internal bool TryGetNetworkId(GameObject gameObject, out ushort id)
         {
             return _networkDictionary.TryGetValue(gameObject, out id);
         }
@@ -131,12 +104,9 @@ namespace Uchu.World
         {
             if (TryGetFilter<T>(out _)) throw new ArgumentException($"Can only have one {nameof(IPerspectiveFilter)} of {typeof(T)}");
 
-            var instance = new T
-            {
-                Player = _player
-            };
+            var instance = new T();
             
-            instance.Start();
+            instance.Initialize(_player);
 
             Filters.Add(instance);
 

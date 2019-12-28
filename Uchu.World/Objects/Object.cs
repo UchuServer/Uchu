@@ -45,14 +45,14 @@ namespace Uchu.World
             if (obj._started) return;
             obj._started = true;
             
-            obj.Zone.ManagedObjects.Add(obj);
+            obj.Zone.RegisterObject(obj);
 
             obj.OnStart?.Invoke();
         }
 
         public static void Destroy(Object obj)
         {
-            obj.Zone.ManagedObjects.Remove(obj);
+            obj.Zone.UnregisterObject(obj);
 
             obj.OnDestroyed.Invoke();
             

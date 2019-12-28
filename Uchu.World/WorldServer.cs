@@ -81,11 +81,8 @@ namespace Uchu.World
 
             var _ = Task.Run(async () =>
             {
-                Logger.Information($"Loading zones...");
-
                 await ZoneParser.LoadZoneDataAsync((int) ServerSpecification.ZoneId);
 
-                Logger.Information($"Loading {ServerSpecification.ZoneId}");
                 await LoadZone(ServerSpecification);
             });
             
@@ -96,19 +93,19 @@ namespace Uchu.World
         {
             Logger.Information($"{point} disconnected: {reason}");
 
-            foreach (var player in Zones
-                .Select(zone => zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point)))
-                .Where(player => !ReferenceEquals(player, default)))
+            var players = Zones.Select(zone =>
+                zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point))
+            ).Where(player => player != default);
+            
+            foreach (var player in players)
             {
                 Object.Destroy(player);
-
-                break;
             }
 
             return Task.CompletedTask;
         }
 
-        public async Task LoadZone(ServerSpecification zone)
+        private async Task LoadZone(ServerSpecification zone)
         {
             if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync((int) zone.ZoneId);
 
@@ -117,8 +114,6 @@ namespace Uchu.World
             var info = ZoneParser.Zones?[zone.ZoneId];
 
             if (info == default) throw new Exception($"Failed to find info for {zone.ZoneId}");
-
-            Logger.Debug($"SPAWN: {info.LuzFile.SpawnPoint}");
 
             var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
             

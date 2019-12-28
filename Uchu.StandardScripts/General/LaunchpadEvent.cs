@@ -46,7 +46,7 @@ namespace StandardScripts.General
 
                     if (launchpadComponent.TargetZone != null)
                     {
-                        player.SendToWorld((ZoneId) launchpadComponent.TargetZone);
+                        await player.SendToWorldAsync((ZoneId) launchpadComponent.TargetZone);
                         
                         return;
                     }

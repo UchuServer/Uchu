@@ -116,8 +116,6 @@ namespace Uchu.World
         
             OnStart.AddListener(() =>
             {
-                Zone.ManagedGameObjects.Add(this);
-
                 foreach (var component in _components.ToArray()) Start(component);
             });
 
@@ -130,7 +128,6 @@ namespace Uchu.World
                 OnEmoteReceived.Clear();
                 
                 Zone.UnregisterObject(this);
-                Zone.UnregisterGameObject(this);
 
                 foreach (var component in _components.ToArray()) Destroy(component);
 
@@ -310,7 +307,7 @@ namespace Uchu.World
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
-                instance.ObjectId = objectId == 0 ? IdUtils.GenerateObjectId() : objectId;
+                instance.ObjectId = objectId == 0 ? IdUtilities.GenerateObjectId() : objectId;
 
                 instance.Lot = lot;
 
@@ -417,7 +414,7 @@ namespace Uchu.World
             // Create GameObject
             //
 
-            var id = levelObject.ObjectId == 0 ? IdUtils.GenerateObjectId() : (long) levelObject.ObjectId;
+            var id = levelObject.ObjectId == 0 ? IdUtilities.GenerateObjectId() : (long) levelObject.ObjectId;
 
             var instance = Instantiate(
                 type,

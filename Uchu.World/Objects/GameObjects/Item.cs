@@ -184,7 +184,7 @@ namespace Uchu.World
 
             var instance = Instantiate<Item>
             (
-                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: IdUtils.GenerateObjectId(), lot: lot
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: IdUtilities.GenerateObjectId(), lot: lot
             );
 
             instance._count = count;

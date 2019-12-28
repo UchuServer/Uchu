@@ -20,13 +20,13 @@ namespace Uchu.World
         //
         // Consts
         //
-        
+
         private const int TicksPerSecondLimit = 20;
 
         //
         // Zone info
         //
-        
+
         public uint CloneId { get; }
         public ushort InstanceId { get; }
         public ZoneInfo ZoneInfo { get; }
@@ -36,34 +36,32 @@ namespace Uchu.World
         //
         // Managed objects
         //
-        
-        internal readonly List<GameObject> ManagedGameObjects = new List<GameObject>();
-        internal readonly List<Object> ManagedObjects = new List<Object>();
-        internal readonly List<Player> ManagedPlayers = new List<Player>();
-        
+
+        private readonly List<Object> _managedObjects = new List<Object>();
+
         //
         // Macro properties
         //
-        
-        public Object[] Objects => ManagedObjects.ToArray();
-        public GameObject[] GameObjects => ManagedGameObjects.ToArray();
-        public Player[] Players => ManagedPlayers.ToArray();
+
+        public Object[] Objects => _managedObjects.ToArray();
+        public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
+        public Player[] Players => Objects.OfType<Player>().ToArray();
         public ZoneId ZoneId => (ZoneId) ZoneInfo.LuzFile.WorldId;
-        
+
         //
         // Runtime
         //
-        
+
         public float DeltaTime { get; private set; }
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
         private readonly ScriptManager _scriptManager;
-        
+
         //
         // Events
         //
-        
+
         public readonly AsyncEvent<Player> OnPlayerLoad = new AsyncEvent<Player>();
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
@@ -76,7 +74,7 @@ namespace Uchu.World
             _scriptManager = new ScriptManager(this);
 
             OnStart.AddListener(async () => await InitializeAsync());
-            
+
             OnDestroyed.AddListener(() => { _running = false; });
         }
 
@@ -85,13 +83,11 @@ namespace Uchu.World
         public async Task InitializeAsync()
         {
             Logger.Information($"Collecting objects for {ZoneId}");
-            
+
             var objects = new List<LevelObjectTemplate>();
 
-            foreach (var lvlFile in ZoneInfo.LvlFiles)
+            foreach (var lvlFile in ZoneInfo.LvlFiles.Where(lvlFile => lvlFile.LevelObjects?.Templates != default))
             {
-                if (lvlFile.LevelObjects?.Templates == default) continue;
-
                 objects.AddRange(lvlFile.LevelObjects.Templates);
             }
 
@@ -126,9 +122,9 @@ namespace Uchu.World
             //
             // Load zone scripts
             //
-            
+
             await _scriptManager.LoadScripts();
-            
+
             Loaded = true;
 
             var _ = ExecuteUpdateAsync();
@@ -139,7 +135,7 @@ namespace Uchu.World
             var obj = GameObject.Instantiate(levelObject, this);
 
             SpawnerComponent spawner = default;
-            
+
             if (levelObject.LegoInfo.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
                 levelObject.LegoInfo.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
                 levelObject.LegoInfo.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
@@ -161,12 +157,12 @@ namespace Uchu.World
             //
             // Only spawns should get constructed on the client.
             //
-            
+
             if (spawner == default)
             {
                 return;
             }
-            
+
             GameObject.Construct(spawner.Spawn());
         }
 
@@ -184,7 +180,7 @@ namespace Uchu.World
         #endregion
 
         #region Messages
-        
+
         public void SelectiveMessage(IGameMessage message, IEnumerable<Player> players)
         {
             foreach (var player in players) player.Message(message);
@@ -192,40 +188,40 @@ namespace Uchu.World
 
         public void ExcludingMessage(IGameMessage message, Player excluded)
         {
-            foreach (var player in ManagedPlayers.Where(p => p != excluded)) player.Message(message);
+            foreach (var player in Players.Where(p => p != excluded)) player.Message(message);
         }
 
         public void BroadcastMessage(IGameMessage message)
         {
-            foreach (var player in ManagedPlayers) player.Message(message);
+            foreach (var player in Players) player.Message(message);
         }
 
         #endregion
-        
+
         #region Object Finder
 
         public GameObject GetGameObject(long objectId)
         {
-            return objectId == -1 ? null : ManagedGameObjects.First(o => o.ObjectId == objectId);
+            return objectId == -1 ? null : GameObjects.First(o => o.ObjectId == objectId);
         }
 
         public bool TryGetGameObject(long objectId, out GameObject result)
         {
-            result = ManagedGameObjects.FirstOrDefault(o => o.ObjectId == objectId);
+            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
             return result != default;
         }
 
         public T GetGameObject<T>(long objectId) where T : GameObject
         {
-            return ManagedGameObjects.OfType<T>().First(o => o.ObjectId == objectId);
+            return GameObjects.OfType<T>().First(o => o.ObjectId == objectId);
         }
 
         public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
         {
-            result = ManagedGameObjects.OfType<T>().FirstOrDefault(o => o.ObjectId == objectId);
+            result = GameObjects.OfType<T>().FirstOrDefault(o => o.ObjectId == objectId);
             return result != default;
         }
-        
+
         #endregion
 
         #region Object Mangement
@@ -234,8 +230,6 @@ namespace Uchu.World
 
         internal async Task RegisterPlayer(Player player)
         {
-            ManagedPlayers.Add(player);
-
             await OnPlayerLoad.InvokeAsync(player);
 
             foreach (var gameObject in GameObjects)
@@ -246,16 +240,14 @@ namespace Uchu.World
             }
         }
 
-        internal void UnregisterObject(Object obj)
+        internal void RegisterObject(Object obj)
         {
-            if (ManagedObjects.Contains(obj)) ManagedObjects.Remove(obj);
+            if (!_managedObjects.Contains(obj)) _managedObjects.Add(obj);
         }
 
-        internal void UnregisterGameObject(GameObject gameObject)
+        internal void UnregisterObject(Object obj)
         {
-            UnregisterObject(gameObject);
-
-            ManagedGameObjects.Remove(gameObject);
+            if (_managedObjects.Contains(obj)) _managedObjects.Remove(obj);
         }
 
         #endregion
@@ -272,14 +264,14 @@ namespace Uchu.World
             foreach (var recipient in recipients)
             {
                 if (!recipient.Perspective.View(gameObject)) continue;
-                    
+
                 if (!recipient.Perspective.Reveal(gameObject, out var id)) continue;
-                
+
                 if (id == 0) return;
 
                 using var stream = new MemoryStream();
                 using var writer = new BitWriter(stream);
-                
+
                 writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
 
                 writer.WriteBit(true);
@@ -299,7 +291,7 @@ namespace Uchu.World
 
                 using var stream = new MemoryStream();
                 using var writer = new BitWriter(stream);
-                
+
                 writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
 
                 writer.Write(id);
@@ -319,12 +311,14 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
+                if (recipient.Perspective.View(gameObject)) continue;
+
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
                 using (var stream = new MemoryStream())
                 {
                     using var writer = new BitWriter(stream);
-                    
+
                     writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
 
                     writer.Write(id);
@@ -337,7 +331,7 @@ namespace Uchu.World
         }
 
         #endregion
-        
+
         #endregion
 
         #region Runtime
@@ -356,7 +350,7 @@ namespace Uchu.World
                     Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
-                
+
                 //
                 // Set player count
                 //
@@ -382,11 +376,32 @@ namespace Uchu.World
 
                     await Task.Delay(1000 / TicksPerSecondLimit);
 
-                    foreach (var obj in ManagedObjects)
+                    var players = Players;
+
+                    foreach (var obj in Objects)
                     {
                         try
                         {
                             Update(obj);
+
+                            if (!(obj is GameObject gameObject)) continue;
+
+                            foreach (var player in players)
+                            {
+                                var spawned = player.Perspective.LoadedObjects.Contains(gameObject);
+                                
+                                if (spawned && !player.Perspective.View(gameObject))
+                                {
+                                    SendDestruction(gameObject, player);
+
+                                    continue;
+                                }
+
+                                if (!spawned)
+                                {
+                                    SendConstruction(gameObject, player);
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
@@ -406,7 +421,7 @@ namespace Uchu.World
                 }
             });
         }
-        
+
         #endregion
     }
 }

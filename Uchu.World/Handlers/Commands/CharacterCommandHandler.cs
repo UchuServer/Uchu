@@ -539,7 +539,7 @@ namespace Uchu.World.Handlers.Commands
         }
         
         [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Admin)]
-        public string World(string[] arguments, Player player)
+        public async Task<string> World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
                 return "world <zoneId>";
@@ -552,7 +552,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (id == ZoneId.FrostBurgh) return $"Sorry, {id} is disabled in the client...";
             
-            player.SendToWorld(id);
+            await player.SendToWorldAsync(id);
             
             player.Message(new SetStunnedMessage
             {

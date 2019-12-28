@@ -117,7 +117,7 @@ namespace Uchu.World.Handlers
             var zone = await ((WorldServer) Server).GetZoneAsync(zoneId);
 
             // Send the character init XML data for this world to the client
-            SendCharacterXmlDataToClient(character, connection, session);
+            await SendCharacterXmlDataToClient(character, connection, session);
 
             var player = await Player.ConstructAsync(character, connection, zone);
             if (character.LandingByRocket)
@@ -180,7 +180,7 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
         /// <param name="session">The session cache for the connection</param>
-        private async void SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
+        private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
             var xmlData = GenerateCharacterXMLData(character);

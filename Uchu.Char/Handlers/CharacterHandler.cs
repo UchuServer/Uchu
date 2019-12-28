@@ -142,7 +142,7 @@ namespace Uchu.Char.Handlers
 
                 user.Characters.Add(new Character
                 {
-                    CharacterId = IdUtils.GenerateObjectId(),
+                    CharacterId = IdUtilities.GenerateObjectId(),
                     Name = name,
                     CustomName = packet.CharacterName,
                     ShirtColor = packet.ShirtColor,
@@ -163,7 +163,7 @@ namespace Uchu.Char.Handlers
                     {
                         new InventoryItem
                         {
-                            InventoryItemId = IdUtils.GenerateObjectId(),
+                            InventoryItemId = IdUtilities.GenerateObjectId(),
                             LOT = (int) shirtLot,
                             Slot = 0,
                             Count = 1,
@@ -172,7 +172,7 @@ namespace Uchu.Char.Handlers
                         },
                         new InventoryItem
                         {
-                            InventoryItemId = IdUtils.GenerateObjectId(),
+                            InventoryItemId = IdUtilities.GenerateObjectId(),
                             LOT = (int) pantsLot,
                             Slot = 1,
                             Count = 1,
@@ -265,7 +265,7 @@ namespace Uchu.Char.Handlers
 
             var requestZone = zone == ZoneId.VentureExplorerCinematic ? ZoneId.VentureExplorer : zone;
             
-            await Server.RequestWorldServerAsync(requestZone, port =>
+            await WorldHelper.RequestWorldServerAsync(requestZone, port =>
             {
                 connection.Send(new ServerRedirectionPacket
                 {
