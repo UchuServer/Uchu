@@ -32,34 +32,24 @@ namespace Uchu.World
         {
             OnStart.AddListener(() =>
             {
-                if (!(GameObject is Player)) return;
-                
                 if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
                 _activeBehaviors.Add(BehaviorSlot.Primary, 1);
                 
-                inventory.OnEquipped.AddListener(async item =>
-                {
-                    if (item == default) return;
-                    
-                    var infos = await BehaviorTree.GetSkillsForItem(item);
+                inventory.OnEquipped.AddListener(MountItem);
 
-                    var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
+                inventory.OnUnEquipped.AddListener(DismountItem);
 
-                    if (onUse == default) return;
-                    
-                    As<Player>().SendChatMessage($"Adding skill: {onUse.SkillId}");
-                    
-                    SetSkill(item.ItemType.GetBehaviorSlot(), (uint) onUse.SkillId);
-                });
+                if (!(GameObject is Player player)) return;
                 
-                inventory.OnUnEquipped.AddListener(item =>
+                player.OnWorldLoad.AddListener(async () =>
                 {
-                    if (item == default) return Task.CompletedTask;
+                    if (!GameObject.TryGetComponent<InventoryManagerComponent>(out var manager)) return;
                     
-                    RemoveSkill(item.ItemType.GetBehaviorSlot());
-                    
-                    return Task.CompletedTask;
+                    foreach (var item in manager[InventoryType.Items].Items.Where(i => i.Equipped))
+                    {
+                        await MountItem(item);
+                    }
                 });
             });
         }
@@ -71,6 +61,83 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
+        }
+
+        private async Task MountItem(Item item)
+        {
+            if (item == default) return;
+            
+            await MountSkill(item);
+
+            await EquipSkill(item);
+        }
+
+        private async Task DismountItem(Item item)
+        {
+            if (item == default) return;
+
+            var slot = item.ItemType.GetBehaviorSlot();
+            
+            RemoveSkill(slot);
+
+            await DismountSkill(item);
+        }
+
+        private async Task EquipSkill(Item item)
+        {
+            if (item == default) return;
+            
+            var infos = await BehaviorTree.GetSkillsForItem(item);
+
+            var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
+
+            if (onUse == default) return;
+            
+            As<Player>().SendChatMessage($"Adding skill: {onUse.SkillId}");
+
+            var slot = item.ItemType.GetBehaviorSlot();
+            
+            RemoveSkill(slot);
+            
+            SetSkill(slot, (uint) onUse.SkillId);
+        }
+
+        private async Task MountSkill(Item item)
+        {
+            if (item == default) return;
+            
+            var infos = await BehaviorTree.GetSkillsForItem(item);
+            
+            var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
+
+            if (onEquip == default) return;
+            
+            As<Player>().SendChatMessage($"Mount skill: {onEquip.SkillId}");
+            
+            var tree = new BehaviorTree(item.Lot);
+
+            await tree.BuildAsync();
+
+            await tree.MountAsync(GameObject);
+        }
+
+        private async Task DismountSkill(Item item)
+        {
+            if (item == default) return;
+            
+            var infos = await BehaviorTree.GetSkillsForItem(item);
+
+            var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
+
+            if (onEquip == default) return;
+            
+            As<Player>().SendChatMessage($"Dismount skill: {onEquip.SkillId}");
+            
+            var tree = new BehaviorTree(item.Lot);
+
+            await tree.BuildAsync();
+
+            await tree.DismantleAsync(GameObject);
         }
 
         public async Task StartUserSkillAsync(StartSkillMessage message)

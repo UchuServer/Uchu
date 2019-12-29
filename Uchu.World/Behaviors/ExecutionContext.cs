@@ -7,9 +7,11 @@ namespace Uchu.World.Behaviors
 {
     using SyncDelegate = Func<BitReader, Task>;
     
+    using DismantleDelegate = Func<Task>;
+
     public class ExecutionContext
     {
-        public readonly GameObject Associate;
+        public GameObject Associate { get; }
 
         public BehaviorBase Root { get; set; }
 
@@ -17,7 +19,7 @@ namespace Uchu.World.Behaviors
 
         public uint SkillId { get; set; }
         
-        public readonly Dictionary<uint, SyncDelegate> BehaviorHandles = new Dictionary<uint, SyncDelegate>();
+        public Dictionary<uint, SyncDelegate> BehaviorHandles { get; } = new Dictionary<uint, SyncDelegate>();
         
         public ExecutionContext(GameObject associate, BitReader reader)
         {

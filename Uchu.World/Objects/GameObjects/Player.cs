@@ -34,6 +34,8 @@ namespace Uchu.World
             new AsyncEventDictionary<string, FireServerEventMessage>();
 
         public AsyncEvent<Lot> OnLootPickup { get; } = new AsyncEvent<Lot>();
+        
+        public AsyncEvent OnWorldLoad { get; } = new AsyncEvent();
 
         public AsyncEvent<Vector3, Quaternion> OnPositionUpdate { get; } = new AsyncEvent<Vector3, Quaternion>();
 

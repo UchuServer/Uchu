@@ -26,6 +26,7 @@ namespace Uchu.World
             OnStart.AddListener(() =>
             {
                 _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
+                
                 _lock = new object();
 
                 foreach (var value in Enum.GetValues(typeof(InventoryType)))

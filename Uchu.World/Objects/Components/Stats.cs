@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -46,7 +47,16 @@ namespace Uchu.World
             get => _maxHealth;
             set
             {
-                OnMaxHealthChanged.Invoke(value, (int) ((int) value - _maxHealth));
+                var delta = (int) ((int) value - _maxHealth);
+
+                if (delta < 0 && _health > value)
+                {
+                    OnHealthChanged.Invoke(value, (int) ((int) value - _health));
+
+                    _health = value;
+                }
+                
+                OnMaxHealthChanged.Invoke(value, delta);
 
                 _maxHealth = value;
 
@@ -76,7 +86,16 @@ namespace Uchu.World
             get => _maxArmor;
             set
             {
-                OnMaxArmorChanged.Invoke(value, (int) ((int) value - _maxArmor));
+                var delta = (int) ((int) value - _maxArmor);
+
+                if (delta < 0 && _armor > value)
+                {
+                    OnArmorChanged.Invoke(value, (int) ((int) value - _armor));
+
+                    _armor = value;
+                }
+                
+                OnMaxArmorChanged.Invoke(value, delta);
 
                 _maxArmor = value;
 
@@ -106,7 +125,16 @@ namespace Uchu.World
             get => _maxImagination;
             set
             {
-                OnMaxImaginationChanged.Invoke(value, (int) ((int) value - _maxImagination));
+                var delta = (int) ((int) value - _maxImagination);
+
+                if (delta < 0 && _imagination > value)
+                {
+                    OnImaginationChanged.Invoke(value, (int) ((int) value - _imagination));
+
+                    _imagination = value;
+                }
+                
+                OnMaxImaginationChanged.Invoke(value, delta);
 
                 _maxImagination = value;
 
@@ -259,6 +287,40 @@ namespace Uchu.World
             Health += Math.Min(value, MaxHealth - Health);
         }
 
+        public async Task BoostBaseHealth(uint delta)
+        {
+            if (!(GameObject is Player)) return;
+
+            await using var ctx = new UchuContext();
+
+            var character = ctx.Characters.First(c => c.CharacterId == GameObject.ObjectId);
+
+            character.BaseHealth += (int) delta;
+
+            MaxHealth += delta;
+
+            Health += delta;
+
+            await ctx.SaveChangesAsync();
+        }
+
+        public async Task BoostBaseImagination(uint delta)
+        {
+            if (!(GameObject is Player)) return;
+
+            await using var ctx = new UchuContext();
+
+            var character = ctx.Characters.First(c => c.CharacterId == GameObject.ObjectId);
+
+            character.BaseImagination += (int) delta;
+
+            MaxImagination += delta;
+
+            Imagination += delta;
+
+            await ctx.SaveChangesAsync();
+        }
+
         private void CollectObjectStats()
         {
             using var cdClient = new CdClientContext();
@@ -284,18 +346,24 @@ namespace Uchu.World
 
         private void CollectPlayerStats()
         {
+            if (!(GameObject is Player)) return;
+            
             using var ctx = new UchuContext();
 
-            var character = ctx.Characters.First(c => c.CharacterId == As<Player>().ObjectId);
+            var character = ctx.Characters.First(c => c.CharacterId == GameObject.ObjectId);
 
+            /*
+             * Any additional stats gets added on by skills.
+             */
+            
             _health = (uint) character.CurrentHealth;
-            _maxHealth = (uint) character.MaximumHealth;
+            _maxHealth = (uint) character.BaseHealth;
 
             _armor = (uint) character.CurrentArmor;
-            _maxArmor = (uint) character.MaximumArmor;
+            _maxArmor = default;
 
             _imagination = (uint) character.CurrentImagination;
-            _maxImagination = (uint) character.MaximumImagination;
+            _maxImagination = (uint) character.BaseImagination;
         }
     }
 }

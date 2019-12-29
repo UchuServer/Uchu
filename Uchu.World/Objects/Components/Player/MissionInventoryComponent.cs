@@ -300,8 +300,8 @@ namespace Uchu.World
 
             var stats = GameObject.GetComponent<Stats>();
 
-            stats.MaxHealth += (uint) (mission.Rewardmaxhealth ?? 0);
-            stats.MaxImagination += (uint) (mission.Rewardmaximagination ?? 0);
+            await stats.BoostBaseHealth((uint) (mission.Rewardmaxhealth ?? 0));
+            await stats.BoostBaseImagination((uint) (mission.Rewardmaximagination ?? 0));
 
             if (missionId == 173)
             {

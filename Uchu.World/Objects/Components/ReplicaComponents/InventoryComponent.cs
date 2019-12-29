@@ -133,9 +133,24 @@ namespace Uchu.World
             Logger.Debug($"Equipping {item}");
             
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
+            
             foreach (var (equipLocation, value) in items)
-                if (equipLocation.Equals(item.ItemComponent.EquipLocation))
+            {
+                if (!equipLocation.Equals(item.ItemComponent.EquipLocation)) continue;
+                
+                var manager = GameObject.GetComponent<InventoryManagerComponent>();
+                
+                if (manager != default)
+                {
+                    var oldItem = manager.FindItem(value.InventoryItemId);
+
+                    await UnEquipItem(oldItem);
+                }
+                else
+                {
                     await UnEquipItem(value.InventoryItemId);
+                }
+            }
 
             Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
 

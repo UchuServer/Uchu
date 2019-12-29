@@ -28,6 +28,11 @@ namespace Uchu.World.Behaviors
             return Task.CompletedTask;
         }
 
+        public virtual Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+
         public static async Task<BehaviorBase> BuildBranch(int behaviorId)
         {
             var cachedBehavior = Cache.FirstOrDefault(c => c.BehaviorId == behaviorId);
@@ -74,15 +79,15 @@ namespace Uchu.World.Behaviors
             };
         }
 
-        public async Task<BehaviorParameter> GetParameter(string name)
+        protected async Task<BehaviorParameter> GetParameter(string name)
         {
             await using var cdClient = new CdClientContext();
             return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
                 p.BehaviorID == BehaviorId && p.ParameterID == name
             );
         }
-        
-        public async Task<T> GetParameter<T>(string name) where T : struct
+
+        protected async Task<T> GetParameter<T>(string name) where T : struct
         {
             var param = await GetParameter(name);
 
@@ -91,7 +96,7 @@ namespace Uchu.World.Behaviors
             return param.Value.HasValue ? (T) Convert.ChangeType(param.Value.Value, typeof(T)) : default;
         }
 
-        public BehaviorParameter[] GetParameters()
+        protected BehaviorParameter[] GetParameters()
         {
             using var cdClient = new CdClientContext();
             return cdClient.BehaviorParameterTable.Where(p =>
@@ -107,7 +112,7 @@ namespace Uchu.World.Behaviors
             );
         }
 
-        public async Task<BehaviorBase> GetBehavior(string name)
+        protected async Task<BehaviorBase> GetBehavior(string name)
         {
             var action = await GetParameter(name);
 
@@ -115,8 +120,8 @@ namespace Uchu.World.Behaviors
 
             return await BuildBranch((int) action.Value);
         }
-        
-        public async Task<BehaviorBase> GetBehavior(uint id)
+
+        protected async Task<BehaviorBase> GetBehavior(uint id)
         {
             if (id == default) return new EmptyBehavior();
             
