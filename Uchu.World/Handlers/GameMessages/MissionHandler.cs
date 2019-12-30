@@ -34,7 +34,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.SendChatMessage($"FLAG: {message.FlagId}");
             
-            await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(MissionTaskType.Flag, message.FlagId);
+            player.GetComponent<MissionInventoryComponent>().UpdateObjectTask(MissionTaskType.Flag, message.FlagId);
             
             player.Message(new NotifyClientFlagChangeMessage
             {

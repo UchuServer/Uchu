@@ -186,12 +186,7 @@ namespace Uchu.World
 
                 for (var i = 0; i < count; i++)
                 {
-#pragma warning disable 4014
-                    Task.Run(async () =>
-#pragma warning restore 4014
-                    {
-                        await questInventory.UpdateObjectTaskAsync(MissionTaskType.ObtainItem, lot);
-                    });
+                    questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
                 }
 
                 //

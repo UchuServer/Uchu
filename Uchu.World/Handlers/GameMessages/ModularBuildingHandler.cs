@@ -34,5 +34,11 @@ namespace Uchu.World.Handlers.GameMessages
         {
             
         }
+
+        [PacketHandler]
+        public async Task BuildExitConfirmationHandler(BuildExitConfirmationMessage message, Player player)
+        {
+            await player.GetComponent<ModularBuilderComponent>().ConfirmFinish();
+        }
     }
 }

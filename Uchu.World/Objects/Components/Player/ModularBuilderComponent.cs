@@ -122,14 +122,10 @@ namespace Uchu.World
             {
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
-
+            
             inventory.AddItem(6416, 1, InventoryType.Models, model);
-            
-            var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
-            
-            await GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
-            
-            IsBuilding = false;
+
+            await ConfirmFinish();
         }
         
         public void DoneArranging(DoneArrangingWithItemMessage message)
@@ -154,6 +150,19 @@ namespace Uchu.World
                 FirstTime = false
             });
             */
+        }
+
+        public async Task ConfirmFinish()
+        {
+            if (!IsBuilding) return;
+            
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+            
+            var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
+            
+            await GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
+            
+            IsBuilding = false;
         }
     }
 }

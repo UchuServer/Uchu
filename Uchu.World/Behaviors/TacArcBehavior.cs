@@ -54,6 +54,8 @@ namespace Uchu.World.Behaviors
 
                 foreach (var target in targets)
                 {
+                    ((Player) context.Associate)?.SendChatMessage($"ATTACKING: {target}");
+                    
                     branchContext.AddTarget(target);
                 }
 

@@ -189,7 +189,7 @@ namespace Uchu.World
 
             instance._count = count;
             instance._slot = slot;
-            instance.Settings = extraInfo;
+            instance.Settings = extraInfo ?? new LegoDataDictionary();
 
             var itemComponent = cdClient.ItemComponentTable.First(
                 i => i.Id == itemRegistryEntry.Componentid

@@ -260,6 +260,10 @@ namespace Uchu.Char.Handlers
             await using var ctx = new UchuContext();
             
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == packet.CharacterId);
+            
+            character.LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+            await ctx.SaveChangesAsync();
 
             var zone = (ZoneId) character.LastZone;
 

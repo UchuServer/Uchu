@@ -58,17 +58,17 @@ namespace Uchu.World
                 spawnerPath.SpawnerObjectId,
                 Lot.Spawner
             );
-            
-            var settings = new LegoDataDictionary();
 
             /* TODO : 
+            
+            var settings = new LegoDataDictionary();
             foreach (var config in wayPoint.Configs)
             {
                 settings.Add(config.ConfigName, config.ConfigTypeAndValue);
             }
-            */
 
             spawner.Settings = settings;
+            */
 
             spawner.Settings.Add("respawn", spawnerPath.RespawnTime);
 

@@ -25,18 +25,21 @@ namespace Uchu.Core
 
         public void Add(float value)
         {
-            foreach (var taskValue in Values.Where(taskValue => taskValue.Value.Equals(value)))
+            lock (this)
             {
-                taskValue.Count++;
-                    
-                return;
-            }
+                foreach (var taskValue in Values.Where(taskValue => taskValue.Value.Equals(value)))
+                {
+                    taskValue.Count++;
 
-            Values.Add(new MissionTaskValue
-            {
-                Value = value,
-                Count = 1
-            });
+                    return;
+                }
+
+                Values.Add(new MissionTaskValue
+                {
+                    Value = value,
+                    Count = 1
+                });
+            }
         }
 
         public void Remove(float value)

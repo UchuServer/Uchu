@@ -28,6 +28,14 @@ namespace Uchu.World
                     return Task.CompletedTask;
                 };
             });
+            
+            OnDestroyed.AddListener(() =>
+            {
+                OnFireServerEvent.Clear();
+                OnLootPickup.Clear();
+                OnWorldLoad.Clear();
+                OnPositionUpdate.Clear();
+            });
         }
 
         public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =

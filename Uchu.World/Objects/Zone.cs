@@ -385,6 +385,8 @@ namespace Uchu.World
                             Update(obj);
 
                             if (!(obj is GameObject gameObject)) continue;
+                            
+                            if (obj is Item) continue;
 
                             foreach (var player in players)
                             {

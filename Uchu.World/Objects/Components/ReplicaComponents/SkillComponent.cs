@@ -173,7 +173,7 @@ namespace Uchu.World
                 _handledSkills[message.SkillHandle] = context;
             }
 
-            await As<Player>().GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
+            GameObject.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
                 MissionTaskType.UseSkill, message.SkillId
             );
         }

@@ -9,6 +9,10 @@ namespace Uchu.World.Filters
         public float Distance { get; set; }
 
         public Player Player { get; set; }
+        
+        public bool Override { get; set; }
+        
+        public Vector3 OverrideReferencePosition { get; set; }
 
         public void Initialize(Player player)
         {
@@ -24,8 +28,12 @@ namespace Uchu.World.Filters
         public bool View(GameObject gameObject)
         {
             if (gameObject?.Transform == default) return false;
+
+            if (gameObject == Player) return true;
             
-            return Vector3.Distance(gameObject.Transform.Position, Player.Transform.Position) <= Distance;
+            var reference = Override ? OverrideReferencePosition : Player.Transform.Position;
+            
+            return Vector3.Distance(gameObject.Transform.Position, reference) <= Distance;
         }
     }
 }

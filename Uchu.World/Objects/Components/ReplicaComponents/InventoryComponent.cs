@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,6 +19,8 @@ namespace Uchu.World
         public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
             new Dictionary<EquipLocation, InventoryItem>();
 
+        private Dictionary<long, long[]> ProxyItems { get; set; } = new Dictionary<long, long[]>();
+        
         public override ComponentId Id => ComponentId.InventoryComponent;
 
         protected InventoryComponent()
@@ -76,7 +77,7 @@ namespace Uchu.World
             });
         }
 
-        public void EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,
+        public long EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,
             InventoryType inventoryType = InventoryType.None)
         {
             using var cdClient = new CdClientContext();
@@ -89,27 +90,29 @@ namespace Uchu.World
             if (cdClientObject == default || itemRegistryEntry == default)
             {
                 Logger.Error($"{lot} is not a valid item");
-                return;
+                return -1;
             }
 
             var itemComponent = cdClient.ItemComponentTable.First(
                 i => i.Id == itemRegistryEntry
             );
 
-            Items.Add(itemComponent.EquipLocation, new InventoryItem
+            var id = IdUtilities.GenerateObjectId();
+            
+            Items[itemComponent.EquipLocation] = new InventoryItem
             {
-                InventoryItemId = IdUtilities.GenerateObjectId(),
+                InventoryItemId = id,
                 Count = count,
                 Slot = slot,
                 LOT = lot,
                 InventoryType = (int) inventoryType
-            });
+            };
+
+            return id;
         }
 
         public async Task EquipItem(Item item, bool ignoreAllChecks = false)
         {
-            await OnEquipped.InvokeAsync(item);
-            
             if (item?.InventoryItem == null)
             {
                 Logger.Error($"{item} is not a valid item");
@@ -123,13 +126,24 @@ namespace Uchu.World
             {
                 if (!As<Player>().GetComponent<ModularBuilderComponent>().IsBuilding)
                 {
-                    if (itemType == ItemType.Model || itemType == ItemType.LootModel || item.Lot == 6086)
+                    if (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle || item.Lot == 6086)
                     {
                         return;
                     }
                 }
             }
             
+            /*
+             * Equip proxies
+             */
+
+            var proxies = await GenerateProxyItems(item);
+
+            if (proxies?.Length > 0)
+            {
+                ProxyItems[item.ObjectId] = proxies;
+            }
+
             Logger.Debug($"Equipping {item}");
             
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
@@ -151,8 +165,10 @@ namespace Uchu.World
                     await UnEquipItem(value.InventoryItemId);
                 }
             }
+            
+            await OnEquipped.InvokeAsync(item);
 
-            Items.Add(item.ItemComponent.EquipLocation, item.InventoryItem);
+            Items[item.ItemComponent.EquipLocation] = item.InventoryItem;
 
             await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true);
 
@@ -168,7 +184,7 @@ namespace Uchu.World
             if (item != null) await UnEquipItem(item.ObjectId);
         }
 
-        public async Task UnEquipItem(long id)
+        private async Task UnEquipItem(long id)
         {
             var (equipLocation, value) = Items.FirstOrDefault(i => i.Value.InventoryItemId == id);
 
@@ -185,6 +201,14 @@ namespace Uchu.World
             await ChangeEquippedSateOnPlayerAsync(id, false);
 
             GameObject.Serialize(GameObject);
+
+            if (ProxyItems.TryGetValue(id, out var proxies))
+            {
+                foreach (var proxy in proxies)
+                {
+                    await UnEquipItem(proxy);
+                }
+            }
         }
 
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
@@ -198,6 +222,36 @@ namespace Uchu.World
 
                 await ctx.SaveChangesAsync();
             }
+        }
+
+        private async Task<long[]> GenerateProxyItems(Item item)
+        {
+            if (string.IsNullOrWhiteSpace(item?.ItemComponent?.SubItems)) return null;
+            
+            var proxies = item.ItemComponent.SubItems
+                .Replace(" ", "")
+                .Split(',')
+                .Select(int.Parse);
+
+            var list = new List<long>();
+
+            await using var cdClient = new CdClientContext();
+
+            foreach (Lot proxy in proxies)
+            {
+                var componentId = proxy.GetComponentId(ComponentId.ItemComponent);
+
+                var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(i => i.Id == componentId);
+
+                if (component == default) continue;
+
+                list.Add(EquipUnmanagedItem(
+                    proxy,
+                    inventoryType: item.Inventory.InventoryType)
+                );
+            }
+
+            return list.ToArray();
         }
 
         public override void Construct(BitWriter writer)

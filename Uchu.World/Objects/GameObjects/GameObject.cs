@@ -76,6 +76,8 @@ namespace Uchu.World
         {
             get
             {
+                if (Settings == default) return 0;
+                
                 if (!Settings.TryGetValue("gmlevel", out var level)) return default;
 
                 return (int) level;

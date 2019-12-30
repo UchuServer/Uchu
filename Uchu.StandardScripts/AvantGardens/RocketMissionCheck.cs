@@ -18,7 +18,7 @@ namespace StandardScripts.AvantGardens
 
                 var questInventory = player.GetComponent<MissionInventoryComponent>();
 
-                await questInventory.UpdateObjectTaskAsync(MissionTaskType.Script, 5652);
+                questInventory.UpdateObjectTask(MissionTaskType.Script, 5652);
             });
             
             return Task.CompletedTask;
