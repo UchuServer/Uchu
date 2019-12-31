@@ -30,10 +30,13 @@ namespace Uchu.World.Filters
             if (gameObject?.Transform == default) return false;
 
             if (gameObject == Player) return true;
+
+            if (Override && Vector3.Distance(gameObject.Transform.Position, OverrideReferencePosition) <= Distance)
+            {
+                return true;
+            }
             
-            var reference = Override ? OverrideReferencePosition : Player.Transform.Position;
-            
-            return Vector3.Distance(gameObject.Transform.Position, reference) <= Distance;
+            return Vector3.Distance(gameObject.Transform.Position, Player.Transform.Position) <= Distance;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Behaviors
@@ -22,8 +23,10 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
+
+            var array = new[] {HitAction, HitActionEnemy, HitActionFaction};
             
-            if (HitAction == default && HitActionEnemy == default && HitActionFaction == default) return;
+            if (array.All(b => b?.BehaviorId == 0)) return;
 
             var handle = context.Reader.Read<uint>();
             

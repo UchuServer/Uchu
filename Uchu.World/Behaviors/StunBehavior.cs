@@ -16,7 +16,7 @@ namespace Uchu.World.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
             
-            if (branchContext.Target == context.Associate || branchContext.Target == default) return;
+            if (branchContext.Target == context.Associate) return;
 
             context.Reader.ReadBit();
         }

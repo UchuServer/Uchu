@@ -114,7 +114,7 @@ namespace Uchu.World.Behaviors
         {
             var action = await GetParameter(name);
 
-            if (action?.Value == null) return new EmptyBehavior();
+            if (action?.Value == null || action.Value.Value.Equals(0)) return new EmptyBehavior();
 
             return await BuildBranch((int) action.Value);
         }
