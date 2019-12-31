@@ -20,7 +20,7 @@ namespace Uchu.World.Behaviors
         public override async Task BuildAsync()
         {
             CheckEnvironment = (await GetParameter("check_env")).Value > 0;
-            Blocked = await GetParameter("blocked_action") != default;
+            Blocked = await GetParameter("blocked action") != default;
 
             ActionBehavior = await GetBehavior("action");
             BlockedBehavior = await GetBehavior("blocked action");
@@ -55,11 +55,14 @@ namespace Uchu.World.Behaviors
                 foreach (var target in targets)
                 {
                     ((Player) context.Associate)?.SendChatMessage($"ATTACKING: {target}");
-                    
-                    branchContext.AddTarget(target);
-                }
 
-                await ActionBehavior.ExecuteAsync(context, branchContext);
+                    var branch = new ExecutionBranchContext(target)
+                    {
+                        Duration = branchContext.Duration
+                    };
+
+                    await ActionBehavior.ExecuteAsync(context, branch);
+                }
             }
             else
             {

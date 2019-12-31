@@ -20,6 +20,8 @@ namespace Uchu.World.Behaviors
 
         public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
+            ((Player) context.Associate)?.SendChatMessage($"[{BehaviorId}] {Id}");
+            
             return Task.CompletedTask;
         }
 
@@ -62,16 +64,12 @@ namespace Uchu.World.Behaviors
 
         protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            var targets = branchContext.Targets;
-            
             context.BehaviorHandles[handle] = async reader =>
             {
-                var newBranchContext = new ExecutionBranchContext();
-
-                foreach (var target in targets)
+                var newBranchContext = new ExecutionBranchContext(branchContext.Target)
                 {
-                    newBranchContext.AddTarget(target);
-                }
+                    Duration = branchContext.Duration
+                };
                 
                 context.Reader = reader;
                 

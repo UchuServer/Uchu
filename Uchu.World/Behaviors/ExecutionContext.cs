@@ -6,8 +6,6 @@ using RakDotNet.IO;
 namespace Uchu.World.Behaviors
 {
     using SyncDelegate = Func<BitReader, Task>;
-    
-    using DismantleDelegate = Func<Task>;
 
     public class ExecutionContext
     {

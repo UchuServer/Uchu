@@ -147,7 +147,7 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                Zone.BroadcastMessage(new EchoStartSkillMessage
+                Zone.ExcludingMessage(new EchoStartSkillMessage
                 {
                     Associate = GameObject,
                     CasterLatency = message.CasterLatency,
@@ -160,7 +160,7 @@ namespace Uchu.World
                     SkillHandle = message.SkillHandle,
                     SkillId = message.SkillId,
                     UsedMouse = message.UsedMouse
-                });
+                }, As<Player>());
 
                 As<Player>().SendChatMessage($"START: {message.SkillId}");
                 
@@ -180,26 +180,31 @@ namespace Uchu.World
 
         public async Task SyncUserSkillAsync(SyncSkillMessage message)
         {
-            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviourHandle}]");
-            
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
 
-            await _handledSkills[message.SkillHandle].SyncAsync(message.BehaviourHandle, reader);
+            var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
+            
+            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviourHandle}] ; {found}");
+
+            if (found)
+            {
+                await behavior.SyncAsync(message.BehaviourHandle, reader);
+            }
 
             if (message.Done)
             {
-                _handledSkills.Remove(message.SkillHandle);
+                //_handledSkills.Remove(message.SkillHandle);
             }
 
-            Zone.BroadcastMessage(new EchoSyncSkillMessage
+            Zone.ExcludingMessage(new EchoSyncSkillMessage
             {
                 Associate = GameObject,
                 BehaviorHandle = message.BehaviourHandle,
                 Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle
-            });
+            }, As<Player>());
         }
 
         public void SetSkill(BehaviorSlot slot, uint skillId)

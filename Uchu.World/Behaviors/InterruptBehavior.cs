@@ -12,8 +12,6 @@ namespace Uchu.World.Behaviors
         public int InteruptAttack { get; set; }
         public int InteruptCharge { get; set; }
         
-        public int Target { get; set; }
-        
         public override async Task BuildAsync()
         {
             InterruptAttack = await GetParameter<int>("interrupt_attack");
@@ -21,13 +19,13 @@ namespace Uchu.World.Behaviors
             InterruptCharge = await GetParameter<int>("interrupt_charge");
             InteruptAttack = await GetParameter<int>("interupt_attack");
             InteruptCharge = await GetParameter<int>("interupt_charge");
-
-            Target = await GetParameter<int>("target");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (Target != context.Associate)
+            await base.ExecuteAsync(context, branchContext);
+
+            if (branchContext.Target != context.Associate)
             {
                 context.Reader.ReadBit();
             }
@@ -38,8 +36,6 @@ namespace Uchu.World.Behaviors
             }
 
             context.Reader.ReadBit();
-            
-            return Task.CompletedTask;
         }
     }
 }

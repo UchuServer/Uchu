@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Behaviors
@@ -14,6 +15,10 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
+            
+            if (branchContext.Target == context.Associate || branchContext.Target == default) return;
+
+            context.Reader.ReadBit();
         }
     }
 }

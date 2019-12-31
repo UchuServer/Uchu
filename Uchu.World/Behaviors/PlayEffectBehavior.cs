@@ -20,12 +20,6 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
-            
-            context.Associate.Zone.BroadcastMessage(new PlayFXEffectMessage
-            {
-                Associate = context.Associate,
-                EffectId = EffectId
-            });
         }
     }
 }

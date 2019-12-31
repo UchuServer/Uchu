@@ -8,9 +8,11 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.BasicAttack;
         
-        public override Task BuildAsync()
+        public BehaviorBase OnSuccess { get; set; }
+        
+        public override async Task BuildAsync()
         {
-            return Task.CompletedTask;
+            OnSuccess = await GetBehavior("on_success");
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
@@ -29,9 +31,13 @@ namespace Uchu.World.Behaviors
 
             var damage = context.Reader.Read<uint>();
 
-            foreach (var target in branchContext.Targets)
+            ((Player) context.Associate)?.SendChatMessage($"{damage} -> {branchContext.Target}");
+            
+            branchContext.Target.GetComponent<Stats>().Damage(damage, context.Associate);
+
+            if (context.Reader.ReadBit())
             {
-                target.GetComponent<Stats>().Damage(damage, context.Associate);
+                await OnSuccess.ExecuteAsync(context, branchContext);
             }
         }
     }

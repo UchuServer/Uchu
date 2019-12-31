@@ -399,26 +399,20 @@ namespace Uchu.World
 
                 var task = tasks.FirstOrDefault(missionTask =>
                 {
-                    if (MissionParser.GetTargets(missionTask).Contains(lot) &&
-                        mission.Tasks.Exists(a => a.TaskId == missionTask.Uid))
+                    if (!MissionParser.GetTargets(missionTask).Contains(lot)) return false;
+
+                    if (!mission.Tasks.Exists(a => a.TaskId == missionTask.Uid)) return false;
+                    
+                    if (missionTask?.TaskType == null) return false;
+                    
+                    if ((MissionTaskType) missionTask.TaskType == MissionTaskType.GoToNpc)
                     {
-                        if (missionTask?.TaskType != null)
-                        {
-                            if ((MissionTaskType) missionTask.TaskType == MissionTaskType.GoToNpc)
-                            {
-                                missionTask.TaskType = (int) MissionTaskType.Interact;
-                            }
-                            
-                            As<Player>().SendChatMessage($"{(MissionTaskType) missionTask.TaskType} -> {type}");
-
-                            if (missionTask.TaskType == (int) type)
-                            {
-                                return true;
-                            }
-                        }
+                        missionTask.TaskType = (int) MissionTaskType.Interact;
                     }
+                            
+                    As<Player>().SendChatMessage($"{(MissionTaskType) missionTask.TaskType} -> {type}");
 
-                    return false;
+                    return missionTask.TaskType == (int) type;
                 });
 
                 //
@@ -475,15 +469,6 @@ namespace Uchu.World
                         );
 
                         break;
-                    case MissionTaskType.Flag:
-                        /*
-                        if (gameObject != default && lot == gameObject.Lot)
-                        {
-                            break;
-                        }
-                        */
-
-                        goto case MissionTaskType.Script;
                     // Allows multiple
                     case MissionTaskType.KillEnemy:
                     case MissionTaskType.QuickBuild:
@@ -508,6 +493,7 @@ namespace Uchu.World
 
                         break;
                     // Singles
+                    case MissionTaskType.Flag:
                     case MissionTaskType.Script:
                     case MissionTaskType.UseSkill:
                     case MissionTaskType.Interact:
@@ -519,8 +505,6 @@ namespace Uchu.World
                         if (!characterTask.Values.Any(v => v.Value.Equals(lot)))
                         {
                             characterTask.Add(lot);
-
-                            Logger.Information($"Update: {lot} -> {characterTask.Values.Count}");
 
                             // Send update to client
                             MessageUpdateMissionTask(

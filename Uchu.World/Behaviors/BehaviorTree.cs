@@ -141,6 +141,8 @@ namespace Uchu.World.Behaviors
 
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
+            target = associate;
+            
             var context = new ExecutionContext(associate, reader);
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
@@ -148,10 +150,8 @@ namespace Uchu.World.Behaviors
                 foreach (var root in defaultList)
                 {
                     context.Root = root;
-                    
-                    var branchContext = new ExecutionBranchContext();
 
-                    branchContext.Targets.Add(target);
+                    var branchContext = new ExecutionBranchContext(target);
                     
                     await root.ExecuteAsync(context, branchContext);
                 }
@@ -163,9 +163,7 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                var branchContext = new ExecutionBranchContext();
-
-                branchContext.Targets.Add(target);
+                var branchContext = new ExecutionBranchContext(target);
                 
                 await root.ExecuteAsync(context, branchContext);
             }
@@ -185,7 +183,7 @@ namespace Uchu.World.Behaviors
                 
                 (associate as Player)?.SendChatMessage($"Mounting behavior: [{root.Id}] {root.BehaviorId}");
 
-                var branchContext = new ExecutionBranchContext();
+                var branchContext = new ExecutionBranchContext(associate);
                 
                 await root.ExecuteAsync(context, branchContext);
             }
@@ -205,7 +203,7 @@ namespace Uchu.World.Behaviors
                 
                 (associate as Player)?.SendChatMessage($"Dismounting behavior: [{root.Id}] {root.BehaviorId}");
                 
-                var branchContext = new ExecutionBranchContext();
+                var branchContext = new ExecutionBranchContext(associate);
                 
                 await root.DismantleAsync(context, branchContext);
             }
