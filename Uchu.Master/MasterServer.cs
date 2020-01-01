@@ -281,7 +281,7 @@ namespace Uchu.Master
             await ctx.Specifications.AddAsync(new ServerSpecification
             {
                 Id = id,
-                Port = 2002,
+                Port = Config.Networking.CharacterPort,
                 ServerType = ServerType.Character
             });
 

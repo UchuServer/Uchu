@@ -26,7 +26,7 @@ namespace Uchu.Auth.Handlers
             var info = new ServerLoginInfoPacket
             {
                 CharacterInstanceAddress = address,
-                CharacterInstancePort = 2002,
+                CharacterInstancePort = (ushort) Server.Config.Networking.CharacterPort,
                 ChatInstanceAddress = address,
                 ChatInstancePort = 2004
             };
