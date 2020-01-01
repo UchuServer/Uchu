@@ -110,8 +110,21 @@ namespace Uchu.Core
 
                 SessionCache = new DatabaseCache();
             }
+
+            if (!IsPortAvailable(Port))
+            {
+                Logger.Error($"Port {Port} is occupied.");
+            }
             
             Logger.Information($"Server {Id} configured on port: {Port}");
+        }
+
+        private bool IsPortAvailable(int port)
+        {
+            var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+            var tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
+
+            return tcpConnInfoArray.All(information => information.LocalEndPoint.Port != port);
         }
 
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
@@ -152,8 +165,8 @@ namespace Uchu.Core
                     {
                         Logger.Information($"Starting server...");
                         
-                        await RakNetServer.RunAsync();
-                    
+                        await RakNetServer.RunAsync().ConfigureAwait(false);
+                        
                         return;
                     }
                 
@@ -166,7 +179,7 @@ namespace Uchu.Core
 
                 Logger.Information($"Starting server...");
                 
-                await RakNetServer.RunAsync();
+                await RakNetServer.RunAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
