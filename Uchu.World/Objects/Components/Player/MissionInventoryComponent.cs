@@ -339,7 +339,19 @@ namespace Uchu.World
                 {
                     if (lot == default || count == default) continue;
 
-                    await inventory.AddItemAsync(lot, (uint) count);
+                    if (mission.IsMission ?? true)
+                    {
+                        await inventory.AddItemAsync(lot, (uint) count);
+                    }
+                    else
+                    {
+                        var _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(11000);
+                            
+                            await inventory.AddItemAsync(lot, (uint) count);
+                        });
+                    }
                 }
             }
             else

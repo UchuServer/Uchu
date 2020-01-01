@@ -20,7 +20,7 @@ namespace Uchu.World.Behaviors
 
         public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            ((Player) context.Associate)?.SendChatMessage($"[{BehaviorId}] {Id}");
+            //((Player) context.Associate)?.SendChatMessage($"[{BehaviorId}] {Id}");
             
             return Task.CompletedTask;
         }

@@ -16,16 +16,6 @@ namespace Uchu.World.Behaviors
 
         public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            /*
-            if (EffectId == default) return Task.CompletedTask;
-            
-            context.Associate.Zone.BroadcastMessage(new PlayFXEffectMessage
-            {
-                Associate = context.Associate,
-                EffectId = EffectId
-            });
-            */
-            
             return Task.CompletedTask;
         }
     }

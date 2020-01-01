@@ -41,6 +41,10 @@ namespace Uchu.World
 
             OnDestroyed.AddListener(() =>
             {
+                OnLotAdded.Clear();
+                
+                OnLotRemoved.Clear();
+                
                 foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items)) Destroy(item);
             });
         }
@@ -144,11 +148,11 @@ namespace Uchu.World
         {
             var inventory = _inventories[inventoryType];
             
+            OnLotAdded.Invoke(lot, count);
+
             // The math here cannot be executed in parallel
             lock (_lock)
             {
-                OnLotAdded.Invoke(lot, count);
-                
                 using var cdClient = new CdClientContext();
                 
                 var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
@@ -177,17 +181,6 @@ namespace Uchu.World
                     
                 // Bricks and alike does not have a stack limit.
                 if (stackSize == default) stackSize = int.MaxValue;
-
-                //
-                // Update quest tasks
-                //
-
-                var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
-
-                for (var i = 0; i < count; i++)
-                {
-                    questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
-                }
 
                 //
                 // Fill stacks
@@ -223,6 +216,18 @@ namespace Uchu.World
                     toCreate -= toAdd;
                 }
             }
+            
+            //
+            // Update quest tasks
+            //
+
+            var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
+
+            for (var i = 0; i < count; i++)
+            {
+                questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
+            }
+
         }
 
         public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)

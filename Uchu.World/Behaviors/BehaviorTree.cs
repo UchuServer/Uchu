@@ -181,8 +181,6 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                (associate as Player)?.SendChatMessage($"Mounting behavior: [{root.Id}] {root.BehaviorId}");
-
                 var branchContext = new ExecutionBranchContext(associate);
                 
                 await root.ExecuteAsync(context, branchContext);
@@ -200,8 +198,6 @@ namespace Uchu.World.Behaviors
             foreach (var root in list)
             {
                 context.Root = root;
-                
-                (associate as Player)?.SendChatMessage($"Dismounting behavior: [{root.Id}] {root.BehaviorId}");
                 
                 var branchContext = new ExecutionBranchContext(associate);
                 

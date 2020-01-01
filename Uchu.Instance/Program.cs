@@ -42,29 +42,46 @@ namespace Uchu.Instance
             
             await server.ConfigureAsync(args[1]);
 
-            switch (specification.ServerType)
+            try
             {
-                case ServerType.Authentication:
-                    await server.StartAsync(typeof(LoginHandler).Assembly);
-                    break;
-                case ServerType.Character:
-                    await server.StartAsync(typeof(CharacterHandler).Assembly);
-                    break;
-                case ServerType.World:
-                    await server.StartAsync(typeof(WorldInitializationHandler).Assembly);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (specification.ServerType)
+                {
+                    case ServerType.Authentication:
+                        await server.StartAsync(typeof(LoginHandler).Assembly, true);
+                        break;
+                    case ServerType.Character:
+                        await server.StartAsync(typeof(CharacterHandler).Assembly);
+                        break;
+                    case ServerType.World:
+                        await server.StartAsync(typeof(WorldInitializationHandler).Assembly);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
-
-            await using (var ctx = new UchuContext())
+            catch (Exception e)
             {
+                Logger.Error(e);
+            }
+            
+            Logger.Information("Exiting...");
+
+            try
+            {
+                await using var ctx = new UchuContext();
+                
                 specification = await ctx.Specifications.FirstAsync(c => c.Id == id);
 
                 ctx.Specifications.Remove(specification);
 
                 await ctx.SaveChangesAsync();
             }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
+
+            Console.ReadKey();
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Uchu.World.Behaviors
             
             if (duration.Value == null) return;
 
-            ActionDuration = (int) (duration.Value * 1000); // Get in ms
+            ActionDuration = (int) duration.Value;
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)

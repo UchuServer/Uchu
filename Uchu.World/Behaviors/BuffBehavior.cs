@@ -30,8 +30,6 @@ namespace Uchu.World.Behaviors
 
         public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            (context.Associate as Player)?.SendChatMessage($"Adding: L: {Life}, A: {Armor}, I: {Imagination}");
-            
             if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
 
             stats.MaxHealth += (uint) Life;
@@ -43,8 +41,6 @@ namespace Uchu.World.Behaviors
 
         public override Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            (context.Associate as Player)?.SendChatMessage($"Removing: L: {Life}, A: {Armor}, I: {Imagination}");
-            
             if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
 
             stats.MaxHealth -= (uint) Life;

@@ -28,14 +28,10 @@ namespace Uchu.World.Behaviors
             var handle = context.Reader.Read<uint>();
 
             RegisterHandle(handle, context, branchContext);
-            
-            ((Player) context.Associate)?.SendChatMessage($"HANDLE: {handle} -> [{Action.BehaviorId}] {Action.Id}");
         }
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            ((Player) context.Associate)?.SendChatMessage($"DELAY: [{Action.BehaviorId}] {Action.Id}");
-            
             await Action.ExecuteAsync(context, branchContext);
         }
     }

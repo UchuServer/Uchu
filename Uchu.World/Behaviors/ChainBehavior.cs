@@ -41,8 +41,6 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
             
             var chainIndex = context.Reader.Read<uint>();
-            
-            ((Player) context.Associate).SendChatMessage($"[{chainIndex}] {string.Join(",", Behaviors.Select(b => b.Id))}");
 
             await Behaviors[chainIndex - 1].ExecuteAsync(context, branchContext);
         }

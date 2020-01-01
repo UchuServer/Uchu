@@ -17,8 +17,6 @@ namespace Uchu.World.Behaviors
 
             var handle = context.Reader.Read<uint>();
             
-            ((Player) context.Associate)?.SendChatMessage($"AIR HANDLE: {handle}");
-
             RegisterHandle(handle, context, branchContext);
         }
 
@@ -31,8 +29,6 @@ namespace Uchu.World.Behaviors
             var id = context.Reader.Read<ulong>();
 
             context.Associate.Zone.TryGetGameObject((long) id, out var target);
-            
-            ((Player) context.Associate)?.SendChatMessage($"AIR: [{BehaviorId}] {actionId}, [{id}] {target}");
 
             var branch = new ExecutionBranchContext(target)
             {
