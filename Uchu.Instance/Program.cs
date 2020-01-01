@@ -29,16 +29,9 @@ namespace Uchu.Instance
                     throw new ArgumentException($"{args[0]} is not a valid server specification ID");
             }
 
-            Server server;
-
-            if (specification.ServerType == ServerType.World)
-            {
-                server = new WorldServer(specification);
-            }
-            else
-            {
-                server = new Server(specification.Id);
-            }
+            var server = specification.ServerType == ServerType.World
+                ? new WorldServer(specification)
+                : new Server(specification.Id);
             
             await server.ConfigureAsync(args[1]);
 

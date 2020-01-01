@@ -111,12 +111,14 @@ namespace Uchu.Core
                 SessionCache = new DatabaseCache();
             }
             
-            Logger.Information($"Server {Id} created on port: {Port}");
+            Logger.Information($"Server {Id} configured on port: {Port}");
         }
 
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
-            RegisterAssembly(Assembly.GetExecutingAssembly());
+            Logger.Information($"Registering assemblies...");
+            
+            RegisterAssembly(typeof(Server).Assembly);
             RegisterAssembly(assembly);
 
             RakNetServer.MessageReceived += HandlePacketAsync;
@@ -127,6 +129,8 @@ namespace Uchu.Core
             {
                 var _ = Task.Run(async () =>
                 {
+                    Logger.Information($"Ready to accept console command...");
+                    
                     while (Running)
                     {
                         var command = Console.ReadLine();
@@ -135,26 +139,39 @@ namespace Uchu.Core
                     }
                 });
             }
-            
-            await using (var ctx = new UchuContext())
+
+            try
             {
-                var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
-
-                if (request == default)
+                Logger.Information("Looking for requests...");
+                
+                await using (var ctx = new UchuContext())
                 {
-                    await RakNetServer.RunAsync().ConfigureAwait(false);
+                    var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
+
+                    if (request == default)
+                    {
+                        Logger.Information($"Starting server...");
+                        
+                        await RakNetServer.RunAsync();
                     
-                    return;
+                        return;
+                    }
+                
+                    Logger.Information($"Request found for {Id}");
+                
+                    request.State = WorldServerRequestState.Complete;
+
+                    ctx.SaveChanges();
                 }
-                
-                Logger.Information($"Request found for {Id}");
-                
-                request.State = WorldServerRequestState.Complete;
 
-                ctx.SaveChanges();
+                Logger.Information($"Starting server...");
+                
+                await RakNetServer.RunAsync();
             }
-
-            await RakNetServer.RunAsync().ConfigureAwait(false);
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public Task StopAsync()
