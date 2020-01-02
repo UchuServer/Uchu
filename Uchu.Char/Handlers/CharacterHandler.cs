@@ -17,7 +17,7 @@ namespace Uchu.Char.Handlers
         private static async Task SendCharacterList(IRakConnection connection, long userId)
         {
             await using var ctx = new UchuContext();
-            
+
             var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
                 .SingleAsync(u => u.UserId == userId);
 
@@ -91,7 +91,8 @@ namespace Uchu.Char.Handlers
                 //    Shirt
                 //
                 var shirtColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.ShirtColor);
-                var shirtName = $"{(shirtColor != null ? shirtColor.Description : "Bright Red")} Shirt {packet.ShirtStyle}";
+                var shirtName =
+                    $"{(shirtColor != null ? shirtColor.Description : "Bright Red")} Shirt {packet.ShirtStyle}";
                 var shirt = ctx.ObjectsTable.ToArray().FirstOrDefault(o =>
                     string.Equals(o.Name, shirtName, StringComparison.CurrentCultureIgnoreCase));
                 shirtLot = (uint) (shirt != null ? shirt.Id : 4049); // Select 'Bright Red Shirt 1' if not found.
@@ -122,9 +123,9 @@ namespace Uchu.Char.Handlers
                 {
                     Logger.Debug($"{connection} character create rejected due to duplicate name");
                     connection.Send(new CharacterCreateResponse
-                            {ResponseId = CharacterCreationResponse.CustomNameInUse}
+                        {ResponseId = CharacterCreationResponse.CustomNameInUse}
                     );
-                    
+
                     return;
                 }
 
@@ -134,7 +135,7 @@ namespace Uchu.Char.Handlers
                     connection.Send(new CharacterCreateResponse
                         {ResponseId = CharacterCreationResponse.PredefinedNameInUse}
                     );
-                    
+
                     return;
                 }
 
@@ -184,7 +185,8 @@ namespace Uchu.Char.Handlers
                     MaximumImagination = 0
                 });
 
-                Logger.Debug($"{user.Username} created character \"{packet.CharacterName}\" with the pre-made name of \"{name}\"");
+                Logger.Debug(
+                    $"{user.Username} created character \"{packet.CharacterName}\" with the pre-made name of \"{name}\"");
 
                 await ctx.SaveChangesAsync();
 
@@ -200,7 +202,7 @@ namespace Uchu.Char.Handlers
         public async Task DeleteCharacter(CharacterDeleteRequest packet, IRakConnection connection)
         {
             await using var ctx = new UchuContext();
-            
+
             try
             {
                 ctx.Characters.Remove(await ctx.Characters.FindAsync(packet.CharacterId));
@@ -223,7 +225,7 @@ namespace Uchu.Char.Handlers
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
-            
+
             if (ctx.Characters.Any(c => c.Name == packet.Name || c.CustomName == packet.Name))
             {
                 connection.Send(new CharacterRenameResponse
@@ -258,9 +260,9 @@ namespace Uchu.Char.Handlers
                 : Server.GetAddresses()[0].ToString();
 
             await using var ctx = new UchuContext();
-            
+
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == packet.CharacterId);
-            
+
             character.LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds();
 
             await ctx.SaveChangesAsync();
@@ -268,9 +270,36 @@ namespace Uchu.Char.Handlers
             var zone = (ZoneId) character.LastZone;
 
             var requestZone = zone == ZoneId.VentureExplorerCinematic ? ZoneId.VentureExplorer : zone;
+
+            //
+            // We don't want to lock up the server on a world server request, as it may take time.
+            //
             
-            await WorldHelper.RequestWorldServerAsync(requestZone, port =>
+            var _ = Task.Run(async () =>
             {
+                //
+                // Request world server.
+                //
+                
+                var port = await WorldHelper.RequestWorldServerAsync(requestZone);
+
+                if (port == -1)
+                {
+                    //
+                    // Error
+                    //
+
+                    var session = Server.SessionCache.GetSession(connection.EndPoint);
+
+                    await SendCharacterList(connection, session.UserId);
+
+                    return;
+                }
+
+                //
+                // Send to world server.
+                //
+
                 connection.Send(new ServerRedirectionPacket
                 {
                     Address = address,

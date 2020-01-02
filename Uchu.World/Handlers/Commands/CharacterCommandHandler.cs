@@ -539,7 +539,7 @@ namespace Uchu.World.Handlers.Commands
         }
         
         [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Admin)]
-        public async Task<string> World(string[] arguments, Player player)
+        public string World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
                 return "world <zoneId>";
@@ -551,10 +551,12 @@ namespace Uchu.World.Handlers.Commands
             if (player.Zone.ZoneId == id) return $"You are already in {id}";
 
             if (id == ZoneId.FrostBurgh) return $"Sorry, {id} is disabled in the client...";
+
+            //
+            // We don't want to lock up the server on a world server request, as it may take time.
+            //
             
-            await player.SendToWorldAsync(id);
-            
-            player.Message(new SetStunnedMessage
+            player.Zone.BroadcastMessage(new SetStunnedMessage
             {
                 Associate = player,
                 CantMove = true,
@@ -564,6 +566,14 @@ namespace Uchu.World.Handlers.Commands
                 CantUseItem = true,
                 CantEquip = true,
                 CantInteract = true
+            });
+
+            var _ = Task.Run(async () =>
+            {
+                if (!await player.SendToWorldAsync(id))
+                {
+                    player.SendChatMessage($"Failed to transfer to {id}, please try later.");
+                }
             });
             
             return $"Requesting transfer to {id}, please wait...";

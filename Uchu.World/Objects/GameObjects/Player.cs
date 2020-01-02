@@ -260,35 +260,41 @@ namespace Uchu.World
             Connection.Send(gameMessage);
         }
 
-        public async Task SendToWorldAsync(ZoneId zoneId)
+        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            await using var ctx = new UchuContext();
+            var port = await WorldHelper.RequestWorldServerAsync(zoneId);
             
-            var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+            if (port == -1)
+            {
+                return false;
+            }
+            
+            if (Server.Port == port)
+            {
+                Logger.Error("Could not send a player to the same port as it already has");
 
-            character.LastZone = (int) zoneId;
-
-            ctx.SaveChanges();
+                return false;
+            }
             
             var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
-            await WorldHelper.RequestWorldServerAsync(zoneId, port =>
+            Message(new ServerRedirectionPacket
             {
-                if (Server.Port == port)
-                {
-                    Logger.Error("Could not send a player to the same port as it already has");
-                    
-                    return;
-                }
-                
-                Message(new ServerRedirectionPacket
-                {
-                    Port = (ushort) port,
-                    Address = address
-                });
+                Port = (ushort) port,
+                Address = address
             });
+
+            await using var ctx = new UchuContext();
+
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+            character.LastZone = (int) zoneId;
+
+            await ctx.SaveChangesAsync();
+
+            return true;
         }
 
         private async Task SetCurrencyAsync(long currency)

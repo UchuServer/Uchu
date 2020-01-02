@@ -46,6 +46,7 @@ namespace Uchu.Instance
                         await server.StartAsync(typeof(CharacterHandler).Assembly);
                         break;
                     case ServerType.World:
+                        server.RegisterAssembly(typeof(CharacterHandler).Assembly);
                         await server.StartAsync(typeof(WorldInitializationHandler).Assembly);
                         break;
                     default:

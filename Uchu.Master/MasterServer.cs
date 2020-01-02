@@ -141,16 +141,13 @@ namespace Uchu.Master
 
                             if (specification.ActiveUserCount >= specification.MaxUserCount) continue;
 
-                            await using (var scopeCtx = new UchuContext())
-                            {
-                                var req = await scopeCtx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
+                            var req = await ctx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
                             
-                                req.SpecificationId = specification.Id;
+                            req.SpecificationId = specification.Id;
 
-                                req.State = WorldServerRequestState.Complete;
+                            req.State = WorldServerRequestState.Complete;
 
-                                await scopeCtx.SaveChangesAsync();
-                            }
+                            await ctx.SaveChangesAsync();
 
                             goto continueToNext;
                         }
@@ -158,31 +155,86 @@ namespace Uchu.Master
                         //
                         // Start new server
                         //
-                        
-                        ushort instanceId = 0;
 
-                        for (var i = 0; i < ushort.MaxValue; i++)
+                        var clone = ctx.Specifications.Count(c => c.ZoneId == request.ZoneId);
+
+                        int port;
+                        
+                        if (Config.Networking.WorldPorts?.Any() ?? false)
                         {
-                            if (WorldServers.Any(w => w.InstanceId == instanceId))
+                            //
+                            // Check for available user specified ports.
+                            // 
+                            // Sometimes, most likely when someone is hosting a public instance, they have to
+                            // port forward. These are therefore the only ports that can be used.
+                            //
+                            
+                            var ports = Config.Networking.WorldPorts.ToList();
+
+                            foreach (var i in ports)
                             {
-                                instanceId++;
-                                
-                                continue;
+                                Logger.Information($"HAS: {i}");
+                            }
+                            
+                            foreach (var specification in ctx.Specifications)
+                            {
+                                if (ports.Contains(specification.Port))
+                                {
+                                    ports.Remove(specification.Port);
+                                }
                             }
 
-                            break;
+                            port = ports.FirstOrDefault();
                         }
-
-                        await using (var scopeCtx = new UchuContext())
+                        else
                         {
-                            var req = await scopeCtx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
-
-                            req.SpecificationId = await StartWorld(request.ZoneId, default, instanceId);
-                        
-                            req.State = WorldServerRequestState.Answered;
+                            //
+                            // Pick the first port which is not used by another server instance.
+                            //
                             
-                            await scopeCtx.SaveChangesAsync();
+                            port = 2003;
+
+                            while (ctx.Specifications.Any(s => s.Port == port))
+                            {
+                                port++;
+                            }
                         }
+
+                        //
+                        // Find request.
+                        //
+                        
+                        var serverRequest = await ctx.WorldServerRequests.FirstAsync(
+                            r => r.Id == request.Id
+                        );
+
+                        if (port == default)
+                        {
+                            //
+                            // We were unable to find a user specified port.
+                            //
+                            
+                            serverRequest.State = WorldServerRequestState.Error;
+
+                            await ctx.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            //
+                            // Start the new server instance.
+                            //
+                            
+                            serverRequest.SpecificationId = await StartWorld(
+                                request.ZoneId,
+                                (uint) clone,
+                                default,
+                                port
+                            );
+
+                            serverRequest.State = WorldServerRequestState.Answered;
+                        }
+
+                        await ctx.SaveChangesAsync();
                     }
                     
                     continueToNext: ;
@@ -290,7 +342,7 @@ namespace Uchu.Master
             await ctx.SaveChangesAsync();
         }
         
-        private static async Task<Guid> StartWorld(ZoneId zoneId, uint cloneId, ushort instanceId)
+        private static async Task<Guid> StartWorld(ZoneId zoneId, uint cloneId, ushort instanceId, int port)
         {
             await using var ctx = new UchuContext();
             
@@ -299,7 +351,7 @@ namespace Uchu.Master
             await ctx.Specifications.AddAsync(new ServerSpecification
             {
                 Id = id,
-                Port = 2003 + instanceId,
+                Port = port,
                 ServerType = ServerType.World,
                 ZoneId = zoneId,
                 ZoneCloneId = cloneId,

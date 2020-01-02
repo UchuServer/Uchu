@@ -4,6 +4,7 @@ namespace Uchu.Core
     {
         Unanswered,
         Answered,
-        Complete
+        Complete,
+        Error
     }
 }

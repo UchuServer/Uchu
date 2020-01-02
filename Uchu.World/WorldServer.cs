@@ -147,7 +147,7 @@ namespace Uchu.World
             return default;
         }
 
-        protected override void RegisterAssembly(Assembly assembly)
+        public override void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
 

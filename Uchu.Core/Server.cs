@@ -111,25 +111,12 @@ namespace Uchu.Core
                 SessionCache = new DatabaseCache();
             }
 
-            if (!IsPortAvailable(Port))
-            {
-                Logger.Error($"Port {Port} is occupied.");
-            }
-            
             Logger.Information($"Server {Id} configured on port: {Port}");
-        }
-
-        private bool IsPortAvailable(int port)
-        {
-            var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-            var tcpConnInfoArray = ipGlobalProperties.GetActiveTcpConnections();
-
-            return tcpConnInfoArray.All(information => information.LocalEndPoint.Port != port);
         }
 
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
-            Logger.Information($"Registering assemblies...");
+            Logger.Information("Registering assemblies...");
             
             RegisterAssembly(typeof(Server).Assembly);
             RegisterAssembly(assembly);
@@ -207,8 +194,8 @@ namespace Uchu.Core
             ).SelectMany(i => i.GetIPProperties().UnicastAddresses
             ).Select(a => a.Address).Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
         }
-        
-        protected virtual void RegisterAssembly(Assembly assembly)
+
+        public virtual void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
 
