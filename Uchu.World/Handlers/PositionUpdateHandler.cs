@@ -12,9 +12,9 @@ namespace Uchu.World.Handlers
         {
             var player = Server.FindPlayer(connection);
 
-            if (player == default)
+            if (player?.Transform == default)
             {
-                Logger.Error($"{connection} is not logged in but sent a Position Update packet.");
+                Logger.Warning($"{connection} is not logged in but sent a Position Update packet.");
                 return;
             }
 
@@ -22,8 +22,6 @@ namespace Uchu.World.Handlers
             // The server is a slave to the position update packets it gets from the client right now.
             //
             
-            if (player.Transform == default) return;
-
             player.Transform.Position = packet.Position;
             player.Transform.Rotation = packet.Rotation;
 

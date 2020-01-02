@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Instance", "Uchu.Insta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Core", "Uchu.Core\Uchu.Core.csproj", "{B6EBC62E-43E6-488F-BA4A-056609601A6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet.IO", "RakDotNet.IO\RakDotNet.IO\RakDotNet.IO.csproj", "{7D1C063E-8E8D-4239-A544-27123C9DA30F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfectedRose.Core", "InfectedRose\InfectedRose.Core\InfectedRose.Core.csproj", "{C25B1A63-51AC-4976-A2BD-9138639D909D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfectedRose.Lvl", "InfectedRose\InfectedRose.Lvl\InfectedRose.Lvl.csproj", "{60D7BAC1-ED35-4F66-9DB6-B14BECF6819E}"
@@ -65,10 +63,6 @@ Global
 		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B6EBC62E-43E6-488F-BA4A-056609601A6F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7D1C063E-8E8D-4239-A544-27123C9DA30F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D1C063E-8E8D-4239-A544-27123C9DA30F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D1C063E-8E8D-4239-A544-27123C9DA30F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D1C063E-8E8D-4239-A544-27123C9DA30F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C25B1A63-51AC-4976-A2BD-9138639D909D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C25B1A63-51AC-4976-A2BD-9138639D909D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C25B1A63-51AC-4976-A2BD-9138639D909D}.Release|Any CPU.ActiveCfg = Release|Any CPU

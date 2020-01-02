@@ -54,7 +54,7 @@ namespace Uchu.Core
                         timeout--;
                             
                         await Task.Delay(100).ConfigureAwait(false);
-                            
+                        
                         continue;
                     case WorldServerRequestState.Complete:
                         break;
