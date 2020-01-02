@@ -213,15 +213,18 @@ namespace Uchu.World
 
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
         {
-            if (As<Player>() != null)
-            {
-                await using var ctx = new UchuContext();
-                var inventoryItem = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == itemId);
+            if (!(GameObject is Player)) return;
+                
+            await using var ctx = new UchuContext();
+            
+            var inventoryItem = await ctx.InventoryItems.FirstOrDefaultAsync(i => i.InventoryItemId == itemId);
+            
+            // Check if it's a proxy or alike.
+            if (inventoryItem == default) return;
 
-                inventoryItem.IsEquipped = equipped;
+            inventoryItem.IsEquipped = equipped;
 
-                await ctx.SaveChangesAsync();
-            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task<long[]> GenerateProxyItems(Item item)
