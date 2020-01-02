@@ -43,7 +43,7 @@ namespace Uchu.World.Handlers
         public async Task AddFriendRequestHandler(AddFriendRequestPacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.LuzFile.WorldId == session.ZoneId);
 
             if (zone == default)
             {
@@ -146,7 +146,7 @@ namespace Uchu.World.Handlers
         public void FriendsListRequestHandler(GetFriendListPacket packet,IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -196,7 +196,7 @@ namespace Uchu.World.Handlers
         public async Task AddFriendResponseHandler(AddFriendResponsePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -267,7 +267,7 @@ namespace Uchu.World.Handlers
         public async Task RemoveFriendHandler(RemoveFriendPacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -301,7 +301,7 @@ namespace Uchu.World.Handlers
         public void TeamInviteHandler(TeamInvitePacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -322,7 +322,7 @@ namespace Uchu.World.Handlers
         public void TeamInviteResponseHandler(TeamInviteResponse packet, IPEndPoint endPoint)
         {
             var session = Server.SessionCache.GetSession(endPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -346,7 +346,7 @@ namespace Uchu.World.Handlers
         public void CheckWhitelistRequestHandler(CheckWhitelistRequestPacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.ZoneId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {

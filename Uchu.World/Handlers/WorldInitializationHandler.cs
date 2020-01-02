@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
 using Uchu.World.Social;
 
 namespace Uchu.World.Handlers
@@ -33,8 +33,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ValidateClientHandler(SessionInfoPacket packet, IRakConnection connection)
         {
-            Logger.Information($"Validating client for world!");
-            
+            Logger.Information($"{connection.EndPoint}'s validating client for world!");
+
             if (!Server.SessionCache.IsKey(packet.SessionKey))
             {
                 await connection.CloseAsync();
@@ -46,7 +46,7 @@ namespace Uchu.World.Handlers
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
-            
+
             // Try to find the player, disconnect if the player is invalid
             var character = await ctx.Characters.FindAsync(session.CharacterId);
             if (character == null)
@@ -69,12 +69,12 @@ namespace Uchu.World.Handlers
 
             var worldServer = (WorldServer) Server;
             var zone = await worldServer.GetZoneAsync(zoneId);
-            
+
             connection.Send(new WorldInfoPacket
             {
                 ZoneId = zoneId,
                 Checksum = zoneId.GetChecksum(),
-                SpawnPosition = zone.ZoneInfo.SpawnPosition
+                SpawnPosition = zone.ZoneInfo.LuzFile.SpawnPoint
             });
         }
 
@@ -90,6 +90,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
+            Logger.Information($"{connection.EndPoint}'s client load completed...");
+
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
@@ -97,7 +99,8 @@ namespace Uchu.World.Handlers
                 .Include(c => c.Items)
                 .Include(c => c.User)
                 .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks).SingleAsync(c => c.CharacterId == session.CharacterId);
+                .ThenInclude(m => m.Tasks).ThenInclude(m => m.Values)
+                .SingleAsync(c => c.CharacterId == session.CharacterId);
 
             var zoneId = (ZoneId) character.LastZone;
             if (zoneId == ZoneId.VentureExplorerCinematic)
@@ -114,7 +117,7 @@ namespace Uchu.World.Handlers
             var zone = await ((WorldServer) Server).GetZoneAsync(zoneId);
 
             // Send the character init XML data for this world to the client
-            SendCharacterXmlDataToClient(character, connection, session);
+            await SendCharacterXmlDataToClient(character, connection, session);
 
             var player = await Player.ConstructAsync(character, connection, zone);
             if (character.LandingByRocket)
@@ -127,7 +130,7 @@ namespace Uchu.World.Handlers
             {
                 player.Message(new DoneLoadingObjectsMessage {Associate = player});
             });
-            
+
             player.Message(new PlayerReadyMessage {Associate = player});
 
             var relations = ctx.Friends.Where(f =>
@@ -155,18 +158,22 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task PlayerLoadedHandler(PlayerLoadedMessage message, Player player)
         {
+            Logger.Information($"{player} loaded...");
+
             if (player != message.Player)
             {
                 Logger.Error($"{player} sent invalid {nameof(PlayerLoadedMessage)} player id: {message.Player}");
 
                 await player.Connection.CloseAsync();
-                
+
                 return;
             }
 
             player.Message(
                 new RestoreToPostLoadStatsMessage {Associate = player}
             );
+
+            await player.OnWorldLoad.InvokeAsync();
         }
 
         /// <summary>
@@ -175,7 +182,7 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
         /// <param name="session">The session cache for the connection</param>
-        private async void SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
+        private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
             var xmlData = GenerateCharacterXMLData(character);
@@ -258,8 +265,8 @@ namespace Uchu.World.Handlers
         {
             return new ItemContainerNode
             {
-                Type = (int)type,
-                Items = character.Items.Where(i => i.InventoryType == (int)type).Select(i => new ItemNode
+                Type = (int) type,
+                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i => new ItemNode
                 {
                     Count = (int) i.Count,
                     Slot = i.Slot,
@@ -267,7 +274,7 @@ namespace Uchu.World.Handlers
                     ObjectId = i.InventoryItemId,
                     Equipped = i.IsEquipped ? 1 : 0,
                     Bound = i.IsBound ? 1 : 0,
-                    
+
                     // Only provide extra information for models inventory
                     ExtraInfo = type == InventoryType.Models && i.ExtraInfo != null
                         ? new ExtraInfoNode
@@ -321,22 +328,22 @@ namespace Uchu.World.Handlers
 
             // Keep a list of all tasks ids that belong to flag tasks
             var flagTaskIds = cdContext.MissionTasksTable
-                .Where(t => t.TaskType == (int)MissionTaskType.Flag)
+                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
                 .Select(t => t.Uid);
-            
+
             // Get all the mission task values that correspond to flag values
             var flagValues = character.Missions
                 .SelectMany(m => m.Tasks
                     .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.Values));
+                    .SelectMany(t => t.ValueArray()));
 
             // The flags are stored as one long list of bits by separating them in unsigned longs
             foreach (var value in flagValues)
             {
                 // Find the long this flag belongs to
-                var index = (int)Math.Floor(value / 64);
+                var index = (int) Math.Floor(value / 64);
                 ulong shiftedValue = 1;
-                shiftedValue <<= (int)value % 64;
+                shiftedValue <<= (int) value % 64;
 
                 if (flags.TryAdd(index, new FlagNode()))
                 {
@@ -348,7 +355,7 @@ namespace Uchu.World.Handlers
                     flags[index].Flag |= shiftedValue;
                 }
             }
-            
+
             return flags.Values.OrderBy(f => f.FlagId).ToArray();
         }
 
@@ -362,7 +369,7 @@ namespace Uchu.World.Handlers
             // Completed and active missions are stored in two separate lists
             var completed = new List<CompletedMissionNode>();
             var missions = new List<MissionNode>();
-            
+
             // For all missions split them into active and completed missions
             foreach (var mission in character.Missions)
             {
@@ -406,15 +413,17 @@ namespace Uchu.World.Handlers
             return mission.Tasks.OrderBy(task => task.TaskId).Select(task =>
                 {
                     // Return the mission task progress as list as there might be more nodes for this task
-                    var progressNodes = new List<MissionProgressNode> { new MissionProgressNode { Value = task.Values.Count }};
+                    var progressNodes = new List<MissionProgressNode>
+                        {new MissionProgressNode {Value = task.Values.Count}};
 
                     using var cdClient = new CdClientContext();
-                    var cdTask = cdClient.MissionTasksTable.Where(t => t.Uid == task.TaskId).First();
-                    
+                    var cdTask = cdClient.MissionTasksTable.First(t => t.Uid == task.TaskId);
+
                     // If the task type is collectible, also send all collectible ids
                     if (cdTask.TaskType != null && ((MissionTaskType) cdTask.TaskType) == MissionTaskType.Collect)
                     {
-                        progressNodes.AddRange(task.Values.Select(value => new MissionProgressNode { Value = value }));
+                        progressNodes.AddRange(task.ValueArray()
+                            .Select(value => new MissionProgressNode {Value = value}));
                     }
 
                     return progressNodes;

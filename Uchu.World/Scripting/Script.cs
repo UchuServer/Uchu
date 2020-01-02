@@ -29,22 +29,39 @@ namespace Uchu.World.Scripting
         ///     Looks at the server scripts in the LuaScriptComponent
         /// </remarks>
         /// <param name="script">LUA Script name</param>
+        /// <param name="client">Look for client LUA Sciripts</param>
         /// <returns>The results of query</returns>
-        protected GameObject[] HasLuaScript(string script)
+        protected GameObject[] HasLuaScript(string script, bool client = false)
         {
+            script = script.ToLower();
+            
             var list = new List<GameObject>();
             
             foreach (var gameObject in Zone.GameObjects)
             {
                 var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
-                
-                if (scriptComponent?.ScriptName != null)
+
+                if (!client)
                 {
-                    if (scriptComponent.ScriptName.ToLower().EndsWith(script.ToLower())) list.Add(gameObject);
+                    if (scriptComponent?.ScriptName != null)
+                    {
+                        if (scriptComponent.ScriptName.ToLower().EndsWith(script)) list.Add(gameObject);
+                    }
+                    else if (gameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                    {
+                        if (((string) scriptOverride).ToLower().EndsWith(script)) list.Add(gameObject);
+                    }
                 }
-                else if (gameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                else
                 {
-                    if (((string) scriptOverride).ToLower().EndsWith(script.ToLower())) list.Add(gameObject);
+                    if (scriptComponent?.ClientScriptName != null)
+                    {
+                        if (scriptComponent.ClientScriptName.ToLower().EndsWith(script)) list.Add(gameObject);
+                    }
+                    else if (gameObject.Settings.TryGetValue("custom_client_script", out var scriptOverride))
+                    {
+                        if (((string) scriptOverride).ToLower().EndsWith(script)) list.Add(gameObject);
+                    }
                 }
             }
 
@@ -97,7 +114,7 @@ namespace Uchu.World.Scripting
 
                 foreach (var (primaryId, id) in ids)
                 {
-                    if (triggerComponent.Trigger?.PrimaryId == primaryId && triggerComponent.Trigger?.Id == id)
+                    if (triggerComponent.Trigger?.Id /*TODO: Primary id*/ == primaryId && triggerComponent.Trigger?.Id == id)
                     {
                         triggers.Add(triggerComponent);
                     }

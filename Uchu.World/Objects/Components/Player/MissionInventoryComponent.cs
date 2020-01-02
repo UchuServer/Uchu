@@ -17,7 +17,7 @@ namespace Uchu.World
         public Mission[] GetCompletedMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId && m.State == (int) MissionState.Completed
             ).ToArray();
         }
@@ -25,7 +25,7 @@ namespace Uchu.World
         public Mission[] GetActiveMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId &&
                      m.State == (int) MissionState.Active ||
                      m.State == (int) MissionState.CompletedActive
@@ -35,7 +35,7 @@ namespace Uchu.World
         public Mission[] GetMissions()
         {
             using var ctx = new UchuContext();
-            return ctx.Missions.Where(
+            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
                 m => m.Character.CharacterId == GameObject.ObjectId
             ).ToArray();
         }
@@ -117,6 +117,7 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
@@ -150,6 +151,8 @@ namespace Uchu.World
                 //
                 // Setup new mission
                 //
+
+                if (character.Missions.Any(m => m.Id == missionId)) return;
 
                 character.Missions.Add(new Mission
                 {
@@ -215,13 +218,14 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
             // If this mission is not already accepted, accept it and move on to complete it.
             //
 
-            if (!character.Missions.Exists(m => m.MissionId == missionId))
+            if (character.Missions.All(m => m.MissionId != missionId))
             {
                 var tasks = cdClient.MissionTasksTable.Where(t => t.Id == missionId);
 
@@ -298,14 +302,14 @@ namespace Uchu.World
 
             var stats = GameObject.GetComponent<Stats>();
 
-            stats.MaxHealth += (uint) (mission.Rewardmaxhealth ?? 0);
-            stats.MaxImagination += (uint) (mission.Rewardmaximagination ?? 0);
+            await stats.BoostBaseHealth((uint) (mission.Rewardmaxhealth ?? 0));
+            await stats.BoostBaseImagination((uint) (mission.Rewardmaximagination ?? 0));
 
             if (missionId == 173)
             {
                 await CompleteMissionAsync(664);
             }
-            
+
             //
             // Get item rewards.
             //
@@ -335,7 +339,19 @@ namespace Uchu.World
                 {
                     if (lot == default || count == default) continue;
 
-                    await inventory.AddItemAsync(lot, (uint) count);
+                    if (mission.IsMission ?? true)
+                    {
+                        await inventory.AddItemAsync(lot, (uint) count);
+                    }
+                    else
+                    {
+                        var _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(11000);
+                            
+                            await inventory.AddItemAsync(lot, (uint) count);
+                        });
+                    }
                 }
             }
             else
@@ -347,7 +363,7 @@ namespace Uchu.World
             }
         }
 
-        public async Task UpdateObjectTaskAsync(MissionTaskType type, Lot lot, GameObject gameObject = default)
+        private async Task UpdateObjectTaskInternal(MissionTaskType type, Lot lot, GameObject gameObject = default)
         {
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
@@ -360,6 +376,7 @@ namespace Uchu.World
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.CharacterId == GameObject.ObjectId);
 
             //
@@ -376,6 +393,11 @@ namespace Uchu.World
                 if (missionState != MissionState.Active && missionState != MissionState.CompletedActive) continue;
 
                 //
+                // Get mission
+                //
+                var clientMission = await cdClient.MissionsTable.FirstAsync(m => m.Id == mission.MissionId);
+
+                //
                 // Get all the tasks this mission operates on.
                 //
 
@@ -388,9 +410,22 @@ namespace Uchu.World
                 //
 
                 var task = tasks.FirstOrDefault(missionTask =>
-                    MissionParser.GetTargets(missionTask).Contains(lot) &&
-                    mission.Tasks.Exists(a => a.TaskId == missionTask.Uid)
-                );
+                {
+                    if (!MissionParser.GetTargets(missionTask).Contains(lot)) return false;
+
+                    if (!mission.Tasks.Exists(a => a.TaskId == missionTask.Uid)) return false;
+                    
+                    if (missionTask?.TaskType == null) return false;
+                    
+                    if ((MissionTaskType) missionTask.TaskType == MissionTaskType.GoToNpc)
+                    {
+                        missionTask.TaskType = (int) MissionTaskType.Interact;
+                    }
+                            
+                    As<Player>().SendChatMessage($"{(MissionTaskType) missionTask.TaskType} -> {type}");
+
+                    return missionTask.TaskType == (int) type;
+                });
 
                 //
                 // If not, move on to the next mission.
@@ -409,8 +444,11 @@ namespace Uchu.World
 
                 var taskId = task.Id.Value;
 
+                As<Player>().SendChatMessage($"Target value: {task.TargetValue}");
+
                 switch (type)
                 {
+                    // Special
                     case MissionTaskType.Collect:
                         if (gameObject == default)
                         {
@@ -421,15 +459,17 @@ namespace Uchu.World
                         var component = gameObject.GetComponent<CollectibleComponent>();
 
                         // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
-                        var shiftedId = (float) component.CollectibleId + (gameObject.Zone.ZoneInfo.ZoneId << 8);
+                        var shiftedId = (float) component.CollectibleId +
+                                        (gameObject.Zone.ZoneInfo.LuzFile.WorldId << 8);
 
-                        if (!characterTask.Values.Contains(shiftedId) && task.TargetValue > characterTask.Values.Count)
+                        if (!characterTask.Contains(shiftedId) &&
+                            task.TargetValue > characterTask.ValueArray().Length)
                         {
                             Logger.Information($"{GameObject} collected {component.CollectibleId}");
-                            characterTask.Values.Add(shiftedId);
+                            characterTask.Add(shiftedId);
                         }
 
-                        Logger.Information($"Has collected {characterTask.Values.Count}/{task.TargetValue}");
+                        Logger.Information($"Has collected {characterTask.ValueArray().Length}/{task.TargetValue}");
 
                         // Send update to client
                         MessageUpdateMissionTask(
@@ -441,38 +481,49 @@ namespace Uchu.World
                         );
 
                         break;
+                    // Allows multiple
                     case MissionTaskType.KillEnemy:
-                        if (task.TargetValue > characterTask.Values.Count)
-                        {
-                            characterTask.Values.Add(lot);
-                        }
-
-                        break;
                     case MissionTaskType.QuickBuild:
                     case MissionTaskType.NexusTowerBrickDonation:
                     case MissionTaskType.None:
-                    case MissionTaskType.Discover:
-                    case MissionTaskType.GoToNpc:
                     case MissionTaskType.MinigameAchievement:
-                    case MissionTaskType.UseEmote:
                     case MissionTaskType.UseConsumable:
-                    case MissionTaskType.UseSkill:
                     case MissionTaskType.ObtainItem:
-                    case MissionTaskType.Interact:
-                    case MissionTaskType.Flag:
-                    case MissionTaskType.Script:
-                    case MissionTaskType.MissionComplete:
                     case MissionTaskType.TamePet:
                     case MissionTaskType.Racing:
                         // Start this task value array
-                        if (!characterTask.Values.Contains(lot))
-                            characterTask.Values.Add(lot);
+                        if (task.TargetValue > characterTask.ValueArray().Length)
+                        {
+                            characterTask.Add(lot);
 
-                        // Send update to client
-                        MessageUpdateMissionTask(
-                            taskId, tasks.IndexOf(task),
-                            new[] {(float) characterTask.Values.Count}
-                        );
+                            // Send update to client
+                            MessageUpdateMissionTask(
+                                taskId, tasks.IndexOf(task),
+                                new[] {(float) characterTask.ValueArray().Length}
+                            );
+                        }
+
+                        break;
+                    // Singles
+                    case MissionTaskType.Flag:
+                    case MissionTaskType.Script:
+                    case MissionTaskType.UseSkill:
+                    case MissionTaskType.Interact:
+                    case MissionTaskType.MissionComplete:
+                    case MissionTaskType.GoToNpc:
+                    case MissionTaskType.Discover:
+                    case MissionTaskType.UseEmote:
+                        // Start this task value array
+                        if (!characterTask.Values.Any(v => v.Value.Equals(lot)))
+                        {
+                            characterTask.Add(lot);
+
+                            // Send update to client
+                            MessageUpdateMissionTask(
+                                taskId, tasks.IndexOf(task),
+                                new[] {(float) characterTask.Values.Count}
+                            );
+                        }
 
                         break;
                     default:
@@ -487,7 +538,14 @@ namespace Uchu.World
 
                 if (!await MissionParser.AllTasksCompletedAsync(mission)) continue;
 
-                MessageMissionState(mission.MissionId, MissionState.ReadyToComplete);
+                if (clientMission.IsMission ?? false)
+                {
+                    MessageMissionState(mission.MissionId, MissionState.ReadyToComplete);
+                }
+                else
+                {
+                    await CompleteMissionAsync(mission.MissionId);
+                }
             }
 
             //
@@ -525,98 +583,64 @@ namespace Uchu.World
                 // Get the mission on the character. If present.
                 //
 
-                var characterMission = character.Missions.Find(m => m.MissionId == mission.Id);
+                var characterMission = character.Missions.FirstOrDefault(m => m.MissionId == mission.Id);
 
                 //
                 // Check if the player could passably start this achievement.
                 //
 
-                if (characterMission == default)
+                if (characterMission != default) continue;
+
+                //
+                // Check if player has the Prerequisites to start this achievement.
+                //
+
+                var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
+                    mission.PrereqMissionID,
+                    GetCompletedMissions()
+                );
+
+                if (!hasPrerequisites) continue;
+
+                //
+                // Player can start achievement.
+                //
+
+                // Get Mission Id of new achievement.
+                if (mission.Id == default) continue;
+                var missionId = mission.Id.Value;
+
+                //
+                // Setup new achievement.
+                //
+
+                characterMission = new Mission
                 {
-                    //
-                    // Check if player has the Prerequisites to start this achievement.
-                    //
-
-                    var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
-                        mission.PrereqMissionID,
-                        GetCompletedMissions()
-                    );
-
-                    if (!hasPrerequisites) continue;
-
-                    //
-                    // Player can start achievement.
-                    //
-
-                    // Get Mission Id of new achievement.
-                    if (mission.Id == default) continue;
-                    var missionId = mission.Id.Value;
-
-                    //
-                    // Setup new achievement.
-                    //
-
-                    characterMission = new Mission
-                    {
-                        MissionId = missionId,
-                        State = (int) MissionState.Active,
-                        Tasks = tasks.Select(t =>
-                        {
-                            Debug.Assert(t.Uid != null, "t.Uid != null");
-                            return new MissionTask
-                            {
-                                TaskId = (int) t.Uid,
-                                Values = new List<float>()
-                            };
-                        }).ToList()
-                    };
-
-                    //
-                    // Add achievement to the database.
-                    //
-
-                    character.Missions.Add(characterMission);
-
-                    await ctx.SaveChangesAsync();
-                }
+                    MissionId = missionId,
+                    State = (int) MissionState.Active,
+                    Tasks = tasks.Select(t => GetTask(character, t)).ToList()
+                };
 
                 //
-                // Check if the mission is active.
+                // Add achievement to the database.
                 //
 
-                var state = (MissionState) characterMission.State;
-
-                if (state != MissionState.Active && state != MissionState.CompletedActive) continue;
-
-                //
-                // Get the task to be updated.
-                //
-
-                var characterTask = characterMission.Tasks.Find(t => t.TaskId == task.Uid);
-
-                // Start this task value array
-                if (!characterTask.Values.Contains(lot)) characterTask.Values.Add(lot);
+                character.Missions.Add(characterMission);
 
                 await ctx.SaveChangesAsync();
 
-                //
-                // Notify the client of the new achievement
-                //
+                await UpdateObjectTaskInternal(type, lot, gameObject);
+            }
+        }
 
-                MessageUpdateMissionTask(
-                    characterMission.MissionId,
-                    tasks.IndexOf(task),
-                    new[] {(float) characterTask.Values.Count}
-                );
+        public void UpdateObjectTask(MissionTaskType type, Lot lot, GameObject gameObject = default)
+        {
+            // pls optimize this
+            lock (this)
+            {
+                var task = UpdateObjectTaskInternal(type, lot, gameObject);
 
-                //
-                // Check if achievement is complete.
-                //
-
-                if (await MissionParser.AllTasksCompletedAsync(characterMission))
-                {
-                    await CompleteMissionAsync(characterMission.MissionId);
-                }
+                task.Wait();
             }
         }
 
@@ -634,7 +658,11 @@ namespace Uchu.World
             return new MissionTask
             {
                 TaskId = task.Uid.Value,
-                Values = values
+                Values = values.Select(v => new MissionTaskValue
+                {
+                    Value = v,
+                    Count = 1
+                }).ToList()
             };
         }
     }

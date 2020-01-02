@@ -26,7 +26,7 @@ namespace Uchu.Core
             {
                 if (wide) builder.Append((char) @this.Read<short>());
                 else builder.Append((char) @this.Read<byte>());
-                if (builder[builder.Length - 1] != '\0') continue;
+                if (builder[^1] != '\0') continue;
                 builder.Length--;
                 break;
             }

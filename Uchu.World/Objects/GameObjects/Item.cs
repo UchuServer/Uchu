@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
 
 namespace Uchu.World
 {
@@ -184,12 +184,12 @@ namespace Uchu.World
 
             var instance = Instantiate<Item>
             (
-                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: IdUtils.GenerateObjectId(), lot: lot
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: IdUtilities.GenerateObjectId(), lot: lot
             );
 
             instance._count = count;
             instance._slot = slot;
-            instance.Settings = extraInfo;
+            instance.Settings = extraInfo ?? new LegoDataDictionary();
 
             var itemComponent = cdClient.ItemComponentTable.First(
                 i => i.Id == itemRegistryEntry.Componentid

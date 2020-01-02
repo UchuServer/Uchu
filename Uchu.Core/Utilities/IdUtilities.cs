@@ -2,7 +2,7 @@ using System;
 
 namespace Uchu.Core
 {
-    public static class IdUtils
+    public static class IdUtilities
     {
         private static readonly Random Random = new Random();
 

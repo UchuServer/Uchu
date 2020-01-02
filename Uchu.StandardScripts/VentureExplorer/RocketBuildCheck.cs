@@ -24,7 +24,7 @@ namespace StandardScripts.VentureExplorer
                     
                     var questInventory = player.GetComponent<MissionInventoryComponent>();
 
-                    await questInventory.UpdateObjectTaskAsync(MissionTaskType.Flag, 44);
+                    questInventory.UpdateObjectTask(MissionTaskType.Flag, 44);
                 });
                 
                 return Task.CompletedTask;

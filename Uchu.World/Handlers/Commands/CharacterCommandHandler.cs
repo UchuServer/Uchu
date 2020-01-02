@@ -4,11 +4,11 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Collections;
-using Uchu.World.Client;
+using Uchu.World.Filters;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -90,13 +90,13 @@ namespace Uchu.World.Handlers.Commands
 
             var rotation = player.Transform.Rotation;
 
-            var obj = GameObject.Instantiate(new LevelObject
+            var obj = GameObject.Instantiate(new LevelObjectTemplate
             {
                 Lot = lot,
                 Position = position,
                 Rotation = rotation,
                 Scale = 1,
-                Settings = new LegoDataDictionary()
+                LegoInfo = new LegoDataDictionary()
             }, player.Zone);
 
             Object.Start(obj);
@@ -410,11 +410,13 @@ namespace Uchu.World.Handlers.Commands
 
             if (!long.TryParse(arguments[0], out var layer)) return "Invalid <layer>";
 
-            if (player.Perspective.ViewMask == layer)
-                player.Perspective.ViewMask -= layer;
-            else player.Perspective.ViewMask += layer;
+            if (!player.Perspective.TryGetFilter<MaskFilter>(out var filter)) return $"No {nameof(MaskFilter)} applied";
+            
+            if (filter.ViewMask == layer)
+                filter.ViewMask -= layer;
+            else filter.ViewMask += layer;
 
-            return $"Layer set to {Convert.ToString(player.Perspective.ViewMask.Value, 2)}";
+            return $"Layer set to {Convert.ToString(filter.ViewMask.Value, 2)}";
         }
 
         [CommandHandler(Signature = "brick", Help = "Spawns a floating brick",
@@ -549,10 +551,12 @@ namespace Uchu.World.Handlers.Commands
             if (player.Zone.ZoneId == id) return $"You are already in {id}";
 
             if (id == ZoneId.FrostBurgh) return $"Sorry, {id} is disabled in the client...";
+
+            //
+            // We don't want to lock up the server on a world server request, as it may take time.
+            //
             
-            player.SendToWorld(id);
-            
-            player.Message(new SetStunnedMessage
+            player.Zone.BroadcastMessage(new SetStunnedMessage
             {
                 Associate = player,
                 CantMove = true,
@@ -562,6 +566,14 @@ namespace Uchu.World.Handlers.Commands
                 CantUseItem = true,
                 CantEquip = true,
                 CantInteract = true
+            });
+
+            var _ = Task.Run(async () =>
+            {
+                if (!await player.SendToWorldAsync(id))
+                {
+                    player.SendChatMessage($"Failed to transfer to {id}, please try later.");
+                }
             });
             
             return $"Requesting transfer to {id}, please wait...";

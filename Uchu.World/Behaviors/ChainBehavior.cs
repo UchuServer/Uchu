@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Behaviors
@@ -32,7 +33,7 @@ namespace Uchu.World.Behaviors
             
             if (delay.Value == null) return;
 
-            Delay = (int) (delay.Value * 1000);
+            Delay = (int) delay.Value;
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)

@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
 using System.Numerics;
+using InfectedRose.Luz;
+using InfectedRose.Lvl;
 using Uchu.Core;
 using Uchu.World.Client;
 
@@ -9,12 +12,17 @@ namespace Uchu.World
     {
         private static readonly Random Random = new Random(); 
         
-        public static GameObject Spawner(LevelObject levelObject, Object parent)
+        public static GameObject Spawner(LevelObjectTemplate levelObject, Object parent)
         {
-            if (!levelObject.Settings.TryGetValue("spawntemplate", out var spawnTemplate))
+            if (!levelObject.LegoInfo.TryGetValue("spawntemplate", out var spawnTemplate))
             {
                 Logger.Error("Instantiating a spawner without a \"spawntemplete\" is now allowed.");
                 return null;
+            }
+
+            if (spawnTemplate is string s)
+            {
+                spawnTemplate = int.Parse(s);
             }
 
             var instance = GameObject.Instantiate(
@@ -28,22 +36,22 @@ namespace Uchu.World
 
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 
-            spawnerComponent.Settings = levelObject.Settings;
+            spawnerComponent.Settings = levelObject.LegoInfo;
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
             spawnerComponent.LevelObject = levelObject;
 
-            levelObject.Settings.Remove("spawntemplate");
+            levelObject.LegoInfo.Remove("spawntemplate");
 
             return instance;
         }
 
-        public static GameObject Spawner(SpawnerPath spawnerPath, Object parent)
+        public static GameObject Spawner(LuzSpawnerPath spawnerPath, Object parent)
         {
-            var wayPoint = (SpawnerWaypoint) spawnerPath.Waypoints[0];
+            var wayPoint = (LuzSpawnerWaypoint) spawnerPath.Waypoints[0];
 
             var spawner = GameObject.Instantiate(
                 parent,
-                spawnerPath.Name,
+                spawnerPath.PathName,
                 wayPoint.Position,
                 wayPoint.Rotation,
                 -1,
@@ -51,15 +59,24 @@ namespace Uchu.World
                 Lot.Spawner
             );
 
-            spawner.Settings = wayPoint.Config;
+            /* TODO : 
+            
+            var settings = new LegoDataDictionary();
+            foreach (var config in wayPoint.Configs)
+            {
+                settings.Add(config.ConfigName, config.ConfigTypeAndValue);
+            }
+
+            spawner.Settings = settings;
+            */
 
             spawner.Settings.Add("respawn", spawnerPath.RespawnTime);
 
             var spawnerComponent = spawner.AddComponent<SpawnerComponent>();
             
             spawnerComponent.Settings = spawner.Settings;
-            spawnerComponent.SpawnTemplate = new Lot((int) spawnerPath.SpawnLot);
-            spawnerComponent.LevelObject = new LevelObject
+            spawnerComponent.SpawnTemplate = new Lot((int) spawnerPath.SpawnedLot);
+            spawnerComponent.LevelObject = new LevelObjectTemplate
             {
                 Scale = 1
             };

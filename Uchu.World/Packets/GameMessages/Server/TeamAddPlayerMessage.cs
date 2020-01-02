@@ -29,7 +29,7 @@ namespace Uchu.World
 
             writer.WriteBit(false);
 
-            if (writer.Flag(Player.Zone.ZoneInfo.ZoneId != 0)) writer.Write((ushort) Player.Zone.ZoneInfo.ZoneId);
+            if (writer.Flag(Player.Zone.ZoneInfo.LuzFile.WorldId != 0)) writer.Write((ushort) Player.Zone.ZoneInfo.LuzFile.WorldId);
         }
     }
 }

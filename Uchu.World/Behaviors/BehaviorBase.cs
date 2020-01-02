@@ -20,10 +20,17 @@ namespace Uchu.World.Behaviors
 
         public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
+            //((Player) context.Associate)?.SendChatMessage($"[{BehaviorId}] {Id}");
+            
             return Task.CompletedTask;
         }
 
         public virtual Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             return Task.CompletedTask;
         }
@@ -57,16 +64,12 @@ namespace Uchu.World.Behaviors
 
         protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            var targets = branchContext.Targets;
-            
             context.BehaviorHandles[handle] = async reader =>
             {
-                var newBranchContext = new ExecutionBranchContext();
-
-                foreach (var target in targets)
+                var newBranchContext = new ExecutionBranchContext(branchContext.Target)
                 {
-                    newBranchContext.AddTarget(target);
-                }
+                    Duration = branchContext.Duration
+                };
                 
                 context.Reader = reader;
                 
@@ -74,15 +77,15 @@ namespace Uchu.World.Behaviors
             };
         }
 
-        public async Task<BehaviorParameter> GetParameter(string name)
+        protected async Task<BehaviorParameter> GetParameter(string name)
         {
             await using var cdClient = new CdClientContext();
             return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
                 p.BehaviorID == BehaviorId && p.ParameterID == name
             );
         }
-        
-        public async Task<T> GetParameter<T>(string name) where T : struct
+
+        protected async Task<T> GetParameter<T>(string name) where T : struct
         {
             var param = await GetParameter(name);
 
@@ -91,7 +94,7 @@ namespace Uchu.World.Behaviors
             return param.Value.HasValue ? (T) Convert.ChangeType(param.Value.Value, typeof(T)) : default;
         }
 
-        public BehaviorParameter[] GetParameters()
+        protected BehaviorParameter[] GetParameters()
         {
             using var cdClient = new CdClientContext();
             return cdClient.BehaviorParameterTable.Where(p =>
@@ -107,16 +110,16 @@ namespace Uchu.World.Behaviors
             );
         }
 
-        public async Task<BehaviorBase> GetBehavior(string name)
+        protected async Task<BehaviorBase> GetBehavior(string name)
         {
             var action = await GetParameter(name);
 
-            if (action?.Value == null) return new EmptyBehavior();
+            if (action?.Value == null || action.Value.Value.Equals(0)) return new EmptyBehavior();
 
             return await BuildBranch((int) action.Value);
         }
-        
-        public async Task<BehaviorBase> GetBehavior(uint id)
+
+        protected async Task<BehaviorBase> GetBehavior(uint id)
         {
             if (id == default) return new EmptyBehavior();
             

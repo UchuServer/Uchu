@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -28,11 +27,6 @@ namespace StandardScripts.General
 
                     if (launchpadComponent == default)
                     {
-                        Console.WriteLine(
-                            $"{launchpad.GameObject} has an invalid launchpad component: {id}",
-                            true
-                        );
-                        
                         return;
                     }
 
@@ -46,14 +40,22 @@ namespace StandardScripts.General
 
                     if (launchpadComponent.TargetZone != null)
                     {
-                        player.SendToWorld((ZoneId) launchpadComponent.TargetZone);
+                        var target = (ZoneId) launchpadComponent.TargetZone;
                         
-                        return;
-                    }
+                        //
+                        // We don't want to lock up the server on a world server request, as it may take time.
+                        //
 
-                    Console.WriteLine(
-                        $"{launchpad.GameObject} has an invalid launchpad target zone: {launchpadComponent.TargetZone}"
-                    );
+                        var _ = Task.Run(async () =>
+                        {
+                            var success = await player.SendToWorldAsync(target);
+
+                            if (!success)
+                            {
+                                player.SendChatMessage($"Failed to transfer to {target}, please try later.");
+                            }
+                        });
+                    }
                 });
                 
                 return Task.CompletedTask;

@@ -18,7 +18,7 @@ namespace Uchu.World
             {
                 GameObject.GetComponent<DestructibleComponent>().OnSmashed.AddListener(async (killer, owner) =>
                 {
-                    await owner.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
+                    owner.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
                         MissionTaskType.KillEnemy,
                         GameObject.Lot,
                         GameObject

@@ -12,7 +12,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.SendChatMessage($"Interacted with {message.TargetObject}");
             
-            await player.GetComponent<MissionInventoryComponent>().UpdateObjectTaskAsync(
+            player.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
                 MissionTaskType.Interact,
                 message.TargetObject.Lot,
                 message.TargetObject
@@ -62,6 +62,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
         {
+            Logger.Debug($"Loaded: {message.GameObject}");
+            
             player.Perspective.ClientLoadedObjectCount++;
         }
 

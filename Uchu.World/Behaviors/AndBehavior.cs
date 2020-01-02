@@ -26,10 +26,7 @@ namespace Uchu.World.Behaviors
             
             foreach (var behavior in Behaviors)
             {
-                var _ = Task.Run(async () =>
-                {
-                    await behavior.ExecuteAsync(context, branchContext);
-                });
+                await behavior.ExecuteAsync(context, branchContext);
             }
         }
     }

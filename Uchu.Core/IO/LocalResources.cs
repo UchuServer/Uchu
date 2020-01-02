@@ -28,7 +28,7 @@ namespace Uchu.Core.IO
             await using var stream = GetStream(path);
             var bytes = new byte[stream.Length];
 
-            await stream.ReadAsync(bytes, 0, (int) stream.Length);
+            await stream.ReadAsync(bytes, 0, (int) stream.Length).ConfigureAwait(false);
 
             return bytes;
         }

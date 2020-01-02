@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Client;
@@ -16,7 +17,7 @@ namespace Uchu.World
         /// </summary>
         private Timer _timer;
 
-        public MovingPlatformPath Path { get; set; }
+        public LuzMovingPlatformPath Path { get; set; }
 
         public string PathName { get; set; }
 
@@ -46,12 +47,12 @@ namespace Uchu.World
         /// <summary>
         ///     Current WayPoint
         /// </summary>
-        public MovingPlatformWaypoint WayPoint => Path.Waypoints[CurrentWaypointIndex] as MovingPlatformWaypoint;
+        public LuzMovingPlatformWaypoint WayPoint => Path.Waypoints[CurrentWaypointIndex] as LuzMovingPlatformWaypoint;
 
         /// <summary>
         ///     Next WayPoint
         /// </summary>
-        public MovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as MovingPlatformWaypoint;
+        public LuzMovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as LuzMovingPlatformWaypoint;
 
         protected MovingPlatformComponent()
         {
@@ -62,8 +63,8 @@ namespace Uchu.World
                     ? (uint) start
                     : 0;
 
-                Path = Zone.ZoneInfo.Paths.FirstOrDefault(p => p is MovingPlatformPath && p.Name == PathName) as
-                    MovingPlatformPath;
+                Path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(p =>
+                    p is LuzMovingPlatformPath && p.PathName == PathName) as LuzMovingPlatformPath;
 
                 Type = GameObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
                     ? PlatformType.Mover
@@ -153,7 +154,7 @@ namespace Uchu.World
             /*
              * Update Object in world.
              */
-            PathName = Path.Name;
+            PathName = Path.PathName;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -197,7 +198,7 @@ namespace Uchu.World
             _timer = new Timer
             {
                 AutoReset = false,
-                Interval = WayPoint.WaitTime * 1000
+                Interval = WayPoint.Wait * 1000
             };
 
             _timer.Elapsed += (sender, args) => { MovePlatform(); };

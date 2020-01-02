@@ -17,11 +17,9 @@ namespace Uchu.World.Behaviors
             UseTarget = await GetParameter<int>("use_target");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            // TODO
-            
-            return Task.CompletedTask;
+            await base.ExecuteAsync(context, branchContext);
         }
     }
 }

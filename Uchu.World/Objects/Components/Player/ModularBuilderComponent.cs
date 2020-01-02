@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Uchu.Core;
-using Uchu.World.Collections;
 
 namespace Uchu.World
 {
@@ -109,7 +109,7 @@ namespace Uchu.World
             });
         }
         
-        public void FinishBuilding(Lot[] models)
+        public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
@@ -122,14 +122,10 @@ namespace Uchu.World
             {
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
-
+            
             inventory.AddItem(6416, 1, InventoryType.Models, model);
-            
-            var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
-            
-            GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
-            
-            IsBuilding = false;
+
+            await ConfirmFinish();
         }
         
         public void DoneArranging(DoneArrangingWithItemMessage message)
@@ -137,7 +133,7 @@ namespace Uchu.World
             As<Player>().SendChatMessage($"DONE: {message.NewSource}\t{message.NewTarget}\t{message.OldSource}");
         }
 
-        public void Pickup(Lot lot)
+        public async Task Pickup(Lot lot)
         {
             As<Player>().SendChatMessage($"PICKUP: {lot}");
             
@@ -145,7 +141,7 @@ namespace Uchu.World
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
             
-            GameObject.GetComponent<InventoryComponent>().EquipItem(item);
+            await GameObject.GetComponent<InventoryComponent>().EquipItem(item);
             
             /*
             As<Player>().Message(new StartArrangingWithItemMessage
@@ -154,6 +150,19 @@ namespace Uchu.World
                 FirstTime = false
             });
             */
+        }
+
+        public async Task ConfirmFinish()
+        {
+            if (!IsBuilding) return;
+            
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+            
+            var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
+            
+            await GameObject.GetComponent<InventoryComponent>().UnEquipItem(thinkingHat);
+            
+            IsBuilding = false;
         }
     }
 }

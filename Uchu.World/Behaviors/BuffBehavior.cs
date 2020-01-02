@@ -27,5 +27,27 @@ namespace Uchu.World.Behaviors
             AttackSpeed = await GetParameter<int>("attack_speed");
             Brain = await GetParameter<int>("brain");
         }
+
+        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+
+            stats.MaxHealth += (uint) Life;
+            stats.MaxArmor += (uint) Armor;
+            stats.MaxImagination += (uint) Imagination;
+
+            return Task.CompletedTask;
+        }
+
+        public override Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+
+            stats.MaxHealth -= (uint) Life;
+            stats.MaxArmor -= (uint) Armor;
+            stats.MaxImagination -= (uint) Imagination;
+            
+            return Task.CompletedTask;
+        }
     }
 }

@@ -8,6 +8,8 @@ namespace Uchu.World
     {
         public static ZoneChecksum GetChecksum(this ZoneId @this)
         {
+            if (!Enum.IsDefined(typeof(ZoneId), @this)) return 0;
+            
             var name = Enum.GetName(typeof(ZoneId), @this);
 
             var names = Enum.GetNames(typeof(ZoneChecksum));

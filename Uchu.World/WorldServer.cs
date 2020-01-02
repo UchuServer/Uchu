@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
@@ -22,7 +23,7 @@ namespace Uchu.World
 
         public List<Zone> Zones { get; }
         
-        public ZoneParser ZoneParser { get; }
+        public ZoneParser ZoneParser { get; private set; }
 
         public uint MaxPlayerCount { get; }
 
@@ -48,20 +49,25 @@ namespace Uchu.World
             }
         }
 
-        public WorldServer(ServerSpecification specifications, string path) : base(specifications.Id, path)
+        public WorldServer(ServerSpecification specifications) : base(specifications.Id)
         {
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
             
             Zones = new List<Zone>();
-            
-            ZoneParser = new ZoneParser(Resources);
 
             _zoneId = specifications.ZoneId;
 
             MaxPlayerCount = specifications.MaxUserCount;
 
             _gameMessageHandlerMap = new GameMessageHandlerMap();
+        }
 
+        public override async Task ConfigureAsync(string configFile)
+        {
+            await base.ConfigureAsync(configFile);
+            
+            ZoneParser = new ZoneParser(Resources);
+            
             GameMessageReceived += HandleGameMessageAsync;
             ServerStopped += () =>
             {
@@ -73,39 +79,41 @@ namespace Uchu.World
 
             RakNetServer.ClientDisconnected += HandleDisconnect;
 
-            Task.Run(async () =>
+            var _ = Task.Run(async () =>
             {
-                await ZoneParser.LoadZoneDataAsync();
+                await ZoneParser.LoadZoneDataAsync((int) ServerSpecification.ZoneId);
 
-                Logger.Information($"Loading {specifications.ZoneId}");
-
-                await LoadZone(specifications);
+                await LoadZone(ServerSpecification);
             });
+            
+            Logger.Information($"Setting up world server: {ServerSpecification.Id}");
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
         {
             Logger.Information($"{point} disconnected: {reason}");
 
-            foreach (var player in Zones
-                .Select(zone => zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point)))
-                .Where(player => !ReferenceEquals(player, default)))
+            var players = Zones.Select(zone =>
+                zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point))
+            ).Where(player => player != default);
+            
+            foreach (var player in players)
             {
                 Object.Destroy(player);
-
-                break;
             }
 
             return Task.CompletedTask;
         }
 
-        public async Task LoadZone(ServerSpecification zone)
+        private async Task LoadZone(ServerSpecification zone)
         {
-            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync();
+            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync((int) zone.ZoneId);
 
             Logger.Information($"Starting {zone.ZoneId}");
 
             var info = ZoneParser.Zones?[zone.ZoneId];
+
+            if (info == default) throw new Exception($"Failed to find info for {zone.ZoneId}");
 
             var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
             
@@ -139,7 +147,7 @@ namespace Uchu.World
             return default;
         }
 
-        protected override void RegisterAssembly(Assembly assembly)
+        public override void RegisterAssembly(Assembly assembly)
         {
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
 
@@ -230,7 +238,7 @@ namespace Uchu.World
 
             Logger.Debug($"Received {((IGameMessage) messageHandler.Packet).GameMessageId}");
 
-            var player = Zones.Where(z => z.ZoneInfo.ZoneId == session.ZoneId).SelectMany(z => z.Players)
+            var player = Zones.Where(z => z.ZoneInfo.LuzFile.WorldId == session.ZoneId).SelectMany(z => z.Players)
                 .FirstOrDefault(p => p.Connection.Equals(connection));
 
             if (player == default)

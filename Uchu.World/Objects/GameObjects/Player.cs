@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -9,6 +8,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Filters;
 using Uchu.World.Social;
 
 namespace Uchu.World
@@ -17,18 +17,24 @@ namespace Uchu.World
     {
         private Player()
         {
-            OnTick.AddListener(CheckDeathZone);
-            
             OnStart.AddListener(() =>
             {
                 Connection.Disconnected += reason =>
                 {
+                    Connection = default;
+                    
                     Destroy(this);
-
-                    Zone.ManagedPlayers.Remove(this);
                     
                     return Task.CompletedTask;
                 };
+            });
+            
+            OnDestroyed.AddListener(() =>
+            {
+                OnFireServerEvent.Clear();
+                OnLootPickup.Clear();
+                OnWorldLoad.Clear();
+                OnPositionUpdate.Clear();
             });
         }
 
@@ -36,6 +42,8 @@ namespace Uchu.World
             new AsyncEventDictionary<string, FireServerEventMessage>();
 
         public AsyncEvent<Lot> OnLootPickup { get; } = new AsyncEvent<Lot>();
+        
+        public AsyncEvent OnWorldLoad { get; } = new AsyncEvent();
 
         public AsyncEvent<Vector3, Quaternion> OnPositionUpdate { get; } = new AsyncEvent<Vector3, Quaternion>();
 
@@ -120,12 +128,33 @@ namespace Uchu.World
             var instance = Instantiate<Player>(
                 zone,
                 character.Name,
-                zone.ZoneInfo.SpawnPosition,
-                zone.ZoneInfo.SpawnRotation,
+                zone.ZoneInfo.LuzFile.SpawnPoint,
+                zone.ZoneInfo.LuzFile.SpawnRotation,
                 1,
                 character.CharacterId,
                 1
             );
+            
+            //
+            // Setup layers
+            //
+            
+            instance.Layer = StandardLayer.Player;
+            
+            var layer = StandardLayer.All;
+            layer -= StandardLayer.Hidden;
+            layer -= StandardLayer.Spawner;
+            
+            instance.Perspective = new Perspective(instance);
+
+            var maskFilter = instance.Perspective.AddFilter<MaskFilter>();
+            maskFilter.ViewMask = layer;
+
+            instance.Perspective.AddFilter<RenderDistanceFilter>();
+            
+            //
+            // Set connection
+            //
 
             instance.Connection = connection;
 
@@ -199,17 +228,6 @@ namespace Uchu.World
             instance.AddComponent<ModularBuilderComponent>();
 
             //
-            // Setup layers
-            //
-            
-            var layer = StandardLayer.All;
-            layer -= StandardLayer.Hidden;
-            layer -= StandardLayer.Spawner;
-
-            instance.Perspective = new Perspective(instance, layer);
-            instance.Layer = StandardLayer.Player;
-
-            //
             // Register player as an active in zone
             //
             
@@ -242,35 +260,41 @@ namespace Uchu.World
             Connection.Send(gameMessage);
         }
 
-        public void SendToWorld(ZoneId zoneId)
+        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            using var ctx = new UchuContext();
+            var port = await WorldHelper.RequestWorldServerAsync(zoneId);
             
-            var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+            if (port == -1)
+            {
+                return false;
+            }
+            
+            if (Server.Port == port)
+            {
+                Logger.Error("Could not send a player to the same port as it already has");
 
-            character.LastZone = (int) zoneId;
-
-            ctx.SaveChanges();
+                return false;
+            }
             
             var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
-            Server.RequestWorldServer(zoneId, port =>
+            Message(new ServerRedirectionPacket
             {
-                if (Server.Port == port)
-                {
-                    Logger.Error("Could not send a player to the same port as it already has");
-                    
-                    return;
-                }
-                
-                Message(new ServerRedirectionPacket
-                {
-                    Port = (ushort) port,
-                    Address = address
-                });
+                Port = (ushort) port,
+                Address = address
             });
+
+            await using var ctx = new UchuContext();
+
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+            character.LastZone = (int) zoneId;
+
+            await ctx.SaveChangesAsync();
+
+            return true;
         }
 
         private async Task SetCurrencyAsync(long currency)
@@ -347,90 +371,6 @@ namespace Uchu.World
             });
 
             await ctx.SaveChangesAsync();
-        }
-
-        private void CheckDeathZone()
-        {
-            // TODO: Remove
-
-            var smashable = GetComponent<DestructibleComponent>();
-
-            if (smashable == null || !smashable.Alive) return;
-
-            switch ((ZoneId) Zone.ZoneInfo.ZoneId)
-            {
-                case ZoneId.VentureExplorerCinematic:
-                    break;
-                case ZoneId.VentureExplorer:
-                    if (Transform.Position.Y <= 560) smashable.Smash(this, this);
-                    break;
-                case ZoneId.ReturnToVentureExplorer:
-                    break;
-                case ZoneId.AvantGardens:
-                    break;
-                case ZoneId.AvantGardensSurvival:
-                    break;
-                case ZoneId.SpiderQueenBattle:
-                    break;
-                case ZoneId.BlockYard:
-                    break;
-                case ZoneId.AvantGrove:
-                    break;
-                case ZoneId.NimbusStation:
-                    break;
-                case ZoneId.PetCove:
-                    break;
-                case ZoneId.VertigoLoopRacetrack:
-                    break;
-                case ZoneId.BattleOfNimbusStation:
-                    break;
-                case ZoneId.NimbusRock:
-                    break;
-                case ZoneId.NimbusIsle:
-                    break;
-                case ZoneId.FrostBurgh:
-                    break;
-                case ZoneId.GnarledForest:
-                    break;
-                case ZoneId.CanyonCove:
-                    break;
-                case ZoneId.KeelhaulCanyon:
-                    break;
-                case ZoneId.ChanteyShantey:
-                    break;
-                case ZoneId.ForbiddenValley:
-                    break;
-                case ZoneId.ForbiddenValleyDragon:
-                    break;
-                case ZoneId.DragonmawChasm:
-                    break;
-                case ZoneId.RavenBluff:
-                    break;
-                case ZoneId.Starbase3001:
-                    break;
-                case ZoneId.DeepFreeze:
-                    break;
-                case ZoneId.RobotCity:
-                    break;
-                case ZoneId.MoonBase:
-                    break;
-                case ZoneId.Portabello:
-                    break;
-                case ZoneId.LegoClub:
-                    break;
-                case ZoneId.CruxPrime:
-                    break;
-                case ZoneId.NexusTower:
-                    break;
-                case ZoneId.Ninjago:
-                    break;
-                case ZoneId.FrakjawBattle:
-                    break;
-                case ZoneId.NimbusStationWinterRacetrack:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
     }
 }

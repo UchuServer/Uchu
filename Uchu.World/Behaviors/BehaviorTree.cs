@@ -13,9 +13,9 @@ namespace Uchu.World.Behaviors
     {
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
-        public readonly (int behaviorId, SkillCastType castType, int skillId)[] BehaviorIds;
+        public (int behaviorId, SkillCastType castType, int skillId)[] BehaviorIds { get; }
 
-        public readonly Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors =
+        public Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
             new Dictionary<SkillCastType, List<BehaviorBase>>();
 
         public static Dictionary<BehaviorTemplateId, Type> Behaviors
@@ -47,7 +47,7 @@ namespace Uchu.World.Behaviors
                 i.ObjectTemplate == lot
             ).ToArray();
             
-            BehaviorIds = new (int behaviorId, SkillCastType castType, int skillId)[3];
+            BehaviorIds = new (int behaviorId, SkillCastType castType, int skillId)[objectSkills.Length];
 
             for (var index = 0; index < objectSkills.Length; index++)
             {
@@ -141,6 +141,8 @@ namespace Uchu.World.Behaviors
 
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
+            target = associate;
+            
             var context = new ExecutionContext(associate, reader);
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
@@ -148,11 +150,9 @@ namespace Uchu.World.Behaviors
                 foreach (var root in defaultList)
                 {
                     context.Root = root;
-                    
-                    var branchContext = new ExecutionBranchContext();
 
-                    branchContext.Targets.Add(target);
-                
+                    var branchContext = new ExecutionBranchContext(target);
+                    
                     await root.ExecuteAsync(context, branchContext);
                 }
             }
@@ -163,9 +163,7 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                var branchContext = new ExecutionBranchContext();
-
-                branchContext.Targets.Add(target);
+                var branchContext = new ExecutionBranchContext(target);
                 
                 await root.ExecuteAsync(context, branchContext);
             }
@@ -173,12 +171,44 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
+        public async Task<ExecutionContext> MountAsync(GameObject associate)
+        {
+            var context = new ExecutionContext(associate, default);
+
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
+            
+            foreach (var root in list)
+            {
+                context.Root = root;
+                
+                var branchContext = new ExecutionBranchContext(associate);
+                
+                await root.ExecuteAsync(context, branchContext);
+            }
+
+            return context;
+        }
+
+        public async Task<ExecutionContext> DismantleAsync(GameObject associate)
+        {
+            var context = new ExecutionContext(associate, default);
+
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
+            
+            foreach (var root in list)
+            {
+                context.Root = root;
+                
+                var branchContext = new ExecutionBranchContext(associate);
+                
+                await root.DismantleAsync(context, branchContext);
+            }
+
+            return context;
+        }
+
         public static async Task<BehaviorInfo[]> GetSkillsForItem(Item item)
         {
-            var type = item.ItemType.GetBehaviorSlot();
-
-            if (type == BehaviorSlot.Invalid) return new BehaviorInfo[0];
-            
             var tree = new BehaviorTree(item.Lot);
             
             return await tree.BuildAsync();
