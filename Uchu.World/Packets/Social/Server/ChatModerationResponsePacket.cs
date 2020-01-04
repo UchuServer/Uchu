@@ -11,7 +11,7 @@ namespace Uchu.World.Social
 
         public bool RequestAccepted { get; set; }
 
-        public byte RequestId { get; set; }
+        public byte ChatChannel { get; set; }
 
         public byte ChatMode { get; set; }
 
@@ -19,13 +19,13 @@ namespace Uchu.World.Social
 
         public (byte start, byte length)[] UnacceptedRanges { get; set; } = new (byte start, byte length)[0];
 
-        public override void Serialize(BitWriter writer)
+        public override void SerializePacket(BitWriter writer)
         {
             writer.Write((byte) (RequestAccepted ? 1 : 0));
 
             writer.Write<ushort>(0);
 
-            writer.Write(RequestId);
+            writer.Write(ChatChannel);
             writer.Write(ChatMode);
 
             writer.WriteString(PlayerName, 33, true);
@@ -36,9 +36,11 @@ namespace Uchu.World.Social
                 writer.Write(length);
             }
 
-            if (UnacceptedRanges.Length == 32) return;
-            writer.Write<byte>(0);
-            writer.Write<byte>(0);
+            for (var i = 0; i < 32 - UnacceptedRanges.Length; i++)
+            {
+                writer.Write<byte>(0);
+                writer.Write<byte>(0);
+            }
         }
     }
 }

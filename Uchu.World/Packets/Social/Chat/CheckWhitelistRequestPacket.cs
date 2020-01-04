@@ -11,7 +11,7 @@ namespace Uchu.World.Social
 
         public byte ChatMode { get; set; }
 
-        public byte RequestId { get; set; }
+        public byte ChatChannel { get; set; }
 
         public string PrivateReceiver { get; set; }
 
@@ -23,7 +23,7 @@ namespace Uchu.World.Social
         {
             ChatMode = reader.Read<byte>();
 
-            RequestId = reader.Read<byte>();
+            ChatChannel = reader.Read<byte>();
 
             PrivateReceiver = reader.ReadString(42, true);
 

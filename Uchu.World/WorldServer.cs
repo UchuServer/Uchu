@@ -10,6 +10,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.World.Client;
+using Uchu.World.Social;
 
 namespace Uchu.World
 {
@@ -22,10 +23,12 @@ namespace Uchu.World
         private readonly ZoneId _zoneId;
 
         public List<Zone> Zones { get; }
-        
-        public ZoneParser ZoneParser { get; private set; }
 
         public uint MaxPlayerCount { get; }
+        
+        public ZoneParser ZoneParser { get; private set; }
+        
+        public Whitelist Whitelist { get; private set; }
 
         public uint ActiveUserCount
         {
@@ -67,6 +70,10 @@ namespace Uchu.World
             await base.ConfigureAsync(configFile);
             
             ZoneParser = new ZoneParser(Resources);
+            
+            Whitelist = new Whitelist(Resources);
+            
+            await Whitelist.LoadDefaultWhitelist();
             
             GameMessageReceived += HandleGameMessageAsync;
             ServerStopped += () =>

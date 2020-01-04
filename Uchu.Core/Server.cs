@@ -326,7 +326,7 @@ namespace Uchu.Core
         {
             var prefix = command.First();
 
-            if (!CommandHandleMap.TryGetValue(prefix, out var group)) return "Invalid prefix";
+            if (!CommandHandleMap.TryGetValue(prefix, out var group)) return default;
 
             command = command.Remove(0, 1);
 

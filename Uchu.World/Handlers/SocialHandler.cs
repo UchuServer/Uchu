@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
+using Uchu.World.Enums;
 using Uchu.World.Social;
 
 namespace Uchu.World.Handlers
@@ -23,20 +24,26 @@ namespace Uchu.World.Handlers
             
             var character = await ctx.Characters.Include(c => c.User)
                 .FirstAsync(c => c.CharacterId == player.ObjectId);
-
-            Logger.Debug(
-                $"{character} executing {message.Message} with GM level {(GameMasterLevel) character.User.GameMasterLevel}");
-
+            
             var response = await Server.HandleCommandAsync(
                 message.Message,
                 player,
                 (GameMasterLevel) character.User.GameMasterLevel
             );
 
-            player.Message(new ChatMessagePacket
+            if (!string.IsNullOrWhiteSpace(response))
             {
-                Message = $"{response}\0"
-            });
+                player.SendChatMessage(response);
+            }
+            else
+            {
+                if (((WorldServer) Server).Whitelist.CheckPhrase(message.Message).Any()) return;
+                
+                foreach (var zonePlayer in player.Zone.Players)
+                {
+                    zonePlayer.SendChatMessage(message.Message, PlayerChatChannel.Normal, player);
+                }
+            }
         }
 
         [PacketHandler]
@@ -345,27 +352,22 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public void CheckWhitelistRequestHandler(CheckWhitelistRequestPacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
-
-            if (zone == default)
-            {
-                Logger.Error($"Invalid ZoneId for {connection}");
-                return;
-            }
-
-            var player = zone.Players.First(p => p.Connection.Equals(connection));
-
+            var player = Server.FindPlayer(connection);
+            
+            if (player == default) return;
+            
             Logger.Information(
-                $"Checking whitelist for [{packet.ChatMode}:{packet.RequestId}]: {packet.PrivateReceiver} | [{packet.ChatMessageLength}] {packet.ChatMessage}"
+                $"Checking whitelist for [{packet.ChatMode}:{packet.ChatChannel}]: {packet.PrivateReceiver} | [{packet.ChatMessageLength}] {packet.ChatMessage}"
             );
+
+            var redact = ((WorldServer) Server).Whitelist.CheckPhrase(packet.ChatMessage);
             
             player.Message(new ChatModerationResponsePacket
             {
-                RequestAccepted = true,
-                RequestId = packet.RequestId,
+                RequestAccepted = redact.Length == default,
+                ChatChannel = packet.ChatChannel,
                 ChatMode = packet.ChatMode,
-                PlayerName = player.Name
+                UnacceptedRanges = redact
             });
         }
     }

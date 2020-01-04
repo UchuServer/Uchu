@@ -8,6 +8,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Enums;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -50,6 +51,8 @@ namespace Uchu.World
         public IRakConnection Connection { get; private set; }
 
         public Perspective Perspective { get; private set; }
+        
+        public PlayerChatChannel ChatChannel { get; set; }
 
         public override string Name
         {
@@ -245,11 +248,15 @@ namespace Uchu.World
             });
         }
 
-        public void SendChatMessage(string message)
+        public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null)
         {
+            if (channel > ChatChannel) return;
+            
             Message(new ChatMessagePacket
             {
-                Message = $"{message}\0"
+                Message = $"{message}\0",
+                Sender = author,
+                IsMythran = author.GameMasterLevel > 0
             });
         }
 
