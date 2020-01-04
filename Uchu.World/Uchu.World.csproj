@@ -10,6 +10,7 @@
       <ProjectReference Include="..\InfectedRose\InfectedRose.Luz\InfectedRose.Luz.csproj" />
       <ProjectReference Include="..\InfectedRose\InfectedRose.Lvl\InfectedRose.Lvl.csproj" />
       <ProjectReference Include="..\InfectedRose\InfectedRose.Triggers\InfectedRose.Triggers.csproj" />
+      <ProjectReference Include="..\InfectedRose\InfectedRose.Utilities\InfectedRose.Utilities.csproj" />
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
     </ItemGroup>
 

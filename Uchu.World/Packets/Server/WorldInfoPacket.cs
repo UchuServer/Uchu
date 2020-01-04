@@ -16,7 +16,7 @@ namespace Uchu.World
 
         public uint Clone { get; set; }
 
-        public ZoneChecksum Checksum { get; set; }
+        public uint Checksum { get; set; }
 
         public Vector3 SpawnPosition { get; set; }
 
@@ -30,7 +30,7 @@ namespace Uchu.World
 
             writer.Write(Clone);
 
-            writer.Write((uint) Checksum);
+            writer.Write(Checksum);
 
             writer.Write(SpawnPosition);
 

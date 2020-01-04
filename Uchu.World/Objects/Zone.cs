@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
+using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -28,9 +29,15 @@ namespace Uchu.World
         //
 
         public uint CloneId { get; }
+        
         public ushort InstanceId { get; }
+        
         public ZoneInfo ZoneInfo { get; }
+        
         public new Server Server { get; }
+        
+        public uint Checksum { get; private set; }
+        
         public bool Loaded { get; private set; }
 
         //
@@ -82,6 +89,10 @@ namespace Uchu.World
 
         public async Task InitializeAsync()
         {
+            Checksum = ZoneInfo.LuzFile.GenerateChecksum(ZoneInfo.LvlFiles);
+            
+            Logger.Information($"Checksum: 0x{Checksum:X}");
+            
             Logger.Information($"Collecting objects for {ZoneId}");
 
             var objects = new List<LevelObjectTemplate>();

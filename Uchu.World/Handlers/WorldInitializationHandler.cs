@@ -73,7 +73,7 @@ namespace Uchu.World.Handlers
             connection.Send(new WorldInfoPacket
             {
                 ZoneId = zoneId,
-                Checksum = zoneId.GetChecksum(),
+                Checksum = zone.Checksum,
                 SpawnPosition = zone.ZoneInfo.LuzFile.SpawnPoint
             });
         }

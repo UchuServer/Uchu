@@ -6,18 +6,6 @@ namespace Uchu.World
 {
     public static class EnumExtensions
     {
-        public static ZoneChecksum GetChecksum(this ZoneId @this)
-        {
-            if (!Enum.IsDefined(typeof(ZoneId), @this)) return 0;
-            
-            var name = Enum.GetName(typeof(ZoneId), @this);
-
-            var names = Enum.GetNames(typeof(ZoneChecksum));
-            var values = Enum.GetValues(typeof(ZoneChecksum));
-
-            return (ZoneChecksum) values.GetValue(names.ToList().IndexOf(name));
-        }
-        
         public static InventoryType GetInventoryType(this ItemType @this)
         {
             switch (@this)
