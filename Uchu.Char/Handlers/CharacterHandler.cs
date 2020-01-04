@@ -281,7 +281,7 @@ namespace Uchu.Char.Handlers
                 // Request world server.
                 //
                 
-                var port = await WorldHelper.RequestWorldServerAsync(requestZone);
+                var port = await ServerHelper.RequestWorldServerAsync(requestZone);
 
                 if (port == -1)
                 {

@@ -19,7 +19,7 @@ namespace Uchu.World
             _zone = zone;
         }
         
-        internal async Task LoadScripts()
+        internal void ReadAssemblies()
         {
             var scriptPacks = new List<ScriptPack>();
 
@@ -47,13 +47,11 @@ namespace Uchu.World
 
                 try
                 {
-                    Logger.Information($"Loading {scriptPackName} script pack");
-                    
                     var assembly = Assembly.LoadFrom(dll);
 
                     var scriptPack = new ScriptPack(_zone, assembly);
 
-                    await scriptPack.LoadAsync();
+                    scriptPack.ReadAssembly();
                     
                     Logger.Information($"Loaded {scriptPackName} script pack");
                     

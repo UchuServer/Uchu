@@ -15,19 +15,18 @@ namespace Uchu.Auth.Handlers
             var addresses = Server.GetAddresses();
             
             var address = connection.EndPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
-            
+
             var info = new ServerLoginInfoPacket
             {
                 CharacterInstanceAddress = address,
+                CharacterInstancePort = ushort.MaxValue,
                 ChatInstanceAddress = address,
                 ChatInstancePort = 2004
             };
-            
-            var characterSpecifications = await ctx.Specifications.FirstOrDefaultAsync(
-                c => c.ServerType == ServerType.Character
-            );
 
-            if (characterSpecifications == default)
+            var characterSpecification = await ServerHelper.GetServerByType(ServerType.Character);
+
+            if (characterSpecification == default)
             {
                 info.LoginCode = LoginCode.InsufficientPermissions;
                 info.Error = new ServerLoginInfoPacket.ErrorMessage
@@ -37,7 +36,7 @@ namespace Uchu.Auth.Handlers
             }
             else
             {
-                info.CharacterInstancePort = (ushort) Server.Config.Networking.CharacterPort;
+                info.CharacterInstancePort = (ushort) characterSpecification.Port;
 
                 if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username))
                 {

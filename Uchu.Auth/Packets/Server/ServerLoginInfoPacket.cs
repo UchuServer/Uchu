@@ -33,7 +33,7 @@ namespace Uchu.Auth
 
         public bool FirstLoginWithSubscription { get; set; } = false;
 
-        public bool FreeToPlay { get; set; } = false;
+        public bool FreeToPlay { get; set; } = true;
 
         public ErrorMessage Error { get; set; } = new ErrorMessage {Message = null};
 

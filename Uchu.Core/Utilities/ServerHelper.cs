@@ -1,13 +1,27 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.Core
 {
-    public static class WorldHelper
+    public static class ServerHelper
     {
         public static async Task<int> RequestWorldServerAsync(ZoneId zoneId)
         {
+            //
+            // Check for servers
+            //
+
+            var worldServers = await GetServersByType(ServerType.World).ConfigureAwait(false);
+            
+            foreach (var worldServer in worldServers.Where(w => w.ZoneId == zoneId))
+            {
+                if (worldServer.ActiveUserCount >= worldServer.MaxUserCount) continue;
+
+                return worldServer.Port;
+            }
+            
             //
             // Start a new world server request.
             //
@@ -82,6 +96,20 @@ namespace Uchu.Core
             Logger.Error($"Request {id} timed out");
 
             return -1;
+        }
+
+        public static async Task<ServerSpecification> GetServerByType(ServerType type)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Specifications.FirstOrDefaultAsync(s => s.ServerType == type).ConfigureAwait(false);
+        }
+                
+        public static async Task<ServerSpecification[]> GetServersByType(ServerType type)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Specifications.Where(s => s.ServerType == type).ToArrayAsync().ConfigureAwait(false);
         }
     }
 }

@@ -10,30 +10,37 @@ namespace Uchu.World.Scripting
     {
         private readonly List<Script> _scripts;
 
-        public IReadOnlyCollection<Script> Scripts => _scripts.AsReadOnly();
+        private readonly Assembly _assembly;
+
+        private readonly Zone _zone;
+
+        public IEnumerable<Script> Scripts => _scripts.AsReadOnly();
         
         public ScriptPack(Zone zone, Assembly assembly)
         {
             _scripts = new List<Script>();
-            
-            foreach (var type in assembly.GetTypes())
+
+            _assembly = assembly;
+
+            _zone = zone;
+        }
+
+        internal void ReadAssembly()
+        {
+            foreach (var type in _assembly.GetTypes())
             {
-                Logger.Information($"SCRIPT TYPE: {type}");
-                
                 if (type.BaseType != typeof(Script)) return;
 
                 var zoneSpecific = type.GetCustomAttribute<ZoneSpecificAttribute>();
 
                 if (zoneSpecific != null)
                 {
-                    if (zoneSpecific.ZoneId != zone.ZoneId) continue;
+                    if (zoneSpecific.ZoneId != _zone.ZoneId) continue;
                 }
 
                 var instance = (Script) Activator.CreateInstance(type);
                 
-                Logger.Information($"{type} is script");
-
-                instance.SetZone(zone);
+                instance.SetZone(_zone);
 
                 _scripts.Add(instance);
             }

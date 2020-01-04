@@ -134,7 +134,12 @@ namespace Uchu.World
             // Load zone scripts
             //
 
-            await _scriptManager.LoadScripts();
+            _scriptManager.ReadAssemblies();
+
+            foreach (var scriptPack in _scriptManager.ScriptPacks)
+            {
+                await scriptPack.LoadAsync();
+            }
 
             Loaded = true;
 

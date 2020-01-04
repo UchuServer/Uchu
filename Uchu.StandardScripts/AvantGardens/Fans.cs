@@ -95,12 +95,11 @@ namespace StandardScripts.AvantGardens
             foreach (var fanObject in GetGroup(group))
             {
                 // Nothing is found here
-                if (fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent))
-                {
-                    Serialize(fanObject);
+                if (!fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) continue;
+                
+                Serialize(fanObject);
                     
-                    physicsComponent.IsEffectActive = false;
-                }
+                physicsComponent.IsEffectActive = false;
             }
 
             GetGroup($"{group}fx")[0].Animate("trigger", true);
@@ -121,12 +120,11 @@ namespace StandardScripts.AvantGardens
             foreach (var fanObject in GetGroup(group))
             {
                 // Nothing is found here
-                if (fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent))
-                {
-                    physicsComponent.IsEffectActive = true;
+                if (!fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) continue;
+                
+                physicsComponent.IsEffectActive = true;
 
-                    Serialize(fanObject);
-                }
+                Serialize(fanObject);
             }
 
             GetGroup($"{group}fx")[0].Animate("idle", true);

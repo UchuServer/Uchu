@@ -262,7 +262,7 @@ namespace Uchu.World
 
         public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            var port = await WorldHelper.RequestWorldServerAsync(zoneId);
+            var port = await ServerHelper.RequestWorldServerAsync(zoneId);
             
             if (port == -1)
             {
