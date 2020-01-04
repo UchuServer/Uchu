@@ -31,9 +31,9 @@ namespace Uchu.Auth
 
         public string Locale { get; set; } = "US";
 
-        public bool FirstLoginWithSubscription { get; set; } = false;
+        public bool FirstLoginWithSubscription { get; set; }
 
-        public bool FreeToPlay { get; set; } = true;
+        public bool FreeToPlay { get; set; }
 
         public ErrorMessage Error { get; set; } = new ErrorMessage {Message = null};
 

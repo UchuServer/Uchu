@@ -60,12 +60,36 @@ namespace Uchu.Auth.Handlers
                                 Message = $"This account has been banned by an admin. Reason:\n{user.BannedReason ?? "Unknown"}"
                             };
                         }
+                        else if (!string.IsNullOrWhiteSpace(user.CustomLockout))
+                        {
+                            info.LoginCode = LoginCode.InsufficientPermissions;
+                            info.Error = new ServerLoginInfoPacket.ErrorMessage
+                            {
+                                Message = user.CustomLockout
+                            };
+                        }
                         else
                         {
                             var key = Server.SessionCache.CreateSession(user.UserId);
 
                             info.LoginCode = LoginCode.Success;
                             info.UserKey = key;
+
+                            //
+                            // I don't intend, nor do I see anyone else, using these.
+                            // Except maybe FirstTimeOnSubscription for the fancy screen.
+                            //
+                            
+                            info.FreeToPlay = user.FreeToPlay;
+                            info.FirstLoginWithSubscription = user.FirstTimeOnSubscription;
+
+                            //
+                            // No longer the first time on subscription
+                            //
+                            
+                            user.FirstTimeOnSubscription = false;
+
+                            await ctx.SaveChangesAsync();
                         }
                     }
                     else
