@@ -16,7 +16,7 @@ Uchu is built with .NET Core 3.1 which is compatible with 64-bit versions Window
 #### .NET Core 3.1
 Install .NET Core 3.1 SDK for your OS using the instructions found on https://dotnet.microsoft.com/download/dotnet-core/3.1.
 
-#### Entity Frameword Command Line Interface
+#### Entity Framework Command Line Interface (optional)
 Run ```dotnet tool install --global dotnet-ef``` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
 
 #### PostgresSQL
