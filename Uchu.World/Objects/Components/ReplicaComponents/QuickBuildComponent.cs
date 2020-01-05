@@ -308,7 +308,8 @@ namespace Uchu.World
             {
                 Associate = GameObject,
                 IsSuccess = true,
-                Player = player
+                Player = player,
+                Duration = _resetTime
             });
 
             /*

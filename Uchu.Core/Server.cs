@@ -135,6 +135,8 @@ namespace Uchu.Core
                     {
                         var command = Console.ReadLine();
                         
+                        if (string.IsNullOrWhiteSpace(command)) continue;
+                        
                         Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console).ConfigureAwait(false));
                     }
                 });

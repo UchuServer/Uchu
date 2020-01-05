@@ -11,7 +11,7 @@ namespace Uchu.World
     public class DestructibleComponent : ReplicaComponent
     {
         private readonly Random _random;
-        
+
         private Core.Client.DestructibleComponent _cdClientComponent;
         private Stats _stats;
 
