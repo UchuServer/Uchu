@@ -3,7 +3,7 @@ using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.AvantGardens
+namespace Uchu.StandardScripts.AvantGardens
 {
     [ZoneSpecific(ZoneId.AvantGardens)]
     public class RocketMissionCheck : Script

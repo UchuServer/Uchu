@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.General
+namespace Uchu.StandardScripts.General
 {
     public class StatPickups : Script
     {

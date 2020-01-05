@@ -1,12 +1,11 @@
 using System;
-using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.AvantGardens
+namespace Uchu.StandardScripts.AvantGardens
 {
     [ZoneSpecific(ZoneId.AvantGardens)]
     public class Fans : Script

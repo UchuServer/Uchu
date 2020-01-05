@@ -10,7 +10,7 @@ using Uchu.Core.Client;
 namespace Uchu.World
 {
     [RequireComponent(typeof(StatsComponent), true)]
-    public class RebuildComponent : ScriptedActivityComponent
+    public class QuickBuildComponent : ScriptedActivityComponent
     {
         private float _completeTime;
         private int _imaginationCost;
@@ -37,7 +37,7 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.QuickBuildComponent;
 
-        protected RebuildComponent()
+        protected QuickBuildComponent()
         {
             OnStart.AddListener(async () =>
             {
@@ -311,6 +311,8 @@ namespace Uchu.World
             State = RebuildState.Completed;
             Success = true;
             Enabled = true;
+            TimeSinceStart = default;
+            PauseTime = default;
             
             if (!Participants.Contains(player)) Participants.Add(player);
 

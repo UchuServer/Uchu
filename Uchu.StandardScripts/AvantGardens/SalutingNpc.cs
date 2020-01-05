@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.AvantGardens
+namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
     ///     LUA Reference: l_ag_saluting_npcs.lua

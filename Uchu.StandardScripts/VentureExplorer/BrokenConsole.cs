@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.VentureExplorer
+namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
     ///     LUA Reference: l_ag_ship_player_shock_server.lua

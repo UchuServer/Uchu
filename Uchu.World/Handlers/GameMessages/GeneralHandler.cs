@@ -53,7 +53,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void RebuildCancelHandler(RebuildCancelMessage message, Player player)
         {
-            if (message.Associate.TryGetComponent<RebuildComponent>(out var rebuild))
+            if (message.Associate.TryGetComponent<QuickBuildComponent>(out var rebuild))
             {
                 rebuild.StopRebuild(player, RebuildFailReason.Canceled);
             }

@@ -5,7 +5,7 @@ using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.General
+namespace Uchu.StandardScripts.General
 {
     public class LaunchpadEvent : Script
     {

@@ -3,7 +3,7 @@ using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting;
 
-namespace StandardScripts.VentureExplorer
+namespace Uchu.StandardScripts.VentureExplorer
 {
     [ZoneSpecific(ZoneId.VentureExplorer)]
     public class RocketBuildCheck: Script
