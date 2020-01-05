@@ -46,6 +46,14 @@ namespace Uchu.World
             _droppedIds = new Stack<ushort>();
 
             _player = player;
+            
+            _player.OnTick.AddListener(async () =>
+            {
+                foreach (var filter in Filters)
+                {
+                    await filter.Tick();
+                }
+            });
         }
 
         internal bool Reveal(GameObject gameObject, out ushort networkId)

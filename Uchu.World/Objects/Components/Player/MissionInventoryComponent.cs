@@ -460,7 +460,7 @@ namespace Uchu.World
 
                         // The collectibleId bitshifted by the zoneId, as that is how the client expects it later
                         var shiftedId = (float) component.CollectibleId +
-                                        (gameObject.Zone.ZoneInfo.LuzFile.WorldId << 8);
+                                        ((int) gameObject.Zone.ZoneId << 8);
 
                         if (!characterTask.Contains(shiftedId) &&
                             task.TargetValue > characterTask.ValueArray().Length)

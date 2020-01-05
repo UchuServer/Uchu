@@ -122,6 +122,54 @@ namespace Uchu.World
             return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
         }
 
+        public async Task<float[]> GetFlagsAsync()
+        {
+            await using var ctx = new UchuContext();
+            await using var cdContext = new CdClientContext();
+
+            var character = await ctx.Characters
+                .Include(c => c.Missions)
+                .ThenInclude(m => m.Tasks)
+                .ThenInclude(t => t.Values)
+                .SingleOrDefaultAsync(c => c.CharacterId == ObjectId);
+            
+            var flagTaskIds = cdContext.MissionTasksTable
+                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
+                .Select(t => t.Uid);
+
+            // Get all the mission task values that correspond to flag values
+            var flagValues = character.Missions
+                .SelectMany(m => m.Tasks
+                    .Where(t => flagTaskIds.Contains(t.TaskId))
+                    .SelectMany(t => t.ValueArray())).ToArray();
+
+            return flagValues;
+        }
+
+        public async Task<float[]> GetCollectedAsync()
+        {
+            await using var ctx = new UchuContext();
+            await using var cdContext = new CdClientContext();
+
+            var character = await ctx.Characters
+                .Include(c => c.Missions)
+                .ThenInclude(m => m.Tasks)
+                .ThenInclude(t => t.Values)
+                .SingleOrDefaultAsync(c => c.CharacterId == ObjectId);
+            
+            var flagTaskIds = cdContext.MissionTasksTable
+                .Where(t => t.TaskType == (int) MissionTaskType.Collect)
+                .Select(t => t.Uid);
+
+            // Get all the mission task values that correspond to flag values
+            var flagValues = character.Missions
+                .SelectMany(m => m.Tasks
+                    .Where(t => flagTaskIds.Contains(t.TaskId))
+                    .SelectMany(t => t.ValueArray())).ToArray();
+            
+            return flagValues;
+        }
+
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
             //
@@ -154,6 +202,7 @@ namespace Uchu.World
             maskFilter.ViewMask = layer;
 
             instance.Perspective.AddFilter<RenderDistanceFilter>();
+            instance.Perspective.AddFilter<FlagFilter>();
             
             //
             // Set connection
@@ -256,7 +305,7 @@ namespace Uchu.World
             {
                 Message = $"{message}\0",
                 Sender = author,
-                IsMythran = author.GameMasterLevel > 0
+                IsMythran = author?.GameMasterLevel > 0
             });
         }
 

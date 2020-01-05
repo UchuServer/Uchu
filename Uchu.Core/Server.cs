@@ -326,12 +326,16 @@ namespace Uchu.Core
 
         public async Task<string> HandleCommandAsync(string command, object author, GameMasterLevel gameMasterLevel)
         {
-            var prefix = command.First();
+            if (command == default) return default;
+            
+            var prefix = command.FirstOrDefault();
 
             if (!CommandHandleMap.TryGetValue(prefix, out var group)) return default;
 
             command = command.Remove(0, 1);
 
+            Logger.Information($"EXEC: {command}");
+            
             var arguments = command.Split(' ').ToList();
 
             if (!group.TryGetValue(arguments[0].ToLower(CultureInfo.CurrentCulture), out var handler))

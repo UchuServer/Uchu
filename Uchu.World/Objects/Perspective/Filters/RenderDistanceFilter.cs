@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Uchu.Core.Client;
 
 namespace Uchu.World.Filters
@@ -24,7 +25,12 @@ namespace Uchu.World.Filters
 
             Distance = zone?.Ghostdistance ?? 500;
         }
-        
+
+        public Task Tick()
+        {
+            return Task.CompletedTask;
+        }
+
         public bool View(GameObject gameObject)
         {
             if (gameObject?.Transform == default) return false;
