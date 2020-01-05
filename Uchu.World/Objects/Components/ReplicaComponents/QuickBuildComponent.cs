@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
@@ -20,6 +21,10 @@ namespace Uchu.World
         private PauseTimer _timer;
         private Timer _imaginationTimer;
         private int _taken;
+        
+        private long StartTime { get; set; }
+        
+        private long Pause { get; set; }
 
         public RebuildState State { get; set; } = RebuildState.Open;
 
@@ -27,9 +32,9 @@ namespace Uchu.World
 
         public bool Enabled { get; set; } = true;
 
-        public float TimeSinceStart { get; set; }
+        public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
 
-        public float PauseTime { get; set; }
+        public float PauseTime => (float) ((Pause - StartTime) / 1000d);
 
         public Vector3 ActivatorPosition { get; set; }
         
@@ -169,6 +174,8 @@ namespace Uchu.World
                 Player = player
             });
 
+            StartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            
             State = RebuildState.Building;
             Enabled = true;
             Success = false;
@@ -212,6 +219,8 @@ namespace Uchu.World
 
                     playerStats.Imagination--;
 
+                    GameObject.Serialize(GameObject);
+
                     if (_taken == _imaginationCost)
                     {
                         _imaginationTimer.Stop();
@@ -253,14 +262,11 @@ namespace Uchu.World
                 Player = player
             });
 
-            var time = (float) (_timer.Time / 1000);
-            
             State = RebuildState.Incomplete;
             Enabled = true;
             Success = false;
-            PauseTime = time;
-            TimeSinceStart = time;
-            
+            Pause = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
             if (Participants.Contains(player)) Participants.Remove(player);
 
             GameObject.Serialize(GameObject);
@@ -311,8 +317,6 @@ namespace Uchu.World
             State = RebuildState.Completed;
             Success = true;
             Enabled = true;
-            TimeSinceStart = default;
-            PauseTime = default;
             
             if (!Participants.Contains(player)) Participants.Add(player);
 
@@ -358,8 +362,6 @@ namespace Uchu.World
             Participants.Clear();
             Success = false;
             Enabled = true;
-            PauseTime = default;
-            TimeSinceStart = default;
             State = RebuildState.Resetting;
 
             GameObject.Serialize(GameObject);
@@ -385,8 +387,6 @@ namespace Uchu.World
             Participants.Clear();
             Success = false;
             Enabled = true;
-            PauseTime = default;
-            TimeSinceStart = default;
             State = RebuildState.Open;
 
             GameObject.Serialize(GameObject);
