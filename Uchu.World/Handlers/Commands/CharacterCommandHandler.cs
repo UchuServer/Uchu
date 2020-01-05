@@ -8,12 +8,25 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Enums;
 using Uchu.World.Filters;
 
 namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
+        [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]
+        public async Task<string> ChangeChatLevel(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "chat <level>";
+
+            if (!Enum.TryParse(typeof(PlayerChatChannel), arguments[0], out var level)) return "Invalid <level>";
+
+            player.ChatChannel = (PlayerChatChannel) level;
+
+            return $"Changed chat level to: {player.ChatChannel}";
+        }
+        
         [CommandHandler(Signature = "give", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> GiveItem(string[] arguments, Player player)
         {
