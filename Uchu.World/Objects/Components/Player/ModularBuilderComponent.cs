@@ -13,11 +13,11 @@ namespace Uchu.World
 
         protected ModularBuilderComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 var inventory = GameObject.GetComponent<InventoryComponent>();
 
-                inventory.OnEquipped.AddListener(item =>
+                Listen(inventory.OnEquipped, item =>
                 {
                     Logger.Information($"Equipped {item.ItemType} item");
                     if (item.ItemType == ItemType.LootModel)

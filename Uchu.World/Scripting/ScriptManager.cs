@@ -47,9 +47,7 @@ namespace Uchu.World
 
                 try
                 {
-                    var assembly = Assembly.LoadFrom(dll);
-
-                    var scriptPack = new ScriptPack(_zone, assembly);
+                    var scriptPack = new ScriptPack(_zone, dll);
 
                     scriptPack.ReadAssembly();
                     

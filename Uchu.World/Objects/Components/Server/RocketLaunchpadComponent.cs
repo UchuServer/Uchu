@@ -11,9 +11,9 @@ namespace Uchu.World
     {
         protected RocketLaunchpadComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
-                GameObject.OnInteract.AddListener(async player =>
+                Listen(GameObject.OnInteract, async player =>
                 {
                     await OnInteract(player);
                 });

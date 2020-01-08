@@ -56,7 +56,7 @@ namespace Uchu.World
 
         protected MovingPlatformComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 PathName = GameObject.Settings.TryGetValue("attached_path", out var name) ? (string) name : "";
                 PathStart = GameObject.Settings.TryGetValue("attached_path_start", out var start)

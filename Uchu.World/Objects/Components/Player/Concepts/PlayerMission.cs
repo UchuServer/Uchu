@@ -20,7 +20,7 @@ namespace Uchu.World
 
         internal PlayerMission()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 using var cdClient = new CdClientContext();
             

@@ -18,7 +18,9 @@ namespace Uchu.World
 
         protected Item()
         {
-            OnDestroyed.AddListener(() => Task.Run(RemoveFromInventoryAsync));
+            Listen(OnDestroyed, () => Task.Run(RemoveFromInventoryAsync));
+            
+            Listen(OnDestroyed, () => Inventory.UnManageItem(this));
         }
 
         public ItemComponent ItemComponent

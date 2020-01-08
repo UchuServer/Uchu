@@ -6,7 +6,7 @@ using Uchu.Core;
 
 namespace Uchu.World.Scripting
 {
-    public abstract class Script
+    public abstract class Script : ObjectBase
     {
         protected Zone Zone { get; private set; }
 
@@ -137,6 +137,13 @@ namespace Uchu.World.Scripting
         internal void SetZone(Zone zone)
         {
             Zone = zone;
+        }
+
+        internal Task InternalUnloadAsync()
+        {
+            ClearListeners();
+
+            return UnloadAsync();
         }
         
         public abstract Task LoadAsync();

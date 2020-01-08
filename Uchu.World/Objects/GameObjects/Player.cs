@@ -8,7 +8,6 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Enums;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -18,7 +17,7 @@ namespace Uchu.World
     {
         private Player()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 Connection.Disconnected += reason =>
                 {
@@ -30,7 +29,9 @@ namespace Uchu.World
                 };
             });
             
-            OnDestroyed.AddListener(() =>
+            Listen(OnTick, async () => { await Perspective.TickAsync(); });
+            
+            Listen(OnDestroyed, () =>
             {
                 OnFireServerEvent.Clear();
                 OnLootPickup.Clear();

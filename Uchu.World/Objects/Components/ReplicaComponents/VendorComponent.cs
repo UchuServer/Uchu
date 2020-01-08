@@ -24,11 +24,11 @@ namespace Uchu.World
 
         protected VendorComponent()
         {
-            OnStart.AddListener(async () =>
+            Listen(OnStart, async () =>
             {
                 await SetupEntries();
                 
-                GameObject.OnInteract.AddListener(OnInteract);
+                Listen(GameObject.OnInteract, OnInteract);
             });
         }
 

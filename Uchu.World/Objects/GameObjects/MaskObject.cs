@@ -8,7 +8,7 @@ namespace Uchu.World
         
         protected MaskObject()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
@@ -20,7 +20,7 @@ namespace Uchu.World
                 Author.Layer = StandardLayer.Hidden;
             });
             
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 Author.Layer = OriginalLayer;
             });

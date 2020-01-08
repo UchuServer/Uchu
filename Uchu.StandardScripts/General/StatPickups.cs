@@ -8,9 +8,9 @@ namespace Uchu.StandardScripts.General
     {
         public override Task LoadAsync()
         {
-            Zone.OnPlayerLoad.AddListener(player =>
+            Listen(Zone.OnPlayerLoad, player =>
             {
-                player.OnLootPickup.AddListener(lot =>
+                Listen(player.OnLootPickup, lot =>
                 {
                     var stats = player.GetComponent<Stats>();
                     

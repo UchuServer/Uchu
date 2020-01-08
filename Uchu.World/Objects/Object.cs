@@ -4,7 +4,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public abstract class Object
+    public abstract class Object : ObjectBase
     {
         private bool _started;
         
@@ -59,8 +59,10 @@ namespace Uchu.World
             obj.OnStart.Clear();
             obj.OnDestroyed.Clear();
             obj.OnTick.Clear();
-        }
 
+            obj.ClearListeners();
+        }
+        
         protected static void Update(Object obj)
         {
             obj.OnTick.Invoke();

@@ -19,7 +19,9 @@ namespace Uchu.StandardScripts.VentureExplorer
 
             foreach (var gameObject in gameObjects)
             {
-                gameObject.GetComponent<MissionGiverComponent>().OnMissionOk.AddListener(async message =>
+                if (!gameObject.TryGetComponent<MissionGiverComponent>(out var missionGiverComponent)) continue;
+                
+                Listen(missionGiverComponent.OnMissionOk, async message =>
                 {
                     var (missionId, isComplete, _, responder) = message;
 

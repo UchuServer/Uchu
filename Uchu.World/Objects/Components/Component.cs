@@ -4,7 +4,7 @@ namespace Uchu.World
     {
         protected Component()
         {
-            OnDestroyed.AddListener(() => { GameObject.RemoveComponent(this); });
+            Listen(OnDestroyed, () => { GameObject.RemoveComponent(this); });
         }
 
         public GameObject GameObject { get; set; }

@@ -63,7 +63,7 @@ namespace Uchu.World
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
-        private readonly ScriptManager _scriptManager;
+        public ScriptManager ScriptManager { get; }
 
         //
         // Events
@@ -78,11 +78,11 @@ namespace Uchu.World
             Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
-            _scriptManager = new ScriptManager(this);
+            ScriptManager = new ScriptManager(this);
 
-            OnStart.AddListener(async () => await InitializeAsync());
+            Listen(OnStart,async () => await InitializeAsync());
 
-            OnDestroyed.AddListener(() => { _running = false; });
+            Listen(OnDestroyed,() => { _running = false; });
         }
 
         #region Initializing
@@ -134,9 +134,9 @@ namespace Uchu.World
             // Load zone scripts
             //
 
-            _scriptManager.ReadAssemblies();
+            ScriptManager.ReadAssemblies();
 
-            foreach (var scriptPack in _scriptManager.ScriptPacks)
+            foreach (var scriptPack in ScriptManager.ScriptPacks)
             {
                 await scriptPack.LoadAsync();
             }

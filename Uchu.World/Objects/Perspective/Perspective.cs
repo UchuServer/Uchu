@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Internal;
 using Uchu.Core;
 using Uchu.World.Filters;
@@ -14,30 +15,11 @@ namespace Uchu.World
         private readonly Dictionary<GameObject, ushort> _networkDictionary;
         private readonly Player _player;
 
-        private uint _clientLoadedObjectCount;
-
         public IEnumerable<GameObject> LoadedObjects => _networkDictionary.Keys;
 
         public Event OnLoaded { get; } = new Event();
 
         private List<IPerspectiveFilter> Filters { get; } = new List<IPerspectiveFilter>();
-
-        internal uint ClientLoadedObjectCount
-        {
-            get => _clientLoadedObjectCount;
-            set
-            {
-                if (value + 10 >= _networkDictionary.Count)
-                {
-                    OnLoaded.Invoke();
-                    OnLoaded.Clear();
-
-                    _clientLoadedObjectCount = default;
-                }
-
-                _clientLoadedObjectCount = value;
-            }
-        }
 
         public Perspective(Player player)
         {
@@ -46,14 +28,6 @@ namespace Uchu.World
             _droppedIds = new Stack<ushort>();
 
             _player = player;
-            
-            _player.OnTick.AddListener(async () =>
-            {
-                foreach (var filter in Filters)
-                {
-                    await filter.Tick();
-                }
-            });
         }
 
         internal bool Reveal(GameObject gameObject, out ushort networkId)
@@ -97,6 +71,14 @@ namespace Uchu.World
         internal bool TryGetNetworkId(GameObject gameObject, out ushort id)
         {
             return _networkDictionary.TryGetValue(gameObject, out id);
+        }
+
+        internal async Task TickAsync()
+        {
+            foreach (var filter in Filters)
+            {
+                await filter.Tick();
+            }
         }
 
         public T GetFilter<T>() where T : IPerspectiveFilter => Filters.OfType<T>().First();

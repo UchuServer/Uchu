@@ -14,9 +14,11 @@ namespace Uchu.World
 
         protected BaseCombatAiComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
-                GameObject.GetComponent<DestructibleComponent>().OnSmashed.AddListener(async (killer, owner) =>
+                if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+                
+                Listen(destructibleComponent.OnSmashed, async (killer, owner) =>
                 {
                     owner.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
                         MissionTaskType.KillEnemy,

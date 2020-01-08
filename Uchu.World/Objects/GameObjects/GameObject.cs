@@ -116,12 +116,12 @@ namespace Uchu.World
         {
             Settings = new LegoDataDictionary();
         
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 foreach (var component in _components.ToArray()) Start(component);
             });
 
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 OnLayerChanged.Clear();
                 

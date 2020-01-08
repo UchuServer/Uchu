@@ -10,21 +10,23 @@ namespace Uchu.StandardScripts.VentureExplorer
     {
         public override Task LoadAsync()
         {
-            Zone.OnPlayerLoad.AddListener(player =>
+            Listen(Zone.OnPlayerLoad, player =>
             {
                 var inventory = player.GetComponent<InventoryManagerComponent>();
                 
-                inventory.OnLotAdded.AddListener(async (lot, count) =>
+                Listen(inventory.OnLotAdded, (lot, count) =>
                 {
                     Logger.Information($"PICKUP: {lot}");
                     
-                    if (lot != Lot.ModularRocket) return;
-                    
+                    if (lot != Lot.ModularRocket) return Task.CompletedTask;
+
                     Logger.Information($"UPDATING FOR: {lot}");
                     
                     var questInventory = player.GetComponent<MissionInventoryComponent>();
 
                     questInventory.UpdateObjectTask(MissionTaskType.Flag, 44);
+                    
+                    return Task.CompletedTask;
                 });
                 
                 return Task.CompletedTask;

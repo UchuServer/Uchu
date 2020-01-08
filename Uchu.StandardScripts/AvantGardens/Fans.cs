@@ -43,14 +43,14 @@ namespace Uchu.StandardScripts.AvantGardens
                     break;
                 }
                 
-                switchComponent.OnActivated.AddListener(player =>
+                Listen(switchComponent.OnActivated, player =>
                 {
                     ActivateFx(fanObject);
                     
                     return Task.CompletedTask;
                 });
                 
-                switchComponent.OnDeactivated.AddListener(() =>
+                Listen(switchComponent.OnDeactivated, () =>
                 {
                     DeactivateFx(fanObject);
                     
@@ -59,7 +59,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 
                 DeactivateFx(fanObject);
                 
-                gameObject.OnTick.AddListener(() =>
+                Listen(gameObject.OnTick, () =>
                 {
                     if (switchComponent.State) return;
                     

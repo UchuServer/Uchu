@@ -11,7 +11,7 @@ namespace Uchu.World
 
         protected CollectibleComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 CollectibleId = (ushort) (int) GameObject.Settings["collectible_id"];
 

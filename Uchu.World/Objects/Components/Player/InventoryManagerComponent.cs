@@ -23,7 +23,7 @@ namespace Uchu.World
 
         protected InventoryManagerComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
                 
@@ -39,7 +39,7 @@ namespace Uchu.World
                 }
             });
 
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 OnLotAdded.Clear();
                 

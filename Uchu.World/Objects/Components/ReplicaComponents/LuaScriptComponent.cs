@@ -18,7 +18,7 @@ namespace Uchu.World
 
         protected LuaScriptComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 using var ctx = new CdClientContext();
             

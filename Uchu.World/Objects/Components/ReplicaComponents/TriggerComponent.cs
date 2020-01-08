@@ -12,7 +12,7 @@ namespace Uchu.World
 
         protected TriggerComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerIds)) return;
 

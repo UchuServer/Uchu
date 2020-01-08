@@ -118,6 +118,8 @@ namespace Uchu.StandardScripts.VentureExplorer
         public override Task UnloadAsync()
         {
             _running = false;
+
+            Destroy(Self);
             
             return Task.CompletedTask;
         }

@@ -8,13 +8,13 @@ namespace Uchu.World
     {
         public List<GameObject> ActiveSpawns { get; }
 
-        public LevelObjectTemplate LevelObject;
+        public LevelObjectTemplate LevelObject { get; set; }
 
         protected SpawnerComponent()
         {
             ActiveSpawns = new List<GameObject>();
             
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 GameObject.Layer = StandardLayer.Spawner;
             });
@@ -46,7 +46,7 @@ namespace Uchu.World
 
             ActiveSpawns.Add(obj);
 
-            obj.OnDestroyed.AddListener(() => { ActiveSpawns.Remove(obj); });
+            Listen(obj.OnDestroyed, () => { ActiveSpawns.Remove(obj); });
 
             return obj;
         }

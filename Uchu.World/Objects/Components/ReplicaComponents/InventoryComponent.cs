@@ -25,13 +25,13 @@ namespace Uchu.World
 
         protected InventoryComponent()
         {
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 OnEquipped.Clear();
                 OnUnEquipped.Clear();
             });
             
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 using var cdClient = new CdClientContext();
             

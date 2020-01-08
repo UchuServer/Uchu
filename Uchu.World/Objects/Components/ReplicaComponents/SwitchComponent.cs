@@ -30,7 +30,7 @@ namespace Uchu.World
 
         protected SwitchComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (GameObject.Settings.TryGetValue("is_hit_switch", out var isHit))
                 {
@@ -62,7 +62,7 @@ namespace Uchu.World
                     SwitchUserRequirement = (uint) requiredUsers;
                 }
                 
-                GameObject.OnInteract.AddListener(async player =>
+                Listen(GameObject.OnInteract, async player =>
                 {
                     await Activate(player);
                 });

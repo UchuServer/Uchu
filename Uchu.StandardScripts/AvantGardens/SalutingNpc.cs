@@ -14,7 +14,7 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             foreach (var gameObject in HasLuaScript(ScriptName))
             {
-                gameObject.OnEmoteReceived.AddListener((emoteId, player) =>
+                Listen(gameObject.OnEmoteReceived, (emoteId, player) =>
                 {
                     if (emoteId == 356)
                     {
@@ -24,7 +24,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     return Task.CompletedTask;
                 });
                 
-                gameObject.OnInteract.AddListener(player =>
+                Listen(gameObject.OnInteract, player =>
                 {
                     gameObject.Animate("salutePlayer");
                 });

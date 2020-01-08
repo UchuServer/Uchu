@@ -125,13 +125,10 @@ namespace Uchu.World.Handlers
                 character.LandingByRocket = false;
                 await ctx.SaveChangesAsync();
             }
-
-            player.Perspective.OnLoaded.AddListener(() =>
-            {
-                player.Message(new DoneLoadingObjectsMessage {Associate = player});
-            });
-
+            
             player.Message(new PlayerReadyMessage {Associate = player});
+            
+            player.Message(new DoneLoadingObjectsMessage {Associate = player});
 
             var relations = ctx.Friends.Where(f =>
                 f.FriendTwoId == character.CharacterId

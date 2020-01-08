@@ -21,7 +21,7 @@ namespace Uchu.StandardScripts.General
 
                 var flag = int.Parse($"{worldId}{number}");
                 
-                gameObject.OnInteract.AddListener(player =>
+                Listen(gameObject.OnInteract, player =>
                 {
                     player.SendChatMessage($"BIO: {flag}");
                     

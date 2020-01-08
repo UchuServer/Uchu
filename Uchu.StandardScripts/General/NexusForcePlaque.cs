@@ -23,7 +23,7 @@ namespace Uchu.StandardScripts.General
 
                 var flag = 10000 + (int) Zone.ZoneId + id;
                 
-                gameObject.OnInteract.AddListener(player =>
+                Listen(gameObject.OnInteract, player =>
                 {
                     player.SendChatMessage($"PLQ: {flag}");
                     

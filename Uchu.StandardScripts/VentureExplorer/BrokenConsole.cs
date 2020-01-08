@@ -18,7 +18,7 @@ namespace Uchu.StandardScripts.VentureExplorer
             
             foreach (var gameObject in gameObjects)
             {
-                gameObject.OnInteract.AddListener(player =>
+                Listen(gameObject.OnInteract, player =>
                 {
                     player.Message(new ServerTerminateInteractionMessage
                     {

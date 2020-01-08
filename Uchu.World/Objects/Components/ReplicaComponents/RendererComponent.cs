@@ -16,7 +16,7 @@ namespace Uchu.World
         {
             Effects = new List<Effect>();
             
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (GameObject.Settings.TryGetValue("renderDisabled", out var disabled)) Disabled = (bool) disabled;
                 else Disabled = false;

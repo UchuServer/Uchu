@@ -178,13 +178,13 @@ namespace Uchu.World
 
         protected Stats()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
             });
 
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 OnHealthChanged.Clear();
                 OnArmorChanged.Clear();
@@ -198,7 +198,7 @@ namespace Uchu.World
 
             if (As<Player>() == default) return;
 
-            OnHealthChanged.AddListener(async (total, delta) =>
+            Listen(OnHealthChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
@@ -209,7 +209,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             });
 
-            OnArmorChanged.AddListener(async (total, delta) =>
+            Listen(OnArmorChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
@@ -220,7 +220,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             });
 
-            OnImaginationChanged.AddListener(async (total, delta) =>
+            Listen(OnImaginationChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
@@ -231,7 +231,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             });
 
-            OnMaxHealthChanged.AddListener(async (total, delta) =>
+            Listen(OnMaxHealthChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
@@ -242,7 +242,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             });
 
-            OnMaxArmorChanged.AddListener(async (total, delta) =>
+            Listen(OnMaxArmorChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
@@ -253,7 +253,7 @@ namespace Uchu.World
                 await ctx.SaveChangesAsync();
             });
 
-            OnMaxImaginationChanged.AddListener(async (total, delta) =>
+            Listen(OnMaxImaginationChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
-using Uchu.World.Enums;
 using Uchu.World.Social;
 
 namespace Uchu.World.Handlers

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -8,7 +9,6 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Enums;
 using Uchu.World.Filters;
 
 namespace Uchu.World.Handlers.Commands
@@ -591,6 +591,69 @@ namespace Uchu.World.Handlers.Commands
             
             return $"Requesting transfer to {id}, please wait...";
         }
+
+        [CommandHandler(Signature = "monitor", Help = "Get server info", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Monitor(string[] arguments, Player player)
+        {
+            var process = Process.GetCurrentProcess();
+            
+            string GetMemory(long memory)
+            {
+                string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+                
+                var len = process.PrivateMemorySize64;
+                
+                var order = 0;
+                
+                while (len >= 1024 && order < sizes.Length - 1) {
+                    order++;
+                    len /= 1024;
+                }
+
+                return $"{len:0.##} {sizes[order]}";
+            }
+            
+            var builder = new StringBuilder();
+
+            if (arguments.Length == 0 || arguments.Contains("-i"))
+            {
+                builder.AppendLine($"Id: {process.Id}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-t"))
+            {
+                builder.AppendLine($"Uptime: {process.TotalProcessorTime:c}");
+            }
+            
+            if (arguments.Length == 0 || arguments.Contains("-m"))
+            {
+                builder.AppendLine($"Memory: {GetMemory(process.PrivateMemorySize64)}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-wm"))
+            {
+                builder.AppendLine($"Working Memory: {GetMemory(process.WorkingSet64)}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-pm"))
+            {
+                builder.AppendLine($"Peak Memory: {GetMemory(process.PeakWorkingSet64)}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-pam"))
+            {
+                builder.AppendLine($"Paged Memory: {GetMemory(process.PagedMemorySize64)}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-p"))
+            {
+                builder.AppendLine($"CPU time: {process.TotalProcessorTime:c}");
+            }
+
+            builder.Length--;
+            
+            return builder.ToString();
+        }
         
         [CommandHandler(Signature = "getemote", Help = "Unlock an emote", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> GetEmote(string[] arguments, Player player)
@@ -642,6 +705,46 @@ namespace Uchu.World.Handlers.Commands
             });
 
             return $"Set emote: \"{emote.AnimationName}\" [{emote.Id}] lock state to {state}";
+        }
+
+        [CommandHandler(Signature = "unload", Help = "Unload scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Unload(string[] arguments, Player player)
+        {
+            var builder = new StringBuilder();
+            
+            foreach (var scriptPack in player.Zone.ScriptManager.ScriptPacks)
+            {
+                if (arguments.Length != 0 && !arguments.Contains(scriptPack.Name)) continue;
+
+                await scriptPack.UnloadAsync();
+
+                builder.AppendLine($"Unloaded: {scriptPack.Name}");
+            }
+
+            if (builder.Length > 0)
+                builder.Length--;
+
+            return builder.ToString();
+        }
+
+        [CommandHandler(Signature = "reload", Help = "Reload scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Reload(string[] arguments, Player player)
+        {
+            var builder = new StringBuilder();
+            
+            foreach (var scriptPack in player.Zone.ScriptManager.ScriptPacks)
+            {
+                if (arguments.Length != 0 && !arguments.Contains(scriptPack.Name)) continue;
+                
+                await scriptPack.ReloadAsync();
+
+                builder.AppendLine($"Reloaded: {scriptPack.Name}");
+            }
+
+            if (builder.Length > 0)
+                builder.Length--;
+
+            return builder.ToString();
         }
     }
 }

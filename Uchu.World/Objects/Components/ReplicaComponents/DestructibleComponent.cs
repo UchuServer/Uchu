@@ -35,7 +35,7 @@ namespace Uchu.World
         {
             _random = new Random();
             
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (GameObject.Settings.TryGetValue("respawn", out var resTimer))
                 {
@@ -64,7 +64,7 @@ namespace Uchu.World
                 
                 if (GameObject.TryGetComponent(out _stats))
                 {
-                    _stats.OnDeath.AddListener(() =>
+                    Listen(_stats.OnDeath, () =>
                     {
                         Logger.Debug($"LATEST: {_stats.LatestDamageSource}");
                         

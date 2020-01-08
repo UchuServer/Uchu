@@ -30,19 +30,19 @@ namespace Uchu.World
 
         protected SkillComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
                 _activeBehaviors.Add(BehaviorSlot.Primary, 1);
                 
-                inventory.OnEquipped.AddListener(MountItem);
+                Listen(inventory.OnEquipped, MountItem);
 
-                inventory.OnUnEquipped.AddListener(DismountItem);
+                Listen(inventory.OnUnEquipped, DismountItem);
 
                 if (!(GameObject is Player player)) return;
                 
-                player.OnWorldLoad.AddListener(async () =>
+                Listen(player.OnWorldLoad, async () =>
                 {
                     if (!GameObject.TryGetComponent<InventoryManagerComponent>(out var manager)) return;
                     

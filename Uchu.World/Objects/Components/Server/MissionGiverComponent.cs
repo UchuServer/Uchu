@@ -17,11 +17,11 @@ namespace Uchu.World
 
         protected MissionGiverComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 CollectMissions();
 
-                GameObject.OnInteract.AddListener(OfferMission);
+                Listen(GameObject.OnInteract, OfferMission);
             });
         }
 

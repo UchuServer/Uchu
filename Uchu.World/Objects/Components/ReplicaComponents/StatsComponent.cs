@@ -22,7 +22,7 @@ namespace Uchu.World
 
         protected StatsComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 HasStats = false;
                 

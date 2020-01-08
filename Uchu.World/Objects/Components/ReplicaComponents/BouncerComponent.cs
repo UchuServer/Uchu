@@ -13,7 +13,7 @@ namespace Uchu.World
 
         protected BouncerComponent()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 if (GameObject.Settings.TryGetValue("bouncer_destination", out var value))
                 {

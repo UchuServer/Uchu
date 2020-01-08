@@ -44,7 +44,7 @@ namespace Uchu.World
 
         protected QuickBuildComponent()
         {
-            OnStart.AddListener(async () =>
+            Listen(OnStart, async () =>
             {
                 if (GameObject.Settings.TryGetValue("rebuild_activators", out var rebuildActivators))
                 {
@@ -95,14 +95,11 @@ namespace Uchu.World
                 }, GameObject);
 
                 Start(Activator);
+                
                 GameObject.Construct(Activator);
-                
-                // Delay to attempt to prevent client from "panic"
-                await Task.Delay(30);
-                
                 GameObject.Serialize(GameObject);
 
-                GameObject.OnInteract.AddListener(StartRebuild);
+                Listen(GameObject.OnInteract, StartRebuild);
             });
         }
         

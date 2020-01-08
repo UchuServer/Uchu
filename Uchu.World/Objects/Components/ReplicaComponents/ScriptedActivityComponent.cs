@@ -27,7 +27,7 @@ namespace Uchu.World
         {
             _random = new Random();
             
-            OnStart.AddListener(async () =>
+            Listen(OnStart, async () =>
             {
                 if (!GameObject.Settings.TryGetValue("activityID", out var id))
                 {

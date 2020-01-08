@@ -1,4 +1,4 @@
-namespace Uchu.World.Enums
+namespace Uchu.World
 {
     public enum PlayerChatChannel
     {

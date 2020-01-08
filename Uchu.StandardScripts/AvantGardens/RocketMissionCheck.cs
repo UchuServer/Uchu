@@ -10,7 +10,7 @@ namespace Uchu.StandardScripts.AvantGardens
     {
         public override Task LoadAsync()
         {
-            Zone.OnPlayerLoad.AddListener(async player =>
+            Listen(Zone.OnPlayerLoad, async player =>
             {
                 var character = await player.GetCharacterAsync();
                 
