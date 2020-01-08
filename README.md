@@ -99,7 +99,7 @@ Before running Uchu for the first time, build it once to make sure it compiles. 
 
 #### Config file
 Before we can configure the server, it needs to generate a config file.
-1. Navigate to where you built the Uchu.Master project. This is commonly /bin/Debug/netcoreapp3.0, relative to the Uchu.Master path, but may differ.
+1. Navigate to where you built the Uchu.Master project. This is commonly /bin/Debug/netcoreapp3.1, relative to the Uchu.Master path, but may differ.
 2. Run ```dotnet ./Uchu.Master.dll```. This will throw errors.
 3. Close the process when it says it has generated a default config file.
 
