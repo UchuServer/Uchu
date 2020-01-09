@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -42,6 +43,22 @@ namespace Uchu.World.Handlers.GameMessages
         public void SelectSkillHandler(SelectSkillMessage message, Player player)
         {
             player.GetComponent<SkillComponent>().SelectedSkill = (uint) message.SkillId;
+        }
+
+        [PacketHandler]
+        public async Task ServerProjectileImpactHandler(RequestServerProjectileImpactMessage message, Player player)
+        {
+            player.SendChatMessage($"Request [{message.Data.Length}]: {message.Projectile} -> {message.Target}");
+            
+            if (message.Projectile == 0) return;
+
+            var projectile = player.Zone.GameObjects.OfType<Projectile>().FirstOrDefault(
+                p => p.ClientObjectId == message.Projectile
+            );
+
+            if (projectile == default) return;
+            
+            await projectile.Impact(message.Data, message.Target);
         }
     }
 }
