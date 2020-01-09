@@ -263,11 +263,34 @@ namespace Uchu.Master
                 backup.Close();
 
                 Logger.Warning("No config file found, creating default.");
+
+                var info = new FileInfo("config.default.xml");
+
+                Logger.Information($"You may now continue with configuring Uchu. Default config file located at: {info.FullName}");
+
+                throw new FileNotFoundException("No config file found.", info.FullName);
             }
 
-            if (!string.IsNullOrWhiteSpace(Config.ResourcesConfiguration?.GameResourceFolder))
+            var configPath = Config.ResourcesConfiguration?.GameResourceFolder;
+            
+            if (!string.IsNullOrWhiteSpace(configPath))
             {
-                Logger.Information($"Using Local Resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
+                if (EnsureUnpackedClient(configPath))
+                {
+                    Logger.Information($"Using local resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
+                }
+                else
+                {
+                    Logger.Error($"Invalid local resources (Invalid path or no .luz files found). Please ensure you are using an unpacked client.");
+                    
+                    throw new FileNotFoundException("No luz files found.");
+                }
+            }
+            else
+            {
+                Logger.Error($"No input location of local resources. Please input in config file.");
+                
+                throw new DirectoryNotFoundException("No local resource path.");
             }
 
             var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDllSourcePath);
@@ -306,6 +329,12 @@ namespace Uchu.Master
             Logger.Information($"{source}\n{ConfigPath}\n{CdClientPath}");
         }
 
+        private static bool EnsureUnpackedClient(string directory)
+        {
+            return directory.EndsWith("res") &&
+                   Directory.GetFiles(directory, "*.luz", SearchOption.AllDirectories).Any();
+        }
+        
         private static async Task StartAuthentication()
         {
             await using var ctx = new UchuContext();
