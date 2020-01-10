@@ -7,7 +7,7 @@ namespace Uchu.Core
 {
     public static class ServerHelper
     {
-        public static async Task<int> RequestWorldServerAsync(ZoneId zoneId)
+        public static async Task<ServerSpecification> RequestWorldServerAsync(ZoneId zoneId)
         {
             //
             // Check for servers
@@ -19,7 +19,7 @@ namespace Uchu.Core
             {
                 if (worldServer.ActiveUserCount >= worldServer.MaxUserCount) continue;
 
-                return worldServer.Port;
+                return worldServer;
             }
             
             //
@@ -73,9 +73,9 @@ namespace Uchu.Core
                     case WorldServerRequestState.Complete:
                         break;
                     case WorldServerRequestState.Error:
-                        return -1;
+                        return default;
                     default:
-                        return -1;
+                        return default;
                 }
                 
                 Logger.Information($"Request completed {id} {request.SpecificationId}");
@@ -90,12 +90,12 @@ namespace Uchu.Core
                     
                 var specification = await ctx.Specifications.FirstAsync(s => s.Id == request.SpecificationId).ConfigureAwait(false);
 
-                return specification.Port;
+                return specification;
             }
                 
             Logger.Error($"Request {id} timed out");
 
-            return -1;
+            return default;
         }
 
         public static async Task<ServerSpecification> GetServerByType(ServerType type)

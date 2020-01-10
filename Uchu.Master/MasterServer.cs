@@ -94,6 +94,16 @@ namespace Uchu.Master
                 await using var ctx = new UchuContext();
 
                 //
+                // Auto restart these
+                //
+
+                if (AuthenticationServer.Process.HasExited)
+                    await StartAuthentication();
+
+                if (CharacterServer.Process.HasExited)
+                    await StartCharacter();
+
+                //
                 // Cleanup
                 //
                 
@@ -103,6 +113,17 @@ namespace Uchu.Master
                     
                     if (worldServer.Process.HasExited)
                     {
+                        // We don't auto restart world servers
+
+                        var specs = await ctx.Specifications.FirstOrDefaultAsync(s => s.Id == worldServer.Id);
+
+                        if (specs != default)
+                        {
+                            ctx.Specifications.Remove(specs);
+
+                            await ctx.SaveChangesAsync();
+                        }
+                        
                         WorldServers.RemoveAt(index);
                     }
                     else
@@ -171,11 +192,6 @@ namespace Uchu.Master
                             
                             var ports = Config.Networking.WorldPorts.ToList();
 
-                            foreach (var i in ports)
-                            {
-                                Logger.Information($"HAS: {i}");
-                            }
-                            
                             foreach (var specification in ctx.Specifications)
                             {
                                 if (ports.Contains(specification.Port))

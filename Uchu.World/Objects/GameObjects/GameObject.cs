@@ -115,7 +115,7 @@ namespace Uchu.World
         protected GameObject()
         {
             Settings = new LegoDataDictionary();
-        
+            
             Listen(OnStart, () =>
             {
                 foreach (var component in _components.ToArray()) Start(component);

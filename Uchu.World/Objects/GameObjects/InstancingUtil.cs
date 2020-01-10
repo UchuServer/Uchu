@@ -94,6 +94,8 @@ namespace Uchu.World
                 spawn
             );
 
+            drop.Layer = StandardLayer.Hidden;
+
             var finalPosition = new Vector3
             {
                 X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,

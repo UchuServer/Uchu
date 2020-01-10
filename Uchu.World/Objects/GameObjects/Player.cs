@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -317,41 +318,43 @@ namespace Uchu.World
             Connection.Send(gameMessage);
         }
 
-        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
+        public async Task<bool> SendToWorldAsync(ServerSpecification specification)
         {
-            var port = await ServerHelper.RequestWorldServerAsync(zoneId);
-            
-            if (port == -1)
-            {
-                return false;
-            }
-            
-            if (Server.Port == port)
-            {
-                Logger.Error("Could not send a player to the same port as it already has");
-
-                return false;
-            }
-            
             var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
                 ? "localhost"
                 : Server.GetAddresses()[0].ToString();
 
             Message(new ServerRedirectionPacket
             {
-                Port = (ushort) port,
+                Port = (ushort) specification.Port,
                 Address = address
             });
-
+            
             await using var ctx = new UchuContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
-            character.LastZone = (int) zoneId;
+            character.LastZone = (int) specification.ZoneId;
 
             await ctx.SaveChangesAsync();
 
             return true;
+        }
+        
+        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
+        {
+            var server = await ServerHelper.RequestWorldServerAsync(zoneId);
+            
+            if (server == default)
+            {
+                return false;
+            }
+
+            if (Server.Port != server.Port) return await SendToWorldAsync(server);
+            
+            Logger.Error("Could not send a player to the same port as it already has");
+
+            return false;
         }
 
         private async Task SetCurrencyAsync(long currency)
