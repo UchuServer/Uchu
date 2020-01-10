@@ -10,7 +10,7 @@ namespace Uchu.World
 {
     public static class InstancingUtil
     {
-        private static readonly Random Random = new Random(); 
+        private static readonly Random Random = new Random();
         
         public static GameObject Spawner(LevelObjectTemplate levelObject, Object parent)
         {
@@ -47,6 +47,8 @@ namespace Uchu.World
 
         public static GameObject Spawner(LuzSpawnerPath spawnerPath, Object parent)
         {
+            if (!spawnerPath.Waypoints.Any()) return null;
+            
             var wayPoint = (LuzSpawnerWaypoint) spawnerPath.Waypoints[0];
 
             var spawner = GameObject.Instantiate(
@@ -75,7 +77,7 @@ namespace Uchu.World
             var spawnerComponent = spawner.AddComponent<SpawnerComponent>();
             
             spawnerComponent.Settings = spawner.Settings;
-            spawnerComponent.SpawnTemplate = new Lot((int) spawnerPath.SpawnedLot);
+            spawnerComponent.SpawnTemplate = (int) spawnerPath.SpawnedLot;
             spawnerComponent.LevelObject = new LevelObjectTemplate
             {
                 Scale = 1

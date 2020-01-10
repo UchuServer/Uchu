@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Behaviors
@@ -10,34 +12,51 @@ namespace Uchu.World.Behaviors
         
         public float DistanceToTarget { get; set; }
         
-        public BehaviorBase Behavior1 { get; set; }
-        
-        public BehaviorBase Behavior2 { get; set; }
-        
+        public Dictionary<BehaviorBase, float> Behaviors { get; set; }
+
         public override async Task BuildAsync()
         {
             ChargeTime = await GetParameter<float>("charge_up");
 
             DistanceToTarget = await GetParameter<float>("distance_to_target");
 
-            Behavior1 = await GetBehavior("behavior_1");
+            Behaviors = new Dictionary<BehaviorBase, float>();
+
+            var parameters = GetParameters();
             
-            Behavior2 = await GetBehavior("behavior_2");
+            for (var index = 0; index < parameters.Length; index++)
+            {
+                var behavior = await GetBehavior($"behavior {index + 1}");
+                
+                if (behavior == default || behavior.Id == BehaviorTemplateId.Empty) continue;
+
+                var value = await GetParameter<float>($"value {index + 1}");
+
+                Behaviors[behavior] = value;
+            }
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
 
-            var value = (int) context.Reader.Read<float>();
+            var value = context.Reader.Read<float>();
+            
+            ((Player) context.Associate)?.SendChatMessage($"Switch Multiple: {value} -> {Behaviors.Count}");
 
-            if (value > 1)
+            var defaultValue = Behaviors.ToArray()[0].Value;
+
+            if (value <= defaultValue) value = defaultValue;
+            
+            foreach (var (behavior, mark) in Behaviors.ToArray().Reverse())
             {
-                await Behavior1.ExecuteAsync(context, branchContext);
-            }
-            else
-            {
-                await Behavior2.ExecuteAsync(context, branchContext);
+                ((Player) context.Associate)?.SendChatMessage($"SWITCH: {behavior.Id} [{mark}]");
+                
+                if (value < mark) continue;
+
+                await behavior.ExecuteAsync(context, branchContext);
+                
+                break;
             }
         }
     }

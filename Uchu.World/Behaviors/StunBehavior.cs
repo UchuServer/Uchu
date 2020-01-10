@@ -20,7 +20,7 @@ namespace Uchu.World.Behaviors
             
             ((Player) context.Associate)?.SendChatMessage($"STUN CASTER: {StunCaster}");
             
-            if (branchContext.Target == context.Associate || StunCaster == 1) return;
+            if (StunCaster == 1) return;
 
             context.Reader.ReadBit();
         }

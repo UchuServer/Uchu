@@ -416,7 +416,7 @@ namespace Uchu.World
             // Create GameObject
             //
 
-            var id = levelObject.ObjectId == 0 ? IdUtilities.GenerateObjectId() : (long) levelObject.ObjectId;
+            var id = levelObject.ObjectId == 0 ? (long) Uchu.World.ObjectId.NewObjectId(ObjectIdFlags.Spawned | ObjectIdFlags.Client) : (long) levelObject.ObjectId;
 
             var instance = Instantiate(
                 type,

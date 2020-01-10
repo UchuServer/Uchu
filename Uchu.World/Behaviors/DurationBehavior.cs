@@ -24,6 +24,8 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
+
+            branchContext.Duration = ActionDuration * 1000;
             
             await Action.ExecuteAsync(context, branchContext);
         }

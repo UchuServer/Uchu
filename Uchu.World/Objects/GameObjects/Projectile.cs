@@ -22,13 +22,15 @@ namespace Uchu.World
             
             var tree = new BehaviorTree(Lot);
 
+            await tree.BuildAsync();
+
             var stream = new MemoryStream(data);
 
             var reader = new BitReader(stream);
 
-            ((Player) Owner)?.SendChatMessage($"Projectile [{Lot}, {tree.RootBehaviors.Count}] -> {target}");
+            ((Player) Owner)?.SendChatMessage($"Projectile HIT [{Lot}, {tree.RootBehaviors.Count}] -> {target}");
 
-            await tree.ExecuteAsync(Owner, reader, SkillCastType.Default, target, true);
+            await tree.UseAsync(Owner, reader, target);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Uchu.World.Handlers.GameMessages
             
             if (message.Projectile == 0) return;
 
-            var projectile = player.Zone.GameObjects.OfType<Projectile>().FirstOrDefault(
+            var projectile = player.Zone.Objects.OfType<Projectile>().FirstOrDefault(
                 p => p.ClientObjectId == message.Projectile
             );
 
