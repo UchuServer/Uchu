@@ -7,16 +7,20 @@ namespace Uchu.World.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Stun;
         
-        public override Task BuildAsync()
+        public int StunCaster { get; set; }
+        
+        public override async Task BuildAsync()
         {
-            return Task.CompletedTask;
+            StunCaster = await GetParameter<int>("stun_caster");
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
             
-            if (branchContext.Target == context.Associate) return;
+            ((Player) context.Associate)?.SendChatMessage($"STUN CASTER: {StunCaster}");
+            
+            if (StunCaster == 1) return;
 
             context.Reader.ReadBit();
         }

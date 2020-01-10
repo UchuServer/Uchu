@@ -77,18 +77,18 @@ namespace Uchu.World
                 _timeToSmash = clientComponent.Timebeforesmash ?? 0;
                 _resetTime = clientComponent.Resettime ?? 0;
 
-                if (!GameObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) ||
-                    !(bool) spawnActivator) return;
+                //if (!GameObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) ||
+                //    !(bool) spawnActivator) return;
                 
                 //
                 // This activator is that imagination cost display of the quickbuild.
                 // It is required to be able to start the quickbuild.
                 //
                 
-                Activator = GameObject.Instantiate(new LevelObjectTemplate()
+                Activator = GameObject.Instantiate(new LevelObjectTemplate
                 {
                     Lot = 6604,
-                    Position = (Vector3) GameObject.Settings["rebuild_activators"],
+                    Position = ActivatorPosition,
                     Rotation = Quaternion.Identity,
                     Scale = -1,
                     LegoInfo = new LegoDataDictionary()
@@ -101,6 +101,8 @@ namespace Uchu.World
 
                 Listen(GameObject.OnInteract, StartRebuild);
             });
+            
+            Listen(OnDestroyed, () => { Destroy(Activator); });
         }
         
         public override void Construct(BitWriter writer)

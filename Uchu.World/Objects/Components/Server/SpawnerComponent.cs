@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using InfectedRose.Lvl;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -34,7 +35,8 @@ namespace Uchu.World
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,
                 Scale = LevelObject.Scale,
-                LegoInfo = Settings
+                LegoInfo = Settings,
+                ObjectId = ObjectId.NewObjectId(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
             }, Zone, this);
         }
 

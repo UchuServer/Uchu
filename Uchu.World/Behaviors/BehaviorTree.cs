@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -139,10 +140,11 @@ namespace Uchu.World.Behaviors
             }).ToArray();
         }
 
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
         {
-            target = associate;
-            
+            if (!explicitTarget)
+                target = associate;
+
             var context = new ExecutionContext(associate, reader);
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
@@ -171,9 +173,27 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
+        public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, GameObject target)
+        {
+            var context = new ExecutionContext(associate, reader);
+
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list)) return context;
+            
+            foreach (var root in list)
+            {
+                context.Root = root;
+                
+                var branchContext = new ExecutionBranchContext(target);
+                
+                await root.ExecuteAsync(context, branchContext);
+            }
+
+            return context;
+        }
+        
         public async Task<ExecutionContext> MountAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, default);
+            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()));
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
             
@@ -191,7 +211,7 @@ namespace Uchu.World.Behaviors
 
         public async Task<ExecutionContext> DismantleAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, default);
+            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()));
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
             

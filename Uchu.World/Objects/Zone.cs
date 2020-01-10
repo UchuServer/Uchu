@@ -186,6 +186,8 @@ namespace Uchu.World
         {
             var obj = InstancingUtil.Spawner(spawnerPath, this);
 
+            if (obj == null) return;
+            
             Start(obj);
 
             var spawn = obj.GetComponent<SpawnerComponent>().Spawn();

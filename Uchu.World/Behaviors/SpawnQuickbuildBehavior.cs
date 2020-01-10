@@ -29,12 +29,37 @@ namespace Uchu.World.Behaviors
             {
                 X = await GetParameter<float>("offsetX"),
                 Y = await GetParameter<float>("offsetY"),
-                Z = await GetParameter<float>("offsetZ"),
+                Z = await GetParameter<float>("offsetZ")
             };
 
             RepositionPlayer = await GetParameter<float>("repositionPlayer");
 
             SpawnFailAction = await GetBehavior("spawn_fail_action");
+        }
+
+        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            var quickBuild = GameObject.Instantiate(
+                context.Associate.Zone,
+                Lot,
+                context.Associate.Transform.Position,
+                context.Associate.Transform.Rotation
+            );
+
+            quickBuild.Transform.Position = context.Associate.Transform.Position;
+
+            Object.Start(quickBuild);
+            GameObject.Construct(quickBuild);
+            GameObject.Serialize(quickBuild);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(branchContext.Duration);
+
+                Object.Destroy(quickBuild);
+            });
+
+            return Task.CompletedTask;
         }
     }
 }

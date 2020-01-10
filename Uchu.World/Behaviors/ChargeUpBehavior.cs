@@ -16,5 +16,21 @@ namespace Uchu.World.Behaviors
 
             MaxDuration = await GetParameter<float>("max_duration");
         }
+        
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            await base.ExecuteAsync(context, branchContext);
+            
+            var handle = context.Reader.Read<uint>();
+            
+            ((Player) context.Associate)?.SendChatMessage($"ChargeUp: {handle}");
+
+            RegisterHandle(handle, context, branchContext);
+        }
+
+        public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            await Action.ExecuteAsync(context, branchContext);
+        }
     }
 }

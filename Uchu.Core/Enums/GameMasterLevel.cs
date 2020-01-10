@@ -5,6 +5,7 @@ namespace Uchu.Core
         Player,
         Mythran,
         Admin,
+        Operator,
         Console
     }
 }

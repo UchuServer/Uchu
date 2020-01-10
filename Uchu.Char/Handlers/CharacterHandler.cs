@@ -281,9 +281,9 @@ namespace Uchu.Char.Handlers
                 // Request world server.
                 //
                 
-                var port = await ServerHelper.RequestWorldServerAsync(requestZone);
+                var server = await ServerHelper.RequestWorldServerAsync(requestZone);
 
-                if (port == -1)
+                if (server == default)
                 {
                     //
                     // Error
@@ -303,7 +303,7 @@ namespace Uchu.Char.Handlers
                 connection.Send(new ServerRedirectionPacket
                 {
                     Address = address,
-                    Port = (ushort) port
+                    Port = (ushort) server.Port
                 });
             });
         }
