@@ -297,7 +297,7 @@ namespace Uchu.World
 
                 As<Player>().HiddenCurrency += mission.Rewardcurrency ?? 0;
 
-                ctx.SaveChanges();
+                await ctx.SaveChangesAsync();
             }
 
             var stats = GameObject.GetComponent<Stats>();
@@ -307,7 +307,10 @@ namespace Uchu.World
 
             if (missionId == 173)
             {
-                await CompleteMissionAsync(664);
+                Detach(async () =>
+                {
+                    await CompleteMissionAsync(664);
+                });
             }
 
             //
@@ -331,23 +334,46 @@ namespace Uchu.World
                     (repeat ? mission.Rewarditem4repeatcount : mission.Rewarditem4count) ?? 1),
             };
 
-            As<Player>().SendChatMessage($"REWARD: {rewardItem}");
-
-            if (rewardItem == -1)
+            var emotes = new[]
             {
-                foreach (var (lot, count) in rewards)
+                mission.Rewardemote ?? -1,
+                mission.Rewardemote2 ?? -1,
+                mission.Rewardemote3 ?? -1,
+                mission.Rewardemote4 ?? -1
+            };
+
+            foreach (var i in emotes.Where(e => e != -1))
+            {
+                await As<Player>().UnlockEmoteAsync(i);
+            }
+
+            As<Player>().SendChatMessage($"REWARD: {rewardItem}", PlayerChatChannel.Normal);
+
+            var isMission = mission.IsMission ?? true;
+            
+            if (rewardItem <= 0)
+            {
+                foreach (var (rewardLot, rewardCount) in rewards)
                 {
+                    var lot = rewardLot;
+                    var count = rewardCount;
+                    
+                    As<Player>().SendChatMessage($"Item: {lot} x {count}");
+                    
                     if (lot == default || count == default) continue;
 
-                    if (mission.IsMission ?? true)
+                    if (isMission)
                     {
-                        await inventory.AddItemAsync(lot, (uint) count);
+                        Detach(async () =>
+                        {
+                            await inventory.AddItemAsync(lot, (uint) count);
+                        });
                     }
                     else
                     {
-                        var _ = Task.Run(async () =>
+                        Detach(async () =>
                         {
-                            await Task.Delay(11000);
+                            As<Player>().SendChatMessage($"Here comes the item {lot} x {count}", PlayerChatChannel.Normal);
                             
                             await inventory.AddItemAsync(lot, (uint) count);
                         });
@@ -359,11 +385,21 @@ namespace Uchu.World
                 var (lot, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
 
                 if (lot != default && count != default)
-                    await inventory.AddItemAsync(lot, (uint) count);
+                {
+                    Detach(async () =>
+                    {
+                        await inventory.AddItemAsync(lot, (uint) count);
+                    });
+                }
             }
+            
+            Detach(() =>
+            {
+                UpdateObjectTask(MissionTaskType.MissionComplete, missionId);
+            });
         }
 
-        private async Task UpdateObjectTaskInternal(MissionTaskType type, Lot lot, GameObject gameObject = default)
+        private async Task UpdateObjectTaskInternal(MissionTaskType type, Lot lot, GameObject gameObject = default, int selectedMissionId = -1)
         {
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
@@ -385,6 +421,8 @@ namespace Uchu.World
 
             foreach (var mission in character.Missions)
             {
+                if (selectedMissionId != -1 && mission.MissionId != selectedMissionId) continue;
+                
                 //
                 // Only active missions should have tasks that can be completed, the rest can be skipped.
                 //
@@ -411,7 +449,9 @@ namespace Uchu.World
 
                 var task = tasks.FirstOrDefault(missionTask =>
                 {
-                    if (!MissionParser.GetTargets(missionTask).Contains(lot)) return false;
+                    var targets = MissionParser.GetTargets(missionTask);
+
+                    if (!targets.Contains(lot)) return false;
 
                     if (!mission.Tasks.Exists(a => a.TaskId == missionTask.Uid)) return false;
                     
@@ -421,7 +461,7 @@ namespace Uchu.World
                     {
                         missionTask.TaskType = (int) MissionTaskType.Interact;
                     }
-                            
+                    
                     As<Player>().SendChatMessage($"{(MissionTaskType) missionTask.TaskType} -> {type}");
 
                     return missionTask.TaskType == (int) type;
@@ -544,7 +584,10 @@ namespace Uchu.World
                 }
                 else
                 {
-                    await CompleteMissionAsync(mission.MissionId);
+                    Detach(async () =>
+                    {
+                        await CompleteMissionAsync(mission.MissionId);
+                    });
                 }
             }
 
@@ -608,6 +651,7 @@ namespace Uchu.World
 
                 // Get Mission Id of new achievement.
                 if (mission.Id == default) continue;
+                
                 var missionId = mission.Id.Value;
 
                 //
@@ -629,16 +673,19 @@ namespace Uchu.World
 
                 await ctx.SaveChangesAsync();
 
-                await UpdateObjectTaskInternal(type, lot, gameObject);
+                Detach(() =>
+                {
+                    UpdateObjectTask(type, lot, gameObject, missionId);
+                });
             }
         }
 
-        public void UpdateObjectTask(MissionTaskType type, Lot lot, GameObject gameObject = default)
+        public void UpdateObjectTask(MissionTaskType type, Lot lot, GameObject gameObject = default, int selectedMissionId = -1)
         {
             // pls optimize this
             lock (this)
             {
-                var task = UpdateObjectTaskInternal(type, lot, gameObject);
+                var task = UpdateObjectTaskInternal(type, lot, gameObject, selectedMissionId);
 
                 task.Wait();
             }

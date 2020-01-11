@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,7 +17,7 @@ namespace Uchu.World
     {
         private Player()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 Connection.Disconnected += reason =>
                 {
@@ -28,6 +27,17 @@ namespace Uchu.World
                     
                     return Task.CompletedTask;
                 };
+                
+                await using var ctx = new UchuContext();
+                
+                var character = await ctx.Characters
+                    .Include(c => c.UnlockedEmotes)
+                    .FirstAsync(c => c.CharacterId == ObjectId);
+
+                foreach (var unlockedEmote in character.UnlockedEmotes)
+                {
+                    await UnlockEmoteAsync(unlockedEmote.EmoteId);
+                }
             });
             
             Listen(OnTick, async () => { await Perspective.TickAsync(); });
@@ -288,6 +298,32 @@ namespace Uchu.World
             await zone.RegisterPlayer(instance);
 
             return instance;
+        }
+
+        public async Task UnlockEmoteAsync(int emoteId)
+        {
+            await using var ctx = new UchuContext();
+
+            var character = await ctx.Characters
+                .Include(c => c.UnlockedEmotes)
+                .FirstAsync(c => c.CharacterId == ObjectId);
+
+            if (character.UnlockedEmotes.All(u => u.EmoteId != emoteId))
+            {
+                character.UnlockedEmotes.Add(new UnlockedEmote
+                {
+                    EmoteId = emoteId
+                });
+
+                await ctx.SaveChangesAsync();
+            }
+            
+            Message(new SetEmoteLockStateMessage
+            {
+                Associate = this,
+                EmoteId = emoteId,
+                Lock = false
+            });
         }
 
         public void Teleport(Vector3 position)

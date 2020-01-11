@@ -190,5 +190,7 @@ namespace Uchu.Core
         public List<InventoryItem> Items { get; set; }
         
         public List<Mission> Missions { get; set; }
+        
+        public List<UnlockedEmote> UnlockedEmotes { get; set; }
     }
 }

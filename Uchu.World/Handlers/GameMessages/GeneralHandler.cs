@@ -84,6 +84,11 @@ namespace Uchu.World.Handlers.GameMessages
                 EmoteId = message.EmoteId,
                 Target = message.Target
             }, player);
+
+            if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
+            {
+                missionInventoryComponent.UpdateObjectTask(MissionTaskType.UseEmote, message.EmoteId, message.Target);
+            }
             
             if (message.Target != default)
             {

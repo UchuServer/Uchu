@@ -146,46 +146,54 @@ namespace Uchu.World
 
         public void AddItem(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
         {
-            var inventory = _inventories[inventoryType];
+            var itemCount = count;
             
-            OnLotAdded.Invoke(lot, count);
+            Detach(() =>
+            {
+                OnLotAdded.Invoke(lot, itemCount);
+            });
+            
+            var inventory = _inventories[inventoryType];
 
             // The math here cannot be executed in parallel
+            
+            using var cdClient = new CdClientContext();
+            
+            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
+            );
+
+            if (componentId == default)
+            {
+                Logger.Error($"{lot} does not have a Item component");
+                return;
+            }
+
+            var component = cdClient.ItemComponentTable.FirstOrDefault(
+                i => i.Id == componentId.Componentid
+            );
+
+            if (component == default)
+            {
+                Logger.Error(
+                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                );
+                return;
+            }
+
+            As<Player>().SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]", PlayerChatChannel.Normal);
+            
+            var stackSize = component.StackSize ?? 1;
+                
+            // Bricks and alike does not have a stack limit.
+            if (stackSize == default) stackSize = int.MaxValue;
+
+            //
+            // Fill stacks
+            //
+
             lock (_lock)
             {
-                using var cdClient = new CdClientContext();
-                
-                var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                    r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-                );
-
-                if (componentId == default)
-                {
-                    Logger.Error($"{lot} does not have a Item component");
-                    return;
-                }
-
-                var component = cdClient.ItemComponentTable.FirstOrDefault(
-                    i => i.Id == componentId.Componentid
-                );
-
-                if (component == default)
-                {
-                    Logger.Error(
-                        $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                    );
-                    return;
-                }
-
-                var stackSize = component.StackSize ?? 1;
-                    
-                // Bricks and alike does not have a stack limit.
-                if (stackSize == default) stackSize = int.MaxValue;
-
-                //
-                // Fill stacks
-                //
-
                 foreach (var item in inventory.Items.Where(i => i.Lot == lot))
                 {
                     if (item.Count == stackSize) continue;
@@ -225,9 +233,11 @@ namespace Uchu.World
 
             for (var i = 0; i < count; i++)
             {
-                questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
+                Detach(() =>
+                {
+                    questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
+                });
             }
-
         }
 
         public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
@@ -264,11 +274,11 @@ namespace Uchu.World
 
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
+            OnLotRemoved.Invoke(lot, count);
+
             // The math here cannot be executed in parallel
             lock (_lock)
             {
-                OnLotRemoved.Invoke(lot, count);
-                
                 using var cdClient = new CdClientContext();
                 
                 var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
@@ -305,11 +315,21 @@ namespace Uchu.World
                 {
                     var toRemove = (uint) Min((int) count, (int) item.Count);
 
-                    if (!silent) item.Count -= toRemove;
+                    if (!silent)
+                    {
+                        Detach(() =>
+                        {
+                            item.Count -= toRemove;
+                        });
+                    }
                     else
                     {
                         var storedCount = count;
-                        Task.Run(async () => { await item.SetCountSilentAsync(storedCount); });
+                        
+                        Detach(async () =>
+                        {
+                            await item.SetCountSilentAsync(storedCount);
+                        });
                     }
 
                     count -= toRemove;

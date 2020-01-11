@@ -132,6 +132,7 @@ namespace Uchu.World.Client
         public static async Task<bool> AllTasksCompletedAsync(Mission mission)
         {
             await using var ctx = new CdClientContext();
+            
             //
             // Get all tasks this mission have to have completed to be handed in.
             //
@@ -142,8 +143,8 @@ namespace Uchu.World.Client
             // Check tasks count to their required values.
             //
 
-            return await tasks.AllAsync(t =>
-                mission.Tasks.Find(t2 => t2.TaskId == t.Uid).Values.Count >= t.TargetValue
+            return (await tasks.ToArrayAsync()).All(t =>
+                mission.Tasks.Find(t2 => t2.TaskId == t.Uid).ValueArray().Length >= t.TargetValue
             );
         }
 
@@ -153,12 +154,27 @@ namespace Uchu.World.Client
 
             if (missionTask.Target != null) targets.Add(missionTask.Target ?? 0);
 
-            if (missionTask.TargetGroup == null) return targets.ToArray();
+            var rawTargets = new List<string>();
 
-            var rawTargets = missionTask.TargetGroup
-                .Replace(" ", "")
-                .Split(',')
-                .Where(c => !string.IsNullOrEmpty(c));
+            if (missionTask.TargetGroup != default)
+            {
+                var paramTargets = missionTask.TargetGroup
+                    .Replace(" ", "")
+                    .Split(',')
+                    .Where(c => !string.IsNullOrEmpty(c)).ToList();
+
+                rawTargets.AddRange(paramTargets);
+            }
+
+            if (missionTask.TaskParam1 != default)
+            {
+                var paramTargets = missionTask.TaskParam1
+                    .Replace(" ", "")
+                    .Split(',')
+                    .Where(c => !string.IsNullOrEmpty(c)).ToList();
+
+                rawTargets.AddRange(paramTargets);
+            }
 
             foreach (var rawTarget in rawTargets)
                 if (int.TryParse(rawTarget, out var target))

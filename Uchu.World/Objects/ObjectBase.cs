@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Uchu.World
 {
@@ -21,6 +22,16 @@ namespace Uchu.World
             {
                 @event.RemoveListener(listener);
             }
+        }
+
+        protected void Detach(Func<Task> task)
+        {
+            Task.Run(task);
+        }
+
+        protected void Detach(Action action)
+        {
+            Task.Run(action);
         }
     }
 }

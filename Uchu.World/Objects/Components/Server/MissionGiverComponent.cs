@@ -174,7 +174,7 @@ namespace Uchu.World
                         missionInventory.GetCompletedMissions()
                     );
 
-                    player.SendChatMessage($"Prerequisite for: {mission.Id} [{hasPrerequisite}]");
+                    player.SendChatMessage($"Prerequisite for: {mission.Id} -> ({mission.PrereqMissionID}) -> [{hasPrerequisite}]");
 
                     if (!hasPrerequisite) continue;
 
