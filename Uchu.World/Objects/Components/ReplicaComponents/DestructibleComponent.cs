@@ -97,8 +97,6 @@ namespace Uchu.World
 
             lootOwner ??= killer as Player;
 
-            OnSmashed.Invoke(killer, lootOwner);
-
             Alive = false;
             
             Zone.BroadcastMessage(new DieMessage
@@ -127,8 +125,13 @@ namespace Uchu.World
             //
             // Normal Smashable
             //
-            
-            if (lootOwner == default) return;
+
+            if (lootOwner == default)
+            {
+                OnSmashed.Invoke(killer, default);
+                
+                return;
+            }
 
             GameObject.Layer -= StandardLayer.Smashable;
             GameObject.Layer += StandardLayer.Hidden;
@@ -191,6 +194,8 @@ namespace Uchu.World
 
                 InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
             }
+
+            OnSmashed.Invoke(killer, lootOwner);
         }
 
         public void Resurrect()

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.World.Behaviors;
 
 namespace Uchu.World
@@ -171,6 +173,19 @@ namespace Uchu.World
                 var context = await tree.ExecuteAsync(GameObject, reader, SkillCastType.OnUse, message.OptionalTarget);
 
                 _handledSkills[message.SkillHandle] = context;
+                
+                await using var cdClient = new CdClientContext();
+
+                var skillBehavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
+                    s => s.SkillID == message.SkillId
+                );
+
+                var cost = skillBehavior.Imaginationcost ?? 0;
+
+                if (GameObject.TryGetComponent<Stats>(out var stats))
+                {
+                    stats.Imagination = (uint) ((int) stats.Imagination - cost);
+                }
             }
 
             GameObject.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
@@ -182,6 +197,15 @@ namespace Uchu.World
         {
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
+
+            Zone.ExcludingMessage(new EchoSyncSkillMessage
+            {
+                Associate = GameObject,
+                BehaviorHandle = message.BehaviourHandle,
+                Content = message.Content,
+                Done = message.Done,
+                SkillHandle = message.SkillHandle
+            }, As<Player>());
 
             var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
@@ -196,15 +220,6 @@ namespace Uchu.World
             {
                 //_handledSkills.Remove(message.SkillHandle);
             }
-
-            Zone.ExcludingMessage(new EchoSyncSkillMessage
-            {
-                Associate = GameObject,
-                BehaviorHandle = message.BehaviourHandle,
-                Content = message.Content,
-                Done = message.Done,
-                SkillHandle = message.SkillHandle
-            }, As<Player>());
         }
 
         public void SetSkill(BehaviorSlot slot, uint skillId)
