@@ -164,16 +164,11 @@ namespace Uchu.World
             }
 
             Start(obj);
-
-            if (obj.Layer == StandardLayer.Hidden)
-            {
-                return;
-            }
-
+            
             //
             // Only spawns should get constructed on the client.
             //
-
+            
             if (spawner == default)
             {
                 return;
@@ -187,9 +182,11 @@ namespace Uchu.World
             var obj = InstancingUtil.Spawner(spawnerPath, this);
 
             if (obj == null) return;
+
+            obj.Layer = StandardLayer.Hidden;
             
             Start(obj);
-
+            
             var spawn = obj.GetComponent<SpawnerComponent>().Spawn();
 
             GameObject.Construct(spawn);
