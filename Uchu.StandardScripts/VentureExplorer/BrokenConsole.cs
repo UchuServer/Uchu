@@ -1,14 +1,14 @@
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
     ///     LUA Reference: l_ag_ship_player_shock_server.lua
     /// </summary>
-    public class BrokenConsole : Script
+    public class BrokenConsole : NativeScript
     {
         private const string ScriptName = "l_ag_ship_player_shock_server.lua";
         

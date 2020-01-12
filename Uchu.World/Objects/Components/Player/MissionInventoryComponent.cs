@@ -18,7 +18,7 @@ namespace Uchu.World
         {
             using var ctx = new UchuContext();
             return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.CharacterId == GameObject.ObjectId && m.State == (int) MissionState.Completed
+                m => m.Character.CharacterId == GameObject.ObjectId && m.CompletionCount > 0
             ).ToArray();
         }
 
@@ -197,6 +197,8 @@ namespace Uchu.World
 
         public async Task CompleteMissionAsync(int missionId, Lot rewardItem = default)
         {
+            As<Player>().SendChatMessage($"COMPLETING: {missionId}!", PlayerChatChannel.Normal);
+            
             Logger.Information($"Completing mission {missionId}");
 
             await using var ctx = new UchuContext();
@@ -252,10 +254,15 @@ namespace Uchu.World
             var characterMission = character.Missions.Find(m => m.MissionId == missionId);
 
             if (characterMission.State == (int) MissionState.Completed) return;
-
+            
             var repeat = characterMission.CompletionCount != 0;
             characterMission.CompletionCount++;
             characterMission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
+            characterMission.State = (int) MissionState.Completed;
+            
+            await ctx.SaveChangesAsync();
+
+            As<Player>().SendChatMessage($"COMPLETE: {missionId}!", PlayerChatChannel.Normal);
 
             //
             // Inform the client it's now complete.
@@ -263,9 +270,6 @@ namespace Uchu.World
 
             MessageMissionState(missionId, MissionState.Completed);
 
-            characterMission.State = (int) MissionState.Completed;
-
-            await ctx.SaveChangesAsync();
 
             //
             // Update player based on rewards.
@@ -304,14 +308,6 @@ namespace Uchu.World
 
             await stats.BoostBaseHealth((uint) (mission.Rewardmaxhealth ?? 0));
             await stats.BoostBaseImagination((uint) (mission.Rewardmaximagination ?? 0));
-
-            if (missionId == 173)
-            {
-                Detach(async () =>
-                {
-                    await CompleteMissionAsync(664);
-                });
-            }
 
             //
             // Get item rewards.
@@ -502,8 +498,7 @@ namespace Uchu.World
                         var shiftedId = (float) component.CollectibleId +
                                         ((int) gameObject.Zone.ZoneId << 8);
 
-                        if (!characterTask.Contains(shiftedId) &&
-                            task.TargetValue > characterTask.ValueArray().Length)
+                        if (!characterTask.Contains(shiftedId) && task.TargetValue > characterTask.ValueArray().Length)
                         {
                             Logger.Information($"{GameObject} collected {component.CollectibleId}");
                             characterTask.Add(shiftedId);
@@ -535,35 +530,34 @@ namespace Uchu.World
                         if (task.TargetValue > characterTask.ValueArray().Length)
                         {
                             characterTask.Add(lot);
-
-                            // Send update to client
-                            MessageUpdateMissionTask(
-                                taskId, tasks.IndexOf(task),
-                                new[] {(float) characterTask.ValueArray().Length}
-                            );
                         }
+
+                        // Send update to client
+                        MessageUpdateMissionTask(
+                            taskId, tasks.IndexOf(task),
+                            new[] {(float) characterTask.ValueArray().Length}
+                        );
 
                         break;
-                    // Singles
+                    // Single
                     case MissionTaskType.Flag:
-                    case MissionTaskType.Script:
-                    case MissionTaskType.UseSkill:
-                    case MissionTaskType.Interact:
                     case MissionTaskType.MissionComplete:
-                    case MissionTaskType.GoToNpc:
+                    case MissionTaskType.Interact:
                     case MissionTaskType.Discover:
+                    case MissionTaskType.UseSkill:
                     case MissionTaskType.UseEmote:
-                        // Start this task value array
-                        if (!characterTask.Values.Any(v => v.Value.Equals(lot)))
+                    case MissionTaskType.GoToNpc:
+                    case MissionTaskType.Script:
+                        if (characterTask.ValueArray().All(v => !v.Equals(lot)))
                         {
                             characterTask.Add(lot);
-
-                            // Send update to client
-                            MessageUpdateMissionTask(
-                                taskId, tasks.IndexOf(task),
-                                new[] {(float) characterTask.Values.Count}
-                            );
                         }
+
+                        // Send update to client
+                        MessageUpdateMissionTask(
+                            taskId, tasks.IndexOf(task),
+                            new[] {(float) characterTask.ValueArray().Length}
+                        );
 
                         break;
                     default:

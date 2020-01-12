@@ -1,10 +1,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Python;
+using Uchu.World.Scripting.Managed;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -63,34 +65,19 @@ namespace Uchu.World.Handlers.Commands
 
             var source = string.Join(" ", param).Replace(@"\n", "\n").Replace(@"\t", "\t");
 
-            var script = new ManagedScript(source, player.Zone.ManagedScriptEngine);
+            await player.Zone.ScriptManager.SetManagedScript(name, source);
 
-            var success = script.Run();
-
-            if (success)
-                player.Zone.ManagedScripts[name] = script;
-
-            return !success ? "Failed" : "";
+            return "Attempting to run python script...";
         }
 
         [CommandHandler(Signature = "python-load", Help = "Load a python file", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> PythonLoad(string[] arguments, Player player)
         {
             if (arguments.Length == 0) return "python-load <file>";
+
+            await player.Zone.ScriptManager.SetManagedScript(arguments[0]);
             
-            var source = await File.ReadAllTextAsync(Path.Combine(Server.MasterPath, arguments[0]));
-
-            var managedScript = new ManagedScript(
-                source,
-                player.Zone.ManagedScriptEngine
-            );
-
-            var success = managedScript.Run();
-
-            if (success)
-                player.Zone.ManagedScripts[Path.GetFileNameWithoutExtension(arguments[0])] = managedScript;
-            
-            return !success ? "Failed" : "";
+            return "Attempting to run python pack...";
         }
 
         [CommandHandler(Signature = "python-unload", Help = "Unload a python script", GameMasterLevel = GameMasterLevel.Admin)]
@@ -98,11 +85,24 @@ namespace Uchu.World.Handlers.Commands
         {
             if (arguments.Length == 0) return "python-unload <id>";
 
-            if (!player.Zone.ManagedScripts.TryGetValue(arguments[0], out _)) return $"No script found with id: {arguments[0]}";
-
-            player.Zone.ManagedScripts.Remove(arguments[0]);
+            await player.Zone.ScriptManager.SetManagedScript(arguments[0]);
             
             return $"Unloaded: {arguments[0]}";
+        }
+
+        [CommandHandler(Signature = "python-list", Help = "List all python scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        public string PythonList(string[] arguments, Player python)
+        {
+            var builder = new StringBuilder();
+
+            builder.Append("Loaded scripts:");
+
+            foreach (var scriptPack in python.Zone.ScriptManager.ScriptPacks.OfType<PythonScriptPack>())
+            {
+                builder.Append($"\n{scriptPack.Name}");
+            }
+
+            return builder.ToString();
         }
     }
 }

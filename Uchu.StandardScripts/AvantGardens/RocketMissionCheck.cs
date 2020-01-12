@@ -1,12 +1,12 @@
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
     [ZoneSpecific(ZoneId.AvantGardens)]
-    public class RocketMissionCheck : Script
+    public class RocketMissionCheck : NativeScript
     {
         public override Task LoadAsync()
         {

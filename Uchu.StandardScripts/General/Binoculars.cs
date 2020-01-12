@@ -1,13 +1,13 @@
 using System.Threading.Tasks;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
     /// <summary>
     ///     LUA Reference: l_binoculars_client.lua
     /// </summary>
-    public class Binoculars : Script
+    public class Binoculars : NativeScript
     {
         private const string ScriptName = "l_binoculars_client.lua";
         

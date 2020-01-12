@@ -1,4 +1,4 @@
-namespace Uchu.World.Scripting
+namespace Uchu.World.Scripting.Native
 {
     public static class GameObjectScriptExtensions
     {

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
@@ -9,7 +9,7 @@ namespace Uchu.StandardScripts.VentureExplorer
     ///     LUA Reference: l_npc_np_spaceman_bob.lua
     /// </summary>
     [ZoneSpecific(ZoneId.VentureExplorer)]
-    public class BobMission : Script
+    public class BobMission : NativeScript
     {
         private const string ScriptName = "l_npc_np_spaceman_bob.lua";
         

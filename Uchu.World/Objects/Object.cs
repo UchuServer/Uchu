@@ -4,7 +4,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public abstract class Object : ObjectBase
+    public class Object : ObjectBase
     {
         private bool _started;
         
@@ -18,7 +18,7 @@ namespace Uchu.World
 
         public Event OnTick { get; } = new Event();
 
-        protected internal Object()
+        protected Object()
         {
         }
         
@@ -38,6 +38,11 @@ namespace Uchu.World
         public static T Instantiate<T>(Zone zone) where T : Object
         {
             return Instantiate(typeof(T), zone) as T;
+        }
+        
+        public static Object Instantiate(Zone zone)
+        {
+            return Instantiate(typeof(Object), zone);
         }
 
         public static void Start(Object obj)

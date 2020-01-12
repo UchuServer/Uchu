@@ -1,12 +1,12 @@
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
     [ZoneSpecific(ZoneId.VentureExplorer)]
-    public class RocketBuildCheck: Script
+    public class RocketBuildCheck: NativeScript
     {
         public override Task LoadAsync()
         {

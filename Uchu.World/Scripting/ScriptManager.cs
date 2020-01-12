@@ -1,33 +1,50 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
-using Uchu.World.Scripting;
+using Uchu.Python;
+using Uchu.World.Scripting.Managed;
+using Uchu.World.Scripting.Native;
 
-namespace Uchu.World
+namespace Uchu.World.Scripting
 {
     public class ScriptManager
     {
-        private readonly Zone _zone;
+        private Zone Zone { get; }
         
-        internal ScriptPack[] ScriptPacks { get; private set; }
+        private ManagedScriptEngine ManagedScriptEngine { get; }
+        
+        internal List<ScriptPack> ScriptPacks { get; private set; }
 
         public ScriptManager(Zone zone)
         {
-            _zone = zone;
+            Zone = zone;
+            
+            ManagedScriptEngine = new ManagedScriptEngine();
         }
         
-        internal void ReadAssemblies()
+        internal async Task LoadDefaultScriptsAsync()
         {
-            var scriptPacks = new List<ScriptPack>();
+            ScriptPacks = new List<ScriptPack>();
+            
+            ScriptPacks.AddRange(LoadNativeScripts());
+            ScriptPacks.AddRange(await LoadManagedScriptsAsync());
+        }
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), _zone.Server.Config.DllSource.ServerDllSourcePath);
+        private List<ScriptPack> LoadNativeScripts()
+        {
+            Logger.Information($"Loading native scripts...");
+            
+            var scriptPacks = new List<ScriptPack>();
+            
+            var path = Path.Combine(Directory.GetCurrentDirectory(), Zone.Server.Config.DllSource.ServerDllSourcePath);
 
             var libraries = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
             
-            foreach (var scriptPackName in _zone.Server.Config.DllSource.ScriptDllSource)
+            foreach (var scriptPackName in Zone.Server.Config.DllSource.ScriptDllSource)
             {
                 string dll = default;
                 
@@ -42,18 +59,20 @@ namespace Uchu.World
                 {
                     Logger.Error($"Could not find DLL for script pack: {scriptPackName}");
                     
-                    return;
+                    continue;
                 }
+                
+                if (scriptPacks.Any(s => s.Location == dll)) continue;
 
                 try
                 {
-                    var scriptPack = new ScriptPack(_zone, dll);
+                    var scriptPack = new NativeScriptPack(Zone, dll);
 
                     scriptPack.ReadAssembly();
                     
-                    Logger.Information($"Loaded {scriptPackName} script pack");
-                    
                     scriptPacks.Add(scriptPack);
+                    
+                    Logger.Information($"Loaded {scriptPackName} native script pack");
                 }
                 catch (Exception e)
                 {
@@ -61,7 +80,66 @@ namespace Uchu.World
                 }
             }
 
-            ScriptPacks = scriptPacks.ToArray();
+            return scriptPacks;
+        }
+
+        private async Task<List<ScriptPack>> LoadManagedScriptsAsync()
+        {
+            Logger.Information($"Loading managed scripts...");
+
+            var scriptPacks = new List<ScriptPack>();
+            
+            ManagedScriptEngine.Init();
+
+            foreach (var script in Zone.Server.Config.ManagedScriptSources?.Scripts ?? new List<string>())
+            {
+                Logger.Information($"Loading {script} managed script pack");
+                
+                string source = default;
+
+                var location = Path.Combine(Zone.Server.MasterPath, script);
+                
+                if (File.Exists(location))
+                {
+                    source = await File.ReadAllTextAsync(location);
+                }
+
+                var managedScript = new PythonScriptPack(Zone, location, source);
+
+                scriptPacks.Add(managedScript);
+            }
+
+            return scriptPacks;
+        }
+
+        public async Task SetManagedScript(string location, string source = default)
+        {
+            var list = ScriptPacks.ToList();
+            
+            foreach (var pack in ScriptPacks.OfType<PythonScriptPack>())
+            {
+                if (pack.Name != location) continue;
+
+                await pack.UnloadAsync();
+
+                list.Remove(pack);
+            }
+
+            ScriptPacks = list;
+
+            location = Path.Combine(Zone.Server.MasterPath, location);
+
+            if (File.Exists(location))
+            {
+                source = await File.ReadAllTextAsync(location);
+            }
+            else if (string.IsNullOrEmpty(source)) return;
+
+            var managedScript = new PythonScriptPack(Zone, location, source);
+
+            ScriptPacks.Add(managedScript);
+
+            await managedScript.LoadAsync();
         }
     }
 }

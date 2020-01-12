@@ -1,13 +1,13 @@
 using System.Threading.Tasks;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
     /// <summary>
     ///     LUA Reference: l_story_box_interact_client.lua
     /// </summary>
-    public class NexusForcePlaque : Script
+    public class NexusForcePlaque : NativeScript
     {
         private const string ScriptName = "l_story_box_interact_client.lua";
         

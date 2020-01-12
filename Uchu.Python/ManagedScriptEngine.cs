@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.Scripting.Hosting;
 
 namespace Uchu.Python
@@ -7,8 +6,6 @@ namespace Uchu.Python
     public class ManagedScriptEngine
     {
         public ScriptEngine Engine { get; private set; }
-
-        public Dictionary<string, dynamic> Standard { get; } = new Dictionary<string, dynamic>();
 
         public void Init()
         {
@@ -19,6 +16,8 @@ namespace Uchu.Python
 
         public bool CompileScript(string script, out CompiledCode code, out ScriptScope scope)
         {
+            Init();
+            
             try
             {
                 var source = Engine.CreateScriptSourceFromString(script);

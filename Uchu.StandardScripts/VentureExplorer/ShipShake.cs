@@ -3,12 +3,12 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
     [ZoneSpecific(ZoneId.VentureExplorer)]
-    public class ShipShake : Script
+    public class ShipShake : NativeScript
     {
         private const string ScriptName = "l_ag_ship_shake.lua";
 

@@ -1,7 +1,7 @@
 using System;
 using Uchu.Core;
 
-namespace Uchu.World.Scripting
+namespace Uchu.World.Scripting.Native
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class ZoneSpecificAttribute : Attribute

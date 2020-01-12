@@ -1,12 +1,12 @@
 using System.Threading.Tasks;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
     ///     LUA Reference: l_ag_saluting_npcs.lua
     /// </summary>
-    public class SalutingNpc : Script
+    public class SalutingNpc : NativeScript
     {
         private const string ScriptName = "l_ag_saluting_npcs.lua";
         

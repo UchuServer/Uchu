@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
-    public class LaunchpadEvent : Script
+    public class LaunchpadEvent : NativeScript
     {
         public override Task LoadAsync()
         {

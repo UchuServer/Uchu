@@ -2,11 +2,11 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
-    public class ImaginationFountain : Script
+    public class ImaginationFountain : NativeScript
     {
         private readonly (Lot, int)[] ImaginationDrops = {
             (Lot.Imagination, 1),

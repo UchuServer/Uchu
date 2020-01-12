@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Scripting.Hosting;
 
@@ -10,7 +11,7 @@ namespace Uchu.Python
         
         private ScriptScope _scope;
 
-        private ManagedScriptEngine _engine;
+        private readonly ManagedScriptEngine _engine;
         
         public ManagedScript(string source, ManagedScriptEngine engine)
         {
@@ -19,13 +20,15 @@ namespace Uchu.Python
             _engine = engine;
         }
 
-        public bool Run()
+        public bool Run() => Run(new KeyValuePair<string, dynamic>[0]);
+        
+        public bool Run(IEnumerable<KeyValuePair<string, dynamic>> variables)
         {
             var success = _engine.CompileScript(Source, out var code, out var scope);
 
             if (!success) return false;
 
-            foreach (var (key, value) in _engine.Standard)
+            foreach (var (key, value) in variables)
             {
                 scope.SetVariable(key, value);
             }
@@ -88,8 +91,10 @@ namespace Uchu.Python
 
                 return true;
             }
-            catch 
+            catch (Exception e)
             {
+                Console.WriteLine(e);
+                
                 return false;
             }
         }
@@ -111,8 +116,10 @@ namespace Uchu.Python
 
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e);
+
                 result = default;
                 
                 return false;

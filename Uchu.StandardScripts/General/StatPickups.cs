@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Uchu.World;
-using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
-    public class StatPickups : Script
+    public class StatPickups : NativeScript
     {
         public override Task LoadAsync()
         {
