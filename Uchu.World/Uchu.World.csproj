@@ -12,6 +12,7 @@
       <ProjectReference Include="..\InfectedRose\InfectedRose.Triggers\InfectedRose.Triggers.csproj" />
       <ProjectReference Include="..\InfectedRose\InfectedRose.Utilities\InfectedRose.Utilities.csproj" />
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
+      <ProjectReference Include="..\Uchu.Python\Uchu.Python.csproj" />
     </ItemGroup>
 
 </Project>

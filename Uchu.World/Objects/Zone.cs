@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
@@ -12,6 +13,7 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Python;
 using Uchu.World.Client;
 
 namespace Uchu.World
@@ -64,6 +66,8 @@ namespace Uchu.World
         private bool _running;
         private int _ticks;
         public ScriptManager ScriptManager { get; }
+        public ManagedScriptEngine ManagedScriptEngine { get; }
+        public Dictionary<string, ManagedScript> ManagedScripts { get; }
 
         //
         // Events
@@ -78,7 +82,10 @@ namespace Uchu.World
             Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
+            
             ScriptManager = new ScriptManager(this);
+            ManagedScriptEngine = new ManagedScriptEngine();
+            ManagedScripts = new Dictionary<string, ManagedScript>();
 
             Listen(OnStart,async () => await InitializeAsync());
 
@@ -141,9 +148,47 @@ namespace Uchu.World
                 await scriptPack.LoadAsync();
             }
 
+            await LoadManagedScripsAsync();
+            
             Loaded = true;
 
             var _ = ExecuteUpdateAsync();
+        }
+
+        private async Task LoadManagedScripsAsync()
+        {
+            ManagedScriptEngine.Init();
+
+            ManagedScriptEngine.Standard["Zone"] = this;
+            ManagedScriptEngine.Standard["Start"] = new Action<Object>(Start);
+            ManagedScriptEngine.Standard["Destroy"] = new Action<Object>(Destroy);
+            ManagedScriptEngine.Standard["Construct"] = new Action<GameObject>(GameObject.Construct);
+            ManagedScriptEngine.Standard["Serialize"] = new Action<GameObject>(GameObject.Serialize);
+            ManagedScriptEngine.Standard["Destruct"] = new Action<GameObject>(GameObject.Destruct);
+            ManagedScriptEngine.Standard["Instantiate"] = new Func<int, Vector3, Quaternion, GameObject>
+                ((lot, position, rotation) => GameObject.Instantiate(this, lot, position, rotation));
+
+            ManagedScriptEngine.Standard["Broadcast"] = new Action<dynamic>(obj =>
+            {
+                foreach (var player in Players)
+                {
+                    player.SendChatMessage(obj, PlayerChatChannel.Normal);
+                }
+            });
+
+            foreach (var script in Server.Config.ManagedScriptSources?.Scripts ?? new List<string>())
+            {
+                var source = await File.ReadAllTextAsync(Path.Combine(Server.MasterPath, script));
+
+                var managedScript = new ManagedScript(
+                    source,
+                    ManagedScriptEngine
+                );
+
+                managedScript.Run();
+
+                ManagedScripts[Path.GetFileNameWithoutExtension(script)] = managedScript;
+            }
         }
 
         private void SpawnLevelObject(LevelObjectTemplate levelObject)
@@ -424,6 +469,11 @@ namespace Uchu.World
                         {
                             Logger.Error(e);
                         }
+                    }
+
+                    foreach (var (_, script) in ManagedScripts)
+                    {
+                        script.Execute("tick");
                     }
 
                     _ticks++;

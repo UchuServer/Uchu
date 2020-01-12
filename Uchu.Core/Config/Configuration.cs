@@ -30,11 +30,18 @@ namespace Uchu.Core
 
         [XmlElement] public ServerDllSource DllSource { get; set; } = new ServerDllSource();
 
+        [XmlElement] public ManagedScriptSources ManagedScriptSources { get; set; } = new ManagedScriptSources();
+        
         [XmlElement]
         public ResourcesConfiguration ResourcesConfiguration { get; set; } =
             new ResourcesConfiguration {GameResourceFolder = "/res"};
         
         [XmlElement] public Networking Networking { get; set; } = new Networking();
+    }
+
+    public class ManagedScriptSources
+    {
+        [XmlElement("Script")] public List<string> Scripts { get; set; } = new List<string>();
     }
 
     public class ServerDllSource

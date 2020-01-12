@@ -42,6 +42,8 @@ namespace Uchu.Core
 
         public int Port { get; private set; }
 
+        public string MasterPath { get; private set; }
+        
         public Guid Id { get; }
 
         public event Func<long, ushort, BitReader, IRakConnection, Task> GameMessageReceived;
@@ -63,6 +65,8 @@ namespace Uchu.Core
 
         public virtual async Task ConfigureAsync(string configFile)
         {
+            MasterPath = Path.GetDirectoryName(configFile);
+            
             var serializer = new XmlSerializer(typeof(Configuration));
 
             if (!File.Exists(configFile))
