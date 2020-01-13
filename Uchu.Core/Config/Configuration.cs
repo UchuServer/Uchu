@@ -61,6 +61,8 @@ namespace Uchu.Core
     {
         [XmlElement] public string Certificate { get; set; } = "";
 
+        [XmlElement] public string Hostname { get; set; } = "";
+        
         [XmlElement] public int CharacterPort { get; set; } = 2002;
         
         [XmlElement("WorldPort")] public List<int> WorldPorts { get; set; }

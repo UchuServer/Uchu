@@ -363,6 +363,55 @@ namespace Uchu.World
 
         #endregion
 
+        #region Debug
+        
+        internal static void SaveCreation(GameObject gameObject, IEnumerable<Player> recipients, string path)
+        {
+            foreach (var recipient in recipients)
+            {
+                if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
+
+                using var stream = new MemoryStream();
+                using var writer = new BitWriter(stream);
+
+                writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
+
+                writer.WriteBit(true);
+                writer.Write(id);
+
+                gameObject.WriteConstruct(writer);
+
+                recipient.Connection.Send(stream);
+
+                var content = stream.ToArray();
+
+                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+            }
+        }
+        
+        internal static void SaveSerialization(GameObject gameObject, IEnumerable<Player> recipients, string path)
+        {
+            foreach (var recipient in recipients)
+            {
+                if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
+
+                using var stream = new MemoryStream();
+                using var writer = new BitWriter(stream);
+
+                writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
+
+                writer.Write(id);
+
+                gameObject.WriteSerialize(writer);
+
+                var content = stream.ToArray();
+
+                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+            }
+        }
+
+        #endregion
+        
         #region Runtime
 
         private Task ExecuteUpdateAsync()
@@ -419,7 +468,7 @@ namespace Uchu.World
 
                             foreach (var player in players)
                             {
-                                var spawned = player.Perspective.LoadedObjects.Contains(gameObject);
+                                var spawned = player.Perspective.LoadedObjects.ToArray().Contains(gameObject);
                                 
                                 if (spawned && !player.Perspective.View(gameObject))
                                 {

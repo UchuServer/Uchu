@@ -1,4 +1,6 @@
+using System.Linq;
 using RakDotNet.IO;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {
@@ -8,7 +10,7 @@ namespace Uchu.World
         
         public bool HasStats { get; set; } = true;
 
-        public int[] Factions { get; set; } = {1};
+        public int[] Factions { get; set; } = new int[0];
         
         public uint DamageAbsorptionPoints { get; set; }
         
@@ -29,6 +31,16 @@ namespace Uchu.World
                 // Stats should be centralized
                 if (!GameObject.TryGetComponent(out _stats))
                     _stats = GameObject.AddComponent<Stats>();
+                
+                using var cdClient = new CdClientContext();
+
+                var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
+                    c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+                );
+                
+                if (destroyable == default) return;
+
+                Factions = new[] {destroyable.Faction ?? 1};
             });
         }
 
@@ -92,7 +104,7 @@ namespace Uchu.World
 
             foreach (var faction in Factions) writer.Write(faction);
 
-            writer.WriteBit(_stats.Smashable);
+            writer.WriteBit(_stats.Smashable && !GameObject.TryGetComponent<QuickBuildComponent>(out _));
         }
     }
 }

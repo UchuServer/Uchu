@@ -12,15 +12,11 @@ namespace Uchu.Auth.Handlers
         {
             await using var ctx = new UchuContext();
             
-            var addresses = Server.GetAddresses();
-            
-            var address = connection.EndPoint.Address.ToString() == "127.0.0.1" ? "localhost" : addresses[0].ToString();
-
             var info = new ServerLoginInfoPacket
             {
-                CharacterInstanceAddress = address,
+                CharacterInstanceAddress = Server.GetHost(),
                 CharacterInstancePort = ushort.MaxValue,
-                ChatInstanceAddress = address,
+                ChatInstanceAddress = Server.GetHost(),
                 ChatInstancePort = 2004
             };
 

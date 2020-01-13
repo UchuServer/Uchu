@@ -12,11 +12,13 @@ namespace Uchu.Core.Handlers
                 Logger.Warning($"Handshake attempted with client of Game version: {packet.GameVersion}");
                 return;
             }
+            
             const int port = 21836;
 
             connection.Send(new HandshakePacket
             {
-                ConnectionType = Server.Port == port ? 0x01u : 0x04u
+                ConnectionType = Server.Port == port ? 0x01u : 0x04u,
+                Address = Server.GetHost()
             });
         }
     }

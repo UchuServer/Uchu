@@ -18,6 +18,11 @@ namespace Uchu.Core
             @this.Send(stream.ToArray());
         }
 
+        public static void SavePacket(this IRakConnection @this, ISerializable serializable)
+        {
+            
+        }
+
         public static void Send(this IRakConnection @this, MemoryStream stream)
         {
             @this.Send(stream.ToArray());

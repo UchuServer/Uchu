@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,32 @@ namespace Uchu.World.Handlers.Commands
             Environment.Exit(0);
 
             return "Stopped server";
+        }
+
+        [CommandHandler(Signature = "save", Help = "Save a serialization", GameMasterLevel = GameMasterLevel.Operator)]
+        public async Task<string> SaveSerialize(string[] arguments, Player player)
+        {
+            var current = player.Zone.GameObjects[0];
+
+            foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+            {
+                if (gameObject.Transform == default) continue;
+
+                if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
+                    Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                    current = gameObject;
+            }
+
+            var path = Path.Combine(Server.MasterPath, "./packets/");
+
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            Zone.SaveSerialization(current, new[] {player}, Path.Combine(path, $"./{current.ObjectId}_s.bin"));
+            Zone.SaveCreation(current, new[] {player}, Path.Combine(path, $"./{current.ObjectId}_c.bin"));
+
+            return "Saved packets";
         }
 
         [CommandHandler(Signature = "python", Help = "Run python", GameMasterLevel = GameMasterLevel.Admin)]

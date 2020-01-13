@@ -43,7 +43,7 @@ namespace Uchu.World.Scripting.Managed
                 ["Construct"] = new Action<GameObject>(GameObject.Construct),
                 ["Serialize"] = new Action<GameObject>(GameObject.Serialize),
                 ["Destruct"] = new Action<GameObject>(GameObject.Destruct),
-                ["Instantiate"] = new Func<int, Vector3, Quaternion, GameObject>
+                ["Create"] = new Func<int, Vector3, Quaternion, GameObject>
                     ((lot, position, rotation) => GameObject.Instantiate(Zone, lot, position, rotation)),
                 ["Broadcast"] = new Action<dynamic>(obj =>
                 {
@@ -55,7 +55,45 @@ namespace Uchu.World.Scripting.Managed
                 ["OnTick"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnTick, action)),
                 ["OnStart"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnStart, action)),
                 ["OnDestroy"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnDestroyed, action)),
-                ["OnInteract"] = new Action<GameObject, Action<Player>>((gameObject, action) => Listen(gameObject.OnInteract, action))
+                ["OnInteract"] = new Action<GameObject, Action<Player>>((gameObject, action) => Listen(gameObject.OnInteract, action)),
+                ["OnHealth"] = new Action<GameObject, Action<int, int, GameObject>>((gameObject, action) =>
+                {
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+
+                    Listen(stats.OnHealthChanged, (newHealth, delta) =>
+                    {
+                        action((int) newHealth, delta, stats.LatestDamageSource);
+                        
+                        return Task.CompletedTask;
+                    });
+                }),
+                ["OnArmor"] = new Action<GameObject, Action<int, int, GameObject>>((gameObject, action) =>
+                {
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+
+                    Listen(stats.OnArmorChanged, (newArmor, delta) =>
+                    {
+                        action((int) newArmor, delta, stats.LatestDamageSource);
+                        
+                        return Task.CompletedTask;
+                    });
+                }),
+                ["OnDeath"] = new Action<GameObject, Action<GameObject>>((gameObject, action) =>
+                {
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+                    
+                    Listen(stats.OnDeath, () => { action(stats.LatestDamageSource); });
+                }),
+                ["Drop"] = new Action<int, Vector3, GameObject, Player>((lot, position, source, player) =>
+                {
+                    var loot = InstancingUtil.Loot(lot, player, source, position);
+
+                    Object.Start(loot);
+                }),
+                ["Currency"] = new Action<int, Vector3, GameObject, Player>((count, position, source, player) =>
+                {
+                    InstancingUtil.Currency(count, player, source, position);
+                })
             };
 
             Script.Run(variables.ToArray());

@@ -356,14 +356,10 @@ namespace Uchu.World
 
         public async Task<bool> SendToWorldAsync(ServerSpecification specification)
         {
-            var address = Connection.EndPoint.Address.ToString() == "127.0.0.1"
-                ? "localhost"
-                : Server.GetAddresses()[0].ToString();
-
             Message(new ServerRedirectionPacket
             {
                 Port = (ushort) specification.Port,
-                Address = address
+                Address = Server.GetHost()
             });
             
             await using var ctx = new UchuContext();

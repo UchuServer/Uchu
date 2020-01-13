@@ -7,11 +7,11 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
@@ -54,6 +54,8 @@ namespace Uchu.Core
         
         protected ServerSpecification ServerSpecification { get; private set; }
 
+        protected X509Certificate Certificate { get; set; }
+
         public Server(Guid id)
         {
             Id = id;
@@ -95,14 +97,22 @@ namespace Uchu.Core
 
             ServerSpecification = specification;
 
-            X509Certificate certificate = default;
-
-            if (Config.Networking?.Certificate != default && File.Exists(Config.Networking.Certificate))
-            {
-                certificate = X509Certificate.CreateFromCertFile(Config.Networking.Certificate);
-            }
+            var certificateFilePath = Path.Combine(MasterPath, Config.Networking.Certificate);
             
-            RakNetServer = new TcpUdpServer(Port, "3.25 ND1", certificate);
+            if (Config.Networking?.Certificate != default && File.Exists(certificateFilePath))
+            {
+                var cert = new X509Certificate2(certificateFilePath);
+
+                Console.WriteLine($"PRIVATE KEY: {cert.HasPrivateKey} {cert.PrivateKey}");
+
+                Certificate = cert;
+                
+                RakNetServer = new TcpUdpServer(Port, "3.25 ND1", Certificate);
+            }
+            else
+            {
+                RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
+            }
 
             try
             {
@@ -188,6 +198,8 @@ namespace Uchu.Core
 
             ServerStopped?.Invoke();
 
+            Certificate.Dispose();
+            
             return RakNetServer.ShutdownAsync();
         }
 
@@ -199,6 +211,11 @@ namespace Uchu.Core
                 i.OperationalStatus == OperationalStatus.Up
             ).SelectMany(i => i.GetIPProperties().UnicastAddresses
             ).Select(a => a.Address).Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
+        }
+
+        public string GetHost()
+        {
+            return !string.IsNullOrWhiteSpace(Config.Networking.Hostname) ? Config.Networking.Hostname : "localhost";
         }
 
         public virtual void RegisterAssembly(Assembly assembly)

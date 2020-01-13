@@ -255,10 +255,6 @@ namespace Uchu.Char.Handlers
         {
             Server.SessionCache.SetCharacter(connection.EndPoint, packet.CharacterId);
 
-            var address = connection.EndPoint.Address.ToString() == "127.0.0.1"
-                ? "localhost"
-                : Server.GetAddresses()[0].ToString();
-
             await using var ctx = new UchuContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == packet.CharacterId);
@@ -302,7 +298,7 @@ namespace Uchu.Char.Handlers
 
                 connection.Send(new ServerRedirectionPacket
                 {
-                    Address = address,
+                    Address = Server.GetHost(),
                     Port = (ushort) server.Port
                 });
             });
