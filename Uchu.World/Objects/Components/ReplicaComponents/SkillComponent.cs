@@ -149,28 +149,16 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                Zone.ExcludingMessage(new EchoStartSkillMessage
-                {
-                    Associate = GameObject,
-                    CasterLatency = message.CasterLatency,
-                    CastType = message.CastType,
-                    Content = message.Content,
-                    LastClickedPosition = message.LastClickedPosition,
-                    OptionalOriginator = message.OptionalOriginator,
-                    OptionalTarget = message.OptionalTarget,
-                    OriginatorRotation = message.OriginatorRotation,
-                    SkillHandle = message.SkillHandle,
-                    SkillId = message.SkillId,
-                    UsedMouse = message.UsedMouse
-                }, As<Player>());
-
                 As<Player>().SendChatMessage($"START: {message.SkillId}");
                 
                 var tree = new BehaviorTree(message.SkillId);
 
                 await tree.BuildAsync();
 
-                var context = await tree.ExecuteAsync(GameObject, reader, SkillCastType.OnUse, message.OptionalTarget);
+                await using var writeStream = new MemoryStream();
+                using var writer = new BitWriter(writeStream);
+
+                var context = await tree.ExecuteAsync(GameObject, reader, writer, SkillCastType.OnUse);
 
                 _handledSkills[message.SkillHandle] = context;
                 
@@ -186,6 +174,21 @@ namespace Uchu.World
                 {
                     stats.Imagination = (uint) ((int) stats.Imagination - cost);
                 }
+                
+                Zone.ExcludingMessage(new EchoStartSkillMessage
+                {
+                    Associate = GameObject,
+                    CasterLatency = message.CasterLatency,
+                    CastType = message.CastType,
+                    Content = writeStream.ToArray(),
+                    LastClickedPosition = message.LastClickedPosition,
+                    OptionalOriginator = message.OptionalOriginator,
+                    OptionalTarget = message.OptionalTarget,
+                    OriginatorRotation = message.OriginatorRotation,
+                    SkillHandle = message.SkillHandle,
+                    SkillId = message.SkillId,
+                    UsedMouse = message.UsedMouse
+                }, As<Player>());
             }
 
             GameObject.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
@@ -198,14 +201,8 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
 
-            Zone.ExcludingMessage(new EchoSyncSkillMessage
-            {
-                Associate = GameObject,
-                BehaviorHandle = message.BehaviourHandle,
-                Content = message.Content,
-                Done = message.Done,
-                SkillHandle = message.SkillHandle
-            }, As<Player>());
+            await using var writeStream = new MemoryStream();
+            using var writer = new BitWriter(writeStream);
 
             var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
@@ -213,13 +210,22 @@ namespace Uchu.World
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviourHandle, reader);
+                await behavior.SyncAsync(message.BehaviourHandle, reader, writer);
             }
 
             if (message.Done)
             {
                 //_handledSkills.Remove(message.SkillHandle);
             }
+
+            Zone.ExcludingMessage(new EchoSyncSkillMessage
+            {
+                Associate = GameObject,
+                BehaviorHandle = message.BehaviourHandle,
+                Content = writeStream.ToArray(),
+                Done = message.Done,
+                SkillHandle = message.SkillHandle
+            }, As<Player>());
         }
 
         public void SetSkill(BehaviorSlot slot, uint skillId)

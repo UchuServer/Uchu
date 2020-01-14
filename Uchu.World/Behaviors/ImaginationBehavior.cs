@@ -13,13 +13,13 @@ namespace Uchu.World.Behaviors
             Imagination = await GetParameter<int>("imagination");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+            await base.ExecuteAsync(context, branchContext);
 
-            stats.Imagination = (uint) ((int) stats.Imagination + Imagination);
+            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return;
             
-            return Task.CompletedTask;
+            stats.Imagination = (uint) ((int) stats.Imagination + Imagination);
         }
     }
 }

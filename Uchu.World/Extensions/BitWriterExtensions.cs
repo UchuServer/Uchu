@@ -36,5 +36,15 @@ namespace Uchu.World
             @this.WriteBit(condition);
             return condition;
         }
+
+        public static void Align(this BitWriter @this)
+        {
+            var toWrite = 8 - (((@this.Position - 1) & 7) + 1);
+
+            for (var i = 0; i < toWrite; i++)
+            {
+                @this.WriteBit(false);
+            }
+        }
     }
 }

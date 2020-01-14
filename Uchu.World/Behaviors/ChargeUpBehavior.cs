@@ -30,6 +30,8 @@ namespace Uchu.World.Behaviors
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
+            await base.ExecuteAsync(context, branchContext);
+            
             await Action.ExecuteAsync(context, branchContext);
         }
     }

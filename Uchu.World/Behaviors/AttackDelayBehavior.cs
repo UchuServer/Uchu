@@ -27,6 +27,8 @@ namespace Uchu.World.Behaviors
             
             var handle = context.Reader.Read<uint>();
 
+            context.Writer.Write(handle);
+
             RegisterHandle(handle, context, branchContext);
         }
 

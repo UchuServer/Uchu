@@ -13,13 +13,13 @@ namespace Uchu.World.Behaviors
             Armor = await GetParameter<int>("armor");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+            await base.ExecuteAsync(context, branchContext);
+
+            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return;
 
             stats.Armor = (uint) ((int) stats.Armor + Armor);
-
-            return Task.CompletedTask;
         }
     }
 }

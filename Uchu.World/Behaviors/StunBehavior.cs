@@ -23,6 +23,8 @@ namespace Uchu.World.Behaviors
             if (StunCaster == 1) return;
 
             context.Reader.ReadBit();
+
+            context.Writer.WriteBit(false);
         }
     }
 }

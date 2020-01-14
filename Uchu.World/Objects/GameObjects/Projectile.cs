@@ -5,7 +5,6 @@ using Uchu.World.Behaviors;
 
 namespace Uchu.World
 {
-    [Unconstructed]
     public class Projectile : Object
     {
         public long ClientObjectId { get; set; }
@@ -27,10 +26,23 @@ namespace Uchu.World
             var stream = new MemoryStream(data);
 
             var reader = new BitReader(stream);
+            
+            var writeStream = new MemoryStream();
 
+            var writer = new BitWriter(writeStream);
+            
             ((Player) Owner)?.SendChatMessage($"Projectile HIT [{Lot}, {tree.RootBehaviors.Count}] -> {target}");
 
-            await tree.UseAsync(Owner, reader, target);
+            await tree.UseAsync(Owner, reader, writer, target);
+            
+            Zone.BroadcastMessage(new DoClientProjectileImpact
+            {
+                Associate = Owner,
+                Data = writeStream.ToArray(),
+                Owner = Owner,
+                ProjectileId = ClientObjectId,
+                Target = target
+            });
         }
     }
 }

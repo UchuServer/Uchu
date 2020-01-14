@@ -16,6 +16,8 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
 
             context.Reader.ReadBit();
+
+            context.Writer.WriteBit(false);
         }
     }
 }

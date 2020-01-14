@@ -13,13 +13,13 @@ namespace Uchu.World.Behaviors
             Health = await GetParameter<int>("health");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+            await base.ExecuteAsync(context, branchContext);
+
+            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return;
 
             stats.Health = (uint) ((int) stats.Health + Health);
-            
-            return Task.CompletedTask;
         }
     }
 }

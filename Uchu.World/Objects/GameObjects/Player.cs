@@ -27,6 +27,11 @@ namespace Uchu.World
                     
                     return Task.CompletedTask;
                 };
+
+                if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
+                {
+                    destructibleComponent.OnResurrect.AddListener(() => { GetComponent<Stats>().Imagination = 6; });
+                }
                 
                 await using var ctx = new UchuContext();
                 

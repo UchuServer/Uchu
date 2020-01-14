@@ -41,6 +41,8 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
 
             var value = context.Reader.Read<float>();
+
+            context.Writer.Write(value);
             
             ((Player) context.Associate)?.SendChatMessage($"Switch Multiple: {value} -> {Behaviors.Count}");
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +13,47 @@ namespace Uchu.World.Behaviors
     {
         public static readonly List<BehaviorBase> Cache = new List<BehaviorBase>();
         
+        private static int EffectIndex { get; set; }
+        
         public int BehaviorId { get; set; }
 
         public abstract BehaviorTemplateId Id { get; }
 
         public abstract Task BuildAsync();
 
-        public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        private int EffectId { get; set; }
+
+        public virtual async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            //((Player) context.Associate)?.SendChatMessage($"[{BehaviorId}] {Id}");
-            
-            return Task.CompletedTask;
+            if (EffectId == 0)
+            {
+                EffectId = await GetParameter<int>("effectID");
+
+                if (EffectId == default) EffectId = -1;
+            }
+
+            if (EffectId == -1) return;
+
+            var effectName = EffectIndex++.ToString();
+
+            context.Associate.Zone.ExcludingMessage(new PlayFXEffectMessage
+            {
+                Associate = branchContext.Target,
+                Secondary = context.Associate,
+                EffectId = EffectId,
+                Name = effectName
+            }, context.Associate as Player);
+
+            var _ = Task.Run(async () =>
+            {
+                await Task.Delay(branchContext.Duration > 0 ? branchContext.Duration : 1000);
+                
+                context.Associate.Zone.ExcludingMessage(new StopFXEffectMessage()
+                {
+                    Associate = branchContext.Target,
+                    Name = effectName
+                }, context.Associate as Player);
+            });
         }
 
         public virtual Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
@@ -49,9 +80,16 @@ namespace Uchu.World.Behaviors
             
             if (behavior?.TemplateID == null) return new EmptyBehavior();
             
-            var id = (BehaviorTemplateId) behavior.TemplateID;
+            var behaviorTypeId = (BehaviorTemplateId) behavior.TemplateID;
+            
+            if (!BehaviorTree.Behaviors.TryGetValue(behaviorTypeId, out var behaviorType))
+            {
+                Logger.Error($"No behavior type of \"{behaviorTypeId}\" found.");
+                
+                return new EmptyBehavior();
+            }
 
-            var instance = (BehaviorBase) Activator.CreateInstance(BehaviorTree.Behaviors[id]);
+            var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
             
             instance.BehaviorId = behaviorId;
             
@@ -64,7 +102,7 @@ namespace Uchu.World.Behaviors
 
         protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            context.BehaviorHandles[handle] = async reader =>
+            context.BehaviorHandles[handle] = async (reader, writer) =>
             {
                 var newBranchContext = new ExecutionBranchContext(branchContext.Target)
                 {
@@ -72,6 +110,7 @@ namespace Uchu.World.Behaviors
                 };
                 
                 context.Reader = reader;
+                context.Writer = writer;
                 
                 await SyncAsync(context, newBranchContext);
             };

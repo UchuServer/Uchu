@@ -17,9 +17,13 @@ namespace Uchu.World.Behaviors
             ProjectileLot = await GetParameter<int>("LOT_ID");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
+            await base.ExecuteAsync(context, branchContext);
+            
             var target = context.Reader.ReadGameObject(context.Associate.Zone);
+
+            context.Writer.Write<long>(target);
 
             ((Player) context.Associate)?.SendChatMessage($"{ProjectileCount} projectiles.");
             
@@ -34,13 +38,13 @@ namespace Uchu.World.Behaviors
                     StartProjectile(context, target);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         private void StartProjectile(ExecutionContext context, GameObject target)
         {
             var projectileId = context.Reader.Read<long>();
+
+            context.Writer.Write(projectileId);
 
             var projectile = Object.Instantiate<Projectile>(context.Associate.Zone);
 

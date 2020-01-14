@@ -9,12 +9,12 @@ namespace Uchu.World
         public override GameMessageId GameMessageId => GameMessageId.PlayFXEffect;
 
         public int EffectId { get; set; } = -1;
-        
-        public string EffectType { get; set; }
+
+        public string EffectType { get; set; } = "";
 
         public float Scale { get; set; } = 1;
-        
-        public string Name { get; set; }
+
+        public string Name { get; set; } = "";
 
         public float Priority { get; set; } = 1;
         

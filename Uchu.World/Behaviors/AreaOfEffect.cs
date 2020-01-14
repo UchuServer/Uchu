@@ -20,15 +20,19 @@ namespace Uchu.World.Behaviors
 
             var length = context.Reader.Read<uint>();
             
-            ((Player) context.Associate)?.SendChatMessage($"AREA LENGTH: {length}");
+            ((Player) context.Associate).SendChatMessage($"AREA LENGTH: {length}");
 
             if (length > 10) length = 10;
+
+            context.Writer.Write(length);
             
             var targets = new GameObject[length];
 
             for (var i = 0; i < length; i++)
             {
                 var id = context.Reader.Read<ulong>();
+
+                context.Writer.Write(id);
 
                 context.Associate.Zone.TryGetGameObject((long) id, out var target);
                 

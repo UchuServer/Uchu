@@ -42,6 +42,8 @@ namespace Uchu.World.Behaviors
             
             var chainIndex = context.Reader.Read<uint>();
 
+            context.Writer.Write(chainIndex);
+
             await Behaviors[chainIndex - 1].ExecuteAsync(context, branchContext);
         }
     }

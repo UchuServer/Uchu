@@ -79,6 +79,13 @@ namespace Uchu.World
                 
                 Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} without a {nameof(Stats)} component.");
             });
+            
+            Listen(OnDestroyed, () =>
+            {
+                OnResurrect.Clear();
+                
+                OnSmashed.Clear();
+            });
         }
 
         public override void Construct(BitWriter writer)

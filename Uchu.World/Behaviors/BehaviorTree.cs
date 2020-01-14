@@ -112,7 +112,14 @@ namespace Uchu.World.Behaviors
 
                     if (behavior?.TemplateID == null) continue;
 
-                    var behaviorType = Behaviors[(BehaviorTemplateId) behavior.TemplateID];
+                    var behaviorTypeId = (BehaviorTemplateId) behavior.TemplateID;
+                    
+                    if (!Behaviors.TryGetValue(behaviorTypeId, out var behaviorType))
+                    {
+                        Logger.Error($"No behavior type of \"{behaviorTypeId}\" found.");
+                        
+                        continue;
+                    }
 
                     var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
 
@@ -139,13 +146,13 @@ namespace Uchu.World.Behaviors
                 CastType = b.castType
             }).ToArray();
         }
-
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
+        
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
         {
             if (!explicitTarget)
                 target = associate;
 
-            var context = new ExecutionContext(associate, reader);
+            var context = new ExecutionContext(associate, reader, writer);
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
             {
@@ -173,9 +180,9 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
-        public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, GameObject target)
+        public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, BitWriter writer, GameObject target)
         {
-            var context = new ExecutionContext(associate, reader);
+            var context = new ExecutionContext(associate, reader, writer);
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list)) return context;
             
@@ -193,7 +200,7 @@ namespace Uchu.World.Behaviors
         
         public async Task<ExecutionContext> MountAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()));
+            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()), new BitWriter(new MemoryStream()));
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
             
@@ -211,7 +218,7 @@ namespace Uchu.World.Behaviors
 
         public async Task<ExecutionContext> DismantleAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()));
+            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()), new BitWriter(new MemoryStream()));
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
             

@@ -19,7 +19,7 @@ namespace Uchu.World.Behaviors
         
         public override async Task BuildAsync()
         {
-            CheckEnvironment = (await GetParameter("check_env")).Value > 0;
+            CheckEnvironment = (await GetParameter("check_env"))?.Value > 0;
             Blocked = await GetParameter("blocked action") != default;
 
             ActionBehavior = await GetBehavior("action");
@@ -30,17 +30,28 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
+
+            var hit = context.Reader.ReadBit();
+            context.Writer.Write(hit);
             
-            if (context.Reader.ReadBit()) // Hit
+            if (hit) // Hit
             {
                 if (CheckEnvironment)
-                    context.Reader.ReadBit(); // Check environment
-                
+                {
+                    var checkEnvironment = context.Reader.ReadBit(); // Check environment
+
+                    context.Writer.WriteBit(checkEnvironment);
+                }
+
                 var targets = new GameObject[context.Reader.Read<uint>()];
+
+                context.Writer.Write((uint) targets.Length);
 
                 for (var i = 0; i < targets.Length; i++)
                 {
                     var targetId = context.Reader.Read<long>();
+
+                    context.Writer.Write(targetId);
                     
                     if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
                     {
@@ -68,7 +79,11 @@ namespace Uchu.World.Behaviors
             {
                 if (Blocked)
                 {
-                    if (context.Reader.ReadBit()) // Is blocked
+                    var isBlocked = context.Reader.ReadBit();
+
+                    context.Writer.WriteBit(isBlocked);
+                    
+                    if (isBlocked) // Is blocked
                     {
                         await BlockedBehavior.ExecuteAsync(context, branchContext);
                     }

@@ -16,10 +16,5 @@ namespace Uchu.World.Behaviors
 
             EffectId = (int) effectId.Value;
         }
-
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await base.ExecuteAsync(context, branchContext);
-        }
     }
 }

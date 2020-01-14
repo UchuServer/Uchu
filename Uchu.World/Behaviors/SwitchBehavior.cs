@@ -33,6 +33,8 @@ namespace Uchu.World.Behaviors
             
             var handle = context.Reader.Read<uint>();
 
+            context.Writer.Write(handle);
+
             RegisterHandle(handle, context, branchContext);
 
             var state = true;
@@ -40,6 +42,8 @@ namespace Uchu.World.Behaviors
             if (Imagination > 0 || !IsEnemyFaction)
             {
                 state = context.Reader.ReadBit();
+
+                context.Writer.WriteBit(false);
             }
 
             if (state)
