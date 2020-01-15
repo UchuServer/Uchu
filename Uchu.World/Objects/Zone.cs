@@ -72,7 +72,7 @@ namespace Uchu.World
         // Events
         //
 
-        public readonly AsyncEvent<Player> OnPlayerLoad = new AsyncEvent<Player>();
+        public AsyncEvent<Player> OnPlayerLoad { get; } = new AsyncEvent<Player>();
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {

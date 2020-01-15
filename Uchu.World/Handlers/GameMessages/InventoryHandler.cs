@@ -45,7 +45,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (message.Item == null) return;
             
-            await player.GetComponent<InventoryComponent>().EquipItem(message.Item);
+            await player.GetComponent<InventoryComponent>().EquipItemAsync(message.Item);
         }
 
         [PacketHandler]
@@ -55,10 +55,10 @@ namespace Uchu.World.Handlers.GameMessages
 
             Logger.Information($"UnEquip Item: {message.ItemToUnEquip} | {message.ReplacementItem}");
 
-            await inventoryComponent.UnEquipItem(message.ItemToUnEquip);
+            await inventoryComponent.UnEquipItemAsync(message.ItemToUnEquip);
 
             if (message.ReplacementItem != null)
-                await inventoryComponent.EquipItem(message.ReplacementItem);
+                await inventoryComponent.EquipItemAsync(message.ReplacementItem);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.Python;
 
 namespace Uchu.World.Scripting.Managed
@@ -93,7 +94,29 @@ namespace Uchu.World.Scripting.Managed
                 ["Currency"] = new Action<int, Vector3, GameObject, Player>((count, position, source, player) =>
                 {
                     InstancingUtil.Currency(count, player, source, position);
-                })
+                }),
+                ["GetComponent"] = new Func<GameObject, string, Component>((gameObject, name) =>
+                {
+                    var type = Type.GetType($"Uchu.World.{name}");
+                    
+                    return type != default ? gameObject.GetComponent(type) : null;
+                }),
+                ["AddComponent"] = new Func<GameObject, string, Component>((gameObject, name) =>
+                {
+                    var type = Type.GetType($"Uchu.World.{name}");
+                    
+                    return type != default ? gameObject.AddComponent(type) : null;
+                }),
+                ["RemoveComponent"] = new Action<GameObject, string>((gameObject, name) =>
+                {
+                    var type = Type.GetType($"Uchu.World.{name}");
+
+                    if (type == null) return;
+                    
+                    gameObject.RemoveComponent(type);
+                }),
+                ["Vector3"] = new Func<float, float, float, Vector3>((x, y, z) => new Vector3(x, y, z)),
+                ["Quaternion"] = new Func<float, float, float, float, Quaternion>((x, y, z, w) => new Quaternion(x, y, z, w))
             };
 
             Script.Run(variables.ToArray());

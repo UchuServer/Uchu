@@ -47,7 +47,7 @@ namespace Uchu.World
                     else networkId = 1;
                 }
 
-                _networkDictionary.Add(gameObject, networkId);
+                _networkDictionary[gameObject] = networkId;
 
                 return true;
             }

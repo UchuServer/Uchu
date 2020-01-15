@@ -18,9 +18,9 @@ namespace Uchu.World
         
         private Mask _layer = new Mask(StandardLayer.Default);
 
-        protected string ObjectName { get; set; }
-
         private ObjectWorldState _worldState;
+
+        protected string ObjectName { get; set; }
         
         public long ObjectId { get; private set; }
 

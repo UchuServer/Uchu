@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -17,6 +18,20 @@ namespace Uchu.World
             set => Rotation = Quaternion.CreateFromYawPitchRoll(value.X, value.Y, value.Z);
         }
 
+        public void Translate(Vector3 delta)
+        {
+            Position += delta;
+
+            GameObject.Serialize(GameObject);
+        }
+        
+        public void Rotate(Quaternion delta)
+        {
+            Rotation += delta;
+
+            GameObject.Serialize(GameObject);
+        }
+        
         public float Scale { get; set; } = -1;
 
         public Transform Parent

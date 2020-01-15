@@ -106,6 +106,20 @@ namespace Uchu.World
 
         public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
+        public async Task EquipAsync(bool skipAllChecks = false)
+        {
+            var inventory = Player.GetComponent<InventoryComponent>();
+
+            await inventory.EquipItemAsync(this, skipAllChecks);
+        }
+
+        public async Task UnEquipAsync(bool skipAllChecks = false)
+        {
+            var inventory = Player.GetComponent<InventoryComponent>();
+
+            await inventory.UnEquipItemAsync(this);
+        }
+        
         public static Item Instantiate(long itemId, Inventory inventory)
         {
             using var cdClient = new CdClientContext();

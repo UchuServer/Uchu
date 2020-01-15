@@ -111,7 +111,7 @@ namespace Uchu.World
             return id;
         }
 
-        public async Task EquipItem(Item item, bool ignoreAllChecks = false)
+        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
         {
             if (item?.InventoryItem == null)
             {
@@ -137,7 +137,7 @@ namespace Uchu.World
              * Equip proxies
              */
 
-            var proxies = await GenerateProxyItems(item);
+            var proxies = await GenerateProxyItemsAsync(item);
 
             if (proxies?.Length > 0)
             {
@@ -158,11 +158,11 @@ namespace Uchu.World
                 {
                     var oldItem = manager.FindItem(value.InventoryItemId);
 
-                    await UnEquipItem(oldItem);
+                    await UnEquipItemAsync(oldItem);
                 }
                 else
                 {
-                    await UnEquipItem(value.InventoryItemId);
+                    await UnEquipItemAsync(value.InventoryItemId);
                 }
             }
             
@@ -175,16 +175,16 @@ namespace Uchu.World
             GameObject.Serialize(GameObject);
         }
 
-        public async Task UnEquipItem(Item item)
+        public async Task UnEquipItemAsync(Item item)
         {
-            OnUnEquipped?.Invoke(item);
+            await OnUnEquipped.InvokeAsync(item);
             
             if (item?.ObjectId <= 0) return;
 
-            if (item != null) await UnEquipItem(item.ObjectId);
+            if (item != null) await UnEquipItemAsync(item.ObjectId);
         }
 
-        private async Task UnEquipItem(long id)
+        private async Task UnEquipItemAsync(long id)
         {
             var (equipLocation, value) = Items.FirstOrDefault(i => i.Value.InventoryItemId == id);
 
@@ -206,7 +206,7 @@ namespace Uchu.World
             {
                 foreach (var proxy in proxies)
                 {
-                    await UnEquipItem(proxy);
+                    await UnEquipItemAsync(proxy);
                 }
             }
         }
@@ -227,7 +227,7 @@ namespace Uchu.World
             await ctx.SaveChangesAsync();
         }
 
-        private async Task<long[]> GenerateProxyItems(Item item)
+        private async Task<long[]> GenerateProxyItemsAsync(Item item)
         {
             if (string.IsNullOrWhiteSpace(item?.ItemComponent?.SubItems)) return null;
             
