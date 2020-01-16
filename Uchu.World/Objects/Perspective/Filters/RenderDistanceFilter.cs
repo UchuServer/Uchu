@@ -35,7 +35,7 @@ namespace Uchu.World.Filters
         {
             if (gameObject?.Transform == default) return false;
 
-            if (gameObject == Player) return true;
+            if (gameObject is Player) return true;
 
             if (Override && Vector3.Distance(gameObject.Transform.Position, OverrideReferencePosition) <= Distance)
             {

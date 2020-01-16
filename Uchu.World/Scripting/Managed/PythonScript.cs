@@ -85,6 +85,15 @@ namespace Uchu.World.Scripting.Managed
                     
                     Listen(stats.OnDeath, () => { action(stats.LatestDamageSource); });
                 }),
+                ["OnChat"] = new Action<Action<Player, string>>(action =>
+                {
+                    Listen(Zone.OnChatMessage, (player, message) =>
+                    {
+                        action(player, message);
+                        
+                        return Task.CompletedTask;
+                    });
+                }),
                 ["Drop"] = new Action<int, Vector3, GameObject, Player>((lot, position, source, player) =>
                 {
                     var loot = InstancingUtil.Loot(lot, player, source, position);

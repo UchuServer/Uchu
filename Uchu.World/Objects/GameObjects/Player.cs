@@ -45,7 +45,7 @@ namespace Uchu.World
                 }
             });
             
-            Listen(OnTick, async () => { await Perspective.TickAsync(); });
+            Listen(OnPositionUpdate, async (_, __) => { await Perspective.TickAsync(); });
             
             Listen(OnDestroyed, () =>
             {

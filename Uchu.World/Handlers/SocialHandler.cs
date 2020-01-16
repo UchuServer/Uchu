@@ -19,6 +19,15 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
+            try
+            {
+                await player.Zone.OnChatMessage.InvokeAsync(player, message.Message);
+            }
+            catch
+            {
+                // Something went wrong with event
+            }
+            
             await using var ctx = new UchuContext();
             
             var character = await ctx.Characters.Include(c => c.User)

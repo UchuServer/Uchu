@@ -73,6 +73,8 @@ namespace Uchu.World
         //
 
         public AsyncEvent<Player> OnPlayerLoad { get; } = new AsyncEvent<Player>();
+        
+        public AsyncEvent<Player, string> OnChatMessage { get; } = new AsyncEvent<Player, string>();
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {

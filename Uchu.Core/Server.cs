@@ -107,7 +107,7 @@ namespace Uchu.Core
 
                 Certificate = cert;
                 
-                RakNetServer = new TcpUdpServer(Port, "3.25 ND1", Certificate);
+                RakNetServer = new TcpUdpServer(Port, "3.25 ND1", Certificate, 150);
             }
             else
             {
