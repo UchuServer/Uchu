@@ -70,6 +70,8 @@ namespace Uchu.World.Handlers
             var worldServer = (WorldServer) Server;
             var zone = await worldServer.GetZoneAsync(zoneId);
 
+            Server.SessionCache.SetZone(connection.EndPoint, zoneId);
+
             connection.Send(new WorldInfoPacket
             {
                 ZoneId = zoneId,
@@ -182,7 +184,7 @@ namespace Uchu.World.Handlers
         private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
-            var xmlData = GenerateCharacterXMLData(character);
+            var xmlData = GenerateCharacterXmlData(character);
 
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
@@ -214,7 +216,7 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private XmlData GenerateCharacterXMLData(Character character)
+        private static XmlData GenerateCharacterXmlData(Character character)
         {
             var xmlData = new XmlData
             {
