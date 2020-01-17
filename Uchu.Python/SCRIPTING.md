@@ -346,6 +346,129 @@ def smash_object(game_object, smasher):
 
 <hr>
 
+### Practical examples
+
+#### Prop hunting
+A small mini-game where players can hide as objects in the game world.
+
+```python
+hidden_players = []
+
+
+def load():
+
+    # Setup `parse_chat` to be called when a chat message is sent.
+    OnChat(parse_chat)
+
+
+def parse_chat(player, message):
+
+    # Only accept commands
+    if message[0] != '/':
+        return
+
+    global hidden_players
+
+    # Interpret player commands
+    param = message.split(' ')
+
+    if param[0] == "/hide":
+
+        # Check if player is already hidden
+        for hidden in hidden_players:
+            if hidden.player == player:
+
+                # Send notice to the player
+                Chat(player, "You are already hidden! Use the /reveal command to reveal yourself.")
+
+                return
+
+        # Get lot
+        lot = int(param[1])
+
+        # Setup prop
+        prop = Prop(player, lot)
+
+        prop.hide()
+
+        # Send notice to the player
+        Chat(player, "You hid yourself as " + str(lot) + "!")
+
+        hidden_players.append(prop)
+    elif param[0] == "/reveal":
+
+        # Check if player is already revealed
+        for hidden in hidden_players:
+            if hidden.player == player:
+                # Remove prop
+                hidden.reveal()
+
+                # Send notice to the player
+                Chat(player, "You revealed yourself!")
+
+                hidden_players.remove(hidden)
+
+                return
+
+        # Send notice to the player
+        Chat(player, "You are already revealed! Use the /hide <lot> command to hide yourself.")
+    elif param[0] == "/guess":
+        guess(player)
+
+
+def guess(player):
+    global hidden_players
+
+    # Send notice to the player
+    Chat(player, "Guessing...")
+
+    # Check if a player has correctly found a hiding prop.
+    for prop in hidden_players:
+        distance = Distance(prop.player.Transform.Position, player.Transform.Position)
+
+        if distance < 5:
+            prop.reveal()
+
+            # Send notice to the player
+            Chat(prop.player, "You were revealed!")
+
+            hidden_players.remove(prop)
+
+
+def unload():
+    # Reveal all hidden players
+    for hidden in hidden_players:
+        hidden.reveal()
+
+
+class Prop:
+    def __init__(self, player, lot):
+        self.player = player
+        self.lot = lot
+        self.layer = player.Layer
+        self.obj = None
+
+    def hide(self):
+        # Hide the player
+        self.player.Layer = Layer.Hidden
+
+        transform = self.player.Transform
+
+        # Create prop object
+        self.obj = Create(self.lot, transform.Position, transform.Rotation)
+
+        # Setup prop object
+        Start(self.obj)
+        Construct(self.obj)
+
+    def reveal(self):
+        # Restore layer
+        self.player.Layer = self.layer
+
+        # Destroy prop object
+        Destroy(self.obj)
+```
+
 ## C#
 Uchu can load .NET Core assemblies at runtime to fulfill lower level scripting tasks.
 
