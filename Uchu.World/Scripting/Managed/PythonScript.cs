@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -35,6 +36,18 @@ namespace Uchu.World.Scripting.Managed
                 Source,
                 Zone.ManagedScriptEngine
             );
+
+            dynamic layers = new ExpandoObject();
+            layers.None = (Mask) StandardLayer.None;
+            layers.Default = (Mask) StandardLayer.Default;
+            layers.Environment = (Mask) StandardLayer.Environment;
+            layers.Npc = (Mask) StandardLayer.Npc;
+            layers.Smashable = (Mask) StandardLayer.Smashable;
+            layers.Player = (Mask) StandardLayer.Player;
+            layers.Enemy = (Mask) StandardLayer.Enemy;
+            layers.Spawner = (Mask) StandardLayer.Spawner;
+            layers.Hidden = (Mask) StandardLayer.Hidden;
+            layers.All = (Mask) StandardLayer.All;
 
             var variables = new Dictionary<string, dynamic>
             {
@@ -125,20 +138,9 @@ namespace Uchu.World.Scripting.Managed
                     gameObject.RemoveComponent(type);
                 }),
                 ["Vector3"] = new Func<float, float, float, Vector3>((x, y, z) => new Vector3(x, y, z)),
+                ["Distance"] = new Func<Vector3, Vector3, float>(Vector3.Distance),
                 ["Quaternion"] = new Func<float, float, float, float, Quaternion>((x, y, z, w) => new Quaternion(x, y, z, w)),
-                ["Layer"] = new
-                {
-                    None = 0,
-                    Default = 1,
-                    Environment = 1 << 1,
-                    Npc = 1 << 2,
-                    Smashable = 1 << 3,
-                    Player = 1 << 4,
-                    Enemy = 1 << 5,
-                    Spawner = 1 << 6,
-                    Hidden = 1 << 7,
-                    All = long.MaxValue
-                },
+                ["Layer"] = layers,
                 ["Chat"] = new Action<Player, string>((player, message) =>
                 {
                     player.SendChatMessage(message, PlayerChatChannel.Normal);

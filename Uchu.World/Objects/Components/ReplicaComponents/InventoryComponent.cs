@@ -145,6 +145,8 @@ namespace Uchu.World
             }
 
             Logger.Debug($"Equipping {item}");
+
+            item.Equipped = true;
             
             var items = Items.Select(i => (i.Key, i.Value)).ToArray();
             
@@ -181,7 +183,12 @@ namespace Uchu.World
             
             if (item?.ObjectId <= 0) return;
 
-            if (item != null) await UnEquipItemAsync(item.ObjectId);
+            if (item != null)
+            {
+                item.Equipped = false;
+                
+                await UnEquipItemAsync(item.ObjectId);
+            }
         }
 
         private async Task UnEquipItemAsync(long id)

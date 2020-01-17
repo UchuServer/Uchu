@@ -173,6 +173,8 @@ namespace Uchu.World.Handlers
             );
 
             await player.OnWorldLoad.InvokeAsync();
+            
+            player.OnWorldLoad.Clear();
         }
 
         /// <summary>

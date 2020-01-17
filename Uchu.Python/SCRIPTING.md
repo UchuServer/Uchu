@@ -67,6 +67,7 @@ Uchu provides multiple resources to your scripts which they can utilize to inter
 * `Currency(count, postion, source, owner)` drops coin for a player to pick up.
 * `Chat(player, message)` sends a chat message to a player.
 * `Broadcast(message)` broadcasts a chat message to every player in the zone.
+* `Distance(vector_0, vector_1)` gets the distance between two Vector3 variables.
 
 <hr>
 

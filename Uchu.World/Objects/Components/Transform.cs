@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Numerics;
-using Uchu.Core;
 
 namespace Uchu.World
 {

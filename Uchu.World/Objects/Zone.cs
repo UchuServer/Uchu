@@ -471,15 +471,17 @@ namespace Uchu.World
                             foreach (var player in players)
                             {
                                 var spawned = player.Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+                                var view = player.Perspective.View(gameObject);
                                 
-                                if (spawned && !player.Perspective.View(gameObject))
+                                if (spawned && !view)
                                 {
                                     SendDestruction(gameObject, player);
 
                                     continue;
                                 }
 
-                                if (!spawned)
+                                if (!spawned && view)
                                 {
                                     SendConstruction(gameObject, player);
                                 }
