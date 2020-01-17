@@ -157,7 +157,7 @@ A GameObject is any object present in the game world, visible or not.
   
         return old_layer
   
-    def restore_object(game_object, layer)
+    def restore_object(game_object, layer):
         game_object.Layer = layer
     ```
 
@@ -340,7 +340,7 @@ GameObject's drop table. Players will drop 10% of their coin up to 10000.
 def smash_object(game_object, smasher):
     component = GetComponent(game_object, "DestructibleComponent")
 
-    component.Smash(game_object, smasher)
+    component.Smash(smasher, smasher)
 ```
 
 <hr>
