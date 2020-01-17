@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Python;
 
 namespace Uchu.World.Scripting.Managed
@@ -144,7 +145,9 @@ namespace Uchu.World.Scripting.Managed
                 ["Chat"] = new Action<Player, string>((player, message) =>
                 {
                     player.SendChatMessage(message, PlayerChatChannel.Normal);
-                })
+                }),
+                ["ClientContext"] = new Func<CdClientContext>(() => new CdClientContext()),
+                ["UchuContext"] = new Func<UchuContext>(() => new UchuContext())
             };
 
             Script.Run(variables.ToArray());

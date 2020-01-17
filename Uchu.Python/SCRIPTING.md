@@ -68,6 +68,8 @@ Uchu provides multiple resources to your scripts which they can utilize to inter
 * `Chat(player, message)` sends a chat message to a player.
 * `Broadcast(message)` broadcasts a chat message to every player in the zone.
 * `Distance(vector_0, vector_1)` gets the distance between two Vector3 variables.
+* `ClientContext()` returns an object allowing you to access the CDClient. See Uchu.Core/Client/CdClientContext.cs
+* `UchuContext()` returns an object allowing you to access the server database. See Uchu.Core/Database/UchuContext.cs
 
 <hr>
 
