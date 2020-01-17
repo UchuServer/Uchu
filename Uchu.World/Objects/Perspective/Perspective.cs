@@ -15,8 +15,10 @@ namespace Uchu.World
         private readonly Dictionary<GameObject, ushort> _networkDictionary;
         private readonly Player _player;
 
-        public IEnumerable<GameObject> LoadedObjects => _networkDictionary.Keys;
+        public GameObject[] LoadedObjects => _networkDictionary.Keys.ToArray();
 
+        public MaskFilter MaskFilter => TryGetFilter<MaskFilter>(out var filter) ? filter : default;
+        
         public Event OnLoaded { get; } = new Event();
 
         private List<IPerspectiveFilter> Filters { get; } = new List<IPerspectiveFilter>();

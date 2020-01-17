@@ -125,16 +125,36 @@ namespace Uchu.World.Scripting.Managed
                     gameObject.RemoveComponent(type);
                 }),
                 ["Vector3"] = new Func<float, float, float, Vector3>((x, y, z) => new Vector3(x, y, z)),
-                ["Quaternion"] = new Func<float, float, float, float, Quaternion>((x, y, z, w) => new Quaternion(x, y, z, w))
+                ["Quaternion"] = new Func<float, float, float, float, Quaternion>((x, y, z, w) => new Quaternion(x, y, z, w)),
+                ["Layer"] = new
+                {
+                    None = 0,
+                    Default = 1,
+                    Environment = 1 << 1,
+                    Npc = 1 << 2,
+                    Smashable = 1 << 3,
+                    Player = 1 << 4,
+                    Enemy = 1 << 5,
+                    Spawner = 1 << 6,
+                    Hidden = 1 << 7,
+                    All = long.MaxValue
+                },
+                ["Chat"] = new Action<Player, string>((player, message) =>
+                {
+                    player.SendChatMessage(message, PlayerChatChannel.Normal);
+                })
             };
 
             Script.Run(variables.ToArray());
-            
-            Script.Execute("load");
-            
-            Listen(Proxy.OnTick, () =>
+
+            Task.Run(() =>
             {
-                Script.Execute("tick");
+                Script.Execute("load");
+            });
+            
+            Listen(Proxy.OnTick, () => { Task.Run(() => {
+                    Script.Execute("tick");
+                });
             });
 
             return Task.CompletedTask;
@@ -146,7 +166,10 @@ namespace Uchu.World.Scripting.Managed
             
             ClearListeners();
 
-            Script.Execute("unload");
+            Task.Run(() =>
+            {
+                Script.Execute("unload");
+            });
             
             return Task.CompletedTask;
         }

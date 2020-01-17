@@ -58,13 +58,32 @@ Uchu provides multiple resources to your scripts which they can utilize to inter
 * `OnHealth(GameObject, function(health, delta, source-game-object))` binds the function to being called when the GameObject's health is changed.
 * `OnArmor(GameObject, function(armor, delta, source-game-object))` binds the function to being called when the GameObject's armor is changed.
 * `OnDeath(GameObject, function(smasher-game-object))` binds the function to being called when the GameObject is smashed.
+* `OnChat(function(player, message))` binds the function to being called when a Player sends a chat message.
 
 <hr>
 
 ##### Global Methods
 * `Drop(lot, position, source, owner)` drops an item for a player to pick up.
 * `Currency(count, postion, source, owner)` drops coin for a player to pick up.
+* `Chat(player, message)` sends a chat message to a player.
+* `Broadcast(message)` broadcasts a chat message to every player in the zone.
 
+<hr>
+
+##### Global Properties
+
+* `Layer` includes the standard layers included in calculating what objects should be shown to the player in the game world.
+The bit operations on this mask are overwritten: `+=` adds a layer, `-=` removes a layer. `=` always sets the layer.
+    * `Layer.None = 0`
+    * `Layer.Default = 1`
+    * `Layer.Environment = 1 << 1`
+    * `Layer.Npc = 1 << 2`
+    * `Layer.Smashable = 1 << 3`
+    * `Layer.Player = 1 << 4`
+    * `Layer.Enemy = 1 << 5`
+    * `Layer.Spawner = 1 << 6`
+    * `Layer.Hidden = 1 << 7` this layer should be used to hide objects from the players.
+    * `Layer.All = (64-bit max value)`
 <hr>
 
 ##### Zone
@@ -122,6 +141,25 @@ A GameObject is any object present in the game world, visible or not.
 * `GameObject.Aline` is `False` if this GameObject is no longer in the Zone. (Readonly)
 * `GameObject.Viewers` gets all the Players that has this GameObject loaded. (Readonly)
 * `GameObject.Layer` gets or sets the layer(s) this GameObject occupies. This determines if the GameObject should be shown to the Players or not.
+    ###### Example
+    ```python
+    def vanish(game_object):
+        old_layer = hide_object(game_object)
+    
+        time.sleep(10)
+  
+        restore_object(game_object, old_layer)
+
+    def hide_object(game_object):
+        old_layer = game_object.Layer
+      
+        game_object.Layer = Layer.Hidden
+  
+        return old_layer
+  
+    def restore_object(game_object, layer)
+        game_object.Layer = layer
+    ```
 
 ###### Methods
 * `Create(Lot, Vector3, Quaternion)` gets a new GameObject from a Lot and place on world.
@@ -145,6 +183,7 @@ A GameObject is any object present in the game world, visible or not.
         Serialize(game_object)
     ```
 * `Destruct(GameObject)` removes this GameObject in the game world.
+(This is a lower level function in Uchu. Use layers to hide GameObjects instead.)
 * `GetComponent(GameObject, Type)` gets a component on this GameObject by its type name. Returns `None` if invalid type or not found.
     ###### Example
     ```python
@@ -164,6 +203,42 @@ A Player in the game world.
 * `Player.Currency` gets or sets the amount of coin this Player has.
 * `Player.UniverseScore` gets or sets the amount of universe score this Player has.
 * `Player.Level` gets or sets the level of this Player. This will set `Player.UniverseScore` to the score required for this level.
+* `Player.Perspective` gets the controller for what this Player can see in the game world. (Readonly)
+
+<hr>
+
+##### Perspective
+A controller for what a Player can see in the game world.
+
+###### Properties
+* `Perspecive.LoadedObjects` gets all the GameObjects this player views in the game world. (Readonly)
+* `Perspecive.MaskFilter` gets the filter handling masking. (Readonly)
+
+<hr>
+
+##### MaskFilter
+The filter handling the Player mask, or in other words, what layers this player will view in the game world.
+
+###### Properties
+* `MaskFilter.ViewMask` gets or sets the bitmap of layers this player will view (64-bit). The bit
+operations on this mask are overwritten: `+=` adds a layer, `-=` removes a layer.
+
+###### Example
+`````python
+def hide_smashables(player):
+    perspective = player.Perspective
+
+    filter = perspective.MaskFilter
+
+    filter.ViewMask -= Layer.Smashable
+
+def view_smashables(player):
+    perspective = player.Perspective
+
+    filter = perspective.MaskFilter
+
+    filter.ViewMask += Layer.Smashable
+`````
 
 <hr>
 
@@ -171,8 +246,8 @@ A Player in the game world.
 A Component attached to a GameObject.
 
 ###### Properties
-* `Component.GameObject` gets the GameObject this Component is attached to.
-* `Component.Transform` gets the Transform component attached to the GameObject this Component is attached to.
+* `Component.GameObject` gets the GameObject this Component is attached to. (Readonly)
+* `Component.Transform` gets the Transform component attached to the GameObject this Component is attached to. (Readonly)
 
 <hr>
 
@@ -185,16 +260,16 @@ A Component that holds positional, rotational, and hierarchical information abou
     ```python
     def move_game_object(game_object, x, y, z):
         vector = Vector3(x, y, z)
-
+        
         game_object.Transform.Position += vector
-  
+        
         Serialize(game_object)
     ```
 * `Transform.Rotation` gets or sets the rotation of the GameObject. This is a Quaternion.
 * `Transform.EulerAngles` gets or sets the euler angles.
 * `Transform.Scale` gets or sets the scale of the GameObject. Cannot be updated in the game world once constructed.
 * `Transform.Parent` gets or sets the Transform the GameObject is a child to.
-* `Transform.Children` gets all the children of this Transform.
+* `Transform.Children` gets all the children of this Transform. (Readonly)
 
 ###### Methods
 * `Transform.Translate(Vector3)` moves the GameObject in the game world.
@@ -250,6 +325,23 @@ A Component responsible for keeping managing a GameObject's stats.
 ##### Methods:
 * `Stats.Damage(damage, source)` does damage calculations on a GameObject.
 * `Stats.Heal(damage)` does healing calculations on a GameObject.
+
+<hr>
+
+#### DestructibleComponent : Component
+A Component where you can smash a GameObject.
+
+##### Methods
+* `DestructibleComponent.Smash(smasher, <optional> loot_owner, <optional> animation)` smashes this GameObject and drops coins and currency based upon the
+GameObject's drop table. Players will drop 10% of their coin up to 10000.
+
+##### Example
+```python
+def smash_object(game_object, smasher):
+    component = GetComponent(game_object, "DestructibleComponent")
+
+    component.Smash(game_object, smasher)
+```
 
 <hr>
 

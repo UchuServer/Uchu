@@ -98,11 +98,11 @@ namespace Uchu.World
         {
         }
 
-        public void Smash(GameObject killer, Player lootOwner = default, string animation = default)
+        public void Smash(GameObject smasher, Player lootOwner = default, string animation = default)
         {
             if (!Alive) return;
 
-            lootOwner ??= killer as Player;
+            lootOwner ??= smasher as Player;
 
             Alive = false;
             
@@ -110,7 +110,7 @@ namespace Uchu.World
             {
                 Associate = GameObject,
                 DeathType = animation ?? "",
-                Killer = killer,
+                Killer = smasher,
                 SpawnLoot = false,
                 LootOwner = lootOwner ?? GameObject
             });
@@ -135,7 +135,7 @@ namespace Uchu.World
 
             if (lootOwner == default)
             {
-                OnSmashed.Invoke(killer, default);
+                OnSmashed.Invoke(smasher, default);
                 
                 return;
             }
@@ -202,7 +202,7 @@ namespace Uchu.World
                 InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
             }
 
-            OnSmashed.Invoke(killer, lootOwner);
+            OnSmashed.Invoke(smasher, lootOwner);
         }
 
         public void Resurrect()
