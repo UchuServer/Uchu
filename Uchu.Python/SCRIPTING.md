@@ -165,7 +165,7 @@ A GameObject is any object present in the game world, visible or not.
 * `Create(Lot, Vector3, Quaternion)` gets a new GameObject from a Lot and place on world.
 * `Construct(GameObject)` adds this GameObject in game world.
     ###### Example
-    ```
+    ```python
     def new_game_object(lot, x, y, z):
         game_object = Create(lot, Vector3(x, y, z), Quaternion(0, 0, 0, 1))
   
