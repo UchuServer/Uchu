@@ -297,25 +297,25 @@ A Component responsible for managing Player's inventory.
 
 <hr>
 
-#### Item : GameObject
+##### Item : GameObject
 An item stack in a Player's inventory.
 
-##### Properties
+###### Properties
 * `Item.ItemComponent` gets the client's item information on for this object. (Readonly)
 * `Item.Inventory` gets the Inventory this Item is in. (Readonly)
 * `Item.Player` gets the Player this Item belongs to. (Readonly)
 * `Item.Count` gets or sets the amount of items in this stack. You should normally use `InventoryManagerComponent.AddItemAsync(Lot, Count)` to add items.
 
-##### Methods
+###### Methods
 * `Item.EquipAsync()` equips this item onto the Player.
 * `Item.UnEquipAsync()` un-equips this item from the Player.
 
 <hr>
 
-#### Stats : Component
+##### Stats : Component
 A Component responsible for keeping managing a GameObject's stats.
 
-##### Properties
+###### Properties
 * `Stats.Health` gets or sets the GameObject's health.
 * `Stats.MaxHealth` gets or sets the GameObject's max health.
 * `Stats.Armor` gets or sets the GameObject's armor.
@@ -323,20 +323,20 @@ A Component responsible for keeping managing a GameObject's stats.
 * `Stats.Imagination` gets or sets the GameObject's imagination.
 * `Stats.MaxImagination` gets or sets the GameObject's max imagination.
 
-##### Methods:
+###### Methods:
 * `Stats.Damage(damage, source)` does damage calculations on a GameObject.
 * `Stats.Heal(damage)` does healing calculations on a GameObject.
 
 <hr>
 
-#### DestructibleComponent : Component
+##### DestructibleComponent : Component
 A Component where you can smash a GameObject.
 
-##### Methods
+###### Methods
 * `DestructibleComponent.Smash(smasher, <optional> loot_owner, <optional> animation)` smashes this GameObject and drops coins and currency based upon the
 GameObject's drop table. Players will drop 10% of their coin up to 10000.
 
-##### Example
+###### Example
 ```python
 def smash_object(game_object, smasher):
     component = GetComponent(game_object, "DestructibleComponent")
