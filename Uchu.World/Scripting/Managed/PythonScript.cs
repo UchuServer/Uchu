@@ -67,47 +67,48 @@ namespace Uchu.World.Scripting.Managed
                         player.SendChatMessage(obj, PlayerChatChannel.Normal);
                     }
                 }),
-                ["OnTick"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnTick, action)),
-                ["OnStart"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnStart, action)),
-                ["OnDestroy"] = new Action<GameObject, Action>((gameObject, action) => Listen(gameObject.OnDestroyed, action)),
-                ["OnInteract"] = new Action<GameObject, Action<Player>>((gameObject, action) => Listen(gameObject.OnInteract, action)),
-                ["OnHealth"] = new Action<GameObject, Action<int, int, GameObject>>((gameObject, action) =>
+                ["OnTick"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnTick, action)),
+                ["OnStart"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnStart, action)),
+                ["OnDestroy"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnDestroyed, action)),
+                ["OnInteract"] = new Func<GameObject, Action<Player>, Delegate>((gameObject, action) => Listen(gameObject.OnInteract, action)),
+                ["OnHealth"] = new Func<GameObject, Action<int, int, GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
 
-                    Listen(stats.OnHealthChanged, (newHealth, delta) =>
+                    return Listen(stats.OnHealthChanged, (newHealth, delta) =>
                     {
                         action((int) newHealth, delta, stats.LatestDamageSource);
                         
                         return Task.CompletedTask;
                     });
                 }),
-                ["OnArmor"] = new Action<GameObject, Action<int, int, GameObject>>((gameObject, action) =>
+                ["OnArmor"] = new Func<GameObject, Action<int, int, GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
 
-                    Listen(stats.OnArmorChanged, (newArmor, delta) =>
+                    return Listen(stats.OnArmorChanged, (newArmor, delta) =>
                     {
                         action((int) newArmor, delta, stats.LatestDamageSource);
                         
                         return Task.CompletedTask;
                     });
                 }),
-                ["OnDeath"] = new Action<GameObject, Action<GameObject>>((gameObject, action) =>
+                ["OnDeath"] = new Func<GameObject, Action<GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return;
+                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
                     
-                    Listen(stats.OnDeath, () => { action(stats.LatestDamageSource); });
+                    return Listen(stats.OnDeath, () => { action(stats.LatestDamageSource); });
                 }),
-                ["OnChat"] = new Action<Action<Player, string>>(action =>
+                ["OnChat"] = new Func<Action<Player, string>, Delegate>(action =>
                 {
-                    Listen(Zone.OnChatMessage, (player, message) =>
+                    return Listen(Zone.OnChatMessage, (player, message) =>
                     {
                         action(player, message);
                         
                         return Task.CompletedTask;
                     });
                 }),
+                ["Release"] = new Action<Delegate>(ReleaseListener),
                 ["Drop"] = new Action<int, Vector3, GameObject, Player>((lot, position, source, player) =>
                 {
                     var loot = InstancingUtil.Loot(lot, player, source, position);

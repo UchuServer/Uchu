@@ -51,6 +51,10 @@ Uchu provides multiple resources to your scripts which they can utilize to inter
 <hr>
 
 ##### Global Events
+Events are a tool to hook up functions to be called when something happens.
+
+###### Setup events
+Binds a function to be called once a event is invoked. All of these functions return a `reference` you can use unbind the event.
 * `OnStart(Object, function)` binds the function to being called when the Object is started.
 * `OnDestroy(Object, function)` binds the function to being called when the Object is destroyed.
 * `OnTick(Object, function)` binds the function to being called every server tick on the Object.
@@ -59,6 +63,9 @@ Uchu provides multiple resources to your scripts which they can utilize to inter
 * `OnArmor(GameObject, function(armor, delta, source-game-object))` binds the function to being called when the GameObject's armor is changed.
 * `OnDeath(GameObject, function(smasher-game-object))` binds the function to being called when the GameObject is smashed.
 * `OnChat(function(player, message))` binds the function to being called when a Player sends a chat message.
+
+###### Release events
+* `Release(reference)` unbinds a function from being called once a event is invoked.
 
 <hr>
 
@@ -87,6 +94,7 @@ The bit operations on this mask are overwritten: `+=` adds a layer, `-=` removes
     * `Layer.Spawner = 1 << 6`
     * `Layer.Hidden = 1 << 7` this layer should be used to hide objects from the players.
     * `Layer.All = (64-bit max value)`
+
 <hr>
 
 ##### Zone
