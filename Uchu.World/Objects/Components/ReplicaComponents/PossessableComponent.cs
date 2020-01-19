@@ -2,7 +2,7 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    public class PossesableComponent : ReplicaComponent
+    public class PossessableComponent : ReplicaComponent
     {
         public GameObject Driver { get; set; }
 
@@ -17,9 +17,8 @@ namespace Uchu.World
         {
             writer.Write(true);
 
-            var hasDriver = Driver != null;
-            writer.WriteBit(hasDriver);
-            if (hasDriver) writer.Write(Driver);
+            if (writer.Flag(Driver != default))
+                writer.Write(Driver);
 
             writer.WriteBit(false);
             writer.WriteBit(false);

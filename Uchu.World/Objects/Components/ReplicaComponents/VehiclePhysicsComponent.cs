@@ -6,10 +6,12 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.VehiclePhysicsComponent;
 
+        public byte ControlScheme { get; set; } = 5;
+        
         public override void Construct(BitWriter writer)
         {
-            writer.Write<byte>(0);
-            writer.WriteBit(false);
+            writer.Write(ControlScheme);
+            writer.WriteBit(true);
 
             Serialize(writer);
         }

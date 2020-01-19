@@ -240,7 +240,7 @@ namespace Uchu.World
             instance.AddComponent<LuaScriptComponent>();
             instance.AddComponent<SkillComponent>();
             instance.AddComponent<RendererComponent>();
-            instance.AddComponent<Component107>();
+            instance.AddComponent<PossessableOccupantComponent>();
             
             controllablePhysics.HasPosition = true;
             stats.HasStats = true;

@@ -16,8 +16,14 @@ namespace Uchu.World
         public uint EffectType { get; set; }
 
         public float EffectAmount { get; set; }
+        
+        public bool AffectedByDistance { get; set; }
 
-        public Vector3? EffectDirection { get; set; } = null;
+        public float MinDistance { get; set; }
+        
+        public float MaxDistance { get; set; }
+        
+        public Vector3 EffectDirection { get; set; }
         
         public override void Construct(BitWriter writer)
         {
@@ -26,30 +32,28 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.WriteBit(HasPosition);
-
-            if (HasPosition)
+            if (writer.Flag(HasPosition))
             {
                 writer.Write(Transform.Position);
                 writer.Write(Transform.Rotation);
             }
 
             writer.WriteBit(true);
-            writer.WriteBit(IsEffectActive);
-
-            if (!IsEffectActive) return;
+            
+            if (!writer.Flag(IsEffectActive)) return;
 
             writer.Write(EffectType);
             writer.Write(EffectAmount);
-            writer.WriteBit(false);
 
-            var hasDirection = EffectDirection != null;
+            if (writer.Flag(AffectedByDistance))
+            {
+                writer.Write(MinDistance);
+                writer.Write(MaxDistance);
+            }
 
-            writer.WriteBit(hasDirection);
+            if (!writer.Flag(EffectDirection != Vector3.Zero)) return;
 
-            if (!hasDirection) return;
-
-            writer.Write(EffectDirection.Value * EffectAmount);
+            writer.Write(EffectDirection * EffectAmount);
         }
     }
 }
