@@ -18,7 +18,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
                 var questInventory = player.GetComponent<MissionInventoryComponent>();
 
-                questInventory.UpdateObjectTask(MissionTaskType.Script, 5652);
+                await questInventory.ScriptAsync(5652);
             });
             
             return Task.CompletedTask;

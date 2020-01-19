@@ -12,10 +12,8 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.SendChatMessage($"Interacted with {message.TargetObject}");
             
-            player.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
-                MissionTaskType.Interact,
-                message.TargetObject.Lot,
-                message.TargetObject
+            await player.GetComponent<MissionInventoryComponent>().GoToNpcAsync(
+                message.TargetObject.Lot
             );
 
             if (message.IsMultiInteract)
@@ -87,7 +85,7 @@ namespace Uchu.World.Handlers.GameMessages
 
             if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
             {
-                missionInventoryComponent.UpdateObjectTask(MissionTaskType.UseEmote, message.EmoteId, message.Target);
+                await missionInventoryComponent.UseEmoteAsync(message.Target, message.EmoteId);
             }
             
             if (message.Target != default)
