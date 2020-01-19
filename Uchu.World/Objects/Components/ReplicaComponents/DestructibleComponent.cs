@@ -7,7 +7,7 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
-    [RequireComponent(typeof(StatsComponent))]
+    [RequireComponent(typeof(Stats))]
     public class DestructibleComponent : ReplicaComponent
     {
         private readonly Random _random;
@@ -60,7 +60,7 @@ namespace Uchu.World
                         Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
                 }
 
-                foreach (var stats in GameObject.GetComponents<StatsComponent>()) stats.HasStats = false;
+                foreach (var stats in GameObject.GetComponents<Stats>()) stats.HasStats = false;
                 
                 if (GameObject.TryGetComponent(out _stats))
                 {
@@ -92,10 +92,13 @@ namespace Uchu.World
         {
             writer.WriteBit(false);
             writer.WriteBit(false);
+            
+            GameObject.GetComponent<Stats>().Construct(writer);
         }
 
         public override void Serialize(BitWriter writer)
         {
+            GameObject.GetComponent<Stats>().Serialize(writer);
         }
 
         public void Smash(GameObject smasher, Player lootOwner = default, string animation = default)

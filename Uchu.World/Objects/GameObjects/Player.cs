@@ -233,7 +233,7 @@ namespace Uchu.World
             
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
             instance.AddComponent<DestructibleComponent>();
-            var stats = instance.GetComponent<StatsComponent>();
+            var stats = instance.GetComponent<Stats>();
             var characterComponent = instance.AddComponent<CharacterComponent>();
             var inventory = instance.AddComponent<InventoryComponent>();
             

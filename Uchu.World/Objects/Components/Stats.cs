@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 
@@ -20,6 +21,16 @@ namespace Uchu.World
         private uint _imagination;
 
         private uint _maxImagination;
+        
+        public int[] Factions { get; set; } = new int[0];
+        
+        public uint DamageAbsorptionPoints { get; set; }
+        
+        public bool Immune { get; set; }
+        
+        public bool GameMasterImmune { get; set; }
+        
+        public bool Shielded { get; set; }
 
         public GameObject LatestDamageSource { get; private set; }
 
@@ -143,6 +154,8 @@ namespace Uchu.World
         }
 
         public bool Smashable { get; set; }
+        
+        public bool HasStats { get; set; }
 
         /// <summary>
         /// New Health, Delta
@@ -182,6 +195,16 @@ namespace Uchu.World
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
+                
+                using var cdClient = new CdClientContext();
+
+                var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
+                    c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+                );
+                
+                if (destroyable == default) return;
+
+                Factions = new[] {destroyable.Faction ?? 1};
             });
 
             Listen(OnDestroyed, () =>
@@ -364,6 +387,69 @@ namespace Uchu.World
 
             _imagination = (uint) character.CurrentImagination;
             _maxImagination = (uint) character.BaseImagination;
+        }
+        
+        public void Construct(BitWriter writer)
+        {
+            writer.WriteBit(true);
+
+            for (var i = 0; i < 9; i++) writer.Write<uint>(0);
+
+            WriteStats(writer);
+
+            if (HasStats)
+            {
+                writer.WriteBit(false);
+                writer.WriteBit(false);
+
+                if (Smashable)
+                {
+                    writer.WriteBit(false);
+                    writer.WriteBit(false);
+                }
+            }
+
+            writer.WriteBit(true);
+            writer.WriteBit(false);
+        }
+
+        public void Serialize(BitWriter writer)
+        {
+            WriteStats(writer);
+
+            writer.WriteBit(true);
+            writer.WriteBit(false);
+        }
+
+        private void WriteStats(BitWriter writer)
+        {
+            writer.WriteBit(HasStats);
+
+            if (!HasStats) return;
+
+            writer.Write(Health);
+            writer.Write<float>(MaxHealth);
+
+            writer.Write(Armor);
+            writer.Write<float>(MaxArmor);
+
+            writer.Write(Imagination);
+            writer.Write<float>(MaxImagination);
+
+            writer.Write(DamageAbsorptionPoints);
+            writer.WriteBit(Immune);
+            writer.WriteBit(GameMasterImmune);
+            writer.WriteBit(Shielded);
+
+            writer.Write<float>(MaxHealth);
+            writer.Write<float>(MaxArmor);
+            writer.Write<float>(MaxImagination);
+
+            writer.Write((uint) Factions.Length);
+
+            foreach (var faction in Factions) writer.Write(faction);
+
+            writer.WriteBit(Smashable && !GameObject.TryGetComponent<QuickBuildComponent>(out _));
         }
     }
 }

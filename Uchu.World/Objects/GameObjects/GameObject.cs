@@ -160,6 +160,8 @@ namespace Uchu.World
 
         public Component AddComponent(Type type)
         {
+            if (TryGetComponent(type, out var addedComponent)) return addedComponent;
+            
             if (Object.Instantiate(type, Zone) is Component component)
             {
                 component.GameObject = this;

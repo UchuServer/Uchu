@@ -10,7 +10,7 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
-    [RequireComponent(typeof(StatsComponent), true)]
+    [RequireComponent(typeof(Stats))]
     public class QuickBuildComponent : ScriptedActivityComponent
     {
         private float _completeTime;
@@ -107,7 +107,11 @@ namespace Uchu.World
         
         public override void Construct(BitWriter writer)
         {
-            Serialize(writer);
+            if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
+                !GameObject.TryGetComponent<CollectibleComponent>(out _))
+                GameObject.GetComponent<Stats>().Construct(writer);
+            
+            SerializeQuickBuild(writer);
 
             writer.WriteBit(false);
 
@@ -118,8 +122,17 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            base.Serialize(writer);
+            if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
+                !GameObject.TryGetComponent<CollectibleComponent>(out _))
+                GameObject.GetComponent<Stats>().Serialize(writer);
 
+            SerializeQuickBuild(writer);
+        }
+
+        private void SerializeQuickBuild(BitWriter writer)
+        {
+            base.Serialize(writer);
+            
             writer.WriteBit(true);
 
             writer.Write((uint) State);

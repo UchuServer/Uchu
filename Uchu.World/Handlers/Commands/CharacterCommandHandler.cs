@@ -232,7 +232,7 @@ namespace Uchu.World.Handlers.Commands
             {
                 info.Append($"\n{component.GetType().Name}");
 
-                if (component is StatsComponent stats)
+                if (component is Stats stats)
                 {
                     info.Append($" {stats.HasStats}");
                 }

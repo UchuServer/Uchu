@@ -17,6 +17,8 @@ namespace Uchu.World.Filters
 
         public bool View(GameObject gameObject)
         {
+            if (gameObject.ClientName == "3D Ambient Sound") return false;
+            
             return gameObject.Layer == ViewMask;
         }
     }
