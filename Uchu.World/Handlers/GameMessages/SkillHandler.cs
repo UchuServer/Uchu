@@ -38,6 +38,12 @@ namespace Uchu.World.Handlers.GameMessages
         {
             player.GetComponent<SkillComponent>().SelectedConsumeable = message.Lot;
         }
+
+        [PacketHandler]
+        public async Task ClientItemConsumedHandler(ClientItemConsumedMessage message, Player player)
+        {
+            await player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(message.Item.Lot);
+        }
         
         [PacketHandler]
         public void SelectSkillHandler(SelectSkillMessage message, Player player)

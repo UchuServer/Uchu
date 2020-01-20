@@ -304,9 +304,9 @@ namespace Uchu.World.MissionSystem
                 foreach (var (rewardLot, rewardCount) in rewards)
                 {
                     var lot = rewardLot;
-                    var count = rewardCount;
+                    var count = Math.Max(rewardCount, 1);
                     
-                    if (lot == default || count == default) continue;
+                    if (lot == default) continue;
 
                     if (isMission)
                     {
@@ -330,7 +330,9 @@ namespace Uchu.World.MissionSystem
             {
                 var (lot, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
 
-                if (lot != default && count != default)
+                count = Math.Max(count, 1);
+                
+                if (lot != default)
                 {
                     var _ = Task.Run(async () =>
                     {

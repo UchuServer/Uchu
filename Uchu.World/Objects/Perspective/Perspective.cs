@@ -34,7 +34,7 @@ namespace Uchu.World
 
         internal bool Reveal(GameObject gameObject, out ushort networkId)
         {
-            lock (gameObject)
+            lock (_networkDictionary)
             {
                 if (!gameObject.Alive || _networkDictionary.ContainsKey(gameObject))
                 {
@@ -57,7 +57,7 @@ namespace Uchu.World
 
         internal void Drop(GameObject gameObject)
         {
-            lock (gameObject)
+            lock (_networkDictionary)
             {
                 if (!_networkDictionary.TryGetValue(gameObject, out var id)) return;
                 _droppedIds.Push(id);
@@ -72,7 +72,10 @@ namespace Uchu.World
 
         internal bool TryGetNetworkId(GameObject gameObject, out ushort id)
         {
-            return _networkDictionary.TryGetValue(gameObject, out id);
+            lock (_networkDictionary)
+            {
+                return _networkDictionary.TryGetValue(gameObject, out id);
+            }
         }
 
         internal async Task TickAsync()

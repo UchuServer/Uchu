@@ -73,6 +73,8 @@ namespace Uchu.World
         //
 
         public AsyncEvent<Player> OnPlayerLoad { get; } = new AsyncEvent<Player>();
+
+        public Event<Object> OnObject { get; } = new Event<Object>();
         
         public AsyncEvent<Player, string> OnChatMessage { get; } = new AsyncEvent<Player, string>();
 
@@ -273,7 +275,12 @@ namespace Uchu.World
 
         internal void RegisterObject(Object obj)
         {
-            if (!_managedObjects.Contains(obj)) _managedObjects.Add(obj);
+            if (!_managedObjects.Contains(obj))
+            {
+                OnObject.Invoke(obj);
+                
+                _managedObjects.Add(obj);
+            }
         }
 
         internal void UnregisterObject(Object obj)

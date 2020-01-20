@@ -28,6 +28,8 @@ namespace Uchu.StandardScripts.AvantGardens
                     Task.Run(async () =>
                     {
                         await Task.Delay(20000);
+                        
+                        quickBuild.GetComponent<DestructibleComponent>().Smash(quickBuild, lootOwner);
 
                         Destroy(quickBuild);
                     });

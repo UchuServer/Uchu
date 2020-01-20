@@ -25,5 +25,29 @@ namespace Uchu.World.Behaviors
             SpawnActionFail = await GetBehavior("spawn_fail_action");
             UpdatePositionWithParent = await GetParameter<int>("updatePositionWithParent");
         }
+
+        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+             await base.ExecuteAsync(context, branchContext);
+
+             var obj = GameObject.Instantiate<AuthoredGameObject>(
+                 context.Associate.Zone,
+                 Lot,
+                 context.Associate.Transform.Position,
+                 context.Associate.Transform.Rotation
+             );
+
+             obj.Author = context.Associate;
+
+             Object.Start(obj);
+             GameObject.Construct(obj);
+
+             var _ = Task.Run(async () =>
+             {
+                 await Task.Delay(branchContext.Duration);
+
+                 Object.Destroy(obj);
+             });
+        }
     }
 }
