@@ -27,7 +27,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
                     Task.Run(async () =>
                     {
-                        await Task.Delay(10000); // TODO: Find real number
+                        await Task.Delay(20000);
 
                         Destroy(quickBuild);
                     });

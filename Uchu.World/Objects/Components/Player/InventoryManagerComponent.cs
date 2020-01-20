@@ -51,6 +51,10 @@ namespace Uchu.World
 
         public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
 
+        public Inventory[] Inventories => _inventories.Values.ToArray();
+
+        public Item[] Items => _inventories.Values.SelectMany(i => i.Items).ToArray();
+
         #region Find Item
 
         public Item FindItem(long id)
