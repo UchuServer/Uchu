@@ -122,6 +122,26 @@ namespace Uchu.World.MissionSystem
             );
 
             MessageMissionTypeState(MissionLockState.New, clientMission.Definedsubtype, clientMission.Definedtype);
+            
+            var obtainTasks = Tasks.OfType<ObtainItemTask>().ToList();
+            
+            if (obtainTasks.Count == default) return;
+            
+            if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventoryManagerComponent)) return;
+
+            var items = inventoryManagerComponent.Items;
+
+            foreach (var task in obtainTasks)
+            {
+                var toGive = items.Where(i => task.Targets.Contains((int) i.Lot)).Sum(i => i.Count);
+
+                for (var i = 0; i < toGive; i++)
+                {
+                    await task.Progress(task.Target);
+                    
+                    if (await task.IsCompleteAsync()) break;
+                }
+            }
         }
 
         public async Task CompleteAsync(int rewardItem = default)
@@ -181,8 +201,6 @@ namespace Uchu.World.MissionSystem
             //
 
             await UpdateMissionStateAsync(MissionState.Completed);
-
-            Player.SendChatMessage($"Completing mission: {MissionId}: {rewardItem}", PlayerChatChannel.Normal);
 
             var _ = Task.Run(async () =>
             {
@@ -266,11 +284,6 @@ namespace Uchu.World.MissionSystem
                     (repeat ? clientMission.Rewarditem4repeatcount : clientMission.Rewarditem4count) ?? 1),
             };
 
-            foreach (var (lot, count) in rewards)
-            {
-                Player.SendChatMessage($"Reward: {lot} x {count}", PlayerChatChannel.Normal);
-            }
-
             var emotes = new[]
             {
                 clientMission.Rewardemote ?? -1,
@@ -292,8 +305,6 @@ namespace Uchu.World.MissionSystem
                 {
                     var lot = rewardLot;
                     var count = rewardCount;
-                    
-                    Player.SendChatMessage($"Sending: {lot} x {count}", PlayerChatChannel.Normal);
                     
                     if (lot == default || count == default) continue;
 
