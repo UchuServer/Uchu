@@ -23,14 +23,12 @@ namespace Uchu.StandardScripts.General
 
                 var flag = 10000 + (int) Zone.ZoneId + id;
                 
-                Listen(gameObject.OnInteract, player =>
+                Listen(gameObject.OnInteract, async player =>
                 {
                     player.SendChatMessage($"PLQ: {flag}");
                     
-                    player.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
-                        MissionTaskType.Flag,
-                        flag,
-                        gameObject
+                    await player.GetComponent<MissionInventoryComponent>().FlagAsync(
+                        flag
                     );
                     
                     player.Message(new NotifyClientFlagChangeMessage

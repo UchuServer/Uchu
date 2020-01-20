@@ -336,11 +336,10 @@ namespace Uchu.World
             GameObject.Serialize(GameObject);
 
             // Update any mission task that required this quickbuild.
-            player.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
-                MissionTaskType.QuickBuild,
-                GameObject.Lot,
-                GameObject
-            );
+            Task.Run(async () =>
+            {
+                await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot);
+            });
 
             /*
              * Reset this quickbuild after three times its completion time.

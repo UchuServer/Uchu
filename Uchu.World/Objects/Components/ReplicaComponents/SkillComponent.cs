@@ -191,8 +191,8 @@ namespace Uchu.World
                 }, As<Player>());
             }
 
-            GameObject.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
-                MissionTaskType.UseSkill, message.SkillId
+            await GameObject.GetComponent<MissionInventoryComponent>().UseSkillAsync(
+                message.SkillId
             );
         }
 
