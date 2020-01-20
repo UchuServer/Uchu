@@ -25,6 +25,8 @@ namespace Uchu.Master
         
         public static string CdClientPath { get; set; }
         
+        public static bool Running { get; set; }
+        
         private static async Task Main(string[] args)
         {
             await OpenConfig();
@@ -62,11 +64,15 @@ namespace Uchu.Master
 
             AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
 
+            Running = true;
+
             await HandleRequests();
         }
 
         private static void ShutdownProcesses(object _, EventArgs ev)
         {
+            Running = false;
+            
             if (!AuthenticationServer.Process.HasExited)
                 AuthenticationServer.Process.Kill();
 
@@ -87,9 +93,11 @@ namespace Uchu.Master
 
         private static async Task HandleRequests()
         {
-            while (true)
+            while (Running)
             {
                 await Task.Delay(50);
+                
+                if (!Running) return;
 
                 await using var ctx = new UchuContext();
 
