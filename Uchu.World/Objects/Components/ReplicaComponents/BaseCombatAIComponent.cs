@@ -12,23 +12,6 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.BaseCombatAIComponent;
 
-        protected BaseCombatAiComponent()
-        {
-            Listen(OnStart, () =>
-            {
-                if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
-                
-                Listen(destructibleComponent.OnSmashed, async (killer, owner) =>
-                {
-                    owner.GetComponent<MissionInventoryComponent>().UpdateObjectTask(
-                        MissionTaskType.KillEnemy,
-                        GameObject.Lot,
-                        GameObject
-                    );
-                });
-            });
-        }
-        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

@@ -23,6 +23,8 @@ namespace Uchu.Core
 
         public float[] ValueArray() => Values.SelectMany(v => Enumerable.Repeat(v.Value, v.Count)).ToArray();
 
+        public int ValueLength() => Values.Sum(v => v.Count);
+        
         public void Add(float value)
         {
             lock (this)

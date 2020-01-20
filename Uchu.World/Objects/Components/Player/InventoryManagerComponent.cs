@@ -184,10 +184,24 @@ namespace Uchu.World
             As<Player>().SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]", PlayerChatChannel.Normal);
             
             var stackSize = component.StackSize ?? 1;
-                
+            
             // Bricks and alike does not have a stack limit.
             if (stackSize == default) stackSize = int.MaxValue;
+            
+            //
+            // Update quest tasks
+            //
 
+            var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
+
+            for (var i = 0; i < count; i++)
+            {
+                Detach(async () =>
+                {
+                    await questInventory.ObtainItemAsync(lot);
+                });
+            }
+            
             //
             // Fill stacks
             //
@@ -223,20 +237,6 @@ namespace Uchu.World
 
                     toCreate -= toAdd;
                 }
-            }
-            
-            //
-            // Update quest tasks
-            //
-
-            var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
-
-            for (var i = 0; i < count; i++)
-            {
-                Detach(() =>
-                {
-                    questInventory.UpdateObjectTask(MissionTaskType.ObtainItem, lot);
-                });
             }
         }
 

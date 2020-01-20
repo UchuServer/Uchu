@@ -14,19 +14,17 @@ namespace Uchu.StandardScripts.VentureExplorer
             {
                 var inventory = player.GetComponent<InventoryManagerComponent>();
                 
-                Listen(inventory.OnLotAdded, (lot, count) =>
+                Listen(inventory.OnLotAdded, async (lot, count) =>
                 {
                     Logger.Information($"PICKUP: {lot}");
-                    
-                    if (lot != Lot.ModularRocket) return Task.CompletedTask;
+
+                    if (lot != Lot.ModularRocket) return;
 
                     Logger.Information($"UPDATING FOR: {lot}");
                     
                     var questInventory = player.GetComponent<MissionInventoryComponent>();
 
-                    questInventory.UpdateObjectTask(MissionTaskType.Flag, 44);
-                    
-                    return Task.CompletedTask;
+                    await questInventory.FlagAsync(44);
                 });
                 
                 return Task.CompletedTask;

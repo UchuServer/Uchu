@@ -107,6 +107,18 @@ namespace Uchu.World
 
             lootOwner ??= smasher as Player;
 
+            if (lootOwner != default)
+            {
+                Task.Run(async () =>
+                {
+                    var missionInventoryComponent = lootOwner.GetComponent<MissionInventoryComponent>();
+                    
+                    if (missionInventoryComponent == default) return;
+                    
+                    await missionInventoryComponent.SmashAsync(GameObject.Lot);
+                });
+            }
+
             Alive = false;
             
             Zone.BroadcastMessage(new DieMessage
