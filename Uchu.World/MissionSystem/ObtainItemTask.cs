@@ -12,6 +12,9 @@ namespace Uchu.World.MissionSystem
             if (!Targets.Contains(lot)) return;
 
             await AddProgressAsync(lot);
+            
+            if (await IsCompleteAsync())
+                await CheckMissionCompleteAsync();
         }
     }
 }

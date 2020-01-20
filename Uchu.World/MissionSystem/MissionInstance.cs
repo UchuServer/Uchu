@@ -160,6 +160,16 @@ namespace Uchu.World.MissionSystem
             
             if (mission.State == (int) MissionState.Completed) return;
             
+            //
+            // Update player based on rewards.
+            //
+
+            await SendRewardsAsync(rewardItem);
+            
+            //
+            // Set complete state
+            //
+            
             mission.CompletionCount++;
             mission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
             mission.State = (int) MissionState.Completed;
@@ -172,11 +182,7 @@ namespace Uchu.World.MissionSystem
 
             await UpdateMissionStateAsync(MissionState.Completed);
 
-            //
-            // Update player based on rewards.
-            //
-
-            await SendRewardsAsync(rewardItem);
+            Player.SendChatMessage($"Completing mission: {MissionId}: {rewardItem}", PlayerChatChannel.Normal);
 
             var _ = Task.Run(async () =>
             {
@@ -260,6 +266,11 @@ namespace Uchu.World.MissionSystem
                     (repeat ? clientMission.Rewarditem4repeatcount : clientMission.Rewarditem4count) ?? 1),
             };
 
+            foreach (var (lot, count) in rewards)
+            {
+                Player.SendChatMessage($"Reward: {lot} x {count}", PlayerChatChannel.Normal);
+            }
+
             var emotes = new[]
             {
                 clientMission.Rewardemote ?? -1,
@@ -281,6 +292,8 @@ namespace Uchu.World.MissionSystem
                 {
                     var lot = rewardLot;
                     var count = rewardCount;
+                    
+                    Player.SendChatMessage($"Sending: {lot} x {count}", PlayerChatChannel.Normal);
                     
                     if (lot == default || count == default) continue;
 
@@ -336,7 +349,7 @@ namespace Uchu.World.MissionSystem
                 m => m.Id == MissionId
             );
 
-            if (clientMission.IsMission ?? false)
+            if (clientMission.IsMission ?? true)
             {
                 await UpdateMissionStateAsync(MissionState.ReadyToComplete);
                 

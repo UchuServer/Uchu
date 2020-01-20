@@ -23,6 +23,9 @@ namespace Uchu.World.MissionSystem
             if (progress.Contains(id)) return;
 
             await AddProgressAsync(id);
+            
+            if (await IsCompleteAsync())
+                await CheckMissionCompleteAsync();
         }
     }
 }

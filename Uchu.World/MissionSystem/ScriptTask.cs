@@ -16,6 +16,9 @@ namespace Uchu.World.MissionSystem
         public async Task Progress(int id)
         {
             await AddProgressAsync(id);
+            
+            if (await IsCompleteAsync())
+                await CheckMissionCompleteAsync();
         }
     }
 }
