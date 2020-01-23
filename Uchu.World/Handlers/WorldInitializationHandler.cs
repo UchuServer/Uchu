@@ -267,23 +267,28 @@ namespace Uchu.World.Handlers
             return new ItemContainerNode
             {
                 Type = (int) type,
-                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i => new ItemNode
+                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i =>
                 {
-                    Count = (int) i.Count,
-                    Slot = i.Slot,
-                    Lot = i.LOT,
-                    ObjectId = i.InventoryItemId,
-                    Equipped = i.IsEquipped ? 1 : 0,
-                    Bound = i.IsBound ? 1 : 0,
+                    var node = new ItemNode
+                    {
+                        Count = (int) i.Count,
+                        Slot = i.Slot,
+                        Lot = i.LOT,
+                        ObjectId = i.InventoryItemId,
+                        Equipped = i.IsEquipped ? 1 : 0,
+                        Bound = i.IsBound ? 1 : 0
+                    };
 
-                    // Only provide extra information for models inventory
-                    ExtraInfo = type == InventoryType.Models && i.ExtraInfo != null
-                        ? new ExtraInfoNode
-                        {
-                            ModuleAssemblyInfo =
-                                "0:" + LegoDataDictionary.FromString(i.ExtraInfo)["assemblyPartLOTs"]
-                        }
-                        : null
+                    if (string.IsNullOrWhiteSpace(i.ExtraInfo)) return node;
+
+                    if (!LegoDataDictionary.FromString(i.ExtraInfo).TryGetValue("assemblyPartLOTs", out var value))
+                        return node;
+
+                    node.ExtraInfo = type == InventoryType.Models ? new ExtraInfoNode {
+                            ModuleAssemblyInfo = "0:" + value
+                    } : null;
+                    
+                    return node;
                 }).ToArray()
             };
         }

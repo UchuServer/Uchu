@@ -16,15 +16,12 @@ namespace Uchu.World
 
         public override bool Equals(object obj)
         {
-            switch (obj)
+            return obj switch
             {
-                case string s:
-                    return s == Location;
-                case EquipLocation l:
-                    return l.Location == Location;
-                default:
-                    return false;
-            }
+                string s => (s == Location),
+                EquipLocation l => (l.Location == Location),
+                _ => false
+            };
         }
 
         public bool Equals(EquipLocation other)
