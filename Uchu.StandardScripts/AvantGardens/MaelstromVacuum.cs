@@ -1,11 +1,13 @@
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
+    [ZoneSpecific(ZoneId.AvantGardens)]
     public class MaelstromVacuum : NativeScript
     {
         public override Task LoadAsync()

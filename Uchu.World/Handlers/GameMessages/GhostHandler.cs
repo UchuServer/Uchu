@@ -8,23 +8,21 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void ToggleGhostReferenceOverrideHandler(ToggleGhostReferenceOverrideMessage message, Player player)
         {
-            if (player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter))
-            {
-                player.SendChatMessage($"Override: {message.Override}");
+            if (!player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter)) return;
+            
+            player.SendChatMessage($"Override: {message.Override}");
                 
-                filter.Override = message.Override;
-            }
+            filter.Override = message.Override;
         }
 
         [PacketHandler]
         public void SetGhostReferencePositionHandler(SetGhostReferencePositionMessage message, Player player)
         {
-            if (player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter))
-            {
-                player.SendChatMessage($"Override position: {message.Position}");
+            if (!player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter)) return;
+            
+            player.SendChatMessage($"Override position: {message.Position}");
                 
-                filter.OverrideReferencePosition = message.Position;
-            }
+            filter.OverrideReferencePosition = message.Position;
         }
     }
 }

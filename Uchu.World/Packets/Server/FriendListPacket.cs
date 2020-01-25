@@ -2,7 +2,7 @@ using System.IO;
 using RakDotNet.IO;
 using Uchu.Core;
 
-namespace Uchu.World.Social
+namespace Uchu.World
 {
     public class FriendListPacket : Packet
     {

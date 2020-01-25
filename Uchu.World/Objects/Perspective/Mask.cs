@@ -66,12 +66,12 @@ namespace Uchu.World
 
         public override bool Equals(object obj)
         {
-            switch (obj)
+            return obj switch
             {
-                case Mask m: return m.Value == Value;
-                case long l: return l == Value;
-                default: return false;
-            }
+                Mask m => (m.Value == Value),
+                long l => (l == Value),
+                _ => false
+            };
         }
 
         public override int GetHashCode()

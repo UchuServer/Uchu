@@ -1,4 +1,4 @@
-namespace Uchu.World.Social
+namespace Uchu.World
 {
     public enum ServerFriendRequestResponse : byte
     {

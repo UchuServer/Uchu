@@ -8,6 +8,8 @@ namespace Uchu.Core
     /// </summary>
     public abstract class Packet : IPacket
     {
+        public IRakConnection Sender { get; set; }
+        
         public abstract RemoteConnectionType RemoteConnectionType { get; }
 
         public abstract uint PacketId { get; }
