@@ -278,75 +278,70 @@ namespace Uchu.World
 
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
+            As<Player>()?.SendChatMessage($"Removing: {lot} x {count} from {inventoryType}");
+            
             OnLotRemoved.Invoke(lot, count);
 
-            // The math here cannot be executed in parallel
-            lock (_lock)
+            using var cdClient = new CdClientContext();
+            
+            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
+            );
+
+            if (componentId == default)
             {
-                using var cdClient = new CdClientContext();
-                
-                var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                    r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-                );
-
-                if (componentId == default)
-                {
-                    Logger.Error($"{lot} does not have a Item component");
-                    return;
-                }
-
-                var component = cdClient.ItemComponentTable.FirstOrDefault(
-                    i => i.Id == componentId.Componentid
-                );
-
-                if (component == default)
-                {
-                    Logger.Error(
-                        $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                    );
-                    return;
-                }
-
-                var items = _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToList();
-
-                //
-                // Sort to make sure we remove from the stacks with the lowest count first.
-                //
-
-                items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
-
-                foreach (var item in items)
-                {
-                    var toRemove = (uint) Min((int) count, (int) item.Count);
-
-                    if (!silent)
-                    {
-                        Detach(() =>
-                        {
-                            item.Count -= toRemove;
-                        });
-                    }
-                    else
-                    {
-                        var storedCount = count;
-                        
-                        Detach(async () =>
-                        {
-                            await item.SetCountSilentAsync(storedCount);
-                        });
-                    }
-
-                    count -= toRemove;
-
-                    if (count != default) continue;
-
-                    return;
-                }
-
-                Logger.Error(
-                    $"Trying to remove {lot} x {count} when {GameObject} does not have that many of {lot} in their {inventoryType} inventory"
-                );
+                Logger.Error($"{lot} does not have a Item component");
+                return;
             }
+
+            var component = cdClient.ItemComponentTable.FirstOrDefault(
+                i => i.Id == componentId.Componentid
+            );
+
+            if (component == default)
+            {
+                Logger.Error(
+                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                );
+                return;
+            }
+
+            var items = _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToList();
+
+            //
+            // Sort to make sure we remove from the stacks with the lowest count first.
+            //
+
+            items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
+
+            foreach (var item in items)
+            {
+                var toRemove = (uint) Min((int) count, (int) item.Count);
+
+                if (!silent)
+                {
+                    item.Count -= toRemove;
+                }
+                else
+                {
+                    var storedCount = item.Count - toRemove;
+                    
+                    Detach(async () =>
+                    {
+                        await item.SetCountSilentAsync(storedCount);
+                    });
+                }
+
+                count -= toRemove;
+
+                if (count != default) continue;
+
+                return;
+            }
+
+            Logger.Error(
+                $"Trying to remove {lot} x {count} when {GameObject} does not have that many of {lot} in their {inventoryType} inventory"
+            );
         }
 
         public void MoveItemsBetweenInventories(Item item, Lot lot, uint count, InventoryType source, InventoryType destination, bool silent = false)

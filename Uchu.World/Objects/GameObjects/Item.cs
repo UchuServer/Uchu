@@ -268,14 +268,16 @@ namespace Uchu.World
                 count = (uint) ItemComponent.StackSize;
             }
 
-            var item = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
-                
+            var item = await ctx.InventoryItems.FirstAsync(i => i.InventoryItemId == ObjectId);
+            
             _count = count;
             item.Count = _count;
-                
-            if (item.Count == default)
+            
+            if (_count == default)
             {
                 ctx.InventoryItems.Remove(item);
+                
+                Destroy(this);
 
                 // Disassemble item.
                 if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))

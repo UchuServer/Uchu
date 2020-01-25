@@ -1,21 +1,21 @@
 using RakDotNet.IO;
 using Uchu.Core;
 
-namespace Uchu.World.Social
+namespace Uchu.World
 {
-    public class RemoveFriendPacket : Packet
+    public class TeamInvitePacket : Packet
     {
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Chat;
 
-        public override uint PacketId => 0x9;
+        public override uint PacketId => 0xF;
 
-        public string FriendName { get; set; }
+        public string InvitedPlayer { get; set; }
 
         public override void Deserialize(BitReader reader)
         {
             reader.Read<ulong>();
 
-            FriendName = reader.ReadString(wide: true);
+            InvitedPlayer = reader.ReadString(wide: true);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Uchu.World.Social
 {
     public class Whitelist
     {
-        private IFileResources _resources;
+        private readonly IFileResources _resources;
         
         public List<string> AcceptedWords { get; }
         
@@ -40,14 +40,10 @@ namespace Uchu.World.Social
             foreach (var word in phrase.Split(" "))
             {
                 var allowed = AcceptedWords.Contains(word);
-                
-                Logger.Information($"WORD: {word} [{allowed}]");
 
                 if (allowed) continue;
 
                 var position = (byte) phrase.IndexOf(word, StringComparison.Ordinal);
-                    
-                Logger.Information($"REDACT: {position} - [{word.Length}]");
                     
                 redact.Add((position, (byte) word.Length));
             }
