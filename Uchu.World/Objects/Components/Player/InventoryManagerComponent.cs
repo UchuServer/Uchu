@@ -145,10 +145,10 @@ namespace Uchu.World
 
             Debug.Assert(component.ItemType != null, "component.ItemType != null");
 
-            AddItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
+            await AddItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
         }
 
-        public void AddItem(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
+        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
         {
             var itemCount = count;
             
@@ -161,7 +161,7 @@ namespace Uchu.World
 
             // The math here cannot be executed in parallel
             
-            using var cdClient = new CdClientContext();
+            await using var cdClient = new CdClientContext();
             
             var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
@@ -200,10 +200,7 @@ namespace Uchu.World
 
             for (var i = 0; i < count; i++)
             {
-                Detach(async () =>
-                {
-                    await questInventory.ObtainItemAsync(lot);
-                });
+                await questInventory.ObtainItemAsync(lot);
             }
             
             //
@@ -344,7 +341,7 @@ namespace Uchu.World
             );
         }
 
-        public void MoveItemsBetweenInventories(Item item, Lot lot, uint count, InventoryType source, InventoryType destination, bool silent = false)
+        public async Task MoveItemsBetweenInventoriesAsync(Item item, Lot lot, uint count, InventoryType source, InventoryType destination, bool silent = false)
         {
             if (item?.Settings != null)
             {
@@ -356,14 +353,14 @@ namespace Uchu.World
                 
                 Destroy(item);
 
-                AddItem(item.Lot, count, destination, item.Settings);
+                await AddItemAsync(item.Lot, count, destination, item.Settings);
                 
                 return;
             }
             
             RemoveItem(item?.Lot ?? lot, count, source, silent);
 
-            AddItem(item?.Lot ?? lot, count, destination);
+            await AddItemAsync(item?.Lot ?? lot, count, destination);
         }
         
         private static int Min(params int[] nums)

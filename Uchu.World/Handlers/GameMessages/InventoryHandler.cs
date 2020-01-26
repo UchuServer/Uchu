@@ -17,11 +17,11 @@ namespace Uchu.World.Handlers.GameMessages
         }
         
         [PacketHandler]
-        public void ItemMoveBetweenInventoriesHandler(MoveItemBetweenInventoryTypesMessage message, Player player)
+        public async Task ItemMoveBetweenInventoriesHandler(MoveItemBetweenInventoryTypesMessage message, Player player)
         {
             player.SendChatMessage($"{message.Item?.Lot ?? message.Lot} {message.SourceInventory} -> {message.DestinationInventory}");
 
-            player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventories(
+            await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
                 message.Item,
                 message.Lot,
                 message.StackCount,
