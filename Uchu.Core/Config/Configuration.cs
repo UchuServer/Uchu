@@ -7,8 +7,9 @@ namespace Uchu.Core
     public class Configuration
     {
         [XmlElement]
-        public DatabaseConfiguration Postgres { get; set; } = new DatabaseConfiguration
+        public DatabaseConfiguration Database { get; set; } = new DatabaseConfiguration
         {
+            Provider = "postgres",
             Database = "uchu",
             Host = "localhost",
             Username = "postgres",
@@ -82,6 +83,8 @@ namespace Uchu.Core
 
     public class DatabaseConfiguration
     {
+        [XmlElement] public string Provider { get; set; }
+        
         [XmlElement] public string Database { get; set; }
 
         [XmlElement] public string Host { get; set; }

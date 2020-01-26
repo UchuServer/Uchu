@@ -13,6 +13,7 @@
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+      <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.6" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
       <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
     </ItemGroup>
@@ -23,6 +24,7 @@
 
     <ItemGroup>
       <Folder Include="Client\Models" />
+      <Folder Include="Migrations\MySql" />
     </ItemGroup>
 
     <ItemGroup>

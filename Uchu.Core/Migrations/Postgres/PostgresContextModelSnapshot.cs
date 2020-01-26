@@ -2,18 +2,16 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Uchu.Core;
+using Uchu.Core.Providers;
 
 namespace Uchu.Core.Migrations
 {
-    [DbContext(typeof(UchuContext))]
-    [Migration("20191227183133_UpdatedTaskValues")]
-    partial class UpdatedTaskValues
+    [DbContext(typeof(PostgresContext))]
+    partial class PostgresContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,6 +310,22 @@ namespace Uchu.Core.Migrations
                     b.ToTable("SessionCaches");
                 });
 
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CharacterId");
+
+                    b.Property<int>("EmoteId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("UnlockedEmote");
+                });
+
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
                     b.Property<long>("UserId")
@@ -322,6 +336,12 @@ namespace Uchu.Core.Migrations
                     b.Property<string>("BannedReason");
 
                     b.Property<int>("CharacterIndex");
+
+                    b.Property<string>("CustomLockout");
+
+                    b.Property<bool>("FirstTimeOnSubscription");
+
+                    b.Property<bool>("FreeToPlay");
 
                     b.Property<int>("GameMasterLevel");
 
@@ -404,6 +424,14 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.MissionTask", "MissionTask")
                         .WithMany("Values")
                         .HasForeignKey("MissionTaskId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "Character")
+                        .WithMany("UnlockedEmotes")
+                        .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

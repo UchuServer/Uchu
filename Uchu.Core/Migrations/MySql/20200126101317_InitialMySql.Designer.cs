@@ -4,22 +4,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Uchu.Core;
+using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations
+namespace Uchu.Core.Migrations.MySql
 {
-    [DbContext(typeof(UchuContext))]
-    [Migration("20200104142332_UpdatedCharacterTable")]
-    partial class UpdatedCharacterTable
+    [DbContext(typeof(MySqlContext))]
+    [Migration("20200126101317_InitialMySql")]
+    partial class InitialMySql
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -62,7 +60,7 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("LastZone");
 
-                    b.Property<int>("LaunchedRocketFrom");
+                    b.Property<ushort>("LaunchedRocketFrom");
 
                     b.Property<long>("Level");
 
@@ -275,19 +273,19 @@ namespace Uchu.Core.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long>("ActiveUserCount");
+                    b.Property<uint>("ActiveUserCount");
 
-                    b.Property<long>("MaxUserCount");
+                    b.Property<uint>("MaxUserCount");
 
                     b.Property<int>("Port");
 
                     b.Property<int>("ServerType");
 
-                    b.Property<long>("ZoneCloneId");
+                    b.Property<uint>("ZoneCloneId");
 
-                    b.Property<int>("ZoneId");
+                    b.Property<ushort>("ZoneId");
 
-                    b.Property<int>("ZoneInstanceId");
+                    b.Property<ushort>("ZoneInstanceId");
 
                     b.HasKey("Id");
 
@@ -312,6 +310,22 @@ namespace Uchu.Core.Migrations
                     b.ToTable("SessionCaches");
                 });
 
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CharacterId");
+
+                    b.Property<int>("EmoteId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("UnlockedEmote");
+                });
+
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
                     b.Property<long>("UserId")
@@ -322,6 +336,8 @@ namespace Uchu.Core.Migrations
                     b.Property<string>("BannedReason");
 
                     b.Property<int>("CharacterIndex");
+
+                    b.Property<string>("CustomLockout");
 
                     b.Property<bool>("FirstTimeOnSubscription");
 
@@ -351,7 +367,7 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("State");
 
-                    b.Property<int>("ZoneId");
+                    b.Property<ushort>("ZoneId");
 
                     b.HasKey("Id");
 
@@ -408,6 +424,14 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.MissionTask", "MissionTask")
                         .WithMany("Values")
                         .HasForeignKey("MissionTaskId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "Character")
+                        .WithMany("UnlockedEmotes")
+                        .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
