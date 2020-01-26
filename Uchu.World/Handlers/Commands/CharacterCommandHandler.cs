@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
+using Uchu.World.Social;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -745,6 +746,54 @@ namespace Uchu.World.Handlers.Commands
                 builder.Length--;
 
             return builder.ToString();
+        }
+
+        [CommandHandler(Signature = "mailbox", Help = "Set mailbox state", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> MailBox(string[] arguments, Player player)
+        {
+            if (arguments.Length == 0) return "/mailbox <state(on/off)>";
+            
+            var state = false;
+
+            switch (arguments[0].ToLower())
+            {
+                case "true":
+                case "on":
+                    state = true;
+                    break;
+                case "false":
+                case "off":
+                    break;
+                default:
+                    return "Invalid <state(on/off)>";
+            }
+
+            if (state)
+            {
+                await UiHelper.OpenMailboxAsync(player);
+            }
+            else
+            {
+                await UiHelper.CloneMailboxAsync(player);
+            }
+
+            return $"Set mailbox state to: {state}";
+        }
+
+        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
+        public async Task<string> Announce(string[] arguments, Player player)
+        {
+            if (arguments.Length < 2) return "/mailbox <title> <message>";
+
+            var args = arguments.ToList();
+
+            var title = args[0];
+
+            args.RemoveAt(0);
+
+            await UiHelper.AnnouncementAsync(player, title, string.Join(" ", args));
+
+            return "Sent announcement";
         }
     }
 }

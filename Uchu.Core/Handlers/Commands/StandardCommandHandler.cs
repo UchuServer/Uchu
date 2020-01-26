@@ -79,7 +79,7 @@ namespace Uchu.Core.Handlers.Commands
             Console.Write("Write the username again to confirm deletion: ");
             if (Console.ReadLine() != name) return "Deletion aborted";
 
-            ctx.Remove(user);
+            ctx.Users.Remove(user);
             ctx.SaveChanges();
 
             return $"Successfully deleted user: {name}";

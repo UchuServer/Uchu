@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
+using Uchu.Core.Providers;
 
 namespace Uchu.Master
 {
@@ -294,6 +295,8 @@ namespace Uchu.Master
 
                 throw new FileNotFoundException("No config file found.", info.FullName);
             }
+
+            UchuContextBase.Config = Config;
 
             var configPath = Config.ResourcesConfiguration?.GameResourceFolder;
             

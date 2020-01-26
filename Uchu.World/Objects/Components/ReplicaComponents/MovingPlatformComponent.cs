@@ -6,7 +6,6 @@ using System.Timers;
 using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.World.Client;
 
 namespace Uchu.World
 {

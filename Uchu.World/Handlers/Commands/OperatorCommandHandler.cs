@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
-using Uchu.Python;
 using Uchu.World.Scripting.Managed;
 
 namespace Uchu.World.Handlers.Commands

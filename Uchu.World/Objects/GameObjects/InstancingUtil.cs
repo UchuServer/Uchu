@@ -4,7 +4,6 @@ using System.Numerics;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
 using Uchu.Core;
-using Uchu.World.Client;
 
 namespace Uchu.World
 {

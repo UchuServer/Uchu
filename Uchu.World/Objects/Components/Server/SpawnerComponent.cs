@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using InfectedRose.Lvl;
-using Uchu.Core;
 
 namespace Uchu.World
 {

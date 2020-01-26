@@ -3,60 +3,63 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Core.Providers;
 
 namespace Uchu.Core
 {
-    public class UchuContext : DbContext, IAsyncDisposable
+    public sealed class UchuContext : IAsyncDisposable, IDisposable
     {
-        public DbSet<User> Users { get; set; }
+        public UchuContextBase ContextBase { get; set; }
 
-        public DbSet<Character> Characters { get; set; }
+        public DbSet<User> Users => ContextBase.Users;
 
-        public DbSet<InventoryItem> InventoryItems { get; set; }
+        public DbSet<Character> Characters => ContextBase.Characters;
 
-        public DbSet<Mission> Missions { get; set; }
+        public DbSet<InventoryItem> InventoryItems => ContextBase.InventoryItems;
 
-        public DbSet<MissionTask> MissionTasks { get; set; }
+        public DbSet<Mission> Missions => ContextBase.Missions;
 
-        public DbSet<Friend> Friends { get; set; }
-        
-        public DbSet<ServerSpecification> Specifications { get; set; }
-        
-        public DbSet<WorldServerRequest> WorldServerRequests { get; set; }
-        
-        public DbSet<SessionCache> SessionCaches { get; set; }
+        public DbSet<MissionTask> MissionTasks => ContextBase.MissionTasks;
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public DbSet<Friend> Friends => ContextBase.Friends;
+
+        public DbSet<ServerSpecification> Specifications => ContextBase.Specifications;
+
+        public DbSet<WorldServerRequest> WorldServerRequests => ContextBase.WorldServerRequests;
+
+        public DbSet<SessionCache> SessionCaches => ContextBase.SessionCaches;
+
+        public DbSet<CharacterMail> Mails => ContextBase.Mails;
+
+        public UchuContext()
         {
-            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+            var config = UchuContextBase.Config;
 
-            var config = new Configuration();
-
-            if (File.Exists(fn))
+            switch (config.Database.Provider)
             {
-                var serializer = new XmlSerializer(typeof(Configuration));
-
-                using var file = File.OpenRead(fn);
-                
-                config = (Configuration) serializer.Deserialize(file);
+                case "postgres":
+                    ContextBase = new PostgresContext();
+                    break;
+                case "mysql":
+                    ContextBase = new MySqlContext();
+                    break;
+                default:
+                    Logger.Error($"{config.Database.Provider} is a invalid or unsupported database provider");
+                    throw new Exception($"Invalid database provider: \"{config.Database.Provider}\"");
             }
-
-            optionsBuilder.UseNpgsql(
-                $"Host={config.Postgres.Host};" +
-                $"Database={config.Postgres.Database};" +
-                $"Username={config.Postgres.Username};" +
-                $"Password={config.Postgres.Password}"
-            );
         }
-
+        
         public async Task EnsureUpdatedAsync()
         {
-            await Database.MigrateAsync().ConfigureAwait(false);
+            await ContextBase.EnsureUpdatedAsync().ConfigureAwait(false);
         }
 
-        public ValueTask DisposeAsync()
-        {
-            return new ValueTask(Task.CompletedTask);
-        }
+        public Task SaveChangesAsync() => ContextBase.SaveChangesAsync();
+        
+        public void SaveChanges() => ContextBase.SaveChanges();
+        
+        public ValueTask DisposeAsync() => ContextBase.DisposeAsync();
+
+        public void Dispose() => ContextBase?.Dispose();
     }
 }
