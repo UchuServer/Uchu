@@ -183,6 +183,11 @@ namespace Uchu.World.MissionSystem
             //
             // Update player based on rewards.
             //
+            
+            mission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
+            mission.State = (int) MissionState.Completed;
+            
+            await ctx.SaveChangesAsync();
 
             await SendRewardsAsync(rewardItem);
             
@@ -191,8 +196,6 @@ namespace Uchu.World.MissionSystem
             //
             
             mission.CompletionCount++;
-            mission.LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
-            mission.State = (int) MissionState.Completed;
             
             await ctx.SaveChangesAsync();
 

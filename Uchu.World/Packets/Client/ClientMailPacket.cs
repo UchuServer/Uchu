@@ -10,31 +10,31 @@ namespace Uchu.World
 
         public override uint PacketId => 0x17;
         
-        public MailPacketId Id { get; set; }
+        public ClientMailPacketId Id { get; set; }
         
         public IDeserializable MailStruct { get; set; }
 
         public override void Deserialize(BitReader reader)
         {
-            Id = (MailPacketId) reader.Read<uint>();
+            Id = (ClientMailPacketId) reader.Read<uint>();
 
             switch (Id)
             {
-                case MailPacketId.Send:
+                case ClientMailPacketId.Send:
                     MailStruct = new MailSend();
                     break;
-                case MailPacketId.DataRequest:
+                case ClientMailPacketId.DataRequest:
                     break;
-                case MailPacketId.AttachmentCollected:
+                case ClientMailPacketId.AttachmentCollected:
                     MailStruct = new MailAttachmentCollected();
                     break;
-                case MailPacketId.Delete:
+                case ClientMailPacketId.Delete:
                     MailStruct = new MailDelete();
                     break;
-                case MailPacketId.Read:
+                case ClientMailPacketId.Read:
                     MailStruct = new MailRead();
                     break;
-                case MailPacketId.NotificationRequest:
+                case ClientMailPacketId.NotificationRequest:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Id));
@@ -43,7 +43,7 @@ namespace Uchu.World
             MailStruct?.Deserialize(reader);
         }
         
-        public enum MailPacketId
+        public enum ClientMailPacketId
         {
             Send,
             DataRequest = 0x3,

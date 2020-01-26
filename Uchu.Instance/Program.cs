@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Auth.Handlers;
 using Uchu.Char.Handlers;
 using Uchu.Core;
+using Uchu.Core.Providers;
 using Uchu.World;
 using Uchu.World.Handlers;
 
@@ -19,6 +22,19 @@ namespace Uchu.Instance
             if (!Guid.TryParse(args[0], out var id))
                 throw new ArgumentException($"{args[0]} is not a valid GUID");
 
+            
+            var serializer = new XmlSerializer(typeof(Configuration));
+
+            if (!File.Exists(args[1]))
+            {
+                throw new ArgumentException($"{args[1]} config file does not exist.");
+            }
+
+            await using (var fs = File.OpenRead(args[1]))
+            {
+                UchuContextBase.Config = (Configuration) serializer.Deserialize(fs);
+            }
+            
             ServerSpecification specification;
 
             await using (var ctx = new UchuContext())

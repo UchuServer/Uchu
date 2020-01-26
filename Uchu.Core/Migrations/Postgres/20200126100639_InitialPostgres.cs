@@ -1,14 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Uchu.Core.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class InitialPostgres : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "SessionCaches",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Key = table.Column<string>(nullable: true),
+                    CharacterId = table.Column<long>(nullable: false),
+                    UserId = table.Column<long>(nullable: false),
+                    ZoneId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SessionCaches", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Specifications",
                 columns: table => new
@@ -37,7 +51,10 @@ namespace Uchu.Core.Migrations
                     Password = table.Column<string>(maxLength: 60, nullable: false),
                     Banned = table.Column<bool>(nullable: false),
                     BannedReason = table.Column<string>(nullable: true),
+                    CustomLockout = table.Column<string>(nullable: true),
                     GameMasterLevel = table.Column<int>(nullable: false),
+                    FreeToPlay = table.Column<bool>(nullable: false),
+                    FirstTimeOnSubscription = table.Column<bool>(nullable: false),
                     CharacterIndex = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -218,13 +235,32 @@ namespace Uchu.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UnlockedEmote",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    EmoteId = table.Column<int>(nullable: false),
+                    CharacterId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UnlockedEmote", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UnlockedEmote_Characters_CharacterId",
+                        column: x => x.CharacterId,
+                        principalTable: "Characters",
+                        principalColumn: "CharacterId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "MissionTasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     TaskId = table.Column<int>(nullable: false),
-                    Values = table.Column<List<float>>(nullable: false),
                     MissionId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -234,6 +270,27 @@ namespace Uchu.Core.Migrations
                         name: "FK_MissionTasks_Missions_MissionId",
                         column: x => x.MissionId,
                         principalTable: "Missions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MissionTaskValue",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    Value = table.Column<float>(nullable: false),
+                    Count = table.Column<int>(nullable: false),
+                    MissionTaskId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MissionTaskValue", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MissionTaskValue_MissionTasks_MissionTaskId",
+                        column: x => x.MissionTaskId,
+                        principalTable: "MissionTasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -267,6 +324,16 @@ namespace Uchu.Core.Migrations
                 name: "IX_MissionTasks_MissionId",
                 table: "MissionTasks",
                 column: "MissionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MissionTaskValue_MissionTaskId",
+                table: "MissionTaskValue",
+                column: "MissionTaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UnlockedEmote_CharacterId",
+                table: "UnlockedEmote",
+                column: "CharacterId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -278,13 +345,22 @@ namespace Uchu.Core.Migrations
                 name: "InventoryItems");
 
             migrationBuilder.DropTable(
-                name: "MissionTasks");
+                name: "MissionTaskValue");
+
+            migrationBuilder.DropTable(
+                name: "SessionCaches");
 
             migrationBuilder.DropTable(
                 name: "Specifications");
 
             migrationBuilder.DropTable(
+                name: "UnlockedEmote");
+
+            migrationBuilder.DropTable(
                 name: "WorldServerRequests");
+
+            migrationBuilder.DropTable(
+                name: "MissionTasks");
 
             migrationBuilder.DropTable(
                 name: "Missions");

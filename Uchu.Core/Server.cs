@@ -17,6 +17,7 @@ using RakDotNet.IO;
 using RakDotNet.TcpUdp;
 using StackExchange.Redis;
 using Uchu.Core.IO;
+using Uchu.Core.Providers;
 
 namespace Uchu.Core
 {
@@ -79,6 +80,8 @@ namespace Uchu.Core
             await using (var fs = File.OpenRead(configFile))
             {
                 Logger.Config = Config = (Configuration) serializer.Deserialize(fs);
+
+                UchuContextBase.Config = Config;
             }
 
             if (!string.IsNullOrWhiteSpace(Config.ResourcesConfiguration?.GameResourceFolder))

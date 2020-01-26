@@ -43,19 +43,9 @@ namespace Uchu.World
 
                 _building = value;
 
-                var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-
                 if (value) return;
-                foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
-                {
-                    inventory.MoveItemsBetweenInventories(
-                        temp,
-                        temp.Lot,
-                        temp.Count,
-                        InventoryType.TemporaryModels,
-                        InventoryType.Models
-                    );
-                }
+
+                Task.Run(ConfirmFinish);
             }
         }
 
@@ -123,7 +113,7 @@ namespace Uchu.World
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
             
-            inventory.AddItem(6416, 1, InventoryType.Models, model);
+            await inventory.AddItemAsync(6416, 1, InventoryType.Models, model);
 
             await ConfirmFinish();
         }
@@ -155,8 +145,19 @@ namespace Uchu.World
         public async Task ConfirmFinish()
         {
             if (!IsBuilding) return;
-            
+
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+            
+            foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
+            {
+                await inventory.MoveItemsBetweenInventoriesAsync(
+                    temp,
+                    temp.Lot,
+                    temp.Count,
+                    InventoryType.TemporaryModels,
+                    InventoryType.Models
+                );
+            }
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
             

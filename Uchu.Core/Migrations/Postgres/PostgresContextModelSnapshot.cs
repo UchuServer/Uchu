@@ -2,18 +2,16 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Uchu.Core;
+using Uchu.Core.Providers;
 
 namespace Uchu.Core.Migrations
 {
-    [DbContext(typeof(UchuContext))]
-    [Migration("20200104142332_UpdatedCharacterTable")]
-    partial class UpdatedCharacterTable
+    [DbContext(typeof(PostgresContext))]
+    partial class PostgresContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -156,6 +154,37 @@ namespace Uchu.Core.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Characters");
+                });
+
+            modelBuilder.Entity("Uchu.Core.CharacterMail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("AttachmentCount");
+
+                    b.Property<decimal>("AttachmentCurrency")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
+                    b.Property<int>("AttachmentLot");
+
+                    b.Property<long>("AuthorId");
+
+                    b.Property<string>("Body");
+
+                    b.Property<DateTime>("ExpirationTime");
+
+                    b.Property<bool>("Read");
+
+                    b.Property<long>("RecipientId");
+
+                    b.Property<DateTime>("SentTime");
+
+                    b.Property<string>("Subject");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Mails");
                 });
 
             modelBuilder.Entity("Uchu.Core.Friend", b =>
@@ -312,6 +341,22 @@ namespace Uchu.Core.Migrations
                     b.ToTable("SessionCaches");
                 });
 
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CharacterId");
+
+                    b.Property<int>("EmoteId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("UnlockedEmote");
+                });
+
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
                     b.Property<long>("UserId")
@@ -322,6 +367,8 @@ namespace Uchu.Core.Migrations
                     b.Property<string>("BannedReason");
 
                     b.Property<int>("CharacterIndex");
+
+                    b.Property<string>("CustomLockout");
 
                     b.Property<bool>("FirstTimeOnSubscription");
 
@@ -408,6 +455,14 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.MissionTask", "MissionTask")
                         .WithMany("Values")
                         .HasForeignKey("MissionTaskId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "Character")
+                        .WithMany("UnlockedEmotes")
+                        .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
