@@ -6,7 +6,7 @@ namespace Uchu.Core.Providers
 {
     public abstract class UchuContextBase : DbContext, IAsyncDisposable
     {
-        public static Configuration Config { get; set; }
+        public static Configuration Config { get; set; } = new Configuration();
         
         public DbSet<User> Users { get; set; }
 
@@ -25,6 +25,8 @@ namespace Uchu.Core.Providers
         public DbSet<WorldServerRequest> WorldServerRequests { get; set; }
         
         public DbSet<SessionCache> SessionCaches { get; set; }
+        
+        public DbSet<CharacterMail> Mails { get; set; }
         
         public virtual async Task EnsureUpdatedAsync()
         {

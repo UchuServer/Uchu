@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Uchu.Core.Providers;
 
 namespace Uchu.Core.Migrations.MySql
 {
     [DbContext(typeof(MySqlContext))]
-    partial class MySqlContextModelSnapshot : ModelSnapshot
+    [Migration("20200126200537_MySqlAddedMail")]
+    partial class MySqlAddedMail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -180,6 +182,10 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<string>("Subject");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("RecipientId");
 
                     b.ToTable("Mails");
                 });
@@ -407,6 +413,19 @@ namespace Uchu.Core.Migrations.MySql
                     b.HasOne("Uchu.Core.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.CharacterMail", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Uchu.Core.Character", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

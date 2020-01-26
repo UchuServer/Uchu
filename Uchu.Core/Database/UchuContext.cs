@@ -29,6 +29,8 @@ namespace Uchu.Core
 
         public DbSet<SessionCache> SessionCaches => ContextBase.SessionCaches;
 
+        public DbSet<CharacterMail> Mails => ContextBase.Mails;
+
         public UchuContext()
         {
             var config = UchuContextBase.Config;

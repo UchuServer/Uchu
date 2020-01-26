@@ -156,6 +156,37 @@ namespace Uchu.Core.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("Uchu.Core.CharacterMail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("AttachmentCount");
+
+                    b.Property<decimal>("AttachmentCurrency")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
+                    b.Property<int>("AttachmentLot");
+
+                    b.Property<long>("AuthorId");
+
+                    b.Property<string>("Body");
+
+                    b.Property<DateTime>("ExpirationTime");
+
+                    b.Property<bool>("Read");
+
+                    b.Property<long>("RecipientId");
+
+                    b.Property<DateTime>("SentTime");
+
+                    b.Property<string>("Subject");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Mails");
+                });
+
             modelBuilder.Entity("Uchu.Core.Friend", b =>
                 {
                     b.Property<int>("Id")

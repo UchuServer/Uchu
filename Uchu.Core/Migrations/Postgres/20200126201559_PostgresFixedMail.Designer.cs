@@ -2,20 +2,24 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations.MySql
+namespace Uchu.Core.Migrations
 {
-    [DbContext(typeof(MySqlContext))]
-    partial class MySqlContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PostgresContext))]
+    [Migration("20200126201559_PostgresFixedMail")]
+    partial class PostgresFixedMail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -58,7 +62,7 @@ namespace Uchu.Core.Migrations.MySql
 
                     b.Property<int>("LastZone");
 
-                    b.Property<ushort>("LaunchedRocketFrom");
+                    b.Property<int>("LaunchedRocketFrom");
 
                     b.Property<long>("Level");
 
@@ -159,9 +163,10 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<ushort>("AttachmentCount");
+                    b.Property<int>("AttachmentCount");
 
-                    b.Property<ulong>("AttachmentCurrency");
+                    b.Property<decimal>("AttachmentCurrency")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
 
                     b.Property<int>("AttachmentLot");
 
@@ -301,19 +306,19 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<uint>("ActiveUserCount");
+                    b.Property<long>("ActiveUserCount");
 
-                    b.Property<uint>("MaxUserCount");
+                    b.Property<long>("MaxUserCount");
 
                     b.Property<int>("Port");
 
                     b.Property<int>("ServerType");
 
-                    b.Property<uint>("ZoneCloneId");
+                    b.Property<long>("ZoneCloneId");
 
-                    b.Property<ushort>("ZoneId");
+                    b.Property<int>("ZoneId");
 
-                    b.Property<ushort>("ZoneInstanceId");
+                    b.Property<int>("ZoneInstanceId");
 
                     b.HasKey("Id");
 
@@ -395,7 +400,7 @@ namespace Uchu.Core.Migrations.MySql
 
                     b.Property<int>("State");
 
-                    b.Property<ushort>("ZoneId");
+                    b.Property<int>("ZoneId");
 
                     b.HasKey("Id");
 
