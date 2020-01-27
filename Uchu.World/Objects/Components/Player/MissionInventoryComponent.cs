@@ -354,8 +354,10 @@ namespace Uchu.World
 
             foreach (var task in otherTasks)
             {
-                var mission = cdClient.MissionsTable.First(m => m.Id == task.Id);
+                var mission = await cdClient.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
 
+                if (mission == default) continue;
+                
                 //
                 // Check if mission is an achievement and has a task of the correct type.
                 //

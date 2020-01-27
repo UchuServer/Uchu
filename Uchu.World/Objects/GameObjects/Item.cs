@@ -330,12 +330,12 @@ namespace Uchu.World
                             await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
                         }
                     }
+
+                    Destroy(this);
                 }
 
                 await ctx.SaveChangesAsync();
             }
-
-            if (_count == default) Destroy(this);
         }
 
         private async Task AddCountAsync()

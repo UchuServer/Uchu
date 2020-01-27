@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Utils;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
@@ -791,9 +792,57 @@ namespace Uchu.World.Handlers.Commands
 
             args.RemoveAt(0);
 
-            await UiHelper.AnnouncementAsync(player, title, string.Join(" ", args));
+            foreach (var zonePlayer in player.Zone.Players)
+            {
+                await UiHelper.AnnouncementAsync(zonePlayer, title, string.Join(" ", args));
+            }
 
             return "Sent announcement";
+        }
+
+        [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Complete(string[] arguments, Player player)
+        {
+            var missions = player.GetComponent<MissionInventoryComponent>().MissionInstances;
+
+            var args = new List<int>();
+
+            foreach (var argument in arguments)
+            {
+                if (int.TryParse(argument, out var id))
+                    args.Add(id);
+            }
+            
+            foreach (var mission in missions)
+            {
+                var state = await mission.GetMissionStateAsync();
+                
+                if (state == MissionState.Completed) continue;
+                
+                if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
+
+                try
+                {
+                    await mission.CompleteAsync();
+                }
+                catch
+                {
+                    // Ignored
+                }
+            }
+
+            return "Completed missions";
+        }
+
+        [CommandHandler(Signature = "clear", Help = "Clears your inventory", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Clear(string[] arguments, Player player)
+        {
+            foreach (var item in player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Items)
+            {
+                item.Count = 0;
+            }
+
+            return "Cleared inventory";
         }
     }
 }
