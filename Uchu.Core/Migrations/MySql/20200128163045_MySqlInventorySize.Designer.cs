@@ -2,22 +2,22 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations
+namespace Uchu.Core.Migrations.MySql
 {
-    [DbContext(typeof(PostgresContext))]
-    partial class PostgresContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(MySqlContext))]
+    [Migration("20200128163045_MySqlInventorySize")]
+    partial class MySqlInventorySize
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -62,7 +62,7 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("LastZone");
 
-                    b.Property<int>("LaunchedRocketFrom");
+                    b.Property<ushort>("LaunchedRocketFrom");
 
                     b.Property<long>("Level");
 
@@ -163,10 +163,9 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("AttachmentCount");
+                    b.Property<ushort>("AttachmentCount");
 
-                    b.Property<decimal>("AttachmentCurrency")
-                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+                    b.Property<ulong>("AttachmentCurrency");
 
                     b.Property<int>("AttachmentLot");
 
@@ -306,19 +305,19 @@ namespace Uchu.Core.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long>("ActiveUserCount");
+                    b.Property<uint>("ActiveUserCount");
 
-                    b.Property<long>("MaxUserCount");
+                    b.Property<uint>("MaxUserCount");
 
                     b.Property<int>("Port");
 
                     b.Property<int>("ServerType");
 
-                    b.Property<long>("ZoneCloneId");
+                    b.Property<uint>("ZoneCloneId");
 
-                    b.Property<int>("ZoneId");
+                    b.Property<ushort>("ZoneId");
 
-                    b.Property<int>("ZoneInstanceId");
+                    b.Property<ushort>("ZoneInstanceId");
 
                     b.HasKey("Id");
 
@@ -400,7 +399,7 @@ namespace Uchu.Core.Migrations
 
                     b.Property<int>("State");
 
-                    b.Property<int>("ZoneId");
+                    b.Property<ushort>("ZoneId");
 
                     b.HasKey("Id");
 

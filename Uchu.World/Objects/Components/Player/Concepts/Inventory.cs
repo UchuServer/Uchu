@@ -14,11 +14,55 @@ namespace Uchu.World
         
         public InventoryManagerComponent ManagerComponent { get; }
 
+        private int _size;
+        
         // TODO: Network & Store in DB
-        public uint Size { get; set; } = 20;
+        public int Size
+        {
+            get
+            {
+                if (InventoryType == InventoryType.Items)
+                {
+                    using var ctx = new UchuContext();
+
+                    var character = ctx.Characters.First(
+                        c => c.CharacterId == ManagerComponent.GameObject.ObjectId
+                    );
+
+                    return character.InventorySize;
+                }
+
+                return _size;
+            }
+            set
+            {
+                if (InventoryType == InventoryType.Items)
+                {
+                    using var ctx = new UchuContext();
+
+                    var character = ctx.Characters.First(
+                        c => c.CharacterId == ManagerComponent.GameObject.ObjectId
+                    );
+
+                    character.InventorySize = value;
+
+                    ctx.SaveChanges();
+                }
+                
+                ((Player) ManagerComponent.GameObject).Message(new SetInventorySizeMessage
+                {
+                    Associate = ManagerComponent.GameObject,
+                    InventoryType = InventoryType,
+                    Size = value
+                });
+
+                _size = value;
+            }
+        }
 
         internal Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
+            
             InventoryType = inventoryType;
             ManagerComponent = managerComponent;
 
@@ -35,6 +79,8 @@ namespace Uchu.World
                 i => Item.Instantiate(i.InventoryItemId, this)
             ).Where(item => !ReferenceEquals(item, default)).ToList();
 
+            _size = inventoryType != InventoryType.Items ? 1000 : playerCharacter.InventorySize;
+            
             foreach (var item in _items)
             {
                 Object.Start(item);

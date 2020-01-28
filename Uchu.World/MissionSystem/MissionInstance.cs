@@ -218,17 +218,26 @@ namespace Uchu.World.MissionSystem
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
 
+            var mission = await ctx.Missions.FirstOrDefaultAsync(
+                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+            );
+
+            var repeat = mission.CompletionCount != 0;
+
             var clientMission = await cdClient.MissionsTable.FirstAsync(
                 m => m.Id == MissionId
             );
+
+            var currency = repeat ? clientMission.Rewardcurrency ?? 0 : clientMission.Rewardcurrencyrepeatable ?? 0;
+            var score = repeat ? clientMission.LegoScore ?? 0 : 0;
             
             if (clientMission.IsMission ?? true)
             {
                 // Mission
 
-                Player.Currency += clientMission.Rewardcurrency ?? 0;
+                Player.Currency += currency;
 
-                Player.UniverseScore += clientMission.LegoScore ?? 0;
+                Player.UniverseScore += score;
             }
             else
             {
@@ -242,15 +251,15 @@ namespace Uchu.World.MissionSystem
                 // These rewards have the be silent, as the client adds them itself.
                 //
 
-                character.Currency += clientMission.Rewardcurrency ?? 0;
-                character.UniverseScore += clientMission.LegoScore ?? 0;
+                character.Currency += currency;
+                character.UniverseScore += score;
 
                 //
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.
                 //
 
-                Player.HiddenCurrency += clientMission.Rewardcurrency ?? 0;
+                Player.HiddenCurrency += currency;
 
                 await ctx.SaveChangesAsync();
             }
@@ -266,11 +275,7 @@ namespace Uchu.World.MissionSystem
 
             var inventory = Player.GetComponent<InventoryManagerComponent>();
 
-            var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
-            );
-
-            var repeat = mission.CompletionCount != 0;
+            inventory[InventoryType.Items].Size += repeat ? clientMission.Rewardmaxinventory ?? 0 : 0;
             
             var rewards = new (Lot, int)[]
             {
@@ -417,6 +422,17 @@ namespace Uchu.World.MissionSystem
                 SubType = subType,
                 Type = type
             });
+        }
+
+        public async Task<bool> IsMissionAsync()
+        {
+            await using var cdClient = new CdClientContext();
+
+            var clientMission = await cdClient.MissionsTable.FirstAsync(
+                m => m.Id == MissionId
+            );
+
+            return clientMission.IsMission ?? true;
         }
     }
 }

@@ -48,6 +48,8 @@ namespace Uchu.Core.Migrations.MySql
 
                     b.Property<long>("HairStyle");
 
+                    b.Property<int>("InventorySize");
+
                     b.Property<bool>("LandingByRocket");
 
                     b.Property<long>("LastActivity");

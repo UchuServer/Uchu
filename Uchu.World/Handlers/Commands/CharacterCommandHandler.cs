@@ -807,6 +807,14 @@ namespace Uchu.World.Handlers.Commands
 
             var args = new List<int>();
 
+            var achievements = arguments.Contains("-a");
+
+            var list = arguments.ToList();
+
+            if (achievements) list.Remove("-a");
+
+            arguments = list.ToArray();
+            
             foreach (var argument in arguments)
             {
                 if (int.TryParse(argument, out var id))
@@ -818,6 +826,10 @@ namespace Uchu.World.Handlers.Commands
                 var state = await mission.GetMissionStateAsync();
                 
                 if (state == MissionState.Completed) continue;
+
+                var isMission = await mission.IsMissionAsync();
+                
+                if (isMission && !arguments.Contains("-a")) continue;
                 
                 if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
 
@@ -843,6 +855,18 @@ namespace Uchu.World.Handlers.Commands
             }
 
             return "Cleared inventory";
+        }
+
+        [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Inventory(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "inventory <size>";
+
+            if (!uint.TryParse(arguments[0], out var size)) return "Invalid <size>";
+
+            player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Size = (int) size;
+
+            return $"Set inventory size to: {size}";
         }
     }
 }

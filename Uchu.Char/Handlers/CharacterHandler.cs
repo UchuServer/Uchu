@@ -159,6 +159,7 @@ namespace Uchu.Char.Handlers
                     LastZone = (int) ZoneId.VentureExplorerCinematic,
                     LastInstance = 0,
                     LastClone = 0,
+                    InventorySize = 20,
                     LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds(),
                     Items = new List<InventoryItem>
                     {
