@@ -5,8 +5,8 @@ LEGO Universe server written in C#
 ## Disclaimer
 > The LEGO Group has not endorsed or authorized the operation of this game and is not liable for any safety issues in relation to its operation.
 
-## Contributions
-Feel free to join this development discord server https://discord.gg/7vxaZ2M, to communicate with other contributors.
+## Discord
+Message Wincent01#1001 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
 
 ## Setup
 Uchu is built with .NET Core 3.1 which is compatible with 64-bit versions Windows, Linux, and MacOS. Although Uchu can run on both Windows and MacOS it is highly recommended that you run it on Linux if passible.
