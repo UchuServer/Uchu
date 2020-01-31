@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.World.Scripting.Managed;
+using Uchu.World.Social;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -129,6 +130,51 @@ namespace Uchu.World.Handlers.Commands
             }
 
             return builder.ToString();
+        }
+
+        [CommandHandler(Signature = "failed", Help = "Display failed message", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Failed(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "failed <id> <...message...>";
+            
+            var args = arguments.ToList();
+
+            var id = args[0];
+
+            args.RemoveAt(0);
+
+            if (!uint.TryParse(id, out var eId)) return "Invalid <id>";
+
+            var message = string.Join(" ", args);
+            
+            player.Message(new NotifyClientFailedPreconditionMessage
+            {
+                Associate = player,
+                Id = (int) eId,
+                Reason = message
+            });
+
+            return "Sent failed condition.";
+        }
+        
+        [CommandHandler(Signature = "state", Help = "Send UI state message", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> State(string[] arguments, Player player)
+        {
+            var state = string.Join(" ", arguments);
+
+            await UiHelper.StateAsync(player, state);
+            
+            return "Sent ui message.";
+        }
+        
+        [CommandHandler(Signature = "toggle", Help = "Send toggle ui message", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Toggle(string[] arguments, Player player)
+        {
+            if (arguments.Length != 2) return "toggle <name> <state>";
+            
+            await UiHelper.ToggleAsync(player, arguments[0], !bool.TryParse(arguments[1], out var state) || state);
+            
+            return "Sent ui message.";
         }
     }
 }

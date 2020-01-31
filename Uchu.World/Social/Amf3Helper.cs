@@ -142,5 +142,14 @@ namespace Uchu.World.Social
                 writer.Write((byte) character);
             }
         }
+
+        public static void Array(BitWriter writer, int length)
+        {
+            writer.Write((byte) Amf3Type.Array);
+            
+            var size = (length << 1) | 1;
+
+            WriteNumber2(writer, (uint) size);
+        }
     }
 }

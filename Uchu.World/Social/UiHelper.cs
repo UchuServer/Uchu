@@ -75,5 +75,47 @@ namespace Uchu.World.Social
                 MessageName = "ToggleAnnounce"
             });
         }
+
+        public static async Task StateAsync(Player player, string state)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+            
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+            Amf3Helper.WriteText(writer, "state");
+
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, state);
+            
+            writer.Write((byte) Amf3Type.Null);
+
+            player.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = player,
+                Content = stream.ToArray(),
+                MessageName = "pushGameState"
+            });
+        }
+
+        public static async Task ToggleAsync(Player player, string name, bool value)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+            Amf3Helper.WriteText(writer, "visible");
+
+            writer.Write((byte) (value ? Amf3Type.True : Amf3Type.False));
+            writer.Write((byte) Amf3Type.Null);
+            
+            player.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = player,
+                Content = stream.ToArray(),
+                MessageName = name
+            });
+        }
     }
 }

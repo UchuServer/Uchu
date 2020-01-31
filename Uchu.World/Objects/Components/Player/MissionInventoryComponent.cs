@@ -50,6 +50,13 @@ namespace Uchu.World
                 MissionId = missionId,
                 QuestGiver = missionGiver
             });
+            
+            As<Player>().Message(new OfferMissionMessage
+            {
+                Associate = missionGiver,
+                MissionId = missionId,
+                QuestGiver = missionGiver
+            });
         }
 
         public MissionInventoryComponent()
