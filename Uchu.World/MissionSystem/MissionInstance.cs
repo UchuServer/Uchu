@@ -228,8 +228,8 @@ namespace Uchu.World.MissionSystem
                 m => m.Id == MissionId
             );
 
-            var currency = repeat ? clientMission.Rewardcurrency ?? 0 : clientMission.Rewardcurrencyrepeatable ?? 0;
-            var score = repeat ? clientMission.LegoScore ?? 0 : 0;
+            var currency = !repeat ? clientMission.Rewardcurrency ?? 0 : clientMission.Rewardcurrencyrepeatable ?? 0;
+            var score = !repeat ? clientMission.LegoScore ?? 0 : 0;
             
             if (clientMission.IsMission ?? true)
             {
@@ -275,7 +275,7 @@ namespace Uchu.World.MissionSystem
 
             var inventory = Player.GetComponent<InventoryManagerComponent>();
 
-            inventory[InventoryType.Items].Size += repeat ? clientMission.Rewardmaxinventory ?? 0 : 0;
+            inventory[InventoryType.Items].Size += !repeat ? clientMission.Rewardmaxinventory ?? 0 : 0;
             
             var rewards = new (Lot, int)[]
             {

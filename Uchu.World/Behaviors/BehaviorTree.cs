@@ -149,9 +149,6 @@ namespace Uchu.World.Behaviors
         
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
         {
-            if (!explicitTarget)
-                target = associate;
-
             var context = new ExecutionContext(associate, reader, writer);
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
@@ -160,7 +157,7 @@ namespace Uchu.World.Behaviors
                 {
                     context.Root = root;
 
-                    var branchContext = new ExecutionBranchContext(target);
+                    var branchContext = new ExecutionBranchContext(associate);
                     
                     await root.ExecuteAsync(context, branchContext);
                 }
@@ -172,7 +169,7 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                var branchContext = new ExecutionBranchContext(target);
+                var branchContext = new ExecutionBranchContext(associate);
                 
                 await root.ExecuteAsync(context, branchContext);
             }

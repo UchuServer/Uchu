@@ -19,9 +19,7 @@ namespace Uchu.World.Behaviors
 
             var length = context.Reader.Read<uint>();
             
-            ((Player) context.Associate).SendChatMessage($"AREA LENGTH: {length}");
-
-            if (length > 10) length = 10;
+            if (length > 10) length = 10; // TODO: Fix
 
             context.Writer.Write(length);
             
@@ -35,8 +33,6 @@ namespace Uchu.World.Behaviors
 
                 context.Associate.Zone.TryGetGameObject((long) id, out var target);
                 
-                ((Player) context.Associate)?.SendChatMessage($"AREA: {id} -> {target}");
-
                 targets[i] = target;
             }
             

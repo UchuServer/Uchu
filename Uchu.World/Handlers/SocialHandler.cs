@@ -32,6 +32,8 @@ namespace Uchu.World.Handlers
             
             var character = await ctx.Characters.Include(c => c.User)
                 .FirstAsync(c => c.CharacterId == player.ObjectId);
+
+            Console.WriteLine($"Message: {message.Message}");
             
             var response = await Server.HandleCommandAsync(
                 message.Message,

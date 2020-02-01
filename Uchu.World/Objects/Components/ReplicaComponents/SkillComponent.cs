@@ -158,7 +158,13 @@ namespace Uchu.World
                 await using var writeStream = new MemoryStream();
                 using var writer = new BitWriter(writeStream);
 
-                var context = await tree.ExecuteAsync(GameObject, reader, writer, SkillCastType.OnUse);
+                var context = await tree.ExecuteAsync(
+                    GameObject,
+                    reader,
+                    writer,
+                    SkillCastType.OnUse,
+                    message.OptionalTarget
+                );
 
                 _handledSkills[message.SkillHandle] = context;
                 

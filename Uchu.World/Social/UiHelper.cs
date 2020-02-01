@@ -6,47 +6,6 @@ namespace Uchu.World.Social
 {
     public static class UiHelper
     {
-        public static async Task OpenMailboxAsync(Player player)
-        {
-            await using var stream = new MemoryStream();
-            using var writer = new BitWriter(stream);
-
-            writer.Write((byte) Amf3Type.Array);
-            writer.Write<byte>(1);
-            Amf3Helper.WriteText(writer, "state");
-
-            writer.Write((byte) Amf3Type.String);
-            Amf3Helper.WriteText(writer, "Mail");
-
-            writer.Write((byte) Amf3Type.Null);
-            
-            player.Message(new UiMessageServerToSingleClientMessage
-            {
-                Associate = player,
-                Content = stream.ToArray(),
-                MessageName = "pushGameState"
-            });
-        }
-
-        public static async Task CloneMailboxAsync(Player player)
-        {
-            await using var stream = new MemoryStream();
-            using var writer = new BitWriter(stream);
-
-            writer.Write((byte) Amf3Type.Array);
-            writer.Write<byte>(1);
-            Amf3Helper.WriteText(writer, "visible");
-
-            writer.Write((byte) Amf3Type.False);
-            writer.Write((byte) Amf3Type.Null);
-            
-            player.Message(new UiMessageServerToSingleClientMessage
-            {
-                Associate = player,
-                Content = stream.ToArray(),
-                MessageName = "ToggleMail"
-            });
-        }
 
         public static async Task AnnouncementAsync(Player player, string title, string message)
         {
@@ -98,6 +57,65 @@ namespace Uchu.World.Social
             });
         }
 
+        public static async Task AddGuildMemberAsync(Player player, int index, GuildMember member)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+            
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+            Amf3Helper.WriteText(writer, "name");
+            
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, member.Name);
+            Amf3Helper.WriteText(writer, "zone");
+
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, member.Zone);
+            Amf3Helper.WriteText(writer, "rank");
+
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, member.Rank);
+            Amf3Helper.WriteText(writer, "online");
+
+            writer.Write((byte) (member.Online ? Amf3Type.True : Amf3Type.False));
+            Amf3Helper.WriteText(writer, "index");
+
+            writer.Write((byte) Amf3Type.Integer);
+            Amf3Helper.WriteNumber2(writer, (uint) index);
+
+            writer.Write((byte) Amf3Type.Null);
+            
+            player.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = player,
+                Content = stream.ToArray(),
+                MessageName = "AddGuildMember"
+            });
+        }
+
+        public static async Task SetGuildNameAsync(Player player, string name)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+            
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+            Amf3Helper.WriteText(writer, "guildName");
+            
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, name);
+            
+            writer.Write((byte) Amf3Type.Null);
+            
+            player.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = player,
+                Content = stream.ToArray(),
+                MessageName = "SetGuildName"
+            });
+        }
+
         public static async Task ToggleAsync(Player player, string name, bool value)
         {
             await using var stream = new MemoryStream();
@@ -117,5 +135,82 @@ namespace Uchu.World.Social
                 MessageName = name
             });
         }
+
+        public static async Task SingleArgumentGuiAsync(this Player @this, string name, string argument, string value)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+            Amf3Helper.WriteText(writer, argument);
+            
+            writer.Write((byte) Amf3Type.String);
+            Amf3Helper.WriteText(writer, value);
+            
+            writer.Write((byte) Amf3Type.Null);
+            
+            @this.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = @this,
+                Content = stream.ToArray(),
+                MessageName = name
+            });
+        }
+
+        public static async Task MessageGuiAsync(this Player @this, string name)
+        {
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+
+            writer.Write((byte) Amf3Type.Null);
+            
+            @this.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = @this,
+                Content = stream.ToArray(),
+                MessageName = name
+            });
+        }
+
+        public static void CentralNoticeGui(this Player @this, string text, int id = 0)
+        {
+            @this.Message(new NotifyClientFailedPreconditionMessage
+            {
+                Associate = @this,
+                Id = id,
+                Reason = text
+            });
+        }
+
+        public static Task CloseMailboxGuiAsync(this Player @this) => ToggleAsync(@this, "ToggleMail", false);
+        
+        public static Task CountdownGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleFlashingText", state);
+        
+        public static Task BackpackGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleBackpack", state);
+        
+        public static Task GuildCreateGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleGuildCreate", state);
+        
+        public static Task GuildMenuGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleGuildUI", state);
+        
+        public static Task PassportGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "TogglePassport", state);
+        
+        public static Task HelpGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleHelpMenu", state);
+        
+        public static Task NewsGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleNews", state);
+        
+        public static Task FriendListGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleFriendsList", state);
+        
+        public static Task RespawnGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleRespawnDialog", state);
+        
+        public static Task PerformanceWarningGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "TogglePerformanceWarning", state);
+        
+        public static Task SpeedChatGuiAsync(this Player @this, bool state) => ToggleAsync(@this, "ToggleSC", state);
+        
+        public static Task OpenGuildChatAsync(this Player @this, bool state) => ToggleAsync(@this, "PlayerInGuild", state);
+        
+        public static Task CloseGuildChatAsync(this Player @this, bool state) => ToggleAsync(@this, "PlayerLeftGuild", state);
+        
+        public static Task OpenMailboxGuiAsync(this Player @this) => StateAsync(@this, "Mail");
     }
 }

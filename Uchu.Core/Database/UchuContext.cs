@@ -31,6 +31,10 @@ namespace Uchu.Core
 
         public DbSet<CharacterMail> Mails => ContextBase.Mails;
 
+        public DbSet<Guild> Guilds => ContextBase.Guilds;
+
+        public DbSet<GuildInvite> GuildInvites => ContextBase.GuildInvites;
+
         public UchuContext()
         {
             var config = UchuContextBase.Config;

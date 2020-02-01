@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
+using InfectedRose.Terrain;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -59,7 +60,7 @@ namespace Uchu.World.Client
                     {
                         await using var sceneStream = _resources.GetStream(Path.Combine(path, scene.FileName));
 
-                        var sceneReader = new BitReader(sceneStream);
+                        using var sceneReader = new BitReader(sceneStream);
                         
                         var lvl = new LvlFile();
 
@@ -74,6 +75,14 @@ namespace Uchu.World.Client
                             template.ObjectId |= 70368744177664;
                         }
                     }
+
+                    var terrainStream = _resources.GetStream(Path.Combine(path, luz.TerrainFileName));
+
+                    using var terrainReader = new BitReader(terrainStream);
+                    
+                    var terrain = new TerrainFile();
+
+                    terrain.Deserialize(terrainReader);
                     
                     Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
                     
@@ -81,7 +90,8 @@ namespace Uchu.World.Client
                     {
                         LuzFile = luz,
                         LvlFiles = lvlFiles,
-                        Triggers = triggers.ToList()
+                        Triggers = triggers.ToList(),
+                        TerrainFile = terrain
                     };
                 }
                 catch (Exception e)

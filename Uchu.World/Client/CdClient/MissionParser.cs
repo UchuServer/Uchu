@@ -25,8 +25,6 @@ namespace Uchu.World.Client
 
         private static bool IsCompleted(string str, Mission[] completed)
         {
-            Logger.Information($"Complete: {str} ANY {string.Join(' ', completed.Select(s => s.Id))}");
-
             if (string.IsNullOrWhiteSpace(str)) return true;
 
             if (str.Contains(':'))
@@ -48,8 +46,6 @@ namespace Uchu.World.Client
 
                 return chrTask.Values.Count >= task.TargetValue;
             }
-
-            Logger.Debug($"Required mission {str}");
 
             var id = int.Parse(str);
 
@@ -127,25 +123,6 @@ namespace Uchu.World.Client
             res = Check(res, IsCompleted(cur.ToString(), completed), mode);
 
             return res;
-        }
-
-        public static async Task<bool> AllTasksCompletedAsync(Mission mission)
-        {
-            await using var ctx = new CdClientContext();
-            
-            //
-            // Get all tasks this mission have to have completed to be handed in.
-            //
-
-            var tasks = ctx.MissionTasksTable.Where(m => m.Id == mission.MissionId);
-
-            //
-            // Check tasks count to their required values.
-            //
-
-            return (await tasks.ToArrayAsync()).All(t =>
-                mission.Tasks.Find(t2 => t2.TaskId == t.Uid).ValueArray().Length >= t.TargetValue
-            );
         }
 
         public static Lot[] GetTargets(MissionTasks missionTask)

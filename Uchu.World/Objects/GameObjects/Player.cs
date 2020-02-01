@@ -71,6 +71,10 @@ namespace Uchu.World
         
         public PlayerChatChannel ChatChannel { get; set; }
 
+        public GuildGuiState GuildGuiState { get; set; }
+        
+        public string GuildInviteName { get; set; }
+        
         public override string Name
         {
             get => ObjectName;
@@ -340,7 +344,7 @@ namespace Uchu.World
             });
         }
 
-        public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null)
+        public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null, ChatChannel chatChannel = World.ChatChannel.Public)
         {
             if (channel > ChatChannel) return;
             
@@ -348,7 +352,8 @@ namespace Uchu.World
             {
                 Message = $"{message}\0",
                 Sender = author,
-                IsMythran = author?.GameMasterLevel > 0
+                IsMythran = author?.GameMasterLevel > 0,
+                Channel = chatChannel
             });
         }
 

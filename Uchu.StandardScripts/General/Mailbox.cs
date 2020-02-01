@@ -13,7 +13,7 @@ namespace Uchu.StandardScripts.General
             {
                 Listen(gameObject.OnInteract, async player =>
                 {
-                    await UiHelper.OpenMailboxAsync(player);
+                    await player.OpenMailboxGuiAsync();
                 });
             }
 

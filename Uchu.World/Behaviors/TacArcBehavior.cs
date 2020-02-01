@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -43,11 +44,13 @@ namespace Uchu.World.Behaviors
                     context.Writer.WriteBit(checkEnvironment);
                 }
 
-                var targets = new GameObject[context.Reader.Read<uint>()];
+                var specifiedTargets = context.Reader.Read<uint>();
 
-                context.Writer.Write((uint) targets.Length);
+                context.Writer.Write(specifiedTargets);
+                
+                var targets = new List<GameObject>();
 
-                for (var i = 0; i < targets.Length; i++)
+                for (var i = 0; i < specifiedTargets; i++)
                 {
                     var targetId = context.Reader.Read<long>();
 
@@ -60,7 +63,7 @@ namespace Uchu.World.Behaviors
                         continue;
                     }
                     
-                    targets[i] = target;
+                    targets.Add(target);
                 }
 
                 foreach (var target in targets)

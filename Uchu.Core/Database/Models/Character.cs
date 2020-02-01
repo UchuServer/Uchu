@@ -179,6 +179,8 @@ namespace Uchu.Core
         public bool LandingByRocket { get; set; }
         
         public int InventorySize { get; set; }
+        
+        public long GuildId { get; set; }
 
         public ZoneId LaunchedRocketFrom { get; set; }
         

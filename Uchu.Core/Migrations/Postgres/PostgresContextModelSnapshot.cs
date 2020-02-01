@@ -46,6 +46,8 @@ namespace Uchu.Core.Migrations
 
                     b.Property<bool>("FreeToPlay");
 
+                    b.Property<long>("GuildId");
+
                     b.Property<long>("HairColor");
 
                     b.Property<long>("HairStyle");
@@ -215,6 +217,38 @@ namespace Uchu.Core.Migrations
                     b.HasIndex("FriendTwoId");
 
                     b.ToTable("Friends");
+                });
+
+            modelBuilder.Entity("Uchu.Core.Guild", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CreatorId");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Guilds");
+                });
+
+            modelBuilder.Entity("Uchu.Core.GuildInvite", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("GuildId");
+
+                    b.Property<long>("RecipientId");
+
+                    b.Property<long>("SenderId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("GuildInvites");
                 });
 
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
@@ -425,6 +459,14 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.Character", "FriendTwo")
                         .WithMany()
                         .HasForeignKey("FriendTwoId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.GuildInvite", b =>
+                {
+                    b.HasOne("Uchu.Core.Guild", "Guild")
+                        .WithMany("Invites")
+                        .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

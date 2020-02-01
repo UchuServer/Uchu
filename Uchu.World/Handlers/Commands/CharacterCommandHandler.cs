@@ -771,11 +771,11 @@ namespace Uchu.World.Handlers.Commands
 
             if (state)
             {
-                await UiHelper.OpenMailboxAsync(player);
+                await player.OpenMailboxGuiAsync();
             }
             else
             {
-                await UiHelper.CloneMailboxAsync(player);
+                await player.CloseMailboxGuiAsync();
             }
 
             return $"Set mailbox state to: {state}";
