@@ -29,5 +29,13 @@ namespace Uchu.World.Behaviors
                 await behavior.ExecuteAsync(context, branchContext);
             }
         }
+
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            foreach (var behavior in Behaviors)
+            {
+                await behavior.CalculateAsync(context, branchContext);
+            }
+        }
     }
 }

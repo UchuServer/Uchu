@@ -146,7 +146,42 @@ namespace Uchu.World.Behaviors
                 CastType = b.castType
             }).ToArray();
         }
+
+        /// <summary>
+        ///     Calculate a server preformed skill
+        /// </summary>
+        /// <param name="associate">Executioner</param>
+        /// <param name="writer">Data to be sent to clients</param>
+        /// <param name="castType">Type of skill</param>
+        /// <returns>Context</returns>
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, SkillCastType castType = SkillCastType.OnUse)
+        {
+            var context = new NpcExecutionContext(associate, writer);
+            
+            if (!RootBehaviors.TryGetValue(castType, out var list)) return context;
+            
+            foreach (var root in list)
+            {
+                context.Root = root;
+                
+                var branchContext = new ExecutionBranchContext(associate);
+                
+                await root.CalculateAsync(context, branchContext);
+            }
+
+            return context;
+        }
         
+        /// <summary>
+        ///     Execute a user preformed skill
+        /// </summary>
+        /// <param name="associate">Executioner</param>
+        /// <param name="reader">Client skill data</param>
+        /// <param name="writer">Data to be sent to clients</param>
+        /// <param name="castType">Type of skill</param>
+        /// <param name="target"></param>
+        /// <param name="explicitTarget"></param>
+        /// <returns>Context</returns>
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
         {
             var context = new ExecutionContext(associate, reader, writer);

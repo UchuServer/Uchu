@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using RakDotNet.IO;
 
 namespace Uchu.World
@@ -25,6 +27,13 @@ namespace Uchu.World
 
             writer.Write((uint) Action);
             writer.Write(Target.ObjectId);
+        }
+
+        public async Task<IEnumerable<GameObject>> SeekValidTargetsAsync()
+        {
+            // TODO: Do faction calculations
+
+            return Zone.Players;
         }
     }
 }

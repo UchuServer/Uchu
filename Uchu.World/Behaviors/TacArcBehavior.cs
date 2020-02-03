@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -18,6 +20,8 @@ namespace Uchu.World.Behaviors
         
         public BehaviorBase MissBehavior { get; set; }
         
+        public int MaxTargets { get; set; }
+        
         public override async Task BuildAsync()
         {
             CheckEnvironment = (await GetParameter("check_env"))?.Value > 0;
@@ -26,6 +30,8 @@ namespace Uchu.World.Behaviors
             ActionBehavior = await GetBehavior("action");
             BlockedBehavior = await GetBehavior("blocked action");
             MissBehavior = await GetBehavior("miss action");
+
+            MaxTargets = await GetParameter<int>("max targets");
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
@@ -99,6 +105,74 @@ namespace Uchu.World.Behaviors
                 {
                     await MissBehavior.ExecuteAsync(context, branchContext);
                 }
+            }
+        }
+
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
+
+            var validTarget = await baseCombatAiComponent.SeekValidTargetsAsync();
+
+            var sourcePosition = context.Associate.Transform.Position;
+
+            var targets = validTarget.Where(target =>
+            {
+                var transform = target.Transform;
+
+                var distance = Vector3.Distance(transform.Position, sourcePosition);
+
+                return context.MinRange < distance && distance < context.MaxRange;
+            }).ToArray();
+
+            var any = targets.Any();
+            
+            context.Writer.WriteBit(any); // Hit
+
+            if (!any)
+            {
+                if (Blocked)
+                {
+                    context.Writer.WriteBit(false);
+                }
+                else
+                {
+                    await MissBehavior.CalculateAsync(context, branchContext);
+                }
+                
+                return;
+            }
+
+            if (CheckEnvironment)
+            {
+                context.Writer.WriteBit(false);
+            }
+
+            var selectedTargets = new List<GameObject>();
+
+            foreach (var target in targets)
+            {
+                if (selectedTargets.Count < MaxTargets)
+                {
+                    selectedTargets.Add(target);
+                }
+            }
+
+            context.Writer.Write((uint) selectedTargets.Count);
+
+            foreach (var target in selectedTargets)
+            {
+                context.Writer.Write(target.ObjectId);
+            }
+
+            foreach (var target in selectedTargets)
+            {
+                var branch = new ExecutionBranchContext(target)
+                {
+                    Duration = branchContext.Duration
+                };
+
+                await ActionBehavior.CalculateAsync(context, branch);
             }
         }
     }
