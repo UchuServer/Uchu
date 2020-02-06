@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Python;
 using Uchu.World.Client;
 using Uchu.World.Social;
 
@@ -91,6 +92,8 @@ namespace Uchu.World
 
                 await LoadZone(ServerSpecification);
             });
+
+            ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
             
             Logger.Information($"Setting up world server: {ServerSpecification.Id}");
         }

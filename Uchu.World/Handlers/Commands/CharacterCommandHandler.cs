@@ -527,10 +527,28 @@ namespace Uchu.World.Handlers.Commands
                     return "Invalid <scale>";
                 }
             }
-            
-            player.Message(new PlayAnimationMessage
+
+            GameObject associate = player;
+
+            if (arguments.Contains("-n"))
             {
-                Associate = player,
+                associate = player.Zone.GameObjects[0];
+
+                foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+                {
+                    if (gameObject.Transform == default) continue;
+
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                    if (Vector3.Distance(associate.Transform.Position, player.Transform.Position) >
+                        Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                        associate = gameObject;
+                }
+            }
+            
+            player.Zone.BroadcastMessage(new PlayAnimationMessage
+            {
+                Associate = associate,
                 AnimationsId = arguments[0],
                 Scale = scale
             });

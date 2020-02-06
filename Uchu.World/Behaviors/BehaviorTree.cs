@@ -152,11 +152,12 @@ namespace Uchu.World.Behaviors
         /// </summary>
         /// <param name="associate">Executioner</param>
         /// <param name="writer">Data to be sent to clients</param>
+        /// <param name="skillId">Skill to execute</param>
         /// <param name="castType">Type of skill</param>
         /// <returns>Context</returns>
-        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, SkillCastType castType = SkillCastType.OnUse)
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, SkillCastType castType = SkillCastType.OnUse)
         {
-            var context = new NpcExecutionContext(associate, writer);
+            var context = new NpcExecutionContext(associate, writer, skillId);
             
             if (!RootBehaviors.TryGetValue(castType, out var list)) return context;
             

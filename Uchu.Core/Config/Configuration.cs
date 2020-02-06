@@ -43,6 +43,8 @@ namespace Uchu.Core
     public class ManagedScriptSources
     {
         [XmlElement("Script")] public List<string> Scripts { get; set; } = new List<string>();
+        
+        [XmlElement("Library")] public List<string> Paths { get; set; } = new List<string>();
     }
 
     public class ServerDllSource
