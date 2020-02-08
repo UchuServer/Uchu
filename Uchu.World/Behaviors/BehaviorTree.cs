@@ -15,6 +15,8 @@ namespace Uchu.World.Behaviors
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
         public (int behaviorId, SkillCastType castType, int skillId)[] BehaviorIds { get; }
+        
+        public Dictionary<int, BehaviorBase> SkillRoots { get; set; } = new Dictionary<int, BehaviorBase>();
 
         public Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
             new Dictionary<SkillCastType, List<BehaviorBase>>();
@@ -66,9 +68,9 @@ namespace Uchu.World.Behaviors
                 Logger.Information($"[{lot}] SKILL: {objectSkill.SkillID} -> {behavior.BehaviorID}");
                 
                 BehaviorIds[index] = (
-                    behavior.BehaviorID.Value,
-                    (SkillCastType) objectSkill.CastOnType.Value,
-                    objectSkill.SkillID.Value
+                    behavior.BehaviorID ?? 0,
+                    objectSkill.CastOnType.HasValue ? (SkillCastType) objectSkill.CastOnType : SkillCastType.OnUse,
+                    objectSkill.SkillID ?? 0
                 );
             }
         }
@@ -100,7 +102,7 @@ namespace Uchu.World.Behaviors
         {
             await using var ctx = new CdClientContext();
             
-            foreach (var (id, castType, _) in BehaviorIds)
+            foreach (var (id, castType, skillId) in BehaviorIds)
             {
                 var root = BehaviorBase.Cache.FirstOrDefault(b => b.BehaviorId == id);
 
@@ -128,7 +130,11 @@ namespace Uchu.World.Behaviors
                     BehaviorBase.Cache.Add(instance);
                     
                     await instance.BuildAsync();
+
+                    root = instance;
                 }
+
+                SkillRoots[skillId] = root;
 
                 if (RootBehaviors.TryGetValue(castType, out var list))
                 {
@@ -153,22 +159,25 @@ namespace Uchu.World.Behaviors
         /// <param name="associate">Executioner</param>
         /// <param name="writer">Data to be sent to clients</param>
         /// <param name="skillId">Skill to execute</param>
+        /// <param name="syncId">Sync Id</param>
         /// <param name="castType">Type of skill</param>
         /// <returns>Context</returns>
-        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, SkillCastType castType = SkillCastType.OnUse)
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, SkillCastType castType = SkillCastType.OnUse)
         {
-            var context = new NpcExecutionContext(associate, writer, skillId);
-            
-            if (!RootBehaviors.TryGetValue(castType, out var list)) return context;
-            
-            foreach (var root in list)
+            var context = new NpcExecutionContext(associate, writer, skillId, syncId);
+
+            if (!SkillRoots.TryGetValue(skillId, out var root))
             {
-                context.Root = root;
+                Logger.Debug($"Failed to find skill: {skillId}");
                 
-                var branchContext = new ExecutionBranchContext(associate);
-                
-                await root.CalculateAsync(context, branchContext);
+                return context;
             }
+            
+            context.Root = root;
+            
+            var branchContext = new ExecutionBranchContext(associate);
+            
+            await root.CalculateAsync(context, branchContext);
 
             return context;
         }

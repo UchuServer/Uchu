@@ -122,7 +122,7 @@ namespace Uchu.World.Behaviors
 
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
 
-                return context.MinRange < distance && distance < context.MaxRange;
+                return distance <= context.MaxRange;
             }).ToArray();
 
             var any = targets.Any();
@@ -142,6 +142,8 @@ namespace Uchu.World.Behaviors
                 
                 return;
             }
+
+            context.FoundTarget = true;
 
             if (CheckEnvironment)
             {
@@ -163,6 +165,13 @@ namespace Uchu.World.Behaviors
             foreach (var target in selectedTargets)
             {
                 context.Writer.Write(target.ObjectId);
+            }
+
+            foreach (var target in selectedTargets)
+            {
+                if (!(target is Player player)) continue;
+
+                player.SendChatMessage("You are a target!");
             }
 
             foreach (var target in selectedTargets)

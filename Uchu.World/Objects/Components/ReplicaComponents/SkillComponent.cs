@@ -20,6 +20,10 @@ namespace Uchu.World
         // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
 
+        private uint BehaviorSyncIndex { get; set; }
+        
+        public uint[] DefaultSkillSet { get; set; }
+
         public Lot SelectedConsumeable { get; set; }
 
         public uint SelectedSkill
@@ -32,8 +36,19 @@ namespace Uchu.World
 
         protected SkillComponent()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
+                await using var cdClient = new CdClientContext();
+
+                var skills = await cdClient.ObjectSkillsTable.Where(
+                    s => s.ObjectTemplate == GameObject.Lot
+                ).ToArrayAsync();
+
+                DefaultSkillSet = skills
+                    .Where(s => s.SkillID != default)
+                    .Select(s => (uint) s.SkillID)
+                    .ToArray();
+                
                 if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
                 _activeBehaviors.Add(BehaviorSlot.Primary, 1);
@@ -140,6 +155,31 @@ namespace Uchu.World
             await tree.BuildAsync();
 
             await tree.DismantleAsync(GameObject);
+        }
+
+        public async Task CalculateSkillAsync(int skillId)
+        {
+            var stream = new MemoryStream();
+            using var writer = new BitWriter(stream, leaveOpen: true);
+
+            var tree = new BehaviorTree(skillId);
+
+            await tree.BuildAsync();
+
+            var syncId = ClaimSyncId();
+
+            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId);
+            
+            if (!context.FoundTarget) return;
+            
+            Zone.BroadcastMessage(new EchoStartSkillMessage
+            {
+                Associate = GameObject,
+                CastType = 0,
+                Content = stream.ToArray(),
+                SkillId = skillId,
+                SkillHandle = syncId,
+            });
         }
 
         public async Task StartUserSkillAsync(StartSkillMessage message)
@@ -304,6 +344,14 @@ namespace Uchu.World
                 SlotId = slot,
                 SkillId = skillId
             });
+        }
+
+        public uint ClaimSyncId()
+        {
+            lock (this)
+            {
+                return ++BehaviorSyncIndex;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Numerics;
 using RakDotNet.IO;
 
 namespace Uchu.World.Behaviors
@@ -9,30 +10,44 @@ namespace Uchu.World.Behaviors
         
         public float MaxRange { get; set; }
         
-        public bool Start { get; set; }
-        
         public int SkillId { get; set; }
         
-        public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId) : base(associate, default, writer)
+        public uint SyncSkillId { get; set; }
+        
+        public bool FoundTarget { get; set; }
+        
+        public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId, uint syncSkillId) : base(associate, default, writer)
         {
-            Start = true;
             SkillId = skillId;
+            SyncSkillId = syncSkillId;
         }
 
-        public NpcExecutionContext Flush()
+        public void Sync(uint behaviorSyncId)
         {
-            if (Start)
+            Associate.Zone.BroadcastMessage(new EchoSyncSkillMessage
             {
-                Associate.Zone.BroadcastMessage(new EchoStartSkillMessage
-                {
-                    SkillId = SkillId,
-                    Associate = Associate,
-                    CastType = (int) SkillCastType.OnUse,
-                    Content = (Writer.BaseStream as MemoryStream)?.ToArray()
-                });
-            }
+                Associate = Associate,
+                SkillHandle = SyncSkillId,
+                BehaviorHandle = behaviorSyncId,
+                Content = (Writer.BaseStream as MemoryStream)?.ToArray(),
+                Done = false
+            });
+        }
 
-            return this;
+        public NpcExecutionContext Copy()
+        {
+            return new NpcExecutionContext(Associate, new BitWriter(new MemoryStream()), SkillId, SyncSkillId)
+            {
+                MaxRange = MaxRange,
+                MinRange = MinRange
+            };
+        }
+
+        public bool IsValidTarget(GameObject gameObject)
+        {
+            var distance = Vector3.Distance(gameObject.Transform.Position, Associate.Transform.Position);
+
+            return distance <= MaxRange;
         }
     }
 }

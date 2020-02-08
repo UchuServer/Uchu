@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -14,7 +15,7 @@ namespace Uchu.World.Behaviors
         
         public override async Task BuildAsync()
         {
-            Behavior = await GetBehavior("Behavior 1");
+            Behavior = await GetBehavior("behavior 1");
 
             MinRange = await GetParameter<float>("min range");
 
@@ -25,8 +26,6 @@ namespace Uchu.World.Behaviors
         {
             context.MinRange = MaxRange;
             context.MaxRange = MaxRange;
-            
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
 
             await Behavior.CalculateAsync(context, branchContext);
         }

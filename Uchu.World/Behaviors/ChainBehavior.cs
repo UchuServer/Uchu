@@ -45,5 +45,14 @@ namespace Uchu.World.Behaviors
 
             await Behaviors[chainIndex - 1].ExecuteAsync(context, branchContext);
         }
+
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            // TODO
+            
+            context.Writer.Write(1);
+            
+            await Behaviors[1 - 1].CalculateAsync(context, branchContext);
+        }
     }
 }

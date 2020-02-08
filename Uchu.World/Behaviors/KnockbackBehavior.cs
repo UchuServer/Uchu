@@ -19,5 +19,10 @@ namespace Uchu.World.Behaviors
 
             context.Writer.WriteBit(false);
         }
+
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            context.Writer.WriteBit(false);
+        }
     }
 }
