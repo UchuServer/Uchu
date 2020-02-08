@@ -155,11 +155,17 @@ namespace Uchu.World.Scripting.Managed
 
             Task.Run(() =>
             {
-                Script.Execute("load");
+                Script.Execute("load", out var exception);
+
+                if (exception != default)
+                    Logger.Error(exception);
             });
             
             Listen(Proxy.OnTick, () => { Task.Run(() => {
-                    Script.Execute("tick");
+                    Script.Execute("tick", out var exception);
+                    
+                    if (exception != default)
+                        Logger.Error(exception);
                 });
             });
 
@@ -174,7 +180,10 @@ namespace Uchu.World.Scripting.Managed
 
             Task.Run(() =>
             {
-                Script.Execute("unload");
+                Script.Execute("unload", out var exception);
+
+                if (exception != default)
+                    Logger.Error(exception);
             });
             
             return Task.CompletedTask;

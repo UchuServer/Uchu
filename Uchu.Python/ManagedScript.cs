@@ -49,11 +49,13 @@ namespace Uchu.Python
             }
         }
 
-        public bool GetVariable<T>(string name, out T result)
+        public bool GetVariable<T>(string name, out T result, out Exception error)
         {
             if (_scope.GetItems().All(s => s.Key != name))
             {
                 result = default;
+
+                error = default;
                 
                 return false;
             }
@@ -63,23 +65,27 @@ namespace Uchu.Python
             try
             {
                 result = (T) variable.Value;
+                
+                error = default;
 
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                
                 result = default;
-
+                
+                error = e;
+                
                 return false;
             }
         }
         
-        public bool Execute(string name)
+        public bool Execute(string name, out Exception error)
         {
             if (_scope.GetItems().All(s => s.Key != name))
             {
+                error = default;
+                
                 return false;
             }
             
@@ -89,21 +95,25 @@ namespace Uchu.Python
             {
                 variable.Value();
 
+                error = default;
+
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                error = e;
                 
                 return false;
             }
         }
 
-        public bool Execute<TOut>(string name, out TOut result)
+        public bool Execute<TOut>(string name, out TOut result, out Exception error)
         {
             if (_scope.GetItems().All(s => s.Key != name))
             {
                 result = default;
+                
+                error = default;
                 
                 return false;
             }
@@ -114,23 +124,27 @@ namespace Uchu.Python
             {
                 result = (TOut) variable.Value();
 
+                error = default;
+
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-
                 result = default;
+                
+                error = e;
                 
                 return false;
             }
         }
         
-        public bool Execute<TOut, TIn>(string name, out TOut result, TIn parameter)
+        public bool Execute<TOut, TIn>(string name, out TOut result, TIn parameter, out Exception error)
         {
             if (_scope.GetItems().All(s => s.Key != name))
             {
                 result = default;
+                
+                error = default;
                 
                 return false;
             }
@@ -141,13 +155,15 @@ namespace Uchu.Python
             {
                 result = (TOut) variable.Value(parameter);
 
+                error = default;
+
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                
                 result = default;
+                
+                error = e;
                 
                 return false;
             }
