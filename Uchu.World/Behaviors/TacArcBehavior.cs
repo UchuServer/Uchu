@@ -122,7 +122,7 @@ namespace Uchu.World.Behaviors
 
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
 
-                return distance <= context.MaxRange;
+                return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToArray();
 
             if (!context.Alive)

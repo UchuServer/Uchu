@@ -27,7 +27,7 @@ namespace Uchu.World.Behaviors
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
-            context.MinRange = MaxRange;
+            context.MinRange = MinRange;
             context.MaxRange = MaxRange;
             context.SkillTime = SkillTime;
 
