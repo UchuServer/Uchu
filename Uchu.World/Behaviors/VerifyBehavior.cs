@@ -17,7 +17,7 @@ namespace Uchu.World.Behaviors
         {
             if (branchContext.Target is Player player)
                 player.SendChatMessage($"Verified: [{Action.Id}] {Action.BehaviorId}");
-            
+
             await Action.CalculateAsync(context, branchContext);
         }
     }

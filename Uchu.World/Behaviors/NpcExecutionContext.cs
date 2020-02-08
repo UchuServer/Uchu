@@ -10,11 +10,29 @@ namespace Uchu.World.Behaviors
         
         public float MaxRange { get; set; }
         
+        public float SkillTime { get; set; }
+        
         public int SkillId { get; set; }
         
         public uint SyncSkillId { get; set; }
         
         public bool FoundTarget { get; set; }
+
+        public bool Alive
+        {
+            get
+            {
+                var destructComponent = Associate.GetComponent<DestructibleComponent>();
+
+                var rebuild = Associate.GetComponent<QuickBuildComponent>();
+                
+                if (!destructComponent.Alive) return false;
+                
+                if (rebuild != default && rebuild.State != RebuildState.Completed) return false;
+
+                return true;
+            }
+        }
         
         public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId, uint syncSkillId) : base(associate, default, writer)
         {

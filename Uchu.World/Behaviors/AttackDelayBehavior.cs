@@ -43,17 +43,11 @@ namespace Uchu.World.Behaviors
 
             context.Writer.Write(syncId);
 
-            if (branchContext.Target is Player player)
-                player.SendChatMessage("Attack delay!");
-            
             Task.Run(async () =>
             {
                 await Task.Delay(Delay);
 
                 context = context.Copy();
-                
-                if (branchContext.Target is Player sPlayer)
-                    sPlayer.SendChatMessage("Attack delay complete!");
                 
                 await Action.CalculateAsync(context, branchContext);
 

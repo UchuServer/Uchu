@@ -157,7 +157,7 @@ namespace Uchu.World
             await tree.DismantleAsync(GameObject);
         }
 
-        public async Task CalculateSkillAsync(int skillId)
+        public async Task<float> CalculateSkillAsync(int skillId)
         {
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
@@ -169,8 +169,8 @@ namespace Uchu.World
             var syncId = ClaimSyncId();
 
             var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId);
-            
-            if (!context.FoundTarget) return;
+
+            if (!context.FoundTarget) return 0;
             
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
@@ -180,6 +180,8 @@ namespace Uchu.World
                 SkillId = skillId,
                 SkillHandle = syncId,
             });
+
+            return context.SkillTime;
         }
 
         public async Task StartUserSkillAsync(StartSkillMessage message)

@@ -102,7 +102,7 @@ namespace Uchu.World.Behaviors
         {
             await using var ctx = new CdClientContext();
             
-            foreach (var (id, castType, skillId) in BehaviorIds)
+            foreach (var (id, castType, skillId) in BehaviorIds.ToArray())
             {
                 var root = BehaviorBase.Cache.FirstOrDefault(b => b.BehaviorId == id);
 
@@ -160,11 +160,13 @@ namespace Uchu.World.Behaviors
         /// <param name="writer">Data to be sent to clients</param>
         /// <param name="skillId">Skill to execute</param>
         /// <param name="syncId">Sync Id</param>
-        /// <param name="castType">Type of skill</param>
+        /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
-        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, SkillCastType castType = SkillCastType.OnUse)
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, GameObject target = default)
         {
-            var context = new NpcExecutionContext(associate, writer, skillId, syncId);
+            target ??= associate;
+            
+            var context = new NpcExecutionContext(target, writer, skillId, syncId);
 
             if (!SkillRoots.TryGetValue(skillId, out var root))
             {
@@ -175,7 +177,7 @@ namespace Uchu.World.Behaviors
             
             context.Root = root;
             
-            var branchContext = new ExecutionBranchContext(associate);
+            var branchContext = new ExecutionBranchContext(target);
             
             await root.CalculateAsync(context, branchContext);
 

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.World.Behaviors;
@@ -15,7 +16,7 @@ namespace Uchu.World
         
         public GameObject Target { get; set; }
 
-        public async Task Impact(byte[] data, GameObject target)
+        public async Task ImpactAsync(byte[] data, GameObject target)
         {
             target ??= Target;
             
@@ -23,15 +24,13 @@ namespace Uchu.World
 
             await tree.BuildAsync();
 
-            var stream = new MemoryStream(data);
+            await using var stream = new MemoryStream(data);
 
             var reader = new BitReader(stream);
             
-            var writeStream = new MemoryStream();
+            await using var writeStream = new MemoryStream();
 
             var writer = new BitWriter(writeStream);
-            
-            ((Player) Owner)?.SendChatMessage($"Projectile HIT [{Lot}, {tree.RootBehaviors.Count}] -> {target}");
 
             await tree.UseAsync(Owner, reader, writer, target);
             
@@ -39,6 +38,36 @@ namespace Uchu.World
             {
                 Associate = Owner,
                 Data = writeStream.ToArray(),
+                Owner = Owner,
+                ProjectileId = ClientObjectId,
+                Target = target
+            });
+        }
+
+        public async Task CalculateImpactAsync(GameObject target)
+        {
+            target ??= Target;
+            
+            var tree = new BehaviorTree(Lot);
+
+            await tree.BuildAsync();
+
+            await using var stream = new MemoryStream();
+
+            var writer = new BitWriter(stream);
+
+            await tree.CalculateAsync(
+                Owner,
+                writer,
+                tree.SkillRoots.First().Key,
+                Owner.GetComponent<SkillComponent>().ClaimSyncId(),
+                target
+            );
+            
+            Zone.BroadcastMessage(new DoClientProjectileImpact
+            {
+                Associate = Owner,
+                Data = stream.ToArray(),
                 Owner = Owner,
                 ProjectileId = ClientObjectId,
                 Target = target

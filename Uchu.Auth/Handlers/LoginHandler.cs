@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
+using static Uchu.Auth.ServerLoginInfoPacket;
 
 namespace Uchu.Auth.Handlers
 {
@@ -9,7 +10,7 @@ namespace Uchu.Auth.Handlers
     {
         [PacketHandler]
         public async Task LoginRequestHandler(ClientLoginInfoPacket packet, IRakConnection connection)
-        {
+        {   
             await using var ctx = new UchuContext();
             
             var info = new ServerLoginInfoPacket
@@ -25,7 +26,7 @@ namespace Uchu.Auth.Handlers
             if (characterSpecification == default)
             {
                 info.LoginCode = LoginCode.InsufficientPermissions;
-                info.Error = new ServerLoginInfoPacket.ErrorMessage
+                info.Error = new ErrorMessage
                 {
                     Message = "No character server instance is running. Please try again later."
                 };
@@ -37,7 +38,7 @@ namespace Uchu.Auth.Handlers
                 if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username))
                 {
                     info.LoginCode = LoginCode.InsufficientPermissions;
-                    info.Error = new ServerLoginInfoPacket.ErrorMessage
+                    info.Error = new ErrorMessage
                     {
                         Message = "We have no records of that Username and Password combination. Please try again."
                     };
@@ -51,7 +52,7 @@ namespace Uchu.Auth.Handlers
                         if (user.Banned)
                         {
                             info.LoginCode = LoginCode.InsufficientPermissions;
-                            info.Error = new ServerLoginInfoPacket.ErrorMessage
+                            info.Error = new ErrorMessage
                             {
                                 Message = $"This account has been banned by an admin. Reason:\n{user.BannedReason ?? "Unknown"}"
                             };
@@ -59,7 +60,7 @@ namespace Uchu.Auth.Handlers
                         else if (!string.IsNullOrWhiteSpace(user.CustomLockout))
                         {
                             info.LoginCode = LoginCode.InsufficientPermissions;
-                            info.Error = new ServerLoginInfoPacket.ErrorMessage
+                            info.Error = new ErrorMessage
                             {
                                 Message = user.CustomLockout
                             };
@@ -91,7 +92,7 @@ namespace Uchu.Auth.Handlers
                     else
                     {
                         info.LoginCode = LoginCode.InsufficientPermissions;
-                        info.Error = new ServerLoginInfoPacket.ErrorMessage
+                        info.Error = new ErrorMessage
                         {
                             Message = "We have no records of that Username and Password combination. Please try again."
                         };

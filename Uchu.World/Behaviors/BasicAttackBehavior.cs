@@ -72,7 +72,7 @@ namespace Uchu.World.Behaviors
             
             context.Writer.Write(0);
 
-            var success = context.IsValidTarget(branchContext.Target);
+            var success = context.IsValidTarget(branchContext.Target) && context.Alive;
 
             var damage = (uint) (success ? MinDamage : 0);
 

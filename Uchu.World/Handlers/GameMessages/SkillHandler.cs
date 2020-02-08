@@ -64,7 +64,7 @@ namespace Uchu.World.Handlers.GameMessages
 
             if (projectile == default) return;
             
-            await projectile.Impact(message.Data, message.Target);
+            await projectile.ImpactAsync(message.Data, message.Target);
         }
     }
 }

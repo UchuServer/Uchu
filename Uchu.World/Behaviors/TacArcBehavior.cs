@@ -125,6 +125,11 @@ namespace Uchu.World.Behaviors
                 return distance <= context.MaxRange;
             }).ToArray();
 
+            if (!context.Alive)
+            {
+                targets = new GameObject[0]; // No targeting if dead
+            }
+
             var any = targets.Any();
             
             context.Writer.WriteBit(any); // Hit

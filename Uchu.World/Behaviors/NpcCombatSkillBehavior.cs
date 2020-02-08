@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -13,6 +12,8 @@ namespace Uchu.World.Behaviors
         
         public float MaxRange { get; set; }
         
+        public float SkillTime { get; set; }
+        
         public override async Task BuildAsync()
         {
             Behavior = await GetBehavior("behavior 1");
@@ -20,12 +21,15 @@ namespace Uchu.World.Behaviors
             MinRange = await GetParameter<float>("min range");
 
             MaxRange = await GetParameter<float>("max range");
+
+            SkillTime = await GetParameter<float>("npc skill time");
         }
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             context.MinRange = MaxRange;
             context.MaxRange = MaxRange;
+            context.SkillTime = SkillTime;
 
             await Behavior.CalculateAsync(context, branchContext);
         }

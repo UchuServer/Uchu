@@ -1,7 +1,9 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
+using Uchu.Core.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -19,18 +21,63 @@ namespace Uchu.World
         
         public BaseCombatAiComponent()
         {
+            var idle = true;
+            
             Listen(OnTick, async () =>
             {
                 var skillComponent = GameObject.GetComponent<SkillComponent>();
 
+                var destructComponent = GameObject.GetComponent<DestructibleComponent>();
+
+                var rebuild = GameObject.GetComponent<QuickBuildComponent>();
+                
+                if (!destructComponent.Alive) return;
+                
+                if (rebuild != default && rebuild.State != RebuildState.Completed) return;
+                
                 if (Cooldown <= 0)
                 {
+                    if (!idle)
+                    {
+                        GameObject.Animate("idle", true);
+
+                        idle = true;
+                    }
+                    
+                    await using var ctx = new CdClientContext();
+
+                    Cooldown = 0.5f;
+                    
                     foreach (var skillId in skillComponent.DefaultSkillSet)
                     {
-                        await skillComponent.CalculateSkillAsync((int) skillId);
-                    }
+                        var time = await skillComponent.CalculateSkillAsync((int) skillId);
 
-                    Cooldown = 4;
+                        if (time.Equals(0)) continue;
+
+                        GameObject.Animate("attack", true);
+
+                        idle = false;
+                        
+                        var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
+                            s => s.SkillID == skillId
+                        );
+
+                        var _ = Task.Run(async () =>
+                        {
+                            await Task.Delay((int) (time * 1000));
+                            
+                            if (!idle)
+                            {
+                                GameObject.Animate("idle", true);
+
+                                idle = true;
+                            }
+                        });
+
+                        Cooldown = (skillInfo.Cooldown ?? 0.5f) + time;
+                        
+                        break;
+                    }
                 }
 
                 Cooldown -= Zone.DeltaTime;
