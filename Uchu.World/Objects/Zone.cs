@@ -204,8 +204,12 @@ namespace Uchu.World
             obj.Layer = StandardLayer.Hidden;
             
             Start(obj);
+
+            var spawner = obj.GetComponent<SpawnerComponent>();
+
+            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => (LuzSpawnerWaypoint) w).ToArray();
             
-            var spawn = obj.GetComponent<SpawnerComponent>().Spawn();
+            var spawn = spawner.Spawn();
 
             GameObject.Construct(spawn);
         }

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Numerics;
+using InfectedRose.Luz;
 using InfectedRose.Lvl;
 
 namespace Uchu.World
@@ -9,6 +11,8 @@ namespace Uchu.World
         public List<GameObject> ActiveSpawns { get; }
 
         public LevelObjectTemplate LevelObject { get; set; }
+        
+        public LuzSpawnerWaypoint[] SpawnLocations { get; set; }
 
         protected SpawnerComponent()
         {

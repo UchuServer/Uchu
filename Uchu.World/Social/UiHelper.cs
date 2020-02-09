@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using RakDotNet.IO;
@@ -148,6 +150,53 @@ namespace Uchu.World.Social
             writer.Write((byte) Amf3Type.String);
             Amf3Helper.WriteText(writer, value);
             
+            writer.Write((byte) Amf3Type.Null);
+            
+            @this.Message(new UiMessageServerToSingleClientMessage
+            {
+                Associate = @this,
+                Content = stream.ToArray(),
+                MessageName = name
+            });
+        }
+
+        public static async Task MessageGuiAsync(this Player @this, string name, IDictionary<string, object> arguments)
+        {
+            if (arguments == null)
+            {
+                throw new ArgumentNullException(nameof(arguments));
+            }
+            
+            await using var stream = new MemoryStream();
+            using var writer = new BitWriter(stream);
+
+            writer.Write((byte) Amf3Type.Array);
+            writer.Write<byte>(1);
+
+            foreach (var (key, value) in arguments)
+            {
+                Amf3Helper.WriteText(writer, key);
+
+                switch (value)
+                {
+                    case string str:
+                        writer.Write((byte) Amf3Type.String);
+                        Amf3Helper.WriteText(writer, str);
+                        break;
+                    case int integer:
+                        writer.Write((byte) Amf3Type.Integer);
+                        Amf3Helper.WriteNumber2(writer, (uint) integer);
+                        break;
+                    case uint unsigned:
+                        writer.Write((byte) Amf3Type.Integer);
+                        Amf3Helper.WriteNumber2(writer, unsigned);
+                        break;
+                    case null:
+                        writer.Write((byte) Amf3Type.Undefined);
+                        break;
+                }
+            }
+
             writer.Write((byte) Amf3Type.Null);
             
             @this.Message(new UiMessageServerToSingleClientMessage

@@ -45,7 +45,7 @@ namespace Uchu.World
                     
                     await using var ctx = new CdClientContext();
 
-                    Cooldown = 0.5f;
+                    Cooldown = 1f;
                     
                     foreach (var skillId in skillComponent.DefaultSkillSet)
                     {
@@ -73,7 +73,7 @@ namespace Uchu.World
                             }
                         });
 
-                        Cooldown = (skillInfo.Cooldown ?? 0.5f) + time;
+                        Cooldown = (skillInfo.Cooldown ?? 1f) + time;
                         
                         break;
                     }

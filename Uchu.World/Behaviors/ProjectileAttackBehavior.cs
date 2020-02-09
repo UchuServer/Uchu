@@ -13,6 +13,10 @@ namespace Uchu.World.Behaviors
         public Lot ProjectileLot { get; set; }
         
         public float ProjectileSpeed { get; set; }
+        
+        public float MaxDistance { get; set; }
+        
+        public float TrackRadius { get; set; }
 
         public override async Task BuildAsync()
         {
@@ -21,6 +25,10 @@ namespace Uchu.World.Behaviors
             ProjectileLot = await GetParameter<int>("LOT_ID");
 
             ProjectileSpeed = await GetParameter<float>("projectile_speed");
+
+            MaxDistance = await GetParameter<float>("max_distance");
+
+            TrackRadius = await GetParameter<float>("track_radius"); // ???
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
@@ -65,6 +73,9 @@ namespace Uchu.World.Behaviors
             projectile.ClientObjectId = projectileId;
             projectile.Target = target;
             projectile.Lot = ProjectileLot;
+            projectile.Destination = target.Transform.Position;
+            projectile.RadiusCheck = TrackRadius;
+            projectile.MaxDistance = MaxDistance;
 
             Object.Start(projectile);
 
@@ -92,6 +103,9 @@ namespace Uchu.World.Behaviors
             projectile.ClientObjectId = projectileId;
             projectile.Target = target;
             projectile.Lot = ProjectileLot;
+            projectile.Destination = target.Transform.Position;
+            projectile.RadiusCheck = TrackRadius;
+            projectile.MaxDistance = MaxDistance;
             
             ((Player) context.Associate)?.SendChatMessage($"Start PROJ: [{projectile.Lot}] {projectile.ClientObjectId} -> {projectile.Target}");
 

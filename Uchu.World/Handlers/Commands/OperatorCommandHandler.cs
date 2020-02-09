@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -175,6 +176,22 @@ namespace Uchu.World.Handlers.Commands
             await UiHelper.ToggleAsync(player, arguments[0], !bool.TryParse(arguments[1], out var state) || state);
             
             return "Sent ui message.";
+        }
+
+        [CommandHandler(Signature = "imagination", Help = "Send imagination ui message", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Imagination(string[] arguments, Player player)
+        {
+            var current = uint.Parse(arguments[0]);
+
+            var max = uint.Parse(arguments[1]);
+
+            await player.MessageGuiAsync("SetImagination", new Dictionary<string, object>()
+            {
+                {"imaginationMax", max},
+                {"imagination", current}
+            });
+
+            return "Sent";
         }
     }
 }

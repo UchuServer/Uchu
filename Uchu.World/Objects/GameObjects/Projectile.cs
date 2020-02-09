@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.World.Behaviors;
@@ -15,9 +16,21 @@ namespace Uchu.World
         public GameObject Owner { get; set; }
         
         public GameObject Target { get; set; }
+        
+        public Vector3 Destination { get; set; }
+        
+        public float MaxDistance { get; set; }
+        
+        public float RadiusCheck { get; set; }
 
         public async Task ImpactAsync(byte[] data, GameObject target)
         {
+            await target.NetFavorAsync();
+
+            var distance = Vector3.Distance(Destination, target.Transform.Position);
+            
+            if (distance > RadiusCheck) return;
+            
             target ??= Target;
             
             var tree = new BehaviorTree(Lot);
@@ -46,7 +59,11 @@ namespace Uchu.World
 
         public async Task CalculateImpactAsync(GameObject target)
         {
-            target ??= Target;
+            await target.NetFavorAsync();
+
+            var distance = Vector3.Distance(Destination, target.Transform.Position);
+            
+            if (distance > RadiusCheck) return;
             
             var tree = new BehaviorTree(Lot);
 

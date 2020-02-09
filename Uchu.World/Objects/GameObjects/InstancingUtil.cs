@@ -46,9 +46,9 @@ namespace Uchu.World
 
         public static GameObject Spawner(LuzSpawnerPath spawnerPath, Object parent)
         {
-            if (!spawnerPath.Waypoints.Any()) return null;
-            
-            var wayPoint = (LuzSpawnerWaypoint) spawnerPath.Waypoints[0];
+            if (spawnerPath.Waypoints.Length == default) return default;
+
+            var wayPoint = (LuzSpawnerWaypoint) spawnerPath.Waypoints[default];
 
             var spawner = GameObject.Instantiate(
                 parent,

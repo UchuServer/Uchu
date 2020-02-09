@@ -74,6 +74,8 @@ namespace Uchu.World
         public GuildGuiState GuildGuiState { get; set; }
         
         public string GuildInviteName { get; set; }
+
+        public int Ping => Connection.AveragePing;
         
         public override string Name
         {
