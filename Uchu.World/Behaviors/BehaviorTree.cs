@@ -104,7 +104,7 @@ namespace Uchu.World.Behaviors
             
             foreach (var (id, castType, skillId) in BehaviorIds.ToArray())
             {
-                var root = BehaviorBase.Cache.FirstOrDefault(b => b.BehaviorId == id);
+                var root = BehaviorBase.Cache.ToArray().FirstOrDefault(b => b.BehaviorId == id);
 
                 if (root == default)
                 {

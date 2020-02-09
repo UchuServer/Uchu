@@ -43,6 +43,11 @@ namespace Uchu.World.Behaviors
 
             context.Writer.Write(syncId);
 
+            if (branchContext.Target is Player player)
+            {
+                player.SendChatMessage($"Delay. [{context.SkillSyncId}] [{syncId}]");
+            }
+
             Task.Run(async () =>
             {
                 await Task.Delay(Delay);
@@ -52,6 +57,11 @@ namespace Uchu.World.Behaviors
                 await Action.CalculateAsync(context, branchContext);
 
                 context.Sync(syncId);
+                
+                if (branchContext.Target is Player sPlayer)
+                {
+                    sPlayer.SendChatMessage($"Sync. [{context.SkillSyncId}] [{syncId}]");
+                }
             });
             
             return Task.CompletedTask;

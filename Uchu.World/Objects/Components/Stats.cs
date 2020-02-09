@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -298,6 +299,11 @@ namespace Uchu.World
             Armor -= armorDamage;
 
             Health -= Math.Min(value, Health);
+
+            if (source != default && GameObject is Player)
+            {
+                GameObject.Animate("onhit", true);
+            }
         }
 
         public void Heal(uint value)

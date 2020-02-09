@@ -171,6 +171,11 @@ namespace Uchu.World
             var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId);
 
             if (!context.FoundTarget) return 0;
+
+            foreach (var player in Zone.Players)
+            {
+                player.SendChatMessage($"Start: [{syncId}]");
+            }
             
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
@@ -179,6 +184,7 @@ namespace Uchu.World
                 Content = stream.ToArray(),
                 SkillId = skillId,
                 SkillHandle = syncId,
+                OptionalOriginator = GameObject
             });
 
             return context.SkillTime;
@@ -254,11 +260,11 @@ namespace Uchu.World
 
             var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
-            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviourHandle}] ; {found}");
+            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviorHandle}] ; {found}");
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviourHandle, reader, writer);
+                await behavior.SyncAsync(message.BehaviorHandle, reader, writer);
             }
 
             if (message.Done)
@@ -269,7 +275,7 @@ namespace Uchu.World
             Zone.ExcludingMessage(new EchoSyncSkillMessage
             {
                 Associate = GameObject,
-                BehaviorHandle = message.BehaviourHandle,
+                BehaviorHandle = message.BehaviorHandle,
                 Content = writeStream.ToArray(),
                 Done = message.Done,
                 SkillHandle = message.SkillHandle

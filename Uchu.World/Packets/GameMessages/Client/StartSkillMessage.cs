@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Numerics;
 using RakDotNet.IO;
@@ -5,7 +6,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class StartSkillMessage : ClientGameMessage
+    public class StartSkillMessage : GeneralGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.StartSkill;
 
@@ -61,6 +62,43 @@ namespace Uchu.World
 
             if (reader.ReadBit())
                 SkillHandle = reader.Read<uint>();
+        }
+
+        public override void SerializeMessage(BitWriter writer)
+        {
+            writer.WriteBit(UsedMouse);
+
+            if (writer.Flag(ConsumableItem != default))
+                writer.Write(ConsumableItem);
+
+            if (writer.Flag(!CasterLatency.Equals(0)))
+                writer.Write(CasterLatency);
+
+            if (writer.Flag(CastType != default))
+                writer.Write(CastType);
+
+            if (writer.Flag(LastClickedPosition != Vector3.Zero))
+                writer.Write(LastClickedPosition);
+
+            writer.Write(OptionalOriginator);
+
+            if (writer.Flag(OptionalTarget != default))
+                writer.Write(OptionalTarget);
+
+            if (writer.Flag(OriginatorRotation != Quaternion.Identity))
+                writer.Write(OriginatorRotation);
+
+            writer.Write((uint) Content.Length);
+
+            foreach (var b in Content)
+            {
+                writer.Write(b);
+            }
+
+            writer.Write(SkillId);
+
+            if (writer.Flag(SkillHandle != 0))
+                writer.Write(SkillHandle);
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
-using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -39,7 +38,7 @@ namespace Uchu.World
                 {
                     if (!idle)
                     {
-                        GameObject.Animate("idle", true);
+                        Action = CombatAiAction.Idle;
 
                         idle = true;
                     }
@@ -54,7 +53,7 @@ namespace Uchu.World
 
                         if (time.Equals(0)) continue;
 
-                        GameObject.Animate("attack", true);
+                        Action = CombatAiAction.Attacking;
 
                         idle = false;
                         
@@ -66,9 +65,9 @@ namespace Uchu.World
                         {
                             await Task.Delay((int) (time * 1000));
                             
-                            if (!idle)
+                            if (!PerformingAction)
                             {
-                                GameObject.Animate("idle", true);
+                                Action = CombatAiAction.Idle;
 
                                 idle = true;
                             }
@@ -96,7 +95,7 @@ namespace Uchu.World
             if (!PerformingAction) return;
 
             writer.Write((uint) Action);
-            writer.Write(Target.ObjectId);
+            writer.Write(Target);
         }
 
         public async Task<GameObject[]> SeekValidTargetsAsync()

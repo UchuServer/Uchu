@@ -2,7 +2,7 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    public class SyncSkillMessage : ClientGameMessage
+    public class SyncSkillMessage : GeneralGameMessage
     {
         public override GameMessageId GameMessageId => GameMessageId.SyncSkill;
 
@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public byte[] Content { get; set; }
 
-        public uint BehaviourHandle { get; set; }
+        public uint BehaviorHandle { get; set; }
 
         public uint SkillHandle { get; set; }
 
@@ -22,8 +22,22 @@ namespace Uchu.World
 
             for (var i = 0; i < Content.Length; i++) Content[i] = reader.Read<byte>();
 
-            BehaviourHandle = reader.Read<uint>();
+            BehaviorHandle = reader.Read<uint>();
             SkillHandle = reader.Read<uint>();
+        }
+
+        public override void SerializeMessage(BitWriter writer)
+        {
+            writer.WriteBit(Done);
+
+            writer.Write((uint) Content.Length);
+            
+            foreach (var b in Content)
+                writer.Write(b);
+
+            writer.Write(BehaviorHandle);
+
+            writer.Write(SkillHandle);
         }
     }
 }

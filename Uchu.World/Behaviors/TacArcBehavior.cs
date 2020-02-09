@@ -125,36 +125,6 @@ namespace Uchu.World.Behaviors
                 return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToArray();
 
-            if (!context.Alive)
-            {
-                targets = new GameObject[0]; // No targeting if dead
-            }
-
-            var any = targets.Any();
-            
-            context.Writer.WriteBit(any); // Hit
-
-            if (!any)
-            {
-                if (Blocked)
-                {
-                    context.Writer.WriteBit(false);
-                }
-                else
-                {
-                    await MissBehavior.CalculateAsync(context, branchContext);
-                }
-                
-                return;
-            }
-
-            context.FoundTarget = true;
-
-            if (CheckEnvironment)
-            {
-                context.Writer.WriteBit(false);
-            }
-
             var selectedTargets = new List<GameObject>();
 
             foreach (var target in targets)
@@ -165,28 +135,60 @@ namespace Uchu.World.Behaviors
                 }
             }
 
-            context.Writer.Write((uint) selectedTargets.Count);
-
-            foreach (var target in selectedTargets)
+            if (!context.Alive)
             {
-                context.Writer.Write(target.ObjectId);
+                selectedTargets.Clear(); // No targeting if dead
             }
 
-            foreach (var target in selectedTargets)
-            {
-                if (!(target is Player player)) continue;
+            var any = selectedTargets.Any();
 
-                player.SendChatMessage("You are a target!");
-            }
+            context.Writer.WriteBit(any); // Hit
 
-            foreach (var target in selectedTargets)
+            if (any)
             {
-                var branch = new ExecutionBranchContext(target)
+                context.FoundTarget = true;
+
+                if (CheckEnvironment)
                 {
-                    Duration = branchContext.Duration
-                };
+                    // TODO
+                    context.Writer.WriteBit(false);
+                }
 
-                await ActionBehavior.CalculateAsync(context, branch);
+                context.Writer.Write((uint) selectedTargets.Count);
+
+                foreach (var target in selectedTargets)
+                {
+                    context.Writer.Write(target.ObjectId);
+                }
+
+                foreach (var target in selectedTargets)
+                {
+                    if (!(target is Player player)) continue;
+
+                    player.SendChatMessage($"You are a target! [{context.SkillSyncId}]");
+                }
+
+                foreach (var target in selectedTargets)
+                {
+                    var branch = new ExecutionBranchContext(target)
+                    {
+                        Duration = branchContext.Duration
+                    };
+
+                    await ActionBehavior.CalculateAsync(context, branch);
+                }
+            }
+            else
+            {
+                if (Blocked)
+                {
+                    // TODO
+                    context.Writer.WriteBit(false);
+                }
+                else
+                {
+                    await MissBehavior.CalculateAsync(context, branchContext);
+                }
             }
         }
     }

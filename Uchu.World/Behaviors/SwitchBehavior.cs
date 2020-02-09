@@ -64,13 +64,13 @@ namespace Uchu.World.Behaviors
 
             // TODO
 
-            var state = branchContext.Target != default && context.Alive;
+            var state = true;
             
             if (Imagination > 0 || !IsEnemyFaction)
             {
-                context.Writer.WriteBit(true);
-
-                state = true;
+                state = branchContext.Target != default && context.Alive;
+                
+                context.Writer.WriteBit(state);
             }
 
             if (state)

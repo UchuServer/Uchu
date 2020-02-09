@@ -37,7 +37,7 @@ namespace Uchu.World.Behaviors
             context.Reader.ReadBit();
             context.Writer.WriteBit(false);
             context.Writer.WriteBit(false);
-            context.Writer.WriteBit(false);
+            context.Writer.WriteBit(true);
 
             context.Reader.Read<uint>();
             context.Writer.Write(0);
@@ -68,7 +68,7 @@ namespace Uchu.World.Behaviors
             
             context.Writer.WriteBit(false);
             context.Writer.WriteBit(false);
-            context.Writer.WriteBit(false);
+            context.Writer.WriteBit(true);
             
             context.Writer.Write(0);
 
