@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -162,11 +163,11 @@ namespace Uchu.World.Behaviors
         /// <param name="syncId">Sync Id</param>
         /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
-        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, GameObject target = default)
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, Vector3 calculatingPosition, GameObject target = default)
         {
             target ??= associate;
             
-            var context = new NpcExecutionContext(target, writer, skillId, syncId);
+            var context = new NpcExecutionContext(target, writer, skillId, syncId, calculatingPosition);
 
             if (!SkillRoots.TryGetValue(skillId, out var root))
             {

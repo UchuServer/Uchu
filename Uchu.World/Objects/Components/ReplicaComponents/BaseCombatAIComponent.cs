@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
+using Uchu.World.AI;
 
 namespace Uchu.World
 {
@@ -18,62 +20,72 @@ namespace Uchu.World
         
         public float Cooldown { get; set; }
         
+        public List<NpcSkillEntry> SkillEntries { get; set; }
+
+        private SkillComponent SkillComponent { get; set; }
+        
+        private DestructibleComponent DestructibleComponent { get; set; }
+        
+        private QuickBuildComponent QuickBuildComponent { get; set; }
+        
         public BaseCombatAiComponent()
         {
-            var idle = true;
+            Listen(OnStart, async () =>
+            {
+                SkillEntries = new List<NpcSkillEntry>();
+                
+                SkillComponent = GameObject.GetComponent<SkillComponent>();
+
+                DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
+
+                QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
+
+                foreach (var skillId in SkillComponent.DefaultSkillSet)
+                {
+                    SkillEntries.Add(new NpcSkillEntry
+                    {
+                        SkillId = skillId,
+                        Cooldown = false
+                    });
+                }
+            });
             
             Listen(OnTick, async () =>
             {
-                var skillComponent = GameObject.GetComponent<SkillComponent>();
-
-                var destructComponent = GameObject.GetComponent<DestructibleComponent>();
-
-                var rebuild = GameObject.GetComponent<QuickBuildComponent>();
+                if (GameObject.Lot == 6007 || GameObject.Lot == 6366) return; // TODO: Remove
                 
-                if (!destructComponent.Alive) return;
+                if (!DestructibleComponent.Alive) return;
                 
-                if (rebuild != default && rebuild.State != RebuildState.Completed) return;
+                if (QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed) return;
                 
                 if (Cooldown <= 0)
                 {
-                    if (!idle)
-                    {
-                        Action = CombatAiAction.Idle;
-
-                        idle = true;
-                    }
-                    
                     await using var ctx = new CdClientContext();
 
                     Cooldown = 1f;
                     
-                    foreach (var skillId in skillComponent.DefaultSkillSet)
+                    foreach (var entry in SkillEntries.Where(s => !s.Cooldown))
                     {
-                        var time = await skillComponent.CalculateSkillAsync((int) skillId);
+                        var time = await SkillComponent.CalculateSkillAsync((int) entry.SkillId);
 
                         if (time.Equals(0)) continue;
 
-                        Action = CombatAiAction.Attacking;
-
-                        idle = false;
+                        entry.Cooldown = true;
                         
                         var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
-                            s => s.SkillID == skillId
+                            s => s.SkillID == entry.SkillId
                         );
 
                         var _ = Task.Run(async () =>
                         {
-                            await Task.Delay((int) (time * 1000));
+                            var cooldown = (skillInfo.Cooldown ?? 1f) + time;
                             
-                            if (!PerformingAction)
-                            {
-                                Action = CombatAiAction.Idle;
+                            await Task.Delay((int) cooldown * 1000);
 
-                                idle = true;
-                            }
+                            entry.Cooldown = false;
                         });
 
-                        Cooldown = (skillInfo.Cooldown ?? 1f) + time;
+                        Cooldown += time;
                         
                         break;
                     }

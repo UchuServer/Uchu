@@ -119,24 +119,31 @@ namespace Uchu.World
         
         public static void Currency(int currency, Player owner, GameObject source, Vector3 spawn)
         {
-            var finalPosition = new Vector3
+            try
             {
-                X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
-                Y = spawn.Y,
-                Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
-            };
+                var finalPosition = new Vector3
+                {
+                    X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
+                    Y = spawn.Y,
+                    Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
+                };
 
-            owner.Message(new DropClientLootMessage
+                owner.Message(new DropClientLootMessage
+                {
+                    Associate = owner,
+                    Currency = currency,
+                    Owner = owner,
+                    Source = source,
+                    SpawnPosition = spawn + Vector3.UnitY,
+                    FinalPosition = finalPosition
+                });
+
+                owner.EntitledCurrency += currency;
+            }
+            catch (Exception e)
             {
-                Associate = owner,
-                Currency = currency,
-                Owner = owner,
-                Source = source,
-                SpawnPosition = spawn + Vector3.UnitY,
-                FinalPosition = finalPosition
-            });
-
-            owner.EntitledCurrency += currency;
+                Logger.Error(e);
+            }
         }
     }
 }

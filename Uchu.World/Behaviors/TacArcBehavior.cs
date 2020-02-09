@@ -114,7 +114,7 @@ namespace Uchu.World.Behaviors
 
             var validTarget = await baseCombatAiComponent.SeekValidTargetsAsync();
 
-            var sourcePosition = context.Associate.Transform.Position;
+            var sourcePosition = context.CalculatingPosition; // Change back to author position?
 
             var targets = validTarget.Where(target =>
             {

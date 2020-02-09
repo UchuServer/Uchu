@@ -168,7 +168,7 @@ namespace Uchu.World
 
             var syncId = ClaimSyncId();
 
-            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId);
+            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position);
 
             if (!context.FoundTarget) return 0;
 

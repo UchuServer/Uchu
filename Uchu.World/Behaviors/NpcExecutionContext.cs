@@ -17,6 +17,8 @@ namespace Uchu.World.Behaviors
         public uint SkillSyncId { get; set; }
         
         public bool FoundTarget { get; set; }
+        
+        public Vector3 CalculatingPosition { get; set; }
 
         public bool Alive
         {
@@ -34,8 +36,10 @@ namespace Uchu.World.Behaviors
             }
         }
         
-        public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId, uint skillSyncId) : base(associate, default, writer)
+        public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId, uint skillSyncId, Vector3 calculatingPosition) 
+            : base(associate, default, writer)
         {
+            CalculatingPosition = calculatingPosition;
             SkillId = skillId;
             SkillSyncId = skillSyncId;
         }
@@ -54,7 +58,7 @@ namespace Uchu.World.Behaviors
 
         public NpcExecutionContext Copy()
         {
-            return new NpcExecutionContext(Associate, new BitWriter(new MemoryStream()), SkillId, SkillSyncId)
+            return new NpcExecutionContext(Associate, new BitWriter(new MemoryStream()), SkillId, SkillSyncId, CalculatingPosition)
             {
                 MaxRange = MaxRange,
                 MinRange = MinRange
@@ -63,6 +67,8 @@ namespace Uchu.World.Behaviors
 
         public bool IsValidTarget(GameObject gameObject)
         {
+            if (MaxRange.Equals(0)) return true;
+            
             var distance = Vector3.Distance(gameObject.Transform.Position, Associate.Transform.Position);
 
             return distance <= MaxRange;

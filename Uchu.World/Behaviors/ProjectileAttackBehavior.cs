@@ -63,6 +63,11 @@ namespace Uchu.World.Behaviors
         
         private void CalculateProjectile(ExecutionContext context, GameObject target)
         {
+            if (target is Player player)
+            {
+                player.SendChatMessage("You are a projectile target!");
+            }
+            
             var projectileId = IdUtilities.GenerateObjectId();
 
             context.Writer.Write(projectileId);

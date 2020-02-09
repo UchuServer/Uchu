@@ -78,6 +78,7 @@ namespace Uchu.World
                 writer,
                 tree.SkillRoots.First().Key,
                 Owner.GetComponent<SkillComponent>().ClaimSyncId(),
+                target.Transform.Position,
                 target
             );
             
