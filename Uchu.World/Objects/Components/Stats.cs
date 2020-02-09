@@ -25,6 +25,8 @@ namespace Uchu.World
         
         public int[] Factions { get; set; } = new int[0];
         
+        public int[] Enemies { get; set; } = new int[0];
+        
         public uint DamageAbsorptionPoints { get; set; }
         
         public bool Immune { get; set; }
@@ -192,12 +194,12 @@ namespace Uchu.World
 
         protected Stats()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
                 
-                using var cdClient = new CdClientContext();
+                await using var cdClient = new CdClientContext();
 
                 var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
                     c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
@@ -206,6 +208,20 @@ namespace Uchu.World
                 if (destroyable == default) return;
 
                 Factions = new[] {destroyable.Faction ?? 1};
+
+                var faction = await cdClient.FactionsTable.FirstOrDefaultAsync(
+                    f => f.Faction == Factions[0]
+                );
+                
+                if (faction?.EnemyList == default) return;
+                
+                if (string.IsNullOrWhiteSpace(faction.EnemyList)) return;
+
+                Enemies = faction.EnemyList
+                    .Replace(" ", "")
+                    .Split(',')
+                    .Select(int.Parse)
+                    .ToArray();
             });
 
             Listen(OnDestroyed, () =>

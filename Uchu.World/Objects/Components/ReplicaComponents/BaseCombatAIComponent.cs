@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
 using Uchu.Core.Client;
 using Uchu.World.AI;
@@ -28,9 +29,11 @@ namespace Uchu.World
         
         private QuickBuildComponent QuickBuildComponent { get; set; }
         
+        private Stats Stats { get; set; }
+        
         public BaseCombatAiComponent()
         {
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
                 SkillEntries = new List<NpcSkillEntry>();
                 
@@ -39,6 +42,8 @@ namespace Uchu.World
                 DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
 
                 QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
+
+                Stats = GameObject.GetComponent<Stats>();
 
                 foreach (var skillId in SkillComponent.DefaultSkillSet)
                 {
@@ -52,8 +57,6 @@ namespace Uchu.World
             
             Listen(OnTick, async () =>
             {
-                if (GameObject.Lot == 6007 || GameObject.Lot == 6366) return; // TODO: Remove
-                
                 if (!DestructibleComponent.Alive) return;
                 
                 if (QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed) return;
@@ -110,11 +113,25 @@ namespace Uchu.World
             writer.Write(Target);
         }
 
-        public async Task<GameObject[]> SeekValidTargetsAsync()
+        public GameObject[] SeekValidTargets()
         {
-            // TODO: Do faction calculations
+            // TODO: Optimize
 
-            return Zone.Players.ToArray();
+            if (Stats.Factions.Length == default) return new GameObject[0];
+
+            var entries = Zone.Objects.OfType<Stats>();
+
+            var targets = new List<GameObject>();
+            
+            foreach (var entry in entries.Where(e => e.Factions.Length != default && e.Health > 0))
+            {
+                if (Stats.Enemies.Contains(entry.Factions.First()))
+                {
+                    targets.Add(entry.GameObject);
+                }
+            }
+
+            return targets.ToArray();
         }
     }
 }

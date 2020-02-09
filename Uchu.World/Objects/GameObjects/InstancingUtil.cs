@@ -87,38 +87,51 @@ namespace Uchu.World
 
         public static GameObject Loot(Lot lot, Player owner, GameObject source, Vector3 spawn)
         {
-            var drop = GameObject.Instantiate(
-                owner.Zone,
-                lot,
-                spawn
-            );
+            if (owner is null) return default;
 
-            drop.Layer = StandardLayer.Hidden;
-
-            var finalPosition = new Vector3
+            try
             {
-                X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
-                Y = spawn.Y,
-                Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
-            };
+                var drop = GameObject.Instantiate(
+                    owner.Zone,
+                    lot,
+                    spawn
+                );
 
-            owner.Message(new DropClientLootMessage
+                drop.Layer = StandardLayer.Hidden;
+
+                var finalPosition = new Vector3
+                {
+                    X = spawn.X + ((float) Random.NextDouble() % 1f - 0.5f) * 20f,
+                    Y = spawn.Y,
+                    Z = spawn.Z + ((float) Random.NextDouble() % 1f - 0.5f) * 20f
+                };
+
+                owner.Message(new DropClientLootMessage
+                {
+                    Associate = owner,
+                    Currency = 0,
+                    Lot = drop.Lot,
+                    Loot = drop,
+                    Owner = owner,
+                    Source = source,
+                    SpawnPosition = drop.Transform.Position + Vector3.UnitY,
+                    FinalPosition = finalPosition
+                });
+
+                return drop;
+            }
+            catch (Exception e)
             {
-                Associate = owner,
-                Currency = 0,
-                Lot = drop.Lot,
-                Loot = drop,
-                Owner = owner,
-                Source = source,
-                SpawnPosition = drop.Transform.Position + Vector3.UnitY,
-                FinalPosition = finalPosition
-            });
-            
-            return drop;
+                Logger.Error(e);
+
+                return default;
+            }
         }
         
         public static void Currency(int currency, Player owner, GameObject source, Vector3 spawn)
         {
+            if (owner is null) return;
+            
             try
             {
                 var finalPosition = new Vector3

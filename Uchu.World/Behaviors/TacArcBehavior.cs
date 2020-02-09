@@ -112,7 +112,7 @@ namespace Uchu.World.Behaviors
         {
             if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
 
-            var validTarget = await baseCombatAiComponent.SeekValidTargetsAsync();
+            var validTarget = baseCombatAiComponent.SeekValidTargets();
 
             var sourcePosition = context.CalculatingPosition; // Change back to author position?
 

@@ -46,7 +46,8 @@ namespace Uchu.World
 
         public static void Start(Object obj)
         {
-            if (obj._started) return;
+            if (obj?._started ?? true) return;
+            
             obj._started = true;
             
             obj.Zone.RegisterObject(obj);
