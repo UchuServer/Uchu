@@ -123,7 +123,17 @@ namespace Uchu.World.Behaviors
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
 
                 return distance <= context.MaxRange && context.MinRange <= distance;
-            }).ToArray();
+            }).ToList();
+
+            /*
+            targets.ToList().Sort((g1, g2) =>
+            {
+                var distance1 = Vector3.Distance(g1.Transform.Position, sourcePosition);
+                var distance2 = Vector3.Distance(g2.Transform.Position, sourcePosition);
+
+                return (int) (distance1 - distance2);
+            });
+            */
 
             var selectedTargets = new List<GameObject>();
 
@@ -146,6 +156,8 @@ namespace Uchu.World.Behaviors
 
             if (any)
             {
+                baseCombatAiComponent.Target = selectedTargets.First();
+                
                 context.FoundTarget = true;
 
                 if (CheckEnvironment)

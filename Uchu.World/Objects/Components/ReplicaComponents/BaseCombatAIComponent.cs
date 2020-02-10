@@ -21,6 +21,8 @@ namespace Uchu.World
         
         public float Cooldown { get; set; }
         
+        public bool AbilityDowntime { get; set; }
+        
         public List<NpcSkillEntry> SkillEntries { get; set; }
 
         private SkillComponent SkillComponent { get; set; }
@@ -30,6 +32,8 @@ namespace Uchu.World
         private QuickBuildComponent QuickBuildComponent { get; set; }
         
         private Stats Stats { get; set; }
+
+        public bool Enabled { get; set; } = true;
         
         public BaseCombatAiComponent()
         {
@@ -57,6 +61,8 @@ namespace Uchu.World
             
             Listen(OnTick, async () =>
             {
+                if (!Enabled) return;
+                
                 if (!DestructibleComponent.Alive) return;
                 
                 if (QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed) return;
@@ -65,6 +71,8 @@ namespace Uchu.World
                 {
                     await using var ctx = new CdClientContext();
 
+                    AbilityDowntime = false;
+                    
                     Cooldown = 1f;
                     
                     foreach (var entry in SkillEntries.Where(s => !s.Cooldown))
@@ -73,6 +81,8 @@ namespace Uchu.World
 
                         if (time.Equals(0)) continue;
 
+                        AbilityDowntime = true;
+                        
                         entry.Cooldown = true;
                         
                         var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(

@@ -69,7 +69,10 @@ namespace Uchu.World
             return euler;
         }
 
-        public static Vector3 MoveTowards(this Vector3 current, Vector3 target, float maxDistanceDelta)
+        public static Vector3 MoveTowards(this Vector3 current, Vector3 target, float maxDistanceDelta) =>
+            MoveTowards(current, target, maxDistanceDelta, out _);
+        
+        public static Vector3 MoveTowards(this Vector3 current, Vector3 target, float maxDistanceDelta, out Vector3 changeVector)
         {
             //
             // Stolen from Unity.
@@ -82,10 +85,21 @@ namespace Uchu.World
             var delta = (float) (deltaX * (double) deltaX + deltaY * (double) deltaY + deltaZ * (double) deltaZ);
 
             if (Math.Abs(delta) < 0.001f || delta <= maxDistanceDelta * (double) maxDistanceDelta)
+            {
+                changeVector = Vector3.Zero;
+
                 return target;
+            }
 
             var change = (float) Math.Sqrt(delta);
 
+            changeVector = new Vector3
+            {
+                X = deltaX / change * maxDistanceDelta,
+                Y = deltaY / change * maxDistanceDelta,
+                Z = deltaZ / change * maxDistanceDelta
+            };
+            
             return new Vector3(
                 current.X + deltaX / change * maxDistanceDelta,
                 current.Y + deltaY / change * maxDistanceDelta,

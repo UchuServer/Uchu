@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Numerics;
 
@@ -32,12 +31,20 @@ namespace Uchu.World
             GameObject.Serialize(GameObject);
         }
 
+        /// <summary>
+        ///     The forward direction for this object
+        /// </summary>
         public Vector3 Forward
         {
             get => Rotation.VectorMultiply(Vector3.UnitX);
             set => Rotation = value.QuaternionLookRotation(Vector3.UnitY);
         }
 
+        /// <summary>
+        ///     Make this object look at a given position
+        /// </summary>
+        /// <param name="position">Position to look at</param>
+        /// <param name="lockY">Ignore the Y axis (Default = true)</param>
         public void LookAt(Vector3 position, bool lockY = true)
         {
             if (lockY)

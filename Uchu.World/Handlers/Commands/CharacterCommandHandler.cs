@@ -80,7 +80,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "spawn", Help = "Spawn an object", GameMasterLevel = GameMasterLevel.Admin)]
         public string Spawn(string[] arguments, Player player)
         {
-            if (arguments.Length != 1 || arguments.Length > 4)
+            if (arguments.Length == default)
                 return "spawn <lot> <x(optional)> <y(optional)> <z(optional)>";
 
             arguments = arguments.Select(a => a.Replace('.', ',')).ToArray();
@@ -88,20 +88,28 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
             var position = player.Transform.Position;
-            if (arguments.Length >= 4)
-                try
+
+            var factionSided = arguments.Contains("-f");
+            
+            if (!factionSided)
+            {
+                if (arguments.Length >= 4)
                 {
-                    position = new Vector3
+                    try
                     {
-                        X = float.Parse(arguments[1].Replace('.', ',')),
-                        Y = float.Parse(arguments[2].Replace('.', ',')),
-                        Z = float.Parse(arguments[3].Replace('.', ','))
-                    };
+                        position = new Vector3
+                        {
+                            X = float.Parse(arguments[1].Replace('.', ',')),
+                            Y = float.Parse(arguments[2].Replace('.', ',')),
+                            Z = float.Parse(arguments[3].Replace('.', ','))
+                        };
+                    }
+                    catch
+                    {
+                        return "Invalid <x(optional)>, <y(optional)>, or <z(optional)>";
+                    }
                 }
-                catch
-                {
-                    return "Invalid <x(optional)>, <y(optional)>, or <z(optional)>";
-                }
+            }
 
             var rotation = player.Transform.Rotation;
 
@@ -116,6 +124,20 @@ namespace Uchu.World.Handlers.Commands
 
             Object.Start(obj);
             GameObject.Construct(obj);
+
+            if (factionSided)
+            {
+                if (obj.TryGetComponent<Stats>(out var stats))
+                {
+                    stats.Factions = new[] {int.Parse(arguments[2])};
+                    stats.Enemies = new[] {int.Parse(arguments[3])};
+                    
+                    obj.GetComponent<DestructibleComponent>().ResurrectTime = 30;
+                    obj.GetComponent<BaseCombatAiComponent>().Enabled = false;
+                    
+                    GameObject.Serialize(obj);
+                }
+            }
 
             return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
         }
