@@ -193,5 +193,11 @@ namespace Uchu.World.Handlers.Commands
 
             return "Sent";
         }
+
+        [CommandHandler(Signature = "ping", Help = "Get you average ping", GameMasterLevel = GameMasterLevel.Player)]
+        public string Ping(string[] arguments, Player player)
+        {
+            return $"{player.Ping}ms";
+        }
     }
 }

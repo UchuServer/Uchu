@@ -474,29 +474,6 @@ namespace Uchu.World
                         try
                         {
                             Update(obj);
-
-                            if (!(obj is GameObject gameObject)) continue;
-                            
-                            if (obj is Item) continue;
-
-                            foreach (var player in players)
-                            {
-                                var spawned = player.Perspective.LoadedObjects.ToArray().Contains(gameObject);
-
-                                var view = player.Perspective.View(gameObject);
-                                
-                                if (spawned && !view)
-                                {
-                                    SendDestruction(gameObject, player);
-
-                                    continue;
-                                }
-
-                                if (!spawned && view)
-                                {
-                                    SendConstruction(gameObject, player);
-                                }
-                            }
                         }
                         catch (Exception e)
                         {

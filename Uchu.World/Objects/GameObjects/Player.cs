@@ -54,6 +54,30 @@ namespace Uchu.World
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
             });
+
+            Listen(OnPositionUpdate, (position, rotation) =>
+            {
+                foreach (var gameObject in Zone.GameObjects)
+                {
+                    var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+                    var view = Perspective.View(gameObject);
+                    
+                    if (spawned && !view)
+                    {
+                        Zone.SendDestruction(gameObject, this);
+
+                        continue;
+                    }
+
+                    if (!spawned && view)
+                    {
+                        Zone.SendConstruction(gameObject, this);
+                    }
+                }
+                
+                return Task.CompletedTask;
+            });
         }
 
         public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =
