@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Numerics;
 
@@ -27,6 +28,28 @@ namespace Uchu.World
         public void Rotate(Quaternion delta)
         {
             Rotation += delta;
+
+            GameObject.Serialize(GameObject);
+        }
+
+        public Vector3 Forward
+        {
+            get => Rotation.VectorMultiply(Vector3.UnitX);
+            set => Rotation = value.QuaternionLookRotation(Vector3.UnitY);
+        }
+
+        public void LookAt(Vector3 position, bool lockY = true)
+        {
+            if (lockY)
+            {
+                position.Y = Position.Y;
+            }
+
+            // Determine which direction to rotate towards
+            var targetDirection = position - Position;
+
+            // Calculate a rotation a step closer to the target and applies rotation to this object
+            Rotation = targetDirection.QuaternionLookRotation(Vector3.UnitY);
 
             GameObject.Serialize(GameObject);
         }

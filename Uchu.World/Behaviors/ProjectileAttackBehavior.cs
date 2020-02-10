@@ -63,6 +63,8 @@ namespace Uchu.World.Behaviors
         
         private void CalculateProjectile(ExecutionContext context, GameObject target)
         {
+            context.Associate.Transform.LookAt(target.Transform.Position);
+            
             if (target is Player player)
             {
                 player.SendChatMessage("You are a projectile target!");

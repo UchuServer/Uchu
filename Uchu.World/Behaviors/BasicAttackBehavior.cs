@@ -60,10 +60,12 @@ namespace Uchu.World.Behaviors
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
+            context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
+            
             await branchContext.Target.NetFavorAsync();
             
             Logger.Debug($"NPC is attacking: {branchContext.Target}");
-            
+
             context.Writer.Align();
 
             context.Writer.Write<ushort>(0);
