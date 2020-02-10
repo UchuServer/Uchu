@@ -12,10 +12,6 @@ namespace Uchu.World.Handlers
 {
     public class SocialHandler : HandlerGroup
     {
-        //
-        // TODO: Move all of this to a component
-        //
-        
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
@@ -43,7 +39,7 @@ namespace Uchu.World.Handlers
 
             if (!string.IsNullOrWhiteSpace(response))
             {
-                player.SendChatMessage(response);
+                player.SendChatMessage(response, PlayerChatChannel.Normal);
             }
             else
             {

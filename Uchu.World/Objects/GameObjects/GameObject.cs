@@ -135,6 +135,14 @@ namespace Uchu.World
 
                 Destruct(this);
             });
+
+            Listen(OnLayerChanged, mask =>
+            {
+                foreach (var player in Zone.Players)
+                {
+                    player.ViewUpdate(this);
+                }
+            });
         }
 
         #region Operators

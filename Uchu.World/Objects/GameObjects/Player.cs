@@ -370,6 +370,25 @@ namespace Uchu.World
             });
         }
 
+        public void ViewUpdate(GameObject gameObject)
+        {
+            var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+            var view = Perspective.View(gameObject);
+                    
+            if (spawned && !view)
+            {
+                Zone.SendDestruction(gameObject, this);
+
+                return;
+            }
+
+            if (!spawned && view)
+            {
+                Zone.SendConstruction(gameObject, this);
+            }
+        }
+
         public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null, ChatChannel chatChannel = World.ChatChannel.Public)
         {
             if (channel > ChatChannel) return;
