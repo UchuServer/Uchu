@@ -38,11 +38,27 @@ namespace Uchu.World.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
 
+            if (context.ExplicitTarget != null)
+            {
+                var branch = new ExecutionBranchContext(context.ExplicitTarget)
+                {
+                    Duration = branchContext.Duration
+                };
+
+                await ActionBehavior.ExecuteAsync(context, branch);
+                
+                context.ExplicitTarget = null;
+                
+                return;
+            }
+            
             var hit = context.Reader.ReadBit();
             context.Writer.Write(hit);
             
             if (hit) // Hit
             {
+                var targets = new List<GameObject>();
+
                 if (CheckEnvironment)
                 {
                     var checkEnvironment = context.Reader.ReadBit(); // Check environment
@@ -53,22 +69,20 @@ namespace Uchu.World.Behaviors
                 var specifiedTargets = context.Reader.Read<uint>();
 
                 context.Writer.Write(specifiedTargets);
-                
-                var targets = new List<GameObject>();
 
                 for (var i = 0; i < specifiedTargets; i++)
                 {
                     var targetId = context.Reader.Read<long>();
 
                     context.Writer.Write(targetId);
-                    
+
                     if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
                     {
                         Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
-                        
+
                         continue;
                     }
-                    
+
                     targets.Add(target);
                 }
 
@@ -125,7 +139,6 @@ namespace Uchu.World.Behaviors
                 return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToList();
 
-            /*
             targets.ToList().Sort((g1, g2) =>
             {
                 var distance1 = Vector3.Distance(g1.Transform.Position, sourcePosition);
@@ -133,7 +146,6 @@ namespace Uchu.World.Behaviors
 
                 return (int) (distance1 - distance2);
             });
-            */
 
             var selectedTargets = new List<GameObject>();
 

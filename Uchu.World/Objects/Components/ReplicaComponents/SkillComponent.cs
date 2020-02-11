@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -184,7 +185,8 @@ namespace Uchu.World
                 Content = stream.ToArray(),
                 SkillId = skillId,
                 SkillHandle = syncId,
-                OptionalOriginator = GameObject
+                OptionalOriginator = GameObject,
+                OriginatorRotation = GameObject.Transform.Rotation
             });
 
             return context.SkillTime;
@@ -194,10 +196,30 @@ namespace Uchu.World
         {
             if (As<Player>() == null) return;
 
+            As<Player>().SendChatMessage($"TARGET: {message.OptionalTarget} [{message.UsedMouse}]");
+
+            try
+            {
+                if (message.OptionalTarget != null)
+                {
+                    // There should be more to this
+                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>().Alive)
+                        message.OptionalTarget = null;
+                    else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
+                        message.OptionalTarget = null;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+                
+                return;
+            }
+
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                As<Player>().SendChatMessage($"START: {message.SkillId}");
+                As<Player>().SendChatMessage($"START: {message.SkillId} [{message.Content.Length}]");
                 
                 var tree = new BehaviorTree(message.SkillId);
 
@@ -234,7 +256,7 @@ namespace Uchu.World
                     Associate = GameObject,
                     CasterLatency = message.CasterLatency,
                     CastType = message.CastType,
-                    Content = writeStream.ToArray(),
+                    Content = message.Content,
                     LastClickedPosition = message.LastClickedPosition,
                     OptionalOriginator = message.OptionalOriginator,
                     OptionalTarget = message.OptionalTarget,
@@ -276,7 +298,7 @@ namespace Uchu.World
             {
                 Associate = GameObject,
                 BehaviorHandle = message.BehaviorHandle,
-                Content = writeStream.ToArray(),
+                Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle
             }, As<Player>());

@@ -252,7 +252,6 @@ namespace Uchu.World.Handlers.Commands
 
             return "Toggled";
         }
-        
 
         [CommandHandler(Signature = "target", Help = "Get target of npc", GameMasterLevel = GameMasterLevel.Admin)]
         public string Target(string[] arguments, Player player)

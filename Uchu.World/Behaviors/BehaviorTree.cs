@@ -192,12 +192,14 @@ namespace Uchu.World.Behaviors
         /// <param name="reader">Client skill data</param>
         /// <param name="writer">Data to be sent to clients</param>
         /// <param name="castType">Type of skill</param>
-        /// <param name="target"></param>
-        /// <param name="explicitTarget"></param>
+        /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
-            var context = new ExecutionContext(associate, reader, writer);
+            var context = new ExecutionContext(associate, reader, writer)
+            {
+                ExplicitTarget = target
+            };
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
             {
