@@ -22,6 +22,8 @@ namespace Uchu.World.Behaviors
         
         public int MaxTargets { get; set; }
         
+        public bool UsePickedTarget { get; set; }
+        
         public override async Task BuildAsync()
         {
             CheckEnvironment = (await GetParameter("check_env"))?.Value > 0;
@@ -32,13 +34,15 @@ namespace Uchu.World.Behaviors
             MissBehavior = await GetBehavior("miss action");
 
             MaxTargets = await GetParameter<int>("max targets");
+
+            UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
 
-            if (context.ExplicitTarget != null)
+            if (UsePickedTarget && context.ExplicitTarget != null)
             {
                 var branch = new ExecutionBranchContext(context.ExplicitTarget)
                 {
@@ -46,8 +50,6 @@ namespace Uchu.World.Behaviors
                 };
 
                 await ActionBehavior.ExecuteAsync(context, branch);
-                
-                context.ExplicitTarget = null;
                 
                 return;
             }
