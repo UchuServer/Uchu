@@ -44,24 +44,6 @@ namespace Uchu.World
 
                 foreach (var item in items)
                 {
-                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                        o => o.Id == item.Itemid
-                    );
-
-                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == item.Itemid && r.Componenttype == 11
-                    );
-
-                    if (cdClientObject == default || itemRegistryEntry == default)
-                    {
-                        Logger.Error($"{item.Itemid} is not a valid item");
-                        continue;
-                    }
-
-                    var itemComponent = cdClient.ItemComponentTable.First(
-                        i => i.Id == itemRegistryEntry.Componentid
-                    );
-
                     Debug.Assert(item.Itemid != null, "item.Itemid != null");
                     Debug.Assert(item.Count != null, "item.Count != null");
 
@@ -94,11 +76,9 @@ namespace Uchu.World
 
             Logger.Debug($"Equipping {item}");
 
-            item.Equipped = true;
-            
             await OnEquipped.InvokeAsync(item);
 
-            await MountItemAsync(item.Lot, item.ObjectId, item.Settings);
+            await MountItemAsync(item.Lot, item.ObjectId, false, item.Settings);
 
             await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true);
 
@@ -113,7 +93,7 @@ namespace Uchu.World
 
             if (item != null)
             {
-                await MountItemAsync(item.Lot, 0);
+                await MountItemAsync(item.Lot, item.ObjectId, true);
             }
         }
 
@@ -133,7 +113,7 @@ namespace Uchu.World
             await ctx.SaveChangesAsync();
         }
 
-        private async Task<Lot[]> GenerateProxyItemsAsync(Lot item)
+        private static async Task<Lot[]> ParseProxyItemsAsync(Lot item)
         {
             await using var ctx = new CdClientContext();
 
@@ -153,8 +133,13 @@ namespace Uchu.World
             return proxies.ToArray();
         }
 
-        public async Task<long> MountItemAsync(Lot inventoryItem, long id, LegoDataDictionary settings = default)
+        public async Task<long> MountItemAsync(Lot inventoryItem, long id, bool unEquip = false, LegoDataDictionary settings = default)
         {
+            if (Zone.TryGetGameObject<Item>(id, out var itemInstance))
+            {
+                itemInstance.Equipped = !unEquip;
+            }
+            
             await using var ctx = new CdClientContext();
 
             var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
@@ -179,7 +164,7 @@ namespace Uchu.World
 
                     if (item == default) goto equipItem;
 
-                    await MountItemAsync(item.LOT, 0);
+                    await MountItemAsync(item.LOT, item.InventoryItemId, true);
                     
                     goto equipItem;
                 }
@@ -198,14 +183,14 @@ namespace Uchu.World
                         
                         if (item == default) continue;
 
-                        await MountItemAsync(item.LOT, 0);
+                        await MountItemAsync(item.LOT, item.InventoryItemId, true);
                     }
                 }
             }
             
             equipItem:
 
-            if (id == default)
+            if (unEquip)
             {
                 Items[location] = default;
                 
@@ -236,7 +221,7 @@ namespace Uchu.World
              * Equip proxies
              */
 
-            var additionalItems = await GenerateProxyItemsAsync(inventoryItem);
+            var additionalItems = await ParseProxyItemsAsync(inventoryItem);
 
             if (additionalItems.Length <= 0) return id;
             

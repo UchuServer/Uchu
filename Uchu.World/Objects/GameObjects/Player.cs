@@ -286,6 +286,7 @@ namespace Uchu.World
                 await inventory.MountItemAsync(
                     item.LOT,
                     item.InventoryItemId,
+                    false,
                     LegoDataDictionary.FromString(item.ExtraInfo)
                 );
             }

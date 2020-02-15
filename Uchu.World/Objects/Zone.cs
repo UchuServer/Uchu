@@ -255,8 +255,8 @@ namespace Uchu.World
 
         public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
         {
-            result = GameObjects.OfType<T>().FirstOrDefault(o => o.ObjectId == objectId);
-            return result != default;
+            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId) as T;
+            return result != null;
         }
 
         #endregion

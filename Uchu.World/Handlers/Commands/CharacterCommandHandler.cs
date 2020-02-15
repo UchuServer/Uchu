@@ -916,5 +916,42 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Set inventory size to: {size}";
         }
+
+        [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Control(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "control <scheme-id>";
+
+            if (!int.TryParse(arguments[0], out var controlScheme)) return "Invalid <scheme-id>";
+            
+            player.Message(new SetPlayerControlSchemeMessage
+            {
+                Associate = player,
+                DelayCameraSwitchIfInCinematic = false,
+                SwitchCamera = true,
+                ControlScheme = controlScheme
+            });
+
+            if (arguments.Length > 1)
+            {
+                if (float.TryParse(arguments[1], out var timed))
+                {
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay((int) (timed * 1000));
+                        
+                        player.Message(new SetPlayerControlSchemeMessage
+                        {
+                            Associate = player,
+                            DelayCameraSwitchIfInCinematic = false,
+                            SwitchCamera = true,
+                            ControlScheme = 0
+                        });
+                    });
+                }
+            }
+
+            return $"Switched control scheme to: {controlScheme}";
+        }
     }
 }
