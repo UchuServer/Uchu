@@ -22,7 +22,7 @@ namespace Uchu.World
         private Dictionary<long, long[]> ProxyItems { get; set; } = new Dictionary<long, long[]>();
         
         public override ComponentId Id => ComponentId.InventoryComponent;
-
+        
         protected InventoryComponent()
         {
             Listen(OnDestroyed, () =>
@@ -31,10 +31,10 @@ namespace Uchu.World
                 OnUnEquipped.Clear();
             });
             
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
-                using var cdClient = new CdClientContext();
-            
+                await using var cdClient = new CdClientContext();
+                
                 var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
 
@@ -64,51 +64,10 @@ namespace Uchu.World
 
                     Debug.Assert(item.Itemid != null, "item.Itemid != null");
                     Debug.Assert(item.Count != null, "item.Count != null");
-                    
-                    Items.TryAdd(itemComponent.EquipLocation, new InventoryItem
-                    {
-                        InventoryItemId = IdUtilities.GenerateObjectId(),
-                        Count = (long) item.Count,
-                        LOT = (int) item.Itemid,
-                        Slot = -1,
-                        InventoryType = -1
-                    });
+
+                    await MountItemAsync(item.Itemid ?? 0, IdUtilities.GenerateObjectId());
                 }
             });
-        }
-
-        public long EquipUnmanagedItem(Lot lot, uint count = 1, int slot = -1,
-            InventoryType inventoryType = InventoryType.None)
-        {
-            using var cdClient = new CdClientContext();
-            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                o => o.Id == lot
-            );
-
-            var itemRegistryEntry = lot.GetComponentId(ComponentId.ItemComponent);
-
-            if (cdClientObject == default || itemRegistryEntry == default)
-            {
-                Logger.Error($"{lot} is not a valid item");
-                return -1;
-            }
-
-            var itemComponent = cdClient.ItemComponentTable.First(
-                i => i.Id == itemRegistryEntry
-            );
-
-            var id = IdUtilities.GenerateObjectId();
-            
-            Items[itemComponent.EquipLocation] = new InventoryItem
-            {
-                InventoryItemId = id,
-                Count = count,
-                Slot = slot,
-                LOT = lot,
-                InventoryType = (int) inventoryType
-            };
-
-            return id;
         }
 
         public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
@@ -132,45 +91,14 @@ namespace Uchu.World
                     }
                 }
             }
-            
-            /*
-             * Equip proxies
-             */
-
-            var proxies = await GenerateProxyItemsAsync(item);
-
-            if (proxies?.Length > 0)
-            {
-                ProxyItems[item.ObjectId] = proxies;
-            }
 
             Logger.Debug($"Equipping {item}");
 
             item.Equipped = true;
             
-            var items = Items.Select(i => (i.Key, i.Value)).ToArray();
-            
-            foreach (var (equipLocation, value) in items)
-            {
-                if (!equipLocation.Equals(item.ItemComponent.EquipLocation)) continue;
-                
-                var manager = GameObject.GetComponent<InventoryManagerComponent>();
-                
-                if (manager != default)
-                {
-                    var oldItem = manager.FindItem(value.InventoryItemId);
-
-                    await UnEquipItemAsync(oldItem);
-                }
-                else
-                {
-                    await UnEquipItemAsync(value.InventoryItemId);
-                }
-            }
-            
             await OnEquipped.InvokeAsync(item);
 
-            Items[item.ItemComponent.EquipLocation] = item.InventoryItem;
+            await MountItemAsync(item.Lot, item.ObjectId, item.Settings);
 
             await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true);
 
@@ -185,43 +113,14 @@ namespace Uchu.World
 
             if (item != null)
             {
-                item.Equipped = false;
-                
-                await UnEquipItemAsync(item.ObjectId);
-            }
-        }
-
-        private async Task UnEquipItemAsync(long id)
-        {
-            var (equipLocation, value) = Items.FirstOrDefault(i => i.Value.InventoryItemId == id);
-
-            if (value == default)
-            {
-                //
-                // It's quite common for the client to send un-equip requests for items that it uses or whatever.
-                //
-                return;
-            }
-
-            Items.Remove(equipLocation);
-
-            await ChangeEquippedSateOnPlayerAsync(id, false);
-
-            GameObject.Serialize(GameObject);
-
-            if (ProxyItems.TryGetValue(id, out var proxies))
-            {
-                foreach (var proxy in proxies)
-                {
-                    await UnEquipItemAsync(proxy);
-                }
+                await MountItemAsync(item.Lot, 0);
             }
         }
 
         private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
         {
             if (!(GameObject is Player)) return;
-                
+            
             await using var ctx = new UchuContext();
             
             var inventoryItem = await ctx.InventoryItems.FirstOrDefaultAsync(i => i.InventoryItemId == itemId);
@@ -234,34 +133,125 @@ namespace Uchu.World
             await ctx.SaveChangesAsync();
         }
 
-        private async Task<long[]> GenerateProxyItemsAsync(Item item)
+        private async Task<Lot[]> GenerateProxyItemsAsync(Lot item)
         {
-            if (string.IsNullOrWhiteSpace(item?.ItemComponent?.SubItems)) return null;
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+
+            if (itemInfo == default) return new Lot[0];
+
+            if (string.IsNullOrWhiteSpace(itemInfo.SubItems)) return new Lot[0];
             
-            var proxies = item.ItemComponent.SubItems
+            var proxies = itemInfo.SubItems
                 .Replace(" ", "")
                 .Split(',')
-                .Select(int.Parse);
+                .Select(i => (Lot) int.Parse(i));
+            
+            return proxies.ToArray();
+        }
 
-            var list = new List<long>();
+        public async Task<long> MountItemAsync(Lot inventoryItem, long id, LegoDataDictionary settings = default)
+        {
+            await using var ctx = new CdClientContext();
 
-            await using var cdClient = new CdClientContext();
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == inventoryItem.GetComponentId(ComponentId.ItemComponent)
+            );
 
-            foreach (Lot proxy in proxies)
+            if (itemInfo == default) return -1;
+
+            var location = (EquipLocation) itemInfo.EquipLocation;
+            
+            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
+            
+            if (Items.TryGetValue(location, out var oldItem) && oldItem != default && skills)
             {
-                var componentId = proxy.GetComponentId(ComponentId.ItemComponent);
+                foreach (var (key, proxyItems) in ProxyItems)
+                {
+                    if (!proxyItems.Contains(oldItem.InventoryItemId)) continue;
+                    
+                    var item = Items.Values.Where(v => v != default).FirstOrDefault(
+                        v => v.InventoryItemId == key
+                    );
 
-                var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(i => i.Id == componentId);
+                    if (item == default) goto equipItem;
 
-                if (component == default) continue;
+                    await MountItemAsync(item.LOT, 0);
+                    
+                    goto equipItem;
+                }
+                
+                await skillComponent.DismountItemAsync(oldItem.LOT);
+                
+                if (ProxyItems.TryGetValue(oldItem.InventoryItemId, out var values))
+                {
+                    ProxyItems.Remove(oldItem.InventoryItemId);
+                    
+                    foreach (var value in values)
+                    {
+                        var item = Items.Values.Where(v => v != default).FirstOrDefault(
+                            v => v.InventoryItemId == value
+                        );
+                        
+                        if (item == default) continue;
 
-                list.Add(EquipUnmanagedItem(
-                    proxy,
-                    inventoryType: item.Inventory.InventoryType)
-                );
+                        await MountItemAsync(item.LOT, 0);
+                    }
+                }
+            }
+            
+            equipItem:
+
+            if (id == default)
+            {
+                Items[location] = default;
+                
+                GameObject.Serialize(GameObject);
+
+                return -1;
+            }
+            
+            var inventoryType = ((ItemType) (itemInfo.ItemType ?? 0)).GetInventoryType();
+
+            Items[location] = new InventoryItem
+            {
+                LOT = inventoryItem,
+                Count = 1,
+                ExtraInfo = settings?.ToString(),
+                InventoryItemId = id,
+                InventoryType = (int) inventoryType,
+                Slot = -1
+            };
+
+            GameObject.Serialize(GameObject);
+
+            if (!skills || inventoryItem == default) return -1;
+
+            await skillComponent.MountItemAsync(inventoryItem);
+
+            /*
+             * Equip proxies
+             */
+
+            var additionalItems = await GenerateProxyItemsAsync(inventoryItem);
+
+            if (additionalItems.Length <= 0) return id;
+            
+            var proxies = new List<long>();
+            
+            foreach (var proxy in additionalItems)
+            {
+                var proxyId = await MountItemAsync(proxy, IdUtilities.GenerateObjectId());
+
+                proxies.Add(proxyId);
             }
 
-            return list.ToArray();
+            ProxyItems[id] = proxies.ToArray();
+
+            return id;
         }
 
         public override void Construct(BitWriter writer)
@@ -273,9 +263,11 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            writer.Write((uint) Items.Count);
+            var items = Items.Values.Where(k => k != default).ToList();
 
-            foreach (var (_, item) in Items)
+            writer.Write((uint) items.Count);
+
+            foreach (var item in items)
             {
                 writer.Write(item.InventoryItemId);
                 writer.Write(item.LOT);

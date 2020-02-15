@@ -12,7 +12,7 @@ namespace Uchu.World.Client
         
         public TerrainFile TerrainFile { get; set; }
         
-        public List<Trigger> Triggers { get; set; }
+        public TriggerDictionary TriggerDictionary { get; set; }
         
         public List<LvlFile> LvlFiles { get; set; }
     }

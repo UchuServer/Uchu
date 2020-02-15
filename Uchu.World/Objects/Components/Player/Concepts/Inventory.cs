@@ -61,7 +61,6 @@ namespace Uchu.World
 
         internal Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
-            
             InventoryType = inventoryType;
             ManagerComponent = managerComponent;
 

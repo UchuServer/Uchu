@@ -500,7 +500,7 @@ namespace Uchu.World
             // Check if this object is a trigger
             //
 
-            if (levelObject.LegoInfo.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
+            if (levelObject.LegoInfo.ContainsKey("trigger_id"))
             {
                 instance.AddComponent<TriggerComponent>();
             }

@@ -53,22 +53,6 @@ namespace Uchu.World
                 if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
                 _activeBehaviors.Add(BehaviorSlot.Primary, 1);
-                
-                Listen(inventory.OnEquipped, MountItem);
-
-                Listen(inventory.OnUnEquipped, DismountItem);
-
-                if (!(GameObject is Player player)) return;
-                
-                Listen(player.OnWorldLoad, async () =>
-                {
-                    if (!GameObject.TryGetComponent<InventoryManagerComponent>(out var manager)) return;
-                    
-                    foreach (var item in manager[InventoryType.Items].Items.Where(i => i.Equipped))
-                    {
-                        await MountItem(item);
-                    }
-                });
             });
         }
         
@@ -81,50 +65,78 @@ namespace Uchu.World
         {
         }
 
-        private async Task MountItem(Item item)
+        public async Task MountItemAsync(Lot item)
         {
             if (item == default) return;
+            
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
+
+            RemoveSkill(slot);
             
             await MountSkill(item);
 
             await EquipSkill(item);
         }
 
-        private async Task DismountItem(Item item)
+        public async Task DismountItemAsync(Lot item)
         {
             if (item == default) return;
 
-            var slot = item.ItemType.GetBehaviorSlot();
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
             
             RemoveSkill(slot);
 
             await DismountSkill(item);
         }
 
-        private async Task EquipSkill(Item item)
+        private async Task EquipSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
+            
+            var infos = await BehaviorTree.GetSkillsForObject(item);
 
             var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
 
             if (onUse == default) return;
             
             As<Player>().SendChatMessage($"Adding skill: {onUse.SkillId}");
-
-            var slot = item.ItemType.GetBehaviorSlot();
             
             RemoveSkill(slot);
             
             SetSkill(slot, (uint) onUse.SkillId);
         }
 
-        private async Task MountSkill(Item item)
+        private async Task MountSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            var infos = await BehaviorTree.GetSkillsForObject(item);
             
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
@@ -132,18 +144,18 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Mount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(item);
 
             await tree.BuildAsync();
 
             await tree.MountAsync(GameObject);
         }
 
-        private async Task DismountSkill(Item item)
+        private async Task DismountSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            var infos = await BehaviorTree.GetSkillsForObject(item);
 
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
@@ -151,7 +163,7 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Dismount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(item);
 
             await tree.BuildAsync();
 

@@ -52,8 +52,6 @@ namespace Uchu.World.Client
                     
                     var path = Path.GetDirectoryName(luzFile);
 
-                    var triggers = await GetTriggers(path);
-                    
                     var lvlFiles = new List<LvlFile>();
 
                     foreach (var scene in luz.Scenes)
@@ -61,6 +59,8 @@ namespace Uchu.World.Client
                         await using var sceneStream = _resources.GetStream(Path.Combine(path, scene.FileName));
 
                         using var sceneReader = new BitReader(sceneStream);
+                        
+                        Logger.Information($"Parsing: {scene.FileName}");
                         
                         var lvl = new LvlFile();
 
@@ -84,61 +84,25 @@ namespace Uchu.World.Client
 
                     terrain.Deserialize(terrainReader);
                     
-                    Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
+                    var triggers = await TriggerDictionary.FromDirectoryAsync(Path.Combine(_resources.RootPath, path));
                     
+                    Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
+
                     Zones[(ZoneId) luz.WorldId] = new ZoneInfo
                     {
                         LuzFile = luz,
                         LvlFiles = lvlFiles,
-                        Triggers = triggers.ToList(),
+                        TriggerDictionary = triggers,
                         TerrainFile = terrain
                     };
+                    
+                    break;
                 }
                 catch (Exception e)
                 {
                     Logger.Error($"Failed to parse {luzFile}: {e.Message}\n{e.StackTrace}");
                 }
             }
-        }
-        
-        private async Task<Trigger[]> GetTriggers(string path)
-        {
-            var files = _resources.GetAllFilesWithExtension(path, "lutriggers");
-
-            var triggerCollection = new List<Trigger>();
-            
-            foreach (var file in files)
-            {
-                await using var stream = File.OpenRead(file);
-
-                var triggers = (TriggerCollection) _triggerSerializer.Deserialize(stream);
-
-                var fileName = Path.GetFileNameWithoutExtension(file);
-
-                var parts = fileName.Split('_');
-
-                foreach (var part in parts)
-                {
-                    //
-                    // I don't know if there is a better way of getting this ID.
-                    //
-                    
-                    if (!int.TryParse(part, out var primaryId)) continue;
-                    
-                    /*
-                    foreach (var trigger in triggers.Triggers)
-                    {
-                        trigger.Id = primaryId;
-                    }
-                    */
-                    
-                    triggerCollection.AddRange(triggers.Triggers);
-                    
-                    break;
-                }
-            }
-
-            return triggerCollection.ToArray();
         }
     }
 }

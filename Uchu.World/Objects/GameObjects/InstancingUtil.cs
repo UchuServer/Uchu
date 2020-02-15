@@ -33,6 +33,11 @@ namespace Uchu.World
                 lot: levelObject.Lot
             );
 
+            if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
+            {
+                Logger.Debug($"SPAWN TRIGGER: {trigger}");
+            }
+
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 
             spawnerComponent.Settings = levelObject.LegoInfo;

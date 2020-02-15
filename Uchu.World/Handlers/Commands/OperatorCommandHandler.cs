@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Scripting.Utils;
 using Uchu.Core;
+using Uchu.World.AI;
 using Uchu.World.Scripting.Managed;
 using Uchu.World.Social;
 

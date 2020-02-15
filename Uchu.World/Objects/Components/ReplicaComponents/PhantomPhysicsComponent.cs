@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public bool IsEffectActive { get; set; }
 
-        public uint EffectType { get; set; }
+        public PhantomPhysicsEffectType EffectType { get; set; }
 
         public float EffectAmount { get; set; }
         
@@ -40,7 +40,7 @@ namespace Uchu.World
             
             if (!writer.Flag(IsEffectActive)) return;
 
-            writer.Write(EffectType);
+            writer.Write((uint) EffectType);
             writer.Write(EffectAmount);
 
             if (writer.Flag(AffectedByDistance))

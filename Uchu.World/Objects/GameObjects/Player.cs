@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
@@ -280,35 +281,14 @@ namespace Uchu.World
             // Equip items
             //
             
-            var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
-
-            await using (var cdClient = new CdClientContext())
+            foreach (var item in character.Items.Where(i => i.IsEquipped))
             {
-                foreach (var item in character.Items.Where(i => i.IsEquipped))
-                {
-                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                        o => o.Id == item.LOT
-                    );
-
-                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == item.LOT && r.Componenttype == 11
-                    );
-
-                    if (cdClientObject == default || itemRegistryEntry == default)
-                    {
-                        Logger.Error($"{item.LOT} is not a valid item");
-                        continue;
-                    }
-
-                    var itemComponent = cdClient.ItemComponentTable.First(
-                        i => i.Id == itemRegistryEntry.Componentid
-                    );
-
-                    equippedItems.Add(itemComponent.EquipLocation, item);
-                }
+                await inventory.MountItemAsync(
+                    item.LOT,
+                    item.InventoryItemId,
+                    LegoDataDictionary.FromString(item.ExtraInfo)
+                );
             }
-            
-            inventory.Items = equippedItems;
             
             //
             // Register player gameobject in zone

@@ -281,9 +281,9 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
-        public static async Task<BehaviorInfo[]> GetSkillsForItem(Item item)
+        public static async Task<BehaviorInfo[]> GetSkillsForObject(Lot lot)
         {
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(lot);
             
             return await tree.BuildAsync();
         }
