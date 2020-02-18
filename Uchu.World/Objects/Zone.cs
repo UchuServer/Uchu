@@ -467,8 +467,6 @@ namespace Uchu.World
 
                     await Task.Delay(1000 / TicksPerSecondLimit);
 
-                    var players = Players;
-
                     foreach (var obj in Objects)
                     {
                         try

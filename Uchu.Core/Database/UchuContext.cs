@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core.Providers;
 
@@ -46,6 +44,9 @@ namespace Uchu.Core
                     break;
                 case "mysql":
                     ContextBase = new MySqlContext();
+                    break;
+                case "sqlite":
+                    ContextBase = new SqliteContext();
                     break;
                 default:
                     Logger.Error($"{config.Database.Provider} is a invalid or unsupported database provider");

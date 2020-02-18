@@ -21,7 +21,6 @@ namespace Uchu.Instance
 
             if (!Guid.TryParse(args[0], out var id))
                 throw new ArgumentException($"{args[0]} is not a valid GUID");
-
             
             var serializer = new XmlSerializer(typeof(Configuration));
 
@@ -35,6 +34,10 @@ namespace Uchu.Instance
                 UchuContextBase.Config = (Configuration) serializer.Deserialize(fs);
             }
             
+            var masterPath = Path.GetDirectoryName(args[1]);
+
+            SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
+
             ServerSpecification specification;
 
             await using (var ctx = new UchuContext())

@@ -275,6 +275,11 @@ namespace Uchu.World.Handlers.Commands
                     info.Append($"\n: {property.Name} = {property.GetValue(component)}");
             }
 
+            if (arguments.Contains("-in"))
+            {
+                current.OnInteract.Invoke(player);
+            }
+
             finish:
 
             return info.ToString();
