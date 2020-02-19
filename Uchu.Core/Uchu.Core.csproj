@@ -25,6 +25,7 @@
     <ItemGroup>
       <Folder Include="Client\Models" />
       <Folder Include="Migrations\MySql" />
+      <Folder Include="Migrations\Sqlite" />
     </ItemGroup>
 
     <ItemGroup>

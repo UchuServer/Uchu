@@ -135,6 +135,14 @@ namespace Uchu.World
 
                 Destruct(this);
             });
+
+            Listen(OnLayerChanged, mask =>
+            {
+                foreach (var player in Zone.Players)
+                {
+                    player.ViewUpdate(this);
+                }
+            });
         }
 
         #region Operators
@@ -492,7 +500,7 @@ namespace Uchu.World
             // Check if this object is a trigger
             //
 
-            if (levelObject.LegoInfo.ContainsKey("trigger_id") && instance.GetComponent<TriggerComponent>() == null)
+            if (levelObject.LegoInfo.ContainsKey("trigger_id"))
             {
                 instance.AddComponent<TriggerComponent>();
             }

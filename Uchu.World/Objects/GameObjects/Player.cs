@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
@@ -54,6 +55,30 @@ namespace Uchu.World
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
             });
+
+            Listen(OnPositionUpdate, (position, rotation) =>
+            {
+                foreach (var gameObject in Zone.GameObjects)
+                {
+                    var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+                    var view = Perspective.View(gameObject);
+                    
+                    if (spawned && !view)
+                    {
+                        Zone.SendDestruction(gameObject, this);
+
+                        continue;
+                    }
+
+                    if (!spawned && view)
+                    {
+                        Zone.SendConstruction(gameObject, this);
+                    }
+                }
+                
+                return Task.CompletedTask;
+            });
         }
 
         public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =
@@ -71,6 +96,12 @@ namespace Uchu.World
         
         public PlayerChatChannel ChatChannel { get; set; }
 
+        public GuildGuiState GuildGuiState { get; set; }
+        
+        public string GuildInviteName { get; set; }
+
+        public int Ping => Connection.AveragePing;
+        
         public override string Name
         {
             get => ObjectName;
@@ -250,35 +281,15 @@ namespace Uchu.World
             // Equip items
             //
             
-            var equippedItems = new Dictionary<EquipLocation, InventoryItem>();
-
-            await using (var cdClient = new CdClientContext())
+            foreach (var item in character.Items.Where(i => i.IsEquipped))
             {
-                foreach (var item in character.Items.Where(i => i.IsEquipped))
-                {
-                    var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                        o => o.Id == item.LOT
-                    );
-
-                    var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                        r => r.Id == item.LOT && r.Componenttype == 11
-                    );
-
-                    if (cdClientObject == default || itemRegistryEntry == default)
-                    {
-                        Logger.Error($"{item.LOT} is not a valid item");
-                        continue;
-                    }
-
-                    var itemComponent = cdClient.ItemComponentTable.First(
-                        i => i.Id == itemRegistryEntry.Componentid
-                    );
-
-                    equippedItems.Add(itemComponent.EquipLocation, item);
-                }
+                await inventory.MountItemAsync(
+                    item.LOT,
+                    item.InventoryItemId,
+                    false,
+                    LegoDataDictionary.FromString(item.ExtraInfo)
+                );
             }
-            
-            inventory.Items = equippedItems;
             
             //
             // Register player gameobject in zone
@@ -340,7 +351,26 @@ namespace Uchu.World
             });
         }
 
-        public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null)
+        public void ViewUpdate(GameObject gameObject)
+        {
+            var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+            var view = Perspective.View(gameObject);
+                    
+            if (spawned && !view)
+            {
+                Zone.SendDestruction(gameObject, this);
+
+                return;
+            }
+
+            if (!spawned && view)
+            {
+                Zone.SendConstruction(gameObject, this);
+            }
+        }
+
+        public void SendChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null, ChatChannel chatChannel = World.ChatChannel.Public)
         {
             if (channel > ChatChannel) return;
             
@@ -348,7 +378,8 @@ namespace Uchu.World
             {
                 Message = $"{message}\0",
                 Sender = author,
-                IsMythran = author?.GameMasterLevel > 0
+                IsMythran = author?.GameMasterLevel > 0,
+                Channel = chatChannel
             });
         }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
+using InfectedRose.Terrain;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -51,15 +52,15 @@ namespace Uchu.World.Client
                     
                     var path = Path.GetDirectoryName(luzFile);
 
-                    var triggers = await GetTriggers(path);
-                    
                     var lvlFiles = new List<LvlFile>();
 
                     foreach (var scene in luz.Scenes)
                     {
                         await using var sceneStream = _resources.GetStream(Path.Combine(path, scene.FileName));
 
-                        var sceneReader = new BitReader(sceneStream);
+                        using var sceneReader = new BitReader(sceneStream);
+                        
+                        Logger.Information($"Parsing: {scene.FileName}");
                         
                         var lvl = new LvlFile();
 
@@ -74,61 +75,34 @@ namespace Uchu.World.Client
                             template.ObjectId |= 70368744177664;
                         }
                     }
+
+                    var terrainStream = _resources.GetStream(Path.Combine(path, luz.TerrainFileName));
+
+                    using var terrainReader = new BitReader(terrainStream);
+                    
+                    var terrain = new TerrainFile();
+
+                    terrain.Deserialize(terrainReader);
+                    
+                    var triggers = await TriggerDictionary.FromDirectoryAsync(Path.Combine(_resources.RootPath, path));
                     
                     Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
-                    
+
                     Zones[(ZoneId) luz.WorldId] = new ZoneInfo
                     {
                         LuzFile = luz,
                         LvlFiles = lvlFiles,
-                        Triggers = triggers.ToList()
+                        TriggerDictionary = triggers,
+                        TerrainFile = terrain
                     };
+                    
+                    break;
                 }
                 catch (Exception e)
                 {
                     Logger.Error($"Failed to parse {luzFile}: {e.Message}\n{e.StackTrace}");
                 }
             }
-        }
-        
-        private async Task<Trigger[]> GetTriggers(string path)
-        {
-            var files = _resources.GetAllFilesWithExtension(path, "lutriggers");
-
-            var triggerCollection = new List<Trigger>();
-            
-            foreach (var file in files)
-            {
-                await using var stream = File.OpenRead(file);
-
-                var triggers = (TriggerCollection) _triggerSerializer.Deserialize(stream);
-
-                var fileName = Path.GetFileNameWithoutExtension(file);
-
-                var parts = fileName.Split('_');
-
-                foreach (var part in parts)
-                {
-                    //
-                    // I don't know if there is a better way of getting this ID.
-                    //
-                    
-                    if (!int.TryParse(part, out var primaryId)) continue;
-                    
-                    /*
-                    foreach (var trigger in triggers.Triggers)
-                    {
-                        trigger.Id = primaryId;
-                    }
-                    */
-                    
-                    triggerCollection.AddRange(triggers.Triggers);
-                    
-                    break;
-                }
-            }
-
-            return triggerCollection.ToArray();
         }
     }
 }

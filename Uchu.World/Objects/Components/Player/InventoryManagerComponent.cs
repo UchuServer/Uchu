@@ -185,7 +185,7 @@ namespace Uchu.World
                 return;
             }
 
-            As<Player>().SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]", PlayerChatChannel.Normal);
+            As<Player>().SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]");
             
             var stackSize = component.StackSize ?? 1;
             

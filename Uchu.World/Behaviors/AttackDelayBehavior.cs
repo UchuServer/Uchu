@@ -36,5 +36,35 @@ namespace Uchu.World.Behaviors
         {
             await Action.ExecuteAsync(context, branchContext);
         }
+
+        public override Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            var syncId = context.Associate.GetComponent<SkillComponent>().ClaimSyncId();
+
+            context.Writer.Write(syncId);
+
+            if (branchContext.Target is Player player)
+            {
+                player.SendChatMessage($"Delay. [{context.SkillSyncId}] [{syncId}]");
+            }
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(Delay);
+
+                context = context.Copy();
+                
+                await Action.CalculateAsync(context, branchContext);
+
+                context.Sync(syncId);
+                
+                if (branchContext.Target is Player sPlayer)
+                {
+                    sPlayer.SendChatMessage($"Sync. [{context.SkillSyncId}] [{syncId}]");
+                }
+            });
+            
+            return Task.CompletedTask;
+        }
     }
 }

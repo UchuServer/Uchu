@@ -47,7 +47,7 @@ namespace Uchu.World
 
                     if (quest == default)
                     {
-                        Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: [{npcComponent.Id}] {npcComponent.MissionID}");
+                        Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: \"[{GameObject.Lot}] {GameObject.Name}\" [{npcComponent.Id}] {npcComponent.MissionID}");
                         continue;
                     }
                     

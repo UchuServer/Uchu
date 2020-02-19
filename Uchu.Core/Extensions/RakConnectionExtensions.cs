@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using RakDotNet;
 using RakDotNet.IO;
@@ -15,7 +16,14 @@ namespace Uchu.Core
             
             writer.Write(serializable);
 
-            @this.Send(stream.ToArray());
+            try
+            {
+                @this.Send(stream.ToArray());
+            }
+            catch (IOException e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public static void SavePacket(this IRakConnection @this, ISerializable serializable)

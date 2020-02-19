@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -15,6 +16,8 @@ namespace Uchu.World.Behaviors
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
         public (int behaviorId, SkillCastType castType, int skillId)[] BehaviorIds { get; }
+        
+        public Dictionary<int, BehaviorBase> SkillRoots { get; set; } = new Dictionary<int, BehaviorBase>();
 
         public Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
             new Dictionary<SkillCastType, List<BehaviorBase>>();
@@ -66,9 +69,9 @@ namespace Uchu.World.Behaviors
                 Logger.Information($"[{lot}] SKILL: {objectSkill.SkillID} -> {behavior.BehaviorID}");
                 
                 BehaviorIds[index] = (
-                    behavior.BehaviorID.Value,
-                    (SkillCastType) objectSkill.CastOnType.Value,
-                    objectSkill.SkillID.Value
+                    behavior.BehaviorID ?? 0,
+                    objectSkill.CastOnType.HasValue ? (SkillCastType) objectSkill.CastOnType : SkillCastType.OnUse,
+                    objectSkill.SkillID ?? 0
                 );
             }
         }
@@ -100,9 +103,9 @@ namespace Uchu.World.Behaviors
         {
             await using var ctx = new CdClientContext();
             
-            foreach (var (id, castType, _) in BehaviorIds)
+            foreach (var (id, castType, skillId) in BehaviorIds.ToArray())
             {
-                var root = BehaviorBase.Cache.FirstOrDefault(b => b.BehaviorId == id);
+                var root = BehaviorBase.Cache.ToArray().FirstOrDefault(b => b.BehaviorId == id);
 
                 if (root == default)
                 {
@@ -128,7 +131,11 @@ namespace Uchu.World.Behaviors
                     BehaviorBase.Cache.Add(instance);
                     
                     await instance.BuildAsync();
+
+                    root = instance;
                 }
+
+                SkillRoots[skillId] = root;
 
                 if (RootBehaviors.TryGetValue(castType, out var list))
                 {
@@ -146,13 +153,53 @@ namespace Uchu.World.Behaviors
                 CastType = b.castType
             }).ToArray();
         }
-        
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default, bool explicitTarget = false)
-        {
-            if (!explicitTarget)
-                target = associate;
 
-            var context = new ExecutionContext(associate, reader, writer);
+        /// <summary>
+        ///     Calculate a server preformed skill
+        /// </summary>
+        /// <param name="associate">Executioner</param>
+        /// <param name="writer">Data to be sent to clients</param>
+        /// <param name="skillId">Skill to execute</param>
+        /// <param name="syncId">Sync Id</param>
+        /// <param name="target">Explicit target</param>
+        /// <returns>Context</returns>
+        public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId, uint syncId, Vector3 calculatingPosition, GameObject target = default)
+        {
+            target ??= associate;
+            
+            var context = new NpcExecutionContext(target, writer, skillId, syncId, calculatingPosition);
+
+            if (!SkillRoots.TryGetValue(skillId, out var root))
+            {
+                Logger.Debug($"Failed to find skill: {skillId}");
+                
+                return context;
+            }
+            
+            context.Root = root;
+            
+            var branchContext = new ExecutionBranchContext(target);
+            
+            await root.CalculateAsync(context, branchContext);
+
+            return context;
+        }
+        
+        /// <summary>
+        ///     Execute a user preformed skill
+        /// </summary>
+        /// <param name="associate">Executioner</param>
+        /// <param name="reader">Client skill data</param>
+        /// <param name="writer">Data to be sent to clients</param>
+        /// <param name="castType">Type of skill</param>
+        /// <param name="target">Explicit target</param>
+        /// <returns>Context</returns>
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer, SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
+        {
+            var context = new ExecutionContext(associate, reader, writer)
+            {
+                ExplicitTarget = target
+            };
             
             if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
             {
@@ -160,7 +207,7 @@ namespace Uchu.World.Behaviors
                 {
                     context.Root = root;
 
-                    var branchContext = new ExecutionBranchContext(target);
+                    var branchContext = new ExecutionBranchContext(associate);
                     
                     await root.ExecuteAsync(context, branchContext);
                 }
@@ -172,7 +219,7 @@ namespace Uchu.World.Behaviors
             {
                 context.Root = root;
                 
-                var branchContext = new ExecutionBranchContext(target);
+                var branchContext = new ExecutionBranchContext(associate);
                 
                 await root.ExecuteAsync(context, branchContext);
             }
@@ -234,9 +281,9 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
-        public static async Task<BehaviorInfo[]> GetSkillsForItem(Item item)
+        public static async Task<BehaviorInfo[]> GetSkillsForObject(Lot lot)
         {
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(lot);
             
             return await tree.BuildAsync();
         }

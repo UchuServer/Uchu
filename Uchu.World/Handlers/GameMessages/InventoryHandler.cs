@@ -44,21 +44,17 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task EquipItemHandler(EquipItemMessage message, Player player)
         {
             if (message.Item == null) return;
-            
-            await player.GetComponent<InventoryComponent>().EquipItemAsync(message.Item);
+
+            await message.Item.EquipAsync();
         }
 
         [PacketHandler]
         public async Task UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
-            var inventoryComponent = player.GetComponent<InventoryComponent>();
-
-            Logger.Information($"UnEquip Item: {message.ItemToUnEquip} | {message.ReplacementItem}");
-
-            await inventoryComponent.UnEquipItemAsync(message.ItemToUnEquip);
+            await message.ItemToUnEquip.UnEquipAsync();
 
             if (message.ReplacementItem != null)
-                await inventoryComponent.EquipItemAsync(message.ReplacementItem);
+                await message.ReplacementItem.EquipAsync();
         }
     }
 }

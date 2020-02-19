@@ -16,8 +16,8 @@ namespace Uchu.World.Behaviors
         public BitReader Reader { get; set; }
         
         public BitWriter Writer { get; set; }
-
-        public uint SkillId { get; set; }
+        
+        public GameObject ExplicitTarget { get; set; }
         
         public Dictionary<uint, SyncDelegate> BehaviorHandles { get; } = new Dictionary<uint, SyncDelegate>();
         

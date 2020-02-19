@@ -12,14 +12,18 @@ namespace Uchu.Master
 
         public ManagedServer(Guid id, string location, string dotnet)
         {
+            var useDotNet = !string.IsNullOrWhiteSpace(dotnet);
+
+            var file = useDotNet ? dotnet : location;
+            
             Id = id;
             Process = new Process
             {
                 StartInfo =
                 {
-                    FileName = dotnet,
-                    WorkingDirectory = Path.GetDirectoryName(location),
-                    Arguments = $"{Path.GetFileName(location)} {id} \"{MasterServer.ConfigPath}\"",
+                    FileName = file,
+                    WorkingDirectory = useDotNet ? Path.GetDirectoryName(location) : Directory.GetCurrentDirectory(),
+                    Arguments = (useDotNet ? $"{Path.GetFileName(location)} " : "") + $"{id} \"{MasterServer.ConfigPath}\"",
                     RedirectStandardOutput = false,
                     UseShellExecute = true,
                     CreateNoWindow = false,

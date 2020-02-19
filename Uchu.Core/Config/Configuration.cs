@@ -43,6 +43,8 @@ namespace Uchu.Core
     public class ManagedScriptSources
     {
         [XmlElement("Script")] public List<string> Scripts { get; set; } = new List<string>();
+        
+        [XmlElement("Library")] public List<string> Paths { get; set; } = new List<string>();
     }
 
     public class ServerDllSource
@@ -50,6 +52,8 @@ namespace Uchu.Core
         [XmlElement] public string ServerDllSourcePath { get; set; } = "../../../../";
 
         [XmlElement] public string DotNetPath { get; set; } = "dotnet";
+
+        [XmlElement] public string Instance { get; set; } = "Uchu.Instance.dll";
         
         [XmlElement]
         public List<string> ScriptDllSource { get; set; } = new List<string>

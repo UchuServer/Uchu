@@ -10,27 +10,37 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void SkillStartHandler(StartSkillMessage message, Player player)
         {
-            try
+            Task.Run(() =>
             {
-                Task.Run(() => player.GetComponent<SkillComponent>().StartUserSkillAsync(message));
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Skill Execution failed: {e.Message}\n{e.StackTrace}");
-            }
+                try
+                {
+                    return player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                    
+                    return Task.CompletedTask;
+                }
+            });
         }
 
         [PacketHandler]
         public void SyncSkillHandler(SyncSkillMessage message, Player player)
         {
-            try
+            Task.Run(() =>
             {
-                Task.Run(() => player.GetComponent<SkillComponent>().SyncUserSkillAsync(message));
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Skill Syncing failed: {e.Message}\n{e.StackTrace}");
-            }
+                try
+                {
+                    return player.GetComponent<SkillComponent>().SyncUserSkillAsync(message);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                    
+                    return Task.CompletedTask;
+                }
+            });
         }
 
         [PacketHandler]
@@ -64,7 +74,7 @@ namespace Uchu.World.Handlers.GameMessages
 
             if (projectile == default) return;
             
-            await projectile.Impact(message.Data, message.Target);
+            await projectile.ImpactAsync(message.Data, message.Target);
         }
     }
 }

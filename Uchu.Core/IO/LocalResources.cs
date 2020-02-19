@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +10,8 @@ namespace Uchu.Core.IO
     {
         private readonly Configuration _config;
 
+        public string RootPath => _config.ResourcesConfiguration.GameResourceFolder;
+
         public LocalResources(Configuration config)
         {
             _config = config;
@@ -20,7 +21,7 @@ namespace Uchu.Core.IO
         {
             await using var stream = GetStream(path);
             using var reader = new StreamReader(stream);
-            return await reader.ReadToEndAsync();
+            return await reader.ReadToEndAsync().ConfigureAwait(false);
         }
 
         public async Task<byte[]> ReadBytesAsync(string path)
@@ -77,8 +78,7 @@ namespace Uchu.Core.IO
 
             return files;
         }
-
-
+        
         public Stream GetStream(string path)
         {
             path = path.Replace('\\', '/').ToLower();

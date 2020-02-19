@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -20,6 +21,10 @@ namespace Uchu.World
         // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
 
+        private uint BehaviorSyncIndex { get; set; }
+        
+        public uint[] DefaultSkillSet { get; set; }
+
         public Lot SelectedConsumeable { get; set; }
 
         public uint SelectedSkill
@@ -32,27 +37,22 @@ namespace Uchu.World
 
         protected SkillComponent()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
+                await using var cdClient = new CdClientContext();
+
+                var skills = await cdClient.ObjectSkillsTable.Where(
+                    s => s.ObjectTemplate == GameObject.Lot
+                ).ToArrayAsync();
+
+                DefaultSkillSet = skills
+                    .Where(s => s.SkillID != default)
+                    .Select(s => (uint) s.SkillID)
+                    .ToArray();
+                
                 if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
                 _activeBehaviors.Add(BehaviorSlot.Primary, 1);
-                
-                Listen(inventory.OnEquipped, MountItem);
-
-                Listen(inventory.OnUnEquipped, DismountItem);
-
-                if (!(GameObject is Player player)) return;
-                
-                Listen(player.OnWorldLoad, async () =>
-                {
-                    if (!GameObject.TryGetComponent<InventoryManagerComponent>(out var manager)) return;
-                    
-                    foreach (var item in manager[InventoryType.Items].Items.Where(i => i.Equipped))
-                    {
-                        await MountItem(item);
-                    }
-                });
             });
         }
         
@@ -65,50 +65,78 @@ namespace Uchu.World
         {
         }
 
-        private async Task MountItem(Item item)
+        public async Task MountItemAsync(Lot item)
         {
             if (item == default) return;
+            
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
+
+            RemoveSkill(slot);
             
             await MountSkill(item);
 
             await EquipSkill(item);
         }
 
-        private async Task DismountItem(Item item)
+        public async Task DismountItemAsync(Lot item)
         {
             if (item == default) return;
 
-            var slot = item.ItemType.GetBehaviorSlot();
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
             
             RemoveSkill(slot);
 
             await DismountSkill(item);
         }
 
-        private async Task EquipSkill(Item item)
+        private async Task EquipSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            await using var ctx = new CdClientContext();
+
+            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+            );
+            
+            if (itemInfo == default) return;
+
+            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
+            
+            var infos = await BehaviorTree.GetSkillsForObject(item);
 
             var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
 
             if (onUse == default) return;
             
             As<Player>().SendChatMessage($"Adding skill: {onUse.SkillId}");
-
-            var slot = item.ItemType.GetBehaviorSlot();
             
             RemoveSkill(slot);
             
             SetSkill(slot, (uint) onUse.SkillId);
         }
 
-        private async Task MountSkill(Item item)
+        private async Task MountSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            var infos = await BehaviorTree.GetSkillsForObject(item);
             
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
@@ -116,18 +144,18 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Mount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(item);
 
             await tree.BuildAsync();
 
             await tree.MountAsync(GameObject);
         }
 
-        private async Task DismountSkill(Item item)
+        private async Task DismountSkill(Lot item)
         {
             if (item == default) return;
             
-            var infos = await BehaviorTree.GetSkillsForItem(item);
+            var infos = await BehaviorTree.GetSkillsForObject(item);
 
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
@@ -135,21 +163,75 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Dismount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item.Lot);
+            var tree = new BehaviorTree(item);
 
             await tree.BuildAsync();
 
             await tree.DismantleAsync(GameObject);
         }
 
+        public async Task<float> CalculateSkillAsync(int skillId)
+        {
+            var stream = new MemoryStream();
+            using var writer = new BitWriter(stream, leaveOpen: true);
+
+            var tree = new BehaviorTree(skillId);
+
+            await tree.BuildAsync();
+
+            var syncId = ClaimSyncId();
+
+            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position);
+
+            if (!context.FoundTarget) return 0;
+
+            foreach (var player in Zone.Players)
+            {
+                player.SendChatMessage($"Start: [{syncId}]");
+            }
+            
+            Zone.BroadcastMessage(new EchoStartSkillMessage
+            {
+                Associate = GameObject,
+                CastType = 0,
+                Content = stream.ToArray(),
+                SkillId = skillId,
+                SkillHandle = syncId,
+                OptionalOriginator = GameObject,
+                OriginatorRotation = GameObject.Transform.Rotation
+            });
+
+            return context.SkillTime;
+        }
+
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
             if (As<Player>() == null) return;
 
+            As<Player>().SendChatMessage($"TARGET: {message.OptionalTarget} [{message.UsedMouse}]");
+
+            try
+            {
+                if (message.OptionalTarget != null)
+                {
+                    // There should be more to this
+                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>().Alive)
+                        message.OptionalTarget = null;
+                    else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
+                        message.OptionalTarget = null;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+                
+                return;
+            }
+
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                As<Player>().SendChatMessage($"START: {message.SkillId}");
+                As<Player>().SendChatMessage($"START: {message.SkillId} [{message.Content.Length}]");
                 
                 var tree = new BehaviorTree(message.SkillId);
 
@@ -158,7 +240,13 @@ namespace Uchu.World
                 await using var writeStream = new MemoryStream();
                 using var writer = new BitWriter(writeStream);
 
-                var context = await tree.ExecuteAsync(GameObject, reader, writer, SkillCastType.OnUse);
+                var context = await tree.ExecuteAsync(
+                    GameObject,
+                    reader,
+                    writer,
+                    SkillCastType.OnUse,
+                    message.OptionalTarget
+                );
 
                 _handledSkills[message.SkillHandle] = context;
                 
@@ -180,7 +268,7 @@ namespace Uchu.World
                     Associate = GameObject,
                     CasterLatency = message.CasterLatency,
                     CastType = message.CastType,
-                    Content = writeStream.ToArray(),
+                    Content = message.Content,
                     LastClickedPosition = message.LastClickedPosition,
                     OptionalOriginator = message.OptionalOriginator,
                     OptionalTarget = message.OptionalTarget,
@@ -206,11 +294,11 @@ namespace Uchu.World
 
             var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
-            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviourHandle}] ; {found}");
+            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviorHandle}] ; {found}");
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviourHandle, reader, writer);
+                await behavior.SyncAsync(message.BehaviorHandle, reader, writer);
             }
 
             if (message.Done)
@@ -221,8 +309,8 @@ namespace Uchu.World
             Zone.ExcludingMessage(new EchoSyncSkillMessage
             {
                 Associate = GameObject,
-                BehaviorHandle = message.BehaviourHandle,
-                Content = writeStream.ToArray(),
+                BehaviorHandle = message.BehaviorHandle,
+                Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle
             }, As<Player>());
@@ -298,6 +386,14 @@ namespace Uchu.World
                 SlotId = slot,
                 SkillId = skillId
             });
+        }
+
+        public uint ClaimSyncId()
+        {
+            lock (this)
+            {
+                return ++BehaviorSyncIndex;
+            }
         }
     }
 }

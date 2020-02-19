@@ -30,6 +30,36 @@ namespace Uchu.World
 
             GameObject.Serialize(GameObject);
         }
+
+        /// <summary>
+        ///     The forward direction for this object
+        /// </summary>
+        public Vector3 Forward
+        {
+            get => Rotation.VectorMultiply(Vector3.UnitX);
+            set => Rotation = value.QuaternionLookRotation(Vector3.UnitY);
+        }
+
+        /// <summary>
+        ///     Make this object look at a given position
+        /// </summary>
+        /// <param name="position">Position to look at</param>
+        /// <param name="lockY">Ignore the Y axis (Default = true)</param>
+        public void LookAt(Vector3 position, bool lockY = true)
+        {
+            if (lockY)
+            {
+                position.Y = Position.Y;
+            }
+
+            // Determine which direction to rotate towards
+            var targetDirection = position - Position;
+
+            // Calculate a rotation a step closer to the target and applies rotation to this object
+            Rotation = targetDirection.QuaternionLookRotation(Vector3.UnitY);
+
+            GameObject.Serialize(GameObject);
+        }
         
         public float Scale { get; set; } = -1;
 

@@ -16,7 +16,6 @@ namespace Uchu.World
 
         private int _size;
         
-        // TODO: Network & Store in DB
         public int Size
         {
             get
@@ -62,7 +61,6 @@ namespace Uchu.World
 
         internal Inventory(InventoryType inventoryType, InventoryManagerComponent managerComponent)
         {
-            
             InventoryType = inventoryType;
             ManagerComponent = managerComponent;
 
@@ -79,7 +77,7 @@ namespace Uchu.World
                 i => Item.Instantiate(i.InventoryItemId, this)
             ).Where(item => !ReferenceEquals(item, default)).ToList();
 
-            _size = inventoryType != InventoryType.Items ? 1000 : playerCharacter.InventorySize;
+            Size = inventoryType != InventoryType.Items ? 1000 : playerCharacter.InventorySize;
             
             foreach (var item in _items)
             {

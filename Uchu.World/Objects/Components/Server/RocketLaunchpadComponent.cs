@@ -33,7 +33,7 @@ namespace Uchu.World
                 return;
             }
 
-            await player.GetComponent<InventoryComponent>().EquipItemAsync(rocket, true);
+            await rocket.EquipAsync(true);
             
             player.Message(new ChangeObjectWorldStateMessage
             {

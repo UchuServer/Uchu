@@ -110,6 +110,8 @@ namespace Uchu.World
         {
             var inventory = Player.GetComponent<InventoryComponent>();
 
+            Equipped = true;
+            
             await inventory.EquipItemAsync(this, skipAllChecks);
         }
 
@@ -117,6 +119,8 @@ namespace Uchu.World
         {
             var inventory = Player.GetComponent<InventoryComponent>();
 
+            Equipped = false;
+            
             await inventory.UnEquipItemAsync(this);
         }
         

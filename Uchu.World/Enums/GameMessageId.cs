@@ -294,6 +294,7 @@ namespace Uchu.World
         MarkInventoryItemAsActive = 0x6e7,
         
         // Undocumented?
-        StartArrangingWithModel = 0x483
+        StartArrangingWithModel = 0x483,
+        SetPlayerControlScheme = 0x1a
     }
 }

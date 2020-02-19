@@ -100,8 +100,6 @@ namespace Uchu.Master
                 
                 if (!Running) return;
 
-                await using var ctx = new UchuContext();
-
                 //
                 // Auto restart these
                 //
@@ -124,6 +122,9 @@ namespace Uchu.Master
                     {
                         // We don't auto restart world servers
 
+
+                        await using var ctx = new UchuContext();
+                        
                         var specs = await ctx.Specifications.FirstOrDefaultAsync(s => s.Id == worldServer.Id);
 
                         if (specs != default)
@@ -137,7 +138,9 @@ namespace Uchu.Master
                     }
                     else
                     {
-                        var specifications = await ctx.Specifications.FirstAsync(w => w.Id == worldServer.Id);
+                        await using var ctx = new UchuContext();
+                        
+                        var specifications = await ctx.Specifications.FirstOrDefaultAsync(w => w.Id == worldServer.Id);
 
                         if (specifications.ActiveUserCount != default)
                         {
@@ -157,16 +160,25 @@ namespace Uchu.Master
                     }
                 }
 
-                foreach (var request in ctx.WorldServerRequests)
+                WorldServerRequest[] requests;
+                
+                await using (var ctx = new UchuContext())
+                {
+                    requests = await ctx.WorldServerRequests.ToArrayAsync();
+                }
+
+                foreach (var request in requests)
                 {
                     if (request.State == WorldServerRequestState.Unanswered)
                     {
                         //
                         // Search for available server
                         //
-                        
+
                         foreach (var worldServer in WorldServers.Where(w => w.ZoneId == request.ZoneId))
                         {
+                            await using var ctx = new UchuContext();
+                            
                             var specification = await ctx.Specifications.FirstAsync(s => s.Id == worldServer.Id);
 
                             if (specification.ActiveUserCount >= specification.MaxUserCount) continue;
@@ -186,7 +198,12 @@ namespace Uchu.Master
                         // Start new server
                         //
 
-                        var clone = ctx.Specifications.Count(c => c.ZoneId == request.ZoneId);
+                        int clone;
+
+                        await using (var ctx = new UchuContext())
+                        {
+                            clone = await ctx.Specifications.CountAsync(c => c.ZoneId == request.ZoneId);
+                        }
 
                         int port;
                         
@@ -200,6 +217,8 @@ namespace Uchu.Master
                             //
                             
                             var ports = Config.Networking.WorldPorts.ToList();
+
+                            await using var ctx = new UchuContext();
 
                             foreach (var specification in ctx.Specifications)
                             {
@@ -219,6 +238,8 @@ namespace Uchu.Master
                             
                             port = 2003;
 
+                            await using var ctx = new UchuContext();
+
                             while (ctx.Specifications.Any(s => s.Port == port))
                             {
                                 port++;
@@ -228,38 +249,41 @@ namespace Uchu.Master
                         //
                         // Find request.
                         //
-                        
-                        var serverRequest = await ctx.WorldServerRequests.FirstAsync(
-                            r => r.Id == request.Id
-                        );
 
-                        if (port == default)
+                        await using (var ctx = new UchuContext())
                         {
-                            //
-                            // We were unable to find a user specified port.
-                            //
-                            
-                            serverRequest.State = WorldServerRequestState.Error;
+                            var serverRequest = await ctx.WorldServerRequests.FirstAsync(
+                                r => r.Id == request.Id
+                            );
+
+                            if (port == default)
+                            {
+                                //
+                                // We were unable to find a user specified port.
+                                //
+
+                                serverRequest.State = WorldServerRequestState.Error;
+
+                                await ctx.SaveChangesAsync();
+                            }
+                            else
+                            {
+                                //
+                                // Start the new server instance.
+                                //
+
+                                serverRequest.SpecificationId = await StartWorld(
+                                    request.ZoneId,
+                                    (uint) clone,
+                                    default,
+                                    port
+                                );
+
+                                serverRequest.State = WorldServerRequestState.Answered;
+                            }
 
                             await ctx.SaveChangesAsync();
                         }
-                        else
-                        {
-                            //
-                            // Start the new server instance.
-                            //
-                            
-                            serverRequest.SpecificationId = await StartWorld(
-                                request.ZoneId,
-                                (uint) clone,
-                                default,
-                                port
-                            );
-
-                            serverRequest.State = WorldServerRequestState.Answered;
-                        }
-
-                        await ctx.SaveChangesAsync();
                     }
                     
                     continueToNext: ;
@@ -269,6 +293,8 @@ namespace Uchu.Master
 
         private static async Task OpenConfig()
         {
+            SqliteContext.DatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "./Uchu.sqlite");
+
             var serializer = new XmlSerializer(typeof(Configuration));
             var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
@@ -324,27 +350,28 @@ namespace Uchu.Master
 
             var matchStr = NormalizePath("/bin/");
 
-            var files = Directory.GetFiles(searchPath, "*.dll", SearchOption.AllDirectories)
+            var files = Directory.GetFiles(searchPath, "*", SearchOption.AllDirectories)
                 .Select(Path.GetFullPath)
                 .Where(f => f.Contains(matchStr)) // hacky solution
                 .ToArray();
 
+            var instance = string.IsNullOrWhiteSpace(Config.DllSource.Instance)
+                ? "Uchu.Instance.dll"
+                : Config.DllSource.Instance;
+
             foreach (var file in files)
             {
-                switch (Path.GetFileName(file))
-                {
-                    case "Uchu.Instance.dll":
-                        DllLocation = file;
-                        break;
-                    default:
-                        continue;
-                }
+                if (Path.GetFileName(file) != instance) continue;
+                
+                DllLocation = file;
+                    
+                break;
             }
 
             if (DllLocation == default)
             {
                 throw new DllNotFoundException(
-                    "Could not find DLL for Uchu.Instance. Did you forget to build it?"
+                    $"Could not find DLL/EXE for {instance}. Did you forget to build it?"
                 );
             }
 

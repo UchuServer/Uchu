@@ -204,8 +204,12 @@ namespace Uchu.World
             obj.Layer = StandardLayer.Hidden;
             
             Start(obj);
+
+            var spawner = obj.GetComponent<SpawnerComponent>();
+
+            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => (LuzSpawnerWaypoint) w).ToArray();
             
-            var spawn = obj.GetComponent<SpawnerComponent>().Spawn();
+            var spawn = spawner.Spawn();
 
             GameObject.Construct(spawn);
         }
@@ -251,8 +255,8 @@ namespace Uchu.World
 
         public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
         {
-            result = GameObjects.OfType<T>().FirstOrDefault(o => o.ObjectId == objectId);
-            return result != default;
+            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId) as T;
+            return result != null;
         }
 
         #endregion
@@ -463,36 +467,11 @@ namespace Uchu.World
 
                     await Task.Delay(1000 / TicksPerSecondLimit);
 
-                    var players = Players;
-
                     foreach (var obj in Objects)
                     {
                         try
                         {
                             Update(obj);
-
-                            if (!(obj is GameObject gameObject)) continue;
-                            
-                            if (obj is Item) continue;
-
-                            foreach (var player in players)
-                            {
-                                var spawned = player.Perspective.LoadedObjects.ToArray().Contains(gameObject);
-
-                                var view = player.Perspective.View(gameObject);
-                                
-                                if (spawned && !view)
-                                {
-                                    SendDestruction(gameObject, player);
-
-                                    continue;
-                                }
-
-                                if (!spawned && view)
-                                {
-                                    SendConstruction(gameObject, player);
-                                }
-                            }
                         }
                         catch (Exception e)
                         {

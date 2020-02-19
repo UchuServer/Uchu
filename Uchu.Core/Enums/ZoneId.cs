@@ -35,6 +35,7 @@ namespace Uchu.Core
         NexusTower = 1900,
         Ninjago = 2000,
         FrakjawBattle,
-        NimbusStationWinterRacetrack = 1261
+        NimbusStationWinterRacetrack = 1261,
+        Test = 58001
     }
 }

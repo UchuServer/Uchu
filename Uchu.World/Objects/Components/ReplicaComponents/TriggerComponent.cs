@@ -1,5 +1,10 @@
+using System;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -11,7 +16,7 @@ namespace Uchu.World
 
         protected TriggerComponent()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerIds)) return;
 
@@ -20,19 +25,77 @@ namespace Uchu.World
 
                 if (split.Length != 2) return;
                 
-                var triggerPrimaryId = int.Parse(split[0]);
+                var fileId = int.Parse(split[0]);
                 var triggerId = int.Parse(split[1]);
 
-                foreach (var trigger in Zone.ZoneInfo.Triggers)
+                Trigger = Zone.ZoneInfo.TriggerDictionary[fileId, triggerId];
+
+                if (Trigger == default)
                 {
-                    // TODO: Primary id
-                    if (trigger.Id != triggerPrimaryId || trigger.Id != triggerId) continue;
+                    Logger.Error($"Failed to find trigger: {triggerId}:{fileId}");
                     
-                    Trigger = trigger;
+                    return;
+                }
+                
+                if (Trigger.Enabled == 0) return;
+
+                foreach (var @event in Trigger.Events)
+                {
+                    Logger.Debug($"TRIGGER EVENT: {@event.Id} -> {@event.Commands.FirstOrDefault()?.Id}");
                     
-                    break;
+                    switch (@event.Id)
+                    {
+                        case "OnCreate":
+                            foreach (var command in @event.Commands)
+                            {
+                                await ExecuteTriggerCommand(command);
+                            }
+                            
+                            break;
+                    }
                 }
             });
+        }
+
+        private async Task ExecuteTriggerCommand(TriggerCommand command)
+        {
+            switch (command.Id)
+            {
+                case "SetPhysicsVolumeEffect":
+                    if (!GameObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) return;
+
+                    var arguments = command.Arguments.Split(',');
+                    
+                    physicsComponent.IsEffectActive = true;
+
+                    var effectTypeInfo = typeof(PhantomPhysicsEffectType);
+
+                    var effectType = (PhantomPhysicsEffectType) Enum.Parse(effectTypeInfo, arguments[0]);
+
+                    physicsComponent.EffectType = effectType;
+
+                    var amount = int.Parse(arguments[1]);
+
+                    physicsComponent.EffectAmount = amount;
+
+                    if (arguments.Length > 2)
+                    {
+                        var direction = new Vector3
+                        {
+                            X = float.Parse(arguments[2]),
+                            Y = float.Parse(arguments[2]),
+                            Z = float.Parse(arguments[2])
+                        };
+
+                        physicsComponent.EffectDirection = direction;
+                    }
+                    
+                    Logger.Information($"PHYSICS: {physicsComponent.EffectType} -> {physicsComponent.EffectType} -> {physicsComponent.EffectDirection}");
+
+                    break;
+            }
+
+            GameObject.Serialize(GameObject);
         }
 
         public override void Construct(BitWriter writer)

@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Utils;
 using Uchu.Core;
+using Uchu.World.AI;
 using Uchu.World.Scripting.Managed;
 using Uchu.World.Social;
 
@@ -175,6 +178,100 @@ namespace Uchu.World.Handlers.Commands
             await UiHelper.ToggleAsync(player, arguments[0], !bool.TryParse(arguments[1], out var state) || state);
             
             return "Sent ui message.";
+        }
+
+        [CommandHandler(Signature = "imagination", Help = "Send imagination ui message", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Imagination(string[] arguments, Player player)
+        {
+            var current = uint.Parse(arguments[0]);
+
+            var max = uint.Parse(arguments[1]);
+
+            await player.MessageGuiAsync("SetImagination", new Dictionary<string, object>()
+            {
+                {"imaginationMax", max},
+                {"imagination", current}
+            });
+
+            return "Sent";
+        }
+
+        [CommandHandler(Signature = "ping", Help = "Get you average ping", GameMasterLevel = GameMasterLevel.Player)]
+        public string Ping(string[] arguments, Player player)
+        {
+            return $"{player.Ping}ms";
+        }
+
+        [CommandHandler(Signature = "movement", Help = "Toggle the movement of an npc", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Movement(string[] arguments, Player player)
+        {
+            var targets = new List<GameObject>();
+
+            Ai(arguments, player);
+            
+            if (arguments.Contains("all"))
+            {
+                targets = player.Zone.Objects.OfType<MovementAiComponent>().Select(
+                    m => m.GameObject
+                ).ToList();
+            }
+            else
+            {
+                var current = player.Zone.GameObjects.First();
+                foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+                {
+                    if (gameObject.Transform == default) continue;
+
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                    if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
+                        Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                        current = gameObject;
+                }
+
+                targets.Add(current);
+            }
+
+            foreach (var current in targets)
+            {
+                if (!current.TryGetComponent<MovementAiComponent>(out var movementAiComponent))
+                    return $"{current} does not have a movement AI component";
+
+                movementAiComponent.Enabled = !movementAiComponent.Enabled;
+            }
+
+            return "Toggled movement for agents";
+        }
+
+        [CommandHandler(Signature = "ai", Help = "Toggle the ai all npcs", GameMasterLevel = GameMasterLevel.Admin)]
+        public static string Ai(string[] arguments, Player player)
+        {
+            foreach (var component in player.Zone.Objects.OfType<BaseCombatAiComponent>())
+            {
+                component.Enabled = true;
+            }
+
+            return "Toggled";
+        }
+
+        [CommandHandler(Signature = "target", Help = "Get target of npc", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Target(string[] arguments, Player player)
+        {
+            var current = player.Zone.GameObjects.First();
+            foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+            {
+                if (gameObject.Transform == default) continue;
+
+                if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
+                    Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                    current = gameObject;
+            }
+
+            if (!current.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return "Invalid nearby";
+
+            return $"Target: {baseCombatAiComponent.Target}";
         }
     }
 }

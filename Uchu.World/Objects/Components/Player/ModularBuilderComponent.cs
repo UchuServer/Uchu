@@ -130,8 +130,8 @@ namespace Uchu.World
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
-            
-            await GameObject.GetComponent<InventoryComponent>().EquipItemAsync(item);
+
+            await item.EquipAsync();
             
             /*
             As<Player>().Message(new StartArrangingWithItemMessage
@@ -160,8 +160,8 @@ namespace Uchu.World
             }
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
-            
-            await GameObject.GetComponent<InventoryComponent>().UnEquipItemAsync(thinkingHat);
+
+            await thinkingHat.UnEquipAsync();
             
             IsBuilding = false;
         }

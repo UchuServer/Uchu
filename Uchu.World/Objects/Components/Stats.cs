@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -23,6 +24,8 @@ namespace Uchu.World
         private uint _maxImagination;
         
         public int[] Factions { get; set; } = new int[0];
+        
+        public int[] Enemies { get; set; } = new int[0];
         
         public uint DamageAbsorptionPoints { get; set; }
         
@@ -191,12 +194,12 @@ namespace Uchu.World
 
         protected Stats()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
                 
-                using var cdClient = new CdClientContext();
+                await using var cdClient = new CdClientContext();
 
                 var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
                     c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
@@ -205,6 +208,20 @@ namespace Uchu.World
                 if (destroyable == default) return;
 
                 Factions = new[] {destroyable.Faction ?? 1};
+
+                var faction = await cdClient.FactionsTable.FirstOrDefaultAsync(
+                    f => f.Faction == Factions[0]
+                );
+                
+                if (faction?.EnemyList == default) return;
+                
+                if (string.IsNullOrWhiteSpace(faction.EnemyList)) return;
+
+                Enemies = faction.EnemyList
+                    .Replace(" ", "")
+                    .Split(',')
+                    .Select(int.Parse)
+                    .ToArray();
             });
 
             Listen(OnDestroyed, () =>
@@ -298,6 +315,11 @@ namespace Uchu.World
             Armor -= armorDamage;
 
             Health -= Math.Min(value, Health);
+
+            if (source != default && GameObject is Player)
+            {
+                GameObject.Animate("onhit", true);
+            }
         }
 
         public void Heal(uint value)

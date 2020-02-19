@@ -55,6 +55,11 @@ namespace Uchu.World.Behaviors
             });
         }
 
+        public virtual Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+
         public virtual Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             return Task.CompletedTask;

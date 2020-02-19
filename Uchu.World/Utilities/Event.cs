@@ -14,6 +14,8 @@ namespace Uchu.World
     {
         protected T[] Actions = new T[0];
 
+        public bool Any => Actions.Length != default;
+        
         internal void AddListener(T action)
         {
             Array.Resize(ref Actions, Actions.Length + 1);

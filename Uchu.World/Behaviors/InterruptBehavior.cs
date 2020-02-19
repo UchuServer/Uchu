@@ -43,5 +43,20 @@ namespace Uchu.World.Behaviors
                 
             context.Writer.WriteBit(false);
         }
+
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (branchContext.Target != context.Associate)
+            {
+                context.Writer.WriteBit(false);
+            }
+
+            if (InterruptBlock == 0)
+            {
+                context.Writer.WriteBit(false);
+            }
+            
+            context.Writer.WriteBit(false);
+        }
     }
 }

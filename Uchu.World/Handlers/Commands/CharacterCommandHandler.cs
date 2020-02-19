@@ -80,7 +80,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "spawn", Help = "Spawn an object", GameMasterLevel = GameMasterLevel.Admin)]
         public string Spawn(string[] arguments, Player player)
         {
-            if (arguments.Length != 1 || arguments.Length > 4)
+            if (arguments.Length == default)
                 return "spawn <lot> <x(optional)> <y(optional)> <z(optional)>";
 
             arguments = arguments.Select(a => a.Replace('.', ',')).ToArray();
@@ -88,20 +88,28 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
             var position = player.Transform.Position;
-            if (arguments.Length >= 4)
-                try
+
+            var factionSided = arguments.Contains("-f");
+            
+            if (!factionSided)
+            {
+                if (arguments.Length >= 4)
                 {
-                    position = new Vector3
+                    try
                     {
-                        X = float.Parse(arguments[1].Replace('.', ',')),
-                        Y = float.Parse(arguments[2].Replace('.', ',')),
-                        Z = float.Parse(arguments[3].Replace('.', ','))
-                    };
+                        position = new Vector3
+                        {
+                            X = float.Parse(arguments[1].Replace('.', ',')),
+                            Y = float.Parse(arguments[2].Replace('.', ',')),
+                            Z = float.Parse(arguments[3].Replace('.', ','))
+                        };
+                    }
+                    catch
+                    {
+                        return "Invalid <x(optional)>, <y(optional)>, or <z(optional)>";
+                    }
                 }
-                catch
-                {
-                    return "Invalid <x(optional)>, <y(optional)>, or <z(optional)>";
-                }
+            }
 
             var rotation = player.Transform.Rotation;
 
@@ -116,6 +124,20 @@ namespace Uchu.World.Handlers.Commands
 
             Object.Start(obj);
             GameObject.Construct(obj);
+
+            if (factionSided)
+            {
+                if (obj.TryGetComponent<Stats>(out var stats))
+                {
+                    stats.Factions = new[] {int.Parse(arguments[2])};
+                    stats.Enemies = new[] {int.Parse(arguments[3])};
+                    
+                    obj.GetComponent<DestructibleComponent>().ResurrectTime = 30;
+                    obj.GetComponent<BaseCombatAiComponent>().Enabled = false;
+                    
+                    GameObject.Serialize(obj);
+                }
+            }
 
             return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
         }
@@ -192,7 +214,15 @@ namespace Uchu.World.Handlers.Commands
                 {
                     if (gameObject.Transform == default) continue;
 
-                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                    if (!arguments.Contains("-sp"))
+                    {
+                        if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                    }
+
+                    if (arguments.Contains("-t"))
+                    {
+                        if (!gameObject.TryGetComponent<TriggerComponent>(out _)) continue;
+                    }
 
                     if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
@@ -243,6 +273,11 @@ namespace Uchu.World.Handlers.Commands
 
                 foreach (var property in component.GetType().GetProperties())
                     info.Append($"\n: {property.Name} = {property.GetValue(component)}");
+            }
+
+            if (arguments.Contains("-in"))
+            {
+                current.OnInteract.Invoke(player);
             }
 
             finish:
@@ -527,10 +562,28 @@ namespace Uchu.World.Handlers.Commands
                     return "Invalid <scale>";
                 }
             }
-            
-            player.Message(new PlayAnimationMessage
+
+            GameObject associate = player;
+
+            if (arguments.Contains("-n"))
             {
-                Associate = player,
+                associate = player.Zone.GameObjects[0];
+
+                foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
+                {
+                    if (gameObject.Transform == default) continue;
+
+                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+
+                    if (Vector3.Distance(associate.Transform.Position, player.Transform.Position) >
+                        Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
+                        associate = gameObject;
+                }
+            }
+            
+            player.Zone.BroadcastMessage(new PlayAnimationMessage
+            {
+                Associate = associate,
                 AnimationsId = arguments[0],
                 Scale = scale
             });
@@ -771,11 +824,11 @@ namespace Uchu.World.Handlers.Commands
 
             if (state)
             {
-                await UiHelper.OpenMailboxAsync(player);
+                await player.OpenMailboxGuiAsync();
             }
             else
             {
-                await UiHelper.CloneMailboxAsync(player);
+                await player.CloseMailboxGuiAsync();
             }
 
             return $"Set mailbox state to: {state}";
@@ -867,6 +920,43 @@ namespace Uchu.World.Handlers.Commands
             player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Size = (int) size;
 
             return $"Set inventory size to: {size}";
+        }
+
+        [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Control(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "control <scheme-id>";
+
+            if (!int.TryParse(arguments[0], out var controlScheme)) return "Invalid <scheme-id>";
+            
+            player.Message(new SetPlayerControlSchemeMessage
+            {
+                Associate = player,
+                DelayCameraSwitchIfInCinematic = false,
+                SwitchCamera = true,
+                ControlScheme = controlScheme
+            });
+
+            if (arguments.Length > 1)
+            {
+                if (float.TryParse(arguments[1], out var timed))
+                {
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay((int) (timed * 1000));
+                        
+                        player.Message(new SetPlayerControlSchemeMessage
+                        {
+                            Associate = player,
+                            DelayCameraSwitchIfInCinematic = false,
+                            SwitchCamera = true,
+                            ControlScheme = 0
+                        });
+                    });
+                }
+            }
+
+            return $"Switched control scheme to: {controlScheme}";
         }
     }
 }

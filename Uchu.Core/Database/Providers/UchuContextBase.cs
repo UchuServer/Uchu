@@ -28,6 +28,10 @@ namespace Uchu.Core.Providers
         
         public DbSet<CharacterMail> Mails { get; set; }
         
+        public DbSet<Guild> Guilds { get; set; }
+        
+        public DbSet<GuildInvite> GuildInvites { get; set; }
+        
         public virtual async Task EnsureUpdatedAsync()
         {
             await Database.MigrateAsync().ConfigureAwait(false);

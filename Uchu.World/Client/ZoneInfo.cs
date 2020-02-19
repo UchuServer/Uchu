@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
+using InfectedRose.Terrain;
 using InfectedRose.Triggers;
 
 namespace Uchu.World.Client
@@ -9,7 +10,9 @@ namespace Uchu.World.Client
     {
         public LuzFile LuzFile { get; set; }
         
-        public List<Trigger> Triggers { get; set; }
+        public TerrainFile TerrainFile { get; set; }
+        
+        public TriggerDictionary TriggerDictionary { get; set; }
         
         public List<LvlFile> LvlFiles { get; set; }
     }
