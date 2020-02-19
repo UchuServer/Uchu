@@ -350,27 +350,28 @@ namespace Uchu.Master
 
             var matchStr = NormalizePath("/bin/");
 
-            var files = Directory.GetFiles(searchPath, "*.dll", SearchOption.AllDirectories)
+            var files = Directory.GetFiles(searchPath, "*", SearchOption.AllDirectories)
                 .Select(Path.GetFullPath)
                 .Where(f => f.Contains(matchStr)) // hacky solution
                 .ToArray();
 
+            var instance = string.IsNullOrWhiteSpace(Config.DllSource.Instance)
+                ? "Uchu.Instance.dll"
+                : Config.DllSource.Instance;
+
             foreach (var file in files)
             {
-                switch (Path.GetFileName(file))
-                {
-                    case "Uchu.Instance.dll":
-                        DllLocation = file;
-                        break;
-                    default:
-                        continue;
-                }
+                if (Path.GetFileName(file) != instance) continue;
+                
+                DllLocation = file;
+                    
+                break;
             }
 
             if (DllLocation == default)
             {
                 throw new DllNotFoundException(
-                    "Could not find DLL for Uchu.Instance. Did you forget to build it?"
+                    $"Could not find DLL/EXE for {instance}. Did you forget to build it?"
                 );
             }
 

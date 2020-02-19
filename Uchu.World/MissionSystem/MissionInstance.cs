@@ -306,46 +306,41 @@ namespace Uchu.World.MissionSystem
             }
 
             var isMission = clientMission.IsMission ?? true;
-            
-            if (rewardItem <= 0)
+
+            var isChoice = clientMission.IsChoiceReward ?? false;
+
+            if (isChoice)
+            {
+                var (lot, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
+
+                count = Math.Max(count, 1);
+                
+                Logger.Debug($"Choice: {lot}x{count} -> {rewardItem}");
+                
+                var _ = Task.Run(async () => { await inventory.AddItemAsync(rewardItem, (uint) count); });
+            }
+            else
             {
                 foreach (var (rewardLot, rewardCount) in rewards)
                 {
                     var lot = rewardLot;
                     var count = Math.Max(rewardCount, 1);
-                    
-                    if (lot == default) continue;
+
+                    if (lot <= 0) continue;
 
                     if (isMission)
                     {
-                        var _ = Task.Run(async () =>
-                        {
-                            await inventory.AddItemAsync(lot, (uint) count);
-                        });
+                        var _ = Task.Run(async () => { await inventory.AddItemAsync(lot, (uint) count); });
                     }
                     else
                     {
                         var _ = Task.Run(async () =>
                         {
                             await Task.Delay(10000);
-                            
+
                             await inventory.AddItemAsync(lot, (uint) count);
                         });
                     }
-                }
-            }
-            else
-            {
-                var (lot, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
-
-                count = Math.Max(count, 1);
-                
-                if (lot != default)
-                {
-                    var _ = Task.Run(async () =>
-                    {
-                        await inventory.AddItemAsync(lot, (uint) count);
-                    });
                 }
             }
         }
