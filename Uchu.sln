@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Python", "Uchu.Python\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfectedRose.Terrain", "InfectedRose\InfectedRose.Terrain\InfectedRose.Terrain.csproj", "{1C4F4C85-C10A-4AEC-B3D1-9B46DE566527}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Api", "Uchu.Api\Uchu.Api.csproj", "{09032CFE-79A5-485D-B1EB-DB7C802F2D3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{1C4F4C85-C10A-4AEC-B3D1-9B46DE566527}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C4F4C85-C10A-4AEC-B3D1-9B46DE566527}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C4F4C85-C10A-4AEC-B3D1-9B46DE566527}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09032CFE-79A5-485D-B1EB-DB7C802F2D3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09032CFE-79A5-485D-B1EB-DB7C802F2D3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09032CFE-79A5-485D-B1EB-DB7C802F2D3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09032CFE-79A5-485D-B1EB-DB7C802F2D3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

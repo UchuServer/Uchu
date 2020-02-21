@@ -38,6 +38,8 @@ namespace Uchu.Core
             new ResourcesConfiguration {GameResourceFolder = "/res"};
         
         [XmlElement] public Networking Networking { get; set; } = new Networking();
+        
+        [XmlElement] public Api Api { get; set; } = new Api();
     }
 
     public class ManagedScriptSources
@@ -71,6 +73,11 @@ namespace Uchu.Core
         [XmlElement] public int CharacterPort { get; set; } = 2002;
         
         [XmlElement("WorldPort")] public List<int> WorldPorts { get; set; }
+    }
+
+    public class Api
+    {
+        [XmlElement("Prefix")] public List<string> Prefixes { get; set; }
     }
 
     public class ResourcesConfiguration

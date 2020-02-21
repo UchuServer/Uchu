@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Api;
 using Uchu.Core;
 using Uchu.Core.Providers;
 
@@ -67,6 +68,8 @@ namespace Uchu.Master
 
             Running = true;
 
+            var _ = Task.Run(SetupApi);
+            
             await HandleRequests();
         }
 
@@ -92,6 +95,17 @@ namespace Uchu.Master
             Environment.Exit(0);
         }
 
+        private static async Task SetupApi()
+        {
+            if (Config.Api?.Prefixes == default) return;
+            
+            if (Config.Api.Prefixes.Count == default) return;
+
+            var api = new ApiManager(Config.Api.Prefixes.ToArray());
+
+            await api.StartAsync();
+        }
+        
         private static async Task HandleRequests()
         {
             while (Running)
