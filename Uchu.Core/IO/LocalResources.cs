@@ -1,7 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Uchu.Core.IO
@@ -51,18 +50,20 @@ namespace Uchu.Core.IO
                 $"*.{extension}",
                 SearchOption.AllDirectories
             );
+            
+            var folder = new Uri(RootPath);
 
             for (var i = 0; i < files.Length; i++)
             {
-                var parts = files[i].Split('/').Reverse().ToArray();
-                var final = parts.TakeWhile(part => part != "res").Aggregate("",
-                    (current, part) => $"{part}/{current}"
+                var file = new Uri(files[i]);
+
+                var final = Uri.UnescapeDataString(
+                    folder.MakeRelativeUri(file)
+                        .ToString()
+                        .Replace('\\', '/')
                 );
 
-                var strBuilder = new StringBuilder(final);
-                strBuilder.Length--;
-
-                files[i] = strBuilder.ToString();
+                files[i] = $"../{final}";
             }
 
             return files;

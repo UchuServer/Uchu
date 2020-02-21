@@ -378,15 +378,26 @@ namespace Uchu.Master
                 if (Path.GetFileName(file) != instance) continue;
                 
                 DllLocation = file;
-                    
+                
                 break;
             }
 
             if (DllLocation == default)
             {
-                throw new DllNotFoundException(
-                    $"Could not find DLL/EXE for {instance}. Did you forget to build it?"
-                );
+                foreach (var file in Directory.GetFiles("./", "*", SearchOption.TopDirectoryOnly))
+                {
+                    if (Path.GetFileName(file) == instance)
+                    {
+                        DllLocation = instance;
+                    }
+                }
+
+                if (DllLocation == default)
+                {
+                    throw new DllNotFoundException(
+                        $"Could not find DLL/EXE for {instance}. Did you forget to build it?"
+                    );
+                }
             }
 
             var source = Directory.GetCurrentDirectory();

@@ -32,6 +32,8 @@ namespace Uchu.World.Client
         {
             Zones.Clear();
 
+            Logger.Information("Parsing zone info...");
+            
             var luzFiles = _resources.GetAllFilesWithExtension("luz");
 
             foreach (var luzFile in luzFiles)
