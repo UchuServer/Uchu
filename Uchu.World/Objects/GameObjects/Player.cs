@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
@@ -54,6 +54,26 @@ namespace Uchu.World
                 OnLootPickup.Clear();
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
+            });
+
+            Listen(OnTick, async () =>
+            {
+                await using var ctx = new UchuContext();
+
+                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+
+                var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
+
+                if (!user.Banned) return;
+                
+                try
+                {
+                    await Connection.CloseAsync();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             });
 
             Listen(OnPositionUpdate, (position, rotation) =>

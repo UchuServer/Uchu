@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World
@@ -24,7 +25,7 @@ namespace Uchu.World
         
         public void Clear()
         {
-            foreach (var key in ActionDictionary.Keys)
+            foreach (var key in ActionDictionary.Keys.ToArray())
             {
                 ActionDictionary[key] = new TAction[0];
             }
