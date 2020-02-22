@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Python;
+using Uchu.World.Social;
 
 namespace Uchu.World.Scripting.Managed
 {
@@ -148,7 +149,9 @@ namespace Uchu.World.Scripting.Managed
                     player.SendChatMessage(message, PlayerChatChannel.Normal);
                 }),
                 ["ClientContext"] = new Func<CdClientContext>(() => new CdClientContext()),
-                ["UchuContext"] = new Func<UchuContext>(() => new UchuContext())
+                ["UchuContext"] = new Func<UchuContext>(() => new UchuContext()),
+                ["CentralNotice"] = new Action<Player, string>((player, text) => player.CentralNoticeGui(text)),
+                ["StoryBox"] = new Action<Player, string>(async (player, text) => await player.StoryBoxGuiAsync(text))
             };
 
             Script.Run(variables.ToArray());

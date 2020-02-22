@@ -191,6 +191,9 @@ namespace Uchu.World.Social
                         writer.Write((byte) Amf3Type.Integer);
                         Amf3Helper.WriteNumber2(writer, unsigned);
                         break;
+                    case bool boolean:
+                        writer.Write((byte) (boolean ? Amf3Type.True : Amf3Type.False));
+                        break;
                     case null:
                         writer.Write((byte) Amf3Type.Undefined);
                         break;
@@ -229,6 +232,19 @@ namespace Uchu.World.Social
                 Associate = @this,
                 Id = id,
                 Reason = text
+            });
+        }
+
+        public static async Task StoryBoxGuiAsync(this Player @this, string text)
+        {
+            await StateAsync(@this, "Story");
+
+            await Task.Delay(100);
+            
+            await @this.MessageGuiAsync("ToggleStoryBox", new Dictionary<string, object>()
+            {
+                {"visible", true},
+                {"text", text}
             });
         }
 

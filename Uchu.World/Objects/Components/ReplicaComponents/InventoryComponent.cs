@@ -49,8 +49,9 @@ namespace Uchu.World
 
                     await MountItemAsync(item.Itemid ?? 0, IdUtilities.GenerateObjectId());
                 }
-
-                GameObject.Serialize(GameObject);
+                
+                if (Items.Any(i => i.Value != default))
+                    GameObject.Serialize(GameObject);
             });
         }
 
