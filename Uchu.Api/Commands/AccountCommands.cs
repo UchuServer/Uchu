@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using Uchu.Api.Models;
 using Uchu.Core;
 
@@ -29,7 +30,7 @@ namespace Uchu.Api.Commands
 
             await using (var ctx = new UchuContext())
             {
-                var duplicate = await ctx.Users.AnyAsync(u => u.Username == accountName);
+                var duplicate = await ctx.Users.Where(u => !u.Sso).AnyAsync(u => u.Username == accountName);
 
                 if (duplicate)
                 {

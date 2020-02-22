@@ -39,7 +39,9 @@ namespace Uchu.Core
         
         [XmlElement] public Networking Networking { get; set; } = new Networking();
         
-        [XmlElement] public Api Api { get; set; } = new Api();
+        [XmlElement("Api")] public ApiConfig ApiConfig { get; set; } = new ApiConfig();
+        
+        [XmlElement("Sso")] public SsoConfig SsoConfig { get; set; } = new SsoConfig();
     }
 
     public class ManagedScriptSources
@@ -71,11 +73,18 @@ namespace Uchu.Core
         [XmlElement] public string Hostname { get; set; } = "";
         
         [XmlElement] public int CharacterPort { get; set; } = 2002;
+
+        [XmlElement] public bool UseAuthentication { get; set; } = true;
         
         [XmlElement("WorldPort")] public List<int> WorldPorts { get; set; }
     }
 
-    public class Api
+    public class SsoConfig
+    {
+        [XmlElement] public string Domain { get; set; } = "";
+    }
+
+    public class ApiConfig
     {
         [XmlElement("Prefix")] public List<string> Prefixes { get; set; }
     }

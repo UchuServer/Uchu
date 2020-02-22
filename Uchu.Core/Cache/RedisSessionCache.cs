@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using StackExchange.Redis;
 
 namespace Uchu.Core
@@ -33,6 +34,15 @@ namespace Uchu.Core
             return key;
         }
 
+        public void CreateSession(long userId, string key)
+        {
+            _client.StringSet(key, new Session
+            {
+                Key = key,
+                UserId = userId
+            }.ToBytes(), TimeSpan.FromDays(1));
+        }
+
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
             var session = GetSession(endpoint);
@@ -52,8 +62,33 @@ namespace Uchu.Core
         }
 
         public Session GetSession(IPEndPoint endpoint)
-            => Session.FromBytes(_client.StringGet(_keys[endpoint.ToString()]));
+        {
+            var task = GetSessionAsync(endpoint);
 
+            task.Wait();
+
+            return task.Result;
+        }
+
+        public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
+        {
+            string key;
+            
+            var timeout = 1000;
+            
+            while (!_keys.TryGetValue(endpoint.ToString(), out key))
+            {
+                if (timeout <= 0)
+                    throw new TimeoutException();
+                
+                await Task.Delay(50).ConfigureAwait(false);
+
+                timeout -= 50;
+            }
+            
+            return Session.FromBytes(_client.StringGet(key));
+        }
+        
         public bool IsKey(string key)
         {
             return _client.KeyExists(key);

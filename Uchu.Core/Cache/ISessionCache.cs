@@ -17,5 +17,7 @@ namespace Uchu.Core
         void RegisterKey(IPEndPoint endPoint, string key);
 
         void DeleteSession(IPEndPoint endpoint);
+
+        void CreateSession(long userId, string key);
     }
 }

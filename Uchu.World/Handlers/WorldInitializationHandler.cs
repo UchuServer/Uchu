@@ -36,14 +36,10 @@ namespace Uchu.World.Handlers
         {
             Logger.Information($"{connection.EndPoint}'s validating client for world!");
 
-            if (!Server.SessionCache.IsKey(packet.SessionKey))
-            {
-                await connection.CloseAsync();
-                Logger.Warning($"{connection} attempted to connect with an invalid session key");
-                return;
-            }
-
-            Server.SessionCache.RegisterKey(connection.EndPoint, packet.SessionKey);
+            var verified = await Server.ValidateUserAsync(connection, packet.Username, packet.SessionKey);
+            
+            if (!verified) return;
+            
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();

@@ -413,8 +413,9 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("GameMasterLevel");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasMaxLength(60);
+
+                    b.Property<bool>("Sso");
 
                     b.Property<string>("Username")
                         .IsRequired()

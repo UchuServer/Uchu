@@ -33,7 +33,7 @@ namespace Uchu.Core.Handlers.Commands
             }
 
             using var ctx = new UchuContext();
-            if (ctx.Users.Any(u => u.Username == name))
+            if (ctx.Users.Where(u => !u.Sso).Any(u => u.Username == name))
             {
                 return "A user with that username already exists";
             }

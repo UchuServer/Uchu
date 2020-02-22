@@ -35,7 +35,7 @@ namespace Uchu.Auth.Handlers
             {
                 info.CharacterInstancePort = (ushort) characterSpecification.Port;
 
-                if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username))
+                if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username && !u.Sso))
                 {
                     info.LoginCode = LoginCode.InsufficientPermissions;
                     info.Error = new ErrorMessage
@@ -45,7 +45,7 @@ namespace Uchu.Auth.Handlers
                 }
                 else
                 {
-                    var user = await ctx.Users.SingleAsync(u => u.Username == packet.Username);
+                    var user = await ctx.Users.SingleAsync(u => u.Username == packet.Username && !u.Sso);
 
                     if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
                     {

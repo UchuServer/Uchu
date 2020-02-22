@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Uchu.Core
 {
@@ -34,6 +36,19 @@ namespace Uchu.Core
             return key;
         }
 
+        public void CreateSession(long userId, string key)
+        {
+            using var ctx = new UchuContext();
+
+            ctx.SessionCaches.Add(new SessionCache
+            {
+                Key = key,
+                UserId = userId
+            });
+
+            ctx.SaveChanges();
+        }
+
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
             using var ctx = new UchuContext();
@@ -62,9 +77,30 @@ namespace Uchu.Core
 
         public Session GetSession(IPEndPoint endpoint)
         {
-            using var ctx = new UchuContext();
+            var task = GetSessionAsync(endpoint);
 
-            var key = _keys[endpoint.ToString()];
+            task.Wait();
+
+            return task.Result;
+        }
+
+        public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
+        {
+            await using var ctx = new UchuContext();
+
+            string key;
+            
+            var timeout = 1000;
+            
+            while (!_keys.TryGetValue(endpoint.ToString(), out key))
+            {
+                if (timeout <= 0)
+                    throw new TimeoutException();
+                
+                await Task.Delay(50).ConfigureAwait(false);
+
+                timeout -= 50;
+            }
 
             var session = ctx.SessionCaches.First(s => s.Key == key);
             
@@ -101,7 +137,7 @@ namespace Uchu.Core
 
             ctx.SaveChanges();
         }
-        
+
         private string GenerateKey(int length = 24)
         {
             var bytes = new byte[length];

@@ -9,7 +9,9 @@ namespace Uchu.Core
 
         [MaxLength(33), Required] public string Username { get; set; }
 
-        [MaxLength(60), Required] public string Password { get; set; }
+        [MaxLength(60)] public string Password { get; set; }
+        
+        public bool Sso { get; set; }
 
         public bool Banned { get; set; }
 

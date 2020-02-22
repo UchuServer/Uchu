@@ -12,12 +12,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
 using StackExchange.Redis;
 using Uchu.Core.IO;
 using Uchu.Core.Providers;
+using Uchu.Sso;
 
 namespace Uchu.Core
 {
@@ -40,6 +42,8 @@ namespace Uchu.Core
         public IFileResources Resources { get; private set; }
 
         public Configuration Config { get; private set; }
+        
+        public SsoService SsoService { get; private set; }
 
         public int Port { get; private set; }
 
@@ -116,6 +120,8 @@ namespace Uchu.Core
             {
                 RakNetServer = new TcpUdpServer(Port, "3.25 ND1");
             }
+
+            SsoService = new SsoService(Config.SsoConfig?.Domain ?? "");
 
             try
             {
@@ -403,6 +409,76 @@ namespace Uchu.Core
             }
 
             return "";
+        }
+
+        public async Task<bool> ValidateUserAsync(IRakConnection connection, string username, string key)
+        {
+            if (connection == null)
+                throw new ArgumentNullException(nameof(connection));
+            
+            var sso = await SsoService.VerifyAsync(username, key).ConfigureAwait(false);
+            var local = SessionCache.IsKey(key);
+            
+            if (!sso && !local)
+            {
+                Logger.Warning($"{connection} attempted to connect with an invalid session key");
+                
+                await connection.CloseAsync().ConfigureAwait(false);
+                
+                return false;
+            }
+
+            if (sso)
+            {
+                //
+                // Register Sso users
+                //
+
+                await using (var ctx = new UchuContext())
+                {
+                    var user = await ctx.Users.Where(u => u.Sso).FirstOrDefaultAsync(
+                        u => u.Username == username
+                    ).ConfigureAwait(false);
+
+                    if (user == default)
+                    {
+                        user = new User
+                        {
+                            Username = username,
+                            Sso = true
+                        };
+
+                        await ctx.Users.AddAsync(user).ConfigureAwait(false);
+                    }
+
+                    await ctx.SaveChangesAsync().ConfigureAwait(false);
+                }
+
+                await using (var ctx = new UchuContext())
+                {
+                    var user = await ctx.Users.Where(u => u.Sso).FirstOrDefaultAsync(
+                        u => u.Username == username
+                    ).ConfigureAwait(false);
+                    
+                    if (user == default) return false;
+                    
+                    if (user.Banned || !string.IsNullOrWhiteSpace(user.CustomLockout))
+                    {
+                        await connection.CloseAsync().ConfigureAwait(false);
+
+                        return false;
+                    }
+                    
+                    if (!SessionCache.IsKey(key))
+                    {
+                        SessionCache.CreateSession(user.UserId, key);
+                    }
+                }
+            }
+
+            SessionCache.RegisterKey(connection.EndPoint, key);
+
+            return true;
         }
 
         private static async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)

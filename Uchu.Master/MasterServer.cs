@@ -29,6 +29,8 @@ namespace Uchu.Master
         
         public static bool Running { get; set; }
         
+        public static bool UseAuthentication { get; set; }
+        
         private static async Task Main(string[] args)
         {
             await OpenConfig();
@@ -59,7 +61,11 @@ namespace Uchu.Master
                 await ctx.SaveChangesAsync();
             }
 
-            await StartAuthentication();
+            if (UseAuthentication)
+            {
+                await StartAuthentication();
+            }
+
             await StartCharacter();
 
             Console.CancelKeyPress += ShutdownProcesses;
@@ -97,11 +103,11 @@ namespace Uchu.Master
 
         private static async Task SetupApi()
         {
-            if (Config.Api?.Prefixes == default) return;
+            if (Config.ApiConfig?.Prefixes == default) return;
             
-            if (Config.Api.Prefixes.Count == default) return;
+            if (Config.ApiConfig.Prefixes.Count == default) return;
 
-            var api = new ApiManager(Config.Api.Prefixes.ToArray());
+            var api = new ApiManager(Config.ApiConfig.Prefixes.ToArray());
 
             await api.StartAsync();
         }
@@ -118,7 +124,7 @@ namespace Uchu.Master
                 // Auto restart these
                 //
 
-                if (AuthenticationServer.Process.HasExited)
+                if (UseAuthentication && AuthenticationServer.Process.HasExited)
                     await StartAuthentication();
 
                 if (CharacterServer.Process.HasExited)
@@ -359,6 +365,8 @@ namespace Uchu.Master
                 
                 throw new DirectoryNotFoundException("No local resource path.");
             }
+
+            UseAuthentication = Config.Networking.UseAuthentication;
 
             var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDllSourcePath);
 
