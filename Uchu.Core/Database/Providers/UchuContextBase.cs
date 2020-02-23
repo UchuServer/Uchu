@@ -19,11 +19,7 @@ namespace Uchu.Core.Providers
         public DbSet<MissionTask> MissionTasks { get; set; }
 
         public DbSet<Friend> Friends { get; set; }
-        
-        public DbSet<ServerSpecification> Specifications { get; set; }
-        
-        public DbSet<WorldServerRequest> WorldServerRequests { get; set; }
-        
+
         public DbSet<SessionCache> SessionCaches { get; set; }
         
         public DbSet<CharacterMail> Mails { get; set; }

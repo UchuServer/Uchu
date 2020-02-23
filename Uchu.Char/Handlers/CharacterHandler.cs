@@ -278,7 +278,7 @@ namespace Uchu.Char.Handlers
                 // Request world server.
                 //
                 
-                var server = await ServerHelper.RequestWorldServerAsync(requestZone);
+                var server = await ServerHelper.RequestWorldServerAsync(Server, requestZone);
 
                 if (server == default)
                 {

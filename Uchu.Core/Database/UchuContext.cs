@@ -21,10 +21,6 @@ namespace Uchu.Core
 
         public DbSet<Friend> Friends => ContextBase.Friends;
 
-        public DbSet<ServerSpecification> Specifications => ContextBase.Specifications;
-
-        public DbSet<WorldServerRequest> WorldServerRequests => ContextBase.WorldServerRequests;
-
         public DbSet<SessionCache> SessionCaches => ContextBase.SessionCaches;
 
         public DbSet<CharacterMail> Mails => ContextBase.Mails;

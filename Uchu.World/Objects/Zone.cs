@@ -441,14 +441,6 @@ namespace Uchu.World
                     Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
-
-                //
-                // Set player count
-                //
-
-                var worldServer = (WorldServer) Server;
-
-                worldServer.ActiveUserCount = (uint) worldServer.Zones.Sum(z => z.Players.Length);
             };
 
             timer.Start();

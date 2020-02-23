@@ -1,14 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Scripting.Utils;
+using Uchu.Api.Models;
 using Uchu.Core;
-using Uchu.World.AI;
 using Uchu.World.Scripting.Managed;
 using Uchu.World.Social;
 
@@ -21,9 +18,11 @@ namespace Uchu.World.Handlers.Commands
         {
             await using var ctx = new UchuContext();
 
-            var world = await ctx.Specifications.FirstOrDefaultAsync(
-                s => s.ServerType == ServerType.World && s.Id != Server.Id
-            );
+            var response = await Server.Api.RunCommandAsync<InstanceListResponse>(
+                Server.MasterApi, "instance/list"
+            ).ConfigureAwait(false);
+
+            var world = response.Instances.FirstOrDefault(i => i.Type == (int) ServerType.World);
 
             foreach (var zonePlayer in player.Zone.Players)
             {
@@ -36,10 +35,12 @@ namespace Uchu.World.Handlers.Commands
                     
                     continue;
                 }
-                
-                zonePlayer.SendChatMessage($"This zone is closing, going to {world.ZoneId}!");
-                
-                await zonePlayer.SendToWorldAsync(world);
+
+                var zone = (ZoneId) world.Zones.First();
+
+                zonePlayer.SendChatMessage($"This zone is closing, going to {zone}!");
+
+                await zonePlayer.SendToWorldAsync(world, zone);
             }
 
             var delay = 1000;
@@ -51,8 +52,9 @@ namespace Uchu.World.Handlers.Commands
 
             await Task.Delay(delay);
 
-            Environment.Exit(0);
-
+            await Server.Api.RunCommandAsync<BaseResponse>(Server.MasterApi, $"instance/decommission?i={Server.Id}")
+                .ConfigureAwait(false);
+            
             return "Stopped server";
         }
 

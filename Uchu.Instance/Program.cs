@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Api;
+using Uchu.Api.Models;
 using Uchu.Auth.Handlers;
 using Uchu.Char.Handlers;
 using Uchu.Core;
@@ -29,34 +32,39 @@ namespace Uchu.Instance
                 throw new ArgumentException($"{args[1]} config file does not exist.");
             }
 
+            Configuration configuration;
+            
             await using (var fs = File.OpenRead(args[1]))
             {
-                UchuContextBase.Config = (Configuration) serializer.Deserialize(fs);
+                UchuContextBase.Config = configuration = (Configuration) serializer.Deserialize(fs);
             }
             
             var masterPath = Path.GetDirectoryName(args[1]);
 
             SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
 
-            ServerSpecification specification;
+            var api = new ApiManager(configuration.ApiConfig.Protocol, configuration.ApiConfig.Domain);
 
-            await using (var ctx = new UchuContext())
+            var instance = await api.RunCommandAsync<InstanceInfoResponse>(
+                configuration.ApiConfig.Port, $"instance/target?i={id}"
+            ).ConfigureAwait(false);
+
+            if (!instance.Success)
             {
-                specification = await ctx.Specifications.FirstOrDefaultAsync(c => c.Id == id);
+                Logger.Error(instance.FailedReason);
 
-                if (specification == default)
-                    throw new ArgumentException($"{args[0]} is not a valid server specification ID");
+                throw new Exception(instance.FailedReason);
             }
-
-            var server = specification.ServerType == ServerType.World
-                ? new WorldServer(specification)
-                : new Server(specification.Id);
+            
+            var server = instance.Info.Type == (int) ServerType.World
+                ? new WorldServer(id)
+                : new Server(id);
             
             await server.ConfigureAsync(args[1]);
 
             try
             {
-                switch (specification.ServerType)
+                switch ((ServerType) instance.Info.Type)
                 {
                     case ServerType.Authentication:
                         await server.StartAsync(typeof(LoginHandler).Assembly, true);
@@ -78,21 +86,6 @@ namespace Uchu.Instance
             }
             
             Logger.Information("Exiting...");
-
-            try
-            {
-                await using var ctx = new UchuContext();
-                
-                specification = await ctx.Specifications.FirstAsync(c => c.Id == id);
-
-                ctx.Specifications.Remove(specification);
-
-                await ctx.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
 
             Console.ReadKey();
         }

@@ -1,11 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
 
-namespace Uchu.Api.Commands
+namespace Uchu.Master.Api
 {
     public class AccountCommands
     {
@@ -142,7 +143,7 @@ namespace Uchu.Api.Commands
 
                 response.Success = true;
                 response.Username = user.Username;
-                response.Level = gameMasterLevel;
+                response.Level = (int) gameMasterLevel;
             }
 
             return response;
@@ -256,7 +257,7 @@ namespace Uchu.Api.Commands
                 response.Id = user.UserId;
                 response.Banned = user.Banned;
                 response.BannedReason = user.BannedReason;
-                response.Level = (GameMasterLevel) user.GameMasterLevel;
+                response.Level = user.GameMasterLevel;
             }
 
             return response;

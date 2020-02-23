@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Uchu.Api;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Providers;
+using Uchu.Master.Api;
 
 namespace Uchu.Master
 {
@@ -16,12 +19,8 @@ namespace Uchu.Master
         public static string DllLocation { get; set; }
 
         public static Configuration Config { get; set; }
-        
-        public static ManagedServer AuthenticationServer { get; set; }
-        
-        public static ManagedServer CharacterServer { get; set; }
-        
-        public static List<ManagedWorldServer> WorldServers { get; set; } = new List<ManagedWorldServer>();
+
+        public static List<ServerInstance> Instances { get; set; }
         
         public static string ConfigPath { get; set; }
         
@@ -31,67 +30,67 @@ namespace Uchu.Master
         
         public static bool UseAuthentication { get; set; }
         
+        public static int ApiPortIndex { get; set; }
+        
+        public static int ApiPort { get; set; }
+        
+        public static bool IsSubsidiary { get; set; }
+        
+        public static List<int> Subsidiaries { get; set; }
+        
+        public static ApiManager Api { get; set; }
+
+        public static int MasterPort => Config.ApiConfig.Port;
+        
         private static async Task Main(string[] args)
         {
-            await OpenConfig();
+            Subsidiaries = new List<int>();
             
-            await using (var ctx = new UchuContext())
+            Instances = new List<ServerInstance>();
+            
+            await ConfigureAsync();
+
+            var databaseVerified = await CheckForDatabaseUpdatesAsync();
+
+            if (!databaseVerified)
             {
-                Logger.Information("Checking for database updates...");
-
-                await ctx.EnsureUpdatedAsync();
+                Logger.Error($"Failed to connect to database provider \"{Config.Database.Provider}\"");
                 
-                Logger.Information("Database up to date...");
-                
-                foreach (var specification in ctx.Specifications)
-                {
-                    ctx.Specifications.Remove(specification);
-                }
-
-                foreach (var request in ctx.WorldServerRequests)
-                {
-                    ctx.WorldServerRequests.Remove(request);
-                }
-
-                foreach (var session in ctx.SessionCaches)
-                {
-                    ctx.SessionCaches.Remove(session);
-                }
-
-                await ctx.SaveChangesAsync();
+                return;
             }
 
-            if (UseAuthentication)
-            {
-                await StartAuthentication();
-            }
-
-            await StartCharacter();
-
+            await SetupApiAsync();
+            
             Console.CancelKeyPress += ShutdownProcesses;
 
             AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
-
-            Running = true;
-
-            var _ = Task.Run(SetupApi);
             
-            await HandleRequests();
+            await Api.StartAsync(ApiPort);
+        }
+
+        private static async Task<bool> CheckForDatabaseUpdatesAsync()
+        {
+            try
+            {
+                await using var ctx = new UchuContext();
+                
+                await ctx.EnsureUpdatedAsync();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static void ShutdownProcesses(object _, EventArgs ev)
         {
             Running = false;
-            
-            if (!AuthenticationServer.Process.HasExited)
-                AuthenticationServer.Process.Kill();
 
-            if (!CharacterServer.Process.HasExited)
-                CharacterServer.Process.Kill();
-
-            foreach (var server in WorldServers.Where(server => !server.Process.HasExited))
+            foreach (var instance in Instances)
             {
-                server.Process.Kill();
+                instance.Process.Kill();
             }
 
             if (!(ev is ConsoleCancelEventArgs cancelEv)) return;
@@ -101,220 +100,77 @@ namespace Uchu.Master
             Environment.Exit(0);
         }
 
-        private static async Task SetupApi()
+        private static async Task SetupApiAsync()
         {
-            if (Config.ApiConfig?.Prefixes == default) return;
+            var apiConfig = Config.ApiConfig;
+
+            Api = new ApiManager(apiConfig.Protocol, apiConfig.Domain);
             
-            if (Config.ApiConfig.Prefixes.Count == default) return;
+            Api.RegisterCommandCollection<AccountCommands>();
+            
+            Api.RegisterCommandCollection<MasterCommands>();
 
-            var api = new ApiManager(Config.ApiConfig.Prefixes.ToArray());
+            var response = await Api.RunCommandAsync<ClaimPortResponse>(MasterPort, "subsidiary");
 
-            await api.StartAsync();
-        }
-        
-        private static async Task HandleRequests()
-        {
-            while (Running)
+            if (response != null && response.Success)
             {
-                await Task.Delay(50);
+                IsSubsidiary = true;
                 
-                if (!Running) return;
+                ApiPort = response.Port;
 
-                //
-                // Auto restart these
-                //
+                Logger.Information($"Is subsidiary: {ApiPort}");
+            }
+            else
+            {
+                ApiPort = MasterPort;
+            }
 
-                if (UseAuthentication && AuthenticationServer.Process.HasExited)
-                    await StartAuthentication();
+            Api.OnLoaded += async () =>
+            {
+                await StartDefaultInstances();
+            };
+        }
 
-                if (CharacterServer.Process.HasExited)
-                    await StartCharacter();
+        private static async Task StartDefaultInstances()
+        {
+            var hostAuthentication = Config.Networking.HostAuthentication;
 
-                //
-                // Cleanup
-                //
+            var hostCharacter = Config.Networking.HostCharacter;
+
+            if (IsSubsidiary)
+            {
+                var instances = await GetAllInstancesAsync();
                 
-                for (var index = 0; index < WorldServers.Count; index++)
+                if (hostAuthentication)
                 {
-                    var worldServer = WorldServers[index];
-                    
-                    if (worldServer.Process.HasExited)
+                    if (instances.Any(i => i.Type == (int) ServerType.Authentication))
                     {
-                        // We don't auto restart world servers
-
-
-                        await using var ctx = new UchuContext();
-                        
-                        var specs = await ctx.Specifications.FirstOrDefaultAsync(s => s.Id == worldServer.Id);
-
-                        if (specs != default)
-                        {
-                            ctx.Specifications.Remove(specs);
-
-                            await ctx.SaveChangesAsync();
-                        }
-                        
-                        WorldServers.RemoveAt(index);
-                    }
-                    else
-                    {
-                        await using var ctx = new UchuContext();
-                        
-                        var specifications = await ctx.Specifications.FirstOrDefaultAsync(w => w.Id == worldServer.Id);
-
-                        if (specifications.ActiveUserCount != default)
-                        {
-                            worldServer.EmptyTime = default;
-                            
-                            continue;
-                        }
-                        
-                        worldServer.EmptyTime++;
-                        
-                        if (worldServer.EmptyTime != 10000) continue;
-
-                        // Evil, but works
-                        worldServer.Process.Kill();
-                        
-                        WorldServers.RemoveAt(index);
+                        hostAuthentication = false;
                     }
                 }
 
-                WorldServerRequest[] requests;
-                
-                await using (var ctx = new UchuContext())
+                if (hostCharacter)
                 {
-                    requests = await ctx.WorldServerRequests.ToArrayAsync();
-                }
-
-                foreach (var request in requests)
-                {
-                    if (request.State == WorldServerRequestState.Unanswered)
+                    if (instances.Any(i => i.Type == (int) ServerType.Character))
                     {
-                        //
-                        // Search for available server
-                        //
-
-                        foreach (var worldServer in WorldServers.Where(w => w.ZoneId == request.ZoneId))
-                        {
-                            await using var ctx = new UchuContext();
-                            
-                            var specification = await ctx.Specifications.FirstAsync(s => s.Id == worldServer.Id);
-
-                            if (specification.ActiveUserCount >= specification.MaxUserCount) continue;
-
-                            var req = await ctx.WorldServerRequests.FirstAsync(r => r.Id == request.Id);
-                            
-                            req.SpecificationId = specification.Id;
-
-                            req.State = WorldServerRequestState.Complete;
-
-                            await ctx.SaveChangesAsync();
-
-                            goto continueToNext;
-                        }
-                        
-                        //
-                        // Start new server
-                        //
-
-                        int clone;
-
-                        await using (var ctx = new UchuContext())
-                        {
-                            clone = await ctx.Specifications.CountAsync(c => c.ZoneId == request.ZoneId);
-                        }
-
-                        int port;
-                        
-                        if (Config.Networking.WorldPorts?.Any() ?? false)
-                        {
-                            //
-                            // Check for available user specified ports.
-                            // 
-                            // Sometimes, most likely when someone is hosting a public instance, they have to
-                            // port forward. These are therefore the only ports that can be used.
-                            //
-                            
-                            var ports = Config.Networking.WorldPorts.ToList();
-
-                            await using var ctx = new UchuContext();
-
-                            foreach (var specification in ctx.Specifications)
-                            {
-                                if (ports.Contains(specification.Port))
-                                {
-                                    ports.Remove(specification.Port);
-                                }
-                            }
-
-                            port = ports.FirstOrDefault();
-                        }
-                        else
-                        {
-                            //
-                            // Pick the first port which is not used by another server instance.
-                            //
-                            
-                            port = 2003;
-
-                            await using var ctx = new UchuContext();
-
-                            while (ctx.Specifications.Any(s => s.Port == port))
-                            {
-                                port++;
-                            }
-                        }
-
-                        //
-                        // Find request.
-                        //
-
-                        await using (var ctx = new UchuContext())
-                        {
-                            var serverRequest = await ctx.WorldServerRequests.FirstAsync(
-                                r => r.Id == request.Id
-                            );
-
-                            if (port == default)
-                            {
-                                //
-                                // We were unable to find a user specified port.
-                                //
-
-                                serverRequest.State = WorldServerRequestState.Error;
-
-                                await ctx.SaveChangesAsync();
-                            }
-                            else
-                            {
-                                //
-                                // Start the new server instance.
-                                //
-
-                                serverRequest.SpecificationId = await StartWorld(
-                                    request.ZoneId,
-                                    (uint) clone,
-                                    default,
-                                    port
-                                );
-
-                                serverRequest.State = WorldServerRequestState.Answered;
-                            }
-
-                            await ctx.SaveChangesAsync();
-                        }
+                        hostCharacter = false;
                     }
-                    
-                    continueToNext: ;
                 }
+            }
+
+            if (hostAuthentication)
+            {
+                await StartInstanceAsync(ServerType.Authentication, 21836);
+            }
+
+            if (hostCharacter)
+            {
+                await StartInstanceAsync(ServerType.Character, Config.Networking.CharacterPort);
             }
         }
 
-        private static async Task OpenConfig()
+        private static async Task ConfigureAsync()
         {
-            SqliteContext.DatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "./Uchu.sqlite");
-
             var serializer = new XmlSerializer(typeof(Configuration));
             var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
@@ -342,6 +198,8 @@ namespace Uchu.Master
                 throw new FileNotFoundException("No config file found.", info.FullName);
             }
 
+            SqliteContext.DatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "./Uchu.sqlite");
+
             UchuContextBase.Config = Config;
 
             var configPath = Config.ResourcesConfiguration?.GameResourceFolder;
@@ -361,52 +219,16 @@ namespace Uchu.Master
             }
             else
             {
-                Logger.Error($"No input location of local resources. Please input in config file.");
+                Logger.Error("No input location of local resources. Please input in config file.");
                 
                 throw new DirectoryNotFoundException("No local resource path.");
             }
 
-            UseAuthentication = Config.Networking.UseAuthentication;
+            UseAuthentication = Config.Networking.HostAuthentication;
+            
+            DllLocation = Config.DllSource.Instance;
 
-            var searchPath = Path.Combine($"{Directory.GetCurrentDirectory()}", Config.DllSource.ServerDllSourcePath);
-
-            var matchStr = NormalizePath("/bin/");
-
-            var files = Directory.GetFiles(searchPath, "*", SearchOption.AllDirectories)
-                .Select(Path.GetFullPath)
-                .Where(f => f.Contains(matchStr)) // hacky solution
-                .ToArray();
-
-            var instance = string.IsNullOrWhiteSpace(Config.DllSource.Instance)
-                ? "Uchu.Instance.dll"
-                : Config.DllSource.Instance;
-
-            foreach (var file in files)
-            {
-                if (Path.GetFileName(file) != instance) continue;
-                
-                DllLocation = file;
-                
-                break;
-            }
-
-            if (DllLocation == default)
-            {
-                foreach (var file in Directory.GetFiles("./", "*", SearchOption.TopDirectoryOnly))
-                {
-                    if (Path.GetFileName(file) == instance)
-                    {
-                        DllLocation = instance;
-                    }
-                }
-
-                if (DllLocation == default)
-                {
-                    throw new DllNotFoundException(
-                        $"Could not find DLL/EXE for {instance}. Did you forget to build it?"
-                    );
-                }
-            }
+            ApiPortIndex = Config.ApiConfig.Port + 1;
 
             var source = Directory.GetCurrentDirectory();
             
@@ -421,79 +243,121 @@ namespace Uchu.Master
             return directory.EndsWith("res") &&
                    Directory.GetFiles(directory, "*.luz", SearchOption.AllDirectories).Any();
         }
-        
-        private static async Task StartAuthentication()
+
+        public static async Task<Guid> StartInstanceAsync(ServerType type, int port)
         {
-            await using var ctx = new UchuContext();
-            
             var id = Guid.NewGuid();
-
-            await ctx.Specifications.AddAsync(new ServerSpecification
+            
+            var instance = new ServerInstance(id)
             {
-                Id = id,
-                Port = 21836,
-                ServerType = ServerType.Authentication
-            });
+                ServerType = type,
+                ServerPort = port,
+                ApiPort = await ClaimApiPortAsync(),
+            };
 
-            AuthenticationServer = new ManagedServer(id, DllLocation, Config.DllSource.DotNetPath);
-
-            await ctx.SaveChangesAsync();
-        }
-        
-        private static async Task StartCharacter()
-        {
-            await using var ctx = new UchuContext();
+            instance.Start(DllLocation, Config.DllSource.DotNetPath);
             
-            var id = Guid.NewGuid();
-
-            await ctx.Specifications.AddAsync(new ServerSpecification
-            {
-                Id = id,
-                Port = Config.Networking.CharacterPort,
-                ServerType = ServerType.Character
-            });
-
-            CharacterServer = new ManagedServer(id, DllLocation, Config.DllSource.DotNetPath);
-            
-            await ctx.SaveChangesAsync();
-        }
-        
-        private static async Task<Guid> StartWorld(ZoneId zoneId, uint cloneId, ushort instanceId, int port)
-        {
-            await using var ctx = new UchuContext();
-            
-            var id = Guid.NewGuid();
-
-            await ctx.Specifications.AddAsync(new ServerSpecification
-            {
-                Id = id,
-                Port = port,
-                ServerType = ServerType.World,
-                ZoneId = zoneId,
-                ZoneCloneId = cloneId,
-                ZoneInstanceId = instanceId,
-                MaxUserCount = 20
-            });
-
-            WorldServers.Add(new ManagedWorldServer(
-                id,
-                DllLocation,
-                Config.DllSource.DotNetPath,
-                zoneId,
-                cloneId,
-                instanceId
-            ));
-            
-            await ctx.SaveChangesAsync();
+            Instances.Add(instance);
 
             return id;
         }
 
-        private static string NormalizePath(string path)
+        public static async Task<int> ClaimWorldPortAsync()
         {
-            var toReplace = Path.DirectorySeparatorChar != '/' ? '/' : '\\';
+            if (IsSubsidiary)
+            {
+                var response = await Api.RunCommandAsync<ClaimPortResponse>(
+                    MasterPort, "claim/world"
+                );
 
-            return path.Replace(toReplace, Path.DirectorySeparatorChar);
+                if (response.Success) return response.Port;
+                
+                Logger.Error(response.FailedReason);
+
+                throw new Exception(response.FailedReason);
+            }
+
+            var instances = await GetAllInstancesAsync();
+
+            var worlds = instances.Where(i => i.Type == (int) ServerType.World).ToArray();
+
+            var specified = Config.Networking.WorldPorts.Count > 0;
+
+            lock (Api)
+            {
+                if (!specified) return worlds.Max(i => i.Port) + 1;
+                
+                var available = Config.Networking.WorldPorts.ToList();
+
+                foreach (var world in worlds)
+                {
+                    if (available.Contains(world.Port))
+                    {
+                        available.Remove(world.Port);
+                    }
+                }
+
+                return available.FirstOrDefault();
+            }
+        }
+
+        public static async Task<int> ClaimApiPortAsync()
+        {
+            if (IsSubsidiary)
+            {
+                var response = await Api.RunCommandAsync<ClaimPortResponse>(
+                    MasterPort, "claim/api"
+                );
+
+                if (response.Success) return response.Port;
+                
+                Logger.Error(response.FailedReason);
+
+                throw new Exception(response.FailedReason);
+            }
+            
+            lock (Api)
+            {
+                return ++ApiPortIndex;
+            }
+        }
+
+        public static async Task<List<InstanceInfo>> GetAllInstancesAsync()
+        {
+            if (IsSubsidiary)
+            {
+                var result = await Api.RunCommandAsync<InstanceListResponse>(
+                    MasterPort, "instance/list/complete"
+                );
+
+                return result.Instances;
+            }
+            
+            var localList = await Api.RunCommandAsync<InstanceListResponse>(
+                ApiPort, "instance/list"
+            );
+
+            var instances = localList.Instances;
+
+            foreach (var subsidiary in Subsidiaries)
+            {
+                var result = await Api.RunCommandAsync<InstanceListResponse>(
+                    subsidiary, "instance/list"
+                );
+                
+                if (result == default) continue;
+
+                if (!result.Success)
+                {
+                    Logger.Error(result.FailedReason);
+                    
+                    continue;
+                }
+
+                instances.AddRange(result.Instances);
+            }
+
+            return instances;
         }
     }
 }

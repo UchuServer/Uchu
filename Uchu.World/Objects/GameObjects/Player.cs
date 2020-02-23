@@ -7,6 +7,7 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
@@ -410,7 +411,7 @@ namespace Uchu.World
             Connection.Send(gameMessage);
         }
 
-        public async Task<bool> SendToWorldAsync(ServerSpecification specification)
+        public async Task<bool> SendToWorldAsync(InstanceInfo specification, ZoneId zoneId)
         {
             Message(new ServerRedirectionPacket
             {
@@ -422,7 +423,7 @@ namespace Uchu.World
 
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
-            character.LastZone = (int) specification.ZoneId;
+            character.LastZone = (int) zoneId;
 
             await ctx.SaveChangesAsync();
 
@@ -431,14 +432,14 @@ namespace Uchu.World
         
         public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            var server = await ServerHelper.RequestWorldServerAsync(zoneId);
+            var server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
             
             if (server == default)
             {
                 return false;
             }
 
-            if (Server.Port != server.Port) return await SendToWorldAsync(server);
+            if (Server.Port != server.Port) return await SendToWorldAsync(server, zoneId);
             
             Logger.Error("Could not send a player to the same port as it already has");
 

@@ -70,7 +70,7 @@ namespace Uchu.World
         
         protected static void Update(Object obj)
         {
-            if (!obj.OnTick.Any) return;
+            if (obj == null || !obj.OnTick.Any) return;
             
             obj.OnTick.Invoke();
         }
