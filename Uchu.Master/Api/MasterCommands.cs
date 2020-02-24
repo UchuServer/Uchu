@@ -146,19 +146,12 @@ namespace Uchu.Master.Api
         [ApiCommand("instance/list/complete")]
         public async Task<object> InstanceCompleteList()
         {
-            var response = new InstanceListResponse();
-            
-            if (MasterServer.IsSubsidiary)
+            var response = new InstanceListResponse
             {
-                response.FailedReason = "is subsidiary";
+                Success = true,
+                Instances = await MasterServer.GetAllInstancesAsync()
+            };
 
-                return response;
-            }
-
-            response.Success = true;
-            
-            response.Instances = await MasterServer.GetAllInstancesAsync();
-            
             return response;
         }
 

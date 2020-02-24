@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -58,12 +59,12 @@ namespace Uchu.Master
                 
                 return;
             }
-
-            await SetupApiAsync();
             
             Console.CancelKeyPress += ShutdownProcesses;
 
             AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
+            
+            await SetupApiAsync();
             
             await Api.StartAsync(ApiPort);
         }
@@ -110,6 +111,8 @@ namespace Uchu.Master
             
             Api.RegisterCommandCollection<MasterCommands>();
 
+            Api.RegisterCommandCollection<CharacterCommands>();
+
             var response = await Api.RunCommandAsync<ClaimPortResponse>(MasterPort, "subsidiary");
 
             if (response != null && response.Success)
@@ -127,6 +130,8 @@ namespace Uchu.Master
 
             Api.OnLoaded += async () =>
             {
+                Logger.Information($"API Ready!");
+                
                 await StartDefaultInstances();
             };
         }
@@ -228,7 +233,7 @@ namespace Uchu.Master
             
             DllLocation = Config.DllSource.Instance;
 
-            ApiPortIndex = Config.ApiConfig.Port + 1;
+            ApiPortIndex = Config.ApiConfig.Port;
 
             var source = Directory.GetCurrentDirectory();
             
@@ -341,6 +346,8 @@ namespace Uchu.Master
 
             foreach (var subsidiary in Subsidiaries)
             {
+                Logger.Information($"Request instance from: {subsidiary}");
+                
                 var result = await Api.RunCommandAsync<InstanceListResponse>(
                     subsidiary, "instance/list"
                 );

@@ -1,3 +1,4 @@
+using System;
 using Uchu.Api;
 using Uchu.Api.Models;
 
@@ -15,10 +16,18 @@ namespace Uchu.Core.Api
         [ApiCommand("server/verify")]
         public object ReadySetupCallback()
         {
-            return new ReadyCallbackResponse
+            var response = new ReadyCallbackResponse();
+
+            if (Server.Id == Guid.Empty)
             {
-                Success = true
-            };
+                response.FailedReason = "invalid id";
+
+                return response;
+            }
+
+            response.Success = true;
+            
+            return response;
         }
     }
 }

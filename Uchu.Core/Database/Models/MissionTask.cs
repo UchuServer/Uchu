@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
@@ -18,6 +19,7 @@ namespace Uchu.Core
 
         public int MissionId { get; set; }
 
+        [JsonIgnore]
         [ForeignKey(nameof(MissionId))]
         public Mission Mission { get; set; }
 

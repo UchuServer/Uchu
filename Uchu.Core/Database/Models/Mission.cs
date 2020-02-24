@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
@@ -22,6 +23,7 @@ namespace Uchu.Core
 
         public long CharacterId { get; set; }
         
+        [JsonIgnore]
         public Character Character { get; set; }
 
         public List<MissionTask> Tasks { get; set; }

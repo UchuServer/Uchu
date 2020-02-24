@@ -93,6 +93,8 @@ namespace Uchu.Core
         [XmlElement] public string Domain { get; set; } = "localhost";
 
         [XmlElement] public int Port { get; set; } = 8000;
+
+        [XmlElement] public string Certificate { get; set; } = "";
     }
 
     public class ResourcesConfiguration

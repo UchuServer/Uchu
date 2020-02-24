@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -32,7 +34,7 @@ namespace Uchu.Api
         public ApiManager(string protocol, string domain)
         {
             Listener = new HttpListener();
-            
+
             Client = new HttpClient();
 
             Map = new Dictionary<string, (MethodInfo, object)>();
@@ -46,7 +48,9 @@ namespace Uchu.Api
         {
             Port = port;
             
-            Listener.Prefixes.Add($"{Protocol}://{Domain}:{Port}/");
+            var prefix = $"{Protocol}://{Domain}:{Port}/";
+            
+            Listener.Prefixes.Add(prefix);
             
             Listener.Start();
 
@@ -59,8 +63,11 @@ namespace Uchu.Api
                 if (OnLoaded != default && first)
                 {
                     first = false;
-                    
-                    await OnLoaded.Invoke();
+
+                    var __ = Task.Run(async () =>
+                    {
+                        await OnLoaded.Invoke();
+                    });
                 }
 
                 var context = await Listener.GetContextAsync();
@@ -68,7 +75,7 @@ namespace Uchu.Api
                 var _ = Task.Run(async () =>
                 {
                     var request = context.Request;
-
+                    
                     var response = context.Response;
 
                     var parameters = (
@@ -125,7 +132,9 @@ namespace Uchu.Api
 
                     response.ContentLength64 = data.LongLength;
 
-                    await response.OutputStream.WriteAsync(data);
+                    var output = response.OutputStream;
+
+                    await output.WriteAsync(data);
 
                     response.Close();
                 });

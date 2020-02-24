@@ -10,7 +10,7 @@ namespace Uchu.Master.Api
 {
     public class AccountCommands
     {
-        [ApiCommand("/account/new")]
+        [ApiCommand("account/new")]
         public async Task<object> CreateAccount(string accountName, string accountPassword)
         {
             var response = new AccountCreationResponse();
@@ -66,7 +66,7 @@ namespace Uchu.Master.Api
             return response;
         }
 
-        [ApiCommand("/account/delete")]
+        [ApiCommand("account/delete")]
         public async Task<object> DeleteAccount(string accountName)
         {
             var response = new AccountDeleteResponse();
@@ -100,7 +100,7 @@ namespace Uchu.Master.Api
             return response;
         }
         
-        [ApiCommand("/account/level")]
+        [ApiCommand("account/level")]
         public async Task<object> AdminAccount(string accountName, string level)
         {
             var response = new AccountAdminResponse();
@@ -149,7 +149,7 @@ namespace Uchu.Master.Api
             return response;
         }
 
-        [ApiCommand("/account/ban")]
+        [ApiCommand("account/ban")]
         public async Task<object> BanAccount(string accountName, string reason)
         {
             var response = new AccountBanResponse();
@@ -193,7 +193,7 @@ namespace Uchu.Master.Api
             return response;
         }
         
-        [ApiCommand("/account/pardon")]
+        [ApiCommand("account/pardon")]
         public async Task<object> PardonAccount(string accountName)
         {
             var response = new AccountPardonResponse();
@@ -228,7 +228,7 @@ namespace Uchu.Master.Api
             return response;
         }
 
-        [ApiCommand("/account/info")]
+        [ApiCommand("account/info")]
         public async Task<object> AccountInfo(string accountName)
         {
             var response = new AccountInfoResponse();
@@ -259,6 +259,20 @@ namespace Uchu.Master.Api
                 response.BannedReason = user.BannedReason;
                 response.Level = user.GameMasterLevel;
             }
+
+            return response;
+        }
+
+        [ApiCommand("account/list")]
+        public async Task<object> Accounts()
+        {
+            var response = new AccountListResponse();
+            
+            await using var ctx = new UchuContext();
+
+            response.Success = true;
+
+            response.Accounts = await ctx.Users.Select(u => u.UserId).ToListAsync();
 
             return response;
         }

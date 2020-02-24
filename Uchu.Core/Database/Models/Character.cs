@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
     public class Character
     {
+        [JsonIgnore]
         public long CharacterId { get; set; }
 
         [MaxLength(33), Required]
@@ -187,8 +189,10 @@ namespace Uchu.Core
         [MaxLength(30)]
         public string Rocket { get; set; }
 
+        [JsonIgnore]
         public long UserId { get; set; }
         
+        [JsonIgnore]
         public User User { get; set; }
 
         public List<InventoryItem> Items { get; set; }

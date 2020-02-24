@@ -22,7 +22,9 @@ namespace Uchu.World.Handlers.Commands
                 Server.MasterApi, "instance/list"
             ).ConfigureAwait(false);
 
-            var world = response.Instances.FirstOrDefault(i => i.Type == (int) ServerType.World);
+            var world = response.Instances.Where(
+                i => i.Id != Server.Id
+            ).FirstOrDefault(i => i.Type == (int) ServerType.World);
 
             foreach (var zonePlayer in player.Zone.Players)
             {
