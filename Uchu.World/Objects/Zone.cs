@@ -13,6 +13,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Python;
+using Uchu.World.AI;
 using Uchu.World.Client;
 using Uchu.World.Scripting;
 
@@ -41,6 +42,8 @@ namespace Uchu.World
         public uint Checksum { get; private set; }
         
         public bool Loaded { get; private set; }
+        
+        public NavMeshManager NavMeshManager { get; }
 
         //
         // Managed objects
@@ -88,6 +91,7 @@ namespace Uchu.World
             
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
+            NavMeshManager = new NavMeshManager(this);
 
             Listen(OnStart,async () => await InitializeAsync());
 
@@ -158,7 +162,9 @@ namespace Uchu.World
                     Logger.Information(e);
                 }
             }
-            
+
+            await NavMeshManager.GeneratePointsAsync();
+
             Loaded = true;
 
             var _ = ExecuteUpdateAsync();

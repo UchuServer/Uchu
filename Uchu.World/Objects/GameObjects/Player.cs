@@ -272,6 +272,7 @@ namespace Uchu.World
 
             instance.Perspective.AddFilter<RenderDistanceFilter>();
             instance.Perspective.AddFilter<FlagFilter>();
+            instance.Perspective.AddFilter<ExcludeFilter>();
             
             //
             // Set connection
