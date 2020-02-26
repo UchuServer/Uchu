@@ -11,7 +11,6 @@ namespace Uchu.Navigation
 	public class Arc
 	{
 		private Node _startNode, _endNode;
-		private double _weight;
 		private bool _passable;
 		private double _length;
 		private bool _lengthUpdated;
@@ -27,7 +26,6 @@ namespace Uchu.Navigation
 		{
 			StartNode = start;
 			EndNode = end;
-			Weight = 1;
 			LengthUpdated = false;
 			Passable = true;
 		}
@@ -72,11 +70,7 @@ namespace Uchu.Navigation
 		/// Sets/Gets the weight of the arc.
 		/// This value is used to determine the cost of moving through the arc.
 		/// </summary>
-		public double Weight
-		{
-			set => _weight = value;
-			get => _weight;
-		}
+		public double Weight => 1;
 
 		/// <summary>
 		/// Gets/Sets the functional state of the arc.

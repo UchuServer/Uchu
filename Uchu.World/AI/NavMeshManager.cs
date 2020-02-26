@@ -32,12 +32,17 @@ namespace Uchu.World.AI
 
             var centerX = (heightMap.GetLength(0) - 1) / 2;
             var centerY = (heightMap.GetLength(1) - 1) / 2;
+
+            var min = float.MaxValue;
             
             for (var x = 0; x < heightMap.GetLength(0); x++)
             {
                 for (var y = 0; y < heightMap.GetLength(1); y++)
                 {
                     var value = heightMap[x, y];
+
+                    if (value < min)
+                        min = value;
 
                     var realX = x - centerX;
                     var realY = y - centerY;
@@ -64,7 +69,7 @@ namespace Uchu.World.AI
 
             Points = inGameValues;
 
-            await Solver.GenerateAsync(Points, heightMap.GetLength(0), heightMap.GetLength(1));
+            await Solver.GenerateAsync(Points, heightMap.GetLength(0), heightMap.GetLength(1), min);
         }
 
         public Vector3[] GeneratePath(Vector3 start, Vector3 end) => Solver.GeneratePath(start, end);

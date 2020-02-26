@@ -6,17 +6,18 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations.Sqlite
+namespace Uchu.Core.Migrations.MySql
 {
-    [DbContext(typeof(SqliteContext))]
-    [Migration("20200222201727_SqliteSso")]
-    partial class SqliteSso
+    [DbContext(typeof(MySqlContext))]
+    [Migration("20200223225709_MySqlMasterRework")]
+    partial class MySqlMasterRework
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -333,30 +334,6 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.ToTable("MissionTaskValue");
                 });
 
-            modelBuilder.Entity("Uchu.Core.ServerSpecification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<uint>("ActiveUserCount");
-
-                    b.Property<uint>("MaxUserCount");
-
-                    b.Property<int>("Port");
-
-                    b.Property<int>("ServerType");
-
-                    b.Property<uint>("ZoneCloneId");
-
-                    b.Property<ushort>("ZoneId");
-
-                    b.Property<ushort>("ZoneInstanceId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Specifications");
-                });
-
             modelBuilder.Entity("Uchu.Core.SessionCache", b =>
                 {
                     b.Property<Guid>("Id")
@@ -422,22 +399,6 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Uchu.Core.WorldServerRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("SpecificationId");
-
-                    b.Property<int>("State");
-
-                    b.Property<ushort>("ZoneId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("WorldServerRequests");
                 });
 
             modelBuilder.Entity("Uchu.Core.Character", b =>

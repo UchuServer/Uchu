@@ -90,10 +90,9 @@ namespace Uchu.Navigation
         /// <param name="endNode">End node for the arc.</param>
         /// <param name="weight">Weight for the arc.</param>
         /// <returns>The reference of the new arc / null if the arc is already in the graph.</returns>
-        public Arc AddArc(Node startNode, Node endNode, float weight)
+        public Arc AddArc(Node startNode, Node endNode)
         {
             var newArc = new Arc(startNode, endNode);
-            newArc.Weight = weight;
             return AddArc(newArc) ? newArc : null;
         }
 
@@ -106,8 +105,8 @@ namespace Uchu.Navigation
         /// <param name="weight"></param>
         public void Add2Arcs(Node node1, Node node2, float weight)
         {
-            AddArc(node1, node2, weight);
-            AddArc(node2, node1, weight);
+            AddArc(node1, node2);
+            AddArc(node2, node1);
         }
 
         /// <summary>

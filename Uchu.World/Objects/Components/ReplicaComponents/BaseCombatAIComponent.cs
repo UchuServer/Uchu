@@ -12,7 +12,7 @@ namespace Uchu.World
 {
     public class BaseCombatAiComponent : ReplicaComponent
     {
-        public bool PerformingAction { get; set; }
+        public bool PerformingAction { get; set; } = true;
 
         public CombatAiAction Action { get; set; }
 

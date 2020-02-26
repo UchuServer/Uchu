@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Uchu.World
@@ -12,7 +13,7 @@ namespace Uchu.World
         
         public async Task InvokeAsync()
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 await action.Invoke();
             }
@@ -28,7 +29,7 @@ namespace Uchu.World
         
         public async Task InvokeAsync(T value)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 await action.Invoke(value);
             }
@@ -44,7 +45,7 @@ namespace Uchu.World
         
         public async Task InvokeAsync(T value, T2 value2)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 await action.Invoke(value, value2);
             }
@@ -60,7 +61,7 @@ namespace Uchu.World
         
         public async Task InvokeAsync(T value, T2 value2, T3 value3)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 await action.Invoke(value, value2, value3);
             }
@@ -76,7 +77,7 @@ namespace Uchu.World
         
         public async Task InvokeAsync(T value, T2 value2, T3 value3, T4 value4)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 await action.Invoke(value, value2, value3, value4);
             }

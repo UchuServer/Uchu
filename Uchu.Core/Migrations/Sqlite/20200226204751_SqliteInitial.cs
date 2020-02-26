@@ -59,31 +59,14 @@ namespace Uchu.Core.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
-                name: "Specifications",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    ServerType = table.Column<int>(nullable: false),
-                    Port = table.Column<int>(nullable: false),
-                    MaxUserCount = table.Column<uint>(nullable: false),
-                    ActiveUserCount = table.Column<uint>(nullable: false),
-                    ZoneId = table.Column<ushort>(nullable: false),
-                    ZoneCloneId = table.Column<uint>(nullable: false),
-                    ZoneInstanceId = table.Column<ushort>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Specifications", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     UserId = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Username = table.Column<string>(maxLength: 33, nullable: false),
-                    Password = table.Column<string>(maxLength: 60, nullable: false),
+                    Password = table.Column<string>(maxLength: 60, nullable: true),
+                    Sso = table.Column<bool>(nullable: false),
                     Banned = table.Column<bool>(nullable: false),
                     BannedReason = table.Column<string>(nullable: true),
                     CustomLockout = table.Column<string>(nullable: true),
@@ -95,20 +78,6 @@ namespace Uchu.Core.Migrations.Sqlite
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.UserId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WorldServerRequests",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    ZoneId = table.Column<ushort>(nullable: false),
-                    State = table.Column<int>(nullable: false),
-                    SpecificationId = table.Column<Guid>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WorldServerRequests", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -420,13 +389,7 @@ namespace Uchu.Core.Migrations.Sqlite
                 name: "SessionCaches");
 
             migrationBuilder.DropTable(
-                name: "Specifications");
-
-            migrationBuilder.DropTable(
                 name: "UnlockedEmote");
-
-            migrationBuilder.DropTable(
-                name: "WorldServerRequests");
 
             migrationBuilder.DropTable(
                 name: "Guilds");

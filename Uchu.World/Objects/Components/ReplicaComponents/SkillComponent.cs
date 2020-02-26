@@ -185,11 +185,6 @@ namespace Uchu.World
 
             if (!context.FoundTarget) return 0;
 
-            foreach (var player in Zone.Players)
-            {
-                player.SendChatMessage($"Start: [{syncId}]");
-            }
-            
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
                 Associate = GameObject,
@@ -216,6 +211,8 @@ namespace Uchu.World
                 {
                     // There should be more to this
                     if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
+                        message.OptionalTarget = null;
+                    else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
                         message.OptionalTarget = null;
                 }
             }

@@ -10,11 +10,13 @@ namespace Uchu.Navigation
 {
     public class Solver
     {
-        private Star Star { get; set; }
-        
         private Node[] Nodes { get; set; }
         
-        public async Task GenerateAsync(Dictionary<int, Dictionary<int, Vector3>> points, int weight, int height)
+        private Graph Graph { get; set; }
+        
+        private Star Star { get; set; }
+        
+        public async Task GenerateAsync(Dictionary<int, Dictionary<int, Vector3>> points, int weight, int height, float min)
         {
             var graph = new Graph();
 
@@ -25,6 +27,8 @@ namespace Uchu.Navigation
                 for (var y = 0; y < height; y++)
                 {
                     var point = points[x][y];
+                    
+                    if (Math.Abs(point.Y - min) < 0.1f) continue;
 
                     nodes.Add(new Vector2(x, y), new Node(point.X, point.Y, point.Z));
                 }
@@ -54,7 +58,7 @@ namespace Uchu.Navigation
                     {
                         if (!nodes.TryGetValue(vector2, out var child)) continue;
                         
-                        if (Vector3.Distance(child.ToVector3(), node.ToVector3()) > 7) return;
+                        if (Vector3.Distance(child.ToVector3(), node.ToVector3()) > 6) return;
 
                         lock (connections)
                             connections.Add(new Arc(node, child));
@@ -68,10 +72,12 @@ namespace Uchu.Navigation
 
             graph.Ln = new ArrayList(nodes.Values.ToArray());
             graph.La = new ArrayList(connections.ToArray());
-            
-            Star = new Star(graph);
 
             Nodes = nodes.Values.ToArray();
+
+            Graph = graph;
+
+            Star = new Star(Graph);
         }
 
         public Vector3[] GeneratePath(Vector3 start, Vector3 end)
@@ -83,7 +89,14 @@ namespace Uchu.Navigation
 
                 Star.SearchPath(startNode, endNode);
 
-                return Star.PathByCoordinates.Select(p => p.ToVector3()).ToArray();
+                var coordinates = Star.PathByCoordinates;
+
+                if (coordinates == default || coordinates.Length == default)
+                {
+                    return new[] {start};
+                }
+
+                return coordinates.Where(c => !ReferenceEquals(c, default)).Select(p => p.ToVector3()).ToArray();
             }
         }
 
