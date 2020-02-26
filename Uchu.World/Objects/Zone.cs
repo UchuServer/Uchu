@@ -285,12 +285,11 @@ namespace Uchu.World
 
         internal void RegisterObject(Object obj)
         {
-            if (!_managedObjects.Contains(obj))
-            {
-                OnObject.Invoke(obj);
+            if (_managedObjects.Contains(obj)) return;
+            
+            OnObject.Invoke(obj);
                 
-                _managedObjects.Add(obj);
-            }
+            _managedObjects.Add(obj);
         }
 
         internal void UnregisterObject(Object obj)
@@ -464,9 +463,17 @@ namespace Uchu.World
                     if (_ticks >= TicksPerSecondLimit) continue;
 
                     await Task.Delay(1000 / TicksPerSecondLimit);
-
-                    foreach (var obj in Objects)
+                    
+                    foreach (var obj in Objects.Where(o => o.OnTick.Any))
                     {
+                        if (obj is GameObject gameObject)
+                        {
+                            if (Players.Length == 0 || Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                            {
+                                continue;
+                            }
+                        }
+                        
                         try
                         {
                             Update(obj);

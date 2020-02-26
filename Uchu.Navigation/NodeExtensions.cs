@@ -1,8 +1,6 @@
 using System.Numerics;
-using EMK.Cartography;
-using EMK.LightGeometry;
 
-namespace Uchu.World.AI.AStar
+namespace Uchu.Navigation
 {
     public static class NodeExtensions
     {

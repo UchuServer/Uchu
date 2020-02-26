@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -185,10 +186,15 @@ namespace Uchu.Core
             }
             
             Logger.Information($"Starting server: {Id}");
-
-            var __ = Task.Run(async () => await Api.StartAsync(ApiPort).ConfigureAwait(false));
             
-            await RakNetServer.RunAsync().ConfigureAwait(false);
+            var networkThread = new Thread(async () =>
+            {
+                await RakNetServer.RunAsync().ConfigureAwait(false);
+            });
+
+            networkThread.Start();
+            
+            await Api.StartAsync(ApiPort).ConfigureAwait(false);
         }
 
         public Task StopAsync()

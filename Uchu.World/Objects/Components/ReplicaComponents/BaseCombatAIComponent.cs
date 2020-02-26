@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Scripting.Utils;
@@ -34,6 +35,8 @@ namespace Uchu.World
         private Stats Stats { get; set; }
 
         public bool Enabled { get; set; } = true;
+        
+        private Vector3 Origin { get; set; }
         
         public BaseCombatAiComponent()
         {

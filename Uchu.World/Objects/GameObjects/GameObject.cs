@@ -492,7 +492,7 @@ namespace Uchu.World
             {
                 var componentType = ReplicaComponent.GetReplica((ComponentId) component.Componenttype);
 
-                if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
+                if (componentType == null) Logger.Warning($"No component of ID {(ComponentId) component.Componenttype}");
                 else instance.AddComponent(componentType);
             }
 

@@ -50,9 +50,9 @@ namespace Uchu.World
                     .Select(s => (uint) s.SkillID)
                     .ToArray();
                 
-                if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
+                if (!(GameObject is Player)) return;
 
-                _activeBehaviors.Add(BehaviorSlot.Primary, 1);
+                _activeBehaviors[BehaviorSlot.Primary] = 1;
             });
         }
         
@@ -215,9 +215,7 @@ namespace Uchu.World
                 if (message.OptionalTarget != null)
                 {
                     // There should be more to this
-                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>().Alive)
-                        message.OptionalTarget = null;
-                    else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
+                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
                         message.OptionalTarget = null;
                 }
             }

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
@@ -24,14 +25,15 @@ namespace Uchu.World
         
         private Vector3 Target { get; set; }
         
-        private int Padding { get; set; }
-
-        private Vector3 OldTarget { get; set; }
-        
         protected MovementAiComponent()
         {
             Listen(OnStart, async () =>
             {
+                while (!GameObject.Started)
+                {
+                    await Task.Delay(50);
+                }
+                
                 await using var ctx = new CdClientContext();
 
                 var info = await ctx.MovementAIComponentTable.FirstOrDefaultAsync(
@@ -58,6 +60,21 @@ namespace Uchu.World
                 Origin = Transform.Position;
 
                 Target = Origin;
+
+                var destructible = GameObject.GetComponent<DestructibleComponent>();
+
+                Listen(destructible.OnSmashed, (smasher, lootOwner) =>
+                {
+                    Transform.Position = Origin;
+                    
+                    Target = Origin;
+
+                    BaseCombatAiComponent.Target = null;
+                    
+                    ControllablePhysicsComponent.Velocity = Vector3.Zero;
+
+                    ControllablePhysicsComponent.HasVelocity = true;
+                });
             });
 
             Listen(OnTick, () =>
@@ -66,15 +83,19 @@ namespace Uchu.World
 
                 CalculatePath();
 
-                var newPosition = Transform.Position.MoveTowards(Target, Speed * Zone.DeltaTime, out var delta);
+                if (Vector3.Distance(Transform.Position, Target) < 2) return;
+                
+                var newPosition = Transform.Position.MoveTowards(Target, Speed * Zone.DeltaTime);
 
                 if (!(Vector3.Distance(newPosition, Transform.Position) > 1)) return;
+
+                var delta = newPosition - Transform.Position;
+                
+                ControllablePhysicsComponent.HasVelocity = delta != Vector3.Zero;
                 
                 ControllablePhysicsComponent.Velocity = delta;
 
-                ControllablePhysicsComponent.HasPosition = true;
-
-                ControllablePhysicsComponent.HasVelocity = delta != Vector3.Zero;
+                ControllablePhysicsComponent.HasPosition = newPosition != Transform.Position;
 
                 Transform.Position = newPosition;
 
@@ -94,17 +115,12 @@ namespace Uchu.World
 
         private void CalculatePath()
         {
-            if (BaseCombatAiComponent == default)
+            if (BaseCombatAiComponent.AbilityDowntime || BaseCombatAiComponent.SkillEntries.Any(s => s.Cooldown))
             {
-                BaseCombatAiComponent = GameObject.GetComponent<BaseCombatAiComponent>();
+                Target = Transform.Position;
+                
+                return;
             }
-
-            if (ControllablePhysicsComponent == default)
-            {
-                ControllablePhysicsComponent = GameObject.GetComponent<ControllablePhysicsComponent>();
-            }
-            
-            if (BaseCombatAiComponent.AbilityDowntime || BaseCombatAiComponent.SkillEntries.Any(s => s.Cooldown)) return;
             
             var targets = BaseCombatAiComponent.SeekValidTargets().Where(target =>
             {
@@ -122,12 +138,10 @@ namespace Uchu.World
     
                 return (int) (distance2 - distance1);
             });
-                
-            var position = Transform.Position;
             
-            var targetPosition = BaseCombatAiComponent?.Target?.Transform?.Position ??
-                                 targets.FirstOrDefault()?.Transform?.Position ??
-                                 Origin;
+            var position = Transform.Position;
+
+            var targetPosition = targets.FirstOrDefault()?.Transform.Position ?? Origin;
             
             if (targetPosition == Target || Vector3.Distance(position, targetPosition) < 2) return;
 

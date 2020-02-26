@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using Uchu.World.AI.AStar;
+using Uchu.Navigation;
 
 namespace Uchu.World.AI
 {

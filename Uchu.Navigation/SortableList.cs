@@ -1,9 +1,7 @@
-
 using System;
 using System.Collections;
 
-
-namespace EMK.Collections
+namespace Uchu.Navigation
 {
 	/// <summary>
 	/// The SortableList allows to maintain a list sorted as long as needed.
@@ -15,12 +13,12 @@ namespace EMK.Collections
 	[Serializable]
 	public class SortableList : IList, ICloneable
 	{
-		private ArrayList _List;
-		private IComparer _Comparer;
-		private bool _UseObjectsComparison;
-		private bool _IsSorted;
-		private bool _KeepSorted;
-		private bool _AddDuplicates;
+		private ArrayList _list;
+		private IComparer _comparer;
+		private bool _useObjectsComparison;
+		private bool _isSorted;
+		private bool _keepSorted;
+		private bool _addDuplicates;
 
 		/// <summary>
 		/// Default constructor.
@@ -32,26 +30,26 @@ namespace EMK.Collections
 		/// Constructor.
 		/// Since no IComparer is provided, added objects must implement the IComparer interface.
 		/// </summary>
-		/// <param name="Capacity">Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)</param>
-		public SortableList(int Capacity) { InitProperties(null, Capacity); }
+		/// <param name="capacity">Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)</param>
+		public SortableList(int capacity) { InitProperties(null, capacity); }
 
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		/// <param name="Comparer">Will be used to compare added elements for sort and search operations.</param>
-		public SortableList(IComparer Comparer) { InitProperties(Comparer, 0); }
+		/// <param name="comparer">Will be used to compare added elements for sort and search operations.</param>
+		public SortableList(IComparer comparer) { InitProperties(comparer, 0); }
 
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		/// <param name="Comparer">Will be used to compare added elements for sort and search operations.</param>
-		/// <param name="Capacity">Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)</param>
-		public SortableList(IComparer Comparer, int Capacity) { InitProperties(Comparer, Capacity); }
+		/// <param name="comparer">Will be used to compare added elements for sort and search operations.</param>
+		/// <param name="capacity">Capacity of the list (<see cref="ArrayList.Capacity">ArrayList.Capacity</see>)</param>
+		public SortableList(IComparer comparer, int capacity) { InitProperties(comparer, capacity); }
 
 		/// <summary>
 		/// 'Get only' property that indicates if the list is sorted.
 		/// </summary>
-		public bool IsSorted { get { return _IsSorted; } }
+		public bool IsSorted => _isSorted;
 
 		/// <summary>
 		/// Get : Indicates if the list must be kept sorted from now on.
@@ -63,16 +61,18 @@ namespace EMK.Collections
 		{
 			set
 			{
-				if ( value==true && !_IsSorted ) throw new InvalidOperationException("The SortableList can only be kept sorted if it is sorted.");
-				_KeepSorted = value;
+				if ( value==true && !_isSorted ) throw new InvalidOperationException("The SortableList can only be kept sorted if it is sorted.");
+				_keepSorted = value;
 			}
-			get { return _KeepSorted; }
+			get => _keepSorted;
 		}
 
 		/// <summary>
 		/// If set to true, it will not be possible to add an object to the list if its value is already in the list.
 		/// </summary>
-		public bool AddDuplicates { set { _AddDuplicates = value; } get { return _AddDuplicates; } }
+		public bool AddDuplicates { set => _addDuplicates = value;
+			get => _addDuplicates;
+		}
 
 		/// <summary>
 		/// IList implementation.
@@ -81,23 +81,23 @@ namespace EMK.Collections
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Index is less than zero or Index is greater than Count.</exception>
 		/// <exception cref="InvalidOperationException">[] operator cannot be used to set a value if KeepSorted property is set to true.</exception>
-		public object this[int Index]
+		public object this[int index]
 		{
 			get
 			{
-				if ( Index>=_List.Count || Index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
-				return _List[Index];
+				if ( index>=_list.Count || index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
+				return _list[index];
 			}
 			set
 			{
-				if ( _KeepSorted ) throw new InvalidOperationException("[] operator cannot be used to set a value if KeepSorted property is set to true.");
-				if ( Index>=_List.Count || Index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
+				if ( _keepSorted ) throw new InvalidOperationException("[] operator cannot be used to set a value if KeepSorted property is set to true.");
+				if ( index>=_list.Count || index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
 				if ( ObjectIsCompliant(value) )
 				{
-					object OBefore = Index>0 ? _List[Index-1] : null;
-					object OAfter = Index<Count-1 ? _List[Index+1] : null;
-					if ( OBefore!=null && _Comparer.Compare(OBefore, value)>0 || OAfter!=null && _Comparer.Compare(value, OAfter)>0 ) _IsSorted = false;
-					_List[Index] = value;
+					var oBefore = index>0 ? _list[index-1] : null;
+					var oAfter = index<Count-1 ? _list[index+1] : null;
+					if ( oBefore!=null && _comparer.Compare(oBefore, value)>0 || oAfter!=null && _comparer.Compare(value, oAfter)>0 ) _isSorted = false;
+					_list[index] = value;
 				}
 			}
 		}
@@ -107,29 +107,29 @@ namespace EMK.Collections
 		/// If the <see cref="KeepSorted">KeepSorted</see> property is set to true, the object will be added at the right place.
 		/// Else it will be added at the end of the list.
 		/// </summary>
-		/// <param name="O">The object to add.</param>
+		/// <param name="o">The object to add.</param>
 		/// <returns>The index where the object has been added.</returns>
 		/// <exception cref="ArgumentException">The SortableList is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
-		public int Add(object O)
+		public int Add(object o)
 		{
-			int Return = -1;
-			if ( ObjectIsCompliant(O) )
+			var @return = -1;
+			if ( ObjectIsCompliant(o) )
 			{
-				if ( _KeepSorted )
+				if ( _keepSorted )
 				{
-					int Index = IndexOf(O);
-					int NewIndex = Index>=0 ? Index : -Index-1;
-					if (NewIndex>=Count) _List.Add(O);
-					else _List.Insert(NewIndex, O);
-					Return = NewIndex;
+					var index = IndexOf(o);
+					var newIndex = index>=0 ? index : -index-1;
+					if (newIndex>=Count) _list.Add(o);
+					else _list.Insert(newIndex, o);
+					@return = newIndex;
 				}
 				else
 				{
-					_IsSorted = false;
-					Return = _List.Add(O);
+					_isSorted = false;
+					@return = _list.Add(o);
 				}
 			}
-			return Return;
+			return @return;
 		}
 
 		/// <summary>
@@ -138,11 +138,11 @@ namespace EMK.Collections
 		/// If the list is sorted, a <see cref="ArrayList.BinarySearch">BinarySearch</see> is performed using IComparer interface.
 		/// Else the <see cref="Equals">Object.Equals</see> implementation is used.
 		/// </summary>
-		/// <param name="O">The object to look for</param>
+		/// <param name="o">The object to look for</param>
 		/// <returns>true if the object is in the list, otherwise false.</returns>
-		public bool Contains(object O)
+		public bool Contains(object o)
 		{
-			return _IsSorted ? _List.BinarySearch(O, _Comparer)>=0 : _List.Contains(O);
+			return _isSorted ? _list.BinarySearch(o, _comparer)>=0 : _list.Contains(o);
 		}
 
 		/// <summary>
@@ -151,61 +151,61 @@ namespace EMK.Collections
 		/// If the list is sorted, a <see cref="ArrayList.BinarySearch">BinarySearch</see> is performed using IComparer interface.
 		/// Else the <see cref="Equals">Object.Equals</see> implementation of objects is used.
 		/// </summary>
-		/// <param name="O">The object to locate.</param>
+		/// <param name="o">The object to locate.</param>
 		/// <returns>
 		/// If the object has been found, a positive integer corresponding to its position.
 		/// If the objects has not been found, a negative integer which is the bitwise complement of the index of the next element.
 		/// </returns>
-		public int IndexOf(object O)
+		public int IndexOf(object o)
 		{
-			int Result = -1;
-			if ( _IsSorted )
+			var result = -1;
+			if ( _isSorted )
 			{
-				Result = _List.BinarySearch(O, _Comparer);
-				while ( Result>0 && _List[Result-1].Equals(O) ) Result--; // We want to point at the FIRST occurence
+				result = _list.BinarySearch(o, _comparer);
+				while ( result>0 && _list[result-1].Equals(o) ) result--; // We want to point at the FIRST occurence
 			}
-			else Result = _List.IndexOf(O);
-			return Result;
+			else result = _list.IndexOf(o);
+			return result;
 		}
 
 		/// <summary>
 		/// IList implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public bool IsFixedSize { get { return _List.IsFixedSize ; } }
+		public bool IsFixedSize => _list.IsFixedSize;
 
 		/// <summary>
 		/// IList implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public bool IsReadOnly { get { return _List.IsReadOnly; } }
+		public bool IsReadOnly => _list.IsReadOnly;
 
 		/// <summary>
 		/// IList implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public void Clear() { _List.Clear(); }
+		public void Clear() { _list.Clear(); }
 
 		/// <summary>
 		/// IList implementation.
 		/// Inserts an objects at a specified index.
 		/// Cannot be used if the list has its KeepSorted property set to true.
 		/// </summary>
-		/// <param name="Index">The index before which the object must be added.</param>
-		/// <param name="O">The object to add.</param>
+		/// <param name="index">The index before which the object must be added.</param>
+		/// <param name="o">The object to add.</param>
 		/// <exception cref="ArgumentException">The SortableList is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Index is less than zero or Index is greater than Count.</exception>
 		/// <exception cref="InvalidOperationException">If the object is added at the specify index, the list will not be sorted any more and the <see cref="KeepSorted"/> property is set to true.</exception>
-		public void Insert(int Index, object O)
+		public void Insert(int index, object o)
 		{
-			if ( _KeepSorted ) throw new InvalidOperationException("Insert method cannot be called if KeepSorted property is set to true.");
-			if ( Index>=_List.Count || Index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
-			if ( ObjectIsCompliant(O) )
+			if ( _keepSorted ) throw new InvalidOperationException("Insert method cannot be called if KeepSorted property is set to true.");
+			if ( index>=_list.Count || index<0 ) throw new ArgumentOutOfRangeException("Index is less than zero or Index is greater than Count.");
+			if ( ObjectIsCompliant(o) )
 			{
-				object OBefore = Index>0 ? _List[Index-1] : null;
-				object OAfter = _List[Index];
-				if ( OBefore!=null && _Comparer.Compare(OBefore, O)>0 || OAfter!=null && _Comparer.Compare(O, OAfter)>0 ) _IsSorted = false;
-				_List.Insert(Index, O);
+				var oBefore = index>0 ? _list[index-1] : null;
+				var oAfter = _list[index];
+				if ( oBefore!=null && _comparer.Compare(oBefore, o)>0 || oAfter!=null && _comparer.Compare(o, oAfter)>0 ) _isSorted = false;
+				_list.Insert(index, o);
 			}
 		}
 
@@ -213,15 +213,15 @@ namespace EMK.Collections
 		/// IList implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		/// <param name="Value">The object whose value must be removed if found in the list.</param>
-		public void Remove(object Value) { _List.Remove(Value); }
+		/// <param name="value">The object whose value must be removed if found in the list.</param>
+		public void Remove(object value) { _list.Remove(value); }
 
 		/// <summary>
 		/// IList implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		/// <param name="Index">Index of object to remove.</param>
-		public void RemoveAt(int Index) { _List.RemoveAt(Index); }
+		/// <param name="index">Index of object to remove.</param>
+		public void RemoveAt(int index) { _list.RemoveAt(index); }
 
 		/// <summary>
 		/// IList.ICollection implementation.
@@ -229,32 +229,32 @@ namespace EMK.Collections
 		/// </summary>
 		/// <param name="array"></param>
 		/// <param name="arrayIndex"></param>
-		public void CopyTo(Array array, int arrayIndex) { _List.CopyTo(array, arrayIndex); }
+		public void CopyTo(Array array, int arrayIndex) { _list.CopyTo(array, arrayIndex); }
 		
 		/// <summary>
 		/// IList.ICollection implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public int Count { get { return _List.Count; } }
+		public int Count => _list.Count;
 
 		/// <summary>
 		/// IList.ICollection implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public bool IsSynchronized { get { return _List.IsSynchronized; } }
+		public bool IsSynchronized => _list.IsSynchronized;
 
 		/// <summary>
 		/// IList.ICollection implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public object SyncRoot { get { return _List.SyncRoot; } }
+		public object SyncRoot => _list.SyncRoot;
 
 		/// <summary>
 		/// IList.IEnumerable implementation.
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
 		/// <returns>Enumerator on the list.</returns>
-		public IEnumerator GetEnumerator() { return _List.GetEnumerator(); }
+		public IEnumerator GetEnumerator() { return _list.GetEnumerator(); }
 
 		/// <summary>
 		/// ICloneable implementation.
@@ -263,69 +263,71 @@ namespace EMK.Collections
 		/// <returns>Cloned object.</returns>
 		public object Clone()
 		{
-			SortableList Clone = new SortableList(_Comparer, _List.Capacity);
-			Clone._List = (ArrayList)_List.Clone();
-			Clone._AddDuplicates = _AddDuplicates;
-			Clone._IsSorted = _IsSorted;
-			Clone._KeepSorted = _KeepSorted;
-			return Clone;
+			var clone = new SortableList(_comparer, _list.Capacity);
+			clone._list = (ArrayList)_list.Clone();
+			clone._addDuplicates = _addDuplicates;
+			clone._isSorted = _isSorted;
+			clone._keepSorted = _keepSorted;
+			return clone;
 		}
 
 		/// <summary>
 		/// Idem IndexOf(object), but starting at a specified position in the list
 		/// </summary>
-		/// <param name="O">The object to locate.</param>
-		/// <param name="Start">The index for start position.</param>
+		/// <param name="o">The object to locate.</param>
+		/// <param name="start">The index for start position.</param>
 		/// <returns></returns>
-		public int IndexOf(object O, int Start)
+		public int IndexOf(object o, int start)
 		{
-			int Result = -1;
-			if ( _IsSorted )
+			var result = -1;
+			if ( _isSorted )
 			{
-				Result = _List.BinarySearch(Start, _List.Count-Start, O, _Comparer);
-				while ( Result>Start && _List[Result-1].Equals(O) ) Result--; // We want to point at the first occurence
+				result = _list.BinarySearch(start, _list.Count-start, o, _comparer);
+				while ( result>start && _list[result-1].Equals(o) ) result--; // We want to point at the first occurence
 			}
-			else Result = _List.IndexOf(O, Start);
-			return Result;
+			else result = _list.IndexOf(o, start);
+			return result;
 		}
 
 		/// <summary>
 		/// Defines an equality for two objects
 		/// </summary>
-		public delegate bool Equality(object O1, object O2);
+		public delegate bool Equality(object o1, object o2);
 
 		/// <summary>
 		/// Idem IndexOf(object), but with a specified equality function
 		/// </summary>
-		/// <param name="O">The object to locate.</param>
-		/// <param name="AreEqual">Equality function to use for the search.</param>
+		/// <param name="o">The object to locate.</param>
+		/// <param name="areEqual">Equality function to use for the search.</param>
 		/// <returns></returns>
-		public int IndexOf(object O, Equality AreEqual)
+		public int IndexOf(object o, Equality areEqual)
 		{
-			for (int i=0; i<_List.Count; i++)
-				if ( AreEqual(_List[i], O) ) return i;
+			for (var i=0; i<_list.Count; i++)
+				if ( areEqual(_list[i], o) ) return i;
 			return -1;
 		}
 
 		/// <summary>
 		/// Idem IndexOf(object), but with a start index and a specified equality function
 		/// </summary>
-		/// <param name="O">The object to locate.</param>
-		/// <param name="Start">The index for start position.</param>
-		/// <param name="AreEqual">Equality function to use for the search.</param>
+		/// <param name="o">The object to locate.</param>
+		/// <param name="start">The index for start position.</param>
+		/// <param name="areEqual">Equality function to use for the search.</param>
 		/// <returns></returns>
-		public int IndexOf(object O, int Start, Equality AreEqual)
+		public int IndexOf(object o, int start, Equality areEqual)
 		{
-			if ( Start<0 || Start>=_List.Count ) throw new ArgumentException("Start index must belong to [0; Count-1].");
-			for (int i=Start; i<_List.Count; i++)
-				if ( AreEqual(_List[i], O) ) return i;
+			if ( start<0 || start>=_list.Count ) throw new ArgumentException("Start index must belong to [0; Count-1].");
+			for (var i=start; i<_list.Count; i++)
+				if ( areEqual(_list[i], o) ) return i;
 			return -1;
 		}
 
 		/// <summary>
 		/// Idem <see cref="ArrayList">ArrayList</see>
 		/// </summary>
-		public int Capacity { get {return _List.Capacity; } set { _List.Capacity = value; } }
+		public int Capacity { get => _list.Capacity;
+			set => _list.Capacity = value;
+		}
 
 		/// <summary>
 		/// Object.ToString() override.
@@ -334,22 +336,22 @@ namespace EMK.Collections
 		/// <returns>The string refecting the list.</returns>
 		public override string ToString()
 		{
-			string OutString = "{";
-			for (int i=0; i<_List.Count; i++)
-				OutString += _List[i].ToString() + (i!=_List.Count-1 ? "; " : "}");
-			return OutString;
+			var outString = "{";
+			for (var i=0; i<_list.Count; i++)
+				outString += _list[i] + (i!=_list.Count-1 ? "; " : "}");
+			return outString;
 		}
 
 		/// <summary>
 		/// Object.Equals() override.
 		/// </summary>
 		/// <returns>true if object is equal to this, otherwise false.</returns>
-		public override bool Equals(object O)
+		public override bool Equals(object o)
 		{
-			SortableList SL = (SortableList)O;
-			if ( SL.Count!=Count ) return false;
-			for (int i=0; i<Count; i++)
-				if ( !SL[i].Equals(this[i]) ) return false;
+			var sl = (SortableList)o;
+			if ( sl.Count!=Count ) return false;
+			for (var i=0; i<Count; i++)
+				if ( !sl[i].Equals(this[i]) ) return false;
 			return true;
 		}
 
@@ -357,7 +359,7 @@ namespace EMK.Collections
 		/// Object.GetHashCode() override.
 		/// </summary>
 		/// <returns>HashCode value.</returns>
-		public override int GetHashCode() { return _List.GetHashCode(); }
+		public override int GetHashCode() { return _list.GetHashCode(); }
 
 		/// <summary>
 		/// Sorts the elements in the list using <see cref="ArrayList.Sort">ArrayList.Sort</see>.
@@ -365,37 +367,37 @@ namespace EMK.Collections
 		/// </summary>
 		public void Sort()
 		{
-			if (_IsSorted) return;
-			_List.Sort(_Comparer);
-			_IsSorted = true;
+			if (_isSorted) return;
+			_list.Sort(_comparer);
+			_isSorted = true;
 		}
 
 		/// <summary>
 		/// If the <see cref="KeepSorted">KeepSorted</see> property is set to true, the object will be added at the right place.
 		/// Else it will be appended to the list.
 		/// </summary>
-		/// <param name="C">The object to add.</param>
+		/// <param name="c">The object to add.</param>
 		/// <returns>The index where the object has been added.</returns>
 		/// <exception cref="ArgumentException">The SortableList is set to use object's IComparable interface, and the specifed object does not implement this interface.</exception>
-		public void AddRange(ICollection C)
+		public void AddRange(ICollection c)
 		{
-			if ( _KeepSorted ) foreach (object O in C) Add(O);
-			else _List.AddRange(C);
+			if ( _keepSorted ) foreach (var o in c) Add(o);
+			else _list.AddRange(c);
 		}
 
 		/// <summary>
 		/// Inserts a collection of objects at a specified index.
 		/// Should not be used if the list is the KeepSorted property is set to true.
 		/// </summary>
-		/// <param name="Index">The index before which the objects must be added.</param>
-		/// <param name="C">The object to add.</param>
+		/// <param name="index">The index before which the objects must be added.</param>
+		/// <param name="c">The object to add.</param>
 		/// <exception cref="ArgumentException">The SortableList is set to use objects's IComparable interface, and the specifed object does not implement this interface.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Index is less than zero or Index is greater than Count.</exception>
 		/// <exception cref="InvalidOperationException">If the object is added at the specify index, the list will not be sorted any more and the <see cref="KeepSorted"/> property is set to true.</exception>
-		public void InsertRange(int Index, ICollection C)
+		public void InsertRange(int index, ICollection c)
 		{
-			if ( _KeepSorted ) foreach (object O in C) Insert(Index++, O);
-			else _List.InsertRange(Index, C);
+			if ( _keepSorted ) foreach (var o in c) Insert(index++, o);
+			else _list.InsertRange(index, c);
 		}
 
 		/// <summary>
@@ -403,17 +405,17 @@ namespace EMK.Collections
 		/// Same values are equals according to the Equals() method of objects in the list.
 		/// The first occurrences encountered are kept.
 		/// </summary>
-		/// <param name="Value">Value whose occurrences number must be limited.</param>
-		/// <param name="NbValuesToKeep">Number of occurrences to keep</param>
-		public void LimitNbOccurrences(object Value, int NbValuesToKeep)
+		/// <param name="value">Value whose occurrences number must be limited.</param>
+		/// <param name="nbValuesToKeep">Number of occurrences to keep</param>
+		public void LimitNbOccurrences(object value, int nbValuesToKeep)
 		{
-			if (Value==null) throw new ArgumentNullException("Value");
-			int Pos = 0;
-			while ( (Pos=IndexOf(Value, Pos)) >= 0 )
+			if (value==null) throw new ArgumentNullException("value");
+			var pos = 0;
+			while ( (pos=IndexOf(value, pos)) >= 0 )
 			{
-				 if ( NbValuesToKeep<=0 ) _List.RemoveAt(Pos);
-				else { Pos++; NbValuesToKeep--; }
-				if ( _IsSorted && _Comparer.Compare(_List[Pos], Value)>0 ) break; // No need to follow
+				 if ( nbValuesToKeep<=0 ) _list.RemoveAt(pos);
+				else { pos++; nbValuesToKeep--; }
+				if ( _isSorted && _comparer.Compare(_list[pos], value)>0 ) break; // No need to follow
 			}
 		}
 
@@ -423,28 +425,28 @@ namespace EMK.Collections
 		/// </summary>
 		public void RemoveDuplicates()
 		{
-			int PosIt;
-			if (_IsSorted)
+			int posIt;
+			if (_isSorted)
 			{
-				PosIt = 0;
-				while ( PosIt<Count-1 )
+				posIt = 0;
+				while ( posIt<Count-1 )
 				{
-					if ( _Comparer.Compare(this[PosIt], this[PosIt+1])==0 ) RemoveAt(PosIt);
-					else PosIt++;
+					if ( _comparer.Compare(this[posIt], this[posIt+1])==0 ) RemoveAt(posIt);
+					else posIt++;
 				}
 			}
 			else
 			{
-				int Left = 0;
-				while ( Left>=0 )
+				var left = 0;
+				while ( left>=0 )
 				{
-					PosIt = Left+1;
-					while (PosIt>0)
+					posIt = left+1;
+					while (posIt>0)
 					{
-						if ( Left!=PosIt && _Comparer.Compare(this[Left], this[PosIt])==0 ) RemoveAt(PosIt);
-						else PosIt++;
+						if ( left!=posIt && _comparer.Compare(this[left], this[posIt])==0 ) RemoveAt(posIt);
+						else posIt++;
 					}
-					Left++;
+					left++;
 				}
 			}
 		}
@@ -455,22 +457,22 @@ namespace EMK.Collections
 		/// <returns>The minimum object in the list</returns>
 		public int IndexOfMin()
 		{
-			int RetInt = -1;
-			if ( _List.Count>0 )
+			var retInt = -1;
+			if ( _list.Count>0 )
 			{
-				RetInt = 0;
-				object RetObj = _List[0];
-				if ( !_IsSorted )
+				retInt = 0;
+				var retObj = _list[0];
+				if ( !_isSorted )
 				{
-					for ( int i=1; i<_List.Count; i++ )
-						if ( _Comparer.Compare(RetObj, _List[i])>0 )
+					for ( var i=1; i<_list.Count; i++ )
+						if ( _comparer.Compare(retObj, _list[i])>0 )
 						{
-							RetObj = _List[i];
-							RetInt = i;
+							retObj = _list[i];
+							retInt = i;
 						}
 				}
 			}
-			return RetInt;
+			return retInt;
 		}
 
 		/// <summary>
@@ -479,56 +481,56 @@ namespace EMK.Collections
 		/// <returns>The maximum object in the list</returns>
 		public int IndexOfMax()
 		{
-			int RetInt = -1;
-			if ( _List.Count>0 )
+			var retInt = -1;
+			if ( _list.Count>0 )
 			{
-				RetInt = _List.Count-1;
-				object RetObj = _List[_List.Count-1];
-				if ( !_IsSorted )
+				retInt = _list.Count-1;
+				var retObj = _list[_list.Count-1];
+				if ( !_isSorted )
 				{
-					for ( int i=_List.Count-2; i>=0; i-- )
-						if ( _Comparer.Compare(RetObj, _List[i])<0 )
+					for ( var i=_list.Count-2; i>=0; i-- )
+						if ( _comparer.Compare(retObj, _list[i])<0 )
 						{
-							RetObj = _List[i];
-							RetInt = i;
+							retObj = _list[i];
+							retInt = i;
 						}
 				}
 			}
-			return RetInt;
+			return retInt;
 		}
 
-		private bool ObjectIsCompliant(object O)
+		private bool ObjectIsCompliant(object o)
 		{
-			if ( _UseObjectsComparison && !(O is IComparable) ) throw new ArgumentException("The SortableList is set to use the IComparable interface of objects, and the object to add does not implement the IComparable interface.");
-			if ( !_AddDuplicates && Contains(O) ) return false;
+			if ( _useObjectsComparison && !(o is IComparable) ) throw new ArgumentException("The SortableList is set to use the IComparable interface of objects, and the object to add does not implement the IComparable interface.");
+			if ( !_addDuplicates && Contains(o) ) return false;
 			return true;
 		}
 
 		private class Comparison : IComparer
 		{
-			public int Compare(object O1, object O2)
+			public int Compare(object o1, object o2)
 			{
-				IComparable C = O1 as IComparable;
-				return C.CompareTo(O2);
+				var c = o1 as IComparable;
+				return c.CompareTo(o2);
 			}
 		}
 
-		private void InitProperties(IComparer Comparer, int Capacity)
+		private void InitProperties(IComparer comparer, int capacity)
 		{
-			if ( Comparer!=null )
+			if ( comparer!=null )
 			{
-				_Comparer = Comparer;
-				_UseObjectsComparison = false;
+				_comparer = comparer;
+				_useObjectsComparison = false;
 			}
 			else
 			{
-				_Comparer = new Comparison();
-				_UseObjectsComparison = true;
+				_comparer = new Comparison();
+				_useObjectsComparison = true;
 			}
-			_List = Capacity>0 ? new ArrayList(Capacity) : new ArrayList();
-			_IsSorted = true;
-			_KeepSorted = true;
-			_AddDuplicates = true;
+			_list = capacity>0 ? new ArrayList(capacity) : new ArrayList();
+			_isSorted = true;
+			_keepSorted = true;
+			_addDuplicates = true;
 		}
 	}
 }

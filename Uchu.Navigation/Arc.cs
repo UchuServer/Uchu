@@ -1,9 +1,6 @@
-
 using System;
-using EMK.LightGeometry;
 
-
-namespace EMK.Cartography
+namespace Uchu.Navigation
 {
 	/// <summary>
 	/// An arc is defined with its two extremity nodes StartNode and EndNode therefore it is oriented.
@@ -13,23 +10,23 @@ namespace EMK.Cartography
 	[Serializable]
 	public class Arc
 	{
-		Node _StartNode, _EndNode;
-		double _Weight;
-		bool _Passable;
-		double _Length;
-		bool _LengthUpdated;
+		private Node _startNode, _endNode;
+		private double _weight;
+		private bool _passable;
+		private double _length;
+		private bool _lengthUpdated;
 
 		/// <summary>
 		/// Arc constructor.
 		/// </summary>
 		/// <exception cref="ArgumentNullException">Extremity nodes cannot be null.</exception>
 		/// <exception cref="ArgumentException">StartNode and EndNode must be different.</exception>
-		/// <param name="Start">The node from which the arc starts.</param>
-		/// <param name="End">The node to which the arc ends.</param>
-		public Arc(Node Start, Node End)
+		/// <param name="start">The node from which the arc starts.</param>
+		/// <param name="end">The node to which the arc ends.</param>
+		public Arc(Node start, Node end)
 		{
-			StartNode = Start;
-			EndNode = End;
+			StartNode = start;
+			EndNode = end;
 			Weight = 1;
 			LengthUpdated = false;
 			Passable = true;
@@ -46,11 +43,11 @@ namespace EMK.Cartography
 			{
 				if ( value==null ) throw new ArgumentNullException("StartNode");
 				if ( EndNode!=null && value.Equals(EndNode) ) throw new ArgumentException("StartNode and EndNode must be different");
-				if ( _StartNode!=null ) _StartNode.OutgoingArcs.Remove(this);
-				_StartNode = value;
-				_StartNode.OutgoingArcs.Add(this);
+				_startNode?.OutgoingArcs.Remove(this);
+				_startNode = value;
+				_startNode.OutgoingArcs.Add(this);
 			}
-			get { return _StartNode; }
+			get => _startNode;
 		}
 
 		/// <summary>
@@ -64,11 +61,11 @@ namespace EMK.Cartography
 			{
 				if ( value==null ) throw new ArgumentNullException("EndNode");
 				if ( StartNode!=null && value.Equals(StartNode) ) throw new ArgumentException("StartNode and EndNode must be different");
-				if ( _EndNode!=null ) _EndNode.IncomingArcs.Remove(this);
-				_EndNode = value;
-				_EndNode.IncomingArcs.Add(this);
+				_endNode?.IncomingArcs.Remove(this);
+				_endNode = value;
+				_endNode.IncomingArcs.Add(this);
 			}
-			get { return _EndNode; }
+			get => _endNode;
 		}
 
 		/// <summary>
@@ -77,8 +74,8 @@ namespace EMK.Cartography
 		/// </summary>
 		public double Weight
 		{
-			set { _Weight = value; }
-			get { return _Weight; }
+			set => _weight = value;
+			get => _weight;
 		}
 
 		/// <summary>
@@ -88,14 +85,14 @@ namespace EMK.Cartography
 		/// </summary>
 		public bool Passable
 		{
-			set { _Passable = value; }
-			get { return _Passable; }		
+			set => _passable = value;
+			get => _passable;
 		}
 
 		internal bool LengthUpdated
 		{
-			set { _LengthUpdated = value; }
-			get { return _LengthUpdated; }
+			set => _lengthUpdated = value;
+			get => _lengthUpdated;
 		}
 
 		/// <summary>
@@ -107,10 +104,10 @@ namespace EMK.Cartography
 			{
 				if ( LengthUpdated==false )
 				{
-					_Length = CalculateLength();
+					_length = CalculateLength();
 					LengthUpdated = true;
 				}
-				return _Length;
+				return _length;
 			}
 		}
 
@@ -119,19 +116,16 @@ namespace EMK.Cartography
 		/// Can be overriden for derived types of arcs that are not linear.
 		/// </summary>
 		/// <returns></returns>
-		virtual protected double CalculateLength()
+		protected virtual double CalculateLength()
 		{
-			return Point3D.DistanceBetween(_StartNode.Position, _EndNode.Position);
+			return Point3D.DistanceBetween(_startNode.Position, _endNode.Position);
 		}
 
 		/// <summary>
 		/// Gets the cost of moving through the arc.
 		/// Can be overriden when not simply equals to Weight*Length.
 		/// </summary>
-		virtual public double Cost
-		{
-			get { return Weight*Length; }
-		}
+		public virtual double Cost => Weight*Length;
 
 		/// <summary>
 		/// Returns the textual description of the arc.
@@ -140,7 +134,7 @@ namespace EMK.Cartography
 		/// <returns>String describing this arc.</returns>
 		public override string ToString()
 		{
-			return _StartNode.ToString()+"-->"+_EndNode.ToString();
+			return _startNode+"-->"+_endNode;
 		}
 
 		/// <summary>
@@ -148,13 +142,13 @@ namespace EMK.Cartography
 		/// Tells if two arcs are equal by comparing StartNode and EndNode.
 		/// </summary>
 		/// <exception cref="ArgumentException">Cannot compare an arc with another type.</exception>
-		/// <param name="O">The arc to compare with.</param>
+		/// <param name="o">The arc to compare with.</param>
 		/// <returns>'true' if both arcs are equal.</returns>
-		public override bool Equals(object O)
+		public override bool Equals(object o)
 		{
-			Arc A = (Arc) O;
-			if ( A==null ) throw new ArgumentException("Cannot compare type "+GetType()+" with type "+O.GetType()+" !");
-			return _StartNode.Equals(A._StartNode) && _EndNode.Equals(A._EndNode);
+			var a = (Arc) o;
+			if ( a==null ) throw new ArgumentException("Cannot compare type "+GetType()+" with type "+o.GetType()+" !");
+			return _startNode.Equals(a._startNode) && _endNode.Equals(a._endNode);
 		}
 
 		/// <summary>

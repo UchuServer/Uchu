@@ -302,16 +302,19 @@ namespace Uchu.World
             //
             // Equip items
             //
-            
-            foreach (var item in character.Items.Where(i => i.IsEquipped))
+
+            instance.Listen(instance.OnWorldLoad, async () =>
             {
-                await inventory.MountItemAsync(
-                    item.LOT,
-                    item.InventoryItemId,
-                    false,
-                    LegoDataDictionary.FromString(item.ExtraInfo)
-                );
-            }
+                foreach (var item in character.Items.Where(i => i.IsEquipped))
+                {
+                    await inventory.MountItemAsync(
+                        item.LOT,
+                        item.InventoryItemId,
+                        false,
+                        LegoDataDictionary.FromString(item.ExtraInfo)
+                    );
+                }
+            });
             
             //
             // Register player gameobject in zone
@@ -405,11 +408,12 @@ namespace Uchu.World
             });
         }
 
-        public void Message(ISerializable gameMessage)
+        public void Message(ISerializable package)
         {
-            Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g.Associate}" : "")}");
-
-            Connection.Send(gameMessage);
+            if (package is IGameMessage gameMessage)
+                if (!Perspective.LoadedObjects.Contains(gameMessage.Associate)) return;
+            
+            Connection.Send(package);
         }
 
         public async Task<bool> SendToWorldAsync(InstanceInfo specification, ZoneId zoneId)

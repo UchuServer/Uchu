@@ -5,7 +5,7 @@ namespace Uchu.World
 {
     public class Object : ObjectBase
     {
-        private bool _started;
+        public bool Started { get; private set; }
         
         public Zone Zone { get; protected set; }
 
@@ -46,9 +46,9 @@ namespace Uchu.World
 
         public static void Start(Object obj)
         {
-            if (obj?._started ?? true) return;
+            if (obj?.Started ?? true) return;
             
-            obj._started = true;
+            obj.Started = true;
             
             obj.Zone.RegisterObject(obj);
 
