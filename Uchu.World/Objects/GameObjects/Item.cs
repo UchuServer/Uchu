@@ -62,8 +62,6 @@ namespace Uchu.World
             }
             set
             {
-                UpdateCount(value);
-                
                 using var ctx = new UchuContext();
                 
                 var info = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
@@ -71,6 +69,8 @@ namespace Uchu.World
                 info.Count = value;
                 
                 ctx.SaveChanges();
+                
+                UpdateCount(value);
             }
         }
 
@@ -318,7 +318,9 @@ namespace Uchu.World
             
             item.Count = count;
             
-            if (Count == default)
+            Logger.Debug($"Setting {this}'s stack size to {item.Count}");
+
+            if (count <= 0)
             {
                 ctx.InventoryItems.Remove(item);
                 
@@ -344,7 +346,7 @@ namespace Uchu.World
             if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
             {
                 Logger.Error(
-                    $"Trying to set {Lot} count to {count}, this is beyond the item's stack-size; Setting it to stack-size"
+                    $"Trying to set {Lot} count to {count}, this is beyond the item's stack-size; setting it to stack-size"
                 );
 
                 count = (uint) ItemComponent.StackSize;
@@ -362,8 +364,10 @@ namespace Uchu.World
             }
 
             item.Count = count;
+            
+            Logger.Debug($"Setting {this}'s stack size to {item.Count}");
 
-            if (item.Count == default)
+            if (count <= 0)
             {
                 ctx.InventoryItems.Remove(item);
 
