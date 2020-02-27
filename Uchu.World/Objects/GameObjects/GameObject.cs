@@ -22,6 +22,8 @@ namespace Uchu.World
 
         protected string ObjectName { get; set; }
         
+        public bool Global { get; set; }
+        
         public long ObjectId { get; private set; }
 
         public Lot Lot { get; private set; }

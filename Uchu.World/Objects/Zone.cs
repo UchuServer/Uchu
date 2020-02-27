@@ -460,21 +460,19 @@ namespace Uchu.World
 
                 while (_running)
                 {
+                    if (Players.Length == 0)
+                    {
+                        await Task.Delay(1000);
+                        
+                        continue;
+                    }
+
                     if (_ticks >= TicksPerSecondLimit) continue;
 
                     await Task.Delay(1000 / TicksPerSecondLimit);
 
                     foreach (var obj in Objects.Where(o => o.OnTick.Any))
                     {
-                        if (obj is GameObject gameObject)
-                        {
-                            if (Players.Length == 0 ||
-                                Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                            {
-                                continue;
-                            }
-                        }
-
                         try
                         {
                             Update(obj);

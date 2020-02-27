@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -60,6 +61,8 @@ namespace Uchu.Instance
             var server = instance.Info.Type == (int) ServerType.World
                 ? new WorldServer(id)
                 : new Server(id);
+
+            Console.Title = $"{(ServerType) instance.Info.Type}:{instance.Info.Port}";
             
             await server.ConfigureAsync(args[1]);
 
