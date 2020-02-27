@@ -305,14 +305,9 @@ namespace Uchu.World
 
             instance.Listen(instance.OnWorldLoad, async () =>
             {
-                foreach (var item in character.Items.Where(i => i.IsEquipped))
+                foreach (var item in instance.GetComponent<InventoryManagerComponent>().Items.Where(i => i.Equipped))
                 {
-                    await inventory.MountItemAsync(
-                        item.LOT,
-                        item.InventoryItemId,
-                        false,
-                        LegoDataDictionary.FromString(item.ExtraInfo)
-                    );
+                    await inventory.MountItemAsync(item.Lot, item.ObjectId, false, item.Settings);
                 }
             });
             

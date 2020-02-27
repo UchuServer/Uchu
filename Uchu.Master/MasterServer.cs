@@ -290,7 +290,12 @@ namespace Uchu.Master
 
             lock (Api)
             {
-                if (!specified) return worlds.Max(i => i.Port) + 1;
+                if (!specified)
+                {
+                    if (worlds.Length == default) return 20000;
+                    
+                    return worlds.Max(i => i.Port) + 1;
+                }
                 
                 var available = Config.Networking.WorldPorts.ToList();
 
