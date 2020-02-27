@@ -229,7 +229,10 @@ namespace Uchu.World
 
             if (!skills || inventoryItem == default) return -1;
 
-            await skillComponent.MountItemAsync(inventoryItem);
+            if (inventoryType == InventoryType.Items)
+            {
+                await skillComponent.MountItemAsync(inventoryItem);
+            }
 
             /*
              * Equip proxies

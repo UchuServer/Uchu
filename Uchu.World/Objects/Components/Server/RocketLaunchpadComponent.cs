@@ -33,13 +33,7 @@ namespace Uchu.World
                 return;
             }
 
-            await rocket.EquipAsync(true);
-            
-            player.Message(new ChangeObjectWorldStateMessage
-            {
-                Associate = rocket,
-                State = ObjectWorldState.Attached
-            });
+            rocket.WorldState = ObjectWorldState.Attached;
             
             player.Message(new FireClientEventMessage
             {

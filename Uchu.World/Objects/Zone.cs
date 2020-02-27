@@ -56,6 +56,7 @@ namespace Uchu.World
         //
 
         public Object[] Objects => _managedObjects.ToArray();
+
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
         public Player[] Players => Objects.OfType<Player>().ToArray();
         public ZoneId ZoneId => (ZoneId) ZoneInfo.LuzFile.WorldId;
@@ -117,29 +118,43 @@ namespace Uchu.World
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
+            var tasks = new List<Task>();
+            
             foreach (var levelObject in objects)
             {
-                try
+                var task = Task.Run(() =>
                 {
-                    SpawnLevelObject(levelObject);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
+                    try
+                    {
+                        SpawnLevelObject(levelObject);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                });
+
+                tasks.Add(task);
             }
 
             foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
             {
-                try
+                var task = Task.Run(() =>
                 {
-                    SpawnPath(path);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
+                    try
+                    {
+                        SpawnPath(path);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                });
+
+                tasks.Add(task);
             }
+
+            await Task.WhenAll(tasks);
 
             Logger.Information($"Loaded {objects.Count} objects for {ZoneId}");
 
@@ -285,16 +300,22 @@ namespace Uchu.World
 
         internal void RegisterObject(Object obj)
         {
-            if (_managedObjects.Contains(obj)) return;
+            lock (_managedObjects)
+            {
+                if (_managedObjects.Contains(obj)) return;
             
-            OnObject.Invoke(obj);
-                
-            _managedObjects.Add(obj);
+                OnObject.Invoke(obj);
+
+                _managedObjects.Add(obj);
+            }
         }
 
         internal void UnregisterObject(Object obj)
         {
-            if (_managedObjects.Contains(obj)) _managedObjects.Remove(obj);
+            lock (_managedObjects)
+            {
+                if (_managedObjects.Contains(obj)) _managedObjects.Remove(obj);
+            }
         }
 
         #endregion

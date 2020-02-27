@@ -405,9 +405,6 @@ namespace Uchu.World
 
         public void Message(ISerializable package)
         {
-            if (package is IGameMessage gameMessage)
-                if (!Perspective.LoadedObjects.Contains(gameMessage.Associate)) return;
-            
             Connection.Send(package);
         }
 
