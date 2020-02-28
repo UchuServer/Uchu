@@ -81,14 +81,16 @@ namespace Uchu.Navigation
         /// <exception cref="ArgumentNullException">StartNode and EndNode cannot be null.</exception>
         /// <param name="startNode">The node from which the path must start.</param>
         /// <param name="endNode">The node to which the path must end.</param>
+        /// <param name="maxSteps">Max amount of steps allowed</param>
         /// <returns>'true' if succeeded / 'false' if failed.</returns>
-        public bool SearchPath(Node startNode, Node endNode)
+        public bool SearchPath(Node startNode, Node endNode, int maxSteps)
         {
             lock (_graph)
             {
                 Initialize(startNode, endNode);
-                while (NextStep())
+                while (NextStep() && maxSteps > 0)
                 {
+                    maxSteps--;
                 }
 
                 return PathFound;

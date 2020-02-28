@@ -57,7 +57,7 @@ namespace Uchu.World
             {
                 return BaseCombatAiComponent.Action switch
                 {
-                    CombatAiAction.Idle => WanderSpeed,
+                    CombatAiAction.Idle => WanderSpeed * 2,
                     CombatAiAction.Attacking => (TetherSpeed * AggroSpeed),
                     CombatAiAction.Tether => TetherSpeed,
                     CombatAiAction.Spawn => 0,
@@ -80,6 +80,8 @@ namespace Uchu.World
                 return Path[PathIndex];
             }
         }
+
+        public bool HasWayPoint => !(Path.Length == default || PathIndex >= Path.Length);
 
         public Vector3 Origin { get; private set; }
         
@@ -166,6 +168,12 @@ namespace Uchu.World
         {
             if (CannotPerformAction)
             {
+                if (ControllablePhysicsComponent.Velocity == Vector3.Zero) return;
+                
+                ControllablePhysicsComponent.Velocity = Vector3.Zero;
+
+                GameObject.Serialize(GameObject);
+
                 return;
             }
             
@@ -181,11 +189,16 @@ namespace Uchu.World
                     if (OnEndOfPath.Any)
                         OnEndOfPath.Invoke();
                 }
+
+                if (HasWayPoint)
+                {
+                    Transform.LookAt(CurrentWayPoint);
+                }
             }
 
             DeltaTime += Zone.DeltaTime;
 
-            var newPosition = Transform.Position.MoveTowards(CurrentWayPoint, Speed * DeltaTime);
+            var newPosition = Transform.Position.MoveTowards(CurrentWayPoint, Speed * DeltaTime, out var deltaVector);
 
             if (Vector3.Distance(Transform.Position, newPosition) < 0.25f)
             {
@@ -193,8 +206,8 @@ namespace Uchu.World
             }
 
             DeltaTime = 0;
-            
-            var delta = newPosition - Transform.Position;
+
+            var delta = deltaVector * Speed;
             
             ControllablePhysicsComponent.HasVelocity = delta != Vector3.Zero;
             
@@ -218,11 +231,9 @@ namespace Uchu.World
 
             if (!(target is Player))
             {
-                /*
                 if (WanderDelay) return;
                 
                 Wander();
-                */
                 
                 return;
             }
@@ -409,7 +420,7 @@ namespace Uchu.World
             Listen(Regular, action);
         }
 
-        private bool CannotPerformAction => !DestructibleComponent.Alive || BaseCombatAiComponent.SkillEntries.Any(s => s.Cooldown);
+        private bool CannotPerformAction => !DestructibleComponent.Alive || BaseCombatAiComponent.AbilityDowntime;
         
         public override void Construct(BitWriter writer)
         {

@@ -87,8 +87,10 @@ namespace Uchu.Navigation
                 var startNode = GetClosest(start);
                 var endNode = GetClosest(end);
 
-                Star.SearchPath(startNode, endNode);
+                var found = Star.SearchPath(startNode, endNode, 20);
 
+                if (!found) return new[] {start};
+                
                 var coordinates = Star.PathByCoordinates;
 
                 if (coordinates == default || coordinates.Length == default)
