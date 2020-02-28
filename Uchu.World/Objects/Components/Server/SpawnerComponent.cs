@@ -116,11 +116,12 @@ namespace Uchu.World
             {
                 Listen(destructibleComponent.OnSmashed, async (smasher, lootOwner) =>
                 {
-                    Destroy(obj);
+                    await Task.Delay(1000);
 
-                    await Task.Delay(RespawnTime);
-                    
-                    Spawn();
+                    var location = FindLocation();
+
+                    obj.Transform.Position = location.Position;
+                    obj.Transform.Rotation = location.Rotation;
                 });
             }
 

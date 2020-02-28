@@ -13,13 +13,6 @@ namespace Uchu.World
     {
         protected Item()
         {
-            Listen(OnStart, () =>
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
-            });
-            
             Listen(OnDestroyed, () => Task.Run(RemoveFromInventoryAsync));
             
             Listen(OnDestroyed, () => Inventory.UnManageItem(this));
@@ -62,15 +55,17 @@ namespace Uchu.World
             }
             set
             {
+                UpdateCount(value);
+                
                 using var ctx = new UchuContext();
                 
-                var info = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
+                var info = ctx.InventoryItems.FirstOrDefault(i => i.InventoryItemId == ObjectId);
 
+                if (info == default) return;
+                
                 info.Count = value;
                 
                 ctx.SaveChanges();
-                
-                UpdateCount(value);
             }
         }
 
@@ -341,20 +336,7 @@ namespace Uchu.World
         
         private void UpdateCount(uint count)
         {
-            using var ctx = new UchuContext();
-            
-            if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
-            {
-                Logger.Error(
-                    $"Trying to set {Lot} count to {count}, this is beyond the item's stack-size; setting it to stack-size"
-                );
-
-                count = (uint) ItemComponent.StackSize;
-            }
-
-            var item = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
-
-            if (count > item.Count)
+            if (count >= Count)
             {
                 AddCount(count);
             }
@@ -363,27 +345,24 @@ namespace Uchu.World
                 RemoveCount(count);
             }
 
-            item.Count = count;
+            if (count > 0) return;
             
-            Logger.Debug($"Setting {this}'s stack size to {item.Count}");
+            using var ctx = new UchuContext();
 
-            if (count <= 0)
+            var item = ctx.InventoryItems.First(i => i.InventoryItemId == ObjectId);
+
+            ctx.InventoryItems.Remove(item);
+
+            // Disassemble item.
+            if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
             {
-                ctx.InventoryItems.Remove(item);
-
-                // Disassemble item.
-                if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+                foreach (var part in (LegoDataList) list)
                 {
-                    foreach (var part in (LegoDataList) list)
-                    {
-                        Task.Run(() => Inventory.ManagerComponent.AddItemAsync((int) part, 1));
-                    }
+                    Task.Run(() => Inventory.ManagerComponent.AddItemAsync((int) part, 1));
                 }
-
-                Destroy(this);
             }
 
-            ctx.SaveChanges();
+            Destroy(this);
         }
 
         private void AddCount(uint count)
