@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
@@ -207,13 +208,8 @@ namespace Uchu.World
             //
             // Only spawns should get constructed on the client.
             //
-            
-            if (spawner == default)
-            {
-                return;
-            }
 
-            GameObject.Construct(spawner.Spawn());
+            spawner?.SpawnCluster();
         }
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
@@ -223,16 +219,18 @@ namespace Uchu.World
             if (obj == null) return;
 
             obj.Layer = StandardLayer.Hidden;
-            
-            Start(obj);
 
             var spawner = obj.GetComponent<SpawnerComponent>();
 
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => (LuzSpawnerWaypoint) w).ToArray();
+            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            {
+                Position = w.Position,
+                Rotation = Quaternion.Identity
+            }).ToList();
             
-            var spawn = spawner.Spawn();
-
-            GameObject.Construct(spawn);
+            Start(obj);
+            
+            spawner.SpawnCluster();
         }
 
         #endregion

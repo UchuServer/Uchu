@@ -65,21 +65,12 @@ namespace Uchu.World
                 Lot.Spawner
             );
 
-            /* TODO : 
-            
-            var settings = new LegoDataDictionary();
-            foreach (var config in wayPoint.Configs)
-            {
-                settings.Add(config.ConfigName, config.ConfigTypeAndValue);
-            }
-
-            spawner.Settings = settings;
-            */
-
             spawner.Settings.Add("respawn", spawnerPath.RespawnTime);
 
             var spawnerComponent = spawner.AddComponent<SpawnerComponent>();
-            
+
+            //spawnerComponent.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
+            spawnerComponent.RespawnTime = (int) spawnerPath.RespawnTime * 1000;
             spawnerComponent.Settings = spawner.Settings;
             spawnerComponent.SpawnTemplate = (int) spawnerPath.SpawnedLot;
             spawnerComponent.LevelObject = new LevelObjectTemplate

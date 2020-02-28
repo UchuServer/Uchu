@@ -137,6 +137,8 @@ namespace Uchu.World
 
                 Listen(destructible.OnSmashed, (smasher, lootOwner) =>
                 {
+                    if (!GameObject.Alive) return;
+                    
                     Transform.Position = Origin;
 
                     BaseCombatAiComponent.Target = null;
