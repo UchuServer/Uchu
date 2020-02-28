@@ -73,6 +73,8 @@ namespace Uchu.World
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
 
+        private List<UpdatedObject> UpdatedObjects { get; }
+        
         //
         // Events
         //
@@ -80,6 +82,8 @@ namespace Uchu.World
         public AsyncEvent<Player> OnPlayerLoad { get; } = new AsyncEvent<Player>();
 
         public Event<Object> OnObject { get; } = new Event<Object>();
+
+        public AsyncEvent OnTick { get; } = new AsyncEvent();
         
         public AsyncEvent<Player, string> OnChatMessage { get; } = new AsyncEvent<Player, string>();
 
@@ -94,6 +98,7 @@ namespace Uchu.World
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
             NavMeshManager = new NavMeshManager(this);
+            UpdatedObjects = new List<UpdatedObject>();
 
             Listen(OnStart,async () => await InitializeAsync());
 
@@ -312,7 +317,16 @@ namespace Uchu.World
         {
             lock (_managedObjects)
             {
-                if (_managedObjects.Contains(obj)) _managedObjects.Remove(obj);
+                if (_managedObjects.Contains(obj))
+                {
+                    _managedObjects.Remove(obj);
+                }
+
+                var updated = UpdatedObjects.FirstOrDefault(u => u.Associate == obj);
+                
+                if (updated == default) return;
+
+                UpdatedObjects.Remove(updated);
             }
         }
 
@@ -471,10 +485,6 @@ namespace Uchu.World
 
             return Task.Run(async () =>
             {
-                var stopWatch = new Stopwatch();
-
-                stopWatch.Start();
-
                 _running = true;
 
                 while (_running)
@@ -488,13 +498,24 @@ namespace Uchu.World
 
                     if (_ticks >= TicksPerSecondLimit) continue;
 
+                    var start = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    
                     await Task.Delay(1000 / TicksPerSecondLimit);
 
-                    foreach (var obj in Objects.Where(o => o.OnTick.Any))
+                    foreach (var updatedObject in UpdatedObjects.ToArray())
                     {
+                        if (updatedObject.Associate is GameObject gameObject)
+                        {
+                            if (Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
+                        }
+
+                        if (updatedObject.Frequency != ++updatedObject.Ticks) continue;
+                        
+                        updatedObject.Ticks = 0;
+
                         try
                         {
-                            Update(obj);
+                            await updatedObject.Delegate();
                         }
                         catch (Exception e)
                         {
@@ -504,15 +525,34 @@ namespace Uchu.World
 
                     _ticks++;
 
-                    var passedMs = stopWatch.ElapsedMilliseconds;
+                    var passedMs = DateTimeOffset.Now.ToUnixTimeMilliseconds() - start;
 
                     DeltaTime = passedMs / 1000f;
 
                     _passedTickTime += passedMs;
-
-                    stopWatch.Restart();
                 }
             });
+        }
+
+        public void Update(Object associate, Func<Task> @delegate, int frequency)
+        {
+            UpdatedObjects.Add(new UpdatedObject
+            {
+                Associate = associate,
+                Delegate = @delegate,
+                Frequency = frequency
+            });
+        }
+        
+        private class UpdatedObject
+        {
+            public Object Associate { get; set; }
+            
+            public Func<Task> Delegate { get; set; }
+            
+            public int Frequency { get; set; }
+            
+            public int Ticks { get; set; }
         }
 
         #endregion

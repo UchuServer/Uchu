@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -54,6 +55,21 @@ namespace Uchu.World
             foreach (var action in Actions.ToArray())
             {
                 action.Invoke();
+            }
+        }
+
+        public void SafeInvoke()
+        {
+            foreach (var action in Actions.ToArray())
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
     }

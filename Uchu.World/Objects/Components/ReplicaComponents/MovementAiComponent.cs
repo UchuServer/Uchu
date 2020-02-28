@@ -13,6 +13,8 @@ namespace Uchu.World
 {
     public class MovementAiComponent : ReplicaComponent
     {
+        private const int UpdateRate = 2;
+        
         public override ComponentId Id => ComponentId.MovementAIComponent;
         
         private MovementAIComponent ClientInfo { get; set; }
@@ -150,19 +152,14 @@ namespace Uchu.World
 
                 SetOnTick(CalculateAction);
 
-                Listen(OnTick, () =>
+                Zone.Update(GameObject, () =>
                 {
-                    try
-                    {
-                        Regular.Invoke();
+                    Regular.Invoke();
 
-                        CalculateMovement();
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
+                    CalculateMovement();
+                    
+                    return Task.CompletedTask;
+                }, UpdateRate);
             });
         }
 
@@ -198,7 +195,7 @@ namespace Uchu.World
                 }
             }
 
-            DeltaTime += Zone.DeltaTime;
+            DeltaTime += Zone.DeltaTime * UpdateRate;
 
             var newPosition = Transform.Position.MoveTowards(CurrentWayPoint, Speed * DeltaTime, out var deltaVector);
 

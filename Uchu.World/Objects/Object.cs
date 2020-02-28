@@ -6,7 +6,7 @@ namespace Uchu.World
     public class Object : ObjectBase
     {
         public bool Started { get; private set; }
-        
+
         public Zone Zone { get; protected set; }
 
         public Server Server => Zone.Server;
@@ -14,8 +14,6 @@ namespace Uchu.World
         public Event OnStart { get; } = new Event();
 
         public Event OnDestroyed { get; } = new Event();
-
-        public Event OnTick { get; } = new Event();
 
         protected Object()
         {
@@ -63,16 +61,8 @@ namespace Uchu.World
             
             obj.OnStart.Clear();
             obj.OnDestroyed.Clear();
-            obj.OnTick.Clear();
 
             obj.ClearListeners();
-        }
-        
-        protected static void Update(Object obj)
-        {
-            if (obj == null || !obj.OnTick.Any) return;
-            
-            obj.OnTick.Invoke();
         }
     }
 }

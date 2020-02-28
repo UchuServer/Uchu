@@ -60,55 +60,60 @@ namespace Uchu.World
                         Cooldown = false
                     });
                 }
-            });
-            
-            Listen(OnTick, async () =>
-            {
-                if (!Enabled) return;
-                
-                if (!DestructibleComponent.Alive) return;
-                
-                if (QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed) return;
-                
-                if (Cooldown <= 0)
+
+                Zone.Update(GameObject, async () =>
                 {
-                    await using var ctx = new CdClientContext();
-
-                    AbilityDowntime = false;
-                    
-                    Cooldown = 1f;
-                    
-                    foreach (var entry in SkillEntries.Where(s => !s.Cooldown))
-                    {
-                        var time = await SkillComponent.CalculateSkillAsync((int) entry.SkillId);
-
-                        if (time.Equals(0)) continue;
-
-                        AbilityDowntime = true;
-                        
-                        entry.Cooldown = true;
-                        
-                        var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
-                            s => s.SkillID == entry.SkillId
-                        );
-
-                        var _ = Task.Run(async () =>
-                        {
-                            var cooldown = (skillInfo.Cooldown ?? 1f) + time;
-                            
-                            await Task.Delay((int) cooldown * 1000);
-
-                            entry.Cooldown = false;
-                        });
-
-                        Cooldown += time;
-                        
-                        break;
-                    }
-                }
-
-                Cooldown -= Zone.DeltaTime;
+                    await CalculateCombat();
+                }, 1);
             });
+        }
+
+        private async Task CalculateCombat()
+        {
+            if (!Enabled) return;
+                
+            if (!DestructibleComponent.Alive) return;
+                
+            if (QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed) return;
+                
+            if (Cooldown <= 0)
+            {
+                await using var ctx = new CdClientContext();
+
+                AbilityDowntime = false;
+                    
+                Cooldown = 1f;
+                    
+                foreach (var entry in SkillEntries.Where(s => !s.Cooldown))
+                {
+                    var time = await SkillComponent.CalculateSkillAsync((int) entry.SkillId);
+
+                    if (time.Equals(0)) continue;
+
+                    AbilityDowntime = true;
+                        
+                    entry.Cooldown = true;
+                        
+                    var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
+                        s => s.SkillID == entry.SkillId
+                    );
+
+                    var _ = Task.Run(async () =>
+                    {
+                        var cooldown = (skillInfo.Cooldown ?? 1f) + time;
+                            
+                        await Task.Delay((int) cooldown * 1000);
+
+                        entry.Cooldown = false;
+                    });
+
+                    Cooldown += time;
+                        
+                    break;
+                }
+            }
+
+            Cooldown -= Zone.DeltaTime;
         }
 
         public override void Construct(BitWriter writer)

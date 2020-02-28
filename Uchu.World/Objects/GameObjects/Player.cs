@@ -45,6 +45,11 @@ namespace Uchu.World
                 {
                     await UnlockEmoteAsync(unlockedEmote.EmoteId);
                 }
+
+                Zone.Update(this, async () =>
+                {
+                    await CheckBannedStatusAsync();
+                }, 20);
             });
             
             Listen(OnPositionUpdate, async (_, __) => { await Perspective.TickAsync(); });
@@ -55,26 +60,6 @@ namespace Uchu.World
                 OnLootPickup.Clear();
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
-            });
-
-            Listen(OnTick, async () =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
-
-                var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
-
-                if (!user.Banned) return;
-                
-                try
-                {
-                    await Connection.CloseAsync();
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
             });
 
             Listen(OnPositionUpdate, (position, rotation) =>
@@ -191,28 +176,24 @@ namespace Uchu.World
             return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
         }
 
-        public async Task<float[]> GetFlagsAsync()
+        private async Task CheckBannedStatusAsync()
         {
             await using var ctx = new UchuContext();
-            await using var cdContext = new CdClientContext();
 
-            var character = await ctx.Characters
-                .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks)
-                .ThenInclude(t => t.Values)
-                .SingleOrDefaultAsync(c => c.CharacterId == ObjectId);
-            
-            var flagTaskIds = cdContext.MissionTasksTable
-                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
-                .Select(t => t.Uid);
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
-            // Get all the mission task values that correspond to flag values
-            var flagValues = character.Missions
-                .SelectMany(m => m.Tasks
-                    .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.ValueArray())).ToArray();
+            var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
 
-            return flagValues;
+            if (!user.Banned) return;
+                
+            try
+            {
+                await Connection.CloseAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public async Task<float[]> GetCollectedAsync()

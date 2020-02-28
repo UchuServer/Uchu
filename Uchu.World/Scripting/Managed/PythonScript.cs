@@ -68,7 +68,6 @@ namespace Uchu.World.Scripting.Managed
                         player.SendChatMessage(obj, PlayerChatChannel.Normal);
                     }
                 }),
-                ["OnTick"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnTick, action)),
                 ["OnStart"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnStart, action)),
                 ["OnDestroy"] = new Func<GameObject, Action, Delegate>((gameObject, action) => Listen(gameObject.OnDestroyed, action)),
                 ["OnInteract"] = new Func<GameObject, Action<Player>, Delegate>((gameObject, action) => Listen(gameObject.OnInteract, action)),
@@ -164,14 +163,16 @@ namespace Uchu.World.Scripting.Managed
                     Logger.Error(exception);
             });
             
-            Listen(Proxy.OnTick, () => { Task.Run(() => {
+            Zone.Update(Proxy, () => { Task.Run(() => {
                     Script.Execute("tick", out var exception);
                     
                     if (exception != default)
                         Logger.Error(exception);
                 });
-            });
-
+            
+                return Task.CompletedTask;
+            }, 1);
+            
             return Task.CompletedTask;
         }
 
