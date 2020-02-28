@@ -49,8 +49,6 @@ namespace Uchu.World
 
             character.LandingByRocket = true;
             
-            character.Rocket = ((LegoDataList) rocket.Settings["assemblyPartLOTs"]).ToString(";") + ";";
-            
             await ctx.SaveChangesAsync();
         }
     }
