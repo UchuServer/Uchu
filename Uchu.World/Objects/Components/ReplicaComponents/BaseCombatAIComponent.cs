@@ -52,11 +52,11 @@ namespace Uchu.World
 
                 Stats = GameObject.GetComponent<Stats>();
 
-                foreach (var skillId in SkillComponent.DefaultSkillSet)
+                foreach (var skillEntry in SkillComponent.DefaultSkillSet)
                 {
                     SkillEntries.Add(new NpcSkillEntry
                     {
-                        SkillId = skillId,
+                        SkillId = skillEntry.SkillId,
                         Cooldown = false
                     });
                 }

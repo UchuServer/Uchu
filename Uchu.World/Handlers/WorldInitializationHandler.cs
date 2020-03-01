@@ -417,7 +417,7 @@ namespace Uchu.World.Handlers
                 {
                     // Return the mission task progress as list as there might be more nodes for this task
                     var progressNodes = new List<MissionProgressNode>
-                        {new MissionProgressNode {Value = task.Values.Count}};
+                        {new MissionProgressNode {Value = task.Values.Sum(v => v.Count)}};
 
                     using var cdClient = new CdClientContext();
                     var cdTask = cdClient.MissionTasksTable.First(t => t.Uid == task.TaskId);

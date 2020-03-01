@@ -4,6 +4,7 @@ namespace Uchu.World
     {
         Default = -1,
         OnUse,
-        OnEquip
+        OnEquip,
+        OnSpawn = 4
     }
 }

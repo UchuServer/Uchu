@@ -23,7 +23,7 @@ namespace Uchu.World
 
         private uint BehaviorSyncIndex { get; set; }
         
-        public uint[] DefaultSkillSet { get; set; }
+        public SkillEntry[] DefaultSkillSet { get; private set; }
 
         public Lot SelectedConsumeable { get; set; }
 
@@ -47,8 +47,15 @@ namespace Uchu.World
 
                 DefaultSkillSet = skills
                     .Where(s => s.SkillID != default)
-                    .Select(s => (uint) s.SkillID)
+                    .Select(s => new SkillEntry
+                    {
+                        SkillId = (uint) (s.SkillID ?? 0),
+                        Type = (SkillCastType) (s.CastOnType ?? 0),
+                        AiCombatWeight = s.AICombatWeight ?? 0
+                    })
                     .ToArray();
+
+                await SetupStandardSkills();
                 
                 if (!(GameObject is Player)) return;
 
@@ -63,6 +70,23 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
+        }
+
+        private async Task SetupStandardSkills()
+        {
+            if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+            
+            foreach (var skillEntry in DefaultSkillSet)
+            {
+                if (skillEntry.Type != SkillCastType.OnSpawn) continue;
+
+                await CalculateSkillAsync((int) skillEntry.SkillId);
+
+                Listen(destructibleComponent.OnResurrect, async () =>
+                {
+                    await CalculateSkillAsync((int) skillEntry.SkillId);
+                });
+            }
         }
 
         public async Task MountItemAsync(Lot item)

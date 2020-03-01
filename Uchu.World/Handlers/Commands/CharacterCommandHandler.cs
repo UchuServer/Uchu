@@ -881,7 +881,7 @@ namespace Uchu.World.Handlers.Commands
 
                 var isMission = await mission.IsMissionAsync();
                 
-                if (isMission && !arguments.Contains("-a")) continue;
+                if (!isMission && !achievements) continue;
                 
                 if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
 
