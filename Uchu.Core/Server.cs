@@ -7,9 +7,9 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +17,9 @@ using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
 using StackExchange.Redis;
+using Uchu.Api;
+using Uchu.Api.Models;
+using Uchu.Core.Api;
 using Uchu.Core.IO;
 using Uchu.Core.Providers;
 using Uchu.Sso;
@@ -44,20 +47,24 @@ namespace Uchu.Core
         public Configuration Config { get; private set; }
         
         public SsoService SsoService { get; private set; }
-
+        
+        public Guid Id { get; }
+        
+        public int ApiPort { get; private set; }
+        
         public int Port { get; private set; }
+        
+        public int MasterApi { get; private set; }
 
         public string MasterPath { get; private set; }
         
-        public Guid Id { get; }
+        public ApiManager Api { get; private set; }
 
         public event Func<long, ushort, BitReader, IRakConnection, Task> GameMessageReceived;
 
         public event Action ServerStopped;
 
         protected bool Running { get; private set; }
-        
-        protected ServerSpecification ServerSpecification { get; private set; }
 
         protected X509Certificate Certificate { get; set; }
 
@@ -88,29 +95,20 @@ namespace Uchu.Core
                 UchuContextBase.Config = Config;
             }
 
+            await SetupApiAsync().ConfigureAwait(false);
+
             if (!string.IsNullOrWhiteSpace(Config.ResourcesConfiguration?.GameResourceFolder))
             {
                 Resources = new LocalResources(Config);
             }
             
-            ServerSpecification specification;
-
-            await using (var ctx = new UchuContext())
-            {
-                specification = ctx.Specifications.First(s => s.Id == Id);
-            }
-            
-            Port = specification.Port;
-
-            ServerSpecification = specification;
-
             var certificateFilePath = Path.Combine(MasterPath, Config.Networking.Certificate);
             
             if (Config.Networking?.Certificate != default && File.Exists(certificateFilePath))
             {
                 var cert = new X509Certificate2(certificateFilePath);
 
-                Console.WriteLine($"PRIVATE KEY: {cert.HasPrivateKey} {cert.PrivateKey}");
+                Logger.Information($"PRIVATE KEY: {cert.HasPrivateKey} {cert.PrivateKey}");
 
                 Certificate = cert;
                 
@@ -135,6 +133,28 @@ namespace Uchu.Core
             }
 
             Logger.Information($"Server {Id} configured on port: {Port}");
+        }
+
+        public async Task SetupApiAsync()
+        {
+            Api = new ApiManager(Config.ApiConfig.Protocol, Config.ApiConfig.Domain);
+
+            var instance = await Api.RunCommandAsync<InstanceInfoResponse>(
+                Config.ApiConfig.Port, $"instance/target?i={Id}"
+            ).ConfigureAwait(false);
+
+            if (!instance.Success)
+            {
+                Logger.Error(instance.FailedReason);
+
+                throw new Exception(instance.FailedReason);
+            }
+
+            Port = instance.Info.Port;
+            ApiPort = instance.Info.ApiPort;
+            MasterApi = instance.Info.MasterApi;
+
+            Api.RegisterCommandCollection<InstanceCommands>(this);
         }
 
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
@@ -164,39 +184,17 @@ namespace Uchu.Core
                     }
                 });
             }
-
-            try
+            
+            Logger.Information($"Starting server: {Id}");
+            
+            var networkThread = new Thread(async () =>
             {
-                Logger.Information("Looking for requests...");
-                
-                await using (var ctx = new UchuContext())
-                {
-                    var request = ctx.WorldServerRequests.FirstOrDefault(w => w.SpecificationId == Id);
-
-                    if (request == default)
-                    {
-                        Logger.Information($"Starting server...");
-                        
-                        await RakNetServer.RunAsync().ConfigureAwait(false);
-                        
-                        return;
-                    }
-                
-                    Logger.Information($"Request found for {Id}");
-                
-                    request.State = WorldServerRequestState.Complete;
-
-                    ctx.SaveChanges();
-                }
-
-                Logger.Information($"Starting server...");
-                
                 await RakNetServer.RunAsync().ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
+            });
+
+            networkThread.Start();
+            
+            await Api.StartAsync(ApiPort).ConfigureAwait(false);
         }
 
         public Task StopAsync()

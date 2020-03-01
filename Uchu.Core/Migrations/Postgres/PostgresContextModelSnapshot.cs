@@ -335,30 +335,6 @@ namespace Uchu.Core.Migrations
                     b.ToTable("MissionTaskValue");
                 });
 
-            modelBuilder.Entity("Uchu.Core.ServerSpecification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<long>("ActiveUserCount");
-
-                    b.Property<long>("MaxUserCount");
-
-                    b.Property<int>("Port");
-
-                    b.Property<int>("ServerType");
-
-                    b.Property<long>("ZoneCloneId");
-
-                    b.Property<int>("ZoneId");
-
-                    b.Property<int>("ZoneInstanceId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Specifications");
-                });
-
             modelBuilder.Entity("Uchu.Core.SessionCache", b =>
                 {
                     b.Property<Guid>("Id")
@@ -424,22 +400,6 @@ namespace Uchu.Core.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Uchu.Core.WorldServerRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("SpecificationId");
-
-                    b.Property<int>("State");
-
-                    b.Property<int>("ZoneId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("WorldServerRequests");
                 });
 
             modelBuilder.Entity("Uchu.Core.Character", b =>

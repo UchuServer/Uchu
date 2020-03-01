@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -39,6 +40,18 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task BuildExitConfirmationHandler(BuildExitConfirmationMessage message, Player player)
         {
             await player.GetComponent<ModularBuilderComponent>().ConfirmFinish();
+        }
+
+        [PacketHandler]
+        public async Task SetLastCustomBuildHandler(SetLastCustomBuildMessage message, Player player)
+        {
+            await using var ctx = new UchuContext();
+
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+
+            character.Rocket = message.Tokens;
+
+            await ctx.SaveChangesAsync();
         }
     }
 }

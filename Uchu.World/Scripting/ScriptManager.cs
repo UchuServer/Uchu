@@ -39,39 +39,19 @@ namespace Uchu.World.Scripting
             
             var scriptPacks = new List<ScriptPack>();
             
-            var path = Path.Combine(Directory.GetCurrentDirectory(), Zone.Server.Config.DllSource.ServerDllSourcePath);
-
-            var libraries = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
-            
-            foreach (var scriptPackName in Zone.Server.Config.DllSource.ScriptDllSource)
+            foreach (var scriptPackPath in Zone.Server.Config.DllSource.ScriptDllSource)
             {
-                string dll = default;
+                Console.WriteLine(scriptPackPath);
                 
-                foreach (var library in libraries)
-                {
-                    if (Path.GetFileName(library) != $"{scriptPackName}.dll") continue;
-
-                    dll = library;
-                }
-
-                if (dll == default)
-                {
-                    Logger.Error($"Could not find DLL for script pack: {scriptPackName}");
-                    
-                    continue;
-                }
-                
-                if (scriptPacks.Any(s => s.Location == dll)) continue;
-
                 try
                 {
-                    var scriptPack = new NativeScriptPack(Zone, dll);
+                    var scriptPack = new NativeScriptPack(Zone, scriptPackPath);
 
                     scriptPack.ReadAssembly();
                     
                     scriptPacks.Add(scriptPack);
                     
-                    Logger.Information($"Loaded {scriptPackName} native script pack");
+                    Logger.Information($"Loaded {scriptPackPath} native script pack");
                 }
                 catch (Exception e)
                 {

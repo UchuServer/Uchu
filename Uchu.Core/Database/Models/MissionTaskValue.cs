@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
@@ -17,6 +18,7 @@ namespace Uchu.Core
 
         public int MissionTaskId { get; set; }
 
+        [JsonIgnore]
         [ForeignKey(nameof(MissionTaskId))]
         public MissionTask MissionTask { get; set; }
 

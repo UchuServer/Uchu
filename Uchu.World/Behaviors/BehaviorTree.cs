@@ -179,8 +179,15 @@ namespace Uchu.World.Behaviors
             context.Root = root;
             
             var branchContext = new ExecutionBranchContext(target);
-            
-            await root.CalculateAsync(context, branchContext);
+
+            try
+            {
+                await root.CalculateAsync(context, branchContext);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
 
             return context;
         }

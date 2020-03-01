@@ -249,17 +249,8 @@ namespace Uchu.World
 
         public void RemoveComponent(Type type)
         {
-            foreach (var required in from component in _components
-                from required in component.GetType().GetCustomAttributes<RequireComponentAttribute>()
-                where required.Type == type
-                select required)
-            {
-                Logger.Error(
-                    $"{type} Component on {this} is Required by {required.Type} and cannot be removed."
-                );
-            }
-
             var comp = GetComponent(type);
+            
             _components.Remove(comp);
 
             Destroy(comp);
@@ -492,7 +483,7 @@ namespace Uchu.World
             {
                 var componentType = ReplicaComponent.GetReplica((ComponentId) component.Componenttype);
 
-                if (componentType == null) Logger.Warning($"No component of ID {component.Componentid}");
+                if (componentType == null) Logger.Warning($"No component of ID {(ComponentId) component.Componenttype}");
                 else instance.AddComponent(componentType);
             }
 

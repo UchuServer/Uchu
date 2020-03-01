@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Scripting.Utils;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
@@ -837,7 +836,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Announce(string[] arguments, Player player)
         {
-            if (arguments.Length < 2) return "/mailbox <title> <message>";
+            if (arguments.Length < 2) return "/annouce <title> <message>";
 
             var args = arguments.ToList();
 
@@ -882,7 +881,7 @@ namespace Uchu.World.Handlers.Commands
 
                 var isMission = await mission.IsMissionAsync();
                 
-                if (isMission && !arguments.Contains("-a")) continue;
+                if (!isMission && !achievements) continue;
                 
                 if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
 
@@ -957,6 +956,64 @@ namespace Uchu.World.Handlers.Commands
             }
 
             return $"Switched control scheme to: {controlScheme}";
+        }
+
+        [CommandHandler(Signature = "mimic", Help = "Active mimic test", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Mimic(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "mimic <lot>";
+
+            if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
+
+            var gameObject = MirrorGameObject.Instantiate(lot, player);
+
+            Object.Start(gameObject);
+            GameObject.Construct(gameObject);
+
+            return $"Active mimic on: {gameObject}";
+        }
+        
+        [CommandHandler(Signature = "terrain", Help = "Test terrain", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Terrain(string[] arguments, Player player)
+        {
+            const float scale = 3.125f;
+            
+            var heightMap = player.Zone.ZoneInfo.TerrainFile.GenerateHeightMap();
+
+            var position = new Vector2(player.Transform.Position.X, player.Transform.Position.Z);
+
+            var closest = new Vector2?();
+            
+            var inGameValues = new Dictionary<Vector2, float>();
+
+            var centerX = (heightMap.GetLength(0) - 1) / 2;
+            var centerY = (heightMap.GetLength(1) - 1) / 2;
+            
+            for (var x = 0; x < heightMap.GetLength(0); x++)
+            {
+                for (var y = 0; y < heightMap.GetLength(1); y++)
+                {
+                    var value = heightMap[x, y];
+
+                    var realX = x - centerX;
+                    var realY = y - centerY;
+                    
+                    var inGame = new Vector2(realX, realY);
+
+                    inGame *= scale;
+
+                    inGameValues[inGame] = value;
+
+                    if (closest == default)
+                        closest = inGame;
+                    else if (Vector2.Distance(closest.Value, position) > Vector2.Distance(inGame, position))
+                    {
+                        closest = inGame;
+                    }
+                }
+            }
+
+            return $"{player.Transform.Position} -> {inGameValues[closest.Value]}";
         }
     }
 }

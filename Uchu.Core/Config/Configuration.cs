@@ -39,6 +39,8 @@ namespace Uchu.Core
         
         [XmlElement] public Networking Networking { get; set; } = new Networking();
         
+        [XmlElement] public GamePlay GamePlay { get; set; } = new GamePlay();
+        
         [XmlElement("Api")] public ApiConfig ApiConfig { get; set; } = new ApiConfig();
         
         [XmlElement("Sso")] public SsoConfig SsoConfig { get; set; } = new SsoConfig();
@@ -53,8 +55,6 @@ namespace Uchu.Core
 
     public class ServerDllSource
     {
-        [XmlElement] public string ServerDllSourcePath { get; set; } = "../../../../";
-
         [XmlElement] public string DotNetPath { get; set; } = "dotnet";
 
         [XmlElement] public string Instance { get; set; } = "Uchu.Instance.dll";
@@ -74,7 +74,11 @@ namespace Uchu.Core
         
         [XmlElement] public int CharacterPort { get; set; } = 2002;
 
-        [XmlElement] public bool UseAuthentication { get; set; } = true;
+        [XmlElement] public bool HostAuthentication { get; set; } = true;
+
+        [XmlElement] public bool HostCharacter { get; set; } = true;
+
+        [XmlElement] public int MaxWorldServers { get; set; } = 100;
         
         [XmlElement("WorldPort")] public List<int> WorldPorts { get; set; }
     }
@@ -86,7 +90,11 @@ namespace Uchu.Core
 
     public class ApiConfig
     {
-        [XmlElement("Prefix")] public List<string> Prefixes { get; set; }
+        [XmlElement] public string Protocol { get; set; } = "http";
+        
+        [XmlElement] public string Domain { get; set; } = "localhost";
+
+        [XmlElement] public int Port { get; set; } = 10000;
     }
 
     public class ResourcesConfiguration
@@ -112,5 +120,12 @@ namespace Uchu.Core
         [XmlElement] public string Username { get; set; }
 
         [XmlElement] public string Password { get; set; }
+    }
+
+    public class GamePlay
+    {
+        [XmlElement] public bool PathFinding { get; set; }
+        
+        [XmlElement] public bool AiWander { get; set; }
     }
 }

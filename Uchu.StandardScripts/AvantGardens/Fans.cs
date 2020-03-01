@@ -59,13 +59,13 @@ namespace Uchu.StandardScripts.AvantGardens
                 
                 DeactivateFx(fanObject);
                 
-                Listen(gameObject.OnTick, () =>
+                Listen(Zone.OnTick, () =>
                 {
-                    if (switchComponent.State) return;
+                    if (switchComponent.State) return Task.CompletedTask;
                     
                     foreach (var player in Zone.Players)
                     {
-                        if (player?.Transform == default) return;
+                        if (player?.Transform == default) return Task.CompletedTask;
                         
                         if (!(Vector3.Distance(player.Transform.Position, gameObject.Transform.Position) < 2)) continue;
 
@@ -73,6 +73,8 @@ namespace Uchu.StandardScripts.AvantGardens
 
                         Serialize(gameObject);
                     }
+                    
+                    return Task.CompletedTask;
                 });
             }
             

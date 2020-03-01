@@ -33,13 +33,7 @@ namespace Uchu.World
                 return;
             }
 
-            await rocket.EquipAsync(true);
-            
-            player.Message(new ChangeObjectWorldStateMessage
-            {
-                Associate = rocket,
-                State = ObjectWorldState.Attached
-            });
+            rocket.WorldState = ObjectWorldState.Attached;
             
             player.Message(new FireClientEventMessage
             {
@@ -54,8 +48,6 @@ namespace Uchu.World
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
 
             character.LandingByRocket = true;
-            
-            character.Rocket = ((LegoDataList) rocket.Settings["assemblyPartLOTs"]).ToString(";") + ";";
             
             await ctx.SaveChangesAsync();
         }

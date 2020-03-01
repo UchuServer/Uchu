@@ -1,5 +1,3 @@
-using Uchu.Core;
-
 namespace Uchu.Api.Models
 {
     public class AccountInfoResponse : BaseResponse
@@ -14,6 +12,6 @@ namespace Uchu.Api.Models
         
         public string BannedReason { get; set; }
         
-        public GameMasterLevel Level { get; set; }
+        public int Level { get; set; }
     }
 }

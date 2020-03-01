@@ -14,38 +14,18 @@ namespace Uchu.World.Scripting.Native
 
         private Assembly _assembly;
 
-        private AssemblyLoadContext _context;
-
-        public override string Name => Path.GetFileNameWithoutExtension(Location);
+        public override string Name => Location;
 
         public IEnumerable<NativeScript> Scripts => _scripts.AsReadOnly();
         
         public NativeScriptPack(Zone zone, string location) : base(zone, location)
         {
             _scripts = new List<NativeScript>();
-            
-            _context = new AssemblyLoadContext($"{Path.GetFileNameWithoutExtension(Location)} Assembly", true);
-        }
-
-        internal void ReloadAssembly()
-        {
-            _context.Unload();
-            
-            _context = null;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            
-            _context = new AssemblyLoadContext($"{Name} Assembly", true);
-            
-            _assembly = null;
-            
-            ReadAssembly();
         }
 
         internal void ReadAssembly()
         {
-            _assembly = _context.LoadFromAssemblyPath(Location);
+            _assembly = Assembly.Load(File.ReadAllBytes(Location));
             
             _scripts = new List<NativeScript>();
 
@@ -101,8 +81,6 @@ namespace Uchu.World.Scripting.Native
         {
             await UnloadAsync();
 
-            ReloadAssembly();
-            
             await LoadAsync();
         }
     }

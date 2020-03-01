@@ -23,7 +23,7 @@ namespace Uchu.World
 
         private uint BehaviorSyncIndex { get; set; }
         
-        public uint[] DefaultSkillSet { get; set; }
+        public SkillEntry[] DefaultSkillSet { get; private set; }
 
         public Lot SelectedConsumeable { get; set; }
 
@@ -47,12 +47,19 @@ namespace Uchu.World
 
                 DefaultSkillSet = skills
                     .Where(s => s.SkillID != default)
-                    .Select(s => (uint) s.SkillID)
+                    .Select(s => new SkillEntry
+                    {
+                        SkillId = (uint) (s.SkillID ?? 0),
+                        Type = (SkillCastType) (s.CastOnType ?? 0),
+                        AiCombatWeight = s.AICombatWeight ?? 0
+                    })
                     .ToArray();
-                
-                if (!GameObject.TryGetComponent<InventoryComponent>(out var inventory)) return;
 
-                _activeBehaviors.Add(BehaviorSlot.Primary, 1);
+                await SetupStandardSkills();
+                
+                if (!(GameObject is Player)) return;
+
+                _activeBehaviors[BehaviorSlot.Primary] = 1;
             });
         }
         
@@ -63,6 +70,23 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
+        }
+
+        private async Task SetupStandardSkills()
+        {
+            if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+            
+            foreach (var skillEntry in DefaultSkillSet)
+            {
+                if (skillEntry.Type != SkillCastType.OnSpawn) continue;
+
+                await CalculateSkillAsync((int) skillEntry.SkillId);
+
+                Listen(destructibleComponent.OnResurrect, async () =>
+                {
+                    await CalculateSkillAsync((int) skillEntry.SkillId);
+                });
+            }
         }
 
         public async Task MountItemAsync(Lot item)
@@ -185,11 +209,6 @@ namespace Uchu.World
 
             if (!context.FoundTarget) return 0;
 
-            foreach (var player in Zone.Players)
-            {
-                player.SendChatMessage($"Start: [{syncId}]");
-            }
-            
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
                 Associate = GameObject,
@@ -215,7 +234,7 @@ namespace Uchu.World
                 if (message.OptionalTarget != null)
                 {
                     // There should be more to this
-                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>().Alive)
+                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
                         message.OptionalTarget = null;
                     else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
                         message.OptionalTarget = null;

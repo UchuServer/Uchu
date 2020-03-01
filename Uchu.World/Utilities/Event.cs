@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -31,7 +32,7 @@ namespace Uchu.World
 
             var index = 0;
             
-            foreach (var element in Actions)
+            foreach (var element in Actions.ToArray())
             {
                 if (element == action) continue;
 
@@ -51,9 +52,24 @@ namespace Uchu.World
     {
         public void Invoke()
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 action.Invoke();
+            }
+        }
+
+        public void SafeInvoke()
+        {
+            foreach (var action in Actions.ToArray())
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
     }
@@ -62,7 +78,7 @@ namespace Uchu.World
     {
         public void Invoke(T value)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 action.Invoke(value);
             }
@@ -73,7 +89,7 @@ namespace Uchu.World
     {
         public void Invoke(T value, T2 value2)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 action.Invoke(value, value2);
             }
@@ -84,7 +100,7 @@ namespace Uchu.World
     {
         public void Invoke(T value, T2 value2, T3 value3)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 action.Invoke(value, value2, value3);
             }
@@ -95,7 +111,7 @@ namespace Uchu.World
     {
         public void Invoke(T value, T2 value2, T3 value3, T4 value4)
         {
-            foreach (var action in Actions)
+            foreach (var action in Actions.ToArray())
             {
                 action.Invoke(value, value2, value3, value4);
             }

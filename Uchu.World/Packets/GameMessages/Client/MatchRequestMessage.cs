@@ -1,5 +1,6 @@
 using InfectedRose.Lvl;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -13,7 +14,7 @@ namespace Uchu.World
         
         public GameObject Activator { get; set; }
         
-        public LegoDataList LegoDataList { get; set; }
+        public LegoDataDictionary Settings { get; set; }
         
         public override void Deserialize(BitReader reader)
         {
@@ -22,8 +23,10 @@ namespace Uchu.World
             Value = reader.Read<int>();
 
             Activator = reader.ReadGameObject(Associate.Zone);
-            
-            // TODO: Additional LDL
+
+            var ldl = reader.ReadString((int) reader.Read<uint>(), true);
+
+            Settings = LegoDataDictionary.FromString(ldl);
         }
     }
 }

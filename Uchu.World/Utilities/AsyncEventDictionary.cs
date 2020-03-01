@@ -38,7 +38,7 @@ namespace Uchu.World
         {
             if (!ActionDictionary.TryGetValue(key, out var actions)) return;
             
-            foreach (var action in actions)
+            foreach (var action in actions.ToArray())
             {
                 await action.Invoke();
             }
@@ -51,7 +51,7 @@ namespace Uchu.World
         {
             if (!ActionDictionary.TryGetValue(key, out var actions)) return;
             
-            foreach (var action in actions)
+            foreach (var action in actions.ToArray())
             {
                 await action.Invoke(value);
             }
@@ -64,7 +64,7 @@ namespace Uchu.World
         {
             if (!ActionDictionary.TryGetValue(key, out var actions)) return;
             
-            foreach (var action in actions)
+            foreach (var action in actions.ToArray())
             {
                 await action.Invoke(value, value2);
             }
@@ -77,7 +77,7 @@ namespace Uchu.World
         {
             if (!ActionDictionary.TryGetValue(key, out var actions)) return;
             
-            foreach (var action in actions)
+            foreach (var action in actions.ToArray())
             {
                 await action.Invoke(value, value2, value3);
             }
@@ -90,7 +90,7 @@ namespace Uchu.World
         {
             if (!ActionDictionary.TryGetValue(key, out var actions)) return;
             
-            foreach (var action in actions)
+            foreach (var action in actions.ToArray())
             {
                 await action.Invoke(value, value2, value3, value4);
             }

@@ -72,7 +72,7 @@ namespace Uchu.World.Behaviors
 
         public static async Task<BehaviorBase> BuildBranch(int behaviorId)
         {
-            var cachedBehavior = Cache.FirstOrDefault(c => c.BehaviorId == behaviorId);
+            var cachedBehavior = Cache.ToArray().FirstOrDefault(c => c.BehaviorId == behaviorId);
 
             if (cachedBehavior != default) return cachedBehavior;
             

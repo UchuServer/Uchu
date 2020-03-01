@@ -7,8 +7,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Python;
+using Uchu.World.Api;
 using Uchu.World.Client;
 using Uchu.World.Social;
 
@@ -20,7 +22,7 @@ namespace Uchu.World
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
-        private readonly ZoneId _zoneId;
+        private ZoneId ZoneId { get; set; }
 
         public List<Zone> Zones { get; }
 
@@ -30,43 +32,19 @@ namespace Uchu.World
         
         public Whitelist Whitelist { get; private set; }
 
-        public uint ActiveUserCount
+        public WorldServer(Guid id) : base(id)
         {
-            get
-            {
-                using var ctx = new UchuContext();
-                
-                var specification = ctx.Specifications.First(s => s.Id == Id);
-
-                return specification.ActiveUserCount;
-            }
-            set
-            {
-                using var ctx = new UchuContext();
-                
-                var specification = ctx.Specifications.First(s => s.Id == Id);
-
-                specification.ActiveUserCount = value;
-
-                ctx.SaveChanges();
-            }
-        }
-
-        public WorldServer(ServerSpecification specifications) : base(specifications.Id)
-        {
-            Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
-            
             Zones = new List<Zone>();
 
-            _zoneId = specifications.ZoneId;
-
-            MaxPlayerCount = specifications.MaxUserCount;
-
+            MaxPlayerCount = 20; // TODO: Set
+            
             _gameMessageHandlerMap = new GameMessageHandlerMap();
         }
 
         public override async Task ConfigureAsync(string configFile)
         {
+            Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
+
             await base.ConfigureAsync(configFile);
             
             ZoneParser = new ZoneParser(Resources);
@@ -85,17 +63,30 @@ namespace Uchu.World
             };
 
             RakNetServer.ClientDisconnected += HandleDisconnect;
+            
+            var instance = await Api.RunCommandAsync<InstanceInfoResponse>(
+                Config.ApiConfig.Port, $"instance/target?i={Id}"
+            ).ConfigureAwait(false);
 
+            ZoneId = (ZoneId) instance.Info.Zones.First();
+            
+            var info = await Api.RunCommandAsync<InstanceInfoResponse>(MasterApi, $"instance/target?i={Id}");
+
+            Api.RegisterCommandCollection<WorldCommands>(this);
+            
             var _ = Task.Run(async () =>
             {
-                await ZoneParser.LoadZoneDataAsync((int) ServerSpecification.ZoneId);
+                foreach (var zone in info.Info.Zones)
+                {
+                    await ZoneParser.LoadZoneDataAsync(zone);
 
-                await LoadZone(ServerSpecification);
+                    await LoadZone(zone);
+                }
             });
 
             ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
             
-            Logger.Information($"Setting up world server: {ServerSpecification.Id}");
+            Logger.Information($"Setting up world server: {Id}");
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
@@ -114,17 +105,17 @@ namespace Uchu.World
             return Task.CompletedTask;
         }
 
-        private async Task LoadZone(ServerSpecification zone)
+        private async Task LoadZone(int zone)
         {
-            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync((int) zone.ZoneId);
+            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync(zone);
 
-            Logger.Information($"Starting {zone.ZoneId}");
+            Logger.Information($"Starting {zone}");
 
-            var info = ZoneParser.Zones?[zone.ZoneId];
+            var info = ZoneParser.Zones?[(ZoneId) zone];
 
-            if (info == default) throw new Exception($"Failed to find info for {zone.ZoneId}");
+            if (info == default) throw new Exception($"Failed to find info for {(ZoneId) zone}");
 
-            var zoneInstance = new Zone(info, this, zone.ZoneInstanceId, zone.ZoneCloneId);
+            var zoneInstance = new Zone(info, this, 0, 0); // TODO Instance/Clone
             
             Zones.Add(zoneInstance);
             
@@ -133,7 +124,7 @@ namespace Uchu.World
 
         public async Task<Zone> GetZoneAsync(ZoneId zoneId)
         {
-            if (_zoneId == zoneId)
+            if (ZoneId == zoneId)
             {
                 //
                 // Wait for zone to load

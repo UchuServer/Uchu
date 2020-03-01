@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Uchu.Api.Models;
-using Uchu.Core;
 
 namespace Uchu.Api
 {
@@ -15,115 +17,181 @@ namespace Uchu.Api
     {
         public HttpListener Listener { get; }
         
-        public string[] Prefixes { get; }
+        public HttpClient Client { get; }
+        
+        public string Protocol { get; }
+        
+        public string Domain { get; }
+        
+        public int Port { get; private set; }
         
         public Dictionary<string, (MethodInfo, object)> Map { get; }
 
-        public ApiManager(string[] prefixes)
+        public event Func<Task> OnLoaded;
+
+        private bool _running;
+
+        public ApiManager(string protocol, string domain)
         {
             Listener = new HttpListener();
 
+            Client = new HttpClient();
+
             Map = new Dictionary<string, (MethodInfo, object)>();
-            
-            Prefixes = prefixes;
+
+            Protocol = protocol;
+
+            Domain = domain;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(int port)
         {
-            foreach (var prefix in Prefixes)
-            {
-                Listener.Prefixes.Add(prefix);
-            }
+            Port = port;
+            
+            var prefix = $"{Protocol}://{Domain}:{Port}/";
+            
+            Listener.Prefixes.Add(prefix);
             
             Listener.Start();
 
-            foreach (var type in typeof(ApiManager).Assembly.GetTypes())
+            _running = true;
+
+            var first = true;
+            
+            while (_running)
             {
-                object instance = null;
-                
-                foreach (var method in type.GetMethods())
+                if (OnLoaded != default && first)
                 {
-                    var attribute = method.GetCustomAttribute<ApiCommandAttribute>();
-                    
-                    if (attribute == null) continue;
+                    first = false;
 
-                    if (instance == null)
+                    var __ = Task.Run(async () =>
                     {
-                        instance = Activator.CreateInstance(type);
-                    }
-
-                    Map[attribute.Route] = (method, instance);
-                }
-            }
-
-            while (true)
-            {
-                var context = await Listener.GetContextAsync();
-
-                var request = context.Request;
-
-                var response = context.Response;
-
-                var parameters = (
-                    from string name in request.QueryString select request.QueryString.Get(name)
-                ).ToArray();
-                
-                string returnString;
-                
-                if (Map.TryGetValue(request.Url.LocalPath, out var value))
-                {
-                    var (info, host) = value;
-
-                    object returnValue;
-                    
-                    try
-                    {
-                        returnValue = info.Invoke(host, parameters);
-                    }
-                    catch
-                    {
-                        returnValue = new BaseResponse
-                        {
-                            FailedReason = "error"
-                        };
-                    }
-                    
-                    switch (returnValue)
-                    {
-                        case Task<string> task:
-                            returnString = await task;
-                            break;
-                        case string str:
-                            returnString = str;
-                            break;
-                        case Task<object> task:
-                            var obj = await task;
-                            returnString = JsonConvert.SerializeObject(obj);
-                            break;
-                        default:
-                            returnString = JsonConvert.SerializeObject(returnValue);
-                            break;
-                    }
-                }
-                else
-                {
-                    returnString = JsonConvert.SerializeObject(new BaseResponse
-                    {
-                        FailedReason = "invalid"
+                        await OnLoaded.Invoke();
                     });
                 }
 
-                response.ContentType = "application/json";
-                response.ContentEncoding = Encoding.UTF8;
+                var context = await Listener.GetContextAsync();
 
-                var data = Encoding.UTF8.GetBytes(returnString);
+                var _ = Task.Run(async () =>
+                {
+                    var request = context.Request;
+                    
+                    var response = context.Response;
 
-                response.ContentLength64 = data.LongLength;
+                    var parameters = (
+                        from string name in request.QueryString select request.QueryString.Get(name)
+                    ).ToArray();
 
-                await response.OutputStream.WriteAsync(data);
-                
-                response.Close();
+                    string returnString;
+
+                    var query = request.Url.LocalPath.Remove(0, 1);
+
+                    if (Map.TryGetValue(query, out var value))
+                    {
+                        var (info, host) = value;
+
+                        object returnValue;
+
+                        try
+                        {
+                            returnValue = info.Invoke(host, parameters);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            
+                            returnValue = new BaseResponse
+                            {
+                                FailedReason = "error"
+                            };
+                        }
+
+                        if (returnValue is Task<object> task)
+                        {
+                            returnValue = await task;
+                        }
+
+                        returnString = returnValue switch
+                        {
+                            string str => str,
+                            _ => JsonConvert.SerializeObject(returnValue)
+                        };
+                    }
+                    else
+                    {
+                        returnString = JsonConvert.SerializeObject(new BaseResponse
+                        {
+                            FailedReason = "invalid"
+                        });
+                    }
+
+                    response.ContentType = "application/json";
+                    response.ContentEncoding = Encoding.UTF8;
+
+                    var data = Encoding.UTF8.GetBytes(returnString);
+
+                    response.ContentLength64 = data.LongLength;
+
+                    var output = response.OutputStream;
+
+                    await output.WriteAsync(data);
+
+                    response.Close();
+                });
             }
+        }
+
+        public void RegisterCommandCollection<T>(params object[] parameters)
+        {
+            var type = typeof(T);
+
+            object instance = null;
+            
+            foreach (var method in type.GetMethods())
+            {
+                var attribute = method.GetCustomAttribute<ApiCommandAttribute>();
+                
+                if (attribute == null) continue;
+
+                if (instance == null)
+                {
+                    instance = Activator.CreateInstance(type, parameters);
+                }
+
+                Map[attribute.Route] = (method, instance);
+            }
+        }
+        
+        public void Close()
+        {
+            _running = false;
+            
+            Listener.Close();
+        }
+
+        public async Task<T> RunCommandAsync<T>(int port, string command)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+                throw new ArgumentNullException(nameof(command));
+
+            var prefix = $"{Protocol}://{Domain}:{port}/";
+
+            var url = $"{prefix}{command}";
+
+            string json;
+            
+            try
+            {
+                json = await Client.GetStringAsync(url);
+            }
+            catch (HttpRequestException)
+            {
+                return default;
+            }
+
+            var response = JsonConvert.DeserializeObject<T>(json);
+
+            return response;
         }
     }
 }

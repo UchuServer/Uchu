@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
+using Uchu.Api.Models;
 using Uchu.Core;
 using static Uchu.Auth.ServerLoginInfoPacket;
 
@@ -21,10 +22,14 @@ namespace Uchu.Auth.Handlers
                 ChatInstancePort = 2004
             };
 
-            var characterSpecification = await ServerHelper.GetServerByType(ServerType.Character);
+            var characterSpecification = await Server.Api.RunCommandAsync<InstanceInfoResponse>(
+                Server.MasterApi, $"instance/basic?t={(int) ServerType.Character}"
+            ).ConfigureAwait(false);
 
-            if (characterSpecification == default)
+            if (!characterSpecification.Success)
             {
+                Logger.Error(characterSpecification.FailedReason);
+                
                 info.LoginCode = LoginCode.InsufficientPermissions;
                 info.Error = new ErrorMessage
                 {
@@ -33,7 +38,7 @@ namespace Uchu.Auth.Handlers
             }
             else
             {
-                info.CharacterInstancePort = (ushort) characterSpecification.Port;
+                info.CharacterInstancePort = (ushort) characterSpecification.Info.Port;
 
                 if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username && !u.Sso))
                 {

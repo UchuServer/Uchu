@@ -9,7 +9,7 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task MatchRequestHandler(MatchRequestMessage message, Player player)
         {
             player.SendChatMessage(
-                $"Match Request:\nType: {message.Type}\nValue: {message.Value}\n{message.Activator}",
+                $"Match Request:\nType: {message.Type}\nValue: {message.Value}\n{message.Activator}\n{message.Settings}",
                 PlayerChatChannel.Normal
             );
         }

@@ -138,11 +138,6 @@ namespace Uchu.World
 
         public async Task<long> MountItemAsync(Lot inventoryItem, long id, bool unEquip = false, LegoDataDictionary settings = default)
         {
-            if (Zone.TryGetGameObject<Item>(id, out var itemInstance))
-            {
-                itemInstance.Equipped = !unEquip;
-            }
-            
             await using var ctx = new CdClientContext();
 
             var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
@@ -193,9 +188,18 @@ namespace Uchu.World
             
             equipItem:
 
+            Item instance;
+            
             if (unEquip)
             {
                 Items[location] = default;
+
+                instance = Zone.GameObjects.OfType<Item>().FirstOrDefault(g => g.ObjectId == id);
+
+                if (instance != null)
+                {
+                    instance.Equipped = false;
+                }
                 
                 GameObject.Serialize(GameObject);
 
@@ -213,12 +217,22 @@ namespace Uchu.World
                 InventoryType = (int) inventoryType,
                 Slot = -1
             };
+            
+            instance = Zone.GameObjects.OfType<Item>().FirstOrDefault(g => g.ObjectId == id);
+
+            if (instance != null)
+            {
+                instance.Equipped = true;
+            }
 
             GameObject.Serialize(GameObject);
 
             if (!skills || inventoryItem == default) return -1;
 
-            await skillComponent.MountItemAsync(inventoryItem);
+            if (inventoryType == InventoryType.Items)
+            {
+                await skillComponent.MountItemAsync(inventoryItem);
+            }
 
             /*
              * Equip proxies

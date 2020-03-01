@@ -1,0 +1,48 @@
+using System.Linq;
+using System.Threading.Tasks;
+using Uchu.Api;
+using Uchu.Api.Models;
+using Uchu.Core;
+
+namespace Uchu.World.Api
+{
+    public class WorldCommands
+    {
+        public WorldServer Server { get; }
+
+        public WorldCommands(WorldServer server)
+        {
+            Server = server;
+        }
+        
+        [ApiCommand("world/players")]
+        public async Task<object> ZonePlayers(string zone)
+        {
+            var response = new ZonePlayersResponse();
+
+            if (!int.TryParse(zone, out var zoneId))
+            {
+                response.FailedReason = "invalid zone";
+
+                return response;
+            }
+
+            var zoneInstance = Server.Zones.FirstOrDefault(z => z.ZoneId == (ZoneId) zoneId);
+
+            if (zoneInstance == default)
+            {
+                response.FailedReason = "not found";
+
+                return response;
+            }
+
+            response.Success = true;
+            
+            response.MaxPlayers = (int) Server.MaxPlayerCount; // TODO: Set
+
+            response.Characters = zoneInstance.Players.Select(p => p.ObjectId).ToList();
+
+            return response;
+        }
+    }
+}

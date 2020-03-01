@@ -7,6 +7,7 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
@@ -44,6 +45,11 @@ namespace Uchu.World
                 {
                     await UnlockEmoteAsync(unlockedEmote.EmoteId);
                 }
+
+                Zone.Update(this, async () =>
+                {
+                    await CheckBannedStatusAsync();
+                }, 20);
             });
             
             Listen(OnPositionUpdate, async (_, __) => { await Perspective.TickAsync(); });
@@ -54,26 +60,6 @@ namespace Uchu.World
                 OnLootPickup.Clear();
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
-            });
-
-            Listen(OnTick, async () =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
-
-                var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
-
-                if (!user.Banned) return;
-                
-                try
-                {
-                    await Connection.CloseAsync();
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
             });
 
             Listen(OnPositionUpdate, (position, rotation) =>
@@ -190,28 +176,24 @@ namespace Uchu.World
             return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
         }
 
-        public async Task<float[]> GetFlagsAsync()
+        private async Task CheckBannedStatusAsync()
         {
             await using var ctx = new UchuContext();
-            await using var cdContext = new CdClientContext();
 
-            var character = await ctx.Characters
-                .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks)
-                .ThenInclude(t => t.Values)
-                .SingleOrDefaultAsync(c => c.CharacterId == ObjectId);
-            
-            var flagTaskIds = cdContext.MissionTasksTable
-                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
-                .Select(t => t.Uid);
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
-            // Get all the mission task values that correspond to flag values
-            var flagValues = character.Missions
-                .SelectMany(m => m.Tasks
-                    .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.ValueArray())).ToArray();
+            var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
 
-            return flagValues;
+            if (!user.Banned) return;
+                
+            try
+            {
+                await Connection.CloseAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public async Task<float[]> GetCollectedAsync()
@@ -271,6 +253,7 @@ namespace Uchu.World
 
             instance.Perspective.AddFilter<RenderDistanceFilter>();
             instance.Perspective.AddFilter<FlagFilter>();
+            instance.Perspective.AddFilter<ExcludeFilter>();
             
             //
             // Set connection
@@ -300,16 +283,14 @@ namespace Uchu.World
             //
             // Equip items
             //
-            
-            foreach (var item in character.Items.Where(i => i.IsEquipped))
+
+            instance.Listen(instance.OnWorldLoad, async () =>
             {
-                await inventory.MountItemAsync(
-                    item.LOT,
-                    item.InventoryItemId,
-                    false,
-                    LegoDataDictionary.FromString(item.ExtraInfo)
-                );
-            }
+                foreach (var item in instance.GetComponent<InventoryManagerComponent>().Items.Where(i => i.Equipped))
+                {
+                    await inventory.MountItemAsync(item.Lot, item.ObjectId, false, item.Settings);
+                }
+            });
             
             //
             // Register player gameobject in zone
@@ -403,14 +384,12 @@ namespace Uchu.World
             });
         }
 
-        public void Message(ISerializable gameMessage)
+        public void Message(ISerializable package)
         {
-            Logger.Debug($"Sending {gameMessage} to {this}{(gameMessage is IGameMessage g ? $" from {g.Associate}" : "")}");
-
-            Connection.Send(gameMessage);
+            Connection.Send(package);
         }
 
-        public async Task<bool> SendToWorldAsync(ServerSpecification specification)
+        public async Task<bool> SendToWorldAsync(InstanceInfo specification, ZoneId zoneId)
         {
             Message(new ServerRedirectionPacket
             {
@@ -422,7 +401,7 @@ namespace Uchu.World
 
             var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
 
-            character.LastZone = (int) specification.ZoneId;
+            character.LastZone = (int) zoneId;
 
             await ctx.SaveChangesAsync();
 
@@ -431,14 +410,14 @@ namespace Uchu.World
         
         public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            var server = await ServerHelper.RequestWorldServerAsync(zoneId);
+            var server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
             
             if (server == default)
             {
                 return false;
             }
 
-            if (Server.Port != server.Port) return await SendToWorldAsync(server);
+            if (Server.Port != server.Port) return await SendToWorldAsync(server, zoneId);
             
             Logger.Error("Could not send a player to the same port as it already has");
 

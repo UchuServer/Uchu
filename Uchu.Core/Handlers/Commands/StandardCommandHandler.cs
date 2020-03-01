@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Api.Models;
 
 namespace Uchu.Core.Handlers.Commands
 {
@@ -12,9 +13,9 @@ namespace Uchu.Core.Handlers.Commands
         [CommandHandler(Signature = "stop", Help = "Stops the server")]
         public async Task StopServer()
         {
-            await Server.StopAsync();
-            
-            Process.GetCurrentProcess().Kill();
+            await Server.Api.RunCommandAsync<BaseResponse>(
+                Server.MasterApi, $"master/decommission?i={Server.Id}"
+            ).ConfigureAwait(false);
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
