@@ -5,10 +5,17 @@ LEGO Universe server written in C#
 ## Disclaimer
 > The LEGO Group has not endorsed or authorized the operation of this game and is not liable for any safety issues in relation to its operation.
 
-## Discord
+## Contributions
+Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
+### Discord
 Message Wincent01#1001 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
+### Python scripting
+Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for you with less programming experience to contribute.
 
-## Setup
+## Release
+Check out [the release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
+
+## Build from source
 Uchu is built with .NET Core 3.1 which is compatible with 64-bit versions Windows, Linux, and MacOS. Although Uchu can run on both Windows and MacOS it is highly recommended that you run it on Linux if possible.
 
 ### Prerequisite
@@ -19,8 +26,10 @@ Install .NET Core 3.1 SDK for your OS using the instructions found on https://do
 #### Entity Framework Command Line Interface (optional)
 Run ```dotnet tool install --global dotnet-ef``` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
 
-#### PostgresSQL
-Uchu uses PostgresSQL as its database provider. If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
+#### PostgreSQL
+Uchu uses PostgresSQL as its database provider by default. This can be changed in the config file later on to either MySQL or SQLite.
+
+If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
 
 ##### Linux (Debian)
 ```
