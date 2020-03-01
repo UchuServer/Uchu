@@ -36,8 +36,6 @@ namespace Uchu.World
 
         public bool Enabled { get; set; } = true;
         
-        private Vector3 Origin { get; set; }
-        
         public BaseCombatAiComponent()
         {
             Listen(OnStart, () =>
@@ -101,7 +99,7 @@ namespace Uchu.World
                     var _ = Task.Run(async () =>
                     {
                         var cooldown = (skillInfo.Cooldown ?? 1f) + time;
-                            
+                        
                         await Task.Delay((int) cooldown * 1000);
 
                         entry.Cooldown = false;

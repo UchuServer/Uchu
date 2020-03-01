@@ -39,6 +39,8 @@ namespace Uchu.Core
         
         [XmlElement] public Networking Networking { get; set; } = new Networking();
         
+        [XmlElement] public GamePlay GamePlay { get; set; } = new GamePlay();
+        
         [XmlElement("Api")] public ApiConfig ApiConfig { get; set; } = new ApiConfig();
         
         [XmlElement("Sso")] public SsoConfig SsoConfig { get; set; } = new SsoConfig();
@@ -88,13 +90,11 @@ namespace Uchu.Core
 
     public class ApiConfig
     {
-        [XmlElement] public string Protocol { get; set; } = "https";
+        [XmlElement] public string Protocol { get; set; } = "http";
         
         [XmlElement] public string Domain { get; set; } = "localhost";
 
-        [XmlElement] public int Port { get; set; } = 8000;
-
-        [XmlElement] public string Certificate { get; set; } = "";
+        [XmlElement] public int Port { get; set; } = 10000;
     }
 
     public class ResourcesConfiguration
@@ -120,5 +120,12 @@ namespace Uchu.Core
         [XmlElement] public string Username { get; set; }
 
         [XmlElement] public string Password { get; set; }
+    }
+
+    public class GamePlay
+    {
+        [XmlElement] public bool PathFinding { get; set; }
+        
+        [XmlElement] public bool AiWander { get; set; }
     }
 }

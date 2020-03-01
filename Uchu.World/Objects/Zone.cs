@@ -44,7 +44,7 @@ namespace Uchu.World
         
         public bool Loaded { get; private set; }
         
-        public NavMeshManager NavMeshManager { get; }
+        public NavMeshManager NavMeshManager { get; private set; }
 
         //
         // Managed objects
@@ -97,7 +97,6 @@ namespace Uchu.World
             
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
-            NavMeshManager = new NavMeshManager(this);
             UpdatedObjects = new List<UpdatedObject>();
 
             Listen(OnStart,async () => await InitializeAsync());
@@ -125,7 +124,14 @@ namespace Uchu.World
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
             var tasks = new List<Task>();
-            
+
+            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
+
+            if (NavMeshManager.Enabled)
+            {
+                await NavMeshManager.GeneratePointsAsync();
+            }
+
             foreach (var levelObject in objects)
             {
                 var task = Task.Run(() =>
@@ -183,9 +189,7 @@ namespace Uchu.World
                     Logger.Information(e);
                 }
             }
-
-            await NavMeshManager.GeneratePointsAsync();
-
+            
             Loaded = true;
 
             var _ = ExecuteUpdateAsync();

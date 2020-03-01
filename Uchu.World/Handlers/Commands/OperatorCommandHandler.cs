@@ -206,47 +206,6 @@ namespace Uchu.World.Handlers.Commands
             return $"{player.Ping}ms";
         }
 
-        [CommandHandler(Signature = "movement", Help = "Toggle the movement of an npc", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Movement(string[] arguments, Player player)
-        {
-            var targets = new List<GameObject>();
-
-            Ai(arguments, player);
-            
-            if (arguments.Contains("all"))
-            {
-                targets = player.Zone.Objects.OfType<MovementAiComponent>().Select(
-                    m => m.GameObject
-                ).ToList();
-            }
-            else
-            {
-                var current = player.Zone.GameObjects.First();
-                foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
-                {
-                    if (gameObject.Transform == default) continue;
-
-                    if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
-
-                    if (Vector3.Distance(current.Transform.Position, player.Transform.Position) >
-                        Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
-                        current = gameObject;
-                }
-
-                targets.Add(current);
-            }
-
-            foreach (var current in targets)
-            {
-                if (!current.TryGetComponent<MovementAiComponent>(out var movementAiComponent))
-                    return $"{current} does not have a movement AI component";
-
-                movementAiComponent.Enabled = !movementAiComponent.Enabled;
-            }
-
-            return "Toggled movement for agents";
-        }
-
         [CommandHandler(Signature = "ai", Help = "Toggle the ai all npcs", GameMasterLevel = GameMasterLevel.Admin)]
         public static string Ai(string[] arguments, Player player)
         {

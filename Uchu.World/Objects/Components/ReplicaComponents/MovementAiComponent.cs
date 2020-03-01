@@ -26,8 +26,6 @@ namespace Uchu.World
         private DestructibleComponent DestructibleComponent { get; set; }
 
         private Random Random { get; }
-        
-        public bool Enabled { get; set; }
 
         public float TetherRadius { get; set; } = 65;
 
@@ -112,6 +110,8 @@ namespace Uchu.World
                     await Task.Delay(50);
                 }
                 
+                if (Zone.NavMeshManager == default || !Zone.NavMeshManager.Enabled) return;
+                
                 await using var ctx = new CdClientContext();
 
                 var info = await ctx.MovementAIComponentTable.FirstOrDefaultAsync(
@@ -165,6 +165,8 @@ namespace Uchu.World
 
         private void CalculateMovement()
         {
+            if (!Zone.NavMeshManager.Enabled) return;
+            
             if (CannotPerformAction)
             {
                 if (ControllablePhysicsComponent.Velocity == Vector3.Zero) return;
@@ -230,7 +232,7 @@ namespace Uchu.World
 
             if (!(target is Player))
             {
-                if (WanderDelay) return;
+                if (WanderDelay || !Server.Config.GamePlay.AiWander) return;
                 
                 Wander();
                 

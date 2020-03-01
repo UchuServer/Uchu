@@ -34,8 +34,6 @@ namespace Uchu.World
 
         public WorldServer(Guid id) : base(id)
         {
-            Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
-            
             Zones = new List<Zone>();
 
             MaxPlayerCount = 20; // TODO: Set
@@ -45,6 +43,8 @@ namespace Uchu.World
 
         public override async Task ConfigureAsync(string configFile)
         {
+            Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
+
             await base.ConfigureAsync(configFile);
             
             ZoneParser = new ZoneParser(Resources);

@@ -836,7 +836,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Announce(string[] arguments, Player player)
         {
-            if (arguments.Length < 2) return "/mailbox <title> <message>";
+            if (arguments.Length < 2) return "/annouce <title> <message>";
 
             var args = arguments.ToList();
 

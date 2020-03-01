@@ -7,14 +7,18 @@ namespace Uchu.World.AI
 {
     public class NavMeshManager
     {
+        public bool Enabled { get; }
+        
         public Zone Zone { get; }
         
         public Solver Solver { get; }
         
         public Dictionary<int, Dictionary<int, Vector3>> Points { get; private set; }
 
-        public NavMeshManager(Zone zone)
+        public NavMeshManager(Zone zone, bool enabled)
         {
+            Enabled = enabled;
+            
             Zone = zone;
             
             Solver = new Solver();
