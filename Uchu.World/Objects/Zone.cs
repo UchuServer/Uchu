@@ -261,6 +261,17 @@ namespace Uchu.World
             foreach (var player in Players) player.Message(message);
         }
 
+        public void BroadcastChatMessage(string message, Player author = null)
+        {
+            foreach (var player in Players) player.Message(new ChatMessagePacket
+            {
+                Message = $"{message}\0",
+                Sender = author,
+                IsMythran = author?.GameMasterLevel > 0,
+                Channel = World.ChatChannel.Public
+            });
+        }
+
         #endregion
 
         #region Object Finder

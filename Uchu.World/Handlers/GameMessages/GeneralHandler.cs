@@ -97,16 +97,26 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task NotifyServerLevelProcessingCompleteHandler(NotifyServerLevelProcessingCompleteMessage message, Player player)
         {
+            await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
-            var character = await player.GetCharacterAsync();
+            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+
+            var lookup_val = 0;
 
             foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
             {
                 if (levelProgressionLookup.RequiredUScore > character.UniverseScore) break;
 
-                character.Level = levelProgressionLookup.Id.Value;
+                lookup_val = levelProgressionLookup.Id.Value;
+            }
 
+            Logger.Debug($"Attempting to assign level {lookup_val} to {character.Name} (They are currently level {character.Level})");
+
+            if (lookup_val > character.Level)
+            {
+                character.Level = lookup_val;
                 GameObject.Serialize(player);
+                await ctx.SaveChangesAsync();
 
                 player.Zone.BroadcastMessage(new PlayFXEffectMessage
                 {
@@ -116,7 +126,8 @@ namespace Uchu.World.Handlers.GameMessages
                     Name = "levelup_body_glow"
                 });
 
-                player.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!", PlayerChatChannel.Normal);
+                player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");
+                Logger.Debug($"Assigned level {lookup_val} to {character.Name} (They are now currently level {character.Level})");
 
             }
 
