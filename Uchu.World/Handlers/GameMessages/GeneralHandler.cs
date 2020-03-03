@@ -93,5 +93,33 @@ namespace Uchu.World.Handlers.GameMessages
                 await message.Target.OnEmoteReceived.InvokeAsync(message.EmoteId, player);
             }
         }
+
+        [PacketHandler]
+        public async Task NotifyServerLevelProcessingCompleteHandler(NotifyServerLevelProcessingCompleteMessage message, Player player)
+        {
+            await using var cdClient = new CdClientContext();
+            var character = await player.GetCharacterAsync();
+
+            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+            {
+                if (levelProgressionLookup.RequiredUScore > character.UniverseScore) break;
+
+                character.Level = levelProgressionLookup.Id.Value;
+
+                GameObject.Serialize(player);
+
+                player.Zone.BroadcastMessage(new PlayFXEffectMessage
+                {
+                    Associate = player,
+                    EffectId = 7074,
+                    EffectType = "create",
+                    Name = "levelup_body_glow"
+                });
+
+                player.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!", PlayerChatChannel.Normal);
+
+            }
+
+        }
     }
 }

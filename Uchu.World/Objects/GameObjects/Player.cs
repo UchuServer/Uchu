@@ -384,6 +384,19 @@ namespace Uchu.World
             });
         }
 
+        public void BroadcastChatMessage(string message, PlayerChatChannel channel = PlayerChatChannel.Debug, Player author = null, ChatChannel chatChannel = World.ChatChannel.Public)
+        {
+            if (channel > ChatChannel) return;
+
+            foreach (var p in Zone.Players) p.Message(new ChatMessagePacket
+            {
+                Message = $"{message}\0",
+                Sender = author,
+                IsMythran = author?.GameMasterLevel > 0,
+                Channel = chatChannel
+            });
+        }
+
         public void Message(ISerializable package)
         {
             Connection.Send(package);
@@ -452,14 +465,14 @@ namespace Uchu.World
 
             character.UniverseScore = score;
 
-            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+            /* foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
             {
                 if (levelProgressionLookup.RequiredUScore > score) break;
 
                 Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
 
                 character.Level = levelProgressionLookup.Id.Value;
-            }
+            } */
 
             Message(new ModifyLegoScoreMessage
             {
