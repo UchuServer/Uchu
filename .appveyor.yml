@@ -2,32 +2,29 @@ version: '{branch}-{build}'
 
 branches:
   only:
-    - rewrite
+    - master
 
 skip_tags: true
 
-only_commits:
+skip_commits:
   files:
-    - RakDotNet/
-    - Uchu.Auth/
-    - Uchu.Char/
-    - Uchu.Core/
-    - Uchu.Master/
-    - Uchu.StandardScripts/
-    - Uchu.World/
-    - .appveyor.yml
-    - .gitmodules
-    - Uchu.sln
+    - README.md
+    - CODE_OF_CONDUCT.md
+    - .gitignore
+    - .gitattributes
 
 image:
   - Visual Studio 2019
-  - Ubuntu1604
   - Ubuntu1804
 
 clone_depth: 1
 
 cache:
   - packages -> **/*.csproj
+  - '~/.local/share/NuGet/v3-cache'
+  - '~/.local/share/NuGet/Cache'
+  - '%LocalAppData%\NuGet\v3-cache'
+  - '%LocalAppData%\NuGet\Cache'
 
 install:
   - git submodule update --init --recursive
@@ -36,18 +33,22 @@ install:
 configuration: Release
 
 build:
-  parallel: true
+  parallel: false
   project: Uchu.sln
 
 artifacts:
-  - path: Uchu.Auth/bin/
+  - path: Uchu.Auth/bin/${configuration}/
     name: UchuAuth
-  - path: Uchu.Char/bin/
+  - path: Uchu.Char/bin/${configuration}/
     name: UchuChar
-  - path: Uchu.World/bin/
+  - path: Uchu.World/bin/${configuration}/
     name: UchuWorld
-  - path: Uchu.Master/bin/
+  - path: Uchu.Master/bin/${configuration}/
     name: UchuMaster
+  - path: Uchu.Instance/bin/${configuration}/
+    name: UchuInstance
+  - path: Uchu.StandardScripts/bin/${configuration}
+    name: UchuStandardScripts
 
 notifications:
   - provider: Webhook
