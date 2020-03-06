@@ -294,6 +294,8 @@ namespace Uchu.World
                 if (State == RebuildState.Incomplete)
                     ResetBuild(player);
             };
+
+            Task.Run(timer.Start);
         }
         
         public void CompleteBuild(Player player)
@@ -330,6 +332,8 @@ namespace Uchu.World
             State = RebuildState.Completed;
             Success = true;
             Enabled = true;
+            StartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            Pause = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             
             if (!Participants.Contains(player)) Participants.Add(player);
 
