@@ -1,4 +1,4 @@
-# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/rewrite.svg?style=flat-square&logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu)
+# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/master.svg?style=flat-square&logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu)
 
 LEGO Universe server written in C#
 
@@ -7,123 +7,133 @@ LEGO Universe server written in C#
 
 ## Contributions
 Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
-### Discord
+
+## Discord
 Message Wincent01#1001 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
-### Python scripting
+
+## Python scripting
 Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for you with less programming experience to contribute.
 
-## Release
-Check out [the release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
+## Releases
+Check out the [release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
 
-## Build from source
-Uchu is built with .NET Core 3.1 which is compatible with 64-bit versions Windows, Linux, and MacOS. Although Uchu can run on both Windows and MacOS it is highly recommended that you run it on Linux if possible.
+## Prerequisites
+Uchu is built with .NET Core 3.1 which is compatible with Windows, Linux, and MacOS.
 
-### Prerequisite
+### .NET Core 3.1
+Install .NET Core 3.1 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
-#### .NET Core 3.1
-Install .NET Core 3.1 SDK for your OS using the instructions found on https://dotnet.microsoft.com/download/dotnet-core/3.1.
+#### Entity Framework Command Line Interface
+Run ``dotnet tool install --global dotnet-ef`` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
 
-#### Entity Framework Command Line Interface (optional)
-Run ```dotnet tool install --global dotnet-ef``` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
-
-#### PostgreSQL
-Uchu uses PostgresSQL as its database provider by default. This can be changed in the config file later on to either MySQL or SQLite.
+### PostgreSQL
+Uchu uses PostgreSQL as its database provider by default. This can be changed in the config file to either MySQL or SQLite.
 
 If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
 
-##### Linux (Debian)
+Make sure to run the following command from the `Uchu.Core` project directory after setting up your database of choice.
+```
+dotnet ef database update -c UchuContext
+```
+
+#### Linux (Debian/Ubuntu)
 ```
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 ```
-##### Windows
+
+#### Windows
 https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
 
-##### MacOS
-https://postgresapp.com/
+#### MacOS
+Refer to [brew](https://brew.sh) instructions [here](https://wiki.postgresql.org/wiki/Homebrew).
 
-#### Redis (optional)
-Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux so setting it up on MacOS or Windows requires some workarounds.
+### Redis (optional)
+Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux and MacOS so setting it up on Windows requires some workarounds.
 
-For deployment, it is highly recommended that you do not skip this step.
+Recommended to install when setting up for hosting.
 
-##### Linux (Debian)
+#### Linux (Debian/Ubuntu)
 ```
 sudo apt install redis-server
 ```
 
-##### MacOS
-https://medium.com/@petehouston/install-and-config-redis-on-mac-os-x-via-homebrew-eb8df9a4f298
+#### MacOS
+```
+brew install redis
+```
 
 ##### Windows
-https://redislabs.com/blog/redis-on-windows-10/
+There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), although fairly outdated and may cause issues.
 
-#### LEGO Universe Client
-Go to https://docs.google.com/document/d/1v9GB1gNwO0C81Rhd4imbaLN7z-R0zpK5sYJMbxPP3Kc/ and naviage to the "Client" section to download a LEGO Universe client.
+### LEGO Universe Client
+You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
 
-IMPORTANT! Download a unpacket client.
+If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
 
-#### TcpUdp Mod
-Uchu utilizes a client mod called TcpUdp to make the server/client connection more stable. 
-1. Downloaded "shim_dll.zip" at https://bitbucket.org/lcdr/raknet_shim_dll/downloads/.
-2. Extract it into your LEGO Universe client directory, in the same directory where `legouniverse.exe` is.
+### TcpUdp Mod
+The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://bitbucket.org/lcdr/raknet_shim_dll/downloads/) made by lcdr and extract it next to the game's executable.
 
-When it is extracted, there should be a `dinput8.dll` present alongside a `mods/` directory. No files should be moved from where they are extracted!
+There are several reasons for not supporting the original protocol anymore with the major one being security, if you would like to get more info please contact us on discord (or via mail if that's your thing).
 
-##### Linux and MacOS
-The only publicly available LEGO Universe clients are for Windows. So you will need a compatibility layer if you are on a operation system which is not Windows.
-1. Download and install WINE using the instructions on https://wiki.winehq.org/Download.
-2. To run LEGO Universe, run ```WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe``` using the terminal.
+#### Linux and MacOS
+Unlike on Windows, Wine does not automatically load dll files placed in the same directory as the executable. You will have to run the client like this in order for it to use the shim's dinput8:
 
-#### IDE (optional)
-Although you can build and run Uchu using the command line, it is recommenced that you utilize an IDE to make your life just a little bit easier.
+```sh
+WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe
+```
+
+### Building from source
 
 #### Git
-Some IDEs comes preinstalled with git version control but most do not. For having a smooth download experience, we recommend you download git as an independent program.
 
 ##### Linux
 ```
 sudo apt install git
 ```
-##### MacOS and Windows
-https://desktop.github.com/
+##### MacOS
+Included in macos dev tools, running `git` from a terminal should prompt you to install them.
 
-### Download
+##### Windows
+You can download git from [the official website](https://git-scm.com/).
 
-#### Linux
+#### Clone the repository
+You can append `--depth 1` to the following command if you don't care about commit history and/or have slow internet.
+
 ```
-git clone https://github.com/yuwui/Uchu.git
-git checkout master
+git clone https://github.com/yuwui/Uchu --recursive -b master
 ```
 
-#### MacOS and Windows
-1. https://help.github.com/en/desktop/contributing-to-projects/cloning-a-repository-from-github-to-github-desktop
-2. Change your "Current Branch" to "master"
+#### Building
+Run the following command in the project root directory (where Uchu.sln is located)
+```
+dotnet build
+```
 
-### Execution Prerequisite
-
-#### Build
-Before running Uchu for the first time, build it once to make sure it compiles. Run ```dotnet build``` using the terminal in the `Uchu` directory.
+### Configuration
 
 #### Config file
 Before we can configure the server, it needs to generate a config file.
-1. Navigate to where you built the Uchu.Master project. This is commonly `/bin/Debug/netcoreapp3.1`, relative to the Uchu.Master path, but may differ.
-2. Run ```dotnet ./Uchu.Master.dll```. This will throw errors.
+1. Navigate to where you built the Uchu.Master project. This is commonly `bin/Debug/netcoreapp3.1/`, relative to the Uchu.Master path, but may differ.
+2. Run `dotnet Uchu.Master.dll`. This will throw errors.
 3. Close the process when it says it has generated a default config file.
 
 #### Configure Servers
-Uchu is not a LEGO Universe repository and you will have to supply your own game resource files for the servers to work with. 
-1. Navigate to where you have LEGO Universe installed and enter the `res/` directory, copy the full path to it.
-2. Find the "config.default.xml" file, duplicate it, rename the new copy to "config.xml". Open the new file.
-3. Find where you see ```<GameResourceFolder></GameResourceFolder>``` and copy your LEGO Universe "/res" path in between the tags.
+Uchu is not a LEGO Universe repository and you will have to supply your own game resource files for the servers to work with.
+
+1. Navigate to where you have LEGO Universe installed and copy the full path to the `res` directory.
+2. Find the `config.default.xml` file generated earlier and rename it to `config.xml`
+3. Open the config, go to `<GameResourceFolder></GameResourceFolder>` and paste your LEGO Universe's `res` directory path between the tags.
 
 No quotation marks (`""`) should be used.
 
-##### Set PostgresSQL credentials
-If you chose something else than "postgres" from your PostgresSQL password, put your password in between the ```<Password></Password>``` tags.
+##### Database
+
+You should check if you've filled in the right database credentials in the config file, it will not run without a database connection.
 
 ##### Define Uchu.Instance and Uchu.StandardScripts
 You have to tell Uchu where it can find the different libraries it will utilize at runtime.
+
 1. Open the config file and find the `<DllSource></DllSource>` section.
 2. If `dotnet` is not accessible as a global command, copy the path to `dotnet(.exe)` in between the `<DotNetPath></DotNetPath>` tags.
 3. Copy the path to Uchu.Instance.dll in between the `<Instance></Instance>` tags. This is commonly `/bin/Debug/netcoreapp3.1`, relative to the Uchu.Instance path, but may differ.
@@ -132,54 +142,38 @@ You have to tell Uchu where it can find the different libraries it will utilize 
 No quotation marks (`""`) should be used.
 
 ##### Network ports (optional)
-If your operating system does not allow you to host a server on any specific network port, or you run other services that might occupy any of the network ports used by Uchu, you must tell it to bind to different other network ports.
+If your operating system does not allow you to host a server on any specific network port, or you run other services that might occupy any of the network ports used by Uchu, you can change the config to bind to different ports.
 
 ###### Servers
-1. Open the config file and find the ```<Networking></Networking>``` section.
-2. To rebind the character network port, add a xml element like this (for network port 40000), ```<CharacterPort>40000</CharacterPort>```.
-3. World servers will incrementally bind to network 2003(+). This might not be feasible for when you have to port-forward for every world server. You can therefore add ANY NUMBER of xml element like this (for network port 20000), ```<WorldPort>20000</WorldPort>```, to tell Uchu where it can bind world servers.
+1. Open the config file and find the `<Networking></Networking>` section.
+2. To rebind the character network port, add a xml element like this (for network port 4000), `<CharacterPort>4000</CharacterPort>`.
+3. World servers will incrementally bind to network 2003(+). This might not be feasible for when you have to port-forward for every world server. You can therefore add ANY NUMBER of xml element like this (for network port 10000), `<WorldPort>10000</WorldPort>`, to tell Uchu where it can bind world servers.
 
-IMPORTANT! If Uchu runs out of specified world ports, it will not be allowed to open additional world servers.
+**IMPORTANT!** If Uchu runs out of specified world ports, additional world servers will **not** work.
 
 ###### API
 1. Open the config file and find the `<Api></Api>` section.
-2. APIs will incrementally bind to network 10000(+) by default. This can be changed by changing the number in the `<Port></Port>` tags.
-
-#### Database Setup (optional)
-Make sure a PostgresSQL server is running and run ```dotnet ef database update -c UchuContext``` in the terminal to build the database form the Uchu.Core directory.
-
-#### Redis (optional)
-Make sure a Redis Cache server is running.
+2. APIs will incrementally bind to network 10000(+) by default. This can be changed by setting the number in the `<Port></Port>` tags.
 
 ### Infrastructure
+
 #### Single-Sing-On authentication
 If you are using a Single-Sing-On (SSO) authentication server (https://github.com/lcdr/sso_auth), you need to specify the domain it is located on.
-1. Open the config file and find the ```<Sso></Sso>``` section.
+1. Open the config file and find the `<Sso></Sso>` section.
 2. Input the domain where the SSO authentication server is hosted in between the `<Domain></Domain>` tags.
 3. Set the `<HostAuthentication></HostAuthentication>` variable in the `<Networking></Networking>` section to `false`.
 
-### Run it!
-Finally after this long and tedius setup process, you are ready to run Uchu!
+#### Creating a user
+In the Uchu.Master console, type `/adduser <username>` and press enter. You will than have to enter a password which will be displayed as stars (\*), and when you are done, press enter.
 
-#### Build Servers
-Navigate to the Uchu.Instance, Uchu.StandardScripts, and Uchu.Master directories and run ```dotnet build``` using the terminal.
-
-#### Run Master Server
-Navigate to the output directory of Uchu.Master and run ```dotnet ./Uchu.Master.dll``` using the terminal.
-
-#### Create a user
-In the Uchu.Master console, type ```/adduser (username)``` and press enter. You will than have to enter a password which will be displayed as stars (*), and when you are done, press enter.
-
-#### Login
-Using your LEGO Universe client you may now login and play what parts of LEGO Universe Uchu has to offer :)
-
-#### Extra
-In the Uchu.Master console, type ```/gamemaster (username) 2```. This will make your account an Admin and will give you access to a lot of commands. Type "/" using the ingame chat to have your options displayed to you.
+#### Admin commands
+In the Uchu.Master console, type `/gamemaster <username> 2`. This will make your account an Admin and will give you access to a lot of commands. Type "/" using the ingame chat to have your options displayed to you.
 
 #### Experimental features
 These features are experiential and may be unstable. These can be enabled under the `<GamePlay></GamePlay>` section in the config file.
 
 ### Troubleshooting
+
 #### Old config file
 If you have used an older version of Uchu, you might have to reset your config file to accomodate new additions. Do this by deleting your old config file and have the server generate a new one.
 
