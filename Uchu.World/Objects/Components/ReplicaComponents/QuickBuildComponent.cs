@@ -140,8 +140,8 @@ namespace Uchu.World
             writer.WriteBit(Success);
             writer.WriteBit(Enabled);
 
-            writer.Write(TimeSinceStart);
-            writer.Write(PauseTime);
+            writer.Write(StartTime > 0 ? TimeSinceStart : StartTime);
+            writer.Write(Pause > 0 ? PauseTime : Pause);
         }
         
         //
@@ -357,7 +357,7 @@ namespace Uchu.World
 
             timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
-            Task.Run(() => { timer.Start(); });
+            Task.Run(timer.Start);
 
             Task.Run(async () => await DropLootAsync(player));
         }
