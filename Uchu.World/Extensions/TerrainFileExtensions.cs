@@ -14,11 +14,11 @@ namespace Uchu.World
             //
             // Render HeightMap
             //
-            for (var chunkY = 0; chunkY < @this.ChunkCountY; ++chunkY)
+            for (var chunkY = 0; chunkY < @this.Height; ++chunkY)
             {
-                for (var chunkX = 0; chunkX < @this.ChunkCountX; ++chunkX)
+                for (var chunkX = 0; chunkX < @this.Weight; ++chunkX)
                 {
-                    var chunk = @this.Chunks[chunkY * @this.ChunkCountX + chunkX];
+                    var chunk = @this.Chunks[chunkY * @this.Weight + chunkX];
 
                     for (var y = 0; y < chunk.HeightMap.Height; ++y)
                     {
