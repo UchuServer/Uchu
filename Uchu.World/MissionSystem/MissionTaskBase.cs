@@ -116,7 +116,7 @@ namespace Uchu.World.MissionSystem
             var mission = await ctx.Missions
                 .Include(m => m.Tasks)
                 .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.ObjectId);
+                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
 
             var task = mission.Tasks.First(m => m.TaskId == TaskId);
 
@@ -134,7 +134,7 @@ namespace Uchu.World.MissionSystem
             var mission = await ctx.Missions
                 .Include(m => m.Tasks)
                 .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.ObjectId);
+                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
             
             var task = mission.Tasks.First(m => m.TaskId == TaskId);
 
@@ -148,7 +148,7 @@ namespace Uchu.World.MissionSystem
             var mission = await ctx.Missions
                 .Include(m => m.Tasks)
                 .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.ObjectId);
+                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
             
             var task = mission.Tasks.First(m => m.TaskId == TaskId);
 

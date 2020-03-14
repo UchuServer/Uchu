@@ -80,8 +80,8 @@ namespace Uchu.World.Handlers.Commands
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
-            Zone.SaveSerialization(current, new[] {player}, Path.Combine(path, $"./{current.ObjectId}_s.bin"));
-            Zone.SaveCreation(current, new[] {player}, Path.Combine(path, $"./{current.ObjectId}_c.bin"));
+            Zone.SaveSerialization(current, new[] {player}, Path.Combine(path, $"./{current.Id}_s.bin"));
+            Zone.SaveCreation(current, new[] {player}, Path.Combine(path, $"./{current.Id}_c.bin"));
 
             return "Saved packets";
         }

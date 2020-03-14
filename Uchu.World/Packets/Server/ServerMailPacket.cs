@@ -111,7 +111,7 @@ namespace Uchu.World
 
                 foreach (var mail in Mails)
                 {
-                    var author = ctx.Characters.First(c => c.CharacterId == mail.AuthorId);
+                    var author = ctx.Characters.First(c => c.Id == mail.AuthorId);
                     
                     writer.Write(mail.Id);
 
@@ -123,7 +123,7 @@ namespace Uchu.World
 
                     writer.Write(mail.AttachmentCurrency);
 
-                    writer.Write(mail.AttachmentLot > 0 ? IdUtilities.GenerateObjectId() : 0); // Unnecessary
+                    writer.Write(mail.AttachmentLot > 0 ? ObjectId.Standalone : ObjectId.Invalid); // Unnecessary
 
                     writer.Write(mail.AttachmentLot);
 

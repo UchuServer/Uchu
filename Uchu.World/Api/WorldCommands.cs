@@ -40,7 +40,7 @@ namespace Uchu.World.Api
             
             response.MaxPlayers = (int) Server.MaxPlayerCount; // TODO: Set
 
-            response.Characters = zoneInstance.Players.Select(p => p.ObjectId).ToList();
+            response.Characters = zoneInstance.Players.Select(p => (long) p.Id).ToList();
 
             return response;
         }

@@ -12,58 +12,167 @@ namespace Uchu.World
 {
     public class InventoryComponent : ReplicaComponent
     {
+        public override ComponentId Id => ComponentId.InventoryComponent;
+        
+        public Dictionary<EquipLocation, EquippedItem> Items { get; }
+        
         public AsyncEvent<Item> OnEquipped { get; } = new AsyncEvent<Item>();
         
         public AsyncEvent<Item> OnUnEquipped { get; } = new AsyncEvent<Item>();
-        
-        public Dictionary<EquipLocation, InventoryItem> Items { get; set; } =
-            new Dictionary<EquipLocation, InventoryItem>();
 
-        private Dictionary<long, long[]> ProxyItems { get; set; } = new Dictionary<long, long[]>();
-        
-        public override ComponentId Id => ComponentId.InventoryComponent;
-        
         protected InventoryComponent()
         {
+            Items = new Dictionary<EquipLocation, EquippedItem>();
+            
             Listen(OnDestroyed, () =>
             {
                 OnEquipped.Clear();
                 OnUnEquipped.Clear();
             });
             
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
-                await using var cdClient = new CdClientContext();
+                if (GameObject is Player) return;
+                
+                using var cdClient = new CdClientContext();
                 
                 var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
 
                 var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
-                Items = new Dictionary<EquipLocation, InventoryItem>();
-
                 foreach (var item in items)
                 {
-                    Debug.Assert(item.Itemid != null, "item.Itemid != null");
-                    Debug.Assert(item.Count != null, "item.Count != null");
+                    if (item.Itemid == default) continue;
+                    
+                    var lot = (Lot) item.Itemid;
 
-                    await MountItemAsync(item.Itemid ?? 0, IdUtilities.GenerateObjectId());
+                    var componentId = lot.GetComponentId(ComponentId.ItemComponent);
+
+                    var info = cdClient.ItemComponentTable.First(i => i.Id == componentId);
+                    
+                    var location = (EquipLocation) info.EquipLocation;
+                    
+                    Items[location] = new EquippedItem
+                    {
+                        Id = ObjectId.Standalone,
+                        Lot = lot
+                    };
                 }
-                
-                if (Items.Any(i => i.Value != default))
-                    GameObject.Serialize(GameObject);
             });
         }
 
-        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
+        private async Task UpdateSlotAsync(EquipLocation slot, EquippedItem item)
         {
-            if (item?.InventoryItem == null)
+            if (Items.TryGetValue(slot, out var previous))
             {
-                Logger.Error($"{item} is not a valid item");
-                
-                return;
+                var id = await FindRootAsync(previous.Id);
+
+                await UnEquipAsync(id);
             }
 
+            Items[slot] = item;
+        }
+
+        private EquipLocation FindSlot(ObjectId id)
+        {
+            var reference = Items.FirstOrDefault(i => i.Value.Id == id);
+
+            return reference.Key;
+        }
+
+        public async Task EquipAsync(EquippedItem item)
+        {
+            await using var cdClient = new CdClientContext();
+
+            var componentId = item.Lot.GetComponentId(ComponentId.ItemComponent);
+
+            var info = await cdClient.ItemComponentTable.FirstAsync(i => i.Id == componentId);
+            
+            var location = (EquipLocation) info.EquipLocation;
+
+            await UpdateSlotAsync(location, item);
+
+            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
+
+            if (skills)
+            {
+                await skillComponent.MountItemAsync(item.Lot);
+            }
+
+            await UpdateEquipState(item.Id, true);
+
+            var proxies = await GenerateProxiesAsync(item.Id);
+
+            foreach (var proxy in proxies)
+            {
+                var instance = await proxy.FindItemAsync();
+
+                var lot = (Lot) instance.Lot;
+                
+                componentId = lot.GetComponentId(ComponentId.ItemComponent);
+
+                info = await cdClient.ItemComponentTable.FirstAsync(i => i.Id == componentId);
+            
+                location = (EquipLocation) info.EquipLocation;
+                
+                await UpdateSlotAsync(location, new EquippedItem
+                {
+                    Id = proxy,
+                    Lot = lot
+                });
+
+                await UpdateEquipState(proxy, true);
+                
+                if (skills)
+                {
+                    await skillComponent.MountItemAsync(lot);
+                }
+            }
+        }
+
+        private async Task UnEquipAsync(ObjectId id)
+        {
+            id = await FindRootAsync(id);
+
+            var slot = FindSlot(id);
+
+            var info = Items[slot];
+
+            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
+            
+            if (skills)
+            {
+                await skillComponent.DismountItemAsync(info.Lot);
+            }
+
+            await UpdateEquipState(id, false);
+
+            Items.Remove(slot);
+
+            var proxies = await FindProxiesAsync(id);
+
+            foreach (var proxy in proxies)
+            {
+                slot = FindSlot(proxy);
+
+                info = Items[slot];
+                
+                if (skills)
+                {
+                    await skillComponent.DismountItemAsync(info.Lot);
+                }
+
+                Items.Remove(slot);
+
+                await UpdateEquipState(proxy, false);
+            }
+
+            await ClearProxiesAsync(id);
+        }
+
+        public async Task<bool> EquipItemAsync(Item item, bool ignoreAllChecks = false)
+        {
             var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
             if (!ignoreAllChecks)
@@ -72,48 +181,32 @@ namespace Uchu.World
                 {
                     if (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle || item.Lot == 6086)
                     {
-                        return;
+                        return false;
                     }
                 }
             }
-
-            Logger.Debug($"Equipping {item}");
-
+            
             await OnEquipped.InvokeAsync(item);
 
-            await MountItemAsync(item.Lot, item.ObjectId, false, item.Settings);
-
-            await ChangeEquippedSateOnPlayerAsync(item.ObjectId, true);
+            await MountItemAsync(item.Id);
 
             GameObject.Serialize(GameObject);
+
+            return true;
         }
 
         public async Task UnEquipItemAsync(Item item)
         {
             await OnUnEquipped.InvokeAsync(item);
             
-            if (item?.ObjectId <= 0) return;
+            if (item?.Id <= 0) return;
 
             if (item != null)
             {
-                await MountItemAsync(item.Lot, item.ObjectId, true);
+                await UnMountItemAsync(item.Id);
             }
-        }
 
-        private async Task ChangeEquippedSateOnPlayerAsync(long itemId, bool equipped)
-        {
-            if (!(GameObject is Player)) return;
-            
-            await using var ctx = new UchuContext();
-            
-            var inventoryItem = await ctx.InventoryItems.FirstOrDefaultAsync(i => i.InventoryItemId == itemId);
-            
-            // Check if it's a proxy or alike.
-            if (inventoryItem == default) return;
-
-            inventoryItem.IsEquipped = equipped;
-
-            await ctx.SaveChangesAsync();
+            GameObject.Serialize(GameObject);
         }
 
         private static async Task<Lot[]> ParseProxyItemsAsync(Lot item)
@@ -136,124 +229,115 @@ namespace Uchu.World
             return proxies.ToArray();
         }
 
-        public async Task<long> MountItemAsync(Lot inventoryItem, long id, bool unEquip = false, LegoDataDictionary settings = default)
+        private static async Task<ObjectId> FindRootAsync(ObjectId id)
         {
-            await using var ctx = new CdClientContext();
+            var item = await id.FindItemAsync();
 
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == inventoryItem.GetComponentId(ComponentId.ItemComponent)
-            );
+            if (item == default) return ObjectId.Invalid;
 
-            if (itemInfo == default) return -1;
+            if (item.ParentId == ObjectId.Invalid) return id;
 
-            var location = (EquipLocation) itemInfo.EquipLocation;
+            return item.ParentId;
+        }
+
+        private static async Task<ObjectId[]> GenerateProxiesAsync(ObjectId id)
+        {
+            var item = await id.FindItemAsync();
+
+            if (item == default) return new ObjectId[0];
+
+            var proxies = await ParseProxyItemsAsync(item.Lot);
             
-            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
-            
-            if (Items.TryGetValue(location, out var oldItem) && oldItem != default && skills)
+            await using var ctx = new UchuContext();
+
+            var references = new ObjectId[proxies.Length];
+
+            for (var index = 0; index < proxies.Length; index++)
             {
-                foreach (var (key, proxyItems) in ProxyItems)
-                {
-                    if (!proxyItems.Contains(oldItem.InventoryItemId)) continue;
-                    
-                    var item = Items.Values.Where(v => v != default).FirstOrDefault(
-                        v => v.InventoryItemId == key
-                    );
-
-                    if (item == default) goto equipItem;
-
-                    await MountItemAsync(item.LOT, item.InventoryItemId, true);
-                    
-                    goto equipItem;
-                }
+                var proxy = proxies[index];
                 
-                await skillComponent.DismountItemAsync(oldItem.LOT);
-                
-                if (ProxyItems.TryGetValue(oldItem.InventoryItemId, out var values))
+                var instance = await ctx.InventoryItems.FirstOrDefaultAsync(
+                    i => i.ParentId == id && i.Lot == proxy
+                ).ConfigureAwait(false);
+
+                if (instance == default)
                 {
-                    ProxyItems.Remove(oldItem.InventoryItemId);
-                    
-                    foreach (var value in values)
+                    instance = new InventoryItem
                     {
-                        var item = Items.Values.Where(v => v != default).FirstOrDefault(
-                            v => v.InventoryItemId == value
-                        );
-                        
-                        if (item == default) continue;
+                        Id = ObjectId.Standalone,
+                        Lot = proxy,
+                        Count = 0,
+                        Slot = -1,
+                        InventoryType = (int) InventoryType.Hidden,
+                        CharacterId = item.CharacterId,
+                        ParentId = id
+                    };
 
-                        await MountItemAsync(item.LOT, item.InventoryItemId, true);
-                    }
+                    await ctx.InventoryItems.AddAsync(instance);
+
+                    await ctx.SaveChangesAsync();
                 }
-            }
-            
-            equipItem:
 
-            Item instance;
-            
-            if (unEquip)
-            {
-                Items[location] = default;
-
-                instance = Zone.GameObjects.OfType<Item>().FirstOrDefault(g => g.ObjectId == id);
-
-                if (instance != null)
-                {
-                    instance.Equipped = false;
-                }
-                
-                GameObject.Serialize(GameObject);
-
-                return -1;
-            }
-            
-            var inventoryType = ((ItemType) (itemInfo.ItemType ?? 0)).GetInventoryType();
-
-            Items[location] = new InventoryItem
-            {
-                LOT = inventoryItem,
-                Count = 1,
-                ExtraInfo = settings?.ToString(),
-                InventoryItemId = id,
-                InventoryType = (int) inventoryType,
-                Slot = -1
-            };
-            
-            instance = Zone.GameObjects.OfType<Item>().FirstOrDefault(g => g.ObjectId == id);
-
-            if (instance != null)
-            {
-                instance.Equipped = true;
+                references[index] = instance.Id;
             }
 
-            GameObject.Serialize(GameObject);
+            return references;
+        }
 
-            if (!skills || inventoryItem == default) return -1;
+        private static async Task<ObjectId[]> FindProxiesAsync(ObjectId id)
+        {
+            await using var ctx = new UchuContext();
 
-            if (inventoryType == InventoryType.Items)
+            var proxies = await ctx.InventoryItems.Where(
+                i => i.ParentId == id
+            ).ToArrayAsync().ConfigureAwait(false);
+
+            return proxies.Select(i => (ObjectId) i.Id).ToArray();
+        }
+
+        private static async Task ClearProxiesAsync(ObjectId id)
+        {
+            await using var ctx = new UchuContext();
+
+            var proxies = await ctx.InventoryItems.Where(
+                i => i.ParentId == id
+            ).ToArrayAsync().ConfigureAwait(false);
+
+            foreach (var proxy in proxies)
             {
-                await skillComponent.MountItemAsync(inventoryItem);
+                ctx.InventoryItems.Remove(proxy);
             }
 
-            /*
-             * Equip proxies
-             */
+            await ctx.SaveChangesAsync();
+        }
 
-            var additionalItems = await ParseProxyItemsAsync(inventoryItem);
+        private static async Task UpdateEquipState(ObjectId id, bool state)
+        {
+            await using var ctx = new UchuContext();
 
-            if (additionalItems.Length <= 0) return id;
+            var item = await ctx.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
+
+            item.IsEquipped = state;
+
+            await ctx.SaveChangesAsync();
+        }
+
+        private async Task MountItemAsync(ObjectId id)
+        {
+            var root = await id.FindItemAsync();
             
-            var proxies = new List<long>();
-            
-            foreach (var proxy in additionalItems)
+            await EquipAsync(new EquippedItem
             {
-                var proxyId = await MountItemAsync(proxy, IdUtilities.GenerateObjectId());
+                Id = id,
+                Lot = root.Lot
+            });
+        }
 
-                proxies.Add(proxyId);
-            }
+        private async Task UnMountItemAsync(ObjectId id)
+        {
+            var root = await FindRootAsync(id);
 
-            ProxyItems[id] = proxies.ToArray();
-
-            return id;
+            await UnEquipAsync(root);
         }
 
         public override void Construct(BitWriter writer)
@@ -265,46 +349,41 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            var items = Items.Values.Where(k => k != default).ToList();
+            var items = Items.Values.ToArray();
 
-            writer.Write((uint) items.Count);
+            writer.Write((uint) items.Length);
 
             foreach (var item in items)
             {
-                writer.Write(item.InventoryItemId);
-                writer.Write(item.LOT);
+                writer.Write(item.Id);
+                writer.Write(item.Lot);
 
                 writer.WriteBit(false);
 
-                var stack = item.Count > 1;
+                writer.WriteBit(false);
 
-                writer.WriteBit(stack);
+                writer.WriteBit(false);
 
-                if (stack) writer.Write((uint) item.Count);
+                writer.WriteBit(false);
 
-                var hasSlot = item.Slot != -1;
+                var info = item.Id.FindItem();
 
-                writer.WriteBit(hasSlot);
-
-                if (hasSlot) writer.Write((ushort) item.Slot);
-
-                var hasInventoryType = item.InventoryType != -1;
-
-                writer.WriteBit(hasInventoryType);
-
-                if (hasInventoryType) writer.Write((uint) item.InventoryType);
-
-                var hasExtraData = !string.IsNullOrWhiteSpace(item.ExtraInfo);
-
-                writer.WriteBit(hasExtraData);
-
-                if (hasExtraData) writer.WriteLdfCompressed(LegoDataDictionary.FromString(item.ExtraInfo));
+                if (info == default)
+                {
+                    writer.WriteBit(false);
+                }
+                else
+                {
+                    if (writer.Flag(!string.IsNullOrWhiteSpace(info.ExtraInfo)))
+                    {
+                        writer.WriteLdfCompressed(LegoDataDictionary.FromString(info.ExtraInfo));
+                    }
+                }
 
                 writer.WriteBit(true);
             }
 
-            writer.WriteBit(true);
-            writer.Write<uint>(0);
+            writer.WriteBit(false);
         }
     }
 }

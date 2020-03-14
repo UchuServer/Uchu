@@ -35,7 +35,7 @@ namespace Uchu.World
         public uint CloneId { get; }
         
         public ushort InstanceId { get; }
-        
+
         public ZoneInfo ZoneInfo { get; }
         
         public new Server Server { get; }
@@ -60,7 +60,12 @@ namespace Uchu.World
 
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
         public Player[] Players => Objects.OfType<Player>().ToArray();
-        public ZoneId ZoneId => (ZoneId) ZoneInfo.LuzFile.WorldId;
+        
+        public ZoneId ZoneId { get; private set; }
+        
+        public Vector3 SpawnPosition { get; private set; }
+        
+        public Quaternion SpawnRotation { get; private set; }
 
         //
         // Runtime
@@ -99,14 +104,12 @@ namespace Uchu.World
             ManagedScriptEngine = new ManagedScriptEngine();
             UpdatedObjects = new List<UpdatedObject>();
 
-            Listen(OnStart,async () => await InitializeAsync());
-
             Listen(OnDestroyed,() => { _running = false; });
         }
 
         #region Initializing
 
-        public async Task InitializeAsync()
+        public async Task<Task> InitializeAsync()
         {
             Checksum = ZoneInfo.LuzFile.GenerateChecksum(ZoneInfo.LvlFiles);
             
@@ -129,11 +132,29 @@ namespace Uchu.World
 
             if (NavMeshManager.Enabled)
             {
+                Logger.Information("Generating navigation way points.");
+
                 await NavMeshManager.GeneratePointsAsync();
+            
+                Logger.Information("Finished generating navigation way points.");
             }
+
+            ZoneId = (ZoneId) ZoneInfo.LuzFile.WorldId;
+
+            SpawnPosition = ZoneInfo.LuzFile.SpawnPoint;
+            
+            SpawnRotation = ZoneInfo.LuzFile.SpawnRotation;
+
+            ZoneInfo.LvlFiles = new List<LvlFile>();
+
+            ZoneInfo.TerrainFile = default;
+
+            GC.Collect();
 
             foreach (var levelObject in objects)
             {
+                Logger.Information($"Loading {levelObject.Lot}");
+                
                 var task = Task.Run(() =>
                 {
                     try
@@ -149,21 +170,24 @@ namespace Uchu.World
                 tasks.Add(task);
             }
 
-            foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
+            if (ZoneInfo.LuzFile.PathData != default)
             {
-                var task = Task.Run(() =>
+                foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
                 {
-                    try
+                    var task = Task.Run(() =>
                     {
-                        SpawnPath(path);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                });
+                        try
+                        {
+                            SpawnPath(path);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                        }
+                    });
 
-                tasks.Add(task);
+                    tasks.Add(task);
+                }
             }
 
             await Task.WhenAll(tasks);
@@ -177,6 +201,7 @@ namespace Uchu.World
             await ScriptManager.LoadDefaultScriptsAsync();
             
             foreach (var scriptPack in ScriptManager.ScriptPacks)
+                
             {
                 try
                 {
@@ -191,8 +216,10 @@ namespace Uchu.World
             }
             
             Loaded = true;
+            
+            objects.Clear();
 
-            var _ = ExecuteUpdateAsync();
+            return ExecuteUpdateAsync();
         }
 
         private void SpawnLevelObject(LevelObjectTemplate levelObject)
@@ -267,23 +294,23 @@ namespace Uchu.World
 
         public GameObject GetGameObject(long objectId)
         {
-            return objectId == -1 ? null : GameObjects.First(o => o.ObjectId == objectId);
+            return objectId == -1 ? null : GameObjects.First(o => o.Id == objectId);
         }
 
         public bool TryGetGameObject(long objectId, out GameObject result)
         {
-            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
+            result = GameObjects.FirstOrDefault(o => o.Id == objectId);
             return result != default;
         }
 
         public T GetGameObject<T>(long objectId) where T : GameObject
         {
-            return GameObjects.OfType<T>().First(o => o.ObjectId == objectId);
+            return GameObjects.OfType<T>().First(o => o.Id == objectId);
         }
 
         public bool TryGetGameObject<T>(long objectId, out T result) where T : GameObject
         {
-            result = GameObjects.FirstOrDefault(o => o.ObjectId == objectId) as T;
+            result = GameObjects.FirstOrDefault(o => o.Id == objectId) as T;
             return result != null;
         }
 

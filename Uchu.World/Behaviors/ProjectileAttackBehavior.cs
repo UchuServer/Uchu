@@ -69,8 +69,8 @@ namespace Uchu.World.Behaviors
             {
                 player.SendChatMessage("You are a projectile target!");
             }
-            
-            var projectileId = IdUtilities.GenerateObjectId();
+
+            var projectileId = ObjectId.Standalone;
 
             context.Writer.Write(projectileId);
             

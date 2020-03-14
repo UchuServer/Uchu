@@ -19,6 +19,12 @@ namespace Uchu.Instance
 {
     internal static class Program
     {
+        private static Server Server { get; set; }
+        
+        private static Guid Id { get; set; }
+        
+        private static ServerType ServerType { get; set; }
+        
         private static async Task Main(string[] args)
         {
             if (args.Length != 2)
@@ -26,59 +32,24 @@ namespace Uchu.Instance
 
             if (!Guid.TryParse(args[0], out var id))
                 throw new ArgumentException($"{args[0]} is not a valid GUID");
-            
-            var serializer = new XmlSerializer(typeof(Configuration));
 
-            if (!File.Exists(args[1]))
-            {
-                throw new ArgumentException($"{args[1]} config file does not exist.");
-            }
+            Id = id;
 
-            Configuration configuration;
-            
-            await using (var fs = File.OpenRead(args[1]))
-            {
-                UchuContextBase.Config = configuration = (Configuration) serializer.Deserialize(fs);
-            }
-            
-            var masterPath = Path.GetDirectoryName(args[1]);
-
-            SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
-
-            var api = new ApiManager(configuration.ApiConfig.Protocol, configuration.ApiConfig.Domain);
-
-            var instance = await api.RunCommandAsync<InstanceInfoResponse>(
-                configuration.ApiConfig.Port, $"instance/target?i={id}"
-            ).ConfigureAwait(false);
-
-            if (!instance.Success)
-            {
-                Logger.Error(instance.FailedReason);
-
-                throw new Exception(instance.FailedReason);
-            }
-            
-            var server = instance.Info.Type == (int) ServerType.World
-                ? new WorldServer(id)
-                : new Server(id);
-
-            Console.Title = $"{(ServerType) instance.Info.Type}:{instance.Info.Port}";
-            
-            await server.ConfigureAsync(args[1]);
+            await ConfigureAsync(args[1]).ConfigureAwait(false);
 
             try
             {
-                switch ((ServerType) instance.Info.Type)
+                switch (ServerType)
                 {
                     case ServerType.Authentication:
-                        await server.StartAsync(typeof(LoginHandler).Assembly, true);
+                        await Server.StartAsync(typeof(LoginHandler).Assembly, true);
                         break;
                     case ServerType.Character:
-                        await server.StartAsync(typeof(CharacterHandler).Assembly);
+                        await Server.StartAsync(typeof(CharacterHandler).Assembly);
                         break;
                     case ServerType.World:
-                        server.RegisterAssembly(typeof(CharacterHandler).Assembly);
-                        await server.StartAsync(typeof(WorldInitializationHandler).Assembly);
+                        Server.RegisterAssembly(typeof(CharacterHandler).Assembly);
+                        await Server.StartAsync(typeof(WorldInitializationHandler).Assembly);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -92,6 +63,50 @@ namespace Uchu.Instance
             Logger.Information("Exiting...");
 
             Console.ReadKey();
+        }
+
+        private static async Task ConfigureAsync(string config)
+        {
+            var serializer = new XmlSerializer(typeof(Configuration));
+
+            if (!File.Exists(config))
+            {
+                throw new ArgumentException($"{config} config file does not exist.");
+            }
+
+            Configuration configuration;
+            
+            await using (var fs = File.OpenRead(config))
+            {
+                UchuContextBase.Config = configuration = (Configuration) serializer.Deserialize(fs);
+            }
+            
+            var masterPath = Path.GetDirectoryName(config);
+
+            SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
+
+            var api = new ApiManager(configuration.ApiConfig.Protocol, configuration.ApiConfig.Domain);
+
+            var instance = await api.RunCommandAsync<InstanceInfoResponse>(
+                configuration.ApiConfig.Port, $"instance/target?i={Id}"
+            ).ConfigureAwait(false);
+
+            if (!instance.Success)
+            {
+                Logger.Error(instance.FailedReason);
+
+                throw new Exception(instance.FailedReason);
+            }
+
+            Server = instance.Info.Type == (int) ServerType.World
+                ? new WorldServer(Id)
+                : new Server(Id);
+            
+            Console.Title = $"{(ServerType) instance.Info.Type}:{instance.Info.Port}";
+
+            ServerType = (ServerType) instance.Info.Type;
+            
+            await Server.ConfigureAsync(config);
         }
     }
 }

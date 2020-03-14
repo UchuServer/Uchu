@@ -184,7 +184,7 @@ namespace Uchu.World.Behaviors
 
                 foreach (var target in selectedTargets)
                 {
-                    context.Writer.Write(target.ObjectId);
+                    context.Writer.Write(target.Id);
                 }
 
                 foreach (var target in selectedTargets)

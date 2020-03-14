@@ -94,7 +94,7 @@ namespace Uchu.World.MissionSystem
             //
 
             var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
             
             var tasks = await cdClient.MissionTasksTable.Where(
@@ -105,7 +105,7 @@ namespace Uchu.World.MissionSystem
 
             await ctx.Missions.AddAsync(new Mission
             {
-                CharacterId = Player.ObjectId,
+                CharacterId = Player.Id,
                 MissionId = MissionId,
                 Tasks = tasks.Select(task => new MissionTask
                 {
@@ -154,7 +154,7 @@ namespace Uchu.World.MissionSystem
             //
             
             var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
 
             if (mission == default)
@@ -162,7 +162,7 @@ namespace Uchu.World.MissionSystem
                 await StartAsync();
                 
                 mission = await ctx.Missions.FirstOrDefaultAsync(
-                    m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                    m => m.CharacterId == Player.Id && m.MissionId == MissionId
                 );
             }
 
@@ -219,7 +219,7 @@ namespace Uchu.World.MissionSystem
             await using var cdClient = new CdClientContext();
 
             var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
 
             var repeat = mission.CompletionCount != 0;
@@ -242,7 +242,7 @@ namespace Uchu.World.MissionSystem
             else
             {
                 var character = await ctx.Characters.FirstAsync(
-                    c => c.CharacterId == Player.ObjectId
+                    c => c.Id == Player.Id
                 );
                 
                 //
@@ -380,7 +380,7 @@ namespace Uchu.World.MissionSystem
             await using var ctx = new UchuContext();
             
             var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
 
             return (MissionState) mission.State;
@@ -391,7 +391,7 @@ namespace Uchu.World.MissionSystem
             await using (var ctx = new UchuContext())
             {
                 var mission = await ctx.Missions.FirstOrDefaultAsync(
-                    m => m.CharacterId == Player.ObjectId && m.MissionId == MissionId
+                    m => m.CharacterId == Player.Id && m.MissionId == MissionId
                 );
 
                 mission.State = (int) state;

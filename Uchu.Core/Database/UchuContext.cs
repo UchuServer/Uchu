@@ -19,7 +19,7 @@ namespace Uchu.Core
 
         public DbSet<MissionTask> MissionTasks => ContextBase.MissionTasks;
 
-        public DbSet<Friend> Friends => ContextBase.Friends;
+        public DbSet<FriendRequest> FriendRequests => ContextBase.FriendRequests;
 
         public DbSet<SessionCache> SessionCaches => ContextBase.SessionCaches;
 
@@ -28,6 +28,14 @@ namespace Uchu.Core
         public DbSet<Guild> Guilds => ContextBase.Guilds;
 
         public DbSet<GuildInvite> GuildInvites => ContextBase.GuildInvites;
+
+        public DbSet<Friend> Friends => ContextBase.Friends;
+
+        public DbSet<ChatTranscript> ChatTranscript => ContextBase.ChatTranscript;
+
+        public DbSet<CharacterTrade> Trades => ContextBase.Trades;
+
+        public DbSet<TradeTransactionItem> TransactionItems => ContextBase.TransactionItems;
 
         public UchuContext()
         {

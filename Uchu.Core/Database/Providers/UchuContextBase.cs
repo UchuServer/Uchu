@@ -18,7 +18,7 @@ namespace Uchu.Core.Providers
 
         public DbSet<MissionTask> MissionTasks { get; set; }
 
-        public DbSet<Friend> Friends { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
 
         public DbSet<SessionCache> SessionCaches { get; set; }
         
@@ -27,6 +27,14 @@ namespace Uchu.Core.Providers
         public DbSet<Guild> Guilds { get; set; }
         
         public DbSet<GuildInvite> GuildInvites { get; set; }
+        
+        public DbSet<Friend> Friends { get; set; }
+        
+        public DbSet<ChatTranscript> ChatTranscript { get; set; }
+        
+        public DbSet<CharacterTrade> Trades { get; set; }
+        
+        public DbSet<TradeTransactionItem> TransactionItems { get; set; }
         
         public virtual async Task EnsureUpdatedAsync()
         {

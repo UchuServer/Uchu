@@ -34,10 +34,12 @@ namespace Uchu.World.Handlers.GameMessages
         public void RemoveItemHandler(RemoveItemToInventoryMessage message, Player player)
         {
             if (!message.Confirmed) return;
+
+            if (message.Item == default) return;
             
             var inventoryManager = player.GetComponent<InventoryManagerComponent>();
-
-            inventoryManager.RemoveItem(message.Item.Lot, message.Delta, message.InventoryType, true);
+            
+            inventoryManager.RemoveItem(message.Item.Lot, message.Item.Count - message.TotalItems, message.InventoryType, true);
         }
 
         [PacketHandler]
@@ -51,6 +53,13 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
+            if (message.ItemToUnEquip == default)
+            {
+                Logger.Error($"{player} attempted to un equip invalid item.");
+                
+                return;
+            }
+            
             await message.ItemToUnEquip.UnEquipAsync();
 
             if (message.ReplacementItem != null)

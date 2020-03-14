@@ -24,7 +24,7 @@ namespace Uchu.Master.Api
 
             await using var ctx = new UchuContext();
 
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == default)
             {
@@ -33,13 +33,13 @@ namespace Uchu.Master.Api
                 return response;
             }
 
-            var characters = await ctx.Characters.Where(c => c.UserId == user.UserId).ToArrayAsync();
+            var characters = await ctx.Characters.Where(c => c.UserId == user.Id).ToArrayAsync();
 
             response.Success = true;
 
             response.UserId = userId;
 
-            response.Characters = characters.Select(c => c.CharacterId.ToString()).ToList();
+            response.Characters = characters.Select(c => c.Id.ToString()).ToList();
 
             return response;
         }
@@ -62,7 +62,7 @@ namespace Uchu.Master.Api
                 .Include(c => c.Items)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks).ThenInclude(t => t.Values)
-                .FirstOrDefaultAsync(c => c.CharacterId == characterId);
+                .FirstOrDefaultAsync(c => c.Id == characterId);
             
             Console.WriteLine($"Details request: {characterId} -> {character}");
 

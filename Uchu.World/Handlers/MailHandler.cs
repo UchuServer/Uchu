@@ -64,7 +64,7 @@ namespace Uchu.World.Handlers
 
             var author = await player.GetCharacterAsync();
 
-            if (recipient.CharacterId == author.CharacterId)
+            if (recipient.Id == author.Id)
             {
                 response.Code = MailResponseCode.CannotMailYourself;
                 
@@ -89,7 +89,9 @@ namespace Uchu.World.Handlers
                     goto sendResponse;
                 }
 
-                if (item.Bound)
+                var bound = await item.IsBoundAsync();
+                
+                if (bound)
                 {
                     response.Code = MailResponseCode.ItemCannotBeMailed;
 
@@ -103,8 +105,8 @@ namespace Uchu.World.Handlers
 
             var mail = new CharacterMail
             {
-                AuthorId = author.CharacterId,
-                RecipientId = recipient.CharacterId,
+                AuthorId = author.Id,
+                RecipientId = recipient.Id,
                 AttachmentCurrency = packet.Currency,
                 AttachmentLot = item?.Lot ?? -1,
                 AttachmentCount = packet.AttachmentCount,
@@ -138,7 +140,7 @@ namespace Uchu.World.Handlers
             var author = await player.GetCharacterAsync();
 
             var mails = await ctx.Mails.Where(
-                m => m.RecipientId == author.CharacterId
+                m => m.RecipientId == author.Id
             ).ToArrayAsync();
 
             var response = new MailData

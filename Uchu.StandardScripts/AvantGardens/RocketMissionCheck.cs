@@ -5,7 +5,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
-    [ZoneSpecific(ZoneId.AvantGardens)]
+    [ZoneSpecific(1100)]
     public class RocketMissionCheck : NativeScript
     {
         public override Task LoadAsync()
@@ -14,7 +14,7 @@ namespace Uchu.StandardScripts.AvantGardens
             {
                 var character = await player.GetCharacterAsync();
                 
-                if (character.LaunchedRocketFrom != ZoneId.VentureExplorer) return;
+                if (character.LaunchedRocketFrom != 1000) return;
 
                 var questInventory = player.GetComponent<MissionInventoryComponent>();
 

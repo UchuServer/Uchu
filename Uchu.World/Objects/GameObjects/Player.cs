@@ -39,7 +39,7 @@ namespace Uchu.World
                 
                 var character = await ctx.Characters
                     .Include(c => c.UnlockedEmotes)
-                    .FirstAsync(c => c.CharacterId == ObjectId);
+                    .FirstAsync(c => c.Id == Id);
 
                 foreach (var unlockedEmote in character.UnlockedEmotes)
                 {
@@ -136,7 +136,7 @@ namespace Uchu.World
             get
             {
                 using var ctx = new UchuContext();
-                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                var character = ctx.Characters.First(c => c.Id == Id);
 
                 return character.Currency;
             }
@@ -150,7 +150,7 @@ namespace Uchu.World
             get
             {
                 using var ctx = new UchuContext();
-                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                var character = ctx.Characters.First(c => c.Id == Id);
 
                 return character.UniverseScore;
             }
@@ -162,7 +162,7 @@ namespace Uchu.World
             get
             {
                 using var ctx = new UchuContext();
-                var character = ctx.Characters.First(c => c.CharacterId == ObjectId);
+                var character = ctx.Characters.First(c => c.Id == Id);
 
                 return character.Level;
             }
@@ -173,16 +173,16 @@ namespace Uchu.World
         {
             await using var ctx = new UchuContext();
                 
-            return await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+            return await ctx.Characters.FirstAsync(c => c.Id == Id);
         }
 
         private async Task CheckBannedStatusAsync()
         {
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
-            var user = await ctx.Users.FirstAsync(u => u.UserId == character.UserId);
+            var user = await ctx.Users.FirstAsync(u => u.Id == character.UserId);
 
             if (!user.Banned) return;
                 
@@ -205,7 +205,7 @@ namespace Uchu.World
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
                 .ThenInclude(t => t.Values)
-                .SingleOrDefaultAsync(c => c.CharacterId == ObjectId);
+                .SingleOrDefaultAsync(c => c.Id == Id);
             
             var flagTaskIds = cdContext.MissionTasksTable
                 .Where(t => t.TaskType == (int) MissionTaskType.Collect)
@@ -229,10 +229,10 @@ namespace Uchu.World
             var instance = Instantiate<Player>(
                 zone,
                 character.Name,
-                zone.ZoneInfo.LuzFile.SpawnPoint,
-                zone.ZoneInfo.LuzFile.SpawnRotation,
+                zone.SpawnPosition,
+                zone.SpawnRotation,
                 1,
-                character.CharacterId,
+                character.Id,
                 1
             );
             
@@ -284,14 +284,24 @@ namespace Uchu.World
             // Equip items
             //
 
-            instance.Listen(instance.OnWorldLoad, async () =>
+            await using (var ctx = new UchuContext())
             {
-                foreach (var item in instance.GetComponent<InventoryManagerComponent>().Items.Where(i => i.Equipped))
+                var items = await ctx.InventoryItems.Where(
+                    i => i.CharacterId == character.Id && i.IsEquipped
+                ).ToArrayAsync();
+
+                foreach (var item in items)
                 {
-                    await inventory.MountItemAsync(item.Lot, item.ObjectId, false, item.Settings);
+                    if (item.ParentId != ObjectId.Invalid) continue;
+                    
+                    await inventory.EquipAsync(new EquippedItem
+                    {
+                        Id = item.Id,
+                        Lot = item.Lot
+                    });
                 }
-            });
-            
+            }
+
             //
             // Register player gameobject in zone
             //
@@ -323,7 +333,7 @@ namespace Uchu.World
 
             var character = await ctx.Characters
                 .Include(c => c.UnlockedEmotes)
-                .FirstAsync(c => c.CharacterId == ObjectId);
+                .FirstAsync(c => c.Id == Id);
 
             if (character.UnlockedEmotes.All(u => u.EmoteId != emoteId))
             {
@@ -399,7 +409,7 @@ namespace Uchu.World
             
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
             character.LastZone = (int) zoneId;
 
@@ -428,7 +438,7 @@ namespace Uchu.World
         {
             await using (var ctx = new UchuContext())
             {
-                var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
                 character.Currency = currency;
                 character.TotalCurrencyCollected += currency;
@@ -448,7 +458,7 @@ namespace Uchu.World
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
             
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
             character.UniverseScore = score;
 
@@ -475,7 +485,7 @@ namespace Uchu.World
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
             
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
             var lookup = await cdClient.LevelProgressionLookupTable.FirstOrDefaultAsync(l => l.Id == level);
 

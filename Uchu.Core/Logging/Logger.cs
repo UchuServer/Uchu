@@ -10,14 +10,9 @@ namespace Uchu.Core
 {
     public static class Logger
     {
-        private static readonly object Lock;
+        private static readonly object Lock = new object();
 
-        public static Configuration Config;
-
-        static Logger()
-        {
-            Lock = new object();
-        }
+        public static Configuration Config { get; set; }
 
         public static void Log(object message, LogLevel logLevel = LogLevel.Information)
         {

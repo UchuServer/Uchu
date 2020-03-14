@@ -1,6 +1,6 @@
 using System;
 
-namespace Uchu.World
+namespace Uchu.Core
 {
     [Flags]
     public enum ObjectIdFlags : long

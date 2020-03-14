@@ -1,41 +1,46 @@
+using System.Globalization;
+
 namespace Uchu.Core
 {
-    public enum ZoneId : ushort
+    public struct ZoneId
     {
-        VentureExplorerCinematic,
-        VentureExplorer = 1000,
-        ReturnToVentureExplorer,
-        AvantGardens = 1100,
-        AvantGardensSurvival,
-        SpiderQueenBattle,
-        BlockYard = 1150,
-        AvantGrove,
-        NimbusStation = 1200,
-        PetCove,
-        VertigoLoopRacetrack = 1203,
-        BattleOfNimbusStation,
-        NimbusRock = 1250,
-        NimbusIsle,
-        FrostBurgh = 1260,
-        GnarledForest = 1300,
-        CanyonCove = 1302,
-        KeelhaulCanyon,
-        ChanteyShantey = 1350,
-        ForbiddenValley = 1400,
-        ForbiddenValleyDragon = 1402,
-        DragonmawChasm,
-        RavenBluff = 1450,
-        Starbase3001 = 1600,
-        DeepFreeze,
-        RobotCity,
-        MoonBase,
-        Portabello = 1604,
-        LegoClub = 1700,
-        CruxPrime = 1800,
-        NexusTower = 1900,
-        Ninjago = 2000,
-        FrakjawBattle,
-        NimbusStationWinterRacetrack = 1261,
-        Test = 58001
+        public ushort Id { get; }
+        
+        public ZoneId(ushort id)
+        {
+            Id = id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Id.Equals(obj);
+        }
+
+        public bool Equals(ZoneId other)
+        {
+            return Id == other.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        public static implicit operator ushort(ZoneId zoneId)
+        {
+            return zoneId.Id;
+        }
+        
+        public static implicit operator ZoneId(ushort id)
+        {
+            return new ZoneId(id);
+        }
+
+        public override string ToString() => Id.ToString(CultureInfo.InvariantCulture);
+
+        public ushort ToUInt16()
+        {
+            return Id;
+        }
     }
 }

@@ -7,7 +7,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
-    [ZoneSpecific(ZoneId.VentureExplorer)]
+    [ZoneSpecific(1000)]
     public class ShipShake : NativeScript
     {
         private const string ScriptName = "l_ag_ship_shake.lua";

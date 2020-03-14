@@ -22,7 +22,7 @@ namespace Uchu.World
 
         protected string ObjectName { get; set; }
         
-        public long ObjectId { get; private set; }
+        public ObjectId Id { get; private set; }
 
         public Lot Lot { get; private set; }
         
@@ -104,7 +104,7 @@ namespace Uchu.World
 
         public Transform Transform => GetComponent<Transform>();
 
-        public bool Alive => Zone?.TryGetGameObject(ObjectId, out _) ?? false;
+        public bool Alive => Zone?.TryGetGameObject(Id, out _) ?? false;
 
         public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
 
@@ -150,7 +150,7 @@ namespace Uchu.World
         public static implicit operator long(GameObject gameObject)
         {
             if (gameObject == null) return -1;
-            return gameObject.ObjectId;
+            return gameObject.Id;
         }
 
         #endregion
@@ -159,7 +159,7 @@ namespace Uchu.World
 
         public override string ToString()
         {
-            return $"[{ObjectId}] \"{(string.IsNullOrWhiteSpace(ObjectName) ? ClientName : Name)}\"";
+            return $"[{Id}] \"{(string.IsNullOrWhiteSpace(ObjectName) ? ClientName : Name)}\"";
         }
 
         #endregion
@@ -304,13 +304,13 @@ namespace Uchu.World
         #region From Raw
 
         public static GameObject Instantiate(Type type, Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
+            Quaternion rotation = default, float scale = 1, ObjectId objectId = default, Lot lot = default,
             SpawnerComponent spawner = default)
         {
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
-                instance.ObjectId = objectId == 0 ? IdUtilities.GenerateObjectId() : objectId;
+                instance.Id = objectId == 0L ? ObjectId.Standalone : objectId;
 
                 instance.Lot = lot;
 
@@ -350,7 +350,7 @@ namespace Uchu.World
         }
 
         public static T Instantiate<T>(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
+            Quaternion rotation = default, float scale = 1, ObjectId objectId = default, Lot lot = default,
             SpawnerComponent spawner = default)
             where T : GameObject
         {
@@ -358,7 +358,7 @@ namespace Uchu.World
         }
         
         public static GameObject Instantiate(Object parent, string name = "", Vector3 position = default,
-            Quaternion rotation = default, float scale = 1, long objectId = default, Lot lot = default,
+            Quaternion rotation = default, float scale = 1, ObjectId objectId = default, Lot lot = default,
             SpawnerComponent spawner = default)
         {
             return Instantiate(typeof(GameObject), parent, name, position, rotation, scale, objectId, lot, spawner);
@@ -417,7 +417,7 @@ namespace Uchu.World
             // Create GameObject
             //
 
-            var id = levelObject.ObjectId == 0 ? (long) Uchu.World.ObjectId.NewObjectId(ObjectIdFlags.Spawned | ObjectIdFlags.Client) : (long) levelObject.ObjectId;
+            var id = levelObject.ObjectId == 0 ? (long) ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client) : (long) levelObject.ObjectId;
 
             var instance = Instantiate(
                 type,
@@ -526,7 +526,7 @@ namespace Uchu.World
 
         internal void WriteConstruct(BitWriter writer)
         {
-            writer.Write(ObjectId);
+            writer.Write(Id);
 
             writer.Write(Lot);
 
@@ -548,7 +548,7 @@ namespace Uchu.World
             writer.WriteBit(hasSpawner);
 
             if (hasSpawner)
-                writer.Write(SpawnerObject.GameObject.ObjectId);
+                writer.Write(SpawnerObject.GameObject.Id);
 
             var hasSpawnerNode = SpawnerObject != null && SpawnerObject.SpawnTemplate != 0;
 

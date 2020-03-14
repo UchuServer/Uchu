@@ -25,30 +25,46 @@ namespace Uchu.World.Handlers
             }
             
             await using var ctx = new UchuContext();
-            
-            var character = await ctx.Characters.Include(c => c.User)
-                .FirstAsync(c => c.CharacterId == player.ObjectId);
 
-            Console.WriteLine($"Message: {message.Message}");
-            
-            var response = await Server.HandleCommandAsync(
-                message.Message,
-                player,
-                (GameMasterLevel) character.User.GameMasterLevel
+            var character = await ctx.Characters.Include(c => c.User).FirstAsync(
+                c => c.Id == player.Id
             );
 
-            if (!string.IsNullOrWhiteSpace(response))
+            Console.WriteLine($"Message: {message.Message}");
+
+            if (message.Message.StartsWith('/'))
             {
-                player.SendChatMessage(response, PlayerChatChannel.Normal);
-            }
-            else
-            {
-                if (((WorldServer) Server).Whitelist.CheckPhrase(message.Message).Any()) return;
-                
-                foreach (var zonePlayer in player.Zone.Players)
+                var response = await Server.HandleCommandAsync(
+                    message.Message,
+                    player,
+                    (GameMasterLevel) character.User.GameMasterLevel
+                );
+
+                if (!string.IsNullOrWhiteSpace(response))
                 {
-                    zonePlayer.SendChatMessage(message.Message, PlayerChatChannel.Normal, player);
+                    player.SendChatMessage(response, PlayerChatChannel.Normal);
                 }
+                
+                return;
+            }
+
+            if (((WorldServer) Server).Whitelist.CheckPhrase(message.Message).Any()) return;
+            
+            var transcript = new ChatTranscript
+            {
+                Author = character.Id,
+                Message = message.Message,
+                Receiver = 0,
+                SentTime = DateTime.Now
+            };
+
+            await ctx.ChatTranscript.AddAsync(transcript);
+
+            await ctx.SaveChangesAsync();
+            
+            foreach (var zonePlayer in player.Zone.Players)
+            {
+                zonePlayer.SendChatMessage(message.Message, PlayerChatChannel.Normal, player);
             }
         }
 
@@ -56,7 +72,7 @@ namespace Uchu.World.Handlers
         public async Task AddFriendRequestHandler(AddFriendRequestPacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneInfo.LuzFile.WorldId == session.ZoneId);
+            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -68,7 +84,7 @@ namespace Uchu.World.Handlers
 
             await using var ctx = new UchuContext();
             
-            var friend = ctx.Characters.FirstOrDefault(c => c.Name == packet.PlayerName);
+            var friend = await ctx.Characters.FirstOrDefaultAsync(c => c.Name == packet.PlayerName);
 
             if (friend == default)
             {
@@ -85,78 +101,50 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+            var character = ctx.Characters.First(c => c.Id == session.CharacterId);
 
-            var relations = ctx.Friends.Where(f =>
-                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
-            ).ToArray();
+            var alreadyFriends = await ctx.Friends.Where(f =>
+                f.FriendA == character.Id || f.FriendB == character.Id
+            ).AnyAsync();
 
-            foreach (var relation in relations)
+            if (alreadyFriends)
             {
-                if (!relation.IsAccepted || relation.IsDeclined) continue;
-                if (relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId)
+                player.Message(new NotifyFriendRequestResponsePacket
                 {
-                    if (!relation.IsBestFriend && packet.IsRequestingBestFriend) continue;
-                        
-                    player.Message(new NotifyFriendRequestResponsePacket
-                    {
-                        PlayerName = packet.PlayerName,
-                        Response = ServerFriendRequestResponse.AlreadyFriends
-                    });
-                        
-                    return;
-                }
-            }
-
-            Logger.Information($"Sending friend request from {player.Name} to {packet.PlayerName}!");
-
-            var invite = relations.FirstOrDefault(relation =>
-                relation.FriendId == friend.CharacterId || relation.FriendTwoId == friend.CharacterId
-            );
-
-            if (invite == default)
-            {
-                invite = new Friend
-                {
-                    FriendId = character.CharacterId,
-                    FriendTwoId = friend.CharacterId
-                };
-
-                ctx.Friends.Add(invite);
-            }
-            else
-            {
-                invite.RequestingBestFriend = true;
-            }
-
-            // Friend one is sender;
-            invite.FriendId = character.CharacterId;
-            invite.FriendTwoId = friend.CharacterId;
-
-            var friendPlayer = zone.Players.FirstOrDefault(p => p.ObjectId == invite.FriendTwoId);
-
-            Logger.Information($"{friendPlayer} is getting a friend request from {player.Name}!");
-
-            invite.RequestHasBeenSent = false;
-
-            if (!ReferenceEquals(friendPlayer, null))
-            {
-                player.Message(new NotifyFriendRequestPacket
-                {
-                    FriendName = player.Name,
-                    IsBestFriendRequest = packet.IsRequestingBestFriend
+                    PlayerName = packet.PlayerName,
+                    Response = ServerFriendRequestResponse.AlreadyFriends
                 });
-
-                invite.RequestHasBeenSent = true;
-
-                Logger.Information($"Friend request sent to {friendPlayer} from {player}");
+                
+                return;
             }
+            
+            var isPending = await ctx.FriendRequests.Where(f =>
+                f.Sender == character.Id && f.Receiver == friend.Id
+            ).AnyAsync();
 
-            await ctx.SaveChangesAsync();
+            if (isPending)
+            {
+                player.Message(new NotifyFriendRequestResponsePacket
+                {
+                    PlayerName = packet.PlayerName,
+                    Response = ServerFriendRequestResponse.PendingApproval
+                });
+                
+                return;
+            }
+            
+            var request = new FriendRequest
+            {
+                Sender = character.Id,
+                Receiver = friend.Id,
+                BestFriend = packet.IsRequestingBestFriend
+            };
+
+            await ctx.FriendRequests.AddAsync(request);
         }
 
         [PacketHandler]
-        public void FriendsListRequestHandler(GetFriendListPacket packet,IRakConnection connection)
+        public async Task FriendsListRequestHandler(GetFriendListPacket packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
             var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
@@ -167,31 +155,31 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            using var ctx = new UchuContext();
-            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
+            await using var ctx = new UchuContext();
+            var character =  await ctx.Characters.FirstAsync(c => c.Id == session.CharacterId);
 
-            var relations = ctx.Friends.Where(f =>
-                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId
-            ).ToArray();
+            var relations = await ctx.Friends.Where(f =>
+                f.FriendA == character.Id || f.FriendB == character.Id
+            ).ToArrayAsync();
 
             var friends = new List<FriendListPacket.Friend>();
+            
             foreach (var characterFriend in relations)
             {
-                if (!characterFriend.IsAccepted) continue;
+                var friendId = characterFriend.FriendA == character.Id
+                    ? characterFriend.FriendB
+                    : characterFriend.FriendA;
 
-                var friendId = characterFriend.FriendTwoId == character.CharacterId
-                    ? characterFriend.FriendId
-                    : characterFriend.FriendTwoId;
+                var friend = ctx.Characters.First(c => c.Id == friendId);
 
-                var friend = ctx.Characters.First(c => c.CharacterId == friendId);
-
-                var player = zone.Players.FirstOrDefault(p => p.ObjectId == friend.CharacterId);
+                var player = zone.Players.FirstOrDefault(p => p.Id == friend.Id);
+                
                 friends.Add(new FriendListPacket.Friend
                 {
-                    IsBestFriend = characterFriend.IsBestFriend,
+                    IsBestFriend = characterFriend.BestFriend,
                     IsFreeToPlay = friend.FreeToPlay,
                     IsOnline = player != default,
-                    PlayerId = player?.ObjectId ?? -1,
+                    PlayerId = player?.Id ?? -1,
                     PlayerName = friend.Name,
                     ZoneId = (ZoneId) friend.LastZone,
                     WorldClone = (uint) friend.LastClone,
@@ -218,62 +206,75 @@ namespace Uchu.World.Handlers
             }
 
             await using var ctx = new UchuContext();
-            var thisCharacter = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-            var friendCharacter = ctx.Characters.First(c => c.Name == packet.FriendName);
-
-            var relations = ctx.Friends.Where(f =>
-                f.FriendTwoId == thisCharacter.CharacterId
-            ).ToArray();
-
-            foreach (var characterFriend in relations.Where(c => !c.IsAccepted))
+            
+            var character = await ctx.Characters.FirstAsync(c => c.Id == session.CharacterId);
+            
+            var friend = await ctx.Characters.FirstAsync(c => c.Name == packet.FriendName);
+            
+            var player = zone.Players.First(p => p.Connection.Equals(connection));
+            
+            if (friend == default)
             {
-                characterFriend.RequestHasBeenSent = true;
-
-                var player = zone.Players.FirstOrDefault(p => p.ObjectId == friendCharacter.CharacterId);
-                switch (packet.Response)
+                player.Message(new NotifyFriendRequestResponsePacket
                 {
-                    case ClientFriendRequestResponse.Accepted:
-                        characterFriend.IsAccepted = true;
-                        characterFriend.IsBestFriend = characterFriend.RequestingBestFriend;
-                        break;
-                    case ClientFriendRequestResponse.Declined:
-                        characterFriend.IsDeclined = true;
-                        break;
-                    case ClientFriendRequestResponse.InviteWindowClosed:
-                        return;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    PlayerName = packet.FriendName,
+                    Response = ServerFriendRequestResponse.InvalidName
+                });
+                
+                return;
+            }
 
-                var senderPlayer = zone.Players.FirstOrDefault(p => p.Name == packet.FriendName);
+            var request = await ctx.FriendRequests.Where(f =>
+                f.Receiver == character.Id
+            ).FirstOrDefaultAsync();
 
-                if (senderPlayer != default)
+            if (request == default)
+            {
+                player.Message(new NotifyFriendRequestResponsePacket
                 {
-                    senderPlayer.Connection.Send(new NotifyFriendRequestResponsePacket
-                    {
-                        IsBestFriend = characterFriend.IsBestFriend,
-                        IsFreeToPlay = friendCharacter.FreeToPlay,
-                        IsPlayerOnline = player != default,
-                        PlayerId = player?.ObjectId ?? -1,
-                        PlayerName = friendCharacter.Name,
-                        ZoneId = (ZoneId) friendCharacter.LastZone,
-                        WorldClone = (uint) friendCharacter.LastClone,
-                        WorldInstance = (ushort) friendCharacter.LastInstance,
-                        Response = packet.Response == ClientFriendRequestResponse.Accepted
-                            ? ServerFriendRequestResponse.Accepted
-                            : ServerFriendRequestResponse.Declined
-                    });
+                    PlayerName = packet.FriendName,
+                    Response = ServerFriendRequestResponse.UnknownError
+                });
+                
+                return;
+            }
 
-                    FriendsListRequestHandler(null, senderPlayer.Connection);
-                }
+            var declined = packet.Response == ClientFriendRequestResponse.Declined ||
+                           packet.Response == ClientFriendRequestResponse.InviteWindowClosed;
 
-                FriendsListRequestHandler(null, connection);
+            if (declined)
+            {
+                ctx.FriendRequests.Remove(request);
 
                 await ctx.SaveChangesAsync();
 
-                if (characterFriend.IsDeclined)
-                    await RemoveFriendHandler(new RemoveFriendPacket {FriendName = packet.FriendName}, connection);
+                player.Message(new NotifyFriendRequestResponsePacket
+                {
+                    PlayerName = packet.FriendName,
+                    Response = ServerFriendRequestResponse.Declined
+                });
+                
+                return;
             }
+
+            var relation = new Friend
+            {
+                FriendA = request.Sender,
+                FriendB = request.Receiver,
+                BestFriend = request.BestFriend
+            };
+
+            ctx.FriendRequests.Remove(request);
+
+            await ctx.Friends.AddAsync(relation);
+
+            await FriendsListRequestHandler(null, connection);
+
+            player.Message(new NotifyFriendRequestResponsePacket
+            {
+                PlayerName = packet.FriendName,
+                Response = ServerFriendRequestResponse.Accepted
+            });
         }
 
         [PacketHandler]
@@ -287,25 +288,31 @@ namespace Uchu.World.Handlers
                 Logger.Error($"Invalid ZoneId for {connection}");
                 return;
             }
-
+            
             await using var ctx = new UchuContext();
-            var character = ctx.Characters.First(c => c.CharacterId == session.CharacterId);
-
-            var relations = ctx.Friends.Where(f =>
-                f.FriendId == character.CharacterId || f.FriendTwoId == character.CharacterId &&
-                f.FriendOne.Name == packet.FriendName || f.FriendTwo.Name == packet.FriendName
-            ).ToArray();
-
-            foreach (var friend in relations)
+            
+            var character = await ctx.Characters.FirstAsync(c => c.Id == session.CharacterId);
+            
+            var friend = await ctx.Characters.FirstAsync(c => c.Name == packet.FriendName);
+            
+            var player = zone.Players.First(p => p.Connection.Equals(connection));
+            
+            if (friend == default)
             {
-                connection.Send(new RemoveFriendResponsePacket
+                player.Message(new RemoveFriendResponsePacket
                 {
                     FriendName = packet.FriendName,
-                    Success = true
+                    Success = false
                 });
-
-                ctx.Friends.Remove(friend);
+                
+                return;
             }
+
+            var relation = await ctx.Friends.FirstOrDefaultAsync(
+                f => f.FriendA == character.Id || f.FriendB == character.Id
+            );
+
+            ctx.Friends.Remove(relation);
 
             await ctx.SaveChangesAsync();
         }
@@ -344,7 +351,7 @@ namespace Uchu.World.Handlers
             }
 
             var player = zone.Players.First(p => p.Connection.EndPoint.Equals(endPoint));
-            var author = zone.Players.First(p => p.ObjectId == packet.InviterObjectId);
+            var author = zone.Players.First(p => p.Id == packet.InviterObjectId);
 
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");
 

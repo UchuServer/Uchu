@@ -62,7 +62,7 @@ namespace Uchu.World.Handlers
 
             // Initialize zone for player
             var zoneId = (ZoneId) character.LastZone;
-            if (zoneId == ZoneId.VentureExplorerCinematic) zoneId = ZoneId.VentureExplorer;
+            if (zoneId == 0) zoneId = 1000;
 
             var worldServer = (WorldServer) Server;
             var zone = await worldServer.GetZoneAsync(zoneId);
@@ -73,7 +73,7 @@ namespace Uchu.World.Handlers
             {
                 ZoneId = zoneId,
                 Checksum = zone.Checksum,
-                SpawnPosition = zone.ZoneInfo.LuzFile.SpawnPoint
+                SpawnPosition = zone.SpawnPosition
             });
         }
 
@@ -99,13 +99,14 @@ namespace Uchu.World.Handlers
                 .Include(c => c.User)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks).ThenInclude(m => m.Values)
-                .SingleAsync(c => c.CharacterId == session.CharacterId);
+                .SingleAsync(c => c.Id == session.CharacterId);
 
             var zoneId = (ZoneId) character.LastZone;
-            if (zoneId == ZoneId.VentureExplorerCinematic)
+            if (zoneId == 0)
             {
-                zoneId = ZoneId.VentureExplorer;
-                character.LastZone = (int) zoneId;
+                zoneId = 1000;
+                
+                character.LastZone = zoneId;
 
                 await ctx.SaveChangesAsync();
             }
@@ -128,19 +129,6 @@ namespace Uchu.World.Handlers
             player.Message(new PlayerReadyMessage {Associate = player});
             
             player.Message(new DoneLoadingObjectsMessage {Associate = player});
-
-            var relations = ctx.Friends.Where(f =>
-                f.FriendTwoId == character.CharacterId
-            ).ToArray();
-
-            foreach (var friend in relations.Where(f => !f.RequestHasBeenSent))
-            {
-                connection.Send(new NotifyFriendRequestPacket
-                {
-                    FriendName = (await ctx.Characters.SingleAsync(c => c.CharacterId == friend.FriendTwoId)).Name,
-                    IsBestFriendRequest = friend.RequestingBestFriend
-                });
-            }
         }
 
         /// <summary>
@@ -197,7 +185,7 @@ namespace Uchu.World.Handlers
             var ldf = new LegoDataDictionary
             {
                 ["accountId"] = session.UserId,
-                ["objid", 9] = character.CharacterId,
+                ["objid", 9] = character.Id,
                 ["name"] = character.Name,
                 ["template"] = 1,
                 ["xmlData"] = xml
@@ -270,8 +258,8 @@ namespace Uchu.World.Handlers
                     {
                         Count = (int) i.Count,
                         Slot = i.Slot,
-                        Lot = i.LOT,
-                        ObjectId = i.InventoryItemId,
+                        Lot = i.Lot,
+                        ObjectId = i.Id,
                         Equipped = i.IsEquipped ? 1 : 0,
                         Bound = i.IsBound ? 1 : 0
                     };
@@ -299,7 +287,7 @@ namespace Uchu.World.Handlers
         {
             return new CharacterNode
             {
-                AccountId = character.User.UserId,
+                AccountId = character.User.Id,
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
                 UniverseScore = character.UniverseScore

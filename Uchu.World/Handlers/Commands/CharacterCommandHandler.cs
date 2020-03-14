@@ -235,7 +235,7 @@ namespace Uchu.World.Handlers.Commands
             var info = new StringBuilder();
 
             if (arguments.Contains("-i"))
-                info.Append($"[{current.ObjectId}] ");
+                info.Append($"[{current.Id}] ");
 
             info.Append($"[{current.Lot}] \"{(string.IsNullOrWhiteSpace(current.Name) ? current.ClientName : current.Name)}\"");
 
@@ -611,14 +611,8 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "world <zoneId>";
 
-            if (!Enum.TryParse<ZoneId>(arguments[0], out var id)) return "Invalid <zoneId>";
-
-            if (!Enum.IsDefined(typeof(ZoneId), id)) return "Invalid <zoneId>";
-
-            if (player.Zone.ZoneId == id) return $"You are already in {id}";
-
-            if (id == ZoneId.FrostBurgh) return $"Sorry, {id} is disabled in the client...";
-
+            if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
+            
             //
             // We don't want to lock up the server on a world server request, as it may take time.
             //
@@ -637,7 +631,7 @@ namespace Uchu.World.Handlers.Commands
 
             var _ = Task.Run(async () =>
             {
-                if (!await player.SendToWorldAsync(id))
+                if (!await player.SendToWorldAsync((ZoneId) id))
                 {
                     player.SendChatMessage($"Failed to transfer to {id}, please try later.");
                 }
@@ -650,12 +644,12 @@ namespace Uchu.World.Handlers.Commands
         public async Task<string> Monitor(string[] arguments, Player player)
         {
             var process = Process.GetCurrentProcess();
-            
-            string GetMemory(long memory)
+
+            static string GetMemory(long memory)
             {
                 string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-                
-                var len = process.PrivateMemorySize64;
+
+                var len = memory;
                 
                 var order = 0;
                 
@@ -697,6 +691,13 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length == 0 || arguments.Contains("-pam"))
             {
                 builder.AppendLine($"Paged Memory: {GetMemory(process.PagedMemorySize64)}");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-gc"))
+            {
+                GC.Collect();
+                
+                builder.AppendLine($"GC Memory: {GetMemory(GC.GetTotalMemory(true))}");
             }
 
             if (arguments.Length == 0 || arguments.Contains("-p"))
@@ -971,49 +972,6 @@ namespace Uchu.World.Handlers.Commands
             GameObject.Construct(gameObject);
 
             return $"Active mimic on: {gameObject}";
-        }
-        
-        [CommandHandler(Signature = "terrain", Help = "Test terrain", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Terrain(string[] arguments, Player player)
-        {
-            const float scale = 3.125f;
-            
-            var heightMap = player.Zone.ZoneInfo.TerrainFile.GenerateHeightMap();
-
-            var position = new Vector2(player.Transform.Position.X, player.Transform.Position.Z);
-
-            var closest = new Vector2?();
-            
-            var inGameValues = new Dictionary<Vector2, float>();
-
-            var centerX = (heightMap.GetLength(0) - 1) / 2;
-            var centerY = (heightMap.GetLength(1) - 1) / 2;
-            
-            for (var x = 0; x < heightMap.GetLength(0); x++)
-            {
-                for (var y = 0; y < heightMap.GetLength(1); y++)
-                {
-                    var value = heightMap[x, y];
-
-                    var realX = x - centerX;
-                    var realY = y - centerY;
-                    
-                    var inGame = new Vector2(realX, realY);
-
-                    inGame *= scale;
-
-                    inGameValues[inGame] = value;
-
-                    if (closest == default)
-                        closest = inGame;
-                    else if (Vector2.Distance(closest.Value, position) > Vector2.Distance(inGame, position))
-                    {
-                        closest = inGame;
-                    }
-                }
-            }
-
-            return $"{player.Transform.Position} -> {inGameValues[closest.Value]}";
         }
     }
 }

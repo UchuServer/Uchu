@@ -8,7 +8,7 @@ namespace Uchu.StandardScripts.VentureExplorer
     /// <summary>
     ///     LUA Reference: l_npc_np_spaceman_bob.lua
     /// </summary>
-    [ZoneSpecific(ZoneId.VentureExplorer)]
+    [ZoneSpecific(1000)]
     public class BobMission : NativeScript
     {
         private const string ScriptName = "l_npc_np_spaceman_bob.lua";

@@ -5,7 +5,8 @@ namespace Uchu.Core
 {
     public class User
     {
-        public long UserId { get; set; }
+        [Key]
+        public long Id { get; set; }
 
         [MaxLength(33), Required] public string Username { get; set; }
 

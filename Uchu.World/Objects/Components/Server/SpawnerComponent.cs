@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -63,7 +64,7 @@ namespace Uchu.World
                 Rotation = location.Rotation,
                 Scale = LevelObject.Scale,
                 LegoInfo = Settings,
-                ObjectId = ObjectId.NewObjectId(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
+                ObjectId = ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
             };
             
             var obj = GameObject.Instantiate(o, Zone, this);

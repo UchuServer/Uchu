@@ -15,7 +15,7 @@ namespace Uchu.World
         {
             writer.WriteString(Sender.Name, wide: true);
 
-            writer.Write(Sender.ObjectId);
+            writer.Write(Sender.Id);
         }
     }
 }

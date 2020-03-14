@@ -13,7 +13,6 @@ namespace Uchu.World
     public class InventoryManagerComponent : Component
     {
         private readonly Dictionary<InventoryType, Inventory> _inventories = new Dictionary<InventoryType, Inventory>();
-        private InventoryComponent _inventoryComponent;
 
         private object _lock;
 
@@ -25,8 +24,6 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
-                _inventoryComponent = GameObject.GetComponent<InventoryComponent>();
-                
                 _lock = new object();
 
                 foreach (var value in Enum.GetValues(typeof(InventoryType)))
@@ -61,7 +58,7 @@ namespace Uchu.World
         {
             using var ctx = new UchuContext();
             var item = ctx.InventoryItems.FirstOrDefault(
-                i => i.InventoryItemId == id && i.CharacterId == GameObject.ObjectId
+                i => i.Id == id && i.CharacterId == GameObject.Id
             );
 
             if (item == default)
@@ -72,7 +69,7 @@ namespace Uchu.World
 
             var managedItem = _inventories[(InventoryType) item.InventoryType][id];
 
-            if (managedItem == null) Logger.Error($"{item.InventoryItemId} is not managed on {GameObject}");
+            if (managedItem == null) Logger.Error($"{item.Id} is not managed on {GameObject}");
 
             return managedItem;
         }
@@ -152,7 +149,7 @@ namespace Uchu.World
         {
             var itemCount = count;
             
-            Detach(() =>
+            var _ = Task.Run(() =>
             {
                 OnLotAdded.Invoke(lot, itemCount);
             });
@@ -211,6 +208,8 @@ namespace Uchu.World
             {
                 foreach (var item in inventory.Items.Where(i => i.Lot == lot))
                 {
+                    if (item.Settings.Count != default) continue;
+
                     if (item.Count == stackSize) continue;
 
                     var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
@@ -323,7 +322,7 @@ namespace Uchu.World
                 {
                     var storedCount = item.Count - toRemove;
                     
-                    Detach(async () =>
+                    var _ = Task.Run(async () =>
                     {
                         await item.SetCountSilentAsync(storedCount);
                     });

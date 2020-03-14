@@ -7,7 +7,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
-    [ZoneSpecific(ZoneId.AvantGardens)]
+    [ZoneSpecific(1100)]
     public class Fans : NativeScript
     {
         public override Task LoadAsync()

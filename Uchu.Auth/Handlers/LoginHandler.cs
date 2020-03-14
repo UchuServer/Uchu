@@ -72,7 +72,7 @@ namespace Uchu.Auth.Handlers
                         }
                         else
                         {
-                            var key = Server.SessionCache.CreateSession(user.UserId);
+                            var key = Server.SessionCache.CreateSession(user.Id);
 
                             info.LoginCode = LoginCode.Success;
                             info.UserKey = key;
