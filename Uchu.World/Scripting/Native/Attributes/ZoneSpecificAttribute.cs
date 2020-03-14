@@ -12,5 +12,10 @@ namespace Uchu.World.Scripting.Native
         {
             ZoneId = zoneId;
         }
+
+        public ZoneSpecificAttribute(int zoneId)
+        {
+            ZoneId = (ZoneId) zoneId;
+        }
     }
 }

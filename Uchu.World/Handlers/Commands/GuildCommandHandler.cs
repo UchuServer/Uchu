@@ -33,7 +33,7 @@ namespace Uchu.World.Handlers.Commands
             
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
 
             Guild guild;
             
@@ -98,12 +98,12 @@ namespace Uchu.World.Handlers.Commands
                     
                     player.CentralNoticeGui($"You created your guild \"{name}\"!");
 
-                    var id = IdUtilities.GenerateObjectId();
+                    var id = ObjectId.Standalone;
                     
                     guild = new Guild
                     {
                         Id = id,
-                        CreatorId = character.CharacterId,
+                        CreatorId = character.Id,
                         Name = name
                     };
 
@@ -126,7 +126,7 @@ namespace Uchu.World.Handlers.Commands
 
                     guild = await ctx.Guilds.FirstAsync(g => g.Id == character.GuildId);
 
-                    if (guild.CreatorId == character.CharacterId)
+                    if (guild.CreatorId == character.Id)
                     {
                         await DismantleGuildAsync(player);
                     }
@@ -167,7 +167,7 @@ namespace Uchu.World.Handlers.Commands
                         g => g.Id == character.GuildId
                     );
 
-                    if (guild.Invites.Any(i => i.RecipientId == invited.CharacterId))
+                    if (guild.Invites.Any(i => i.RecipientId == invited.Id))
                     {
                         player.CentralNoticeGui($"There is already a pending invite to {playerName}!");
                         
@@ -177,15 +177,15 @@ namespace Uchu.World.Handlers.Commands
                     var invite = new GuildInvite
                     {
                         GuildId = guild.Id,
-                        RecipientId = invited.CharacterId,
-                        SenderId = character.CharacterId
+                        RecipientId = invited.Id,
+                        SenderId = character.Id
                     };
 
                     await ctx.GuildInvites.AddAsync(invite);
 
                     await ctx.SaveChangesAsync();
 
-                    var invitedPlayer = player.Zone.Players.FirstOrDefault(p => p.ObjectId == invited.CharacterId);
+                    var invitedPlayer = player.Zone.Players.FirstOrDefault(p => p.Id == invited.Id);
 
                     if (invitedPlayer != default)
                     {
@@ -215,7 +215,7 @@ namespace Uchu.World.Handlers.Commands
                         break;
                     }
 
-                    var guildInvite = guild.Invites.FirstOrDefault(i => i.RecipientId == player.ObjectId);
+                    var guildInvite = guild.Invites.FirstOrDefault(i => i.RecipientId == player.Id);
 
                     if (guildInvite == default)
                     {
@@ -251,7 +251,7 @@ namespace Uchu.World.Handlers.Commands
                         break;
                     }
 
-                    var declineInvite = guild.Invites.FirstOrDefault(i => i.RecipientId == player.ObjectId);
+                    var declineInvite = guild.Invites.FirstOrDefault(i => i.RecipientId == player.Id);
 
                     if (declineInvite == default)
                     {
@@ -278,7 +278,7 @@ namespace Uchu.World.Handlers.Commands
         {
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
 
             var guild = await ctx.Guilds.FirstOrDefaultAsync(g => g.Id == character.GuildId);
 
@@ -299,13 +299,13 @@ namespace Uchu.World.Handlers.Commands
             
             foreach (var member in members)
             {
-                var memberPlayer = player.Zone.Players.FirstOrDefault(p => p.ObjectId ==  member.CharacterId);
+                var memberPlayer = player.Zone.Players.FirstOrDefault(p => p.Id ==  member.Id);
 
                 await UiHelper.AddGuildMemberAsync(player, index++, new GuildMember
                 {
                     Name = member.Name,
                     Online = memberPlayer != default,
-                    Rank = guild.CreatorId == member.CharacterId ? "Owner" : "Member",
+                    Rank = guild.CreatorId == member.Id ? "Owner" : "Member",
                     Zone = ((ZoneId) member.LastZone).ToString()
                 });
             }
@@ -317,7 +317,7 @@ namespace Uchu.World.Handlers.Commands
         {
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
 
             var guild = await ctx.Guilds.FirstAsync(g => g.Id == character.GuildId);
 
@@ -327,7 +327,7 @@ namespace Uchu.World.Handlers.Commands
             {
                 member.GuildId = 0;
                 
-                var memberPlayer = player.Zone.Players.FirstOrDefault(p => p.ObjectId ==  member.CharacterId);
+                var memberPlayer = player.Zone.Players.FirstOrDefault(p => p.Id ==  member.Id);
 
                 memberPlayer?.CentralNoticeGui($"{guild.Name} was dismantled, you are no longer a member of a guild.");
             }
@@ -344,7 +344,7 @@ namespace Uchu.World.Handlers.Commands
             if (invite == default)
             {
                 invite = await ctx.GuildInvites.FirstOrDefaultAsync(
-                    g => g.RecipientId == player.ObjectId
+                    g => g.RecipientId == player.Id
                 );
             }
             else

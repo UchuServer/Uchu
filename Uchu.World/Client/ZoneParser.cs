@@ -19,13 +19,13 @@ namespace Uchu.World.Client
         private readonly IFileResources _resources;
         private readonly XmlSerializer _triggerSerializer = new XmlSerializer(typeof(TriggerCollection));
 
-        public Dictionary<ZoneId, ZoneInfo> Zones { get; }
+        public Dictionary<int, ZoneInfo> Zones { get; }
 
         public ZoneParser(IFileResources resources)
         {
             _resources = resources;
             
-            Zones = new Dictionary<ZoneId, ZoneInfo>();
+            Zones = new Dictionary<int, ZoneInfo>();
         }
 
         public async Task LoadZoneDataAsync(int seek)
@@ -90,7 +90,7 @@ namespace Uchu.World.Client
                     
                     Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
 
-                    Zones[(ZoneId) luz.WorldId] = new ZoneInfo
+                    Zones[(int) luz.WorldId] = new ZoneInfo
                     {
                         LuzFile = luz,
                         LvlFiles = lvlFiles,

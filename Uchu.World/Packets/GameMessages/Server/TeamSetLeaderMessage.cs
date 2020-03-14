@@ -10,7 +10,7 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
-            writer.Write(NewLeader.ObjectId);
+            writer.Write(NewLeader.Id);
         }
     }
 }

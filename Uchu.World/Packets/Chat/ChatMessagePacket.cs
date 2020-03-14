@@ -33,7 +33,7 @@ namespace Uchu.World
             {
                 writer.WriteString(Sender.Name, wide: true);
 
-                writer.Write((ulong) Sender.ObjectId);
+                writer.Write((ulong) Sender.Id);
             }
             else
             {

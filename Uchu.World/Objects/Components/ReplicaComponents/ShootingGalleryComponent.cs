@@ -63,7 +63,7 @@ namespace Uchu.World
             writer.Write(CannonAngle);
             writer.Write(Facing);
 
-            writer.Write((ulong) Operator.ObjectId);
+            writer.Write((ulong) Operator.Id);
 
             writer.Write(CannonTimeout);
             writer.Write(CannonFoV);

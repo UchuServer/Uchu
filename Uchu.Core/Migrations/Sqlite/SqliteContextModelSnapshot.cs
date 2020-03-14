@@ -18,7 +18,7 @@ namespace Uchu.Core.Migrations.Sqlite
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
-                    b.Property<long>("CharacterId")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("BaseHealth");
@@ -61,7 +61,7 @@ namespace Uchu.Core.Migrations.Sqlite
 
                     b.Property<int>("LastZone");
 
-                    b.Property<ushort>("LaunchedRocketFrom");
+                    b.Property<int>("LaunchedRocketFrom");
 
                     b.Property<long>("Level");
 
@@ -150,7 +150,7 @@ namespace Uchu.Core.Migrations.Sqlite
 
                     b.Property<long>("UserId");
 
-                    b.HasKey("CharacterId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
@@ -187,32 +187,74 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.ToTable("Mails");
                 });
 
-            modelBuilder.Entity("Uchu.Core.Friend", b =>
+            modelBuilder.Entity("Uchu.Core.CharacterTrade", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<long>("FriendId");
+                    b.Property<long>("CurrencyA");
 
-                    b.Property<long>("FriendTwoId");
+                    b.Property<long>("CurrencyB");
 
-                    b.Property<bool>("IsAccepted");
+                    b.Property<long>("PartyA");
 
-                    b.Property<bool>("IsBestFriend");
-
-                    b.Property<bool>("IsDeclined");
-
-                    b.Property<bool>("RequestHasBeenSent");
-
-                    b.Property<bool>("RequestingBestFriend");
+                    b.Property<long>("PartyB");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FriendId");
+                    b.ToTable("Trades");
+                });
 
-                    b.HasIndex("FriendTwoId");
+            modelBuilder.Entity("Uchu.Core.ChatTranscript", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("Author");
+
+                    b.Property<string>("Message");
+
+                    b.Property<long>("Receiver");
+
+                    b.Property<DateTime>("SentTime");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatTranscript");
+                });
+
+            modelBuilder.Entity("Uchu.Core.Friend", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("BestFriend");
+
+                    b.Property<long>("FriendA");
+
+                    b.Property<long>("FriendB");
+
+                    b.HasKey("Id");
 
                     b.ToTable("Friends");
+                });
+
+            modelBuilder.Entity("Uchu.Core.FriendRequest", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("BestFriend");
+
+                    b.Property<long>("Receiver");
+
+                    b.Property<long>("Sender");
+
+                    b.Property<bool>("Sent");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FriendRequests");
                 });
 
             modelBuilder.Entity("Uchu.Core.Guild", b =>
@@ -249,7 +291,7 @@ namespace Uchu.Core.Migrations.Sqlite
 
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
                 {
-                    b.Property<long>("InventoryItemId")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<long>("CharacterId");
@@ -264,11 +306,13 @@ namespace Uchu.Core.Migrations.Sqlite
 
                     b.Property<bool>("IsEquipped");
 
-                    b.Property<int>("LOT");
+                    b.Property<int>("Lot");
+
+                    b.Property<long>("ParentId");
 
                     b.Property<int>("Slot");
 
-                    b.HasKey("InventoryItemId");
+                    b.HasKey("Id");
 
                     b.HasIndex("CharacterId");
 
@@ -349,6 +393,24 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.ToTable("SessionCaches");
                 });
 
+            modelBuilder.Entity("Uchu.Core.TradeTransactionItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("ItemId");
+
+                    b.Property<long>("Party");
+
+                    b.Property<long>("TradeId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TradeId");
+
+                    b.ToTable("TransactionItems");
+                });
+
             modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
                 {
                     b.Property<long>("Id")
@@ -367,7 +429,7 @@ namespace Uchu.Core.Migrations.Sqlite
 
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
-                    b.Property<long>("UserId")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<bool>("Banned");
@@ -393,7 +455,7 @@ namespace Uchu.Core.Migrations.Sqlite
                         .IsRequired()
                         .HasMaxLength(33);
 
-                    b.HasKey("UserId");
+                    b.HasKey("Id");
 
                     b.ToTable("Users");
                 });
@@ -403,19 +465,6 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("Uchu.Core.Friend", b =>
-                {
-                    b.HasOne("Uchu.Core.Character", "FriendOne")
-                        .WithMany()
-                        .HasForeignKey("FriendId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Uchu.Core.Character", "FriendTwo")
-                        .WithMany()
-                        .HasForeignKey("FriendTwoId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -456,6 +505,14 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.MissionTask", "MissionTask")
                         .WithMany("Values")
                         .HasForeignKey("MissionTaskId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.TradeTransactionItem", b =>
+                {
+                    b.HasOne("Uchu.Core.CharacterTrade", "Trade")
+                        .WithMany("TransactionItems")
+                        .HasForeignKey("TradeId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

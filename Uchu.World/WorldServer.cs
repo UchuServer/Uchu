@@ -111,9 +111,10 @@ namespace Uchu.World
 
             Logger.Information($"Starting {zone}");
 
-            var info = ZoneParser.Zones?[(ZoneId) zone];
-
-            if (info == default) throw new Exception($"Failed to find info for {(ZoneId) zone}");
+            if (ZoneParser?.Zones == default || !ZoneParser.Zones.TryGetValue(zone, out var info))
+            {
+                throw new Exception($"Failed to find info for {(ZoneId) zone}");
+            }
 
             var zoneInstance = new Zone(info, this, 0, 0); // TODO Instance/Clone
             
@@ -238,16 +239,16 @@ namespace Uchu.World
 
             Logger.Debug($"Received {((IGameMessage) messageHandler.Packet).GameMessageId}");
 
-            var player = Zones.Where(z => z.ZoneInfo.LuzFile.WorldId == session.ZoneId).SelectMany(z => z.Players)
+            var player = Zones.Where(z => z.ZoneId == session.ZoneId).SelectMany(z => z.Players)
                 .FirstOrDefault(p => p.Connection.Equals(connection));
 
-            if (player == default)
+            if (player?.Zone == default)
             {
                 Logger.Error($"{connection} is not logged in but sent a GameMessage.");
                 return;
             }
 
-            var associate = player.Zone.GameObjects.FirstOrDefault(o => o.ObjectId == objectId);
+            var associate = player.Zone.GameObjects.FirstOrDefault(o => o.Id == objectId);
 
             if (associate == default)
             {

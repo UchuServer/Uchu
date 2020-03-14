@@ -20,7 +20,7 @@ namespace Uchu.World
         {
             using var ctx = new UchuContext();
             return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.CharacterId == GameObject.ObjectId && m.CompletionCount > 0
+                m => m.Character.Id == GameObject.Id && m.CompletionCount > 0
             ).ToArray();
         }
 
@@ -28,7 +28,7 @@ namespace Uchu.World
         {
             using var ctx = new UchuContext();
             return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.CharacterId == GameObject.ObjectId &&
+                m => m.Character.Id == GameObject.Id &&
                      m.State == (int) MissionState.Active ||
                      m.State == (int) MissionState.CompletedActive
             ).ToArray();
@@ -38,7 +38,7 @@ namespace Uchu.World
         {
             using var ctx = new UchuContext();
             return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.CharacterId == GameObject.ObjectId
+                m => m.Character.Id == GameObject.Id
             ).ToArray();
         }
 
@@ -72,7 +72,7 @@ namespace Uchu.World
             await using var ctx = new UchuContext();
 
             var missions = await ctx.Missions.Where(
-                m => m.CharacterId == GameObject.ObjectId
+                m => m.CharacterId == GameObject.Id
             ).ToArrayAsync();
 
             MissionInstances = new List<MissionInstance>();
@@ -422,10 +422,10 @@ namespace Uchu.World
 
                 var activeTask = instance.Tasks.First(t => t.TaskId == task.Uid);
 
-                if (progress != null) Detach(async () =>
+                if (progress != null)
                 {
-                    await progress(activeTask as T);
-                });
+                    var _ = Task.Run(async () => await progress(activeTask as T));
+                }
             }
         }
     }

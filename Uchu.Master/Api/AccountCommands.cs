@@ -58,7 +58,7 @@ namespace Uchu.Master.Api
                 if (user == default) return response;
 
                 response.Success = true;
-                response.Id = user.UserId;
+                response.Id = user.Id;
                 response.Username = user.Username;
                 response.Hash = user.Password;
             }
@@ -254,7 +254,7 @@ namespace Uchu.Master.Api
                 response.Success = true;
                 response.Username = user.Username;
                 response.Hash = user.Password;
-                response.Id = user.UserId;
+                response.Id = user.Id;
                 response.Banned = user.Banned;
                 response.BannedReason = user.BannedReason;
                 response.Level = user.GameMasterLevel;
@@ -272,7 +272,7 @@ namespace Uchu.Master.Api
 
             response.Success = true;
 
-            response.Accounts = await ctx.Users.Select(u => u.UserId).ToListAsync();
+            response.Accounts = await ctx.Users.Select(u => u.Id).ToListAsync();
 
             return response;
         }

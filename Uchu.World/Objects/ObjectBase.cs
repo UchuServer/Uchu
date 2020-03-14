@@ -45,15 +45,5 @@ namespace Uchu.World
 
             _listening = list.ToArray();
         }
-
-        protected void Detach(Func<Task> task)
-        {
-            Task.Run(task);
-        }
-
-        protected void Detach(Action action)
-        {
-            Task.Run(action);
-        }
     }
 }

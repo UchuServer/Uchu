@@ -11,7 +11,7 @@ namespace Uchu.World
 
             if (id == -1) return null;
 
-            var gameObject = zone.GameObjects.FirstOrDefault(g => g.ObjectId == id);
+            var gameObject = zone.GameObjects.FirstOrDefault(g => g.Id == id);
 
             return gameObject;
         }

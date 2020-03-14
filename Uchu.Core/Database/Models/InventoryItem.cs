@@ -5,10 +5,11 @@ namespace Uchu.Core
 {
     public class InventoryItem
     {
-        public long InventoryItemId { get; set; }
+        [Key]
+        public long Id { get; set; }
 
         [Required]
-        public int LOT { get; set; }
+        public int Lot { get; set; }
 
         [Required]
         public int Slot { get; set; }
@@ -17,15 +18,17 @@ namespace Uchu.Core
         public long Count { get; set; } = 1;
 
         [Required]
-        public bool IsBound { get; set; } = false;
+        public bool IsBound { get; set; }
 
         [Required]
-        public bool IsEquipped { get; set; } = false;
+        public bool IsEquipped { get; set; }
 
         [Required]
-        public int InventoryType { get; set; } = 0;
+        public int InventoryType { get; set; }
 
-        public string ExtraInfo { get; set; } = null;
+        public string ExtraInfo { get; set; }
+        
+        public long ParentId { get; set; }
 
         public long CharacterId { get; set; }
         

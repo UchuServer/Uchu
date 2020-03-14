@@ -23,13 +23,13 @@ namespace Uchu.World
 
             if (writer.Flag(NoLootOnDeath)) writer.WriteBit(NoLootOnDeath);
 
-            writer.Write(Player.ObjectId);
+            writer.Write(Player.Id);
 
             writer.WriteString(Player.Name, wide: true);
 
             writer.WriteBit(false);
 
-            if (writer.Flag(Player.Zone.ZoneInfo.LuzFile.WorldId != 0)) writer.Write((ushort) Player.Zone.ZoneInfo.LuzFile.WorldId);
+            if (writer.Flag(Player.Zone.ZoneId != 0)) writer.Write((ushort) Player.Zone.ZoneId);
         }
     }
 }

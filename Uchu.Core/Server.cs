@@ -32,8 +32,6 @@ namespace Uchu.Core
 
     public class Server
     {
-        private Task _runTask;
-
         protected HandlerMap HandlerMap { get; }
 
         protected CommandHandleMap CommandHandleMap { get; }
@@ -159,42 +157,52 @@ namespace Uchu.Core
 
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
-            Logger.Information("Registering assemblies...");
+            RegisterDefaultAssemblies(assembly);
+
+            if (acceptConsoleCommands)
+            {
+                StartConsole();
+            }
             
+            Running = true;
+
+            var tasks = new[]
+            {
+                RakNetServer.RunAsync(),
+                Api.StartAsync(ApiPort)
+            };
+
+            await Task.WhenAny(tasks).ConfigureAwait(false);
+
+            await StopAsync().ConfigureAwait(false);
+        }
+
+        private void StartConsole()
+        {
+            Task.Run(async () =>
+            {
+                Logger.Information("Ready to accept console command...");
+
+                while (Running)
+                {
+                    var command = Console.ReadLine();
+
+                    if (string.IsNullOrWhiteSpace(command)) continue;
+
+                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console)
+                        .ConfigureAwait(false));
+                }
+            });
+        }
+
+        private void RegisterDefaultAssemblies(Assembly assembly)
+        {
+            Logger.Information("Registering assemblies...");
+
             RegisterAssembly(typeof(Server).Assembly);
             RegisterAssembly(assembly);
 
             RakNetServer.MessageReceived += HandlePacketAsync;
-
-            Running = true;
-
-            if (acceptConsoleCommands)
-            {
-                var _ = Task.Run(async () =>
-                {
-                    Logger.Information($"Ready to accept console command...");
-                    
-                    while (Running)
-                    {
-                        var command = Console.ReadLine();
-                        
-                        if (string.IsNullOrWhiteSpace(command)) continue;
-                        
-                        Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console).ConfigureAwait(false));
-                    }
-                });
-            }
-            
-            Logger.Information($"Starting server: {Id}");
-            
-            var networkThread = new Thread(async () =>
-            {
-                await RakNetServer.RunAsync().ConfigureAwait(false);
-            });
-
-            networkThread.Start();
-            
-            await Api.StartAsync(ApiPort).ConfigureAwait(false);
         }
 
         public Task StopAsync()
@@ -210,16 +218,6 @@ namespace Uchu.Core
             return RakNetServer.ShutdownAsync();
         }
 
-        public static IPAddress[] GetAddresses()
-        {
-            return NetworkInterface.GetAllNetworkInterfaces().Where(i =>
-                (i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
-                 i.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
-                i.OperationalStatus == OperationalStatus.Up
-            ).SelectMany(i => i.GetIPProperties().UnicastAddresses
-            ).Select(a => a.Address).Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
-        }
-
         public string GetHost()
         {
             return !string.IsNullOrWhiteSpace(Config.Networking.Hostname) ? Config.Networking.Hostname : "localhost";
@@ -227,6 +225,11 @@ namespace Uchu.Core
 
         public virtual void RegisterAssembly(Assembly assembly)
         {
+            if (assembly == default)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+            
             var groups = assembly.GetTypes().Where(c => c.IsSubclassOf(typeof(HandlerGroup)));
 
             foreach (var group in groups)
@@ -469,7 +472,7 @@ namespace Uchu.Core
                     
                     if (!SessionCache.IsKey(key))
                     {
-                        SessionCache.CreateSession(user.UserId, key);
+                        SessionCache.CreateSession(user.Id, key);
                     }
                 }
             }

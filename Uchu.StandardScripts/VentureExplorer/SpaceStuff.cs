@@ -9,7 +9,7 @@ namespace Uchu.StandardScripts.VentureExplorer
     /// <summary>
     ///     LUA Reference: l_ag_space_stuff.lua
     /// </summary>
-    [ZoneSpecific(ZoneId.VentureExplorer)]
+    [ZoneSpecific(1000)]
     public class SpaceStuff : NativeScript
     {
         private const string ScriptName = "l_ag_space_stuff.lua";

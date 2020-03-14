@@ -47,7 +47,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
 
             character.Rocket = message.Tokens;
 

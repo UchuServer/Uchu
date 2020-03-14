@@ -25,7 +25,7 @@ namespace Uchu.World
                     using var ctx = new UchuContext();
 
                     var character = ctx.Characters.First(
-                        c => c.CharacterId == ManagerComponent.GameObject.ObjectId
+                        c => c.Id == ManagerComponent.GameObject.Id
                     );
 
                     return character.InventorySize;
@@ -40,7 +40,7 @@ namespace Uchu.World
                     using var ctx = new UchuContext();
 
                     var character = ctx.Characters.First(
-                        c => c.CharacterId == ManagerComponent.GameObject.ObjectId
+                        c => c.Id == ManagerComponent.GameObject.Id
                     );
 
                     character.InventorySize = value;
@@ -67,14 +67,14 @@ namespace Uchu.World
             using var ctx = new UchuContext();
             var playerCharacter = ctx.Characters
                 .Include(c => c.Items)
-                .First(c => c.CharacterId == managerComponent.GameObject.ObjectId);
+                .First(c => c.Id == managerComponent.GameObject.Id);
 
             var inventoryItems = playerCharacter.Items
-                .Where(item => (InventoryType) item.InventoryType == inventoryType)
+                .Where(item => item.ParentId == ObjectId.Invalid && (InventoryType) item.InventoryType == inventoryType)
                 .ToList();
 
             _items = inventoryItems.Select(
-                i => Item.Instantiate(i.InventoryItemId, this)
+                i => Item.Instantiate(i.Id, this)
             ).Where(item => !ReferenceEquals(item, default)).ToList();
 
             Size = inventoryType != InventoryType.Items ? 1000 : playerCharacter.InventorySize;
@@ -89,7 +89,7 @@ namespace Uchu.World
 
         public Item this[uint slot] => Items.FirstOrDefault(i => i.Slot == slot);
 
-        public Item this[long id] => Items.FirstOrDefault(i => i.ObjectId == id);
+        public Item this[long id] => Items.FirstOrDefault(i => i.Id == id);
 
         public void ManageItem(Item item)
         {

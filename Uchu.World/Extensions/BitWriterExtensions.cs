@@ -9,7 +9,7 @@ namespace Uchu.World
     {
         public static void Write(this BitWriter @this, GameObject gameObject)
         {
-            @this.Write(gameObject?.ObjectId ?? -1);
+            @this.Write(gameObject?.Id ?? -1);
         }
 
         public static void WriteLdfCompressed(this BitWriter @this, LegoDataDictionary dict)

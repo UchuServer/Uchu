@@ -19,7 +19,7 @@ namespace Uchu.Char.Handlers
             await using var ctx = new UchuContext();
 
             var user = await ctx.Users.Include(u => u.Characters).ThenInclude(c => c.Items)
-                .SingleAsync(u => u.UserId == userId);
+                .SingleAsync(u => u.Id == userId);
 
             var charCount = user.Characters.Count;
             var chars = new CharacterListResponse.Character[charCount];
@@ -32,10 +32,10 @@ namespace Uchu.Char.Handlers
             {
                 var chr = user.Characters[i];
 
-                var items = chr.Items.Where(itm => itm.IsEquipped).Select(itm => (uint) itm.LOT).ToArray();
+                var items = chr.Items.Where(itm => itm.IsEquipped).Select(itm => (uint) itm.Lot).ToArray();
                 chars[i] = new CharacterListResponse.Character
                 {
-                    CharacterId = chr.CharacterId,
+                    CharacterId = chr.Id,
                     Name = chr.Name,
                     UnnaprovedName = chr.CustomName,
                     NameRejected = chr.NameRejected,
@@ -139,11 +139,11 @@ namespace Uchu.Char.Handlers
                     return;
                 }
 
-                var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.UserId == session.UserId);
+                var user = await ctx.Users.Include(u => u.Characters).SingleAsync(u => u.Id == session.UserId);
 
                 user.Characters.Add(new Character
                 {
-                    CharacterId = IdUtilities.GenerateObjectId(),
+                    Id = ObjectId.Standalone,
                     Name = name,
                     CustomName = packet.CharacterName,
                     ShirtColor = packet.ShirtColor,
@@ -156,7 +156,7 @@ namespace Uchu.Char.Handlers
                     EyebrowStyle = packet.EyebrowStyle,
                     EyeStyle = packet.EyeStyle,
                     MouthStyle = packet.MouthStyle,
-                    LastZone = (int) ZoneId.VentureExplorerCinematic,
+                    LastZone = 0,
                     LastInstance = 0,
                     LastClone = 0,
                     InventorySize = 20,
@@ -165,8 +165,8 @@ namespace Uchu.Char.Handlers
                     {
                         new InventoryItem
                         {
-                            InventoryItemId = IdUtilities.GenerateObjectId(),
-                            LOT = (int) shirtLot,
+                            Id = ObjectId.Standalone,
+                            Lot = (int) shirtLot,
                             Slot = 0,
                             Count = 1,
                             InventoryType = (int) InventoryType.Items,
@@ -174,8 +174,8 @@ namespace Uchu.Char.Handlers
                         },
                         new InventoryItem
                         {
-                            InventoryItemId = IdUtilities.GenerateObjectId(),
-                            LOT = (int) pantsLot,
+                            Id = ObjectId.Standalone,
+                            Lot = (int) pantsLot,
                             Slot = 1,
                             Count = 1,
                             InventoryType = (int) InventoryType.Items,
@@ -187,7 +187,8 @@ namespace Uchu.Char.Handlers
                 });
 
                 Logger.Debug(
-                    $"{user.Username} created character \"{packet.CharacterName}\" with the pre-made name of \"{name}\"");
+                    $"{user.Username} created character \"{packet.CharacterName}\" with the pre-made name of \"{name}\""
+                );
 
                 await ctx.SaveChangesAsync();
 
@@ -258,7 +259,7 @@ namespace Uchu.Char.Handlers
 
             await using var ctx = new UchuContext();
 
-            var character = await ctx.Characters.FirstAsync(c => c.CharacterId == packet.CharacterId);
+            var character = await ctx.Characters.FirstAsync(c => c.Id == packet.CharacterId);
 
             character.LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds();
 
@@ -266,7 +267,7 @@ namespace Uchu.Char.Handlers
 
             var zone = (ZoneId) character.LastZone;
 
-            var requestZone = zone == ZoneId.VentureExplorerCinematic ? ZoneId.VentureExplorer : zone;
+            var requestZone = (ZoneId) (zone == 0 ? 1000 : zone);
 
             //
             // We don't want to lock up the server on a world server request, as it may take time.

@@ -81,7 +81,7 @@ namespace Uchu.World
             writer.WriteBit(true);
             writer.Write(TotalItems);
 
-            writer.Write(Item.ObjectId);
+            writer.Write(Item.Id);
 
             writer.Write(FlyingLootPosition);
 

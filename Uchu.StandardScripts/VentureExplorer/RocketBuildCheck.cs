@@ -5,7 +5,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
-    [ZoneSpecific(ZoneId.VentureExplorer)]
+    [ZoneSpecific(1000)]
     public class RocketBuildCheck: NativeScript
     {
         public override Task LoadAsync()

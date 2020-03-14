@@ -9,7 +9,7 @@ namespace Uchu.StandardScripts.VentureExplorer
     /// <summary>
     ///     LUA Reference: l_ag_imag_smashable.lua
     /// </summary>
-    [ZoneSpecific(ZoneId.VentureExplorer)]
+    [ZoneSpecific(1000)]
     public class ImaginationSmashable : NativeScript
     {
         private const string ScriptName = "l_ag_imag_smashable.lua";

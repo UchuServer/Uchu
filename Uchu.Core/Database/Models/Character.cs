@@ -7,7 +7,7 @@ namespace Uchu.Core
     public class Character
     {
         [JsonIgnore]
-        public long CharacterId { get; set; }
+        public long Id { get; set; }
 
         [MaxLength(33), Required]
         public string Name { get; set; }
@@ -184,7 +184,7 @@ namespace Uchu.Core
         
         public long GuildId { get; set; }
 
-        public ZoneId LaunchedRocketFrom { get; set; }
+        public int LaunchedRocketFrom { get; set; }
         
         [MaxLength(30)]
         public string Rocket { get; set; }

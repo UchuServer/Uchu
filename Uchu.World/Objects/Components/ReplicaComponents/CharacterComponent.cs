@@ -44,7 +44,7 @@ namespace Uchu.World
             writer.Write((uint) Character.EyebrowStyle);
             writer.Write((uint) Character.EyeStyle);
             writer.Write((uint) Character.MouthStyle);
-            writer.Write((ulong) Character.User.UserId);
+            writer.Write((ulong) Character.User.Id);
             writer.Write((ulong) Character.LastActivity);
             writer.Write<ulong>(0);
             writer.Write((ulong) Character.UniverseScore);
