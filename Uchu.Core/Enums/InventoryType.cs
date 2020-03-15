@@ -19,6 +19,7 @@ namespace Uchu.Core
         PropertyDeeds,
         VendorBuyback = 11,
         Hidden = 12,
+        BrickDonations,
         VaultModels = 14,
         Invalid = 100
     }

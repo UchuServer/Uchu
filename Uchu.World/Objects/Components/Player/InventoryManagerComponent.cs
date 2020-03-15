@@ -153,8 +153,13 @@ namespace Uchu.World
             {
                 OnLotAdded.Invoke(lot, itemCount);
             });
-            
-            var inventory = _inventories[inventoryType];
+
+            if (!_inventories.TryGetValue(inventoryType, out var inventory))
+            {
+                inventory = new Inventory(inventoryType, this);
+
+                _inventories[inventoryType] = inventory;
+            }
 
             // The math here cannot be executed in parallel
             

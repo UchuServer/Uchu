@@ -31,16 +31,30 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "give", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> GiveItem(string[] arguments, Player player)
         {
-            if (arguments.Length == 0 || arguments.Length > 2) return "give <lot> <count(optional)>";
+            if (arguments.Length == default) return "give <lot> <count(optional)> <inventory(optional)>";
 
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
             uint count = 1;
-            if (arguments.Length == 2)
+            if (arguments.Length >= 2)
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
+            if (arguments.Length != 3)
+            {
+                await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
+            }
+            else
+            {
+                if (!uint.TryParse(arguments[2], out var inventory))
+                    return "Invalid <inventory(optional)>";
+
+                await player.GetComponent<InventoryManagerComponent>().AddItemAsync(
+                    lot,
+                    count,
+                    (InventoryType) inventory
+                );
+            }
 
             return $"Successfully added {lot} x {count} to your inventory";
         }
@@ -203,7 +217,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Toggled jetpack state: {state}";
         }
 
-        [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = GameMasterLevel.Player)]
         public string Near(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects[0];

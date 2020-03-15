@@ -295,6 +295,9 @@ namespace Uchu.World
         
         // Undocumented?
         StartArrangingWithModel = 0x483,
-        SetPlayerControlScheme = 0x1a
+        SetPlayerControlScheme = 0x1a,
+        DonateBrick = 0x177,
+        WithdrawDonatedBrick = 0x178,
+        DonateBricks = 0x17a
     }
 }
