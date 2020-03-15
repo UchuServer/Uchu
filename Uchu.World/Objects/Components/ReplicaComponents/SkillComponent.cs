@@ -168,9 +168,7 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Mount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item);
-
-            await tree.BuildAsync();
+            var tree = await BehaviorTree.FromLotAsync(item);
 
             await tree.MountAsync(GameObject);
         }
@@ -187,10 +185,8 @@ namespace Uchu.World
             
             As<Player>().SendChatMessage($"Dismount skill: {onEquip.SkillId}");
             
-            var tree = new BehaviorTree(item);
-
-            await tree.BuildAsync();
-
+            var tree = await BehaviorTree.FromLotAsync(item);
+            
             await tree.DismantleAsync(GameObject);
         }
 
@@ -199,9 +195,7 @@ namespace Uchu.World
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
 
-            var tree = new BehaviorTree(skillId);
-
-            await tree.BuildAsync();
+            var tree = await BehaviorTree.FromSkillAsync(skillId);
 
             var syncId = ClaimSyncId();
 
@@ -227,8 +221,6 @@ namespace Uchu.World
         {
             if (As<Player>() == null) return;
 
-            As<Player>().SendChatMessage($"TARGET: {message.OptionalTarget} [{message.UsedMouse}]");
-
             try
             {
                 if (message.OptionalTarget != null)
@@ -250,12 +242,8 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                As<Player>().SendChatMessage($"START: {message.SkillId} [{message.Content.Length}]");
+                var tree = await BehaviorTree.FromSkillAsync(message.SkillId);
                 
-                var tree = new BehaviorTree(message.SkillId);
-
-                await tree.BuildAsync();
-
                 await using var writeStream = new MemoryStream();
                 using var writer = new BitWriter(writeStream);
 
@@ -266,20 +254,14 @@ namespace Uchu.World
                     SkillCastType.OnUse,
                     message.OptionalTarget
                 );
-
+                
                 _handledSkills[message.SkillHandle] = context;
                 
-                await using var cdClient = new CdClientContext();
-
-                var skillBehavior = await cdClient.SkillBehaviorTable.FirstOrDefaultAsync(
-                    s => s.SkillID == message.SkillId
-                );
-
-                var cost = skillBehavior.Imaginationcost ?? 0;
-
                 if (GameObject.TryGetComponent<Stats>(out var stats))
                 {
-                    stats.Imagination = (uint) ((int) stats.Imagination - cost);
+                    var info = tree.BehaviorIds.First(b => b.SkillId == message.SkillId);
+                    
+                    stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);
                 }
                 
                 Zone.ExcludingMessage(new EchoStartSkillMessage
@@ -297,7 +279,7 @@ namespace Uchu.World
                     UsedMouse = message.UsedMouse
                 }, As<Player>());
             }
-
+            
             await GameObject.GetComponent<MissionInventoryComponent>().UseSkillAsync(
                 message.SkillId
             );

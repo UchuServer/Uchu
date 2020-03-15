@@ -14,7 +14,7 @@ namespace Uchu.Core
 
         public uint Identifier => (uint) (Value & uint.MaxValue);
 
-        public uint Flags => (uint) (Value >> 32);
+        public ObjectIdFlags Flags => (ObjectIdFlags) Value;
 
         public ObjectId(ulong value)
         {

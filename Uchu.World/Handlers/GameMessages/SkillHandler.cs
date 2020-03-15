@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Uchu.Core;
@@ -8,39 +9,29 @@ namespace Uchu.World.Handlers.GameMessages
     public class SkillHandler : HandlerGroup
     {
         [PacketHandler]
-        public void SkillStartHandler(StartSkillMessage message, Player player)
+        public async Task SkillStartHandler(StartSkillMessage message, Player player)
         {
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    return player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                    
-                    return Task.CompletedTask;
-                }
-            });
+                await player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         [PacketHandler]
-        public void SyncSkillHandler(SyncSkillMessage message, Player player)
+        public async Task SyncSkillHandler(SyncSkillMessage message, Player player)
         {
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    return player.GetComponent<SkillComponent>().SyncUserSkillAsync(message);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                    
-                    return Task.CompletedTask;
-                }
-            });
+                await player.GetComponent<SkillComponent>().SyncUserSkillAsync(message);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         [PacketHandler]

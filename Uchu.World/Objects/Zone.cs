@@ -50,16 +50,20 @@ namespace Uchu.World
         // Managed objects
         //
 
-        private readonly List<Object> _managedObjects = new List<Object>();
+        private List<Object> ManagedObjects { get; }
+        
+        private List<GameObject> SpawnedObjects { get; }
 
         //
         // Macro properties
         //
 
-        public Object[] Objects => _managedObjects.ToArray();
+        public Object[] Objects => ManagedObjects.ToArray();
 
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
         public Player[] Players => Objects.OfType<Player>().ToArray();
+
+        public GameObject[] Spawned => SpawnedObjects.ToArray();
         
         public ZoneId ZoneId { get; private set; }
         
@@ -103,6 +107,8 @@ namespace Uchu.World
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
             UpdatedObjects = new List<UpdatedObject>();
+            ManagedObjects = new List<Object>();
+            SpawnedObjects = new List<GameObject>();
 
             Listen(OnDestroyed,() => { _running = false; });
         }
@@ -334,23 +340,37 @@ namespace Uchu.World
 
         internal void RegisterObject(Object obj)
         {
-            lock (_managedObjects)
+            lock (ManagedObjects)
             {
-                if (_managedObjects.Contains(obj)) return;
+                if (ManagedObjects.Contains(obj)) return;
             
                 OnObject.Invoke(obj);
 
-                _managedObjects.Add(obj);
+                ManagedObjects.Add(obj);
+
+                if (!(obj is GameObject gameObject)) return;
+                
+                if ((gameObject.Id.Flags & ObjectIdFlags.Spawned) != 0)
+                {
+                    SpawnedObjects.Add(gameObject);
+                }
             }
         }
 
         internal void UnregisterObject(Object obj)
         {
-            lock (_managedObjects)
+            lock (ManagedObjects)
             {
-                if (_managedObjects.Contains(obj))
+                if (!ManagedObjects.Contains(obj)) return;
+                
+                ManagedObjects.Remove(obj);
+
+                if (obj is GameObject gameObject)
                 {
-                    _managedObjects.Remove(obj);
+                    if ((gameObject.Id.Flags & ObjectIdFlags.Spawned) != 0)
+                    {
+                        SpawnedObjects.Remove(gameObject);
+                    }
                 }
 
                 var updated = UpdatedObjects.FirstOrDefault(u => u.Associate == obj);

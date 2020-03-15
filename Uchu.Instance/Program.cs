@@ -37,6 +37,8 @@ namespace Uchu.Instance
 
             await ConfigureAsync(args[1]).ConfigureAwait(false);
 
+            Logger.Debug($"Process ID: {Process.GetCurrentProcess().Id}");
+            
             try
             {
                 switch (ServerType)

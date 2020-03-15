@@ -33,9 +33,7 @@ namespace Uchu.World
             
             target ??= Target;
             
-            var tree = new BehaviorTree(Lot);
-
-            await tree.BuildAsync();
+            var tree = await BehaviorTree.FromLotAsync(Lot);
 
             await using var stream = new MemoryStream(data);
 
@@ -65,9 +63,7 @@ namespace Uchu.World
             
             if (distance > RadiusCheck) return;
             
-            var tree = new BehaviorTree(Lot);
-
-            await tree.BuildAsync();
+            var tree = await BehaviorTree.FromLotAsync(Lot);
 
             await using var stream = new MemoryStream();
 

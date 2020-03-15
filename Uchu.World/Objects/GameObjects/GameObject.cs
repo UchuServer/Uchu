@@ -310,6 +310,7 @@ namespace Uchu.World
             if (type.IsSubclassOf(typeof(GameObject)) || type == typeof(GameObject))
             {
                 var instance = (GameObject) Object.Instantiate(type, parent.Zone);
+                
                 instance.Id = objectId == 0L ? ObjectId.Standalone : objectId;
 
                 instance.Lot = lot;

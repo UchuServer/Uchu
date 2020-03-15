@@ -48,11 +48,11 @@ namespace Uchu.World
 
                 Zone.Update(this, async () =>
                 {
+                    await Perspective.TickAsync();
+
                     await CheckBannedStatusAsync();
                 }, 20);
             });
-            
-            Listen(OnPositionUpdate, async (_, __) => { await Perspective.TickAsync(); });
             
             Listen(OnDestroyed, () =>
             {
@@ -60,30 +60,6 @@ namespace Uchu.World
                 OnLootPickup.Clear();
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
-            });
-
-            Listen(OnPositionUpdate, (position, rotation) =>
-            {
-                foreach (var gameObject in Zone.GameObjects)
-                {
-                    var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
-
-                    var view = Perspective.View(gameObject);
-                    
-                    if (spawned && !view)
-                    {
-                        Zone.SendDestruction(gameObject, this);
-
-                        continue;
-                    }
-
-                    if (!spawned && view)
-                    {
-                        Zone.SendConstruction(gameObject, this);
-                    }
-                }
-                
-                return Task.CompletedTask;
             });
         }
 
@@ -362,6 +338,28 @@ namespace Uchu.World
             });
         }
 
+        internal void UpdateView()
+        {
+            foreach (var gameObject in Zone.Spawned)
+            {
+                var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+
+                var view = Perspective.View(gameObject);
+                    
+                if (spawned && !view)
+                {
+                    Zone.SendDestruction(gameObject, this);
+
+                    continue;
+                }
+
+                if (!spawned && view)
+                {
+                    Zone.SendConstruction(gameObject, this);
+                }
+            }
+        }
+        
         public void ViewUpdate(GameObject gameObject)
         {
             var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
@@ -411,7 +409,7 @@ namespace Uchu.World
 
             var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
-            character.LastZone = (int) zoneId;
+            character.LastZone = zoneId;
 
             await ctx.SaveChangesAsync();
 

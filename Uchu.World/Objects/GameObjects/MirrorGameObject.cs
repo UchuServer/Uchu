@@ -8,14 +8,14 @@ namespace Uchu.World
     {
         protected MirrorGameObject()
         {
-            OnStart.AddListener(() =>
+            Listen(OnStart, () =>
             {
                 var player = (Player) Author;
-                
-                player.OnPositionUpdate.AddListener(MimicMovement);
+
+                Listen(player.OnPositionUpdate, MimicMovement);
             });
             
-            OnDestroyed.AddListener(() =>
+            Listen(OnDestroyed, () =>
             {
                 foreach (var player in Author.Zone.Players)
                 {

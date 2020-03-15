@@ -670,7 +670,9 @@ namespace Uchu.World.Handlers.Commands
 
             if (arguments.Length == 0 || arguments.Contains("-t"))
             {
-                builder.AppendLine($"Uptime: {process.TotalProcessorTime:c}");
+                var span = DateTime.Now - process.StartTime;
+                
+                builder.AppendLine($"Uptime: {span.Days}D, {span.Hours}H, {span.Minutes}m, {span.Seconds}s, {span.Milliseconds}ms");
             }
             
             if (arguments.Length == 0 || arguments.Contains("-m"))
@@ -702,7 +704,24 @@ namespace Uchu.World.Handlers.Commands
 
             if (arguments.Length == 0 || arguments.Contains("-p"))
             {
-                builder.AppendLine($"CPU time: {process.TotalProcessorTime:c}");
+                var span = process.TotalProcessorTime;
+
+                builder.AppendLine($"CPU Time: {span.Days}D, {span.Hours}H, {span.Minutes}m, {span.Seconds}s, {span.Milliseconds}ms");
+            }
+
+            if (arguments.Length == 0 || arguments.Contains("-l"))
+            {
+                var start = DateTime.Now;
+                
+                var before = process.TotalProcessorTime;
+
+                await Task.Delay(1000);
+
+                var time = process.TotalProcessorTime - before;
+
+                builder.AppendLine(
+                    $"Load: {(int) (time.TotalMilliseconds / (DateTime.Now - start).TotalMilliseconds / Environment.ProcessorCount * 100)}%"
+                );
             }
 
             builder.Length--;

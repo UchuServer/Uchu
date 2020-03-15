@@ -48,7 +48,9 @@ namespace Uchu.World.Handlers
                 p => p != player
             ).ToArray());
 
-            await player.OnPositionUpdate.InvokeAsync(player.Transform.Position, player.Transform.Rotation);
+            player.UpdateView();
+
+            await player.OnPositionUpdate.InvokeAsync(packet.Position, packet.Rotation);
         }
     }
 }
