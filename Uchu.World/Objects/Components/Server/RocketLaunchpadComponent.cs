@@ -28,7 +28,7 @@ namespace Uchu.World
 
             if (rocket == default)
             {
-                Logger.Error($"Could not find a valid rocket for {player}", true);
+                Logger.Error($"Could not find a valid rocket for {player}");
                 
                 return;
             }

@@ -84,7 +84,7 @@ namespace Uchu.Core.IO
         {
             path = path.Replace('\\', '/').ToLower();
 
-            return File.OpenRead(Path.Combine(_config.ResourcesConfiguration.GameResourceFolder, path));
+            return File.OpenRead(Path.Combine(RootPath, path));
         }
     }
 }

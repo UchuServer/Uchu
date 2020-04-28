@@ -61,6 +61,7 @@ namespace Uchu.World
         public Object[] Objects => ManagedObjects.ToArray();
 
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
+        
         public Player[] Players => Objects.OfType<Player>().ToArray();
 
         public GameObject[] Spawned => SpawnedObjects.ToArray();
@@ -159,8 +160,6 @@ namespace Uchu.World
 
             foreach (var levelObject in objects)
             {
-                Logger.Information($"Loading {levelObject.Lot}");
-                
                 var task = Task.Run(() =>
                 {
                     try

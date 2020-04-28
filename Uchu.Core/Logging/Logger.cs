@@ -14,21 +14,21 @@ namespace Uchu.Core
 
         public static Configuration Config { get; set; }
 
-        public static void Log(object message, LogLevel logLevel = LogLevel.Information)
+        public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {
             switch (logLevel)
             {
                 case LogLevel.Debug:
-                    Debug(message);
+                    Debug(content);
                     break;
                 case LogLevel.Information:
-                    Information(message);
+                    Information(content);
                     break;
                 case LogLevel.Warning:
-                    Warning(message);
+                    Warning(content);
                     break;
                 case LogLevel.Error:
-                    Error(message);
+                    Error(content);
                     break;
                 case LogLevel.None:
                     break;
@@ -37,61 +37,176 @@ namespace Uchu.Core
             }
         }
 
-        public static void Debug(object obj)
+        public static void Debug(object content)
         {
-            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Debug, ConsoleColor.Green); });
+#if DEBUG
+            var trace = new StackTrace();
+
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Debug, ConsoleColor.Green, trace); });
+#else
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Debug, ConsoleColor.Green); });
+#endif
         }
 
-        public static void Information(object obj)
+        public static void Information(object content)
         {
-            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Information, ConsoleColor.White, true); });
+#if DEBUG
+            var trace = new StackTrace();
+
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Information, ConsoleColor.White, trace); });
+#else
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Information, ConsoleColor.White); });
+#endif
         }
 
-        public static void Warning(object obj)
+        public static void Warning(object content)
         {
-            Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Warning, ConsoleColor.Yellow); });
+#if DEBUG
+            var trace = new StackTrace();
+
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow, trace); });
+#else
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow); });
+#endif
         }
 
-        public static void Error(object obj, bool stackTrace = false)
+        public static void Error(object content)
         {
-            if (stackTrace)
+#if DEBUG
+            var trace = new StackTrace();
+
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Error, ConsoleColor.Red, trace); });
+#else
+            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Error, ConsoleColor.Red); });
+#endif
+        }
+
+#if DEBUG
+        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, StackTrace trace)
+#else
+        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color)
+#endif
+        {
+            if (message.Contains('\n', StringComparison.InvariantCulture))
             {
-                Task.Run(() => { InternalLog($"{obj}\n{new StackTrace()}", LogLevel.Error, ConsoleColor.Red); });
+                var parts = message.Split('\n');
+
+                var visual = parts.Max(p => p.Length);
+
+                foreach (var part in parts)
+                {
+                    var padding = new string(Enumerable.Repeat(' ', visual - part.Length).ToArray());
+
+                    var segment = $"{part}{padding}";
+
+#if DEBUG
+                    InternalLog(segment, logLevel, color, trace);
+
+                    trace = default;
+#else
+                    InternalLog(segment, logLevel, color);
+#endif
+                }
+
+                return;
             }
-            else
-            {
-                Task.Run(() => { InternalLog(obj.ToString(), LogLevel.Error, ConsoleColor.Red); });
-            }
-        }
 
-        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, bool clearColor = false)
-        {
-            lock (Lock)
             {
-                if (clearColor)
+                if (color == ConsoleColor.White)
+                {
                     Console.ResetColor();
+                }
                 else
+                {
                     Console.ForegroundColor = color;
+                }
 
-                message = $"[{logLevel}] {message}";
+                var level = logLevel.ToString();
 
-                var consoleLogLevel = Enum.Parse<LogLevel>(Config.ConsoleLogging.Level);
+                var padding = new string(Enumerable.Repeat(' ', 12 - level.Length).ToArray());
+
+                message = $"[{level}]{padding} {message}";
+
+#if DEBUG
+                var amount = 140 - message.Length;
+                padding = new string(Enumerable.Repeat(' ', amount > 0 ? amount : 1).ToArray());
+
+                message = $"{message}{padding}|";
+
+                if (trace != default)
+                {
+                    var invoker = TraceInvoker(trace);
+
+                    if (invoker?.DeclaringType != default)
+                        message = $"{message} {invoker.DeclaringType.Name}.{invoker.Name}";
+                }
+#endif
+
+                var configuration = Config.ConsoleLogging;
+
+                var consoleLogLevel = Enum.Parse<LogLevel>(configuration.Level);
+
+                string finalMessage;
 
                 if (consoleLogLevel <= logLevel)
                 {
-                    Console.WriteLine(message);
+                    finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+
+                    Console.WriteLine(finalMessage);
                     Console.ResetColor();
                 }
 
-                var fileLogLevel = Enum.Parse<LogLevel>(Config.FileLogging.Level);
+                configuration = Config.FileLogging;
 
-                if (fileLogLevel != LogLevel.None && fileLogLevel <= logLevel)
-                {
-                    var file = Config.FileLogging.Logfile;
+                var fileLogLevel = Enum.Parse<LogLevel>(configuration.Level);
 
-                    File.AppendAllTextAsync(file, $"{DateTime.Now} {message}\n");
-                }
+                if (fileLogLevel == LogLevel.None || fileLogLevel > logLevel) return;
+
+                var file = configuration.File;
+
+                finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+
+                File.AppendAllTextAsync(file, $"{finalMessage}\n");
             }
         }
+
+#if DEBUG
+        private static MethodBase TraceInvoker(StackTrace trace)
+        {
+            var frames = trace.GetFrames();
+
+            var avoid = new[]
+            {
+                typeof(Logger)
+            };
+
+            foreach (var frame in frames)
+            {
+                if (frame == default) continue;
+
+                var method = frame.GetMethod();
+
+                var type = method.DeclaringType;
+
+                if (type?.Namespace == default) continue;
+                
+                var attribute = type.GetCustomAttribute<LoggerIgnoreAttribute>();
+
+                if (avoid.Contains(type) || attribute != null) continue;
+
+                if (type.Namespace != null && !type.Namespace.StartsWith(
+                    "Uchu", StringComparison.InvariantCulture)
+                ) continue;
+
+                if (type.Name.Contains('<', StringComparison.InvariantCulture)) continue;
+
+                if (method.Name.Contains('<', StringComparison.InvariantCulture)) continue;
+
+                return method;
+            }
+
+            return default;
+        }
+#endif
     }
 }

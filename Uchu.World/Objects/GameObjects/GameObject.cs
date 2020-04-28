@@ -12,10 +12,8 @@ namespace Uchu.World
 {
     public class GameObject : Object
     {
-        private readonly List<Component> _components = new List<Component>();
+        private List<Component> Components { get; }
 
-        private readonly List<ReplicaComponent> _replicaComponents = new List<ReplicaComponent>();
-        
         private Mask _layer = new Mask(StandardLayer.Default);
 
         private ObjectWorldState _worldState;
@@ -92,11 +90,11 @@ namespace Uchu.World
 
         #region Events
 
-        public Event<Mask> OnLayerChanged { get; } = new Event<Mask>();
+        public Event<Mask> OnLayerChanged { get; }
 
-        public Event<Player> OnInteract { get; } = new Event<Player>();
+        public Event<Player> OnInteract { get; }
 
-        public AsyncEvent<int, Player> OnEmoteReceived { get; } = new AsyncEvent<int, Player>();
+        public AsyncEvent<int, Player> OnEmoteReceived { get; }
 
         #endregion
         
@@ -106,7 +104,7 @@ namespace Uchu.World
 
         public bool Alive => Zone?.TryGetGameObject(Id, out _) ?? false;
 
-        public ReplicaComponent[] ReplicaComponents => _replicaComponents.ToArray();
+        public ReplicaComponent[] ReplicaComponents => Components.OfType<ReplicaComponent>().ToArray();
 
         public Player[] Viewers => Zone.Players.Where(p => p.Perspective.TryGetNetworkId(this, out _)).ToArray();
 
@@ -116,9 +114,17 @@ namespace Uchu.World
         {
             Settings = new LegoDataDictionary();
             
+            Components = new List<Component>();
+            
+            OnLayerChanged = new Event<Mask>();
+            
+            OnInteract = new Event<Player>();
+            
+            OnEmoteReceived = new AsyncEvent<int, Player>();
+            
             Listen(OnStart, () =>
             {
-                foreach (var component in _components.ToArray()) Start(component);
+                foreach (var component in Components.ToArray()) Start(component);
             });
 
             Listen(OnDestroyed, () =>
@@ -131,7 +137,7 @@ namespace Uchu.World
                 
                 Zone.UnregisterObject(this);
 
-                foreach (var component in _components.ToArray()) Destroy(component);
+                foreach (var component in Components.ToArray()) Destroy(component);
 
                 Destruct(this);
             });
@@ -174,13 +180,11 @@ namespace Uchu.World
             {
                 component.GameObject = this;
 
-                _components.Add(component);
+                Components.Add(component);
 
                 var requiredComponents = type.GetCustomAttributes<RequireComponentAttribute>().ToArray();
 
                 foreach (var attribute in requiredComponents.Where(r => r.Priority)) AddComponent(attribute.Type);
-
-                if (component is ReplicaComponent replicaComponent) _replicaComponents.Add(replicaComponent);
 
                 foreach (var attribute in requiredComponents.Where(r => !r.Priority)) AddComponent(attribute.Type);
 
@@ -200,27 +204,27 @@ namespace Uchu.World
 
         public Component GetComponent(Type type)
         {
-            return _components.FirstOrDefault(c => c.GetType() == type);
+            return Components.FirstOrDefault(c => c.GetType() == type);
         }
 
         public Component[] GetComponents(Type type)
         {
-            return _components.Where(c => c.GetType() == type).ToArray();
+            return Components.Where(c => c.GetType() == type).ToArray();
         }
 
         public T GetComponent<T>() where T : Component
         {
-            return _components.FirstOrDefault(c => c is T) as T;
+            return Components.FirstOrDefault(c => c is T) as T;
         }
 
         public T[] GetComponents<T>() where T : Component
         {
-            return _components.OfType<T>().ToArray();
+            return Components.OfType<T>().ToArray();
         }
 
         public Component[] GetAllComponents()
         {
-            return _components.ToArray();
+            return Components.ToArray();
         }
 
         public bool TryGetComponent(Type type, out Component result)
@@ -251,7 +255,7 @@ namespace Uchu.World
         {
             var comp = GetComponent(type);
             
-            _components.Remove(comp);
+            Components.Remove(comp);
 
             Destroy(comp);
         }
@@ -263,7 +267,7 @@ namespace Uchu.World
 
         public void RemoveComponent(Component component)
         {
-            if (_components.Contains(component)) RemoveComponent(component.GetType());
+            if (Components.Contains(component)) RemoveComponent(component.GetType());
         }
 
         #endregion
@@ -544,18 +548,10 @@ namespace Uchu.World
 
             writer.WriteBit(hasTriggerId);
 
-            var hasSpawner = SpawnerObject != null;
-
-            writer.WriteBit(hasSpawner);
-
-            if (hasSpawner)
+            if (writer.Flag(SpawnerObject != null))
                 writer.Write(SpawnerObject.GameObject.Id);
 
-            var hasSpawnerNode = SpawnerObject != null && SpawnerObject.SpawnTemplate != 0;
-
-            writer.WriteBit(hasSpawnerNode);
-
-            if (hasSpawnerNode)
+            if (writer.Flag(SpawnerObject != null && SpawnerObject.SpawnTemplate != 0))
                 writer.Write(SpawnerObject.SpawnTemplate);
 
             var hasScale = !Transform.Scale.Equals(-1);
@@ -581,7 +577,7 @@ namespace Uchu.World
             // Construct replica components.
             //
 
-            foreach (var replicaComponent in _replicaComponents) replicaComponent.Construct(writer);
+            foreach (var replicaComponent in ReplicaComponents) replicaComponent.Construct(writer);
         }
 
         internal void WriteSerialize(BitWriter writer)
@@ -592,7 +588,7 @@ namespace Uchu.World
             // Serialize replica components.
             //
 
-            foreach (var replicaComponent in _replicaComponents) replicaComponent.Serialize(writer);
+            foreach (var replicaComponent in ReplicaComponents) replicaComponent.Serialize(writer);
         }
 
         private void WriteHierarchy(BitWriter writer)

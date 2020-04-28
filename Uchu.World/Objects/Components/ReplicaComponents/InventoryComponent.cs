@@ -16,14 +16,18 @@ namespace Uchu.World
         
         public Dictionary<EquipLocation, EquippedItem> Items { get; }
         
-        public AsyncEvent<Item> OnEquipped { get; } = new AsyncEvent<Item>();
+        public AsyncEvent<Item> OnEquipped { get; }
         
-        public AsyncEvent<Item> OnUnEquipped { get; } = new AsyncEvent<Item>();
+        public AsyncEvent<Item> OnUnEquipped { get; }
 
         protected InventoryComponent()
         {
             Items = new Dictionary<EquipLocation, EquippedItem>();
             
+            OnEquipped = new AsyncEvent<Item>();
+            
+            OnUnEquipped = new AsyncEvent<Item>();
+
             Listen(OnDestroyed, () =>
             {
                 OnEquipped.Clear();

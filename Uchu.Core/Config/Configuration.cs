@@ -26,7 +26,7 @@ namespace Uchu.Core
         public LoggingConfiguration FileLogging { get; set; } = new LoggingConfiguration
         {
             Level = LogLevel.None.ToString(),
-            Logfile = "uchu.log"
+            File = "uchu.log"
         };
 
         [XmlElement] public ServerDllSource DllSource { get; set; } = new ServerDllSource();
@@ -106,7 +106,9 @@ namespace Uchu.Core
     {
         [XmlElement] public string Level { get; set; }
 
-        [XmlElement] public string Logfile { get; set; }
+        [XmlElement] public string File { get; set; }
+        
+        [XmlElement] public bool Timestamp { get; set; }
     }
 
     public class DatabaseConfiguration

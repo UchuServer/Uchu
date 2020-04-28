@@ -14,9 +14,9 @@ namespace Uchu.World
 {
     public class SkillComponent : ReplicaComponent
     {
-        private readonly Dictionary<BehaviorSlot, uint> _activeBehaviors = new Dictionary<BehaviorSlot, uint>();
+        private Dictionary<BehaviorSlot, uint> ActiveBehaviors { get; }
         
-        private readonly Dictionary<uint, ExecutionContext> _handledSkills = new Dictionary<uint, ExecutionContext>();
+        private Dictionary<uint, ExecutionContext> HandledSkills { get; }
         
         // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
@@ -29,14 +29,18 @@ namespace Uchu.World
 
         public uint SelectedSkill
         {
-            get => _activeBehaviors[BehaviorSlot.Primary];
-            set => _activeBehaviors[BehaviorSlot.Primary] = value;
+            get => ActiveBehaviors[BehaviorSlot.Primary];
+            set => ActiveBehaviors[BehaviorSlot.Primary] = value;
         }
         
         public override ComponentId Id => ComponentId.SkillComponent;
 
         protected SkillComponent()
         {
+            ActiveBehaviors = new Dictionary<BehaviorSlot, uint>();
+
+            HandledSkills = new Dictionary<uint, ExecutionContext>();
+            
             Listen(OnStart, async () =>
             {
                 await using var cdClient = new CdClientContext();
@@ -59,7 +63,7 @@ namespace Uchu.World
                 
                 if (!(GameObject is Player)) return;
 
-                _activeBehaviors[BehaviorSlot.Primary] = 1;
+                ActiveBehaviors[BehaviorSlot.Primary] = 1;
             });
         }
         
@@ -255,7 +259,7 @@ namespace Uchu.World
                     message.OptionalTarget
                 );
                 
-                _handledSkills[message.SkillHandle] = context;
+                HandledSkills[message.SkillHandle] = context;
                 
                 if (GameObject.TryGetComponent<Stats>(out var stats))
                 {
@@ -293,7 +297,7 @@ namespace Uchu.World
             await using var writeStream = new MemoryStream();
             using var writer = new BitWriter(writeStream);
 
-            var found = _handledSkills.TryGetValue(message.SkillHandle, out var behavior);
+            var found = HandledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
             As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviorHandle}] ; {found}");
 
@@ -319,9 +323,9 @@ namespace Uchu.World
 
         public void SetSkill(BehaviorSlot slot, uint skillId)
         {
-            if (_activeBehaviors.TryGetValue(slot, out var currentSkill))
+            if (ActiveBehaviors.TryGetValue(slot, out var currentSkill))
             {
-                _activeBehaviors.Remove(slot);
+                ActiveBehaviors.Remove(slot);
                 
                 Logger.Information($"Removed skill: [{slot}]: {currentSkill}");
                 
@@ -332,7 +336,7 @@ namespace Uchu.World
                 });
             }
 
-            _activeBehaviors[slot] = skillId;
+            ActiveBehaviors[slot] = skillId;
 
             Logger.Information($"Selected skill: [{slot}]: {skillId}");
             
@@ -347,9 +351,9 @@ namespace Uchu.World
         
         public void RemoveSkill(BehaviorSlot slot)
         {
-            if (_activeBehaviors.TryGetValue(slot, out var currentSkill))
+            if (ActiveBehaviors.TryGetValue(slot, out var currentSkill))
             {
-                _activeBehaviors.Remove(slot);
+                ActiveBehaviors.Remove(slot);
                 
                 Logger.Information($"Removed skill: [{slot}]: {currentSkill}");
                 
@@ -376,7 +380,7 @@ namespace Uchu.World
                 _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, null)
             };
 
-            _activeBehaviors[slot] = skillId;
+            ActiveBehaviors[slot] = skillId;
             
             Logger.Information($"Selected default skill: [{slot}]: {skillId}");
             

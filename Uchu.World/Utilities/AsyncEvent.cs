@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World
 {
+    [LoggerIgnore]
     public class AsyncEvent : EventBase<Func<Task>>
     {
         public void Invoke()
@@ -20,6 +22,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class AsyncEvent<T> : EventBase<Func<T, Task>>
     {
         public void Invoke(T value)
@@ -36,6 +39,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class AsyncEvent<T, T2> : EventBase<Func<T, T2, Task>>
     {
         public void Invoke(T value, T2 value2)
@@ -52,6 +56,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class AsyncEvent<T, T2, T3> : EventBase<Func<T, T2, T3, Task>>
     {
         public void Invoke(T value, T2 value2, T3 value3)
@@ -68,6 +73,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class AsyncEvent<T, T2, T3, T4> : EventBase<Func<T, T2, T3, T4, Task>>
     {
         public void Invoke(T value, T2 value2, T3 value3, T4 value4)

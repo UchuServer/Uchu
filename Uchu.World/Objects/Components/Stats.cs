@@ -163,37 +163,51 @@ namespace Uchu.World
         /// <summary>
         /// New Health, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnHealthChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnHealthChanged { get; }
 
         /// <summary>
         /// New Armor, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnArmorChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnArmorChanged { get; }
 
         /// <summary>
         /// New Imagination, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnImaginationChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnImaginationChanged { get; }
 
         /// <summary>
         /// New MaxHealth, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnMaxHealthChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnMaxHealthChanged { get; }
 
         /// <summary>
         /// New MaxArmor, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnMaxArmorChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnMaxArmorChanged { get; }
 
         /// <summary>
         /// New MaxImagination, Delta
         /// </summary>
-        public readonly AsyncEvent<uint, int> OnMaxImaginationChanged = new AsyncEvent<uint, int>();
+        public AsyncEvent<uint, int> OnMaxImaginationChanged { get; }
 
-        public readonly Event OnDeath = new Event();
+        public AsyncEvent OnDeath { get; }
 
         protected Stats()
         {
+            OnHealthChanged = new AsyncEvent<uint, int>();
+            
+            OnArmorChanged = new AsyncEvent<uint, int>();
+            
+            OnImaginationChanged = new AsyncEvent<uint, int>();
+            
+            OnMaxHealthChanged = new AsyncEvent<uint, int>();
+            
+            OnMaxArmorChanged = new AsyncEvent<uint, int>();
+            
+            OnMaxImaginationChanged = new AsyncEvent<uint, int>();
+            
+            OnDeath = new AsyncEvent();
+            
             Listen(OnStart, async () =>
             {
                 if (GameObject is Player) CollectPlayerStats();
@@ -208,6 +222,8 @@ namespace Uchu.World
                 if (destroyable == default) return;
 
                 Factions = new[] {destroyable.Faction ?? 1};
+
+                Smashable = destroyable.IsSmashable ?? false;
 
                 var faction = await cdClient.FactionsTable.FirstOrDefaultAsync(
                     f => f.Faction == Factions[0]
@@ -445,10 +461,8 @@ namespace Uchu.World
 
         private void WriteStats(BitWriter writer)
         {
-            writer.WriteBit(HasStats);
-
-            if (!HasStats) return;
-
+            if (!writer.Flag(HasStats)) return;
+            
             writer.Write(Health);
             writer.Write<float>(MaxHealth);
 
@@ -471,7 +485,7 @@ namespace Uchu.World
 
             foreach (var faction in Factions) writer.Write(faction);
 
-            writer.WriteBit(Smashable && !GameObject.TryGetComponent<QuickBuildComponent>(out _));
+            writer.WriteBit(Smashable);
         }
     }
 }

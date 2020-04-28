@@ -97,7 +97,12 @@ namespace Uchu.World.Scripting.Managed
                 {
                     if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
                     
-                    return Listen(stats.OnDeath, () => { action(stats.LatestDamageSource); });
+                    return Listen(stats.OnDeath, () =>
+                    {
+                        action(stats.LatestDamageSource);
+                        
+                        return Task.CompletedTask;
+                    });
                 }),
                 ["OnChat"] = new Func<Action<Player, string>, Delegate>(action =>
                 {

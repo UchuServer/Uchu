@@ -25,6 +25,10 @@ namespace Uchu.World
 
         public Vector3 PlatformPosition { get; set; }
 
+        public float GravityMultiplier { get; set; } = 1;
+
+        public float SpeedMultiplier { get; set; } = 1;
+
         public override ComponentId Id => ComponentId.ControllablePhysicsComponent;
         
         public override void Construct(BitWriter writer)
@@ -56,8 +60,12 @@ namespace Uchu.World
 
         public void WritePhysics(BitWriter writer)
         {
-            writer.WriteBit(false);
-
+            if (writer.Flag(!GravityMultiplier.Equals(1) || !SpeedMultiplier.Equals(1)))
+            {
+                writer.Write(GravityMultiplier);
+                writer.Write(SpeedMultiplier);
+            }
+            
             writer.WriteBit(true);
             writer.Write<float>(0);
             writer.WriteBit(false);

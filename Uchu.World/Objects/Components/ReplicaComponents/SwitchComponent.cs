@@ -21,14 +21,18 @@ namespace Uchu.World
         
         public Player Activator { get; set; }
 
-        public AsyncEvent<Player> OnActivated { get; } = new AsyncEvent<Player>();
+        public AsyncEvent<Player> OnActivated { get; }
         
-        public AsyncEvent OnDeactivated { get; } = new AsyncEvent();
-        
+        public AsyncEvent OnDeactivated { get; }
+
         public override ComponentId Id => ComponentId.SwitchComponent;
 
         protected SwitchComponent()
         {
+            OnActivated = new AsyncEvent<Player>();
+
+            OnDeactivated = new AsyncEvent();
+
             Listen(OnStart, () =>
             {
                 if (GameObject.Settings.TryGetValue("is_hit_switch", out var isHit))

@@ -14,7 +14,7 @@ namespace Uchu.World
         /// <summary>
         ///     Current timer.
         /// </summary>
-        private Timer _timer;
+        private Timer Timer { get; set; }
 
         public LuzMovingPlatformPath Path { get; set; }
 
@@ -164,15 +164,15 @@ namespace Uchu.World
             /*
              * Start Waiting after completing path.
              */
-            _timer = new Timer
+            Timer = new Timer
             {
                 AutoReset = false,
                 Interval = WayPoint.Speed * 1000
             };
 
-            _timer.Elapsed += (sender, args) => { WaitPoint(); };
+            Timer.Elapsed += (sender, args) => { WaitPoint(); };
 
-            Task.Run(() => _timer.Start());
+            Task.Run(() => Timer.Start());
         }
 
         private void WaitPoint()
@@ -194,15 +194,15 @@ namespace Uchu.World
             /*
              * Start Waiting after waiting.
              */
-            _timer = new Timer
+            Timer = new Timer
             {
                 AutoReset = false,
                 Interval = WayPoint.Wait * 1000
             };
 
-            _timer.Elapsed += (sender, args) => { MovePlatform(); };
+            Timer.Elapsed += (sender, args) => { MovePlatform(); };
 
-            Task.Run(() => _timer.Start());
+            Task.Run(() => Timer.Start());
         }
     }
 }

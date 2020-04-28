@@ -66,12 +66,12 @@ namespace Uchu.World
                 {
                     Listen(_stats.OnDeath, () =>
                     {
-                        Logger.Debug($"LATEST: {_stats.LatestDamageSource}");
-                        
                         Smash(
                             _stats.LatestDamageSource,
                             _stats.LatestDamageSource is Player player ? player : default
                         );
+                        
+                        return Task.CompletedTask;
                     });
                     
                     return;

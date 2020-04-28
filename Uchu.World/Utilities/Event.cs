@@ -4,6 +4,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
+    [LoggerIgnore]
     public abstract class EventBase
     {
         public abstract void Clear();
@@ -11,6 +12,7 @@ namespace Uchu.World
         public abstract void RemoveListener(Delegate @delegate);
     }
     
+    [LoggerIgnore]
     public abstract class EventBase<T> : EventBase where T : Delegate
     {
         protected T[] Actions = new T[0];
@@ -48,6 +50,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class Event : EventBase<Action>
     {
         public void Invoke()
@@ -74,6 +77,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class Event<T> : EventBase<Action<T>>
     {
         public void Invoke(T value)
@@ -85,6 +89,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class Event<T, T2> : EventBase<Action<T, T2>>
     {
         public void Invoke(T value, T2 value2)
@@ -96,6 +101,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class Event<T, T2, T3> : EventBase<Action<T, T2, T3>>
     {
         public void Invoke(T value, T2 value2, T3 value3)
@@ -107,6 +113,7 @@ namespace Uchu.World
         }
     }
     
+    [LoggerIgnore]
     public class Event<T, T2, T3, T4> : EventBase<Action<T, T2, T3, T4>>
     {
         public void Invoke(T value, T2 value2, T3 value3, T4 value4)
