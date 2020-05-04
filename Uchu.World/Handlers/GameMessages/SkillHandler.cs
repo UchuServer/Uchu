@@ -43,7 +43,13 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task ClientItemConsumedHandler(ClientItemConsumedMessage message, Player player)
         {
-            await player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(message.Item.Lot);
+            await message.Item.ConsumeAsync();
+        }
+        
+        [PacketHandler]
+        public async Task UseNonEquipmentItemHandler(UseNonEquipmentItemMessage message, Player player)
+        {
+            await message.Item.ConsumeAsync();
         }
         
         [PacketHandler]

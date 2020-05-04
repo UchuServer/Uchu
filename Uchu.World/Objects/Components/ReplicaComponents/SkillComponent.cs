@@ -66,7 +66,7 @@ namespace Uchu.World
                 ActiveBehaviors[BehaviorSlot.Primary] = 1;
             });
         }
-        
+
         public override void Construct(BitWriter writer)
         {
             writer.WriteBit(false);

@@ -34,7 +34,7 @@ namespace Uchu.StandardScripts.VentureExplorer
                     
                     for (var i = 0; i < _random.Next(1, 3); i++)
                     {
-                        var loot = InstancingUtil.Loot(Lot.Imagination, owner, gameObject, gameObject.Transform.Position);
+                        var loot = InstancingUtilities.InstantiateLoot(Lot.Imagination, owner, gameObject, gameObject.Transform.Position);
 
                         Start(loot);
                     }

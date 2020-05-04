@@ -37,15 +37,15 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void RequestResurrectHandler(RequestResurrectMessage message, Player player)
+        public async Task RequestResurrectHandler(RequestResurrectMessage message, Player player)
         {
-            player.GetComponent<DestructibleComponent>().Resurrect();
+            await player.GetComponent<DestructibleComponent>().ResurrectAsync();
         }
 
         [PacketHandler]
-        public void RequestSmashHandler(RequestSmashPlayerMessage message, Player player)
+        public async Task RequestSmashHandler(RequestSmashPlayerMessage message, Player player)
         {
-            player.GetComponent<DestructibleComponent>().Smash(player, player);
+            await player.GetComponent<DestructibleComponent>().SmashAsync(player, player);
         }
 
         [PacketHandler]

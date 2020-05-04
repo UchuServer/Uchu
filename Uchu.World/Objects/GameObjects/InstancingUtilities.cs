@@ -7,7 +7,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public static class InstancingUtil
+    public static class InstancingUtilities
     {
         private static readonly Random Random = new Random();
         
@@ -81,7 +81,7 @@ namespace Uchu.World
             return spawner;
         }
 
-        public static GameObject Loot(Lot lot, Player owner, GameObject source, Vector3 spawn)
+        public static GameObject InstantiateLoot(Lot lot, Player owner, GameObject source, Vector3 spawn)
         {
             if (owner is null) return default;
 
@@ -124,7 +124,7 @@ namespace Uchu.World
             }
         }
         
-        public static void Currency(int currency, Player owner, GameObject source, Vector3 spawn)
+        public static void InstantiateCurrency(int currency, Player owner, GameObject source, Vector3 spawn)
         {
             if (owner is null) return;
             

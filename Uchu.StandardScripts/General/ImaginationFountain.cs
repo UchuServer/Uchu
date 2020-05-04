@@ -34,7 +34,7 @@ namespace Uchu.StandardScripts.General
 
                         toGive -= cost;
 
-                        var loot = InstancingUtil.Loot(lot, player, gameObject, gameObject.Transform.Position+ Vector3.UnitY * 3);
+                        var loot = InstancingUtilities.InstantiateLoot(lot, player, gameObject, gameObject.Transform.Position+ Vector3.UnitY * 3);
 
                         Start(loot);
                     }

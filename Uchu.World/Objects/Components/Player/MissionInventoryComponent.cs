@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -12,7 +13,7 @@ namespace Uchu.World
 {
     public class MissionInventoryComponent : Component
     {
-        private readonly object _lock = new object();
+        private SemaphoreSlim Lock { get; }
         
         public List<MissionInstance> MissionInstances { get; private set; }
 
@@ -44,14 +45,16 @@ namespace Uchu.World
 
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
-            As<Player>().Message(new OfferMissionMessage
+            var player = (Player) GameObject;
+            
+            player.Message(new OfferMissionMessage
             {
                 Associate = GameObject,
                 MissionId = missionId,
                 QuestGiver = missionGiver
             });
             
-            As<Player>().Message(new OfferMissionMessage
+            player.Message(new OfferMissionMessage
             {
                 Associate = missionGiver,
                 MissionId = missionId,
@@ -61,6 +64,8 @@ namespace Uchu.World
 
         public MissionInventoryComponent()
         {
+            Lock = new SemaphoreSlim(1, 1);
+            
             Listen(OnStart, async () =>
             {
                 await LoadAsync();
@@ -100,8 +105,19 @@ namespace Uchu.World
             // Get the mission the player is responding to.
             //
 
-            var mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
+            MissionInstance mission;
 
+            await Lock.WaitAsync();
+            
+            try
+            {
+                mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
+            }
+            finally
+            {
+                Lock.Release();
+            }
+            
             //
             // Check if the player is accepting a mission or responding to one.
             //
@@ -110,7 +126,16 @@ namespace Uchu.World
             {
                 var instance = new MissionInstance(GameObject as Player, missionId);
 
-                MissionInstances.Add(instance);
+                await Lock.WaitAsync();
+
+                try
+                {
+                    MissionInstances.Add(instance);
+                }
+                finally
+                {
+                    Lock.Release();
+                }
 
                 await instance.LoadAsync();
 
@@ -154,9 +179,20 @@ namespace Uchu.World
             //
             // Get the mission the player is responding to.
             //
+            
+            MissionInstance mission;
 
-            var mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
-
+            await Lock.WaitAsync();
+            
+            try
+            {
+                mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
+            }
+            finally
+            {
+                Lock.Release();
+            }
+            
             //
             // Check if the player is accepting a mission or responding to one.
             //
@@ -165,8 +201,17 @@ namespace Uchu.World
             {
                 var instance = new MissionInstance(GameObject as Player, missionId);
                 
-                MissionInstances.Add(instance);
-                
+                await Lock.WaitAsync();
+
+                try
+                {
+                    MissionInstances.Add(instance);
+                }
+                finally
+                {
+                    Lock.Release();
+                }
+
                 await instance.LoadAsync();
 
                 await instance.CompleteAsync();
@@ -181,20 +226,29 @@ namespace Uchu.World
         {
             var tasks = new List<T>();
 
-            foreach (var instance in MissionInstances)
-            {
-                var state = await instance.GetMissionStateAsync();
-                
-                if (state != MissionState.Active && state != MissionState.CompletedActive) continue;
+            await Lock.WaitAsync();
 
-                foreach (var task in instance.Tasks.OfType<T>())
+            try
+            { 
+                foreach (var instance in MissionInstances)
                 {
-                    var isComplete = await task.IsCompleteAsync();
-                    
-                    if (isComplete) continue;
+                    var state = await instance.GetMissionStateAsync();
+                
+                    if (state != MissionState.Active && state != MissionState.CompletedActive) continue;
 
-                    tasks.Add(task);
+                    foreach (var task in instance.Tasks.OfType<T>())
+                    {
+                        var isComplete = await task.IsCompleteAsync();
+                    
+                        if (isComplete) continue;
+
+                        tasks.Add(task);
+                    }
                 }
+            }
+            finally
+            {
+                Lock.Release();
             }
 
             return tasks.ToArray();
@@ -379,8 +433,19 @@ namespace Uchu.World
                 // Get the mission on the character. If present.
                 //
 
-                var characterMission = MissionInstances.FirstOrDefault(m => m.MissionId == mission.Id);
+                MissionInstance characterMission;
 
+                await Lock.WaitAsync();
+            
+                try
+                {
+                    characterMission = MissionInstances.FirstOrDefault(m => m.MissionId == mission.Id);
+                }
+                finally
+                {
+                    Lock.Release();
+                }
+                
                 //
                 // Check if the player could passably start this achievement.
                 //
@@ -413,8 +478,17 @@ namespace Uchu.World
                 
                 var instance = new MissionInstance(GameObject as Player, missionId);
 
-                MissionInstances.Add(instance);
-
+                await Lock.WaitAsync();
+                
+                try
+                {
+                    MissionInstances.Add(instance);
+                }
+                finally
+                {
+                    Lock.Release();
+                }
+                
                 await instance.LoadAsync();
 
                 // TODO: Silent?

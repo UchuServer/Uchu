@@ -168,9 +168,9 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Smash(string[] arguments, Player player)
+        public async Task<string> Smash(string[] arguments, Player player)
         {
-            player.GetComponent<DestructibleComponent>().Smash(player, player);
+            await player.GetComponent<DestructibleComponent>().SmashAsync(player, player);
 
             return "You smashed yourself";
         }

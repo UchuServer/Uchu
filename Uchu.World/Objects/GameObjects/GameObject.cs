@@ -412,7 +412,7 @@ namespace Uchu.World
             //
 
             if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _))
-                return InstancingUtil.Spawner(levelObject, parent);
+                return InstancingUtilities.Spawner(levelObject, parent);
 
             using var ctx = new CdClientContext();
             

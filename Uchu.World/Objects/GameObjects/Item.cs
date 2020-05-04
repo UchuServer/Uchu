@@ -13,6 +13,8 @@ namespace Uchu.World
     {
         protected Item()
         {
+            OnConsumed = new AsyncEvent();
+            
             Listen(OnDestroyed, () => Task.Run(RemoveFromInventoryAsync));
             
             Listen(OnDestroyed, () => Inventory.UnManageItem(this));
@@ -29,6 +31,8 @@ namespace Uchu.World
                 return cdClient.ItemComponentTable.FirstOrDefault(c => c.Id == id);
             }
         }
+        
+        public AsyncEvent OnConsumed { get; }
 
         public Inventory Inventory { get; private set; }
 
@@ -50,7 +54,7 @@ namespace Uchu.World
                 
                 using var ctx = new UchuContext();
                 
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
+                var info = ctx.InventoryItems.FirstOrDefault(i => i.Id == Id);
 
                 if (info == default) return;
                 
@@ -132,6 +136,44 @@ namespace Uchu.World
             item.IsBound = true;
 
             await ctx.SaveChangesAsync();
+        }
+        
+        public async Task ConsumeAsync()
+        {
+            var consumable = await IsConsumableAsync();
+            
+            if (!consumable)
+            {
+                var id = Lot.GetComponentId(ComponentId.PackageComponent);
+
+                if (id != default)
+                {
+                    consumable = true;
+                    
+                    AddComponent<ItemPackageComponent>();
+                }
+            }
+            
+            Logger.Debug($"Consumable: {Lot} -> {consumable} [{await IsConsumableAsync()}]");
+
+            if (!consumable) return;
+            
+            await OnConsumed.InvokeAsync();
+            
+            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
+
+            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
+        }
+        
+        public async Task<bool> IsConsumableAsync()
+        {
+            await using var cdClient = new CdClientContext();
+
+            var skills = await cdClient.ObjectSkillsTable.Where(
+                s => s.ObjectTemplate == Lot
+            ).ToArrayAsync();
+            
+            return skills.Any(s => s.CastOnType == (int) SkillCastType.OnConsumed);
         }
         
         public static Item Instantiate(long itemId, Inventory inventory)
@@ -316,9 +358,13 @@ namespace Uchu.World
             
             using var ctx = new UchuContext();
 
-            var item = ctx.InventoryItems.First(i => i.Id == Id);
+            var item = ctx.InventoryItems.FirstOrDefault(i => i.Id == Id);
 
+            if (item == default) return;
+            
             ctx.InventoryItems.Remove(item);
+            
+            ctx.SaveChanges();
 
             // Disassemble item.
             if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))

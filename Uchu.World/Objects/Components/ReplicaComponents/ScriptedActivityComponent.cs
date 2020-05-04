@@ -88,7 +88,7 @@ namespace Uchu.World
 
                     lootOwner.SendChatMessage("Dropping activity item!!!");
                     
-                    var drop = InstancingUtil.Loot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
+                    var drop = InstancingUtilities.InstantiateLoot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
                     
                     Start(drop);
                 }
@@ -108,7 +108,7 @@ namespace Uchu.World
                     
                     lootOwner.SendChatMessage("Dropping activity coin!!!");
                     
-                    InstancingUtil.Currency(coinToDrop, lootOwner, GameObject, Transform.Position);
+                    InstancingUtilities.InstantiateCurrency(coinToDrop, lootOwner, GameObject, Transform.Position);
                 }
             }
         }

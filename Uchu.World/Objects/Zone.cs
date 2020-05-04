@@ -255,7 +255,7 @@ namespace Uchu.World
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            var obj = InstancingUtil.Spawner(spawnerPath, this);
+            var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
             if (obj == null) return;
 

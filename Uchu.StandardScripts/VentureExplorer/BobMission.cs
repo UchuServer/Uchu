@@ -29,8 +29,6 @@ namespace Uchu.StandardScripts.VentureExplorer
 
                     responder.GetComponent<Stats>().Imagination = 6;
 
-                    (responder as Player)?.SendChatMessage("COMPLETING 664");
-                    
                     await responder.GetComponent<MissionInventoryComponent>().CompleteMissionAsync(664);
                 });
             }

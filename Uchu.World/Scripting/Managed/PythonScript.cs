@@ -116,13 +116,13 @@ namespace Uchu.World.Scripting.Managed
                 ["Release"] = new Action<Delegate>(ReleaseListener),
                 ["Drop"] = new Action<int, Vector3, GameObject, Player>((lot, position, source, player) =>
                 {
-                    var loot = InstancingUtil.Loot(lot, player, source, position);
+                    var loot = InstancingUtilities.InstantiateLoot(lot, player, source, position);
 
                     Object.Start(loot);
                 }),
                 ["Currency"] = new Action<int, Vector3, GameObject, Player>((count, position, source, player) =>
                 {
-                    InstancingUtil.Currency(count, player, source, position);
+                    InstancingUtilities.InstantiateCurrency(count, player, source, position);
                 }),
                 ["GetComponent"] = new Func<GameObject, string, Component>((gameObject, name) =>
                 {
