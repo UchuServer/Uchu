@@ -49,7 +49,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task UseNonEquipmentItemHandler(UseNonEquipmentItemMessage message, Player player)
         {
-            await message.Item.ConsumeAsync();
+            await message.Item.UseNonEquipmentItem();
         }
         
         [PacketHandler]

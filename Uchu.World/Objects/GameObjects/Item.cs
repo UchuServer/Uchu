@@ -11,9 +11,28 @@ namespace Uchu.World
     [Unconstructed]
     public class Item : GameObject
     {
+        public bool IsPackage { get; private set; }
+        
+        public bool IsConsumable { get; private set; }
+        
         protected Item()
         {
             OnConsumed = new AsyncEvent();
+
+            Listen(OnStart, () =>
+            {
+                IsPackage = Lot.GetComponentId(ComponentId.PackageComponent) != default;
+                
+                using var cdClient = new CdClientContext();
+
+                var skills = cdClient.ObjectSkillsTable.Where(
+                    s => s.ObjectTemplate == Lot
+                ).ToArray();
+
+                IsConsumable = skills.Any(
+                    s => s.CastOnType == (int) SkillCastType.OnConsumed
+                );
+            });
             
             Listen(OnDestroyed, () => Task.Run(RemoveFromInventoryAsync));
             
@@ -137,45 +156,36 @@ namespace Uchu.World
 
             await ctx.SaveChangesAsync();
         }
-        
-        public async Task ConsumeAsync()
+
+        public async Task UseNonEquipmentItem()
         {
-            var consumable = await IsConsumableAsync();
-            
-            if (!consumable)
-            {
-                var id = Lot.GetComponentId(ComponentId.PackageComponent);
-
-                if (id != default)
-                {
-                    consumable = true;
-                    
-                    AddComponent<ItemPackageComponent>();
-                }
-            }
-            
-            Logger.Debug($"Consumable: {Lot} -> {consumable} [{await IsConsumableAsync()}]");
-
-            if (!consumable) return;
+            if (!IsPackage) return;
             
             await OnConsumed.InvokeAsync();
             
-            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
+            var container = AddComponent<LootContainerComponent>();
 
-            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
-        }
-        
-        public async Task<bool> IsConsumableAsync()
-        {
-            await using var cdClient = new CdClientContext();
-
-            var skills = await cdClient.ObjectSkillsTable.Where(
-                s => s.ObjectTemplate == Lot
-            ).ToArrayAsync();
+            await container.CollectDetailsAsync();
             
-            return skills.Any(s => s.CastOnType == (int) SkillCastType.OnConsumed);
+            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
+            
+            var manager = Inventory.ManagerComponent;
+            
+            foreach (var lot in container.GenerateLootYields())
+            {
+                await manager.AddItemAsync(lot, 1);
+            }
         }
         
+        public async Task ConsumeAsync()
+        {
+            if (!IsConsumable) return;
+            
+            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
+            
+            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
+        }
+
         public static Item Instantiate(long itemId, Inventory inventory)
         {
             using var cdClient = new CdClientContext();

@@ -141,7 +141,7 @@ namespace Uchu.World
 
             var slot = FindSlot(id);
 
-            var info = Items[slot];
+            if (!Items.TryGetValue(slot, out var info)) return;
 
             var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
             
