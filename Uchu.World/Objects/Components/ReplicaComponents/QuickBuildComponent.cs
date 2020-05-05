@@ -210,7 +210,7 @@ namespace Uchu.World
             _imaginationTimer = new Timer
             {
                 AutoReset = true,
-                Interval = 1000
+                Interval = _completeTime * 1000 / _imaginationCost
             };
 
             _imaginationTimer.Elapsed += (sender, args) =>

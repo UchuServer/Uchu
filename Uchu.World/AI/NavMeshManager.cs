@@ -12,8 +12,6 @@ namespace Uchu.World.AI
         public Zone Zone { get; }
         
         public Solver Solver { get; }
-        
-        public Dictionary<int, Dictionary<int, Vector3>> Points { get; private set; }
 
         public NavMeshManager(Zone zone, bool enabled)
         {
@@ -71,9 +69,7 @@ namespace Uchu.World.AI
                 }
             }
 
-            Points = inGameValues;
-
-            await Solver.GenerateAsync(Points, heightMap.GetLength(0), heightMap.GetLength(1), min);
+            await Solver.GenerateAsync(inGameValues, heightMap.GetLength(0), heightMap.GetLength(1), min);
         }
 
         public Vector3[] GeneratePath(Vector3 start, Vector3 end) => Solver.GeneratePath(start, end);

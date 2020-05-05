@@ -88,7 +88,7 @@ namespace Uchu.World.Handlers.GameMessages
                 await missionInventoryComponent.UseEmoteAsync(message.Target, message.EmoteId);
             }
             
-            if (message.Target != default)
+            if (message.Target?.OnEmoteReceived != default)
             {
                 await message.Target.OnEmoteReceived.InvokeAsync(message.EmoteId, player);
             }
