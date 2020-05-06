@@ -9,34 +9,48 @@ namespace Uchu.StandardScripts.AvantGardens
     {
         public override Task LoadAsync()
         {
-            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 6253))
+            Listen(Zone.OnObject, obj =>
             {
-                if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) continue;
+                if (!(obj is GameObject gameObject)) return;
 
-                Listen(destructibleComponent.OnSmashed, (smasher, lootOwner) =>
-                {
-                    var quickBuild = GameObject.Instantiate(
-                        Zone,
-                        6254,
-                        gameObject.Transform.Position,
-                        gameObject.Transform.Rotation
-                    );
+                MountTurret(gameObject);
+            });
 
-                    Start(quickBuild);
-                    Construct(quickBuild);
-
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(20000);
-                        
-                        await quickBuild.GetComponent<DestructibleComponent>().SmashAsync(quickBuild, lootOwner);
-
-                        Destroy(quickBuild);
-                    });
-                });
+            foreach (var gameObject in Zone.GameObjects)
+            {
+                MountTurret(gameObject);
             }
             
             return Task.CompletedTask;
+        }
+
+        public void MountTurret(GameObject gameObject)
+        {
+            if (gameObject.Lot != 6253) return;
+
+            if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+
+            Listen(destructibleComponent.OnSmashed, (smasher, lootOwner) =>
+            {
+                var quickBuild = GameObject.Instantiate(
+                    Zone,
+                    6254,
+                    gameObject.Transform.Position,
+                    gameObject.Transform.Rotation
+                );
+
+                Start(quickBuild);
+                Construct(quickBuild);
+
+                Task.Run(async () =>
+                {
+                    await Task.Delay(20000);
+
+                    await quickBuild.GetComponent<DestructibleComponent>().SmashAsync(quickBuild, lootOwner);
+
+                    Destroy(quickBuild);
+                });
+            });
         }
     }
 }

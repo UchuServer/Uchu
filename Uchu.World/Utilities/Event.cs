@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -11,15 +12,20 @@ namespace Uchu.World
 
         public abstract void RemoveListener(Delegate @delegate);
     }
-    
-    [LoggerIgnore]
-    public abstract class EventBase<T> : EventBase where T : Delegate
-    {
-        protected T[] Actions = new T[0];
 
-        public bool Any => Actions.Length != default;
-        
+    [LoggerIgnore]
+    public abstract class EventBase<T, T2> : EventBase where T : Delegate where T2 : Delegate
+    {
+        protected Delegate[] Actions = new Delegate[0];
+
         internal void AddListener(T action)
+        {
+            Array.Resize(ref Actions, Actions.Length + 1);
+
+            Actions[^1] = action;
+        }
+
+        internal void AddListener(T2 action)
         {
             Array.Resize(ref Actions, Actions.Length + 1);
 
@@ -28,15 +34,15 @@ namespace Uchu.World
 
         public override void RemoveListener(Delegate @delegate)
         {
-            if (!(@delegate is T action) || !Actions.Contains(action)) return;
-            
-            var array = new T[Actions.Length - 1];
+            if (!Actions.Contains(@delegate)) return;
+
+            var array = new Delegate[Actions.Length - 1];
 
             var index = 0;
-            
+
             foreach (var element in Actions.ToArray())
             {
-                if (element == action) continue;
+                if (element == @delegate) continue;
 
                 array[index++] = element;
             }
@@ -46,24 +52,18 @@ namespace Uchu.World
 
         public override void Clear()
         {
-            Actions = new T[0];
+            Actions = new Delegate[0];
         }
     }
-    
+
     [LoggerIgnore]
-    public class Event : EventBase<Action>
+    public class Event : EventBase<Action, Func<Task>>
     {
         public void Invoke()
         {
-            foreach (var action in Actions.ToArray())
-            {
-                action.Invoke();
-            }
-        }
+            var actions = Actions.ToArray();
 
-        public void SafeInvoke()
-        {
-            foreach (var action in Actions.ToArray())
+            foreach (var action in actions.OfType<Action>())
             {
                 try
                 {
@@ -74,53 +74,232 @@ namespace Uchu.World
                     Logger.Error(e);
                 }
             }
+
+            foreach (var func in actions.OfType<Func<Task>>())
+            {
+                try
+                {
+                    func.Invoke().Wait();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+        }
+
+        public async Task InvokeAsync()
+        {
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action>())
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<Task>>())
+            {
+                try
+                {
+                    await func.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
         }
     }
-    
+
     [LoggerIgnore]
-    public class Event<T> : EventBase<Action<T>>
+    public class Event<T> : EventBase<Action<T>, Func<T, Task>>
     {
         public void Invoke(T value)
         {
-            foreach (var action in Actions.ToArray())
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T>>())
             {
-                action.Invoke(value);
+                try
+                {
+                    action.Invoke(value);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, Task>>())
+            {
+                try
+                {
+                    func.Invoke(value).Wait();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+        }
+
+        public async Task InvokeAsync(T value)
+        {
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T>>())
+            {
+                try
+                {
+                    action.Invoke(value);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, Task>>())
+            {
+                try
+                {
+                    await func.Invoke(value);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
     }
-    
+
     [LoggerIgnore]
-    public class Event<T, T2> : EventBase<Action<T, T2>>
+    public class Event<T, T2> : EventBase<Action<T, T2>, Func<T, T2, Task>>
     {
         public void Invoke(T value, T2 value2)
         {
-            foreach (var action in Actions.ToArray())
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T, T2>>())
             {
-                action.Invoke(value, value2);
+                try
+                {
+                    action.Invoke(value, value2);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, T2, Task>>())
+            {
+                try
+                {
+                    func.Invoke(value, value2).Wait();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+        }
+
+        public async Task InvokeAsync(T value, T2 value2)
+        {
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T, T2>>())
+            {
+                try
+                {
+                    action.Invoke(value, value2);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, T2, Task>>())
+            {
+                try
+                {
+                    await func.Invoke(value, value2);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
     }
-    
+
     [LoggerIgnore]
-    public class Event<T, T2, T3> : EventBase<Action<T, T2, T3>>
+    public class Event<T, T2, T3> : EventBase<Action<T, T2, T3>, Func<T, T2, T3, Task>>
     {
         public void Invoke(T value, T2 value2, T3 value3)
         {
-            foreach (var action in Actions.ToArray())
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T, T2, T3>>())
             {
-                action.Invoke(value, value2, value3);
+                try
+                {
+                    action.Invoke(value, value2, value3);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, T2, T3, Task>>())
+            {
+                try
+                {
+                    func.Invoke(value, value2, value3).Wait();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
-    }
-    
-    [LoggerIgnore]
-    public class Event<T, T2, T3, T4> : EventBase<Action<T, T2, T3, T4>>
-    {
-        public void Invoke(T value, T2 value2, T3 value3, T4 value4)
+
+        public async Task InvokeAsync(T value, T2 value2, T3 value3)
         {
-            foreach (var action in Actions.ToArray())
+            var actions = Actions.ToArray();
+
+            foreach (var action in actions.OfType<Action<T, T2, T3>>())
             {
-                action.Invoke(value, value2, value3, value4);
+                try
+                {
+                    action.Invoke(value, value2, value3);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            foreach (var func in actions.OfType<Func<T, T2, T3, Task>>())
+            {
+                try
+                {
+                    await func.Invoke(value, value2, value3);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
     }

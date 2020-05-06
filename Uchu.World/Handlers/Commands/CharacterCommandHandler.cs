@@ -1006,5 +1006,17 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Active mimic on: {gameObject}";
         }
+
+        [CommandHandler(Signature = "gravity", Help = "Sets gravity scale", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Gravity(string[] arguments, Player player)
+        {
+            if (arguments.Length == default) return "gravity <scale (0-2)>";
+
+            if (!float.TryParse(arguments[0], out var scale)) return "Invalid <scale (0-2)>";
+
+            player.GravityScale = scale;
+
+            return $"Successfully set gravity scale to: {player.GravityScale}";
+        }
     }
 }

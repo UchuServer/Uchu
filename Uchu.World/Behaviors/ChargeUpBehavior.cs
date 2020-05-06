@@ -23,8 +23,6 @@ namespace Uchu.World.Behaviors
             
             var handle = context.Reader.Read<uint>();
             
-            ((Player) context.Associate)?.SendChatMessage($"ChargeUp: {handle}");
-
             RegisterHandle(handle, context, branchContext);
         }
 

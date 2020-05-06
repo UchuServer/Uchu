@@ -28,20 +28,14 @@ namespace Uchu.World.Behaviors
             if (branchContext.Target != context.Associate)
             {
                 context.Reader.ReadBit();
-                
-                context.Writer.WriteBit(false);
             }
 
             if (InterruptBlock == 0)
             {
                 context.Reader.ReadBit();
-                
-                context.Writer.WriteBit(false);
             }
 
             context.Reader.ReadBit();
-                
-            context.Writer.WriteBit(false);
         }
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)

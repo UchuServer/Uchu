@@ -27,30 +27,20 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
             
             context.Reader.Align();
-            context.Writer.Align();
 
             context.Reader.Read<ushort>();
-            context.Writer.Write<ushort>(0);
 
             context.Reader.ReadBit();
             context.Reader.ReadBit();
             context.Reader.ReadBit();
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(true);
 
             context.Reader.Read<uint>();
-            context.Writer.Write(0);
 
             var damage = context.Reader.Read<uint>();
-            context.Writer.Write(damage);
 
-            ((Player) context.Associate)?.SendChatMessage($"{damage} -> {branchContext.Target}");
-            
             branchContext.Target.GetComponent<Stats>().Damage(damage, context.Associate);
 
             var success = context.Reader.ReadBit();
-            context.Writer.WriteBit(success);
             
             if (success)
             {
@@ -64,8 +54,6 @@ namespace Uchu.World.Behaviors
             
             await branchContext.Target.NetFavorAsync();
             
-            Logger.Debug($"NPC is attacking: {branchContext.Target}");
-
             context.Writer.Align();
 
             context.Writer.Write<ushort>(0);
@@ -82,9 +70,6 @@ namespace Uchu.World.Behaviors
 
             context.Writer.Write(damage);
             
-            if (branchContext.Target is Player player)
-                player.SendChatMessage($"Attacked for {damage}");
-
             context.Writer.WriteBit(success);
 
             if (success)

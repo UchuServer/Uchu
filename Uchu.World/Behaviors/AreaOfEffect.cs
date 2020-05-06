@@ -31,15 +31,11 @@ namespace Uchu.World.Behaviors
             
             if (length > 10) length = 10; // TODO: Fix
 
-            context.Writer.Write(length);
-            
             var targets = new GameObject[length];
 
             for (var i = 0; i < length; i++)
             {
                 var id = context.Reader.Read<ulong>();
-
-                context.Writer.Write(id);
 
                 context.Associate.Zone.TryGetGameObject((long) id, out var target);
                 

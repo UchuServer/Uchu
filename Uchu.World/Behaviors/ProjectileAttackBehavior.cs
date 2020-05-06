@@ -37,10 +37,6 @@ namespace Uchu.World.Behaviors
             
             var target = context.Reader.ReadGameObject(context.Associate.Zone);
 
-            context.Writer.Write<long>(target);
-
-            ((Player) context.Associate)?.SendChatMessage($"{ProjectileCount} projectiles.");
-
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
             
             for (var i = 0; i < count; i++)
@@ -101,8 +97,6 @@ namespace Uchu.World.Behaviors
         private void StartProjectile(ExecutionContext context, GameObject target)
         {
             var projectileId = context.Reader.Read<long>();
-
-            context.Writer.Write(projectileId);
 
             var projectile = Object.Instantiate<Projectile>(context.Associate.Zone);
 

@@ -11,12 +11,15 @@ namespace Uchu.World
 
         public Server Server => Zone.Server;
 
-        public Event OnStart { get; } = new Event();
+        public Event OnStart { get; }
 
-        public Event OnDestroyed { get; } = new Event();
+        public Event OnDestroyed { get; }
 
         protected Object()
         {
+            OnStart = new Event();
+            
+            OnDestroyed = new Event();
         }
         
         public static Object Instantiate(Type type, Zone zone)
@@ -60,6 +63,7 @@ namespace Uchu.World
             obj.OnDestroyed.Invoke();
             
             obj.OnStart.Clear();
+            
             obj.OnDestroyed.Clear();
 
             obj.ClearListeners();

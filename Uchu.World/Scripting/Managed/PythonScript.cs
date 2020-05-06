@@ -78,8 +78,6 @@ namespace Uchu.World.Scripting.Managed
                     return Listen(stats.OnHealthChanged, (newHealth, delta) =>
                     {
                         action((int) newHealth, delta, stats.LatestDamageSource);
-                        
-                        return Task.CompletedTask;
                     });
                 }),
                 ["OnArmor"] = new Func<GameObject, Action<int, int, GameObject>, Delegate>((gameObject, action) =>
@@ -89,8 +87,6 @@ namespace Uchu.World.Scripting.Managed
                     return Listen(stats.OnArmorChanged, (newArmor, delta) =>
                     {
                         action((int) newArmor, delta, stats.LatestDamageSource);
-                        
-                        return Task.CompletedTask;
                     });
                 }),
                 ["OnDeath"] = new Func<GameObject, Action<GameObject>, Delegate>((gameObject, action) =>
@@ -100,8 +96,6 @@ namespace Uchu.World.Scripting.Managed
                     return Listen(stats.OnDeath, () =>
                     {
                         action(stats.LatestDamageSource);
-                        
-                        return Task.CompletedTask;
                     });
                 }),
                 ["OnChat"] = new Func<Action<Player, string>, Delegate>(action =>
@@ -109,8 +103,6 @@ namespace Uchu.World.Scripting.Managed
                     return Listen(Zone.OnChatMessage, (player, message) =>
                     {
                         action(player, message);
-                        
-                        return Task.CompletedTask;
                     });
                 }),
                 ["Release"] = new Action<Delegate>(ReleaseListener),

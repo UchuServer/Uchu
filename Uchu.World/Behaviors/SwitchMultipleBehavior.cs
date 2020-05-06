@@ -41,19 +41,13 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
 
             var value = context.Reader.Read<float>();
-
-            context.Writer.Write(value);
             
-            ((Player) context.Associate)?.SendChatMessage($"Switch Multiple: {value} -> {Behaviors.Count}");
-
             var defaultValue = Behaviors.ToArray()[0].Value;
 
             if (value <= defaultValue) value = defaultValue;
             
             foreach (var (behavior, mark) in Behaviors.ToArray().Reverse())
             {
-                ((Player) context.Associate)?.SendChatMessage($"SWITCH: {behavior.Id} [{mark}]");
-                
                 if (value < mark) continue;
 
                 await behavior.ExecuteAsync(context, branchContext);

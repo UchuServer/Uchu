@@ -182,6 +182,7 @@ namespace Uchu.World.Behaviors
         /// <param name="writer">Data to be sent to clients</param>
         /// <param name="skillId">Skill to execute</param>
         /// <param name="syncId">Sync Id</param>
+        /// <param name="calculatingPosition">Where position calculations are done from</param>
         /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
         public async Task<NpcExecutionContext> CalculateAsync(GameObject associate, BitWriter writer, int skillId,
@@ -223,10 +224,10 @@ namespace Uchu.World.Behaviors
         /// <param name="castType">Type of skill</param>
         /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader, BitWriter writer,
+        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader,
             SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
-            var context = new ExecutionContext(associate, reader, writer)
+            var context = new ExecutionContext(associate, reader, default)
             {
                 ExplicitTarget = target
             };
@@ -257,10 +258,9 @@ namespace Uchu.World.Behaviors
             return context;
         }
 
-        public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, BitWriter writer,
-            GameObject target)
+        public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, GameObject target)
         {
-            var context = new ExecutionContext(associate, reader, writer);
+            var context = new ExecutionContext(associate, reader, default);
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list)) return context;
 

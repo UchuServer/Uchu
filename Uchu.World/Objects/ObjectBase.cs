@@ -8,7 +8,7 @@ namespace Uchu.World
     {
         private (EventBase, Delegate)[] _listening = new (EventBase, Delegate)[0];
 
-        protected Delegate Listen<T>(EventBase<T> @event, T @delegate) where T : Delegate
+        protected Delegate Listen<T, T2>(EventBase<T, T2> @event, T @delegate) where T : Delegate where T2 : Delegate
         {
             @event.AddListener(@delegate);
 
@@ -19,6 +19,17 @@ namespace Uchu.World
             return @delegate;
         }
 
+        protected Delegate Listen<T, T2>(EventBase<T, T2> @event, T2 @delegate) where T : Delegate where T2 : Delegate
+        {
+            @event.AddListener(@delegate);
+
+            Array.Resize(ref _listening, _listening.Length + 1);
+
+            _listening[^1] = (@event, @delegate);
+
+            return @delegate;
+        }
+        
         protected void ClearListeners()
         {
             foreach (var (@event, listener) in _listening)

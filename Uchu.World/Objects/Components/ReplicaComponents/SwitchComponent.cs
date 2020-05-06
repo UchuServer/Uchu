@@ -21,17 +21,17 @@ namespace Uchu.World
         
         public Player Activator { get; set; }
 
-        public AsyncEvent<Player> OnActivated { get; }
+        public Event<Player> OnActivated { get; }
         
-        public AsyncEvent OnDeactivated { get; }
+        public Event OnDeactivated { get; }
 
         public override ComponentId Id => ComponentId.SwitchComponent;
 
         protected SwitchComponent()
         {
-            OnActivated = new AsyncEvent<Player>();
+            OnActivated = new Event<Player>();
 
-            OnDeactivated = new AsyncEvent();
+            OnDeactivated = new Event();
 
             Listen(OnStart, () =>
             {

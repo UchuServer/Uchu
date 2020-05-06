@@ -16,8 +16,6 @@ namespace Uchu.World.Behaviors
             await base.ExecuteAsync(context, branchContext);
 
             context.Reader.ReadBit();
-
-            context.Writer.WriteBit(false);
         }
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)

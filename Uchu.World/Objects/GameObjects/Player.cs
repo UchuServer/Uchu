@@ -17,6 +17,8 @@ namespace Uchu.World
 {
     public sealed class Player : GameObject
     {
+        private float _gravityScale = 1;
+        
         private Player()
         {
             Listen(OnStart, async () =>
@@ -66,11 +68,11 @@ namespace Uchu.World
         public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =
             new AsyncEventDictionary<string, FireServerEventMessage>();
 
-        public AsyncEvent<Lot> OnLootPickup { get; } = new AsyncEvent<Lot>();
+        public Event<Lot> OnLootPickup { get; } = new Event<Lot>();
         
-        public AsyncEvent OnWorldLoad { get; } = new AsyncEvent();
+        public Event OnWorldLoad { get; } = new Event();
 
-        public AsyncEvent<Vector3, Quaternion> OnPositionUpdate { get; } = new AsyncEvent<Vector3, Quaternion>();
+        public Event<Vector3, Quaternion> OnPositionUpdate { get; } = new Event<Vector3, Quaternion>();
 
         public IRakConnection Connection { get; private set; }
 
@@ -143,6 +145,21 @@ namespace Uchu.World
                 return character.Level;
             }
             set => Task.Run(async () => { await SetLevelAsync(value); });
+        }
+
+        public float GravityScale
+        {
+            get => _gravityScale;
+            set
+            {
+                _gravityScale = Math.Clamp(value, 0, 2);
+                
+                Message(new SetGravityScaleMessage
+                {
+                    Associate = this,
+                    Scale = _gravityScale
+                });
+            }
         }
 
         public async Task<Character> GetCharacterAsync()
@@ -360,7 +377,7 @@ namespace Uchu.World
             }
         }
         
-        public void ViewUpdate(GameObject gameObject)
+        public void TriggerViewUpdate(GameObject gameObject)
         {
             var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
 

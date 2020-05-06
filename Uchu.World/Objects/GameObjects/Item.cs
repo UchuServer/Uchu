@@ -17,7 +17,7 @@ namespace Uchu.World
         
         protected Item()
         {
-            OnConsumed = new AsyncEvent();
+            OnConsumed = new Event();
 
             Listen(OnStart, () =>
             {
@@ -34,8 +34,6 @@ namespace Uchu.World
                 );
             });
             
-            Listen(OnDestroyed, () => Task.Run(RemoveFromInventoryAsync));
-            
             Listen(OnDestroyed, () => Inventory.UnManageItem(this));
         }
 
@@ -51,7 +49,7 @@ namespace Uchu.World
             }
         }
         
-        public AsyncEvent OnConsumed { get; }
+        public Event OnConsumed { get; }
 
         public Inventory Inventory { get; private set; }
 

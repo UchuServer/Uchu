@@ -11,7 +11,7 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
-            writer.Write(Math.Clamp(Scale, 0, 2));
+            writer.Write(Scale);
         }
     }
 }

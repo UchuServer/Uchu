@@ -10,7 +10,7 @@ namespace Uchu.World
     [ServerComponent(Id = ComponentId.SpawnerComponent)]
     public class SpawnerComponent : Component
     {
-        private Random _random;
+        private readonly Random _random;
         
         public List<GameObject> ActiveSpawns { get; }
 
@@ -117,12 +117,11 @@ namespace Uchu.World
             {
                 Listen(destructibleComponent.OnSmashed, async (smasher, lootOwner) =>
                 {
-                    await Task.Delay(1000);
+                    Destroy(obj);
 
-                    var location = FindLocation();
-
-                    obj.Transform.Position = location.Position;
-                    obj.Transform.Rotation = location.Rotation;
+                    await Task.Delay(RespawnTime);
+                    
+                    Spawn();
                 });
             }
 

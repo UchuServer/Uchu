@@ -30,8 +30,6 @@ namespace Uchu.World.Behaviors
 
             var handle = context.Reader.Read<uint>();
 
-            context.Writer.Write(handle);
-            
             RegisterHandle(handle, context, branchContext);
         }
 
@@ -39,13 +37,9 @@ namespace Uchu.World.Behaviors
         {
             var actionId = context.Reader.Read<uint>();
 
-            context.Writer.Write(actionId);
-
             var action = await GetBehavior(actionId);
 
             var id = context.Reader.Read<ulong>();
-
-            context.Writer.Write(id);
 
             context.Associate.Zone.TryGetGameObject((long) id, out var target);
 

@@ -33,8 +33,6 @@ namespace Uchu.World.Behaviors
             
             MovementType = (MovementType) context.Reader.Read<uint>();
 
-            context.Writer.Write((uint) MovementType);
-
             switch (MovementType)
             {
                 case MovementType.Ground:

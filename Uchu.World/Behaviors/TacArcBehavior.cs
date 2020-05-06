@@ -55,7 +55,6 @@ namespace Uchu.World.Behaviors
             }
             
             var hit = context.Reader.ReadBit();
-            context.Writer.Write(hit);
             
             if (hit) // Hit
             {
@@ -63,20 +62,14 @@ namespace Uchu.World.Behaviors
 
                 if (CheckEnvironment)
                 {
-                    var checkEnvironment = context.Reader.ReadBit(); // Check environment
-
-                    context.Writer.WriteBit(checkEnvironment);
+                    context.Reader.ReadBit();
                 }
 
                 var specifiedTargets = context.Reader.Read<uint>();
 
-                context.Writer.Write(specifiedTargets);
-
                 for (var i = 0; i < specifiedTargets; i++)
                 {
                     var targetId = context.Reader.Read<long>();
-
-                    context.Writer.Write(targetId);
 
                     if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
                     {
@@ -90,8 +83,6 @@ namespace Uchu.World.Behaviors
 
                 foreach (var target in targets)
                 {
-                    ((Player) context.Associate)?.SendChatMessage($"ATTACKING: {target}");
-
                     var branch = new ExecutionBranchContext(target)
                     {
                         Duration = branchContext.Duration
@@ -106,8 +97,6 @@ namespace Uchu.World.Behaviors
                 {
                     var isBlocked = context.Reader.ReadBit();
 
-                    context.Writer.WriteBit(isBlocked);
-                    
                     if (isBlocked) // Is blocked
                     {
                         await BlockedBehavior.ExecuteAsync(context, branchContext);

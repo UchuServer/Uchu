@@ -163,50 +163,50 @@ namespace Uchu.World
         /// <summary>
         /// New Health, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnHealthChanged { get; }
+        public Event<uint, int> OnHealthChanged { get; }
 
         /// <summary>
         /// New Armor, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnArmorChanged { get; }
+        public Event<uint, int> OnArmorChanged { get; }
 
         /// <summary>
         /// New Imagination, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnImaginationChanged { get; }
+        public Event<uint, int> OnImaginationChanged { get; }
 
         /// <summary>
         /// New MaxHealth, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnMaxHealthChanged { get; }
+        public Event<uint, int> OnMaxHealthChanged { get; }
 
         /// <summary>
         /// New MaxArmor, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnMaxArmorChanged { get; }
+        public Event<uint, int> OnMaxArmorChanged { get; }
 
         /// <summary>
         /// New MaxImagination, Delta
         /// </summary>
-        public AsyncEvent<uint, int> OnMaxImaginationChanged { get; }
+        public Event<uint, int> OnMaxImaginationChanged { get; }
 
-        public AsyncEvent OnDeath { get; }
+        public Event OnDeath { get; }
 
         protected Stats()
         {
-            OnHealthChanged = new AsyncEvent<uint, int>();
+            OnHealthChanged = new Event<uint, int>();
             
-            OnArmorChanged = new AsyncEvent<uint, int>();
+            OnArmorChanged = new Event<uint, int>();
             
-            OnImaginationChanged = new AsyncEvent<uint, int>();
+            OnImaginationChanged = new Event<uint, int>();
             
-            OnMaxHealthChanged = new AsyncEvent<uint, int>();
+            OnMaxHealthChanged = new Event<uint, int>();
             
-            OnMaxArmorChanged = new AsyncEvent<uint, int>();
+            OnMaxArmorChanged = new Event<uint, int>();
             
-            OnMaxImaginationChanged = new AsyncEvent<uint, int>();
+            OnMaxImaginationChanged = new Event<uint, int>();
             
-            OnDeath = new AsyncEvent();
+            OnDeath = new Event();
             
             Listen(OnStart, async () =>
             {
@@ -252,13 +252,13 @@ namespace Uchu.World
                 OnDeath.Clear();
             });
 
-            if (As<Player>() == default) return;
+            if (!(GameObject is Player)) return;
 
             Listen(OnHealthChanged, async (total, delta) =>
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.CurrentHealth = (int) total;
 
@@ -269,7 +269,7 @@ namespace Uchu.World
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.CurrentArmor = (int) total;
 
@@ -280,7 +280,7 @@ namespace Uchu.World
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.CurrentImagination = (int) total;
 
@@ -291,7 +291,7 @@ namespace Uchu.World
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.MaximumHealth = (int) total;
 
@@ -302,7 +302,7 @@ namespace Uchu.World
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.MaximumArmor = (int) total;
 
@@ -313,7 +313,7 @@ namespace Uchu.World
             {
                 await using var ctx = new UchuContext();
 
-                var character = await ctx.Characters.FirstAsync(c => c.Id == As<Player>().Id);
+                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
 
                 character.MaximumImagination = (int) total;
 

@@ -103,63 +103,61 @@ namespace Uchu.World
             
             Regular = new Event();
             
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
-                while (!GameObject.Started)
+                Listen(GameObject.OnStart, async () =>
                 {
-                    await Task.Delay(50);
-                }
-                
-                if (Zone.NavMeshManager == default || !Zone.NavMeshManager.Enabled) return;
-                
-                await using var ctx = new CdClientContext();
+                    if (Zone.NavMeshManager == default || !Zone.NavMeshManager.Enabled) return;
 
-                var info = await ctx.MovementAIComponentTable.FirstOrDefaultAsync(
-                    m => m.Id == GameObject.Lot.GetComponentId(ComponentId.MovementAIComponent)
-                );
+                    await using var ctx = new CdClientContext();
 
-                if (info == default)
-                {
-                    Destroy(this);
-                    
-                    return;
-                }
+                    var info = await ctx.MovementAIComponentTable.FirstOrDefaultAsync(
+                        m => m.Id == GameObject.Lot.GetComponentId(ComponentId.MovementAIComponent)
+                    );
 
-                BaseCombatAiComponent = GameObject.GetComponent<BaseCombatAiComponent>();
+                    if (info == default)
+                    {
+                        Destroy(this);
 
-                ControllablePhysicsComponent = GameObject.GetComponent<ControllablePhysicsComponent>();
+                        return;
+                    }
 
-                DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
+                    BaseCombatAiComponent = GameObject.GetComponent<BaseCombatAiComponent>();
 
-                ClientInfo = info;
+                    ControllablePhysicsComponent = GameObject.GetComponent<ControllablePhysicsComponent>();
 
-                Origin = Transform.Position;
+                    DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
 
-                var destructible = GameObject.GetComponent<DestructibleComponent>();
+                    ClientInfo = info;
 
-                Listen(destructible.OnSmashed, (smasher, lootOwner) =>
-                {
-                    if (!GameObject.Alive) return;
-                    
-                    Transform.Position = Origin;
+                    Origin = Transform.Position;
 
-                    BaseCombatAiComponent.Target = null;
-                    
-                    ControllablePhysicsComponent.Velocity = Vector3.Zero;
+                    var destructible = GameObject.GetComponent<DestructibleComponent>();
 
-                    ControllablePhysicsComponent.HasVelocity = true;
+                    Listen(destructible.OnSmashed, (smasher, lootOwner) =>
+                    {
+                        if (!GameObject.Alive) return;
+
+                        Transform.Position = Origin;
+
+                        BaseCombatAiComponent.Target = null;
+
+                        ControllablePhysicsComponent.Velocity = Vector3.Zero;
+
+                        ControllablePhysicsComponent.HasVelocity = true;
+                    });
+
+                    SetOnTick(CalculateAction);
+
+                    Zone.Update(GameObject, () =>
+                    {
+                        Regular.Invoke();
+
+                        CalculateMovement();
+
+                        return Task.CompletedTask;
+                    }, UpdateRate);
                 });
-
-                SetOnTick(CalculateAction);
-
-                Zone.Update(GameObject, () =>
-                {
-                    Regular.Invoke();
-
-                    CalculateMovement();
-                    
-                    return Task.CompletedTask;
-                }, UpdateRate);
             });
         }
 
@@ -182,13 +180,11 @@ namespace Uchu.World
             {
                 PathIndex++;
                 
-                if (OnEndOfWayPoint.Any)
-                    OnEndOfWayPoint.Invoke();
+                OnEndOfWayPoint.Invoke();
                 
                 if (PathIndex >= Path.Length)
                 {
-                    if (OnEndOfPath.Any)
-                        OnEndOfPath.Invoke();
+                    OnEndOfPath.Invoke();
                 }
 
                 if (HasWayPoint)

@@ -89,13 +89,13 @@ namespace Uchu.World
         // Events
         //
 
-        public AsyncEvent<Player> OnPlayerLoad { get; } = new AsyncEvent<Player>();
+        public Event<Player> OnPlayerLoad { get; } = new Event<Player>();
 
         public Event<Object> OnObject { get; } = new Event<Object>();
 
-        public AsyncEvent OnTick { get; } = new AsyncEvent();
+        public Event OnTick { get; } = new Event();
         
-        public AsyncEvent<Player, string> OnChatMessage { get; } = new AsyncEvent<Player, string>();
+        public Event<Player, string> OnChatMessage { get; } = new Event<Player, string>();
 
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {
@@ -133,8 +133,6 @@ namespace Uchu.World
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
-            var tasks = new List<Task>();
-
             NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
 
             if (NavMeshManager.Enabled)
@@ -160,44 +158,38 @@ namespace Uchu.World
 
             foreach (var levelObject in objects)
             {
-                var task = Task.Run(() =>
+                Logger.Debug($"Loading {levelObject.Lot} [{levelObject.ObjectId}]...");
+                
+                try
                 {
+                    SpawnLevelObject(levelObject);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
+            
+            if (ZoneInfo.LuzFile.PathData != default)
+            {
+                foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
+                {
+                    Logger.Information($"Loading {path.PathName}");
+                    
                     try
                     {
-                        SpawnLevelObject(levelObject);
+                        SpawnPath(path);
                     }
                     catch (Exception e)
                     {
                         Logger.Error(e);
                     }
-                });
-
-                tasks.Add(task);
-            }
-
-            if (ZoneInfo.LuzFile.PathData != default)
-            {
-                foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
-                {
-                    var task = Task.Run(() =>
-                    {
-                        try
-                        {
-                            SpawnPath(path);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Error(e);
-                        }
-                    });
-
-                    tasks.Add(task);
                 }
             }
-
-            await Task.WhenAll(tasks);
-
-            Logger.Information($"Loaded {objects.Count} objects for {ZoneId}");
+            
+            Logger.Information($"Loaded {Objects.Length} objects for {ZoneId}");
 
             //
             // Load zone scripts
@@ -257,6 +249,8 @@ namespace Uchu.World
         {
             var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
+            Logger.Debug($"Instancing: {spawnerPath.PathName} -> {obj}");
+            
             if (obj == null) return;
 
             obj.Layer = StandardLayer.Hidden;
@@ -269,9 +263,15 @@ namespace Uchu.World
                 Rotation = Quaternion.Identity
             }).ToList();
             
+            Logger.Debug($"Starting: {spawnerPath.PathName}");
+            
             Start(obj);
             
+            Logger.Debug($"Started: {spawnerPath.PathName}");
+            
             spawner.SpawnCluster();
+            
+            Logger.Debug($"Spawned: {spawnerPath.PathName}");
         }
 
         #endregion

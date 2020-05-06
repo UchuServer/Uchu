@@ -248,13 +248,9 @@ namespace Uchu.World
             {
                 var tree = await BehaviorTree.FromSkillAsync(message.SkillId);
                 
-                await using var writeStream = new MemoryStream();
-                using var writer = new BitWriter(writeStream);
-
                 var context = await tree.ExecuteAsync(
                     GameObject,
                     reader,
-                    writer,
                     SkillCastType.OnUse,
                     message.OptionalTarget
                 );

@@ -94,7 +94,7 @@ namespace Uchu.World
 
         public Event<Player> OnInteract { get; }
 
-        public AsyncEvent<int, Player> OnEmoteReceived { get; }
+        public Event<int, Player> OnEmoteReceived { get; }
 
         #endregion
         
@@ -120,7 +120,7 @@ namespace Uchu.World
             
             OnInteract = new Event<Player>();
             
-            OnEmoteReceived = new AsyncEvent<int, Player>();
+            OnEmoteReceived = new Event<int, Player>();
             
             Listen(OnStart, () =>
             {
@@ -146,7 +146,7 @@ namespace Uchu.World
             {
                 foreach (var player in Zone.Players)
                 {
-                    player.ViewUpdate(this);
+                    player.TriggerViewUpdate(this);
                 }
             });
         }
