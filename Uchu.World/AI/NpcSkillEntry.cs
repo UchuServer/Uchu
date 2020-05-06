@@ -5,5 +5,7 @@ namespace Uchu.World.AI
         public uint SkillId { get; set; }
         
         public bool Cooldown { get; set; }
+        
+        public float AbilityCooldown { get; set; }
     }
 }

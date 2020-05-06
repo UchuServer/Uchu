@@ -537,9 +537,13 @@ namespace Uchu.World
             {
                 _running = true;
 
+                var watch = new Stopwatch();
+                
                 while (_running)
                 {
-                    if (Players.Length == 0)
+                    var players = Players;
+                    
+                    if (players.Length == 0)
                     {
                         await Task.Delay(1000);
                         
@@ -548,43 +552,70 @@ namespace Uchu.World
 
                     if (_ticks >= TicksPerSecondLimit) continue;
 
-                    var start = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    
-                    await Task.Delay(1000 / TicksPerSecondLimit);
+                    watch.Restart();
 
                     foreach (var updatedObject in UpdatedObjects.ToArray())
                     {
                         if (updatedObject.Associate is GameObject gameObject)
                         {
-                            if (Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
+                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
                         }
 
+                        updatedObject.DeltaTime += DeltaTime;
+                        
                         if (updatedObject.Frequency != ++updatedObject.Ticks) continue;
                         
                         updatedObject.Ticks = 0;
 
                         try
                         {
-                            await updatedObject.Delegate();
+                            var start = watch.ElapsedMilliseconds;
+                            
+                            await updatedObject.Delegate(updatedObject.DeltaTime);
+
+                            var elapsed = watch.ElapsedMilliseconds - start;
+
+                            if (elapsed > 100)
+                            {
+                                Logger.Warning(
+                                    $"Slow update: {updatedObject.Associate} in {elapsed}ms"
+                                );
+                            }
                         }
                         catch (Exception e)
                         {
                             Logger.Error(e);
                         }
+
+                        updatedObject.DeltaTime = 0;
                     }
 
                     _ticks++;
 
-                    var passedMs = DateTimeOffset.Now.ToUnixTimeMilliseconds() - start;
-
-                    DeltaTime = passedMs / 1000f;
+                    var passedMs = watch.ElapsedMilliseconds;
 
                     _passedTickTime += passedMs;
+                    
+                    await Task.Delay((int) Math.Max(1000 / TicksPerSecondLimit - passedMs, 0));
+                    
+                    passedMs = watch.ElapsedMilliseconds;
+
+                    DeltaTime = passedMs / 1000f;
                 }
             });
         }
 
         public void Update(Object associate, Func<Task> @delegate, int frequency)
+        {
+            UpdatedObjects.Add(new UpdatedObject
+            {
+                Associate = associate,
+                Delegate = _ => @delegate(),
+                Frequency = frequency
+            });
+        }
+        
+        public void Update(Object associate, Func<float, Task> @delegate, int frequency)
         {
             UpdatedObjects.Add(new UpdatedObject
             {
@@ -598,11 +629,13 @@ namespace Uchu.World
         {
             public Object Associate { get; set; }
             
-            public Func<Task> Delegate { get; set; }
+            public Func<float, Task> Delegate { get; set; }
             
             public int Frequency { get; set; }
             
             public int Ticks { get; set; }
+            
+            public float DeltaTime { get; set; }
         }
 
         #endregion

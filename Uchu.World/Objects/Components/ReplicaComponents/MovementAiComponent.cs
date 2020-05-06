@@ -149,11 +149,11 @@ namespace Uchu.World
 
                     SetOnTick(CalculateAction);
 
-                    Zone.Update(GameObject, () =>
+                    Zone.Update(GameObject, delta =>
                     {
                         Regular.Invoke();
 
-                        CalculateMovement();
+                        CalculateMovement(delta);
 
                         return Task.CompletedTask;
                     }, UpdateRate);
@@ -161,7 +161,7 @@ namespace Uchu.World
             });
         }
 
-        private void CalculateMovement()
+        private void CalculateMovement(float deltaTime)
         {
             if (!Zone.NavMeshManager.Enabled) return;
             
@@ -193,7 +193,7 @@ namespace Uchu.World
                 }
             }
 
-            DeltaTime += Zone.DeltaTime * UpdateRate;
+            DeltaTime += deltaTime;
 
             var newPosition = Transform.Position.MoveTowards(CurrentWayPoint, Speed * DeltaTime, out var deltaVector);
 

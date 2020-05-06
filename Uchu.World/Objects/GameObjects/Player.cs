@@ -53,7 +53,7 @@ namespace Uchu.World
                     await Perspective.TickAsync();
 
                     await CheckBannedStatusAsync();
-                }, 20);
+                }, 20 * 5);
             });
             
             Listen(OnDestroyed, () =>

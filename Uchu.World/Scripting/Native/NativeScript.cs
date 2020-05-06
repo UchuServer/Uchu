@@ -39,33 +39,43 @@ namespace Uchu.World.Scripting.Native
             
             foreach (var gameObject in Zone.GameObjects)
             {
-                var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
-
-                if (!client)
+                if (HasLuaScript(gameObject, script, client))
                 {
-                    if (scriptComponent?.ScriptName != null)
-                    {
-                        if (scriptComponent.ScriptName.ToLower().EndsWith(script)) list.Add(gameObject);
-                    }
-                    else if (gameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
-                    {
-                        if (((string) scriptOverride).ToLower().EndsWith(script)) list.Add(gameObject);
-                    }
-                }
-                else
-                {
-                    if (scriptComponent?.ClientScriptName != null)
-                    {
-                        if (scriptComponent.ClientScriptName.ToLower().EndsWith(script)) list.Add(gameObject);
-                    }
-                    else if (gameObject.Settings.TryGetValue("custom_client_script", out var scriptOverride))
-                    {
-                        if (((string) scriptOverride).ToLower().EndsWith(script)) list.Add(gameObject);
-                    }
+                    list.Add(gameObject);
                 }
             }
 
             return list.ToArray();
+        }
+
+        protected bool HasLuaScript(GameObject gameObject, string script, bool client = false)
+        {
+            var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
+
+            if (!client)
+            {
+                if (scriptComponent?.ScriptName != null)
+                {
+                    if (scriptComponent.ScriptName.ToLower().EndsWith(script)) return true;
+                }
+                else if (gameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                {
+                    if (((string) scriptOverride).ToLower().EndsWith(script)) return true;
+                }
+            }
+            else
+            {
+                if (scriptComponent?.ClientScriptName != null)
+                {
+                    if (scriptComponent.ClientScriptName.ToLower().EndsWith(script)) return true;
+                }
+                else if (gameObject.Settings.TryGetValue("custom_client_script", out var scriptOverride))
+                {
+                    if (((string) scriptOverride).ToLower().EndsWith(script)) return true;
+                }
+            }
+
+            return false;
         }
 
         protected GameObject[] GetGroup(string group) => GetGroup(Zone, group);

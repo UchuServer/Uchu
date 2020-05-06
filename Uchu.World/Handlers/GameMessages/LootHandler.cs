@@ -21,15 +21,15 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task PickupItemHandler(PickupItemMessage message, Player player)
         {
-            if (message.Loot == default)
+            if (message.Loot == default || !message.Loot.Alive)
             {
                 Logger.Error($"{player} is trying to pick up invalid item.");
                 return;
             }
             
-            await player.OnLootPickup.InvokeAsync(message.Loot.Lot);
-            
             Object.Destroy(message.Loot);
+            
+            await player.OnLootPickup.InvokeAsync(message.Loot.Lot);
 
             await player.GetComponent<InventoryManagerComponent>().AddItemAsync(message.Loot.Lot, 1);
         }

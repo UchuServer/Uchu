@@ -38,35 +38,47 @@ namespace Uchu.World
 
         public BaseCombatAiComponent()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 SkillEntries = new List<NpcSkillEntry>();
 
-                SkillComponent = GameObject.GetComponent<SkillComponent>();
-
-                DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
-
-                QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
-
-                Stats = GameObject.GetComponent<Stats>();
-
-                foreach (var skillEntry in SkillComponent.DefaultSkillSet)
+                Listen(GameObject.OnStart, async () =>
                 {
-                    SkillEntries.Add(new NpcSkillEntry
+                    SkillComponent = GameObject.GetComponent<SkillComponent>();
+
+                    DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
+
+                    QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
+
+                    Stats = GameObject.GetComponent<Stats>();
+
+                    foreach (var skillEntry in SkillComponent.DefaultSkillSet)
                     {
-                        SkillId = skillEntry.SkillId,
-                        Cooldown = false
-                    });
-                }
+                        await using var ctx = new CdClientContext();
 
-                Zone.Update(GameObject, async () =>
-                {
-                    await CalculateCombat();
-                }, 1);
+                        var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
+                            s => s.SkillID == skillEntry.SkillId
+                        );
+
+                        await SkillComponent.CalculateSkillAsync((int) skillEntry.SkillId, true);
+                        
+                        SkillEntries.Add(new NpcSkillEntry
+                        {
+                            SkillId = skillEntry.SkillId,
+                            Cooldown = false,
+                            AbilityCooldown = skillInfo.Cooldown ?? 1
+                        });
+                    }
+
+                    Zone.Update(GameObject, async delta =>
+                    {
+                        await CalculateCombat(delta);
+                    }, 1);
+                });
             });
         }
 
-        private async Task CalculateCombat()
+        private async Task CalculateCombat(float delta)
         {
             if (!Enabled) return;
 
@@ -76,8 +88,6 @@ namespace Uchu.World
 
             if (Cooldown <= 0)
             {
-                await using var ctx = new CdClientContext();
-
                 AbilityDowntime = false;
 
                 Cooldown = 1f;
@@ -92,13 +102,9 @@ namespace Uchu.World
 
                     entry.Cooldown = true;
 
-                    var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
-                        s => s.SkillID == entry.SkillId
-                    );
-
                     var _ = Task.Run(async () =>
                     {
-                        var cooldown = (skillInfo.Cooldown ?? 1f) + time;
+                        var cooldown = entry.AbilityCooldown + time;
 
                         await Task.Delay((int) cooldown * 1000);
 
@@ -111,7 +117,7 @@ namespace Uchu.World
                 }
             }
 
-            Cooldown -= Zone.DeltaTime;
+            Cooldown -= delta;
         }
 
         public override void Construct(BitWriter writer)
