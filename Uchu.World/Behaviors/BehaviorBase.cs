@@ -106,18 +106,17 @@ namespace Uchu.World.Behaviors
 
         protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            context.BehaviorHandles[handle] = async (reader, writer) =>
+            context.RegisterHandle(handle, async reader =>
             {
                 var newBranchContext = new ExecutionBranchContext(branchContext.Target)
                 {
                     Duration = branchContext.Duration
                 };
-                
+
                 context.Reader = reader;
-                context.Writer = writer;
-                
+
                 await SyncAsync(context, newBranchContext);
-            };
+            });
         }
 
         protected async Task<BehaviorParameter> GetParameter(string name)

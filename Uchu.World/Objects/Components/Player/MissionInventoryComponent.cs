@@ -43,6 +43,37 @@ namespace Uchu.World
             ).ToArray();
         }
 
+        public async Task<bool> HasCompleted(int id)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Missions.AnyAsync(
+                m => m.CharacterId == GameObject.Id && m.Id == id && m.State >= (int) MissionState.Completed
+            );
+        }
+
+        public async Task<bool> OnMission(int id)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Missions.AnyAsync(
+                m => m.CharacterId == GameObject.Id && m.Id == id &&
+                    (m.State == (int) MissionState.Active || m.State == (int) MissionState.CompletedAvailable)
+            );
+        }
+
+        public async Task<bool> CanAccept(int id)
+        {
+            await using var ctx = new CdClientContext();
+
+            var mission = await ctx.MissionsTable.FirstAsync(m => m.Id == id);
+            
+            return MissionParser.CheckPrerequiredMissions(
+                mission.PrereqMissionID,
+                GetCompletedMissions()
+            );
+        }
+
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
             var player = (Player) GameObject;
@@ -312,8 +343,21 @@ namespace Uchu.World
             {
                 await task.Progress(lot);
             }
-
+            
             await SearchForNewAchievementsAsync<GoToNpcTask>(MissionTaskType.GoToNpc, lot, async task =>
+            {
+                await task.Progress(lot);
+            });
+        }
+        
+        public async Task InteractAsync(Lot lot)
+        {
+            foreach (var task in await FindActiveTasksAsync<InteractTask>())
+            {
+                await task.Progress(lot);
+            }
+            
+            await SearchForNewAchievementsAsync<InteractTask>(MissionTaskType.Interact, lot, async task =>
             {
                 await task.Progress(lot);
             });

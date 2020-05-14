@@ -21,23 +21,12 @@ namespace Uchu.StandardScripts.General
                 
                 var id = int.Parse(idString.Substring(idString.Length - 2));
 
-                var flag = 10000 + (int) Zone.ZoneId + id;
+                var flag = 10000 + Zone.ZoneId + id;
                 
                 Listen(gameObject.OnInteract, async player =>
                 {
-                    player.SendChatMessage($"PLQ: {flag}");
-                    
-                    await player.GetComponent<MissionInventoryComponent>().FlagAsync(
-                        flag
-                    );
-                    
-                    player.Message(new NotifyClientFlagChangeMessage
-                    {
-                        Associate = player,
-                        Flag = true,
-                        FlagId = flag
-                    });
-                    
+                    await player.SetFlagAsync(flag, true);
+
                     player.Message(new FireClientEventMessage
                     {
                         Associate = gameObject,

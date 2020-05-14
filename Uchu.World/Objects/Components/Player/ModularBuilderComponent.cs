@@ -42,18 +42,20 @@ namespace Uchu.World
                 });
 
                 _building = value;
-
-                if (value) return;
-
-                Task.Run(ConfirmFinish);
             }
         }
 
-        public void StartBuilding(StartBuildingWithItemMessage message)
+        public async Task StartBuildingAsync(StartBuildingWithItemMessage message)
         {
             As<Player>().SendChatMessage(
                 $"[{IsBuilding}]\n{string.Join('\n', typeof(StartBuildingWithItemMessage).GetProperties().Select(p => $"{p.Name} = {p.GetValue(message)}"))}"
             );
+
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+            
+            var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
+
+            await thinkingHat.EquipAsync(true);
             
             IsBuilding = true;
             
@@ -131,8 +133,8 @@ namespace Uchu.World
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
 
-            await item.EquipAsync();
-            
+            await item.EquipAsync(true);
+
             /*
             As<Player>().Message(new StartArrangingWithItemMessage
             {
@@ -144,8 +146,6 @@ namespace Uchu.World
 
         public async Task ConfirmFinish()
         {
-            if (!IsBuilding) return;
-
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
@@ -162,6 +162,12 @@ namespace Uchu.World
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
 
             await thinkingHat.UnEquipAsync();
+            
+            As<Player>().Message(new FinishArrangingWithItemMessage
+            {
+                Associate = GameObject,
+                BuildArea = BasePlate
+            });
             
             IsBuilding = false;
         }

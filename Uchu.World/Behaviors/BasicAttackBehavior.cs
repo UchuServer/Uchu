@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -30,15 +31,40 @@ namespace Uchu.World.Behaviors
 
             context.Reader.Read<ushort>();
 
-            context.Reader.ReadBit();
-            context.Reader.ReadBit();
-            context.Reader.ReadBit();
+            var failImmune = context.Reader.ReadBit();
+
+            if (!failImmune)
+            {
+                var unknown = context.Reader.ReadBit();
+                
+                if (!unknown)
+                {
+                    context.Reader.ReadBit();
+                }
+            }
 
             context.Reader.Read<uint>();
 
             var damage = context.Reader.Read<uint>();
 
-            branchContext.Target.GetComponent<Stats>().Damage(damage, context.Associate);
+            if (branchContext == default)
+            {
+                Logger.Error("Invalid Brash Context!");
+                
+                throw new Exception("Invalid!");
+            }
+            
+            if (branchContext.Target == default || !branchContext.Target.TryGetComponent<Stats>(out var stats))
+            {
+                Logger.Error($"Invalid target: {branchContext.Target}");
+            }
+            else
+            {
+                var _ = Task.Run(() =>
+                {
+                    stats.Damage(damage, context.Associate);
+                });
+            }
 
             var success = context.Reader.ReadBit();
             
@@ -76,7 +102,10 @@ namespace Uchu.World.Behaviors
             {
                 var stats = branchContext.Target.GetComponent<Stats>();
 
-                stats.Damage(damage, context.Associate);
+                var _ = Task.Run(() =>
+                {
+                    stats.Damage(damage, context.Associate);
+                });
                 
                 await OnSuccess.CalculateAsync(context, branchContext);
             }

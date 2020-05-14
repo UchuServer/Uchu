@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
@@ -29,15 +30,18 @@ namespace Uchu.World.Behaviors
 
             var length = context.Reader.Read<uint>();
             
-            if (length > 10) length = 10; // TODO: Fix
-
             var targets = new GameObject[length];
 
             for (var i = 0; i < length; i++)
             {
                 var id = context.Reader.Read<ulong>();
 
-                context.Associate.Zone.TryGetGameObject((long) id, out var target);
+                if (!context.Associate.Zone.TryGetGameObject((long) id, out var target))
+                {
+                    Logger.Error($"{context.Associate} sent invalid AreaOfEffect target: {id}");
+
+                    continue;
+                }
                 
                 targets[i] = target;
             }

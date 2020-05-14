@@ -160,6 +160,22 @@ namespace Uchu.Core.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("Uchu.Core.CharacterFlag", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("CharacterId");
+
+                    b.Property<int>("Flag");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("Flags");
+                });
+
             modelBuilder.Entity("Uchu.Core.CharacterMail", b =>
                 {
                     b.Property<long>("Id")
@@ -469,6 +485,14 @@ namespace Uchu.Core.Migrations
                     b.HasOne("Uchu.Core.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Uchu.Core.CharacterFlag", b =>
+                {
+                    b.HasOne("Uchu.Core.Character", "Character")
+                        .WithMany("Flags")
+                        .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

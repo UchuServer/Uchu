@@ -422,7 +422,9 @@ namespace Uchu.World
             // Create GameObject
             //
 
-            var id = levelObject.ObjectId == 0 ? (long) ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client) : (long) levelObject.ObjectId;
+            var id = levelObject.ObjectId == 0
+                ? (long) ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
+                : (long) levelObject.ObjectId;
 
             var instance = Instantiate(
                 type,
@@ -460,11 +462,7 @@ namespace Uchu.World
                 // Add components from the entries
                 //
 
-                if ((ComponentId) (int) component.Componenttype == ComponentId.MissionNPCComponent)
-                    Logger.Information($"{instance} has a Quest Giver component.");
-
-                var componentType =
-                    ReplicaComponent.GetReplica((ComponentId) (int) component.Componenttype);
+                var componentType = ReplicaComponent.GetReplica((ComponentId) (int) component.Componenttype);
 
                 if (componentType != default) instance.AddComponent(componentType);
             }
@@ -501,14 +499,6 @@ namespace Uchu.World
                 instance.AddComponent<TriggerComponent>();
             }
 
-            //
-            // Check if this object has a spawn activator attached to it
-            //
-
-            //
-            // Setup all the components
-            //
-            
             return instance;
         }
 

@@ -10,9 +10,18 @@ namespace Uchu.World.Behaviors
         
         public BehaviorBase Action { get; set; }
         
+        public int Intervals { get; set; }
+        
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
+
+            Intervals = await GetParameter<int>("num_intervals");
+
+            if (Intervals == 0)
+            {
+                Intervals = 1;
+            }
             
             var delay = await GetParameter("delay");
             
@@ -24,10 +33,13 @@ namespace Uchu.World.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
-            
+
             var handle = context.Reader.Read<uint>();
 
-            RegisterHandle(handle, context, branchContext);
+            for (var i = 0; i < Intervals; i++)
+            {
+                RegisterHandle(handle, context, branchContext);
+            }
         }
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)

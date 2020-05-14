@@ -95,10 +95,12 @@ namespace Uchu.World.Handlers
 
             await using var ctx = new UchuContext();
             var character = await ctx.Characters
+                .Include(c => c.Flags)
                 .Include(c => c.Items)
                 .Include(c => c.User)
                 .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks).ThenInclude(m => m.Values)
+                .ThenInclude(m => m.Tasks)
+                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.Id == session.CharacterId);
 
             var zoneId = (ZoneId) character.LastZone;
@@ -317,6 +319,7 @@ namespace Uchu.World.Handlers
             var flags = new Dictionary<int, FlagNode>();
             using var cdContext = new CdClientContext();
 
+            /*
             // Keep a list of all tasks ids that belong to flag tasks
             var flagTaskIds = cdContext.MissionTasksTable
                 .Where(t => t.TaskType == (int) MissionTaskType.Flag)
@@ -327,6 +330,9 @@ namespace Uchu.World.Handlers
                 .SelectMany(m => m.Tasks
                     .Where(t => flagTaskIds.Contains(t.TaskId))
                     .SelectMany(t => t.ValueArray()));
+            */
+
+            var flagValues = character.Flags.Select(f => (float) f.Flag);
 
             // The flags are stored as one long list of bits by separating them in unsigned longs
             foreach (var value in flagValues)

@@ -17,9 +17,7 @@ namespace Uchu.World.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
             
-            ((Player) context.Associate)?.SendChatMessage($"STUN CASTER: {StunCaster}");
-            
-            if (StunCaster == 1) return;
+            if (StunCaster == 1 || branchContext.Target == context.Associate) return;
 
             context.Reader.ReadBit();
         }

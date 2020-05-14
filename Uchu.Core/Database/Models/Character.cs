@@ -200,5 +200,7 @@ namespace Uchu.Core
         public List<Mission> Missions { get; set; }
         
         public List<UnlockedEmote> UnlockedEmotes { get; set; }
+        
+        public List<CharacterFlag> Flags { get; set; }
     }
 }

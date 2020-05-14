@@ -34,7 +34,7 @@ namespace Uchu.World
             
             OnResurrect = new Event();
             
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 if (GameObject.Settings.TryGetValue("respawn", out var resTimer))
                 {
@@ -47,9 +47,13 @@ namespace Uchu.World
                     };
                 }
 
+                var container = GameObject.AddComponent<LootContainerComponent>();
+
+                await container.CollectDetailsAsync();
+                
                 GameObject.Layer = StandardLayer.Smashable;
 
-                using (var cdClient = new CdClientContext())
+                await using (var cdClient = new CdClientContext())
                 {
                     var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
@@ -137,29 +141,23 @@ namespace Uchu.World
             // Normal Smashable
             //
 
-            if (owner == null)
-            {
-                OnSmashed.Invoke(smasher, default);
-
-                return;
-            }
-
             GameObject.Layer -= StandardLayer.Smashable;
             GameObject.Layer += StandardLayer.Hidden;
 
             InitializeRespawn();
+            
+            if (owner != null)
+            {
+                await GenerateYieldsAsync(owner);
+            }
 
-            await GenerateYieldsAsync(owner);
-
-            OnSmashed.Invoke(smasher, owner);
+            await OnSmashed.InvokeAsync(smasher, owner);
         }
         
         private async Task GenerateYieldsAsync(Player owner)
         {
-            var container = GameObject.AddComponent<LootContainerComponent>();
-
-            await container.CollectDetailsAsync();
-
+            var container = GameObject.GetComponent<LootContainerComponent>();
+            
             foreach (var lot in container.GenerateLootYields())
             {
                 var drop = InstancingUtilities.InstantiateLoot(lot, owner, GameObject, Transform.Position);
@@ -219,7 +217,7 @@ namespace Uchu.World
                 GameObject.Layer -= StandardLayer.Hidden;
             }
 
-            OnResurrect.Invoke();
+            await OnResurrect.InvokeAsync();
         }
     }
 }

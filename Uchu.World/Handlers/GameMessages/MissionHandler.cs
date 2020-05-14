@@ -32,15 +32,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task SetFlagHandler(SetFlagMessage message, Player player)
         {
-            player.SendChatMessage($"FLAG: {message.FlagId}");
-            
-            await player.GetComponent<MissionInventoryComponent>().FlagAsync(message.FlagId);
-            
-            player.Message(new NotifyClientFlagChangeMessage
-            {
-                Flag = message.Flag,
-                FlagId = message.FlagId
-            });
+            await player.SetFlagAsync(message.FlagId, message.Flag);
         }
     }
 }

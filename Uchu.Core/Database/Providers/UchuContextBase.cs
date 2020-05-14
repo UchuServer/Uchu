@@ -36,6 +36,8 @@ namespace Uchu.Core.Providers
         
         public DbSet<TradeTransactionItem> TransactionItems { get; set; }
         
+        public DbSet<CharacterFlag> Flags { get; set; }
+        
         public virtual async Task EnsureUpdatedAsync()
         {
             await Database.MigrateAsync().ConfigureAwait(false);

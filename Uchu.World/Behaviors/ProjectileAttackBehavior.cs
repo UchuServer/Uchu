@@ -108,8 +108,6 @@ namespace Uchu.World.Behaviors
             projectile.RadiusCheck = TrackRadius;
             projectile.MaxDistance = MaxDistance;
             
-            ((Player) context.Associate)?.SendChatMessage($"Start PROJ: [{projectile.Lot}] {projectile.ClientObjectId} -> {projectile.Target}");
-
             Object.Start(projectile);
         }
     }

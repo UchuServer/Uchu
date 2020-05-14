@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Behaviors
@@ -51,7 +52,7 @@ namespace Uchu.World.Behaviors
                     await JetpackBehavior.ExecuteAsync(context, branchContext);
                     return;
                 default:
-                    return;
+                    throw new Exception($"Invalid {nameof(MovementType)}! Got {MovementType}!");
             }
         }
     }

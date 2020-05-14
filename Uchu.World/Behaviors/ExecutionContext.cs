@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World.Behaviors
 {
-    using SyncDelegate = Func<BitReader, BitWriter, Task>;
+    using SyncDelegate = Func<BitReader, Task>;
 
     public class ExecutionContext
     {
@@ -14,13 +16,13 @@ namespace Uchu.World.Behaviors
         public BehaviorBase Root { get; set; }
 
         public BitReader Reader { get; set; }
-        
+
         public BitWriter Writer { get; set; }
-        
+
         public GameObject ExplicitTarget { get; set; }
-        
-        public Dictionary<uint, SyncDelegate> BehaviorHandles { get; } = new Dictionary<uint, SyncDelegate>();
-        
+
+        public List<BehaviorSyncEntry> BehaviorHandles { get; } = new List<BehaviorSyncEntry>();
+
         public ExecutionContext(GameObject associate, BitReader reader, BitWriter writer)
         {
             Associate = associate;
@@ -28,14 +30,41 @@ namespace Uchu.World.Behaviors
             Writer = writer;
         }
 
-        public async Task SyncAsync(uint handle, BitReader reader, BitWriter writer)
+        public async Task SyncAsync(uint handle, BitReader reader)
         {
-            if (BehaviorHandles.TryGetValue(handle, out var method))
+            BehaviorSyncEntry entry;
+            
+            lock (BehaviorHandles)
             {
-                await method(reader, writer);
+                entry = BehaviorHandles.FirstOrDefault(e => e.Handle == handle);
 
-                BehaviorHandles.Remove(handle);
+                if (entry == default)
+                {
+                    Logger.Error($"Invalid behavior sync id: {handle}!");
+                    
+                    return;
+                }
+                
+                BehaviorHandles.Remove(entry);
             }
+            
+            await entry.Delegate(reader);
+        }
+
+        public void RegisterHandle(uint handle, SyncDelegate @delegate)
+        {
+            BehaviorHandles.Add(new BehaviorSyncEntry
+            {
+                Handle = handle,
+                Delegate = @delegate
+            });
+        }
+
+        public class BehaviorSyncEntry
+        {
+            public uint Handle { get; set; }
+
+            public SyncDelegate Delegate { get; set; }
         }
     }
 }

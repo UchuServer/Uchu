@@ -37,6 +37,8 @@ namespace Uchu.Core
 
         public DbSet<TradeTransactionItem> TransactionItems => ContextBase.TransactionItems;
 
+        public DbSet<CharacterFlag> Flags => ContextBase.Flags;
+
         public UchuContext()
         {
             var config = UchuContextBase.Config;

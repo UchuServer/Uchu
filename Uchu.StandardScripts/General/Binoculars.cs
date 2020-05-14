@@ -23,18 +23,7 @@ namespace Uchu.StandardScripts.General
                 
                 Listen(gameObject.OnInteract, async player =>
                 {
-                    player.SendChatMessage($"BIO: {flag}");
-                    
-                    await player.GetComponent<MissionInventoryComponent>().FlagAsync(
-                        flag
-                    );
-                    
-                    player.Message(new NotifyClientFlagChangeMessage
-                    {
-                        Associate = player,
-                        Flag = true,
-                        FlagId = flag
-                    });
+                    await player.SetFlagAsync(flag, true);
                     
                     player.Message(new FireClientEventMessage
                     {

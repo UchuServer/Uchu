@@ -10,8 +10,6 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (!player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter)) return;
             
-            player.SendChatMessage($"Override: {message.Override}");
-                
             filter.Override = message.Override;
         }
 
@@ -20,8 +18,6 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (!player.Perspective.TryGetFilter<RenderDistanceFilter>(out var filter)) return;
             
-            player.SendChatMessage($"Override position: {message.Position}");
-                
             filter.OverrideReferencePosition = message.Position;
         }
     }

@@ -21,6 +21,9 @@ namespace Uchu.World
 
             if (hasState) writer.Write((int) LockState);
 
+            SubType ??= "";
+            Type ??= "";
+            
             writer.Write((uint) SubType.Length);
             writer.WriteString(SubType, SubType.Length);
 

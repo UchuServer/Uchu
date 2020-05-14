@@ -2,8 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
-using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
@@ -21,6 +21,12 @@ namespace Uchu.World
         
         private Player()
         {
+            OnFireServerEvent = new AsyncEventDictionary<string, FireServerEventMessage>();
+
+            OnPositionUpdate = new Event<Vector3, Quaternion>();
+
+            Lock = new SemaphoreSlim(1, 1);
+
             Listen(OnStart, async () =>
             {
                 Connection.Disconnected += reason =>
@@ -65,14 +71,13 @@ namespace Uchu.World
             });
         }
 
-        public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; } =
-            new AsyncEventDictionary<string, FireServerEventMessage>();
+        public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; }
 
         public Event<Lot> OnLootPickup { get; } = new Event<Lot>();
         
         public Event OnWorldLoad { get; } = new Event();
 
-        public Event<Vector3, Quaternion> OnPositionUpdate { get; } = new Event<Vector3, Quaternion>();
+        public Event<Vector3, Quaternion> OnPositionUpdate { get; }
 
         public IRakConnection Connection { get; private set; }
 
@@ -83,7 +88,9 @@ namespace Uchu.World
         public GuildGuiState GuildGuiState { get; set; }
         
         public string GuildInviteName { get; set; }
-
+        
+        private SemaphoreSlim Lock { get; }
+        
         public int Ping => Connection.AveragePing;
         
         public override string Name
@@ -165,8 +172,54 @@ namespace Uchu.World
         public async Task<Character> GetCharacterAsync()
         {
             await using var ctx = new UchuContext();
-                
+            
             return await ctx.Characters.FirstAsync(c => c.Id == Id);
+        }
+
+        public async Task<bool> GetFlagAsync(int flag)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Flags.AnyAsync(f => f.CharacterId == Id && f.Flag == flag);
+        }
+
+        public async Task SetFlagAsync(int flag, bool state)
+        {
+            await Lock.WaitAsync();
+            
+            await using var ctx = new UchuContext();
+
+            var entry = await ctx.Flags.FirstOrDefaultAsync(
+                f => f.CharacterId == Id && f.Flag == flag
+            );
+            
+            if (entry != default && !state)
+            {
+                ctx.Flags.Remove(entry);
+
+                await ctx.SaveChangesAsync();
+            }
+            else if (entry == default && state)
+            {
+                await ctx.Flags.AddAsync(new CharacterFlag
+                {
+                    CharacterId = Id,
+                    Flag = flag
+                });
+
+                await ctx.SaveChangesAsync();
+                
+                await GetComponent<MissionInventoryComponent>().FlagAsync(flag);
+            }
+
+            Message(new NotifyClientFlagChangeMessage
+            {
+                Associate = this,
+                Flag = state,
+                FlagId = flag
+            });
+            
+            Lock.Release();
         }
 
         private async Task CheckBannedStatusAsync()

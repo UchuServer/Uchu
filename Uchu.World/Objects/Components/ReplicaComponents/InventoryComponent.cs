@@ -116,8 +116,10 @@ namespace Uchu.World
                 
                 componentId = lot.GetComponentId(ComponentId.ItemComponent);
 
-                info = await cdClient.ItemComponentTable.FirstAsync(i => i.Id == componentId);
+                info = await cdClient.ItemComponentTable.FirstOrDefaultAsync(i => i.Id == componentId);
             
+                if (info == default) continue;
+                
                 location = (EquipLocation) info.EquipLocation;
                 
                 await UpdateSlotAsync(location, new EquippedItem
@@ -133,6 +135,11 @@ namespace Uchu.World
                     await skillComponent.MountItemAsync(lot);
                 }
             }
+        }
+
+        public bool HasEquipped(Lot lot)
+        {
+            return Items.Any(i => i.Value.Lot == lot);
         }
 
         private async Task UnEquipAsync(ObjectId id)

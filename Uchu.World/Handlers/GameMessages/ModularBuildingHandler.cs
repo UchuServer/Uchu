@@ -9,7 +9,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void StartBuildingHandler(StartBuildingWithItemMessage message, Player player)
         {
-            player.GetComponent<ModularBuilderComponent>().StartBuilding(message);
+            player.GetComponent<ModularBuilderComponent>().StartBuildingAsync(message);
         }
 
         [PacketHandler]
@@ -52,6 +52,20 @@ namespace Uchu.World.Handlers.GameMessages
             character.Rocket = message.Tokens;
 
             await ctx.SaveChangesAsync();
+        }
+
+        [PacketHandler]
+        public async Task SetBuildModeHandler(SetBuildModeMessage message, Player player)
+        {
+            player.Message(new SetBuildModeConfirmed
+            {
+                Associate = message.Associate,
+                ModePaused = message.ModePaused,
+                ModeValue = message.ModeValue,
+                Player = player,
+                Start = message.Start,
+                StartPosition = message.StartPosition
+            });
         }
     }
 }

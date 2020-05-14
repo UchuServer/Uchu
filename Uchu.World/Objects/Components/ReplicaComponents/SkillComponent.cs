@@ -233,10 +233,14 @@ namespace Uchu.World
                 if (message.OptionalTarget != null)
                 {
                     // There should be more to this
-                    if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
+                    if (!message.OptionalTarget.Alive)
                         message.OptionalTarget = null;
+                    else if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
+                        message.OptionalTarget = null;
+                    /*
                     else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
                         message.OptionalTarget = null;
+                    */
                 }
             }
             catch (Exception e)
@@ -293,16 +297,13 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
 
-            await using var writeStream = new MemoryStream();
-            using var writer = new BitWriter(writeStream);
-
             var found = HandledSkills.TryGetValue(message.SkillHandle, out var behavior);
             
-            As<Player>().SendChatMessage($"SYNC: {message.SkillHandle} [{message.BehaviorHandle}] ; {found}");
+            Logger.Debug($"SYNC: {message.SkillHandle} [{message.BehaviorHandle}] ; {found}");
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviorHandle, reader, writer);
+                await behavior.SyncAsync(message.BehaviorHandle, reader);
             }
 
             if (message.Done)
