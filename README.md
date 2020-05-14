@@ -9,7 +9,7 @@ LEGO Universe server written in C#
 Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
 
 ## Discord
-Message Wincent01#1001 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
+Message Wincent01#7921 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
 
 ## Python scripting
 Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for you with less programming experience to contribute.
