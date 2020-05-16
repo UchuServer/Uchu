@@ -188,11 +188,15 @@ namespace Uchu.World
 
             if (!ignoreAllChecks)
             {
-                if (!As<Player>().GetComponent<ModularBuilderComponent>().IsBuilding)
+                if (GameObject is Player player)
                 {
-                    if (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle || item.Lot == 6086)
+                    if (!player.GetComponent<ModularBuilderComponent>().IsBuilding)
                     {
-                        return false;
+                        if (itemType == ItemType.Model || itemType == ItemType.LootModel ||
+                            itemType == ItemType.Vehicle || item.Lot == 6086)
+                        {
+                            return false;
+                        }
                     }
                 }
             }

@@ -78,13 +78,15 @@ namespace Uchu.World
 
         private async Task SetupStandardSkills()
         {
-            if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
-            
             foreach (var skillEntry in DefaultSkillSet)
             {
+                Logger.Debug($"{GameObject} has skill [{skillEntry.Type}] {skillEntry.SkillId}");
+                
                 if (skillEntry.Type != SkillCastType.OnSpawn) continue;
 
                 await CalculateSkillAsync((int) skillEntry.SkillId);
+
+                if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) continue;
 
                 Listen(destructibleComponent.OnResurrect, async () =>
                 {
@@ -153,8 +155,6 @@ namespace Uchu.World
 
             if (onUse == default) return;
             
-            As<Player>().SendChatMessage($"Adding skill: {onUse.SkillId}");
-            
             RemoveSkill(slot);
             
             SetSkill(slot, (uint) onUse.SkillId);
@@ -170,8 +170,6 @@ namespace Uchu.World
 
             if (onEquip == default) return;
             
-            As<Player>().SendChatMessage($"Mount skill: {onEquip.SkillId}");
-            
             var tree = await BehaviorTree.FromLotAsync(item);
 
             await tree.MountAsync(GameObject);
@@ -186,8 +184,6 @@ namespace Uchu.World
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
             if (onEquip == default) return;
-            
-            As<Player>().SendChatMessage($"Dismount skill: {onEquip.SkillId}");
             
             var tree = await BehaviorTree.FromLotAsync(item);
             
@@ -226,8 +222,8 @@ namespace Uchu.World
 
         public async Task StartUserSkillAsync(StartSkillMessage message)
         {
-            if (As<Player>() == null) return;
-
+            if (!(GameObject is Player)) return;
+            
             try
             {
                 if (message.OptionalTarget != null)
@@ -284,7 +280,7 @@ namespace Uchu.World
                     SkillHandle = message.SkillHandle,
                     SkillId = message.SkillId,
                     UsedMouse = message.UsedMouse
-                }, As<Player>());
+                }, GameObject as Player);
             }
             
             await GameObject.GetComponent<MissionInventoryComponent>().UseSkillAsync(
@@ -318,18 +314,20 @@ namespace Uchu.World
                 Content = message.Content,
                 Done = message.Done,
                 SkillHandle = message.SkillHandle
-            }, As<Player>());
+            }, GameObject as Player);
         }
 
         public void SetSkill(BehaviorSlot slot, uint skillId)
         {
+            if (!(GameObject is Player player)) return;
+
             if (ActiveBehaviors.TryGetValue(slot, out var currentSkill))
             {
                 ActiveBehaviors.Remove(slot);
                 
                 Logger.Information($"Removed skill: [{slot}]: {currentSkill}");
                 
-                As<Player>().Message(new RemoveSkillMessage
+                player.Message(new RemoveSkillMessage
                 {
                     Associate = GameObject,
                     SkillId = currentSkill
@@ -340,7 +338,7 @@ namespace Uchu.World
 
             Logger.Information($"Selected skill: [{slot}]: {skillId}");
             
-            As<Player>().Message(new AddSkillMessage
+            player.Message(new AddSkillMessage
             {
                 Associate = GameObject,
                 CastType = SkillCastType.OnUse,
@@ -351,13 +349,15 @@ namespace Uchu.World
         
         public void RemoveSkill(BehaviorSlot slot)
         {
+            if (!(GameObject is Player player)) return;
+
             if (ActiveBehaviors.TryGetValue(slot, out var currentSkill))
             {
                 ActiveBehaviors.Remove(slot);
                 
                 Logger.Information($"Removed skill: [{slot}]: {currentSkill}");
                 
-                As<Player>().Message(new RemoveSkillMessage
+                player.Message(new RemoveSkillMessage
                 {
                     Associate = GameObject,
                     SkillId = currentSkill
@@ -384,7 +384,7 @@ namespace Uchu.World
             
             Logger.Information($"Selected default skill: [{slot}]: {skillId}");
             
-            As<Player>().Message(new AddSkillMessage
+            player.Message(new AddSkillMessage
             {
                 Associate = GameObject,
                 CastType = SkillCastType.OnUse,

@@ -10,7 +10,5 @@ namespace Uchu.World
         public GameObject GameObject { get; set; }
 
         public Transform Transform => GameObject.Transform;
-
-        protected T As<T>() where T : GameObject => GameObject as T;
     }
 }

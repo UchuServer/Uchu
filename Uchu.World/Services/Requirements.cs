@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -9,6 +10,100 @@ namespace Uchu.World.Services
 {
     public static class Requirements
     {
+        private static bool Check(bool a, bool b, Mode mode)
+        {
+            return mode switch
+            {
+                Mode.And => (a && b),
+                Mode.Or => (a || b),
+                Mode.None => false,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+            };
+        }
+        
+        private enum Mode
+        {
+            None,
+            And,
+            Or
+        }
+
+        private static async Task<bool> CheckAsync(string cur, Player player)
+        {
+            if (string.IsNullOrWhiteSpace(cur)) return true;
+
+            return await CheckPreconditionAsync(int.Parse(cur), player);
+        }
+        
+        public static async Task<bool> CheckRequirementsAsync(string requirements, Player player)
+        {
+            if (string.IsNullOrWhiteSpace(requirements)) return true;
+
+            var cur = new StringBuilder();
+            var res = true;
+            var mode = Mode.And;
+
+            for (var i = 0; i < requirements.Length; i++)
+            {
+                var chr = requirements[i];
+
+                switch (chr)
+                {
+                    case ' ':
+                        break;
+
+                    case '&':
+                    case ',':
+                    {
+                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+
+                        cur.Clear();
+
+                        if (!res)
+                            return false;
+
+                        mode = Mode.And;
+                        break;
+                    }
+
+                    case '|':
+                    {
+                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+
+                        cur.Clear();
+
+                        mode = Mode.Or;
+                        break;
+                    }
+
+                    case '(':
+                        res = Check(res, await CheckRequirementsAsync(requirements.Substring(i + 1), player), mode);
+                        break;
+
+                    case ')':
+                        return Check(res, await CheckAsync(cur.ToString(), player), mode);
+
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                    case ':':
+                        cur.Append(chr);
+                        break;
+                }
+            }
+
+            res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+
+            return res;
+        }
+        
         public static async Task<bool> CheckPreconditionAsync(int id, Player player)
         {
             await using var cdClient = new CdClientContext();
@@ -120,7 +215,7 @@ namespace Uchu.World.Services
             
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.CanAccept(id);
+            return await missions.CanAcceptAsync(id);
         }
 
         private static async Task<bool> OnMissionAsync(Preconditions preconditions, Player player)
@@ -129,7 +224,7 @@ namespace Uchu.World.Services
             
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.OnMission(id);
+            return await missions.OnMissionAsync(id);
         }
 
         private static async Task<bool> MissionCompleteAsync(Preconditions preconditions, Player player)
@@ -138,7 +233,7 @@ namespace Uchu.World.Services
             
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.HasCompleted(id);
+            return await missions.HasCompletedAsync(id);
         }
     }
 }

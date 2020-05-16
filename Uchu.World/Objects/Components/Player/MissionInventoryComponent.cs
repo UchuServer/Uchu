@@ -43,7 +43,7 @@ namespace Uchu.World
             ).ToArray();
         }
 
-        public async Task<bool> HasCompleted(int id)
+        public async Task<bool> HasCompletedAsync(int id)
         {
             await using var ctx = new UchuContext();
 
@@ -52,17 +52,17 @@ namespace Uchu.World
             );
         }
 
-        public async Task<bool> OnMission(int id)
+        public async Task<bool> OnMissionAsync(int id)
         {
             await using var ctx = new UchuContext();
 
             return await ctx.Missions.AnyAsync(
                 m => m.CharacterId == GameObject.Id && m.Id == id &&
-                    (m.State == (int) MissionState.Active || m.State == (int) MissionState.CompletedAvailable)
+                    (m.State == (int) MissionState.Active || m.State == (int) MissionState.CompletedActive)
             );
         }
 
-        public async Task<bool> CanAccept(int id)
+        public async Task<bool> CanAcceptAsync(int id)
         {
             await using var ctx = new CdClientContext();
 

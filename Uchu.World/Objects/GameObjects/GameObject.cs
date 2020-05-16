@@ -31,7 +31,7 @@ namespace Uchu.World
 
         public string ClientName { get; private set; }
 
-        public SpawnerComponent SpawnerObject { get; private set; }
+        public SpawnerComponent Spawner { get; private set; }
 
         public Mask Layer
         {
@@ -327,7 +327,7 @@ namespace Uchu.World
                     instance.ClientName = obj?.Name;
                 }
 
-                instance.SpawnerObject = spawner;
+                instance.Spawner = spawner;
 
                 var transform = instance.AddComponent<Transform>();
                 transform.Position = position;
@@ -437,7 +437,7 @@ namespace Uchu.World
                 levelObject.Lot
             );
 
-            instance.SpawnerObject = spawner;
+            instance.Spawner = spawner;
             instance.Settings = levelObject.LegoInfo;
 
             //
@@ -538,11 +538,11 @@ namespace Uchu.World
 
             writer.WriteBit(hasTriggerId);
 
-            if (writer.Flag(SpawnerObject != null))
-                writer.Write(SpawnerObject.GameObject.Id);
+            if (writer.Flag(Spawner != null))
+                writer.Write(Spawner.GameObject.Id);
 
-            if (writer.Flag(SpawnerObject != null && SpawnerObject.SpawnTemplate != 0))
-                writer.Write(SpawnerObject.SpawnTemplate);
+            if (writer.Flag(Spawner != null && Spawner.SpawnTemplate != 0))
+                writer.Write(Spawner.SpawnTemplate);
 
             var hasScale = !Transform.Scale.Equals(-1);
 

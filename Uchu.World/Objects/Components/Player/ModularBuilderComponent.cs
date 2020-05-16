@@ -35,7 +35,9 @@ namespace Uchu.World
             get => _building;
             private set
             {
-                As<Player>().Message(new SetStunnedMessage
+                if (!(GameObject is Player player)) return;
+
+                player.Message(new SetStunnedMessage
                 {
                     Associate = GameObject,
                     CantAttack = value
@@ -47,9 +49,7 @@ namespace Uchu.World
 
         public async Task StartBuildingAsync(StartBuildingWithItemMessage message)
         {
-            As<Player>().SendChatMessage(
-                $"[{IsBuilding}]\n{string.Join('\n', typeof(StartBuildingWithItemMessage).GetProperties().Select(p => $"{p.Name} = {p.GetValue(message)}"))}"
-            );
+            if (!(GameObject is Player player)) return;
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
@@ -61,7 +61,7 @@ namespace Uchu.World
             
             BasePlate = message.Associate;
             
-            As<Player>().Message(new StartArrangingWithItemMessage
+            player.Message(new StartArrangingWithItemMessage
             {
                 Associate = GameObject,
                 FirstTime = message.FirstTime,
@@ -82,7 +82,9 @@ namespace Uchu.World
 
         public void StartBuildingWithItem(Item item)
         {
-            As<Player>().Message(new StartArrangingWithItemMessage
+            if (!(GameObject is Player player)) return;
+
+            player.Message(new StartArrangingWithItemMessage
             {
                 Associate = GameObject,
                 FirstTime = false,
@@ -122,13 +124,10 @@ namespace Uchu.World
         
         public void DoneArranging(DoneArrangingWithItemMessage message)
         {
-            As<Player>().SendChatMessage($"DONE: {message.NewSource}\t{message.NewTarget}\t{message.OldSource}");
         }
 
         public async Task Pickup(Lot lot)
         {
-            As<Player>().SendChatMessage($"PICKUP: {lot}");
-            
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
@@ -146,6 +145,8 @@ namespace Uchu.World
 
         public async Task ConfirmFinish()
         {
+            if (!(GameObject is Player player)) return;
+
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
             foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
@@ -163,7 +164,7 @@ namespace Uchu.World
 
             await thinkingHat.UnEquipAsync();
             
-            As<Player>().Message(new FinishArrangingWithItemMessage
+            player.Message(new FinishArrangingWithItemMessage
             {
                 Associate = GameObject,
                 BuildArea = BasePlate

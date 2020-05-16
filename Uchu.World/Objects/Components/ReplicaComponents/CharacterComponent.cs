@@ -115,11 +115,13 @@ namespace Uchu.World
 
         private void WritePart2(BitWriter writer)
         {
-            var hasLevel = As<Player>().Level != 0;
+            var player = (Player) GameObject;
+            
+            var hasLevel = player.Level != 0;
 
             writer.WriteBit(hasLevel);
 
-            if (hasLevel) writer.Write((uint) As<Player>().Level);
+            if (hasLevel) writer.Write((uint) player.Level);
         }
 
         private static void WritePart3(BitWriter writer)

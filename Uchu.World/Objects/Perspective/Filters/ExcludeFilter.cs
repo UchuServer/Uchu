@@ -31,8 +31,14 @@ namespace Uchu.World.Filters
             return !_excluded.Contains(gameObject);
         }
 
-        public void Exclude(GameObject gameObject) => _excluded.Add(gameObject);
+        public void Exclude(GameObject gameObject)
+        {
+            _excluded.Add(gameObject);
+        }
 
-        public void Include(GameObject gameObject) => _excluded.Remove(gameObject);
+        public void Include(GameObject gameObject)
+        {
+            _excluded.Remove(gameObject);
+        }
     }
 }

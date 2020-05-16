@@ -147,6 +147,8 @@ namespace Uchu.World
 
         public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
         {
+            if (!(GameObject is Player player)) return;
+
             var itemCount = count;
             
             var _ = Task.Run(() =>
@@ -187,7 +189,7 @@ namespace Uchu.World
                 return;
             }
 
-            As<Player>().SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]");
+            player.SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]");
             
             var stackSize = component.StackSize ?? 1;
             
@@ -279,8 +281,6 @@ namespace Uchu.World
 
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
-            As<Player>()?.SendChatMessage($"Removing: {lot} x {count} from {inventoryType}");
-            
             OnLotRemoved.Invoke(lot, count);
 
             using var cdClient = new CdClientContext();
