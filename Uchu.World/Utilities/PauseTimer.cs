@@ -10,8 +10,10 @@ namespace Uchu.World
         private readonly Stopwatch _stopwatch;
         private bool _resumed;
 
-        public PauseTimer(double interval) : base(interval)
+        public PauseTimer(double interval) : base(interval > 0 ? interval : 1)
         {
+            interval = interval > 0 ? interval : 1;
+            
             _initialInterval = interval;
             
             Elapsed += OnElapsed;

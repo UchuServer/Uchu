@@ -7,6 +7,8 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
+    using Restriction = Func<Player, Lot, Task<bool>>;
+    
     public class LootContainerComponent : Component
     {
         private LootContainerComponent()
@@ -16,6 +18,8 @@ namespace Uchu.World
             Entries = new List<LootMatrix>();
 
             Currencies = new List<CurrencyMatrix>();
+            
+            Restrictions = new List<Restriction>();
         }
 
         private Random Random { get; }
@@ -23,6 +27,8 @@ namespace Uchu.World
         private List<LootMatrix> Entries { get; }
 
         private List<CurrencyMatrix> Currencies { get; }
+        
+        private List<Restriction> Restrictions { get; }
 
         private int Level { get; set; }
 
@@ -45,13 +51,53 @@ namespace Uchu.World
             Searched = true;
         }
 
-        public IEnumerable<Lot> GenerateLootYields()
+        public void Restrict(Restriction restriction)
         {
+            Restrictions.Add(restriction);
+        }
+
+        public async Task<Lot[]> GenerateLootYieldsAsync(Player owner)
+        {
+            var yields = new List<Lot>();
+            
             foreach (var matrix in Entries)
             {
                 var count = Random.Next(matrix.Minimum, matrix.Maximum);
 
                 var entries = matrix.Entries.ToList();
+
+                if (owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                {
+                    var missionEntries = entries.Where(e => e.Mission).ToArray();
+
+                    foreach (var entry in missionEntries)
+                    {
+                        if (await missionInventory.RequiresItemAsync(entry.Lot)) continue;
+
+                        entries.Remove(entry);
+                    }
+                }
+
+                var filterList = entries.ToArray();
+
+                foreach (var entry in filterList)
+                {
+                    var restricted = false;
+
+                    foreach (var restriction in Restrictions)
+                    {
+                        if (await restriction(owner, entry.Lot)) continue;
+                        
+                        restricted = true;
+                            
+                        break;
+                    }
+
+                    if (restricted)
+                    {
+                        entries.Remove(entry);
+                    }
+                }
                 
                 for (var i = 0; i < count; i++)
                 {
@@ -65,10 +111,12 @@ namespace Uchu.World
 
                     if (result <= matrix.Percentage)
                     {
-                        yield return entry.Lot;
+                        yields.Add(entry.Lot);
                     }
                 }
             }
+
+            return yields.ToArray();
         }
 
         public int GenerateCurrencyYields()
@@ -115,7 +163,7 @@ namespace Uchu.World
                     Minimum = matrix.MinToDrop ?? 1,
                     Maximum = matrix.MaxToDrop ?? 1,
                     Percentage = matrix.Percent ?? 0,
-                    Entries = items.ToArray()
+                    Entries = items.ToArray(),
                 };
 
                 Entries.Add(entry);

@@ -14,9 +14,9 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Python;
-using Uchu.World.AI;
 using Uchu.World.Client;
 using Uchu.World.Scripting;
+using Uchu.World.Systems.AI;
 
 namespace Uchu.World
 {
@@ -257,21 +257,17 @@ namespace Uchu.World
 
             var spawner = obj.GetComponent<SpawnerComponent>();
 
+            spawner.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
+
             spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
             {
                 Position = w.Position,
                 Rotation = Quaternion.Identity
             }).ToList();
-            
-            Logger.Debug($"Starting: {spawnerPath.PathName}");
-            
+
             Start(obj);
             
-            Logger.Debug($"Started: {spawnerPath.PathName}");
-            
             spawner.SpawnCluster();
-            
-            Logger.Debug($"Spawned: {spawnerPath.PathName}");
         }
 
         #endregion
@@ -556,6 +552,8 @@ namespace Uchu.World
 
                     foreach (var updatedObject in UpdatedObjects.ToArray())
                     {
+                        if (updatedObject.Stuck) continue;
+                        
                         if (updatedObject.Associate is GameObject gameObject)
                         {
                             if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
@@ -567,11 +565,27 @@ namespace Uchu.World
                         
                         updatedObject.Ticks = 0;
 
+                        var start = watch.ElapsedMilliseconds;
+
                         try
                         {
-                            var start = watch.ElapsedMilliseconds;
-                            
-                            await updatedObject.Delegate(updatedObject.DeltaTime);
+                            var task = Task.Run(async () =>
+                            {
+                                await updatedObject.Delegate(updatedObject.DeltaTime);
+
+                                updatedObject.Stuck = false;
+                            });
+
+                            var delay = Task.Delay(250);
+
+                            await Task.WhenAny(task, delay);
+
+                            if (delay.IsCompleted && !task.IsCompleted)
+                            {
+                                Logger.Error($"{updatedObject.Associate} is now defined as stuck!");
+                                
+                                updatedObject.Stuck = true;
+                            }
 
                             var elapsed = watch.ElapsedMilliseconds - start;
 
@@ -636,6 +650,8 @@ namespace Uchu.World
             public int Ticks { get; set; }
             
             public float DeltaTime { get; set; }
+            
+            public bool Stuck { get; set; }
         }
 
         #endregion

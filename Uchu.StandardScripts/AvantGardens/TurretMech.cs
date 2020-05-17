@@ -32,12 +32,14 @@ namespace Uchu.StandardScripts.AvantGardens
 
             Listen(destructibleComponent.OnSmashed, (smasher, lootOwner) =>
             {
-                var quickBuild = GameObject.Instantiate(
+                var quickBuild = GameObject.Instantiate<AuthoredGameObject>(
                     Zone,
                     6254,
                     gameObject.Transform.Position,
                     gameObject.Transform.Rotation
                 );
+
+                quickBuild.Author = smasher;
 
                 Start(quickBuild);
                 Construct(quickBuild);

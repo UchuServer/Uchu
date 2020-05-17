@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
 using Uchu.Core.Client;
-using Uchu.World.AI;
+using Uchu.World.Systems.AI;
 
 namespace Uchu.World
 {

@@ -167,14 +167,15 @@ namespace Uchu.World
             {
                 slot = FindSlot(proxy);
 
-                info = Items[slot];
-                
-                if (skills)
+                if (Items.TryGetValue(slot, out info))
                 {
-                    await skillComponent.DismountItemAsync(info.Lot);
-                }
+                    if (skills)
+                    {
+                        await skillComponent.DismountItemAsync(info.Lot);
+                    }
 
-                Items.Remove(slot);
+                    Items.Remove(slot);
+                }
 
                 await UpdateEquipState(proxy, false);
             }

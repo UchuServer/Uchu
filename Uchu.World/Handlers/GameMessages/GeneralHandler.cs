@@ -10,7 +10,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)
         {
-            player.SendChatMessage($"Interacted with {message.TargetObject}");
+            Logger.Information($"{player} interacted with {message.TargetObject}");
 
             var inventory = player.GetComponent<MissionInventoryComponent>();
             
@@ -34,9 +34,9 @@ namespace Uchu.World.Handlers.GameMessages
             }
             else if (message.TargetObject != default)
             {
-                await inventory.InteractAsync(message.TargetObject.Lot);
-                
                 await message.TargetObject.OnInteract.InvokeAsync(player);
+                
+                await inventory.InteractAsync(message.TargetObject.Lot);
             }
         }
 

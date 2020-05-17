@@ -3,7 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
-using Uchu.World.Behaviors;
+using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
 {

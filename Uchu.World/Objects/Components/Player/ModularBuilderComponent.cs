@@ -7,9 +7,9 @@ namespace Uchu.World
 {
     public class ModularBuilderComponent : Component
     {
-        private bool _building;
-
         public GameObject BasePlate { get; private set; }
+        
+        public bool IsBuilding { get; private set; }
 
         protected ModularBuilderComponent()
         {
@@ -19,7 +19,6 @@ namespace Uchu.World
 
                 Listen(inventory.OnEquipped, item =>
                 {
-                    Logger.Information($"Equipped {item.ItemType} item");
                     if (item.ItemType == ItemType.LootModel)
                     {
                         StartBuildingWithItem(item);
@@ -28,23 +27,6 @@ namespace Uchu.World
                     return Task.CompletedTask;
                 });
             });
-        }
-        
-        public bool IsBuilding
-        {
-            get => _building;
-            private set
-            {
-                if (!(GameObject is Player player)) return;
-
-                player.Message(new SetStunnedMessage
-                {
-                    Associate = GameObject,
-                    CantAttack = value
-                });
-
-                _building = value;
-            }
         }
 
         public async Task StartBuildingAsync(StartBuildingWithItemMessage message)

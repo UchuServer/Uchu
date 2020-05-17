@@ -102,7 +102,7 @@ namespace Uchu.World
 
         public Transform Transform => GetComponent<Transform>();
 
-        public bool Alive => Zone?.TryGetGameObject(Id, out _) ?? false;
+        public bool Alive => Id != ObjectId.Invalid && Zone.GameObjects.Any(g => g.Id == Id);
 
         public ReplicaComponent[] ReplicaComponents => Components.OfType<ReplicaComponent>().ToArray();
 
@@ -140,6 +140,8 @@ namespace Uchu.World
                 foreach (var component in Components.ToArray()) Destroy(component);
 
                 Destruct(this);
+                
+                Id = ObjectId.Invalid;
             });
 
             Listen(OnLayerChanged, mask =>

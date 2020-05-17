@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -23,6 +24,8 @@ namespace Uchu.StandardScripts.General
                 
                 Listen(gameObject.OnInteract, async player =>
                 {
+                    Logger.Debug($"Got flag {flag}");
+                    
                     await player.SetFlagAsync(flag, true);
                     
                     player.Message(new FireClientEventMessage

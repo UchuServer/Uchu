@@ -134,6 +134,8 @@ namespace Uchu.World
 
                     var destructible = GameObject.GetComponent<DestructibleComponent>();
 
+                    ControllablePhysicsComponent.HasVelocity = true;
+
                     Listen(destructible.OnSmashed, (smasher, lootOwner) =>
                     {
                         if (!GameObject.Alive) return;
@@ -170,6 +172,8 @@ namespace Uchu.World
                 if (ControllablePhysicsComponent.Velocity == Vector3.Zero) return;
                 
                 ControllablePhysicsComponent.Velocity = Vector3.Zero;
+
+                ControllablePhysicsComponent.HasPosition = true;
 
                 GameObject.Serialize(GameObject);
 

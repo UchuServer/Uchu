@@ -35,6 +35,8 @@ namespace Uchu.World
         public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
 
         public float PauseTime => (float) ((Pause - StartTime) / 1000d);
+        
+        public int ActivityId { get; private set; }
 
         public Vector3 ActivatorPosition { get; set; }
         
@@ -54,6 +56,11 @@ namespace Uchu.World
                 {
                     ActivatorPosition = Transform.Position;
                 }
+
+                if (GameObject.Settings.TryGetValue("activityID", out var activityId))
+                {
+                    ActivityId = (int) activityId;
+                }
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
 
@@ -62,6 +69,11 @@ namespace Uchu.World
                 var clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
                     r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)
                 );
+
+                if (ActivityId == default)
+                {
+                    ActivityId = clientComponent.ActivityID ?? 0;
+                }
 
                 if (clientComponent == default)
                 {
@@ -342,7 +354,7 @@ namespace Uchu.World
             // Update any mission task that required this quickbuild.
             Task.Run(async () =>
             {
-                await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot);
+                await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot, ActivityId);
             });
 
             /*

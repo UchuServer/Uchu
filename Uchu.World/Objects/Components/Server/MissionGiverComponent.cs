@@ -65,8 +65,6 @@ namespace Uchu.World
         {
             var missionInventory = player.GetComponent<MissionInventoryComponent>();
 
-            player.SendChatMessage($"\n\n\nInteracting with {GameObject.ClientName} [{Missions.Length}]\n");
-
             try
             {
                 foreach (var (mission, component) in Missions)
@@ -77,8 +75,6 @@ namespace Uchu.World
                     //
 
                     var playerMissions = missionInventory.GetMissions();
-
-                    player.SendChatMessage($"Checking: {mission.Id}");
 
                     // Get the quest id.
                     if (mission.Id == default) continue;
@@ -102,8 +98,6 @@ namespace Uchu.World
 
                         if (missionState == MissionState.ReadyToComplete)
                         {
-                            player.SendChatMessage($"Can complete: {mission.Id}");
-
                             //
                             // Offer mission hand in to the player.
                             //
@@ -150,7 +144,6 @@ namespace Uchu.World
                             case MissionState.Unavailable:
                             case MissionState.Completed:
                             case MissionState.CompletedReadyToComplete:
-                                player.SendChatMessage($"Unavailable mission: {mission.Id} [{missionState}]");
                                 continue;
                             default:
                                 throw new ArgumentOutOfRangeException(
@@ -162,19 +155,12 @@ namespace Uchu.World
                     //
                     // Check if player has completed the required missions to take on this new mission.
                     //
-
-                    foreach (var completedMission in missionInventory.GetCompletedMissions())
-                    {
-                        player.SendChatMessage($"HAS: {completedMission.MissionId}");
-                    }
                     
                     var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
                         mission.PrereqMissionID,
                         missionInventory.GetCompletedMissions()
                     );
-
-                    player.SendChatMessage($"Prerequisite for: {mission.Id} -> ({mission.PrereqMissionID}) -> [{hasPrerequisite}]");
-
+                    
                     if (!hasPrerequisite) continue;
 
                     //

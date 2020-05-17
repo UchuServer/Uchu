@@ -112,6 +112,11 @@ namespace Uchu.World
             return _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToArray();
         }
 
+        public uint CountItems(Lot lot)
+        {
+            return (uint) Items.Sum(item => item.Count);
+        }
+
         #endregion
         
         public async Task AddItemAsync(Lot lot, uint count, LegoDataDictionary extraInfo = default)
@@ -247,6 +252,11 @@ namespace Uchu.World
             }
         }
 
+        public Task RemoveAllAsync(Lot lot, bool silent = false)
+        {
+            return RemoveItemAsync(lot, CountItems(lot), silent);
+        }
+        
         public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
         {
             await using var cdClient = new CdClientContext();

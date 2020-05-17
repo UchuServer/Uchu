@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Behaviors;
+using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
 {
@@ -173,6 +173,11 @@ namespace Uchu.World
             var tree = await BehaviorTree.FromLotAsync(item);
 
             await tree.MountAsync(GameObject);
+
+            if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+            {
+                await missionInventory.UseSkillAsync(onEquip.SkillId);
+            }
         }
 
         private async Task DismountSkill(Lot item)
@@ -262,9 +267,12 @@ namespace Uchu.World
                 
                 if (GameObject.TryGetComponent<Stats>(out var stats))
                 {
-                    var info = tree.BehaviorIds.First(b => b.SkillId == message.SkillId);
-                    
-                    stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);
+                    var info = tree.BehaviorIds.FirstOrDefault(b => b.SkillId == message.SkillId);
+
+                    if (info != default)
+                    {
+                        stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);
+                    }
                 }
                 
                 Zone.ExcludingMessage(new EchoStartSkillMessage

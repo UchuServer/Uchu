@@ -7,9 +7,9 @@ namespace Uchu.World.Handlers.GameMessages
     public class ModularBuildingHandler : HandlerGroup
     {
         [PacketHandler]
-        public void StartBuildingHandler(StartBuildingWithItemMessage message, Player player)
+        public async Task StartBuildingHandler(StartBuildingWithItemMessage message, Player player)
         {
-            player.GetComponent<ModularBuilderComponent>().StartBuildingAsync(message);
+            await player.GetComponent<ModularBuilderComponent>().StartBuildingAsync(message);
         }
 
         [PacketHandler]

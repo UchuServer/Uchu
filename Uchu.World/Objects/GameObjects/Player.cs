@@ -25,6 +25,10 @@ namespace Uchu.World
 
             OnPositionUpdate = new Event<Vector3, Quaternion>();
 
+            OnLootPickup = new Event<Lot>();
+            
+            OnWorldLoad = new Event();
+
             Lock = new SemaphoreSlim(1, 1);
 
             Listen(OnStart, async () =>
@@ -73,9 +77,9 @@ namespace Uchu.World
 
         public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; }
 
-        public Event<Lot> OnLootPickup { get; } = new Event<Lot>();
+        public Event<Lot> OnLootPickup { get; }
         
-        public Event OnWorldLoad { get; } = new Event();
+        public Event OnWorldLoad { get; }
 
         public Event<Vector3, Quaternion> OnPositionUpdate { get; }
 
@@ -192,6 +196,11 @@ namespace Uchu.World
             var entry = await ctx.Flags.FirstOrDefaultAsync(
                 f => f.CharacterId == Id && f.Flag == flag
             );
+
+            if (state)
+            {
+                await GetComponent<MissionInventoryComponent>().FlagAsync(flag);
+            }
             
             if (entry != default && !state)
             {
@@ -208,8 +217,6 @@ namespace Uchu.World
                 });
 
                 await ctx.SaveChangesAsync();
-                
-                await GetComponent<MissionInventoryComponent>().FlagAsync(flag);
             }
 
             Message(new NotifyClientFlagChangeMessage

@@ -38,6 +38,14 @@ namespace Uchu.World
             
             Listen(OnStart, () =>
             {
+                if (Settings != default)
+                {
+                    if (Settings.TryGetValue("number_to_maintain", out var value))
+                    {
+                        SpawnsToMaintain = (int) value;
+                    }
+                }
+
                 if (SpawnLocations.Count == 0)
                 {
                     SpawnLocations.Add(new SpawnLocation

@@ -67,7 +67,7 @@ namespace Uchu.World
             }
             set
             {
-                UpdateCount(value);
+                UpdateCountAsync(value).Wait();
                 
                 using var ctx = new UchuContext();
                 
@@ -169,7 +169,7 @@ namespace Uchu.World
             
             var manager = Inventory.ManagerComponent;
             
-            foreach (var lot in container.GenerateLootYields())
+            foreach (var lot in await container.GenerateLootYieldsAsync(Player))
             {
                 await manager.AddItemAsync(lot, 1);
             }
@@ -177,11 +177,11 @@ namespace Uchu.World
         
         public async Task ConsumeAsync()
         {
+            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
+            
             if (!IsConsumable) return;
             
             await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
-            
-            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
         }
 
         public static Item Instantiate(long itemId, Inventory inventory)
@@ -334,6 +334,9 @@ namespace Uchu.World
 
             if (count <= 0)
             {
+                if (await IsEquippedAsync())
+                    await UnEquipAsync();
+                
                 ctx.InventoryItems.Remove(item);
                 
                 Destroy(this);
@@ -351,7 +354,7 @@ namespace Uchu.World
             await ctx.SaveChangesAsync();
         }
         
-        private void UpdateCount(uint count)
+        private async Task UpdateCountAsync(uint count)
         {
             if (count >= Count)
             {
@@ -364,22 +367,27 @@ namespace Uchu.World
 
             if (count > 0) return;
             
-            using var ctx = new UchuContext();
+            await using var ctx = new UchuContext();
 
-            var item = ctx.InventoryItems.FirstOrDefault(i => i.Id == Id);
+            var item = await ctx.InventoryItems.FirstOrDefaultAsync(
+                i => i.Id == Id
+            );
 
             if (item == default) return;
-            
+
+            if (await IsEquippedAsync())
+                await UnEquipAsync();
+
             ctx.InventoryItems.Remove(item);
             
-            ctx.SaveChanges();
+            await ctx.SaveChangesAsync();
 
             // Disassemble item.
             if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
             {
                 foreach (var part in (LegoDataList) list)
                 {
-                    Task.Run(() => Inventory.ManagerComponent.AddItemAsync((int) part, 1));
+                    await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
                 }
             }
 

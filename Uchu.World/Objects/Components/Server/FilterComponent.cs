@@ -12,6 +12,8 @@ namespace Uchu.World
 
         public FilterComponent()
         {
+            Condition = null;
+            
             OnMissions = new List<int>();
         }
 

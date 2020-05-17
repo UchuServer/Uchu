@@ -46,6 +46,20 @@ namespace Uchu.StandardScripts.VentureExplorer
                 
                 return;
             }
+
+            if (gameObject.TryGetComponent<LootContainerComponent>(out var container))
+            {
+                container.Restrict(async (owner, lot) =>
+                {
+                    var missions = owner.GetComponent<MissionInventoryComponent>();
+
+                    if (!await missions.HasMissionAsync(308)) return false;
+                    
+                    var inventory = owner.GetComponent<InventoryManagerComponent>();
+
+                    return inventory.CountItems(lot) > 0;
+                });
+            }
             
             Listen(destructibleComponent.OnSmashed, (killer, owner) =>
             {
@@ -63,7 +77,7 @@ namespace Uchu.StandardScripts.VentureExplorer
                 }
 
                 var random = _random.Next(0, 26);
-                    
+                
                 if (random != 1) return;
                     
                 //

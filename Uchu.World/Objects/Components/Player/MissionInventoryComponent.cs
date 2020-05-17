@@ -7,12 +7,16 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
-using Uchu.World.MissionSystem;
+using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
 {
     public class MissionInventoryComponent : Component
     {
+        public Event<MissionInstance> OnAcceptMission { get; }
+        
+        public Event<MissionInstance> OnCompleteMission { get; }
+        
         private SemaphoreSlim Lock { get; }
         
         public List<MissionInstance> MissionInstances { get; private set; }
@@ -57,8 +61,17 @@ namespace Uchu.World
             await using var ctx = new UchuContext();
 
             return await ctx.Missions.AnyAsync(
-                m => m.CharacterId == GameObject.Id && m.Id == id &&
+                m => m.CharacterId == GameObject.Id && m.MissionId == id &&
                     (m.State == (int) MissionState.Active || m.State == (int) MissionState.CompletedActive)
+            );
+        }
+
+        public async Task<bool> HasMissionAsync(int id)
+        {
+            await using var ctx = new UchuContext();
+
+            return await ctx.Missions.AnyAsync(
+                m => m.CharacterId == GameObject.Id && m.MissionId == id
             );
         }
 
@@ -72,6 +85,18 @@ namespace Uchu.World
                 mission.PrereqMissionID,
                 GetCompletedMissions()
             );
+        }
+
+        public async Task<bool> RequiresItemAsync(Lot lot)
+        {
+            foreach (var task in MissionInstances.SelectMany(instance => instance.Tasks.OfType<ObtainItemTask>()))
+            {
+                if (await task.IsCompleteAsync()) continue;
+
+                if (task.Targets.Contains((int) lot)) return true;
+            }
+
+            return await RequiredForNewAchievementsAsync(MissionTaskType.ObtainItem, lot);
         }
 
         public void MessageOfferMission(int missionId, GameObject missionGiver)
@@ -95,6 +120,10 @@ namespace Uchu.World
 
         public MissionInventoryComponent()
         {
+            OnAcceptMission = new Event<MissionInstance>();
+            
+            OnCompleteMission = new Event<MissionInstance>();
+            
             Lock = new SemaphoreSlim(1, 1);
             
             Listen(OnStart, async () =>
@@ -324,16 +353,16 @@ namespace Uchu.World
             });
         }
 
-        public async Task QuickBuildAsync(Lot lot)
+        public async Task QuickBuildAsync(Lot lot, int activity)
         {
             foreach (var task in await FindActiveTasksAsync<QuickBuildTask>())
             {
-                await task.Progress(lot);
+                await task.Progress(lot, activity);
             }
 
             await SearchForNewAchievementsAsync<QuickBuildTask>(MissionTaskType.QuickBuild, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.Progress(lot, activity);
             });
         }
 
@@ -440,7 +469,79 @@ namespace Uchu.World
                 await task.Progress(flag);
             });
         }
-        
+
+        private async Task<bool> RequiredForNewAchievementsAsync(MissionTaskType type, Lot lot)
+        {
+            await using var cdClient = new CdClientContext();
+            
+            //
+            // Collect tasks which fits the requirements of this action.
+            //
+
+            var otherTasks = new List<MissionTasks>();
+
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            foreach (var missionTask in ClientCache.Tasks)
+                if (MissionParser.GetTargets(missionTask).Contains(lot))
+                    otherTasks.Add(missionTask);
+
+            foreach (var task in otherTasks)
+            {
+                var mission = await cdClient.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
+
+                if (mission == default) continue;
+
+                //
+                // Check if mission is an achievement and has a task of the correct type.
+                //
+
+                if (mission.OfferobjectID != -1 ||
+                    mission.TargetobjectID != -1 ||
+                    (mission.IsMission ?? true) ||
+                    task.TaskType != (int) type)
+                    continue;
+
+                //
+                // Get the mission on the character. If present.
+                //
+
+                MissionInstance characterMission;
+
+                await Lock.WaitAsync();
+
+                try
+                {
+                    characterMission = MissionInstances.FirstOrDefault(m => m.MissionId == mission.Id);
+                }
+                finally
+                {
+                    Lock.Release();
+                }
+
+                //
+                // Check if the player could passably start this achievement.
+                //
+
+                if (characterMission != default) continue;
+
+                //
+                // Check if player has the Prerequisites to start this achievement.
+                //
+
+                var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
+                    mission.PrereqMissionID,
+                    GetCompletedMissions()
+                );
+
+                if (hasPrerequisites)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // TODO: Improve
         private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null) where T : MissionTaskBase
         {
@@ -453,7 +554,7 @@ namespace Uchu.World
             var otherTasks = new List<MissionTasks>();
 
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var missionTask in cdClient.MissionTasksTable)
+            foreach (var missionTask in ClientCache.Tasks)
                 if (MissionParser.GetTargets(missionTask).Contains(lot))
                     otherTasks.Add(missionTask);
 

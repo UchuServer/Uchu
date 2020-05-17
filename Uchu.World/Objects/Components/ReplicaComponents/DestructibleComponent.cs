@@ -108,6 +108,11 @@ namespace Uchu.World
         {
             if (!Alive) return;
 
+            if (smasher is AuthoredGameObject authored)
+            {
+                owner = authored.Author as Player;
+            }
+            
             Alive = false;
 
             owner ??= smasher as Player;
@@ -158,7 +163,7 @@ namespace Uchu.World
         {
             var container = GameObject.GetComponent<LootContainerComponent>();
             
-            foreach (var lot in container.GenerateLootYields())
+            foreach (var lot in await container.GenerateLootYieldsAsync(owner))
             {
                 var drop = InstancingUtilities.InstantiateLoot(lot, owner, GameObject, Transform.Position);
 
