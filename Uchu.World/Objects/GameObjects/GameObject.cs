@@ -501,6 +501,11 @@ namespace Uchu.World
                 instance.AddComponent<TriggerComponent>();
             }
 
+            if (levelObject.LegoInfo.ContainsKey("primitiveModelType"))
+            {
+                instance.AddComponent<PrimitiveModelComponent>();
+            }
+
             return instance;
         }
 

@@ -13,6 +13,7 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
 using Uchu.World.Scripting;
@@ -75,28 +76,42 @@ namespace Uchu.World
         //
         // Runtime
         //
-
-        public float DeltaTime { get; private set; }
+        
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
+        private long _physicsTime;
+        
+        public float DeltaTime { get; private set; }
+        
         public ScriptManager ScriptManager { get; }
+        
         public ManagedScriptEngine ManagedScriptEngine { get; }
-
+        
         private List<UpdatedObject> UpdatedObjects { get; }
+        
+        //
+        // Physics
+        //
+        
+        public PhysicsSimulation Simulation { get; }
+        
+        public Event EarlyPhysics { get; }
+        
+        public Event LatePhysics { get; }
         
         //
         // Events
         //
 
-        public Event<Player> OnPlayerLoad { get; } = new Event<Player>();
+        public Event<Player> OnPlayerLoad { get; } 
 
-        public Event<Object> OnObject { get; } = new Event<Object>();
+        public Event<Object> OnObject { get; }
 
-        public Event OnTick { get; } = new Event();
+        public Event OnTick { get; }
         
-        public Event<Player, string> OnChatMessage { get; } = new Event<Player, string>();
-
+        public Event<Player, string> OnChatMessage { get; }
+        
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
@@ -105,11 +120,19 @@ namespace Uchu.World
             InstanceId = instanceId;
             CloneId = cloneId;
             
+            EarlyPhysics = new Event();
+            LatePhysics = new Event();
+            OnPlayerLoad = new Event<Player>();
+            OnObject = new Event<Object>();
+            OnTick = new Event();
+            OnChatMessage = new Event<Player, string>();
+
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
             UpdatedObjects = new List<UpdatedObject>();
             ManagedObjects = new List<Object>();
             SpawnedObjects = new List<GameObject>();
+            Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
         }
@@ -158,6 +181,11 @@ namespace Uchu.World
 
             foreach (var levelObject in objects)
             {
+                if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
+                {
+                    Logger.Information($"Trigger: {trigger}");
+                }
+                
                 Logger.Debug($"Loading {levelObject.Lot} [{levelObject.ObjectId}]...");
                 
                 try
@@ -223,15 +251,14 @@ namespace Uchu.World
         {
             var obj = GameObject.Instantiate(levelObject, this);
 
-            SpawnerComponent spawner = default;
-
             if (levelObject.LegoInfo.TryGetValue("loadSrvrOnly", out var serverOnly) && (bool) serverOnly ||
                 levelObject.LegoInfo.TryGetValue("carver_only", out var carverOnly) && (bool) carverOnly ||
                 levelObject.LegoInfo.TryGetValue("renderDisabled", out var disabled) && (bool) disabled)
             {
                 obj.Layer = StandardLayer.Hidden;
             }
-            else if (!obj.TryGetComponent(out spawner))
+            
+            if (!obj.TryGetComponent(out SpawnerComponent spawner))
             {
                 obj.Layer = StandardLayer.Hidden;
             }
@@ -249,8 +276,6 @@ namespace Uchu.World
         {
             var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
-            Logger.Debug($"Instancing: {spawnerPath.PathName} -> {obj}");
-            
             if (obj == null) return;
 
             obj.Layer = StandardLayer.Hidden;
@@ -522,12 +547,14 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) =>
             {
                 if (_ticks > 0)
-                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms");
+                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms PHY: {_physicsTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
             };
 
             timer.Start();
+
+            Listen(OnTick, PhysicsStep);
 
             return Task.Run(async () =>
             {
@@ -603,7 +630,9 @@ namespace Uchu.World
 
                         updatedObject.DeltaTime = 0;
                     }
-
+                    
+                    await OnTick.InvokeAsync();
+                    
                     _ticks++;
 
                     var passedMs = watch.ElapsedMilliseconds;
@@ -617,6 +646,23 @@ namespace Uchu.World
                     DeltaTime = passedMs / 1000f;
                 }
             });
+        }
+
+        private async Task PhysicsStep()
+        {
+            var watch = new Stopwatch();
+            
+            watch.Start();
+            
+            await EarlyPhysics.InvokeAsync();
+
+            Simulation.Step(DeltaTime);
+            
+            await LatePhysics.InvokeAsync();
+            
+            watch.Stop();
+
+            _physicsTime += watch.ElapsedMilliseconds;
         }
 
         public void Update(Object associate, Func<Task> @delegate, int frequency)

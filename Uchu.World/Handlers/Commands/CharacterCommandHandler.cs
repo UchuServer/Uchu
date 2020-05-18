@@ -223,13 +223,19 @@ namespace Uchu.World.Handlers.Commands
             var current = player.Zone.GameObjects[0];
 
             if (!arguments.Contains("-m"))
+            {
                 foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
                 {
                     if (gameObject.Transform == default) continue;
 
                     if (!arguments.Contains("-sp"))
                     {
-                        if (gameObject.GetComponent<SpawnerComponent>() != default) continue;
+                        if (gameObject.TryGetComponent<SpawnerComponent>(out _)) continue;
+                    }
+                    
+                    if (arguments.Contains("-npm"))
+                    {
+                        if (gameObject.TryGetComponent<PrimitiveModelComponent>(out _)) continue;
                     }
 
                     if (arguments.Contains("-t"))
@@ -241,8 +247,11 @@ namespace Uchu.World.Handlers.Commands
                         Vector3.Distance(gameObject.Transform.Position, player.Transform.Position))
                         current = gameObject;
                 }
+            }
             else
+            {
                 current = player;
+            }
 
             if (current == default) return "No objects in this zone.";
 

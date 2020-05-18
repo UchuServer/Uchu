@@ -204,7 +204,6 @@ namespace Uchu.World
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
 
-
             var syncId = ClaimSyncId();
 
             var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position);

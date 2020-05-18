@@ -385,13 +385,20 @@ namespace Uchu.World
 
             watch.Start();
 
-            Logger.Debug($"Calculating path to: {target}");
+            var closest = Zone.NavMeshManager.FindClosestNode(Transform.Position);
 
+            if (Vector3.Distance(closest, Transform.Position) > 10)
+            {
+                return;
+            }
+
+            Logger.Debug($"Calculating path to: {target}");
+            
             Path = Zone.NavMeshManager.GeneratePath(Transform.Position, target);
 
-            PathIndex = 1;
-
             Logger.Debug($"Finished calculated path to: {target} in {watch.ElapsedMilliseconds}ms!");
+
+            PathIndex = 1;
         }
 
         private void SetOnEndOfPath(Action action)

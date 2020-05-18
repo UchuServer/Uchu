@@ -10,6 +10,7 @@ using RakDotNet.IO;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Physics;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -41,6 +42,8 @@ namespace Uchu.World
                     
                     return Task.CompletedTask;
                 };
+
+                Listen(OnPositionUpdate, UpdatePhysics);
 
                 if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
@@ -354,14 +357,7 @@ namespace Uchu.World
                     });
                 }
             }
-
-            //
-            // Register player gameobject in zone
-            //
             
-            Start(instance);
-            Construct(instance);
-
             //
             // Server Components
             //
@@ -370,6 +366,34 @@ namespace Uchu.World
             instance.AddComponent<InventoryManagerComponent>();
             instance.AddComponent<TeamPlayerComponent>();
             instance.AddComponent<ModularBuilderComponent>();
+            
+            //
+            // Physics
+            //
+
+            var physics = instance.AddComponent<PhysicsComponent>();
+
+            var box = CapsuleBody.Create(
+                zone.Simulation,
+                instance.Transform.Position,
+                instance.Transform.Rotation,
+                new Vector2(2, 4)
+            );
+
+            physics.SetPhysics(box);
+
+            instance.Listen(physics.OnEnter, instance.OnEnterCollision);
+
+            instance.Listen(physics.OnCollision, instance.OnStayCollision);
+            
+            instance.Listen(physics.OnLeave, instance.OnLeaveCollision);
+            
+            //
+            // Register player gameobject in zone
+            //
+            
+            Start(instance);
+            Construct(instance);
 
             //
             // Register player as an active in zone
@@ -378,6 +402,36 @@ namespace Uchu.World
             await zone.RegisterPlayer(instance);
 
             return instance;
+        }
+
+        private void OnStayCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} stayed {other.GameObject}");
+        }
+        
+        private void OnEnterCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} entered {other.GameObject}");
+        }
+        
+        private void OnLeaveCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} left {other.GameObject}");
+        }
+
+        private void UpdatePhysics(Vector3 position, Quaternion rotation)
+        {
+            var physics = (PhysicsBody) GetComponent<PhysicsComponent>().Physics;
+
+            physics.Position = Transform.Position;
+
+            physics.Rotation = Transform.Rotation;
+
+            var details = GetComponent<ControllablePhysicsComponent>();
+            
+            physics.AngularVelocity = details.HasAngularVelocity ? details.AngularVelocity : Vector3.Zero;
+
+            physics.LinearVelocity = details.HasVelocity ? details.Velocity : Vector3.Zero;
         }
 
         public async Task UnlockEmoteAsync(int emoteId)

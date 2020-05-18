@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -235,6 +236,23 @@ namespace Uchu.World.Handlers.Commands
             if (!current.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return "Invalid nearby";
 
             return $"Target: {baseCombatAiComponent.Target}";
+        }
+
+        [CommandHandler(Signature = "physics", Help = "Test the physics", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Physics(string[] arguments, Player player)
+        {
+            var position = player.Transform.Position;
+
+            var builder = new StringBuilder();
+            
+            foreach (var obj in player.Zone.Simulation.Objects)
+            {
+                var associated = (PhysicsComponent) obj.Associate;
+
+                builder.AppendLine($"{associated.GameObject} -> {obj.Position}");
+            }
+
+            return builder.ToString();
         }
     }
 }

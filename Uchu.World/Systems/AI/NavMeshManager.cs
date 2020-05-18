@@ -76,5 +76,12 @@ namespace Uchu.World.Systems.AI
         {
             return Solver.GeneratePath(start, end);
         }
+
+        public Vector3 FindClosestNode(Vector3 position)
+        {
+            var node = Solver.GetClosest(position);
+
+            return node.Position.ToVector3();
+        }
     }
 }

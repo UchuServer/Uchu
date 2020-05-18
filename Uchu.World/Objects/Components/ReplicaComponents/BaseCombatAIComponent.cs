@@ -147,6 +147,8 @@ namespace Uchu.World
 
             foreach (var entry in entries.Where(e => e.Factions.Length != default && e.Health > 0))
             {
+                if (entry.GameObject.TryGetComponent<TriggerComponent>(out _)) continue;
+                
                 if (Stats.Enemies.Contains(entry.Factions.First()))
                 {
                     targets.Add(entry.GameObject);

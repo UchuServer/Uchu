@@ -102,7 +102,7 @@ namespace Uchu.Navigation
             }
         }
 
-        private Node GetClosest(Vector3 value)
+        public Node GetClosest(Vector3 value)
         {
             var closest = Nodes[default];
 
