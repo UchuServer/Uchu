@@ -51,6 +51,8 @@ namespace Uchu.World.Systems.Behaviors
                 case MovementType.Jetpack:
                     await JetpackBehavior.ExecuteAsync(context, branchContext);
                     return;
+                case MovementType.Stunned:
+                    return;
                 default:
                     throw new Exception($"Invalid {nameof(MovementType)}! Got {MovementType}!");
             }

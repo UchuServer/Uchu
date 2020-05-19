@@ -36,64 +36,76 @@ namespace Uchu.World
                 var fileId = int.Parse(split[0]);
                 var triggerId = int.Parse(split[1]);
 
-                Trigger = Zone.ZoneInfo.TriggerDictionary[fileId, triggerId];
-                
-                if (Trigger == default)
-                {
-                    Trigger = Zone.ZoneInfo.TriggerDictionary[triggerId, fileId];
-
-                    if (Trigger == default)
-                    {
-                        Logger.Error($"{GameObject} Failed to find trigger: {triggerId}:{fileId}");
-
-                        return;
-                    }
-                }
-                
-                if (Trigger.Enabled == 0) return;
-
-                Logger.Information($"{GameObject} Trigger: {Trigger.FileId}:{Trigger.Id}");
-
-                foreach (var @event in Trigger.Events)
-                {
-                    PhysicsComponent physics;
-                    switch (@event.Id)
-                    {
-                        case "OnCreate":
-                            await ExecuteEventAsync(@event);
-                            break;
-                        case "OnDestroy":
-                            Listen(OnDestroyed, async () =>
-                            {
-                                await ExecuteEventAsync(@event);
-                            });
-                            break;
-                        case "OnEnter":
-                            physics = GameObject.AddComponent<PhysicsComponent>();
-                            
-                            Listen(physics.OnEnter, async other =>
-                            {
-                                Logger.Information($"Enter: {other.GameObject}");
-
-                                await ExecuteEventAsync(@event, other.GameObject);
-                            });
-                            break;;
-                        case "OnExit":
-                            physics = GameObject.AddComponent<PhysicsComponent>();
-                            
-                            Listen(physics.OnLeave, async other =>
-                            {
-                                Logger.Information($"Left: {other.GameObject}");
-                                
-                                await ExecuteEventAsync(@event, other.GameObject);
-                            });
-                            break;
-                        default:
-                            Logger.Error($"Unsupported event type: {@event.Id}!");
-                            break;
-                    }
-                }
+                await LoadTriggerAsync(fileId, triggerId);
             });
+        }
+
+        public async Task LoadTriggerAsync(int fileId, int triggerId)
+        {
+            var trigger = Zone.ZoneInfo.TriggerDictionary[fileId, triggerId];
+                
+            if (trigger == default)
+            {
+                trigger = Zone.ZoneInfo.TriggerDictionary[triggerId, fileId];
+
+                if (trigger == default)
+                {
+                    Logger.Error($"{GameObject} Failed to find trigger: {triggerId}:{fileId}");
+
+                    return;
+                }
+            }
+                
+            if (trigger.Enabled == 0) return;
+
+            await LoadTriggerAsync(trigger);
+        }
+
+        public async Task LoadTriggerAsync(Trigger trigger)
+        {
+            Trigger = trigger;
+            
+            Logger.Information($"{GameObject} Trigger: {Trigger.FileId}:{Trigger.Id}");
+
+            foreach (var @event in trigger.Events)
+            {
+                PhysicsComponent physics;
+                switch (@event.Id)
+                {
+                    case "OnCreate":
+                        await ExecuteEventAsync(@event);
+                        break;
+                    case "OnDestroy":
+                        Listen(OnDestroyed, async () =>
+                        {
+                            await ExecuteEventAsync(@event);
+                        });
+                        break;
+                    case "OnEnter":
+                        physics = GameObject.AddComponent<PhysicsComponent>();
+                            
+                        Listen(physics.OnEnter, async other =>
+                        {
+                            Logger.Information($"Enter: {other.GameObject}");
+
+                            await ExecuteEventAsync(@event, other.GameObject);
+                        });
+                        break;;
+                    case "OnExit":
+                        physics = GameObject.AddComponent<PhysicsComponent>();
+                            
+                        Listen(physics.OnLeave, async other =>
+                        {
+                            Logger.Information($"Left: {other.GameObject}");
+                                
+                            await ExecuteEventAsync(@event, other.GameObject);
+                        });
+                        break;
+                    default:
+                        Logger.Error($"Unsupported event type: {@event.Id}!");
+                        break;
+                }
+            }
         }
 
         private async Task ExecuteEventAsync(TriggerEvent @event, params object[] arguments)
@@ -118,6 +130,9 @@ namespace Uchu.World
                     break;
                 case "pushObject":
                     await PushObjectAsync(command, arguments);
+                    break;
+                case "repelObject":
+                    await RepealObjectAsync(command, arguments);
                     break;
             }
 
@@ -152,7 +167,31 @@ namespace Uchu.World
                 }
             });
         }
-        
+
+        private async Task RepealObjectAsync(TriggerCommand command, params object[] arguments)
+        {
+            if (!(arguments[0] is Player target)) return;
+
+            var targetDirection = Transform.Position - target.Transform.Position;
+
+            var rotation = targetDirection.QuaternionLookRotation(Vector3.UnitY);
+
+            var forward = rotation.VectorMultiply(Vector3.UnitX);
+
+            var parameters = command.Arguments.Split(',');
+            
+            target.SendChatMessage($"Knockback!");
+            
+            target.Message(new KnockbackMessage
+            {
+                Associate = target,
+                Caster = GameObject,
+                Originator = GameObject,
+                KnockbackTime = 1,
+                Vector = forward * float.Parse(parameters[0])
+            });
+        }
+
         private async Task CastSkillAsync(TriggerCommand command, params object[] arguments)
         {
             if (!(arguments[0] is Player target)) return;
@@ -163,11 +202,20 @@ namespace Uchu.World
 
             var skill = int.Parse(parameters[0]);
 
-            /*
             var skillComponent = GameObject.AddComponent<SkillComponent>();
 
-            await skillComponent.CalculateSkillAsync(skill, false, target);
-            */
+            var _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await skillComponent.CalculateSkillAsync(skill, target);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            });
         }
 
         private async Task SetPhysicsVolumeEffectAsync(TriggerCommand command)

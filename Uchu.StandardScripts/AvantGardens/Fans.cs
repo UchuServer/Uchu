@@ -57,7 +57,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     return Task.CompletedTask;
                 });
                 
-                DeactivateFx(fanObject);
+                ActivateFx(fanObject);
                 
                 Listen(Zone.OnTick, () =>
                 {

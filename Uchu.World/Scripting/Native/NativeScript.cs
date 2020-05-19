@@ -78,7 +78,10 @@ namespace Uchu.World.Scripting.Native
             return false;
         }
 
-        protected GameObject[] GetGroup(string group) => GetGroup(Zone, group);
+        protected GameObject[] GetGroup(string group)
+        {
+            return GetGroup(Zone, group);
+        }
 
         /// <summary>
         ///     Get all GameObjects with a specific group
@@ -98,6 +101,35 @@ namespace Uchu.World.Scripting.Native
                 if (gameObject?.Settings == default) continue;
                 
                 if (!gameObject.Settings.TryGetValue("groupID", out var groupId)) continue;
+
+                if (!(groupId is string groupIdString)) continue;
+                
+                var groups = groupIdString.Split(';');
+                
+                if (groups.Contains(group)) gameObjects.Add(gameObject);
+            }
+
+            return gameObjects.ToArray();
+        }
+        
+        /// <summary>
+        ///     Get all GameObjects with a specific volume group
+        /// </summary>
+        /// <remarks>
+        ///     GameObject's volumes groups are defined by their "volGroup" setting
+        /// </remarks>
+        /// <param name="zone">Zone to query</param>
+        /// <param name="group">Group to query</param>
+        /// <returns>The results of query</returns>
+        public static GameObject[] GetVolumeGroup(Zone zone, string group)
+        {
+            var gameObjects = new List<GameObject>();
+            
+            foreach (var gameObject in zone.GameObjects)
+            {
+                if (gameObject?.Settings == default) continue;
+                
+                if (!gameObject.Settings.TryGetValue("volGroup", out var groupId)) continue;
 
                 if (!(groupId is string groupIdString)) continue;
                 

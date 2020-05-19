@@ -30,7 +30,9 @@ namespace Uchu.World
             writer.WriteBit(ClientDeath);
             writer.WriteBit(SpawnLoot);
 
-            writer.WriteString(DeathType);
+            DeathType ??= "";
+            writer.Write((uint) DeathType.Length);
+            writer.WriteString(DeathType, DeathType.Length, true);
 
             writer.Write(DirectionRelativeAngleXz);
             writer.Write(DirectionRelativeAngleY);

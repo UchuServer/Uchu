@@ -32,5 +32,16 @@ namespace Uchu.World.Scripting.Native
                 KillImmediate = killImmediate
             });
         }
+
+        public static string[] GetGroups(this GameObject @this)
+        {
+            if (!@this.Settings.TryGetValue("groupID", out var groupId)) return new string[0];
+
+            if (!(groupId is string groupIdString)) return new string[0];
+                
+            var groups = groupIdString.Split(';');
+
+            return groups;
+        }
     }
 }

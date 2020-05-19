@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
+using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
 
 namespace Uchu.World.Handlers.Commands
@@ -170,7 +171,14 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> Smash(string[] arguments, Player player)
         {
-            await player.GetComponent<DestructibleComponent>().SmashAsync(player, player);
+            var animation = "violent";
+
+            if (arguments.Length != default)
+            {
+                animation = arguments[default];
+            }
+
+            await player.GetComponent<DestructibleComponent>().SmashAsync(player, player, animation);
 
             return "You smashed yourself";
         }
@@ -215,6 +223,54 @@ namespace Uchu.World.Handlers.Commands
             });
 
             return $"Toggled jetpack state: {state}";
+        }
+
+        [CommandHandler(Signature = "group", Help = "Search for objects with group", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Group(string[] arguments, Player player)
+        {
+            var builder = new StringBuilder();
+            
+            if (arguments.Length == default)
+            {
+                foreach (var gameObject in player.Zone.GameObjects)
+                {
+                    if (!gameObject.Settings.TryGetValue("groupID", out var groupId)) continue;
+
+                    if (!(groupId is string groupIdString)) continue;
+
+                    builder.AppendLine($"{groupIdString}");
+                }
+
+                return builder.ToString();
+            }
+
+            foreach (var gameObject in NativeScript.GetGroup(player.Zone, arguments[0]))
+            {
+                builder.AppendLine($"{gameObject}");
+            }
+
+            return builder.ToString();
+        }
+
+        [CommandHandler(Signature = "fx", Help = "Play FX", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Fx(string[] arguments, Player player)
+        {
+            if (arguments.Length != 3) return "fx <name> <type> <id>";
+
+            var name = arguments[0];
+            var type = arguments[1];
+            var id = int.Parse(arguments[2]);
+
+            player.PlayFX(name, type, id);
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(10000);
+
+                player.StopFX(name);
+            });
+
+            return $"Successfully played FX: {name}, {type}, {id}";
         }
 
         [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = GameMasterLevel.Player)]
