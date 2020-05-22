@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 

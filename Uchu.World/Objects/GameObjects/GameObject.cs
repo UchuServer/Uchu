@@ -19,7 +19,7 @@ namespace Uchu.World
         private ObjectWorldState _worldState;
 
         protected string ObjectName { get; set; }
-        
+
         public ObjectId Id { get; private set; }
 
         public Lot Lot { get; private set; }
@@ -424,9 +424,9 @@ namespace Uchu.World
             // Create GameObject
             //
 
-            var id = levelObject.ObjectId == 0
-                ? (long) ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
-                : (long) levelObject.ObjectId;
+            var id = levelObject.ObjectId == ObjectId.Invalid
+                ? ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
+                : (ObjectId) levelObject.ObjectId;
 
             var instance = Instantiate(
                 type,
@@ -592,21 +592,14 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            var hasParent = Transform.Parent != null;
-
-            writer.WriteBit(hasParent);
-
-            if (hasParent)
+            if (writer.Flag(Transform.Parent != null))
             {
                 writer.Write(Transform.Parent.GameObject);
                 writer.WriteBit(false);
             }
 
-            var hasChildren = Transform.Children.Length != default;
-
-            writer.WriteBit(hasChildren);
-
-            if (!hasChildren) return;
+            if (!writer.Flag(Transform.Children.Length != default)) return;
+            
             writer.Write((ushort) Transform.Children.Length);
 
             foreach (var child in Transform.Children) writer.Write(child.GameObject);

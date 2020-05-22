@@ -525,6 +525,8 @@ namespace Uchu.World
 
         public void Message(ISerializable package)
         {
+            if (Id == ObjectId.Invalid) return;
+            
             Connection.Send(package);
         }
 
@@ -544,12 +546,29 @@ namespace Uchu.World
 
             await ctx.SaveChangesAsync();
 
+            Destroy(this);
+
             return true;
         }
         
         public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            var server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
+            Logger.Information($"Requesting server for: {zoneId}");
+
+            InstanceInfo server;
+
+            try
+            {
+                server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+
+                return false;
+            }
+            
+            Logger.Information($"Yielded {server?.Port.ToString() ?? "<void>"} for {zoneId}");
             
             if (server == default)
             {
@@ -637,6 +656,11 @@ namespace Uchu.World
             });
 
             await ctx.SaveChangesAsync();
+        }
+
+        ~Player()
+        {
+            Logger.Information($"Player freed: {Id}");
         }
     }
 }

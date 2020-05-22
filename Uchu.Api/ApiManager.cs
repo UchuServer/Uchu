@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -16,9 +14,7 @@ namespace Uchu.Api
     public class ApiManager
     {
         public HttpListener Listener { get; }
-        
-        public HttpClient Client { get; }
-        
+
         public string Protocol { get; }
         
         public string Domain { get; }
@@ -34,8 +30,6 @@ namespace Uchu.Api
         public ApiManager(string protocol, string domain)
         {
             Listener = new HttpListener();
-
-            Client = new HttpClient();
 
             Map = new Dictionary<string, (MethodInfo, object)>();
 
@@ -78,65 +72,74 @@ namespace Uchu.Api
                     
                     var response = context.Response;
 
-                    var parameters = (
-                        from string name in request.QueryString select request.QueryString.Get(name)
-                    ).ToArray();
-
-                    string returnString;
-
-                    var query = request.Url.LocalPath.Remove(0, 1);
-
-                    if (Map.TryGetValue(query, out var value))
+                    try
                     {
-                        var (info, host) = value;
+                        var parameters = (
+                            from string name in request.QueryString select request.QueryString.Get(name)
+                        ).ToArray();
 
-                        object returnValue;
+                        string returnString;
 
-                        try
+                        var query = request.Url.LocalPath.Remove(0, 1);
+
+                        if (Map.TryGetValue(query, out var value))
                         {
-                            returnValue = info.Invoke(host, parameters);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                            
-                            returnValue = new BaseResponse
+                            var (info, host) = value;
+
+                            object returnValue;
+
+                            try
                             {
-                                FailedReason = "error"
+                                returnValue = info.Invoke(host, parameters);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+
+                                returnValue = new BaseResponse
+                                {
+                                    FailedReason = "error"
+                                };
+                            }
+
+                            if (returnValue is Task<object> task)
+                            {
+                                returnValue = await task;
+                            }
+
+                            returnString = returnValue switch
+                            {
+                                string str => str,
+                                _ => JsonConvert.SerializeObject(returnValue)
                             };
                         }
-
-                        if (returnValue is Task<object> task)
+                        else
                         {
-                            returnValue = await task;
+                            returnString = JsonConvert.SerializeObject(new BaseResponse
+                            {
+                                FailedReason = "invalid"
+                            });
                         }
 
-                        returnString = returnValue switch
-                        {
-                            string str => str,
-                            _ => JsonConvert.SerializeObject(returnValue)
-                        };
+                        response.ContentType = "application/json";
+                        response.ContentEncoding = Encoding.UTF8;
+
+                        var data = Encoding.UTF8.GetBytes(returnString);
+
+                        response.ContentLength64 = data.LongLength;
+
+                        var output = response.OutputStream;
+
+                        await output.WriteAsync(data);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        returnString = JsonConvert.SerializeObject(new BaseResponse
-                        {
-                            FailedReason = "invalid"
-                        });
+                        Console.WriteLine(e);
                     }
-
-                    response.ContentType = "application/json";
-                    response.ContentEncoding = Encoding.UTF8;
-
-                    var data = Encoding.UTF8.GetBytes(returnString);
-
-                    response.ContentLength64 = data.LongLength;
-
-                    var output = response.OutputStream;
-
-                    await output.WriteAsync(data);
-
-                    response.Close();
+                    finally
+                    {
+                        response.Close();
+                    }
                 });
             }
         }
@@ -179,10 +182,12 @@ namespace Uchu.Api
             var url = $"{prefix}{command}";
 
             string json;
+
+            var client = new HttpClient();
             
             try
             {
-                json = await Client.GetStringAsync(url);
+                json = await client.GetStringAsync(url);
             }
             catch (HttpRequestException)
             {

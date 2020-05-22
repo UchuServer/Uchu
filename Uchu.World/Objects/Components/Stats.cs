@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {

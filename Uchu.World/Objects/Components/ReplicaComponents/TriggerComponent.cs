@@ -1,11 +1,9 @@
 using System;
-using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.Core;
-using Uchu.Physics;
 
 namespace Uchu.World
 {
