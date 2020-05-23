@@ -14,6 +14,7 @@
       <ProjectReference Include="..\InfectedRose\InfectedRose.Utilities\InfectedRose.Utilities.csproj" />
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
       <ProjectReference Include="..\Uchu.Navigation\Uchu.Navigation.csproj" />
+      <ProjectReference Include="..\Uchu.Physics\Uchu.Physics.csproj" />
       <ProjectReference Include="..\Uchu.Python\Uchu.Python.csproj" />
     </ItemGroup>
 

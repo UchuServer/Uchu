@@ -73,7 +73,8 @@ namespace Uchu.World
                     {
                         await SmashAsync(
                             Stats.LatestDamageSource,
-                            Stats.LatestDamageSource is Player player ? player : default
+                            Stats.LatestDamageSource is Player player ? player : default,
+                            Stats.LatestEffect
                         );
                     });
                     
@@ -104,7 +105,7 @@ namespace Uchu.World
             GameObject.GetComponent<Stats>().Serialize(writer);
         }
 
-        public async Task SmashAsync(GameObject smasher, Player owner = default, string animation = default)
+        public async Task SmashAsync(GameObject smasher, Player owner = default, string animation = "")
         {
             if (!Alive) return;
 
@@ -129,7 +130,7 @@ namespace Uchu.World
             Zone.BroadcastMessage(new DieMessage
             {
                 Associate = GameObject,
-                DeathType = animation ?? "",
+                DeathType = animation,
                 Killer = smasher,
                 SpawnLoot = false,
                 LootOwner = owner ?? GameObject

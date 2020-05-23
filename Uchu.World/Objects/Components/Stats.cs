@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -36,6 +35,8 @@ namespace Uchu.World
         public bool Shielded { get; set; }
 
         public GameObject LatestDamageSource { get; private set; }
+        
+        public string LatestEffect { get; private set; }
 
         public uint Health
         {
@@ -321,9 +322,10 @@ namespace Uchu.World
             });
         }
 
-        public void Damage(uint value, GameObject source)
+        public void Damage(uint value, GameObject source, string effectHandler = "")
         {
             LatestDamageSource = source;
+            LatestEffect = effectHandler;
             
             var armorDamage = Math.Min(value, Armor);
 
@@ -331,11 +333,6 @@ namespace Uchu.World
             Armor -= armorDamage;
 
             Health -= Math.Min(value, Health);
-
-            if (source != default && GameObject is Player)
-            {
-                GameObject.Animate("onhit", true);
-            }
         }
 
         public void Heal(uint value)

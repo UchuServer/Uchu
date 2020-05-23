@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -12,47 +13,19 @@ namespace Uchu.World.Systems.Behaviors
     {
         public static readonly List<BehaviorBase> Cache = new List<BehaviorBase>();
         
-        private static int EffectIndex { get; set; }
-        
         public int BehaviorId { get; set; }
 
         public abstract BehaviorTemplateId Id { get; }
 
         public abstract Task BuildAsync();
 
-        private int EffectId { get; set; }
+        public int EffectId { get; set; }
+        
+        public string EffectHandler { get; set; }
 
-        public virtual async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (EffectId == 0)
-            {
-                EffectId = await GetParameter<int>("effectID");
-
-                if (EffectId == default) EffectId = -1;
-            }
-
-            if (EffectId == -1) return;
-
-            var effectName = EffectIndex++.ToString();
-
-            context.Associate.Zone.ExcludingMessage(new PlayFXEffectMessage
-            {
-                Associate = branchContext.Target,
-                Secondary = context.Associate,
-                EffectId = EffectId,
-                Name = effectName
-            }, context.Associate as Player);
-
-            var _ = Task.Run(async () =>
-            {
-                await Task.Delay(branchContext.Duration > 0 ? branchContext.Duration : 1000);
-                
-                context.Associate.Zone.ExcludingMessage(new StopFXEffectMessage()
-                {
-                    Associate = branchContext.Target,
-                    Name = effectName
-                }, context.Associate as Player);
-            });
+            return Task.CompletedTask;
         }
 
         public virtual Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
@@ -68,6 +41,26 @@ namespace Uchu.World.Systems.Behaviors
         public virtual Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             return Task.CompletedTask;
+        }
+
+        public async Task PlayFxAsync(string type, GameObject target, int time)
+        {
+            await using var ctx = new CdClientContext();
+
+            var fx = await ctx.BehaviorEffectTable.FirstOrDefaultAsync(
+                e => e.EffectType == type && e.EffectID == EffectId
+            );
+            
+            if (fx == default) return;
+
+            target.PlayFX(fx.EffectName, fx.EffectType, EffectId);
+
+            var _ = Task.Run(async () =>
+            {
+                await Task.Delay(time);
+
+                target.StopFX(fx.EffectName);
+            });
         }
 
         public static async Task<BehaviorBase> BuildBranch(int behaviorId)
@@ -96,6 +89,10 @@ namespace Uchu.World.Systems.Behaviors
             var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
             
             instance.BehaviorId = behaviorId;
+
+            instance.EffectId = behavior.EffectID ?? 0;
+
+            instance.EffectHandler = behavior.EffectHandle;
             
             Cache.Add(instance);
 

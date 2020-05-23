@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
-using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -57,7 +56,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     return Task.CompletedTask;
                 });
                 
-                DeactivateFx(fanObject);
+                ActivateFx(fanObject);
                 
                 Listen(Zone.OnTick, () =>
                 {

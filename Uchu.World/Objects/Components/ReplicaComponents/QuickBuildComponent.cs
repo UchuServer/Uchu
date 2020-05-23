@@ -106,6 +106,8 @@ namespace Uchu.World
                     LegoInfo = new LegoDataDictionary()
                 }, GameObject);
 
+                Activator.Transform.Parent = Transform;
+
                 Start(Activator);
                 
                 GameObject.Construct(Activator);

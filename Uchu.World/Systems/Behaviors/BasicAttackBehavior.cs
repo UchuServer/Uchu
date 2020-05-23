@@ -79,7 +79,7 @@ namespace Uchu.World.Systems.Behaviors
             context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
             
             await branchContext.Target.NetFavorAsync();
-            
+
             context.Writer.Align();
 
             context.Writer.Write<ushort>(0);
@@ -100,12 +100,11 @@ namespace Uchu.World.Systems.Behaviors
 
             if (success)
             {
+                await PlayFxAsync("onhit", branchContext.Target, 1000);
+
                 var stats = branchContext.Target.GetComponent<Stats>();
 
-                var _ = Task.Run(() =>
-                {
-                    stats.Damage(damage, context.Associate);
-                });
+                stats.Damage(damage, context.Associate, EffectHandler);
                 
                 await OnSuccess.CalculateAsync(context, branchContext);
             }

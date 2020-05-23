@@ -259,6 +259,8 @@ namespace Uchu.World
         
         public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
         {
+            if (count == default) return;
+            
             await using var cdClient = new CdClientContext();
             
             var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(

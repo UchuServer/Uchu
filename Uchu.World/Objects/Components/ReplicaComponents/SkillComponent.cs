@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
@@ -204,12 +203,36 @@ namespace Uchu.World
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
 
-
             var syncId = ClaimSyncId();
 
             var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position);
 
             if (!context.FoundTarget) return 0;
+
+            Zone.BroadcastMessage(new EchoStartSkillMessage
+            {
+                Associate = GameObject,
+                CastType = 0,
+                Content = stream.ToArray(),
+                SkillId = skillId,
+                SkillHandle = syncId,
+                OptionalOriginator = GameObject,
+                OriginatorRotation = GameObject.Transform.Rotation
+            });
+
+            return context.SkillTime;
+        }
+
+        public async Task<float> CalculateSkillAsync(int skillId, GameObject target)
+        {
+            var tree = await BehaviorTree.FromSkillAsync(skillId);
+
+            var stream = new MemoryStream();
+            using var writer = new BitWriter(stream, leaveOpen: true);
+
+            var syncId = ClaimSyncId();
+
+            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position, target);
 
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {

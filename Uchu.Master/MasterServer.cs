@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;

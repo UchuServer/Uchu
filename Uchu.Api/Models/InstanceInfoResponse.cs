@@ -1,5 +1,3 @@
-using System;
-
 namespace Uchu.Api.Models
 {
     public class InstanceInfoResponse : BaseResponse

@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Api.Models;
 
 namespace Uchu.Core

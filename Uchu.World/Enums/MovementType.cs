@@ -6,6 +6,7 @@ namespace Uchu.World
         Jump,
         Falling,
         DoubleJump,
-        Jetpack = 6
+        Jetpack = 6,
+        Stunned
     }
 }

@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
 using Uchu.Core.Client;
 using Uchu.World.Systems.AI;
@@ -147,6 +145,8 @@ namespace Uchu.World
 
             foreach (var entry in entries.Where(e => e.Factions.Length != default && e.Health > 0))
             {
+                if (entry.GameObject.TryGetComponent<TriggerComponent>(out _)) continue;
+                
                 if (Stats.Enemies.Contains(entry.Factions.First()))
                 {
                     targets.Add(entry.GameObject);

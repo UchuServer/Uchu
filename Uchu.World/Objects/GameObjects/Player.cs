@@ -10,6 +10,7 @@ using RakDotNet.IO;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Physics;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -41,6 +42,8 @@ namespace Uchu.World
                     
                     return Task.CompletedTask;
                 };
+
+                Listen(OnPositionUpdate, UpdatePhysics);
 
                 if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
@@ -354,14 +357,7 @@ namespace Uchu.World
                     });
                 }
             }
-
-            //
-            // Register player gameobject in zone
-            //
             
-            Start(instance);
-            Construct(instance);
-
             //
             // Server Components
             //
@@ -370,6 +366,34 @@ namespace Uchu.World
             instance.AddComponent<InventoryManagerComponent>();
             instance.AddComponent<TeamPlayerComponent>();
             instance.AddComponent<ModularBuilderComponent>();
+            
+            //
+            // Physics
+            //
+
+            var physics = instance.AddComponent<PhysicsComponent>();
+
+            var box = CapsuleBody.Create(
+                zone.Simulation,
+                instance.Transform.Position,
+                instance.Transform.Rotation,
+                new Vector2(2, 4)
+            );
+
+            physics.SetPhysics(box);
+
+            instance.Listen(physics.OnEnter, instance.OnEnterCollision);
+
+            instance.Listen(physics.OnCollision, instance.OnStayCollision);
+            
+            instance.Listen(physics.OnLeave, instance.OnLeaveCollision);
+            
+            //
+            // Register player gameobject in zone
+            //
+            
+            Start(instance);
+            Construct(instance);
 
             //
             // Register player as an active in zone
@@ -378,6 +402,38 @@ namespace Uchu.World
             await zone.RegisterPlayer(instance);
 
             return instance;
+        }
+
+        private void OnStayCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} stayed {other.GameObject}");
+        }
+        
+        private void OnEnterCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} entered {other.GameObject}");
+        }
+        
+        private void OnLeaveCollision(PhysicsComponent other)
+        {
+            Logger.Information($"{this} left {other.GameObject}");
+        }
+
+        private void UpdatePhysics(Vector3 position, Quaternion rotation)
+        {
+            if (!TryGetComponent<PhysicsComponent>(out var physicsComponent)) return;
+
+            if (!(physicsComponent.Physics is PhysicsBody physics)) return;
+
+            physics.Position = Transform.Position;
+
+            physics.Rotation = Transform.Rotation;
+
+            var details = GetComponent<ControllablePhysicsComponent>();
+            
+            physics.AngularVelocity = details.HasAngularVelocity ? details.AngularVelocity : Vector3.Zero;
+
+            physics.LinearVelocity = details.HasVelocity ? details.Velocity : Vector3.Zero;
         }
 
         public async Task UnlockEmoteAsync(int emoteId)
@@ -471,17 +527,13 @@ namespace Uchu.World
 
         public void Message(ISerializable package)
         {
+            if (Id == ObjectId.Invalid) return;
+            
             Connection.Send(package);
         }
 
         public async Task<bool> SendToWorldAsync(InstanceInfo specification, ZoneId zoneId)
         {
-            Message(new ServerRedirectionPacket
-            {
-                Port = (ushort) specification.Port,
-                Address = Server.GetHost()
-            });
-            
             await using var ctx = new UchuContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
@@ -489,13 +541,34 @@ namespace Uchu.World
             character.LastZone = zoneId;
 
             await ctx.SaveChangesAsync();
+            
+            Message(new ServerRedirectionPacket
+            {
+                Port = (ushort) specification.Port,
+                Address = Server.GetHost()
+            });
 
             return true;
         }
         
         public async Task<bool> SendToWorldAsync(ZoneId zoneId)
         {
-            var server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
+            Logger.Information($"Requesting server for: {zoneId}");
+
+            InstanceInfo server;
+
+            try
+            {
+                server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+
+                return false;
+            }
+            
+            Logger.Information($"Yielded {server?.Port.ToString() ?? "<void>"} for {zoneId}");
             
             if (server == default)
             {
@@ -583,6 +656,11 @@ namespace Uchu.World
             });
 
             await ctx.SaveChangesAsync();
+        }
+
+        ~Player()
+        {
+            Logger.Information($"Player freed: {Id}");
         }
     }
 }

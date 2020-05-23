@@ -4,12 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -166,13 +163,18 @@ namespace Uchu.Core
             
             Running = true;
 
+            var server = RakNetServer.RunAsync();
+            var api = Api.StartAsync(ApiPort);
+
             var tasks = new[]
             {
-                RakNetServer.RunAsync(),
-                Api.StartAsync(ApiPort)
+                server,
+                api
             };
 
             await Task.WhenAny(tasks).ConfigureAwait(false);
+            
+            Console.WriteLine($"EXIT: {server.Status} | {api.Status}");
 
             await StopAsync().ConfigureAwait(false);
         }
@@ -207,13 +209,15 @@ namespace Uchu.Core
 
         public Task StopAsync()
         {
-            Logger.Log("Shutting down...");
+            Console.WriteLine("Shutting down...");
 
             Running = false;
 
             ServerStopped?.Invoke();
 
-            Certificate.Dispose();
+            Certificate?.Dispose();
+            
+            Api?.Close();
             
             return RakNetServer.ShutdownAsync();
         }
