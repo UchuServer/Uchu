@@ -103,8 +103,7 @@ namespace Uchu.World
                     Position = ActivatorPosition,
                     Rotation = Quaternion.Identity,
                     Scale = -1,
-                    LegoInfo = new LegoDataDictionary(),
-                    ObjectId = ObjectId.FromFlags(ObjectIdFlags.Spawned)
+                    LegoInfo = new LegoDataDictionary()
                 }, GameObject);
 
                 Activator.Transform.Parent = Transform;
