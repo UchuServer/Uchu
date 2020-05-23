@@ -421,7 +421,9 @@ namespace Uchu.World
 
         private void UpdatePhysics(Vector3 position, Quaternion rotation)
         {
-            var physics = (PhysicsBody) GetComponent<PhysicsComponent>().Physics;
+            if (!TryGetComponent<PhysicsComponent>(out var physicsComponent)) return;
+
+            if (!(physicsComponent.Physics is PhysicsBody physics)) return;
 
             physics.Position = Transform.Position;
 
@@ -532,12 +534,6 @@ namespace Uchu.World
 
         public async Task<bool> SendToWorldAsync(InstanceInfo specification, ZoneId zoneId)
         {
-            Message(new ServerRedirectionPacket
-            {
-                Port = (ushort) specification.Port,
-                Address = Server.GetHost()
-            });
-            
             await using var ctx = new UchuContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
@@ -545,8 +541,12 @@ namespace Uchu.World
             character.LastZone = zoneId;
 
             await ctx.SaveChangesAsync();
-
-            Destroy(this);
+            
+            Message(new ServerRedirectionPacket
+            {
+                Port = (ushort) specification.Port,
+                Address = Server.GetHost()
+            });
 
             return true;
         }

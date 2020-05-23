@@ -18,13 +18,23 @@ namespace Uchu.Physics
 
         public override int Id => Handle.Value;
 
-        public override Vector3 Position => Reference.Pose.Position;
+        public override Vector3 Position
+        {
+            get
+            {
+                if (!Reference.Exists) return default;
+                
+                return Reference.Pose.Position;
+            }
+        }
 
         public override void Dispose()
         {
-            Simulation.Simulation.Statics.Remove(Handle);
-
             Simulation.Release(this);
+            
+            if (!Reference.Exists) return;
+            
+            Simulation.Simulation.Statics.Remove(Handle);
         }
     }
 }

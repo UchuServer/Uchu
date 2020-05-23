@@ -82,7 +82,17 @@ namespace Uchu.Physics.Callbacks
             pairMaterial.MaximumRecoveryVelocity = 2f;
             pairMaterial.SpringSettings = new SpringSettings(30, 1);
             //For the purposes of the demo, contact constraints are always generated.
-            return OnCollision(pair.A, pair.B);
+
+            try
+            {
+                OnCollision(pair.A, pair.B);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return false;
         }
 
         /// <summary>

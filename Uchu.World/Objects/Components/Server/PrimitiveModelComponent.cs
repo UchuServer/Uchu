@@ -8,10 +8,7 @@ namespace Uchu.World
     {
         protected PrimitiveModelComponent()
         {
-            Listen(OnStart, () =>
-            {
-                LoadPhysics();
-            });
+            Listen(OnStart, LoadPhysics);
         }
         
         private void LoadPhysics()

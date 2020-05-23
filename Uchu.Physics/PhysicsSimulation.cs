@@ -46,11 +46,23 @@ namespace Uchu.Physics
             /*
              * DON'T SLEEP ON THE JOB!
              */
-            foreach (var physicsBody in Bodies)
+            var bodies = Bodies.ToArray();
+            
+            foreach (var physicsBody in bodies)
             {
+                if (!physicsBody.Reference.Exists)
+                {
+                    Objects.Remove(physicsBody);
+                    
+                    continue;
+                }
+                
                 physicsBody.Reference.Activity.SleepCandidate = false;
+
                 if (!physicsBody.Reference.Awake)
+                {
                     Simulation.Awakener.AwakenBody(physicsBody.Handle);
+                }
             }
 
             Simulation.Timestep(deltaTime);
@@ -90,6 +102,8 @@ namespace Uchu.Physics
         {
             foreach (var physicsObject in Bodies)
             {
+                if (!physicsObject.Reference.Exists) continue;
+                
                 if (physicsObject.Id == bodyHandle.Value)
                 {
                     return physicsObject;
@@ -98,6 +112,8 @@ namespace Uchu.Physics
             
             foreach (var physicsObject in Statics)
             {
+                if (!physicsObject.Reference.Exists) continue;
+
                 if (physicsObject.Id == staticHandle.Value)
                 {
                     return physicsObject;
@@ -107,14 +123,8 @@ namespace Uchu.Physics
             throw new Exception($"Failed to find physics object: Got {staticHandle}/{bodyHandle}");
         }
 
-        ~PhysicsSimulation()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Simulation?.Dispose();
             Buffer?.Clear();
         }

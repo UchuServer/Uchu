@@ -20,33 +20,75 @@ namespace Uchu.Physics
 
         public override Vector3 Position
         {
-            get => Reference.Pose.Position;
-            set => Reference.Pose.Position = value;
+            get
+            {
+                if (!Reference.Exists) return default;
+                
+                return Reference.Pose.Position;
+            }
+            set
+            {
+                if (!Reference.Exists) return;
+                
+                Reference.Pose.Position = value;
+            }
         }
 
         public Quaternion Rotation
         {
-            get => Reference.Pose.Orientation;
-            set => Reference.Pose.Orientation = value;
+            get
+            {
+                if (!Reference.Exists) return default;
+
+                return Reference.Pose.Orientation;
+            }
+            set
+            {
+                if (!Reference.Exists) return;
+                
+                Reference.Pose.Orientation = value;
+            }
         }
 
         public Vector3 AngularVelocity
         {
-            get => Reference.Velocity.Angular;
-            set => Reference.Velocity.Angular = value;
+            get
+            {
+                if (!Reference.Exists) return default;
+
+                return Reference.Velocity.Angular;
+            }
+            set
+            {
+                if (!Reference.Exists) return;
+                
+                Reference.Velocity.Angular = value;
+            }
         }
 
         public Vector3 LinearVelocity
         {
-            get => Reference.Velocity.Linear;
-            set => Reference.Velocity.Linear = value;
+            get
+            {
+                if (!Reference.Exists) return default;
+
+                return Reference.Velocity.Linear;
+            }
+            set
+            {
+                if (!Reference.Exists) return;
+                
+                Reference.Velocity.Linear = value;
+            }
         }
 
         public override void Dispose()
         {
-            Simulation.Simulation.Bodies.Remove(Handle);
-
             Simulation.Release(this);
+            
+            if (!Reference.Exists) return;
+            
+            Simulation.Simulation.Bodies.Remove(Handle);
         }
     }
 }
