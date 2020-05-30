@@ -12,13 +12,15 @@ Contributions are always welcome! Feel free to open pull requests or issues to h
 Message Wincent01#7921 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
 
 ## Python scripting
-Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for you with less programming experience to contribute.
+Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
 
 ## Releases
 Check out the [release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
 
 ## Prerequisites
-Uchu is built with .NET Core 3.1 which is compatible with Windows, Linux, and MacOS.
+This project will be built and run using a CLI, so you should only attempt to set it up if you are familiar with your native command line interface. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
+Users should also understand that Uchu is not a game in and of itself, but a server which tells a program on your computer - the client - what to do.
+Uchu is built with .NET Core 3.1 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
 
 ### .NET Core 3.1
 Install .NET Core 3.1 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
@@ -69,7 +71,7 @@ There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), alt
 ### LEGO Universe Client
 You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
 
-If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
+Uchu does not contain all of the information the server needs to run LEGO Universe and requires clients from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
 
 ### TcpUdp Mod
 The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://bitbucket.org/lcdr/raknet_shim_dll/downloads/) made by lcdr and extract it next to the game's executable.
