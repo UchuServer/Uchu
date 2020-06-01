@@ -18,7 +18,7 @@ Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.
 Check out the [release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
 
 ## Prerequisites
-This project will be built and run using a CLI, so you should only attempt to set it up if you are familiar with your native command line interface. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
+This project will be built and run using a CLI. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
 Users should also understand that Uchu is not a game in and of itself, but a server which tells a program on your computer - the client - what to do.
 Uchu is built with .NET Core 3.1 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
 
@@ -71,7 +71,7 @@ There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), alt
 ### LEGO Universe Client
 You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
 
-Uchu does not contain all of the information the server needs to run LEGO Universe and requires clients from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
+Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
 
 ### TcpUdp Mod
 The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://bitbucket.org/lcdr/raknet_shim_dll/downloads/) made by lcdr and extract it next to the game's executable.
