@@ -45,28 +45,15 @@ sudo apt install postgresql postgresql-contrib
 ```
 
 #### Windows
-https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
+You may download it for Windows here: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
 
 #### MacOS
 Refer to [brew](https://brew.sh) instructions [here](https://wiki.postgresql.org/wiki/Homebrew).
 
-### Redis (optional)
-Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux and MacOS so setting it up on Windows requires some workarounds.
+## Windows
+This guide will have information regarding launching Redis with WSL, the embedded Linux Framework inside Windows 10: https://redislabs.com/blog/redis-on-windows-10/
 
-Recommended to install when setting up for hosting.
-
-#### Linux (Debian/Ubuntu)
-```
-sudo apt install redis-server
-```
-
-#### MacOS
-```
-brew install redis
-```
-
-##### Windows
-There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), although fairly outdated and may cause issues.
+There's also a [package on chocolatey](https://chocolatey.org/packages/redis-64), although fairly outdated and may cause issues.
 
 ### LEGO Universe Client
 You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
