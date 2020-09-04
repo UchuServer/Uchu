@@ -37,7 +37,7 @@ namespace Uchu.Auth
 
         public ErrorMessage Error { get; set; } = new ErrorMessage {Message = null};
 
-        public uint StampCount { get; set; } = 4;
+        public uint StampCount { get; set; } = 0x0144;
 
         // TODO: add stamps
 
@@ -110,6 +110,49 @@ namespace Uchu.Auth
             writer.Write(Error);
 
             writer.Write(StampCount);
+            
+            
+            // Stamp data
+            writer.Write<ulong>(0x0000000000000000);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x0000001c00000007);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x0000000300000008);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x0000000000000009);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000000000000000a);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000000010000000b);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000000010000000e);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000000000000000f);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x0000000100000011);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x0000000000000005);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x0000000100000006);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x0000000100000014);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x000029ca00000013);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x0000000000000015);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x0000000000000016);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000029c400000017);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x000029c40000001b);	
+            writer.Write<ulong>(0x000000004ee27a4d);
+			writer.Write<ulong>(0x000000010000001c);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000000000000001d);	
+            writer.Write<ulong>(0x000000004ee27a4c);
+			writer.Write<ulong>(0x000029ca0000001e);	
+            writer.Write<ulong>(0x000000004ee27a4d);
         }
     }
 }
