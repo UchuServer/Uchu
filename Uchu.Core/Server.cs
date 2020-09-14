@@ -75,7 +75,6 @@ namespace Uchu.Core
         public virtual async Task ConfigureAsync(string configFile)
         {
             MasterPath = Path.GetDirectoryName(configFile);
-            
             var serializer = new XmlSerializer(typeof(Configuration));
 
             if (!File.Exists(configFile))
@@ -118,12 +117,12 @@ namespace Uchu.Core
 
             try
             {
-                SessionCache = new RedisSessionCache();
+                SessionCache = new RedisSessionCache(Config.CacheConfig);
+                Logger.Information($"Established Redis connection at {Config.CacheConfig.Host}:{Config.CacheConfig.Port}");
             }
             catch (RedisConnectionException)
             {
                 Logger.Error("Failed to establish Redis connection, falling back to database.");
-
                 SessionCache = new DatabaseCache();
             }
 
