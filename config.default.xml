@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Uchu xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Database>
+    <Provider>postgres</Provider>
+    <Database>uchu</Database>
+    <Host>localhost</Host>
+    <Username>uchu</Username>
+    <Password>uchu</Password>
+  </Database>
+  <ConsoleLogging>
+    <Level>Debug</Level>
+    <Timestamp>false</Timestamp>
+  </ConsoleLogging>
+  <FileLogging>
+    <Level>None</Level>
+    <File>uchu.log</File>
+    <Timestamp>false</Timestamp>
+  </FileLogging>
+  <DllSource>
+    <DotNetPath>dotnet</DotNetPath>
+    <Instance>Uchu.Instance/bin/Debug/netcoreapp3.1/Uchu.Instance.dll</Instance>
+    <ScriptDllSource>Uchu.StandardScripts</ScriptDllSource>
+  </DllSource>
+  <ManagedScriptSources />
+  <ResourcesConfiguration>
+    <GameResourceFolder>/Users/mick/LU/res</GameResourceFolder>
+  </ResourcesConfiguration>
+  <Networking>
+    <Certificate/>
+    <Hostname>localhost</Hostname>
+    <CharacterPort>2002</CharacterPort>
+    <HostAuthentication>true</HostAuthentication>
+    <HostCharacter>true</HostCharacter>
+    <MaxWorldServers>100</MaxWorldServers>
+  </Networking>
+  <GamePlay>
+    <PathFinding>false</PathFinding>
+    <AiWander>false</AiWander>
+  </GamePlay>
+  <Api>
+    <Protocol>http</Protocol>
+    <Domain>localhost</Domain>
+    <Port>10000</Port>
+  </Api>
+  <Cache>
+    <Host/>
+    <Port/>
+  </Cache>
+  <Sso>
+    <Domain />
+  </Sso>
+</Uchu>

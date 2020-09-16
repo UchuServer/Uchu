@@ -93,14 +93,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="endpoint">The endpoint a user is connecting from</param>
         /// <returns>If available, the session that belongs to the endpoint</returns>
-        public Session GetSession(IPEndPoint endpoint)
-        {
-            var task = GetSessionAsync(endpoint);
-
-            task.Wait();
-
-            return GetSessionAsync(endpoint).Result;
-        }
+        public Session GetSession(IPEndPoint endpoint) => GetSessionAsync(endpoint).Result;
 
         /// <summary>
         /// Gets an active session based on a user connection
