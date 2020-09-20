@@ -318,7 +318,7 @@ namespace Uchu.Core
         }
 
         /// <summary>
-        /// Registers an Uchu Instance assembly
+        /// Registers an assembly by fetching all handlers from it and storing them in the server
         /// </summary>
         /// <param name="assembly">The assembly to register</param>
         /// <exception cref="ArgumentNullException">If the assembly is empty</exception>
