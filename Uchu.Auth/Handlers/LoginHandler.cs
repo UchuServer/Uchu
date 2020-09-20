@@ -16,9 +16,9 @@ namespace Uchu.Auth.Handlers
             
             var info = new ServerLoginInfoPacket
             {
-                CharacterInstanceAddress = Server.GetHost(),
+                CharacterInstanceAddress = Server.Host,
                 CharacterInstancePort = ushort.MaxValue,
-                ChatInstanceAddress = Server.GetHost(),
+                ChatInstanceAddress = Server.Host,
                 ChatInstancePort = 2004
             };
 

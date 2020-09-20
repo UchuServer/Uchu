@@ -11,17 +11,9 @@ namespace Uchu.World.Handlers
         public async Task PositionHandler(PositionUpdatePacket packet, IRakConnection connection)
         {
             var player = Server.FindPlayer(connection);
-
-            if (player?.Transform == default)
-            {
-                Logger.Warning($"{connection} is not logged in but sent a Position Update packet.");
-                return;
-            }
-
-            //
-            // The server is a slave to the position update packets it gets from the client right now.
-            //
+            if (player?.Transform == default) return;
             
+            // The server is a slave to the position update packets it gets from the client right now.
             player.Transform.Position = packet.Position;
             player.Transform.Rotation = packet.Rotation;
 
