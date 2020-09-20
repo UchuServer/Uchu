@@ -18,7 +18,7 @@ namespace Uchu.Core.Handlers
             connection.Send(new HandshakePacket
             {
                 ConnectionType = Server.Port == port ? 0x01u : 0x04u,
-                Address = Server.GetHost()
+                Address = Server.Host
             });
         }
     }

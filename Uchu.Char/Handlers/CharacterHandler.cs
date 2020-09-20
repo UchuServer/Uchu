@@ -70,7 +70,6 @@ namespace Uchu.Char.Handlers
         public async Task CharacterList(CharacterListRequest packet, IRakConnection connection)
         {
             var session = Server.SessionCache.GetSession(connection.EndPoint);
-
             await SendCharacterList(connection, session.UserId);
         }
 
@@ -84,19 +83,15 @@ namespace Uchu.Char.Handlers
 
             await using (var ctx = new CdClientContext())
             {
-                //
-                //    Shirt
-                //
+                // Shirt
                 var shirtColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.ShirtColor);
                 var shirtName =
                     $"{(shirtColor != null ? shirtColor.Description : "Bright Red")} Shirt {packet.ShirtStyle}";
                 var shirt = ctx.ObjectsTable.ToArray().FirstOrDefault(o =>
                     string.Equals(o.Name, shirtName, StringComparison.CurrentCultureIgnoreCase));
                 shirtLot = (uint) (shirt != null ? shirt.Id : 4049); // Select 'Bright Red Shirt 1' if not found.
-
-                //
-                //    Pants
-                //
+                
+                // Pants
                 var pantsColor = await ctx.BrickColorsTable.FirstOrDefaultAsync(c => c.Id == packet.PantsColor);
                 var pantsName = $"{(pantsColor != null ? pantsColor.Description : "Bright Red")} Pants";
                 var pants = ctx.ObjectsTable.ToArray().FirstOrDefault(o =>
@@ -205,15 +200,12 @@ namespace Uchu.Char.Handlers
             try
             {
                 ctx.Characters.Remove(await ctx.Characters.FindAsync(packet.CharacterId));
-
                 await ctx.SaveChangesAsync();
-
                 connection.Send(new CharacterDeleteResponse());
             }
             catch (Exception e)
             {
                 Logger.Error($"Character deletion failed for {connection}'s character {packet.CharacterId}\n{e}");
-
                 connection.Send(new CharacterDeleteResponse {Success = false});
             }
         }
@@ -224,7 +216,8 @@ namespace Uchu.Char.Handlers
             var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
-
+            
+            // Check if the name already exists and return proper response if so
             if (ctx.Characters.Any(c => c.Name == packet.Name || c.CustomName == packet.Name))
             {
                 connection.Send(new CharacterRenameResponse
@@ -234,6 +227,7 @@ namespace Uchu.Char.Handlers
                 return;
             }
 
+            // If the name is free, update accordingly and notify the client
             var chr = await ctx.Characters.FindAsync(packet.CharacterId);
 
             chr.CustomName = packet.Name;
@@ -255,49 +249,31 @@ namespace Uchu.Char.Handlers
             Server.SessionCache.SetCharacter(connection.EndPoint, packet.CharacterId);
 
             await using var ctx = new UchuContext();
-
             var character = await ctx.Characters.FirstAsync(c => c.Id == packet.CharacterId);
-
             character.LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds();
-
             await ctx.SaveChangesAsync();
 
             var zone = (ZoneId) character.LastZone;
-
             var requestZone = (ZoneId) (zone == 0 ? 1000 : zone);
-
-            //
-            // We don't want to lock up the server on a world server request, as it may take time.
-            //
             
+            // We don't want to lock up the server on a world server request, as it may take time.
             var _ = Task.Run(async () =>
             {
-                //
                 // Request world server.
-                //
-                
                 var server = await ServerHelper.RequestWorldServerAsync(Server, requestZone);
-
                 if (server == default)
                 {
-                    //
-                    // Error
-                    //
-
+                    // If there's no server available, error
                     var session = Server.SessionCache.GetSession(connection.EndPoint);
-
                     await SendCharacterList(connection, session.UserId);
 
                     return;
                 }
-
-                //
+                
                 // Send to world server.
-                //
-
                 connection.Send(new ServerRedirectionPacket
                 {
-                    Address = Server.GetHost(),
+                    Address = Server.Host,
                     Port = (ushort) server.Port
                 });
             });

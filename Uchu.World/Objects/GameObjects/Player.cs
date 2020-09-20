@@ -545,7 +545,7 @@ namespace Uchu.World
             Message(new ServerRedirectionPacket
             {
                 Port = (ushort) specification.Port,
-                Address = Server.GetHost()
+                Address = Server.Host
             });
 
             return true;
