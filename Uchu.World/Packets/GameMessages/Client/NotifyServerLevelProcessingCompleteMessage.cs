@@ -4,5 +4,4 @@
     {
         public override GameMessageId GameMessageId => GameMessageId.NotifyServerLevelProcessingComplete;
     }
-
 }

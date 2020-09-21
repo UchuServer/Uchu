@@ -103,8 +103,8 @@ namespace Uchu.World.Handlers.GameMessages
         {
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
+
             var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-            // var character = await ctx.Characters.FirstAsync(c => c.CharacterId == player.ObjectId);
 
             var lookup_val = 0;
 
