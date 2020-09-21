@@ -219,10 +219,11 @@ namespace Uchu.World.Handlers.Commands
 
             if (arguments.Length == 2)
             {
-                float.TryParse(arguments[1], out float Speed);
-
-                JetPackAirSpeed = Speed;
-                JetPackMaxAirSpeed = Speed + 5;
+                if (float.TryParse(arguments[1], out float Speed))
+                {
+                    JetPackAirSpeed = Speed;
+                    JetPackMaxAirSpeed = Speed + 5;
+                }
             }
 
 
