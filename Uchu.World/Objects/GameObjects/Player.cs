@@ -610,14 +610,14 @@ namespace Uchu.World
 
             character.UniverseScore = score;
 
-            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+            /*foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
             {
                 if (levelProgressionLookup.RequiredUScore > score) break;
 
                 Debug.Assert(levelProgressionLookup.Id != null, "levelProgressionLookup.Id != null");
 
                 character.Level = levelProgressionLookup.Id.Value;
-            }
+            }*/
 
             Message(new ModifyLegoScoreMessage
             {
