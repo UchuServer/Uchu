@@ -22,7 +22,7 @@ namespace Uchu.World
         
         private Player()
         {
-            OnFireServerEvent = new AsyncEventDictionary<string, FireServerEventMessage>();
+            OnFireServerEvent = new Event<string, FireServerEventMessage>();
 
             OnPositionUpdate = new Event<Vector3, Quaternion>();
 
@@ -78,7 +78,7 @@ namespace Uchu.World
             });
         }
 
-        public AsyncEventDictionary<string, FireServerEventMessage> OnFireServerEvent { get; }
+        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
 
         public Event<Lot> OnLootPickup { get; }
         

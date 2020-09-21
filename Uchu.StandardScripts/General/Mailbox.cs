@@ -19,9 +19,13 @@ namespace Uchu.StandardScripts.General
 
             Listen(Zone.OnPlayerLoad, player =>
             {
-                player.OnFireServerEvent.AddListener("toggleMail", async message =>
+                Listen(player.OnFireServerEvent, async (messagename, message) =>
                 {
-                    await UiHelper.ToggleAsync(player, "ToggleMail", false);
+                    if (messagename == "toggleMail")
+                    {
+                        await UiHelper.ToggleAsync(player, "ToggleMail", false);
+                    }
+
                 });
             });
 
