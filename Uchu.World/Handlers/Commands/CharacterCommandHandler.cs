@@ -197,7 +197,10 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Admin)]
         public string Fly(string[] arguments, Player player)
         {
-            if (arguments.Length != 1) return "fly <state(on/off)>";
+            if (arguments.Length != 1 && arguments.Length != 2) return "fly <state(on/off)>";
+
+            float JetPackAirSpeed = 10;
+            float JetPackMaxAirSpeed = 15;
 
             bool state;
             switch (arguments[0].ToLower())
@@ -214,12 +217,24 @@ namespace Uchu.World.Handlers.Commands
                     return "Invalid <state(on/off)>";
             }
 
+            if (arguments.Length == 2)
+            {
+                if (float.TryParse(arguments[1], out float Speed))
+                {
+                    JetPackAirSpeed = Speed;
+                    JetPackMaxAirSpeed = Speed + 5;
+                }
+            }
+
+
             player.Message(new SetJetPackModeMessage
             {
                 Associate = player,
                 BypassChecks = true,
                 Use = state,
-                EffectId = 36
+                EffectId = 36,
+                AirSpeed = JetPackAirSpeed,
+                MaxAirSpeed = JetPackMaxAirSpeed
             });
 
             return $"Toggled jetpack state: {state}";

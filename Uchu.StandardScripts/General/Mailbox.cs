@@ -17,6 +17,14 @@ namespace Uchu.StandardScripts.General
                 });
             }
 
+            Listen(Zone.OnPlayerLoad, player =>
+            {
+                player.OnFireServerEvent.AddListener("toggleMail", async message =>
+                {
+                    await UiHelper.ToggleAsync(player, "ToggleMail", false);
+                });
+            });
+
             return Task.CompletedTask;
         }
     }
