@@ -261,16 +261,13 @@ namespace Uchu.World
                         message.OptionalTarget = null;
                     else if (!message.OptionalTarget.GetComponent<DestructibleComponent>()?.Alive ?? true)
                         message.OptionalTarget = null;
-                    /*
-                    else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
-                        message.OptionalTarget = null;
-                    */
+                    /* else if (Vector3.Distance(message.OptionalTarget.Transform.Position, Transform.Position) > TargetRange)
+                        message.OptionalTarget = null;*/
                 }
             }
             catch (Exception e)
             {
                 Logger.Error(e);
-                
                 return;
             }
 
@@ -278,7 +275,6 @@ namespace Uchu.World
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
                 var tree = await BehaviorTree.FromSkillAsync(message.SkillId);
-                
                 var context = await tree.ExecuteAsync(
                     GameObject,
                     reader,
@@ -291,7 +287,6 @@ namespace Uchu.World
                 if (GameObject.TryGetComponent<Stats>(out var stats))
                 {
                     var info = tree.BehaviorIds.FirstOrDefault(b => b.SkillId == message.SkillId);
-
                     if (info != default)
                     {
                         stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);

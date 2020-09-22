@@ -88,25 +88,27 @@ namespace Uchu.World.Systems.Behaviors
             return tree;
         }
 
+        /// <summary>
+        /// Takes a skill ID and creates a simple skill tree with that skill from the behavior table
+        /// </summary>
+        /// <param name="skillId">The skill ID to use</param>
+        /// <returns>A behavior tree that contains the skill belonging to the skill ID</returns>
         public static async Task<BehaviorTree> FromSkillAsync(int skillId)
         {
-            var tree = new BehaviorTree();
-
             await using var cdClient = new CdClientContext();
 
+            var tree = new BehaviorTree();
             var behavior = cdClient.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == skillId);
-
+            
             if (behavior == default)
             {
                 Logger.Error($"Could not find behavior for skill: {skillId}");
-
                 return tree;
             }
 
             if (behavior.BehaviorID == default)
             {
                 Logger.Error($"{skillId} has an invalid behavior id");
-
                 return tree;
             }
 
@@ -122,61 +124,90 @@ namespace Uchu.World.Systems.Behaviors
             };
 
             await tree.BuildAsync();
-            
             return tree;
         }
 
+        /// <summary>
+        /// Builds the skill tree by finding all behaviors associated with it and storing them in the rootbehaviors dict 
+        /// </summary>
         private async Task BuildAsync()
         {
             await using var ctx = new CdClientContext();
 
+            // Build the base behavior for each requested skill
             foreach (var skill in BehaviorIds)
             {
-                var root = BehaviorBase.Cache.ToArray().FirstOrDefault(b => b.BehaviorId == skill.BaseBehavior);
+                var root = BehaviorBase.Cache.ToArray().FirstOrDefault(
+                    b => b.BehaviorId == skill.BaseBehavior);
 
+                // If the behavior can't be found in the cache, build in from scratch using its template
                 if (root == default)
                 {
-                    var behavior = await ctx.BehaviorTemplateTable.FirstOrDefaultAsync(
-                        t => t.BehaviorID == skill.BaseBehavior
-                    );
-
-                    if (behavior?.TemplateID == null) continue;
-
-                    var behaviorTypeId = (BehaviorTemplateId) behavior.TemplateID;
-
-                    if (!Behaviors.TryGetValue(behaviorTypeId, out var behaviorType))
+                    root = await CreateBehaviorFromInfo(ctx, skill);
+                    if (root == null)
                     {
-                        Logger.Error($"No behavior type of \"{behaviorTypeId}\" found.");
-
                         continue;
                     }
-
-                    var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
-
-                    instance.BehaviorId = skill.BaseBehavior;
-
-                    BehaviorBase.Cache.Add(instance);
-
-                    await instance.BuildAsync();
-
-                    root = instance;
                 }
 
+                // For each skill, store the fresh behavior root
                 SkillRoots[skill.SkillId] = root;
 
+                // Also store each behavior by CastType
                 if (RootBehaviors.TryGetValue(skill.CastType, out var list))
                 {
                     list.Add(root);
                 }
                 else
                 {
-                    RootBehaviors[skill.CastType] = new List<BehaviorBase> {root};
+                    RootBehaviors[skill.CastType] = new List<BehaviorBase> { root };
                 }
             }
         }
 
         /// <summary>
-        ///     Calculate a server preformed skill
+        /// Creates a behavior base from skill information by finding its behavior template and spawning an instance
+        /// of that.
+        /// </summary>
+        /// <remarks>
+        /// Also adds this behavior base to the cache
+        /// </remarks>
+        /// <param name="context">Reusable context to query from</param>
+        /// <param name="info">The behavior info to get the skill from</param>
+        /// <returns>The instantiated behavior base if succeeded, <c>null</c> otherwise</returns>
+        private async Task<BehaviorBase> CreateBehaviorFromInfo(CdClientContext context, BehaviorInfo info)
+        {
+            var behavior = await context.BehaviorTemplateTable.FirstOrDefaultAsync(
+                t => t.BehaviorID == info.BaseBehavior
+            );
+
+            if (behavior?.TemplateID == null)
+                return null;
+            
+            var behaviorTypeId = (BehaviorTemplateId) behavior.TemplateID;
+
+            if (!Behaviors.TryGetValue(behaviorTypeId, out var behaviorType))
+            {
+                Logger.Error($"No behavior type of \"{behaviorTypeId}\" found.");
+                return null;
+            }
+
+            var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
+            if (instance == null)
+            {
+                Logger.Error($"Could not create behaviour of type {behaviorType}.");
+                return null;
+            }
+            
+            instance.BehaviorId = info.BaseBehavior;
+            BehaviorBase.Cache.Add(instance);
+            await instance.BuildAsync();
+            
+            return instance;
+        }
+
+        /// <summary>
+        /// Calculate a server preformed skill
         /// </summary>
         /// <param name="associate">Executioner</param>
         /// <param name="writer">Data to be sent to clients</param>
@@ -195,7 +226,6 @@ namespace Uchu.World.Systems.Behaviors
             if (!SkillRoots.TryGetValue(skillId, out var root))
             {
                 Logger.Debug($"Failed to find skill: {skillId}");
-
                 return context;
             }
 
@@ -216,11 +246,10 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         /// <summary>
-        ///     Execute a user preformed skill
+        /// Execute a user preformed skill
         /// </summary>
         /// <param name="associate">Executioner</param>
         /// <param name="reader">Client skill data</param>
-        /// <param name="writer">Data to be sent to clients</param>
         /// <param name="castType">Type of skill</param>
         /// <param name="target">Explicit target</param>
         /// <returns>Context</returns>
@@ -237,21 +266,16 @@ namespace Uchu.World.Systems.Behaviors
                 foreach (var root in defaultList)
                 {
                     context.Root = root;
-
                     var branchContext = new ExecutionBranchContext(associate);
-
                     await root.ExecuteAsync(context, branchContext);
                 }
             }
 
             if (!RootBehaviors.TryGetValue(castType, out var list)) return context;
-
             foreach (var root in list)
             {
                 context.Root = root;
-
                 var branchContext = new ExecutionBranchContext(associate);
-
                 await root.ExecuteAsync(context, branchContext);
             }
 

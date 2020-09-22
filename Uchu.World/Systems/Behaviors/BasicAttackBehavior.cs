@@ -29,46 +29,34 @@ namespace Uchu.World.Systems.Behaviors
             
             context.Reader.Align();
 
-            context.Reader.Read<ushort>();
+            var unknown = context.Reader.Read<byte>();
+            var unknown1 = unknown > 0 ? unknown : context.Reader.Read<byte>();
+            context.Reader.Read<byte>();
 
-            var failImmune = context.Reader.ReadBit();
+            context.Reader.ReadBit();
+            context.Reader.ReadBit();
+            var flag2 = context.Reader.ReadBit();
 
-            if (!failImmune)
-            {
-                var unknown = context.Reader.ReadBit();
-                
-                if (!unknown)
-                {
-                    context.Reader.ReadBit();
-                }
-            }
-
-            context.Reader.Read<uint>();
-
-            var damage = context.Reader.Read<uint>();
-
-            if (branchContext == default)
-            {
-                Logger.Error("Invalid Brash Context!");
-                
-                throw new Exception("Invalid!");
-            }
+            if (flag2) context.Reader.Read<uint>();
             
+            var damage = context.Reader.Read<uint>();
+            var died = context.Reader.ReadBit();
+            var successSate = context.Reader.Read<byte>();
+
             if (branchContext.Target == default || !branchContext.Target.TryGetComponent<Stats>(out var stats))
             {
                 Logger.Error($"Invalid target: {branchContext.Target}");
             }
             else
             {
-                var _ = Task.Run(() =>
+                await Task.Run(() =>
                 {
                     stats.Damage(damage, context.Associate);
                 });
             }
-
-            var success = context.Reader.ReadBit();
             
-            if (success)
+            if (unknown1 == 81) context.Reader.Read<byte>();
+            if (successSate == 1)
             {
                 await OnSuccess.ExecuteAsync(context, branchContext);
             }
