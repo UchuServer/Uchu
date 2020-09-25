@@ -13,38 +13,60 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class BehaviorTree
     {
-        private static Dictionary<BehaviorTemplateId, Type> _behaviors;
-
+        /// <summary>
+        /// Creates a behavior tree
+        /// </summary>
+        private BehaviorTree()
+        {
+        }
+        
+        /// <summary>
+        /// Contains all the abstract information about the database behaviors in this tree
+        /// </summary>
         public BehaviorInfo[] BehaviorIds { get; private set; }
 
+        /// <summary>
+        /// All the implemented behaviors in this tree, stored by ID
+        /// </summary>
         public Dictionary<int, BehaviorBase> SkillRoots { get; set; } = new Dictionary<int, BehaviorBase>();
 
-        public Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
+        /// <summary>
+        /// All the behaviors in this tree, grouped by SkillCastType
+        /// </summary>
+        private Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
             new Dictionary<SkillCastType, List<BehaviorBase>>();
 
+        private static Dictionary<BehaviorTemplateId, Type> _behaviors;
+        
+        /// <summary>
+        /// Map of all implemented behaviors, ordered by behavior template id
+        /// </summary>
         public static Dictionary<BehaviorTemplateId, Type> Behaviors
         {
             get
             {
                 if (_behaviors != default) return _behaviors;
-
                 _behaviors = new Dictionary<BehaviorTemplateId, Type>();
 
+                // Get all implemented behaviors for the assembly
                 var behaviors = typeof(BehaviorBase).Assembly.GetTypes().Where(
                     t => t.BaseType == typeof(BehaviorBase) && t != typeof(BehaviorBase)
                 ).ToArray();
 
+                // Store all found behaviors by their skill ID
                 foreach (var behavior in behaviors)
                 {
-                    _behaviors.Add(((BehaviorBase) Activator.CreateInstance(behavior)).Id, behavior);
+                    var behaviorInstance = Activator.CreateInstance(behavior);
+                    if (behaviorInstance == default)
+                    {
+                        Logger.Error($"Could not create instance of behavior of type {behavior}.");
+                        continue;
+                    }
+                    _behaviors.Add(((BehaviorBase) behaviorInstance).Id, behavior);
                 }
 
                 return _behaviors;
             }
-        }
-
-        private BehaviorTree()
-        {
         }
 
         public static async Task<BehaviorTree> FromLotAsync(Lot lot)
@@ -89,28 +111,18 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         /// <summary>
-        /// Takes a skill ID and creates a simple skill tree with that skill from the behavior table
+        /// Takes a skill ID and creates a simple skill tree with database information about that behavior skill
         /// </summary>
         /// <param name="skillId">The skill ID to use</param>
-        /// <returns>A behavior tree that contains the skill belonging to the skill ID</returns>
+        /// <returns>A behavior tree that contains database information about the skill belonging to the skill ID</returns>
         public static async Task<BehaviorTree> FromSkillAsync(int skillId)
         {
-            await using var cdClient = new CdClientContext();
-
             var tree = new BehaviorTree();
-            var behavior = cdClient.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == skillId);
             
-            if (behavior == default)
-            {
-                Logger.Error($"Could not find behavior for skill: {skillId}");
+            // Try to find the base behavior linked to this skill
+            var behavior = await BaseBehaviorForSkill(skillId);
+            if (behavior?.BehaviorID == default)
                 return tree;
-            }
-
-            if (behavior.BehaviorID == default)
-            {
-                Logger.Error($"{skillId} has an invalid behavior id");
-                return tree;
-            }
 
             tree.BehaviorIds = new[]
             {
@@ -128,7 +140,31 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         /// <summary>
-        /// Builds the skill tree by finding all behaviors associated with it and storing them in the rootbehaviors dict 
+        /// Finds the root behavior associated with a given skill by looking in the SkillBehavior table and returns
+        /// database information regarding that root behavior.
+        /// </summary>
+        /// <param name="skillId">The skill ID to find a behavior for</param>
+        /// <returns>The skill behavior if it existed, <c>default</c> otherwise</returns>
+        private static async Task<SkillBehavior> BaseBehaviorForSkill(int skillId)
+        {
+            await using var clientContext = new CdClientContext();
+            var skillBehavior = clientContext.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == skillId);
+            
+            if (skillBehavior == default)
+            {
+                Logger.Error($"Could not find behavior for skill: {skillId}.");
+            }
+            else if (skillBehavior.BehaviorID == default)
+            {
+                Logger.Error($"{skillId} has an invalid behavior id.");
+            }
+            
+            return skillBehavior;
+        }
+
+        /// <summary>
+        /// Builds the skill tree by taking all database information about the behaviors in the tree and turning them
+        /// into implemented classes for each respective database behavior.
         /// </summary>
         private async Task BuildAsync()
         {
@@ -143,7 +179,7 @@ namespace Uchu.World.Systems.Behaviors
                 // If the behavior can't be found in the cache, build in from scratch using its template
                 if (root == default)
                 {
-                    root = await CreateBehaviorFromInfo(ctx, skill);
+                    root = await BehaviorFromInfo(ctx, skill);
                     if (root == null)
                     {
                         continue;
@@ -166,16 +202,15 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         /// <summary>
-        /// Creates a behavior base from skill information by finding its behavior template and spawning an instance
-        /// of that.
+        /// Finds and builds a behavior implementation using behavior database information.
         /// </summary>
         /// <remarks>
-        /// Also adds this behavior base to the cache
+        /// Also adds this behavior implementation to the cache
         /// </remarks>
         /// <param name="context">Reusable context to query from</param>
         /// <param name="info">The behavior info to get the skill from</param>
         /// <returns>The instantiated behavior base if succeeded, <c>null</c> otherwise</returns>
-        private async Task<BehaviorBase> CreateBehaviorFromInfo(CdClientContext context, BehaviorInfo info)
+        private static async Task<BehaviorBase> BehaviorFromInfo(CdClientContext context, BehaviorInfo info)
         {
             var behavior = await context.BehaviorTemplateTable.FirstOrDefaultAsync(
                 t => t.BehaviorID == info.BaseBehavior
@@ -193,7 +228,7 @@ namespace Uchu.World.Systems.Behaviors
             }
 
             var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
-            if (instance == null)
+            if (instance == default)
             {
                 Logger.Error($"Could not create behaviour of type {behaviorType}.");
                 return null;
@@ -201,8 +236,8 @@ namespace Uchu.World.Systems.Behaviors
             
             instance.BehaviorId = info.BaseBehavior;
             BehaviorBase.Cache.Add(instance);
-            await instance.BuildAsync();
             
+            await instance.BuildAsync();
             return instance;
         }
 
@@ -256,30 +291,40 @@ namespace Uchu.World.Systems.Behaviors
         public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader,
             SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
+            // Define a generic context that will be used by all root behaviors
             var context = new ExecutionContext(associate, reader, default)
             {
                 ExplicitTarget = target
             };
 
-            if (RootBehaviors.TryGetValue(SkillCastType.Default, out var defaultList))
-            {
-                foreach (var root in defaultList)
-                {
-                    context.Root = root;
-                    var branchContext = new ExecutionBranchContext(associate);
-                    await root.ExecuteAsync(context, branchContext);
-                }
-            }
-
-            if (!RootBehaviors.TryGetValue(castType, out var list)) return context;
-            foreach (var root in list)
-            {
-                context.Root = root;
-                var branchContext = new ExecutionBranchContext(associate);
-                await root.ExecuteAsync(context, branchContext);
-            }
+            // First execute the default behaviors, then the behaviors linked to the skill type
+            await ExecuteRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
+            await ExecuteRootBehaviorsForSkillType(associate, castType, context);
 
             return context;
+        }
+
+        /// <summary>
+        /// Executes all root behaviors for a certain skill type in the behavior tree. Executes them on behalf of the
+        /// associate.
+        /// </summary>
+        /// <param name="associate">The target to activate the skills from</param>
+        /// <param name="skillType">The explicit skilltypes to execute</param>
+        /// <param name="context">The generic context for the entire behavior tree</param>
+        private async Task ExecuteRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType, 
+            ExecutionContext context)
+        {
+            if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
+            {
+                foreach (var rootBehavior in rootBehaviorList)
+                {
+                    context.Root = rootBehavior;
+                    
+                    // For each behavior specify behavior specific context (for example duration and explicit target)
+                    var branchContext = new ExecutionBranchContext(associate);
+                    await rootBehavior.ExecuteAsync(context, branchContext);
+                }
+            }
         }
 
         public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, GameObject target)

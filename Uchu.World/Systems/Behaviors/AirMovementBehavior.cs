@@ -14,9 +14,7 @@ namespace Uchu.World.Systems.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
-
             var handle = context.Reader.Read<uint>();
-
             RegisterHandle(handle, context, branchContext);
         }
 
@@ -24,10 +22,7 @@ namespace Uchu.World.Systems.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
             
-            var actionId = context.Reader.Read<uint>();
-
-            var action = await GetBehavior(actionId);
-
+            var action = await GetBehavior(context.Reader.Read<uint>());
             var id = context.Reader.Read<ulong>();
 
             context.Associate.Zone.TryGetGameObject((long) id, out var target);

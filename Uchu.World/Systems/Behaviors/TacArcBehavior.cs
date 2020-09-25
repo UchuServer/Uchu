@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -48,63 +49,25 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     Duration = branchContext.Duration
                 };
-
-                await ActionBehavior.ExecuteAsync(context, branch);
                 
-                return;
-            }
-            
-            var hit = context.Reader.ReadBit();
-            
-            if (hit) // Hit
-            {
-                var targets = new List<GameObject>();
-
-                if (CheckEnvironment)
-                {
-                    context.Reader.ReadBit();
-                }
-
-                var specifiedTargets = context.Reader.Read<uint>();
-
-                for (var i = 0; i < specifiedTargets; i++)
-                {
-                    var targetId = context.Reader.Read<long>();
-
-                    if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
-                    {
-                        Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
-
-                        continue;
-                    }
-
-                    targets.Add(target);
-                }
-
-                foreach (var target in targets)
-                {
-                    var branch = new ExecutionBranchContext(target)
-                    {
-                        Duration = branchContext.Duration
-                    };
-
-                    await ActionBehavior.ExecuteAsync(context, branch);
-                }
+                await ActionBehavior.ExecuteAsync(context, branch);
             }
             else
             {
-                if (Blocked)
+                var hit = context.Reader.ReadBit();
+                if (CheckEnvironment)
                 {
-                    var isBlocked = context.Reader.ReadBit();
-
-                    if (isBlocked) // Is blocked
+                    var blocked = context.Reader.ReadBit();
+                    if (blocked)
                     {
                         await BlockedBehavior.ExecuteAsync(context, branchContext);
+                        return;
                     }
-                    else
-                    {
-                        await MissBehavior.ExecuteAsync(context, branchContext);
-                    }
+                }
+                
+                if (hit)
+                {
+                    await FindAndHitTargets(context, branchContext);
                 }
                 else
                 {
@@ -113,20 +76,50 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        /// <summary>
+        /// Finds all targets in the area and optionally hits them if not missed and not blocked
+        /// </summary>
+        /// <param name="context">The context to find the targets from</param>
+        /// <param name="branchContext">The branch context to execute further behaviors from</param>
+        private async Task FindAndHitTargets(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            var targetCount = context.Reader.Read<uint>();
+            var targets = new List<GameObject>();
+
+            // Find all targets for this hit
+            for (var i = 0; i < targetCount; i++)
+            {
+                var targetId = context.Reader.Read<long>();
+                if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                {
+                    Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
+                    continue;
+                }
+                targets.Add(target);
+            }
+
+            // Hit all targets
+            foreach (var target in targets)
+            {
+                var branch = new ExecutionBranchContext(target)
+                {
+                    Duration = branchContext.Duration
+                };
+
+                await ActionBehavior.ExecuteAsync(context, branch);
+            }
+        }
+
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
 
             var validTarget = baseCombatAiComponent.SeekValidTargets();
-
             var sourcePosition = context.CalculatingPosition; // Change back to author position?
-
             var targets = validTarget.Where(target =>
             {
                 var transform = target.Transform;
-
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
-
                 return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToList();
 

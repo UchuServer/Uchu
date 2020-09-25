@@ -8,19 +8,30 @@ namespace Uchu.World.Systems.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.BasicAttack;
         
-        public BehaviorBase OnSuccess { get; set; }
+        /// <summary>
+        /// The behavior to execute if this behavior succeeded
+        /// </summary>
+        private BehaviorBase OnSuccess { get; set; }
         
-        public int MinDamage { get; set; }
+        /// <summary>
+        /// The minimum damage this attack may do
+        /// </summary>
+        private uint MinDamage { get; set; }
         
-        public int MaxDamage { get; set; }
+        /// <summary>
+        /// The maximum damage this attack may do
+        /// </summary>
+        private uint MaxDamage { get; set; }
         
+        /// <summary>
+        /// Fills the success, min and max damage parameters
+        /// </summary>
+        /// <returns></returns>
         public override async Task BuildAsync()
         {
             OnSuccess = await GetBehavior("on_success");
-
-            MinDamage = await GetParameter<int>("min damage");
-
-            MaxDamage = await GetParameter<int>("max damage");
+            MinDamage = await GetParameter<uint>("min damage");
+            MaxDamage = await GetParameter<uint>("max damage");
         }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
@@ -40,21 +51,16 @@ namespace Uchu.World.Systems.Behaviors
             if (flag2) context.Reader.Read<uint>();
             
             var damage = context.Reader.Read<uint>();
-            var died = context.Reader.ReadBit();
+            var _ = context.Reader.ReadBit(); // Died?
             var successSate = context.Reader.Read<byte>();
 
-            if (branchContext.Target == default || !branchContext.Target.TryGetComponent<Stats>(out var stats))
+            // Make sure the target is valid and damage them
+            if (branchContext.Target != default && branchContext.Target.TryGetComponent<Stats>(out var stats))
             {
-                Logger.Error($"Invalid target: {branchContext.Target}");
-            }
-            else
-            {
-                await Task.Run(() =>
-                {
-                    stats.Damage(damage, context.Associate);
-                });
+                stats.Damage(CalculateDamage(damage), context.Associate);
             }
             
+            // Execute the success state only if some parameters are set
             if (unknown1 == 81) context.Reader.Read<byte>();
             if (successSate == 1)
             {
@@ -65,37 +71,46 @@ namespace Uchu.World.Systems.Behaviors
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
-            
             await branchContext.Target.NetFavorAsync();
-
             context.Writer.Align();
-
-            context.Writer.Write<ushort>(0);
+            
+            // Three unknowns
+            context.Writer.Write<byte>(0);
+            context.Writer.Write<byte>(0);
+            context.Writer.Write<byte>(0);
             
             context.Writer.WriteBit(false);
             context.Writer.WriteBit(false);
             context.Writer.WriteBit(true);
             
-            context.Writer.Write(0);
+            // Unknown 2 == true so this should be set
+            context.Writer.Write<uint>(0);
 
-            var success = context.IsValidTarget(branchContext.Target) && context.Alive;
-
-            var damage = (uint) (success ? MinDamage : 0);
-
+            var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
             context.Writer.Write(damage);
             
-            context.Writer.WriteBit(success);
+            context.Writer.WriteBit(!context.Alive);
+            
+            var success = context.IsValidTarget(branchContext.Target) && context.Alive;
+            context.Writer.Write<uint>((uint)(success ? 1 : 0));
 
-            if (success)
+            if (success && branchContext.Target.TryGetComponent<Stats>(out var stats))
             {
                 await PlayFxAsync("onhit", branchContext.Target, 1000);
-
-                var stats = branchContext.Target.GetComponent<Stats>();
-
                 stats.Damage(damage, context.Associate, EffectHandler);
-                
                 await OnSuccess.CalculateAsync(context, branchContext);
             }
+        }
+        
+        /// <summary>
+        /// Takes a damage input and ensures that it's between the min and max damage
+        /// </summary>
+        /// <param name="damage">The damage to check</param>
+        /// <returns>the damage, or the min or max damage</returns>
+        private uint CalculateDamage(uint damage)
+        {
+            if (damage <= MaxDamage && damage >= MinDamage) return damage;
+            return damage > MaxDamage ? MaxDamage : MinDamage;
         }
     }
 }

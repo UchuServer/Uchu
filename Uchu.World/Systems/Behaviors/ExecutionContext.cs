@@ -41,7 +41,6 @@ namespace Uchu.World.Systems.Behaviors
                 if (entry == default)
                 {
                     Logger.Error($"Invalid behavior sync id: {handle}!");
-                    
                     return;
                 }
                 
@@ -53,11 +52,15 @@ namespace Uchu.World.Systems.Behaviors
 
         public void RegisterHandle(uint handle, SyncDelegate @delegate)
         {
-            BehaviorHandles.Add(new BehaviorSyncEntry
+            lock (BehaviorHandles)
             {
-                Handle = handle,
-                Delegate = @delegate
-            });
+                BehaviorHandles.Add(new BehaviorSyncEntry
+                {
+                    Handle = handle,
+                    Delegate = @delegate
+                });
+                Logger.Debug($"Registered handle for sync id: {handle}");
+            }
         }
 
         public class BehaviorSyncEntry
