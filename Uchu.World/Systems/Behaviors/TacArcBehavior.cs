@@ -110,13 +110,14 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        private List<GameObject> LocateTargets(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
+            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent))
+                return new List<GameObject>();
 
-            var validTarget = baseCombatAiComponent.SeekValidTargets();
+            var validTargets = baseCombatAiComponent.SeekValidTargets();
             var sourcePosition = context.CalculatingPosition; // Change back to author position?
-            var targets = validTarget.Where(target =>
+            var targets = validTargets.Where(target =>
             {
                 var transform = target.Transform;
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
@@ -132,7 +133,6 @@ namespace Uchu.World.Systems.Behaviors
             });
 
             var selectedTargets = new List<GameObject>();
-
             foreach (var target in targets)
             {
                 if (selectedTargets.Count < MaxTargets)
@@ -141,42 +141,41 @@ namespace Uchu.World.Systems.Behaviors
                 }
             }
 
-            if (!context.Alive)
-            {
-                selectedTargets.Clear(); // No targeting if dead
-            }
+            return selectedTargets;
+        }
 
-            var any = selectedTargets.Any();
-
-            context.Writer.WriteBit(any); // Hit
-
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) || !context.Alive)
+                return;
+            
+            // Find targets if the game object is alive
+            var targets = LocateTargets(context, branchContext);
+            var any = targets.Any();
+            context.Writer.WriteBit(any);
+            
             if (any)
             {
-                baseCombatAiComponent.Target = selectedTargets.First();
-                
+                combatAi.Target = targets.First();
                 context.FoundTarget = true;
 
                 if (CheckEnvironment)
                 {
-                    // TODO
-                    context.Writer.WriteBit(false);
+                    context.Writer.WriteBit(Blocked);
+                    if (Blocked)
+                    {
+                        // TODO: Implement
+                    }
                 }
 
-                context.Writer.Write((uint) selectedTargets.Count);
+                context.Writer.Write((uint) targets.Count);
 
-                foreach (var target in selectedTargets)
+                foreach (var target in targets)
                 {
                     context.Writer.Write(target.Id);
                 }
 
-                foreach (var target in selectedTargets)
-                {
-                    if (!(target is Player player)) continue;
-
-                    player.SendChatMessage($"You are a target! [{context.SkillSyncId}]");
-                }
-
-                foreach (var target in selectedTargets)
+                foreach (var target in targets)
                 {
                     var branch = new ExecutionBranchContext(target)
                     {
@@ -186,7 +185,7 @@ namespace Uchu.World.Systems.Behaviors
                     await ActionBehavior.CalculateAsync(context, branch);
                 }
             }
-            else
+            else if (context.Alive)
             {
                 if (Blocked)
                 {
