@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -16,6 +18,7 @@ namespace Uchu.World.Systems.Behaviors
             await base.ExecuteAsync(context, branchContext);
             var handle = context.Reader.Read<uint>();
             RegisterHandle(handle, context, branchContext);
+            Logger.Debug("AirMovementBehavior");
         }
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)

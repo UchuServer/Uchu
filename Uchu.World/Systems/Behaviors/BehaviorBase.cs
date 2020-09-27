@@ -22,6 +22,10 @@ namespace Uchu.World.Systems.Behaviors
         public int EffectId { get; set; }
         
         public string EffectHandler { get; set; }
+        
+        public BehaviorBase()
+        {
+        }
 
         public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
@@ -39,6 +43,16 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         public virtual Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual Task DeserializeStartAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+        
+        public virtual Task DeserializeSyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             return Task.CompletedTask;
         }

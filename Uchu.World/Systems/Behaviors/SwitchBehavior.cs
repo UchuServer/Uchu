@@ -30,12 +30,6 @@ namespace Uchu.World.Systems.Behaviors
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
-            
-            /*
-            var handle = context.Reader.Read<uint>();
-
-            RegisterHandle(handle, context, branchContext);
-            */
 
             var state = true;
 
@@ -56,12 +50,6 @@ namespace Uchu.World.Systems.Behaviors
 
         public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
-            /*
-            var syncId = context.Associate.GetComponent<SkillComponent>().ClaimSyncId();
-
-            context.Writer.Write(syncId);
-            */
-            
             // TODO
 
             var state = true;

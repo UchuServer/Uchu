@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -11,6 +12,8 @@ namespace Uchu.World.Systems.Behaviors
         public BehaviorBase Action { get; set; }
         
         public int Intervals { get; set; }
+        
+        private uint Handle { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -29,16 +32,21 @@ namespace Uchu.World.Systems.Behaviors
 
             Delay = (int) (delay.Value * 1000);
         }
+        
+        public override Task DeserializeStartAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            Handle = context.Reader.Read<uint>();
+            return base.DeserializeStartAsync(context, branchContext);
+        }
 
         public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             await base.ExecuteAsync(context, branchContext);
 
-            var handle = context.Reader.Read<uint>();
-
             for (var i = 0; i < Intervals; i++)
             {
-                RegisterHandle(handle, context, branchContext);
+                RegisterHandle(Handle, context, branchContext);
+                Logger.Debug("AttackDelayBehavior");
             }
         }
 

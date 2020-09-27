@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -35,7 +34,6 @@ namespace Uchu.World.Systems.Behaviors
             MissBehavior = await GetBehavior("miss action");
 
             MaxTargets = await GetParameter<int>("max targets");
-
             UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
         }
 
@@ -49,7 +47,6 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     Duration = branchContext.Duration
                 };
-                
                 await ActionBehavior.ExecuteAsync(context, branch);
             }
             else
@@ -76,6 +73,74 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) || !context.Alive)
+                return;
+
+            // If there's a single target to hit, hit them and exit
+            if (UsePickedTarget && context.ExplicitTarget != null)
+            {
+                await ActionBehavior.CalculateAsync(context, branchContext);
+            }
+            else
+            {
+                var targets = LocateTargets(context);
+                var any = targets.Any();
+                context.Writer.WriteBit(any);
+                
+                // If we have to check the environment, check if this is a blocked action and notify all the targets
+                if (CheckEnvironment)
+                {
+                    context.Writer.WriteBit(Blocked);
+                    if (Blocked)
+                    {
+                        foreach (var target in targets)
+                        {
+                            var branch = new ExecutionBranchContext(target)
+                            {
+                                Duration = branchContext.Duration,
+                                Target = target
+                            };
+                            await BlockedBehavior.CalculateAsync(context, branch);
+                        }
+                        return;
+                    }
+                }
+                
+                // If there was no explicit target, find targets if the game object is alive
+                if (any)
+                {
+                    combatAi.Target = targets.First();
+                    context.FoundTarget = true;
+                    context.Writer.Write((uint) targets.Count);
+
+                    // Register all targets
+                    foreach (var target in targets)
+                    {
+                        context.Writer.Write((long)target.Id);
+                    }
+                    
+                    // Hit all targets
+                    foreach (var target in targets)
+                    {
+                        var branch = new ExecutionBranchContext(target)
+                        {
+                            Duration = branchContext.Duration,
+                            Target = target
+                        };
+                        await ActionBehavior.CalculateAsync(context, branch);
+                    }
+                }
+                else
+                {
+                    // If this isn't a hit, miss (obviously)
+                    await MissBehavior.CalculateAsync(context, branchContext);
+                }
+            }
+        }
+        
+        
         /// <summary>
         /// Finds all targets in the area and optionally hits them if not missed and not blocked
         /// </summary>
@@ -110,7 +175,12 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        private List<GameObject> LocateTargets(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        /// <summary>
+        /// Locates all targets within range of a context and returns a list of them
+        /// </summary>
+        /// <param name="context">The NPC context to find targets for</param>
+        /// <returns>A list of targets if they were found, otherwise an empty list</returns>
+        private List<GameObject> LocateTargets(NpcExecutionContext context)
         {
             if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent))
                 return new List<GameObject>();
@@ -142,61 +212,6 @@ namespace Uchu.World.Systems.Behaviors
             }
 
             return selectedTargets;
-        }
-
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) || !context.Alive)
-                return;
-            
-            // Find targets if the game object is alive
-            var targets = LocateTargets(context, branchContext);
-            var any = targets.Any();
-            context.Writer.WriteBit(any);
-            
-            if (any)
-            {
-                combatAi.Target = targets.First();
-                context.FoundTarget = true;
-
-                if (CheckEnvironment)
-                {
-                    context.Writer.WriteBit(Blocked);
-                    if (Blocked)
-                    {
-                        // TODO: Implement
-                    }
-                }
-
-                context.Writer.Write((uint) targets.Count);
-
-                foreach (var target in targets)
-                {
-                    context.Writer.Write(target.Id);
-                }
-
-                foreach (var target in targets)
-                {
-                    var branch = new ExecutionBranchContext(target)
-                    {
-                        Duration = branchContext.Duration
-                    };
-
-                    await ActionBehavior.CalculateAsync(context, branch);
-                }
-            }
-            else if (context.Alive)
-            {
-                if (Blocked)
-                {
-                    // TODO
-                    context.Writer.WriteBit(false);
-                }
-                else
-                {
-                    await MissBehavior.CalculateAsync(context, branchContext);
-                }
-            }
         }
     }
 }

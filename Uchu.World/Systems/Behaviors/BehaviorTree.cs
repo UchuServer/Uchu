@@ -280,6 +280,20 @@ namespace Uchu.World.Systems.Behaviors
             return context;
         }
 
+        private async Task<ExecutionContext> DeserializeAsync(GameObject associate, BitReader reader,
+            SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
+        {
+            var context = new ExecutionContext(associate, reader, default)
+            {
+                ExplicitTarget = target
+            };
+
+            await DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
+            await DeserializeRootBehaviorsForSkillType(associate, castType, context);
+
+            return context;
+        }
+
         /// <summary>
         /// Execute a user preformed skill
         /// </summary>
@@ -302,6 +316,22 @@ namespace Uchu.World.Systems.Behaviors
             await ExecuteRootBehaviorsForSkillType(associate, castType, context);
 
             return context;
+        }
+
+        private async Task DeserializeRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType,
+            ExecutionContext context)
+        {
+            if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
+            {
+                foreach (var rootBehavior in rootBehaviorList)
+                {
+                    context.Root = rootBehavior;
+                    
+                    // For each behavior specify behavior specific context (for example duration and explicit target)
+                    var branchContext = new ExecutionBranchContext(associate);
+                    await rootBehavior.DeserializeStartAsync();
+                }
+            }
         }
 
         /// <summary>

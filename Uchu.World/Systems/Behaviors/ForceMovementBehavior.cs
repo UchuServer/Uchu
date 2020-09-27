@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -24,13 +25,12 @@ namespace Uchu.World.Systems.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
 
-            var array = new[] {HitAction, HitActionEnemy, HitActionFaction};
-            
-            if (array.All(b => b?.BehaviorId == 0)) return;
-
-            var handle = context.Reader.Read<uint>();
-
-            RegisterHandle(handle, context, branchContext);
+            if (HitAction.BehaviorId != 0 || HitActionEnemy.BehaviorId != 0 || HitActionFaction.BehaviorId != 0)
+            {
+                var handle = context.Reader.Read<uint>();
+                RegisterHandle(handle, context, branchContext);
+                Logger.Debug("ForceMovementBehavior");
+            }
         }
 
         public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
