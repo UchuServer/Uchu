@@ -2,39 +2,44 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class DurationBehavior : BehaviorBase
+    public class DurationBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+    }
+    public class DurationBehavior : BehaviorBase<DurationBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Duration;
-        
-        public BehaviorBase Action { get; set; }
-        
-        public int ActionDuration { get; set; }
+
+        private BehaviorBase Action { get; set; }
+
+        private int ActionDuration { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
 
             var duration = await GetParameter("duration");
-            
             if (duration.Value == null) return;
 
             ActionDuration = (int) duration.Value;
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-
-            branchContext.Duration = ActionDuration * 1000;
-            
-            await Action.ExecuteAsync(context, branchContext);
+            behaviorExecutionParameters.ActionExecutionParameters = Action.DeserializeStart(
+                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
+        {
+            behaviorExecutionParameters.ActionExecutionParameters.BranchContext.Duration = ActionDuration * 1000;
+            await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
+        }
+
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             branchContext.Duration = ActionDuration * 1000;
-
-            await Action.CalculateAsync(context, branchContext);
+            await Action.SerializeStart(context, branchContext);
         }
     }
 }

@@ -275,7 +275,7 @@ namespace Uchu.World
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
                 var tree = await BehaviorTree.FromSkillAsync(message.SkillId);
-                var context = await tree.ExecuteAsync(
+                var context = tree.Deserialize(
                     GameObject,
                     reader,
                     SkillCastType.OnUse,
@@ -283,15 +283,6 @@ namespace Uchu.World
                 );
                 
                 HandledSkills[message.SkillHandle] = context;
-                
-                if (GameObject.TryGetComponent<Stats>(out var stats))
-                {
-                    var info = tree.BehaviorIds.FirstOrDefault(b => b.SkillId == message.SkillId);
-                    if (info != default)
-                    {
-                        stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);
-                    }
-                }
                 
                 Zone.ExcludingMessage(new EchoStartSkillMessage
                 {
@@ -307,6 +298,17 @@ namespace Uchu.World
                     SkillId = message.SkillId,
                     UsedMouse = message.UsedMouse
                 }, GameObject as Player);
+
+                await tree.ExecuteAsync();
+                
+                if (GameObject.TryGetComponent<Stats>(out var stats))
+                {
+                    var info = tree.BehaviorIds.FirstOrDefault(b => b.SkillId == message.SkillId);
+                    if (info != default)
+                    {
+                        stats.Imagination = (uint) ((int) stats.Imagination - info.ImaginationCost);
+                    }
+                }
             }
             
             await GameObject.GetComponent<MissionInventoryComponent>().UseSkillAsync(

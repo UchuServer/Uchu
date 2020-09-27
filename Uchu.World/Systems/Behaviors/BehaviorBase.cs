@@ -9,52 +9,69 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public abstract class BehaviorBase
+    public abstract class BehaviorBase<T> : BehaviorBase
+        where T : BehaviorExecutionParameters, new()
     {
-        public static readonly List<BehaviorBase> Cache = new List<BehaviorBase>();
-        
-        public int BehaviorId { get; set; }
-
-        public abstract BehaviorTemplateId Id { get; }
-
-        public abstract Task BuildAsync();
-
-        public int EffectId { get; set; }
-        
-        public string EffectHandler { get; set; }
-        
-        public BehaviorBase()
-        {
-        }
-
-        public virtual Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected virtual Task ExecuteStart(T executionParameters)
         {
             return Task.CompletedTask;
         }
+        public override Task ExecuteStart(BehaviorExecutionParameters executionParameters)
+        {
+            return ExecuteStart((T) executionParameters);
+        }
 
-        public virtual Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected virtual Task ExecuteSync(T executionParameters)
         {
             return Task.CompletedTask;
         }
+        public override Task ExecuteSync(BehaviorExecutionParameters executionParameters)
+        {
+            return ExecuteSync((T) executionParameters);
+        }
 
-        public virtual Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected virtual void DeserializeStart(T behaviorExecutionParameters)
+        {
+        }
+        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+            ExecutionBranchContext branchContext)
+        {
+            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
+            DeserializeStart(behaviorExecutionParameters);
+            return behaviorExecutionParameters;
+        }
+
+        protected virtual void DeserializeSync(T behaviorExecutionParameters)
+        {
+        }
+        public override BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
+            ExecutionBranchContext branchContext)
+        {
+            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
+            DeserializeSync(behaviorExecutionParameters);
+            return behaviorExecutionParameters;
+        }
+
+        protected virtual Task DismantleAsync(T executionParameters)
         {
             return Task.CompletedTask;
         }
-
-        public virtual Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task DismantleAsync(BehaviorExecutionParameters executionParameters)
         {
-            return Task.CompletedTask;
+            await DismantleAsync((T) executionParameters);
         }
 
-        public virtual Task DeserializeStartAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected void RegisterHandle(uint handle, BehaviorExecutionParameters behaviorExecutionParameters)
         {
-            return Task.CompletedTask;
-        }
-        
-        public virtual Task DeserializeSyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            return Task.CompletedTask;
+            behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
+            {
+                // TODO: Check if start is locked
+                var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
+                    behaviorExecutionParameters.BranchContext);
+                syncBehaviorExecutionParameters.Context.Reader = reader;
+                
+                await ExecuteSync(syncBehaviorExecutionParameters);
+            });
         }
 
         public async Task PlayFxAsync(string type, GameObject target, int time)
@@ -76,11 +93,44 @@ namespace Uchu.World.Systems.Behaviors
                 target.StopFX(fx.EffectName);
             });
         }
+    }
 
+    public abstract class BehaviorBase
+    {
+        public int BehaviorId { get; set; }
+
+        public abstract BehaviorTemplateId Id { get; }
+
+        public virtual Task BuildAsync()
+        {
+            return Task.CompletedTask;
+        }
+        
+        public int EffectId { get; set; }
+        
+        public string EffectHandler { get; set; }
+        
+        public static readonly List<BehaviorBase> Cache = new List<BehaviorBase>();
+        
+        protected async Task<BehaviorBase> GetBehavior(string name)
+        {
+            var action = await GetParameter(name);
+
+            if (action?.Value == null || action.Value.Value.Equals(0)) return new EmptyBehavior();
+
+            return await BuildBranch((int) action.Value);
+        }
+
+        protected async Task<BehaviorBase> GetBehavior(uint id)
+        {
+            if (id == default) return new EmptyBehavior();
+            
+            return await BuildBranch((int) id);
+        }
+        
         public static async Task<BehaviorBase> BuildBranch(int behaviorId)
         {
             var cachedBehavior = Cache.ToArray().FirstOrDefault(c => c.BehaviorId == behaviorId);
-
             if (cachedBehavior != default) return cachedBehavior;
             
             await using var ctx = new CdClientContext();
@@ -114,22 +164,7 @@ namespace Uchu.World.Systems.Behaviors
 
             return instance;
         }
-
-        protected void RegisterHandle(uint handle, ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            context.RegisterHandle(handle, async reader =>
-            {
-                var newBranchContext = new ExecutionBranchContext(branchContext.Target)
-                {
-                    Duration = branchContext.Duration
-                };
-
-                context.Reader = reader;
-
-                await SyncAsync(context, newBranchContext);
-            });
-        }
-
+        
         protected async Task<BehaviorParameter> GetParameter(string name)
         {
             await using var cdClient = new CdClientContext();
@@ -138,13 +173,13 @@ namespace Uchu.World.Systems.Behaviors
             );
         }
 
-        protected async Task<T> GetParameter<T>(string name) where T : struct
+        protected async Task<TS> GetParameter<TS>(string name) where TS : struct
         {
             var param = await GetParameter(name);
 
             if (param == default) return default;
             
-            return param.Value.HasValue ? (T) Convert.ChangeType(param.Value.Value, typeof(T)) : default;
+            return param.Value.HasValue ? (TS) Convert.ChangeType(param.Value.Value, typeof(TS)) : default;
         }
 
         protected BehaviorParameter[] GetParameters()
@@ -163,20 +198,36 @@ namespace Uchu.World.Systems.Behaviors
             );
         }
 
-        protected async Task<BehaviorBase> GetBehavior(string name)
+        public virtual Task ExecuteSync(BehaviorExecutionParameters executionParameters)
         {
-            var action = await GetParameter(name);
-
-            if (action?.Value == null || action.Value.Value.Equals(0)) return new EmptyBehavior();
-
-            return await BuildBranch((int) action.Value);
+            return Task.CompletedTask;
+        }
+        
+        public virtual Task ExecuteStart(BehaviorExecutionParameters executionParameters)
+        {
+            return Task.CompletedTask;
         }
 
-        protected async Task<BehaviorBase> GetBehavior(uint id)
+        public virtual Task DismantleAsync(BehaviorExecutionParameters executionParameters)
         {
-            if (id == default) return new EmptyBehavior();
-            
-            return await BuildBranch((int) id);
+            return Task.CompletedTask;
+        }
+        
+        public virtual Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return Task.CompletedTask;
+        }
+
+        public virtual BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+            ExecutionBranchContext branchContext)
+        {
+            return new BehaviorExecutionParameters(context, branchContext);
+        }
+
+        public virtual BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
+            ExecutionBranchContext branchContext)
+        {
+            return new BehaviorExecutionParameters(context, branchContext);
         }
     }
 }

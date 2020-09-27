@@ -10,5 +10,15 @@ namespace Uchu.World.Systems.Behaviors
         {
             return Task.CompletedTask;
         }
+
+        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return new BehaviorExecutionParameters(context, branchContext);
+        }
+
+        public override BehaviorExecutionParameters DeserializeSync(ExecutionContext context, ExecutionBranchContext branchContext)
+        {
+            return new BehaviorExecutionParameters(context, branchContext);
+        }
     }
 }

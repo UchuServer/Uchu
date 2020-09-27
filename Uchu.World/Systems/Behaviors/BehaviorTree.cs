@@ -5,12 +5,19 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Runtime;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 
 namespace Uchu.World.Systems.Behaviors
 {
+    public class BehaviorExecution
+    {
+        public BehaviorBase BehaviorBase { get; set; }
+        public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
+    }
+    
     public class BehaviorTree
     {
         /// <summary>
@@ -33,10 +40,14 @@ namespace Uchu.World.Systems.Behaviors
         /// <summary>
         /// All the behaviors in this tree, grouped by SkillCastType
         /// </summary>
-        private Dictionary<SkillCastType, List<BehaviorBase>> RootBehaviors { get; } =
-            new Dictionary<SkillCastType, List<BehaviorBase>>();
+        private Dictionary<SkillCastType, List<BehaviorExecution>> RootBehaviors { get; } =
+            new Dictionary<SkillCastType, List<BehaviorExecution>>();
+        
+        private Dictionary<BehaviorBase, BehaviorExecutionParameters> TreeExecutionParameters;
 
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
+
+        private SkillCastType CastType = default;
         
         /// <summary>
         /// Map of all implemented behaviors, ordered by behavior template id
@@ -176,7 +187,7 @@ namespace Uchu.World.Systems.Behaviors
                 var root = BehaviorBase.Cache.ToArray().FirstOrDefault(
                     b => b.BehaviorId == skill.BaseBehavior);
 
-                // If the behavior can't be found in the cache, build in from scratch using its template
+                // If the behavior can't be found in the cache, build it from scratch using its template
                 if (root == default)
                 {
                     root = await BehaviorFromInfo(ctx, skill);
@@ -189,14 +200,20 @@ namespace Uchu.World.Systems.Behaviors
                 // For each skill, store the fresh behavior root
                 SkillRoots[skill.SkillId] = root;
 
+                var executionPreparation = new BehaviorExecution()
+                {
+                    BehaviorBase = root
+                };
+                
                 // Also store each behavior by CastType
                 if (RootBehaviors.TryGetValue(skill.CastType, out var list))
                 {
-                    list.Add(root);
+                    list.Add(executionPreparation);
                 }
                 else
                 {
-                    RootBehaviors[skill.CastType] = new List<BehaviorBase> { root };
+                    RootBehaviors[skill.CastType] = new List<BehaviorExecution>
+                        { executionPreparation };
                 }
             }
         }
@@ -266,11 +283,11 @@ namespace Uchu.World.Systems.Behaviors
 
             context.Root = root;
 
-            var branchContext = new ExecutionBranchContext(target);
+            var branchContext = new ExecutionBranchContext { Target = target };
 
             try
             {
-                await root.CalculateAsync(context, branchContext);
+                await root.SerializeStart(context, branchContext);
             }
             catch (Exception e)
             {
@@ -280,79 +297,53 @@ namespace Uchu.World.Systems.Behaviors
             return context;
         }
 
-        private async Task<ExecutionContext> DeserializeAsync(GameObject associate, BitReader reader,
+        public ExecutionContext Deserialize(GameObject associate, BitReader reader,
             SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
+            CastType = castType;
+            
             var context = new ExecutionContext(associate, reader, default)
             {
                 ExplicitTarget = target
             };
 
-            await DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
-            await DeserializeRootBehaviorsForSkillType(associate, castType, context);
+            DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
+            DeserializeRootBehaviorsForSkillType(associate, castType, context);
 
             return context;
         }
-
-        /// <summary>
-        /// Execute a user preformed skill
-        /// </summary>
-        /// <param name="associate">Executioner</param>
-        /// <param name="reader">Client skill data</param>
-        /// <param name="castType">Type of skill</param>
-        /// <param name="target">Explicit target</param>
-        /// <returns>Context</returns>
-        public async Task<ExecutionContext> ExecuteAsync(GameObject associate, BitReader reader,
-            SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
+        
+        public async Task ExecuteAsync()
         {
-            // Define a generic context that will be used by all root behaviors
-            var context = new ExecutionContext(associate, reader, default)
-            {
-                ExplicitTarget = target
-            };
-
-            // First execute the default behaviors, then the behaviors linked to the skill type
-            await ExecuteRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
-            await ExecuteRootBehaviorsForSkillType(associate, castType, context);
-
-            return context;
+            await ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
+            await ExecuteRootBehaviorsForSkillType(CastType);
         }
 
-        private async Task DeserializeRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType,
+        private void DeserializeRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType,
             ExecutionContext context)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
-                foreach (var rootBehavior in rootBehaviorList)
+                foreach (var executionPreparation in rootBehaviorList)
                 {
-                    context.Root = rootBehavior;
-                    
                     // For each behavior specify behavior specific context (for example duration and explicit target)
-                    var branchContext = new ExecutionBranchContext(associate);
-                    await rootBehavior.DeserializeStartAsync();
+                    context.Root = executionPreparation.BehaviorBase;
+                    var branchContext = new ExecutionBranchContext { Target = associate };
+                    
+                    // Prepare the behavior for execution by populating it with context
+                    executionPreparation.BehaviorExecutionParameters = 
+                        executionPreparation.BehaviorBase.DeserializeStart(context, branchContext);
                 }
             }
         }
-
-        /// <summary>
-        /// Executes all root behaviors for a certain skill type in the behavior tree. Executes them on behalf of the
-        /// associate.
-        /// </summary>
-        /// <param name="associate">The target to activate the skills from</param>
-        /// <param name="skillType">The explicit skilltypes to execute</param>
-        /// <param name="context">The generic context for the entire behavior tree</param>
-        private async Task ExecuteRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType, 
-            ExecutionContext context)
+        
+        private async Task ExecuteRootBehaviorsForSkillType(SkillCastType skillType)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
-                foreach (var rootBehavior in rootBehaviorList)
+                foreach (var executionPreparation in rootBehaviorList)
                 {
-                    context.Root = rootBehavior;
-                    
-                    // For each behavior specify behavior specific context (for example duration and explicit target)
-                    var branchContext = new ExecutionBranchContext(associate);
-                    await rootBehavior.ExecuteAsync(context, branchContext);
+                    await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
                 }
             }
         }
@@ -363,13 +354,9 @@ namespace Uchu.World.Systems.Behaviors
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list)) return context;
 
-            foreach (var root in list)
+            foreach (var behaviorExecution in list)
             {
-                context.Root = root;
-
-                var branchContext = new ExecutionBranchContext(target);
-
-                await root.ExecuteAsync(context, branchContext);
+                await behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
             }
 
             return context;
@@ -382,13 +369,9 @@ namespace Uchu.World.Systems.Behaviors
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
 
-            foreach (var root in list)
+            foreach (var executionPreparation in list)
             {
-                context.Root = root;
-
-                var branchContext = new ExecutionBranchContext(associate);
-
-                await root.ExecuteAsync(context, branchContext);
+                await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
             }
 
             return context;
@@ -401,13 +384,9 @@ namespace Uchu.World.Systems.Behaviors
 
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
 
-            foreach (var root in list)
+            foreach (var executionPreparation in list)
             {
-                context.Root = root;
-
-                var branchContext = new ExecutionBranchContext(associate);
-
-                await root.DismantleAsync(context, branchContext);
+                await executionPreparation.BehaviorBase.DismantleAsync(executionPreparation.BehaviorExecutionParameters);
             }
 
             return context;

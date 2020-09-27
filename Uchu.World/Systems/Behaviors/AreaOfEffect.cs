@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -5,15 +6,21 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class AreaOfEffect : BehaviorBase
+    public class AreaOfEffectExecutionParameters : BehaviorExecutionParameters
+    {
+        public uint Length { get; set; }
+        public List<BehaviorExecutionParameters> TargetActions { get; } = 
+            new List<BehaviorExecutionParameters>();
+    }
+    public class AreaOfEffect : BehaviorBase<AreaOfEffectExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AreaOfEffect;
-        
-        public BehaviorBase Action { get; set; }
-        
-        public int MaxTargets { get; set; }
-        
-        public float Radius { get; set; }
+
+        private BehaviorBase Action { get; set; }
+
+        private int MaxTargets { get; set; }
+
+        private float Radius { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -24,35 +31,37 @@ namespace Uchu.World.Systems.Behaviors
             Radius = await GetParameter<float>("radius");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(AreaOfEffectExecutionParameters behaviorExecutionParameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-
-            var length = context.Reader.Read<uint>();
-            
-            var targets = new GameObject[length];
-
-            for (var i = 0; i < length; i++)
+            behaviorExecutionParameters.Length = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            for (var i = 0; i < behaviorExecutionParameters.Length; i++)
             {
-                var id = context.Reader.Read<ulong>();
-
-                if (!context.Associate.Zone.TryGetGameObject((long) id, out var target))
+                var targetId = (long) behaviorExecutionParameters.Context.Reader.Read<ulong>();
+                if (!behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject(targetId, 
+                    out var target))
                 {
-                    Logger.Error($"{context.Associate} sent invalid AreaOfEffect target: {id}");
-
-                    continue;
+                    Logger.Error($"{behaviorExecutionParameters.Context.Associate} sent invalid AreaOfEffect target.");
                 }
-                
-                targets[i] = target;
-            }
-            
-            foreach (var target in targets)
-            {
-                await Action.ExecuteAsync(context, new ExecutionBranchContext(target));
+
+                var behaviorBase = Action.DeserializeStart(behaviorExecutionParameters.Context, 
+                    new ExecutionBranchContext()
+                {
+                    Target = target,
+                    Duration = behaviorExecutionParameters.BranchContext.Duration
+                });
+                behaviorExecutionParameters.TargetActions.Add(behaviorBase);
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        {
+            foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
+            {
+                await Action.ExecuteStart(behaviorExecutionParameters);
+            }
+        }
+
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
 
@@ -91,7 +100,10 @@ namespace Uchu.World.Systems.Behaviors
 
             foreach (var target in targets)
             {
-                await Action.CalculateAsync(context, new ExecutionBranchContext(target));
+                await Action.SerializeStart(context, new ExecutionBranchContext
+                {
+                    Target = target
+                });
             }
         }
     }

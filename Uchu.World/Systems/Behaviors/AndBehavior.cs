@@ -1,12 +1,18 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class AndBehavior : BehaviorBase
+    public class AndBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; set; } 
+            = new List<BehaviorExecutionParameters>();
+    }
+    public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.And;
         
-        public BehaviorBase[] Behaviors { get; set; }
+        private BehaviorBase[] Behaviors { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -20,21 +26,28 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(AndBehaviorExecutionParameters executionParameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-            
-            foreach (var behavior in Behaviors)
+            foreach (var behaviorBase in Behaviors)
             {
-                await behavior.ExecuteAsync(context, branchContext);
+                executionParameters.BehaviorExecutionParameters.Add(
+                    behaviorBase.DeserializeStart(executionParameters.Context, executionParameters.BranchContext));
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteStart(AndBehaviorExecutionParameters executionParameters)
+        {
+            for (var i = 0; i < Behaviors.Length; i++)
+            {
+                await Behaviors[i].ExecuteStart(executionParameters.BehaviorExecutionParameters[i]);
+            }
+        }
+
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             foreach (var behavior in Behaviors)
             {
-                await behavior.CalculateAsync(context, branchContext);
+                await behavior.SerializeStart(context, branchContext);
             }
         }
     }

@@ -3,17 +3,20 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class AttackDelayBehavior : BehaviorBase
+    public class AttackDelayBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public uint Handle { get; set; }
+    }
+    
+    public class AttackDelayBehavior : BehaviorBase<AttackDelayBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AttackDelay;
-        
-        public int Delay { get; set; }
-        
-        public BehaviorBase Action { get; set; }
-        
-        public int Intervals { get; set; }
-        
-        private uint Handle { get; set; }
+
+        private int Delay { get; set; }
+
+        private BehaviorBase Action { get; set; }
+
+        private int Intervals { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -33,29 +36,21 @@ namespace Uchu.World.Systems.Behaviors
             Delay = (int) (delay.Value * 1000);
         }
         
-        public override Task DeserializeStartAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            Handle = context.Reader.Read<uint>();
-            return base.DeserializeStartAsync(context, branchContext);
-        }
-
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await base.ExecuteAsync(context, branchContext);
-
+            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
             for (var i = 0; i < Intervals; i++)
             {
-                RegisterHandle(Handle, context, branchContext);
-                Logger.Debug("AttackDelayBehavior");
+                RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
             }
         }
 
-        public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await Action.ExecuteAsync(context, branchContext);
+            await Action.ExecuteStart(behaviorExecutionParameters);
         }
 
-        public override Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             var syncId = context.Associate.GetComponent<SkillComponent>().ClaimSyncId();
 
@@ -72,7 +67,7 @@ namespace Uchu.World.Systems.Behaviors
 
                 context = context.Copy();
                 
-                await Action.CalculateAsync(context, branchContext);
+                await Action.SerializeStart(context, branchContext);
 
                 context.Sync(syncId);
                 

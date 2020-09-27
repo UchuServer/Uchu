@@ -3,41 +3,37 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class ChargeUpBehavior : BehaviorBase
+    public class ChargeUpBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public uint Handle { get; set; }
+        public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+    }
+    public class ChargeUpBehavior : BehaviorBase<ChargeUpBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.ChargeUp;
-        
-        public BehaviorBase Action { get; set; }
-        
-        public float MaxDuration { get; set; }
-        
-        private uint Handle { get; set; }
-        
+
+        private BehaviorBase Action { get; set; }
+
+        private float MaxDuration { get; set; }
+
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
-
             MaxDuration = await GetParameter<float>("max_duration");
         }
 
-        public override Task DeserializeAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(ChargeUpBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            Handle = context.Reader.Read<uint>();
-            RegisterHandle(Handle, context, branchContext);
-            Logger.Debug("ChargeUpBehavior");
-            return base.DeserializeAsync(context, branchContext);
-        }
-
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await base.ExecuteAsync(context, branchContext);
-        }
-
-        public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await base.ExecuteAsync(context, branchContext);
+            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            behaviorExecutionParameters.ActionExecutionParameters = Action.DeserializeStart(
+                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
             
-            await Action.ExecuteAsync(context, branchContext);
+            RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
+        }
+
+        protected override async Task ExecuteSync(ChargeUpBehaviorExecutionParameters behaviorExecutionParameters)
+        {
+            await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
         }
     }
 }

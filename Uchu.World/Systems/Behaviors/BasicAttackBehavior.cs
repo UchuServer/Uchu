@@ -4,7 +4,16 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class BasicAttackBehavior : BehaviorBase
+    public class BasicAttackBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public byte Unknown { get; set; }
+        public byte Unknown1 { get; set; }
+        public bool Flag2 { get; set; }
+        public uint Damage { get; set; }
+        public byte SuccessState { get; set; }
+        public BehaviorExecutionParameters OnSuccessBehaviorExecutionParameters { get; set; }
+    }
+    public class BasicAttackBehavior : BehaviorBase<BasicAttackBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.BasicAttack;
         
@@ -34,41 +43,49 @@ namespace Uchu.World.Systems.Behaviors
             MaxDamage = await GetParameter<uint>("max damage");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await base.ExecuteAsync(context, branchContext);
+            behaviorExecutionParameters.Context.Reader.Align();
+            behaviorExecutionParameters.Unknown = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
+                ? behaviorExecutionParameters.Unknown
+                : behaviorExecutionParameters.Context.Reader.Read<byte>();
             
-            context.Reader.Align();
-
-            var unknown = context.Reader.Read<byte>();
-            var unknown1 = unknown > 0 ? unknown : context.Reader.Read<byte>();
-            context.Reader.Read<byte>();
-
-            context.Reader.ReadBit();
-            context.Reader.ReadBit();
-            var flag2 = context.Reader.ReadBit();
-
-            if (flag2) context.Reader.Read<uint>();
+            // Unused flags
+            behaviorExecutionParameters.Context.Reader.ReadBit();
+            behaviorExecutionParameters.Context.Reader.ReadBit();
             
-            var damage = context.Reader.Read<uint>();
-            var _ = context.Reader.ReadBit(); // Died?
-            var successSate = context.Reader.Read<byte>();
+            behaviorExecutionParameters.Flag2 = behaviorExecutionParameters.Context.Reader.ReadBit();
+            if (behaviorExecutionParameters.Flag2) behaviorExecutionParameters.Context.Reader.Read<uint>();
 
+            behaviorExecutionParameters.Damage = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            behaviorExecutionParameters.Context.Reader.ReadBit(); // Died?
+            behaviorExecutionParameters.SuccessState = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            
+            if (behaviorExecutionParameters.Unknown1 == 81) behaviorExecutionParameters.Context.Reader.Read<byte>();
+            if (behaviorExecutionParameters.SuccessState == 1)
+                behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(
+                    behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
+        }
+
+        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
+        {
             // Make sure the target is valid and damage them
-            if (branchContext.Target != default && branchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (behaviorExecutionParameters.BranchContext.Target != default && 
+                behaviorExecutionParameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
             {
-                stats.Damage(CalculateDamage(damage), context.Associate);
+                stats.Damage(CalculateDamage(behaviorExecutionParameters.Damage), 
+                    behaviorExecutionParameters.Context.Associate);
             }
             
             // Execute the success state only if some parameters are set
-            if (unknown1 == 81) context.Reader.Read<byte>();
-            if (successSate == 1)
+            if (behaviorExecutionParameters.SuccessState == 1)
             {
-                await OnSuccess.ExecuteAsync(context, branchContext);
+                await OnSuccess.ExecuteStart(behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters);
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
             await branchContext.Target.NetFavorAsync();
@@ -98,7 +115,7 @@ namespace Uchu.World.Systems.Behaviors
             {
                 await PlayFxAsync("onhit", branchContext.Target, 1000);
                 stats.Damage(damage, context.Associate, EffectHandler);
-                await OnSuccess.CalculateAsync(context, branchContext);
+                await OnSuccess.SerializeStart(context, branchContext);
             }
         }
         
