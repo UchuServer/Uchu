@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Systems.Missions;
@@ -10,6 +12,7 @@ namespace Uchu.StandardScripts.NimbusStation
     public class GetFaction : NativeScript
     {
         int MissionID { get; set; } = 474;
+
         public override Task LoadAsync()
         {
             Listen(Zone.OnPlayerLoad, player => {
@@ -58,6 +61,35 @@ namespace Uchu.StandardScripts.NimbusStation
                     if (CelebrationID != -1)
                     {
                         // Play effect
+
+                        var Celebration = (await new CdClientContext().CelebrationParametersTable.Where(t => t.Id == CelebrationID).ToArrayAsync())[0];
+
+                        player.Message(new StartCelebrationEffectMessage
+                        {
+                            Animation = Celebration.Animation,
+                            BackgroundObject = new Lot(Celebration.BackgroundObject.Value),
+                            CameraPathLOT = new Lot(Celebration.CameraPathLOT.Value),
+                            CeleLeadIn = Celebration.CeleLeadIn.Value,
+                            CeleLeadOut = Celebration.CeleLeadOut.Value,
+                            CelebrationID = Celebration.Id.Value,
+                            Duration = Celebration.Duration.Value,
+                            IconID = Celebration.IconID.Value,
+                            MainText = Celebration.MainText,
+                            MixerProgram = Celebration.MixerProgram,
+                            MusicCue = Celebration.MusicCue,
+                            PathNodeName = Celebration.PathNodeName,
+                            SoundGUID = Celebration.SoundGUID,
+                            SubText = Celebration.SubText
+                        }); // Start effect
+
+                        SetTimer(() =>
+                        {
+                            player.Message(new CelebrationCompletedMessage
+                            {
+                                CelebrationToFinishID = CelebrationID,
+                                Animation = Celebration.Animation
+                            }); // End effect
+                        }, 4000);
                     }
 
                     MissionInventoryComponent MissionInventory = player.GetComponent<MissionInventoryComponent>(); 

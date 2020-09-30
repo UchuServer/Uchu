@@ -410,17 +410,17 @@ namespace Uchu.World
 
         private void OnStayCollision(PhysicsComponent other)
         {
-            Logger.Information($"{this} stayed {other.GameObject}");
+            Logger.Debug($"{this} stayed {other.GameObject}");
         }
         
         private void OnEnterCollision(PhysicsComponent other)
         {
-            Logger.Information($"{this} entered {other.GameObject}");
+            Logger.Debug($"{this} entered {other.GameObject}");
         }
         
         private void OnLeaveCollision(PhysicsComponent other)
         {
-            Logger.Information($"{this} left {other.GameObject}");
+            Logger.Debug($"{this} left {other.GameObject}");
         }
 
         private void UpdatePhysics(Vector3 position, Quaternion rotation)
