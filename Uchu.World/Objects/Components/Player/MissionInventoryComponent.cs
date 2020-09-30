@@ -142,14 +142,21 @@ namespace Uchu.World
 
             MissionInstances = new List<MissionInstance>();
 
+            Player player = GameObject as Player;
+
             foreach (var mission in missions)
             {
-                var instance = new MissionInstance(GameObject as Player, mission.MissionId);
+                var instance = new MissionInstance(player, mission.MissionId);
                 
                 MissionInstances.Add(instance);
 
                 await instance.LoadAsync();
             }
+
+            Listen(player.OnRespondToMission, async (MissionID, Reciever, RewardLOT) =>
+            {
+                await RespondToMissionAsync(MissionID, Reciever, RewardLOT);
+            });
         }
         
         public async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)

@@ -73,7 +73,7 @@ namespace Uchu.World.Scripting.Managed
                 ["OnInteract"] = new Func<GameObject, Action<Player>, Delegate>((gameObject, action) => Listen(gameObject.OnInteract, action)),
                 ["OnHealth"] = new Func<GameObject, Action<int, int, GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
+                    if (!gameObject.TryGetComponent<DestroyableComponent>(out var stats)) return null;
 
                     return Listen(stats.OnHealthChanged, (newHealth, delta) =>
                     {
@@ -82,7 +82,7 @@ namespace Uchu.World.Scripting.Managed
                 }),
                 ["OnArmor"] = new Func<GameObject, Action<int, int, GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
+                    if (!gameObject.TryGetComponent<DestroyableComponent>(out var stats)) return null;
 
                     return Listen(stats.OnArmorChanged, (newArmor, delta) =>
                     {
@@ -91,7 +91,7 @@ namespace Uchu.World.Scripting.Managed
                 }),
                 ["OnDeath"] = new Func<GameObject, Action<GameObject>, Delegate>((gameObject, action) =>
                 {
-                    if (!gameObject.TryGetComponent<Stats>(out var stats)) return null;
+                    if (!gameObject.TryGetComponent<DestroyableComponent>(out var stats)) return null;
                     
                     return Listen(stats.OnDeath, () =>
                     {

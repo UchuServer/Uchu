@@ -22,7 +22,7 @@ namespace Uchu.StandardScripts.General
             {
                 Listen(gameObject.OnInteract, player =>
                 {
-                    if (!player.TryGetComponent<Stats>(out var stats)) return;
+                    if (!player.TryGetComponent<DestroyableComponent>(out var stats)) return;
 
                     var toGive = (int) stats.MaxImagination;
 

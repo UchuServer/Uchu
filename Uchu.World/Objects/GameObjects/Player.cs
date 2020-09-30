@@ -22,6 +22,8 @@ namespace Uchu.World
         
         private Player()
         {
+            OnRespondToMission = new Event<int, GameObject, Lot>();
+
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
 
             OnPositionUpdate = new Event<Vector3, Quaternion>();
@@ -47,7 +49,7 @@ namespace Uchu.World
 
                 if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
-                    destructibleComponent.OnResurrect.AddListener(() => { GetComponent<Stats>().Imagination = 6; });
+                    destructibleComponent.OnResurrect.AddListener(() => { GetComponent<DestroyableComponent>().Imagination = 6; });
                 }
                 
                 await using var ctx = new UchuContext();
@@ -79,6 +81,8 @@ namespace Uchu.World
         }
 
         public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+
+        public Event<int, GameObject, Lot> OnRespondToMission { get; }
 
         public Event<Lot> OnLootPickup { get; }
         
@@ -323,7 +327,7 @@ namespace Uchu.World
             
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
             instance.AddComponent<DestructibleComponent>();
-            var stats = instance.GetComponent<Stats>();
+            var stats = instance.GetComponent<DestroyableComponent>();
             var characterComponent = instance.AddComponent<CharacterComponent>();
             var inventory = instance.AddComponent<InventoryComponent>();
             

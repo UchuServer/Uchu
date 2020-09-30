@@ -12,7 +12,7 @@ namespace Uchu.StandardScripts.General
             {
                 Listen(player.OnLootPickup, lot =>
                 {
-                    var stats = player.GetComponent<Stats>();
+                    var stats = player.GetComponent<DestroyableComponent>();
                     
                     switch (lot)
                     {

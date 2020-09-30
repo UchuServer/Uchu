@@ -73,7 +73,7 @@ namespace Uchu.World
             Transform.Position = position;
             Transform.Rotation = rotation;
 
-            if (TryGetComponent<Stats>(out var stats))
+            if (TryGetComponent<DestroyableComponent>(out var stats))
             {
                 stats.Factions = new int[0];
             }
