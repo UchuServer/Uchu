@@ -33,22 +33,19 @@ namespace Uchu.World.Systems.Behaviors
             };
 
             RepositionPlayer = await GetParameter<float>("repositionPlayer");
-
             SpawnFailAction = await GetBehavior("spawn_fail_action");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override Task ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-            
             var quickBuild = GameObject.Instantiate(
-                context.Associate.Zone,
+                parameters.Context.Associate.Zone,
                 Lot,
-                context.Associate.Transform.Position,
-                context.Associate.Transform.Rotation
+                parameters.Context.Associate.Transform.Position,
+                parameters.Context.Associate.Transform.Rotation
             );
 
-            quickBuild.Transform.Position = context.Associate.Transform.Position;
+            quickBuild.Transform.Position = parameters.Context.Associate.Transform.Position;
 
             Object.Start(quickBuild);
             GameObject.Construct(quickBuild);
@@ -56,10 +53,11 @@ namespace Uchu.World.Systems.Behaviors
 
             var _ = Task.Run(async () =>
             {
-                await Task.Delay(branchContext.Duration);
-
+                await Task.Delay(parameters.BranchContext.Duration);
                 Object.Destroy(quickBuild);
             });
+            
+            return Task.CompletedTask;
         }
     }
 }

@@ -5,28 +5,26 @@ namespace Uchu.World.Systems.Behaviors
     public class StunBehavior : BehaviorBase
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Stun;
-        
-        public int StunCaster { get; set; }
+        private int StunCaster { get; set; }
         
         public override async Task BuildAsync()
         {
             StunCaster = await GetParameter<int>("stun_caster");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
-            await base.ExecuteAsync(context, branchContext);
-            
-            if (StunCaster == 1 || branchContext.Target == context.Associate) return;
-
-            context.Reader.ReadBit();
+            if (StunCaster != 1 && branchContext.Target != context.Associate)
+                context.Reader.ReadBit();
+            return base.DeserializeStart(context, branchContext);
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (StunCaster == 1) return;
-
-            context.Writer.WriteBit(false);
+            if (StunCaster != 1)
+                context.Writer.WriteBit(false);
+            return Task.CompletedTask;
         }
     }
 }

@@ -2,20 +2,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class OverTimeBehavior : BehaviorBase
+    public class OverTimeBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
+    }
+    public class OverTimeBehavior : BehaviorBase<OverTimeBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.OverTime;
-        
-        public BehaviorBase Action { get; set; }
+
+        private BehaviorBase Action { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(OverTimeBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteAsync(context, branchContext);
+            parameters.BehaviorExecutionParameters = Action.DeserializeStart(parameters.Context,
+                parameters.BranchContext);
+        }
+
+        protected override async Task ExecuteStart(OverTimeBehaviorExecutionParameters parameters)
+        {
+            await Action.ExecuteStart(parameters.BehaviorExecutionParameters);
         }
     }
 }

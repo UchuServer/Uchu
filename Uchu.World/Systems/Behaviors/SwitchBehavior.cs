@@ -2,91 +2,63 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class SwitchBehavior : BehaviorBase
+    public class SwitchBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public bool State { get; set; }
+        public BehaviorExecutionParameters Parameters { get; set; }
+    }
+    public class SwitchBehavior : BehaviorBase<SwitchBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Switch;
 
-        public BehaviorBase Action { get; set; }
-        
-        public int Imagination { get; set; }
-        
-        public bool IsEnemyFaction { get; set; }
-        
-        public BehaviorBase ActionFalse { get; set; }
-        
-        public BehaviorBase ActionTrue { get; set; }
+        private BehaviorBase Action { get; set; }
+        private int Imagination { get; set; }
+        private bool IsEnemyFaction { get; set; }
+        private BehaviorBase ActionFalse { get; set; }
+        private BehaviorBase ActionTrue { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
             ActionFalse = await GetBehavior("action_false");
             ActionTrue = await GetBehavior("action_true");
-
             Imagination = await GetParameter<int>("imagination");
-
             IsEnemyFaction = (await GetParameter("isEnemyFaction"))?.Value > 0;
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(SwitchBehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-
-            var state = true;
-
+            parameters.State = true;
             if (Imagination > 0 || !IsEnemyFaction)
-            {
-                state = context.Reader.ReadBit();
-            }
+                parameters.State = parameters.Context.Reader.ReadBit();
 
-            if (state)
-            {
-                await ActionTrue.ExecuteAsync(context, branchContext);
-            }
-            else
-            {
-                await ActionFalse.ExecuteAsync(context, branchContext);
-            }
+            parameters.Parameters = parameters.State
+                ? ActionTrue.DeserializeStart(parameters.Context, parameters.BranchContext)
+                : ActionFalse.DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteStart(SwitchBehaviorExecutionParameters parameters)
         {
-            // TODO
+            if (parameters.State)
+                await ActionTrue.ExecuteStart(parameters.Parameters);
+            else
+                await ActionFalse.ExecuteStart(parameters.Parameters);
+        }
 
-            var state = true;
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        {
             
+            var state = true;
             if (Imagination > 0 || !IsEnemyFaction)
             {
                 state = branchContext.Target != default && context.Alive;
-                
                 context.Writer.WriteBit(state);
             }
 
             if (state)
-            {
-                await ActionTrue.CalculateAsync(context, branchContext);
-            }
+                await ActionTrue.SerializeStart(context, branchContext);
             else
-            {
-                await ActionFalse.CalculateAsync(context, branchContext);
-            }
-
-            /*
-            var _ = Task.Run(async () =>
-            {
-                context = context.Copy();
-                
-                await Action.CalculateAsync(context, branchContext);
-
-                context.Sync(syncId);
-            });
-            */
+                await ActionFalse.SerializeStart(context, branchContext);
         }
-
-        /*
-        public override async Task SyncAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await Action.ExecuteAsync(context, branchContext);
-        }
-        */
     }
 }

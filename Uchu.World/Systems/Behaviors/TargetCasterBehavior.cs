@@ -2,22 +2,29 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class TargetCasterBehavior : BehaviorBase
+    public class TargetCasterBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters Parameters { get; set; }
+    }
+    public class TargetCasterBehavior : BehaviorBase<TargetCasterBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.TargetCaster;
-        
-        public BehaviorBase Action { get; set; }
+
+        private BehaviorBase Action { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(TargetCasterBehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
+            parameters.Parameters = Action.DeserializeStart(parameters.Context, parameters.BranchContext);
+        }
 
-            await Action.ExecuteAsync(context, new ExecutionBranchContext(context.Associate));
+        protected override async Task ExecuteStart(TargetCasterBehaviorExecutionParameters parameters)
+        {
+            await Action.ExecuteStart(parameters.Parameters);
         }
     }
 }

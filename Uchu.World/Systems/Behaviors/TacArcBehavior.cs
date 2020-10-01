@@ -6,23 +6,26 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class TacArcBehavior : BehaviorBase
+    public class TacArcBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public bool Hit { get; set; }
+        public bool Blocked { get; set; }
+        public BehaviorBase Behavior { get; set; }
+        public BehaviorExecutionParameters Parameters { get; set; }
+        public List<BehaviorExecutionParameters> ParametersList { get; set; } 
+            = new List<BehaviorExecutionParameters>();
+    }
+    public class TacArcBehavior : BehaviorBase<TacArcBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.TacArc;
-        
-        public bool CheckEnvironment { get; set; }
 
-        public bool Blocked { get; set; }
-        
-        public BehaviorBase ActionBehavior { get; set; }
-        
-        public BehaviorBase BlockedBehavior { get; set; }
-        
-        public BehaviorBase MissBehavior { get; set; }
-        
-        public int MaxTargets { get; set; }
-        
-        public bool UsePickedTarget { get; set; }
+        private bool CheckEnvironment { get; set; }
+        private bool Blocked { get; set; }
+        private BehaviorBase ActionBehavior { get; set; }
+        private BehaviorBase BlockedBehavior { get; set; }
+        private BehaviorBase MissBehavior { get; set; }
+        private int MaxTargets { get; set; }
+        private bool UsePickedTarget { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -37,43 +40,93 @@ namespace Uchu.World.Systems.Behaviors
             UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-
-            if (UsePickedTarget && context.ExplicitTarget != null)
+            if (UsePickedTarget && parameters.Context.ExplicitTarget != null)
             {
-                var branch = new ExecutionBranchContext(context.ExplicitTarget)
-                {
-                    Duration = branchContext.Duration
-                };
-                await ActionBehavior.ExecuteAsync(context, branch);
+                parameters.Behavior = ActionBehavior;
+                parameters.Parameters = parameters.Behavior.DeserializeStart(parameters.Context,
+                    parameters.BranchContext);
+                parameters.Parameters.BranchContext.Target = parameters.Context.ExplicitTarget;
             }
             else
             {
-                var hit = context.Reader.ReadBit();
+                parameters.Hit = parameters.Context.Reader.ReadBit();
                 if (CheckEnvironment)
                 {
-                    var blocked = context.Reader.ReadBit();
-                    if (blocked)
+                    parameters.Blocked = parameters.Context.Reader.ReadBit();
+                    if (parameters.Blocked)
                     {
-                        await BlockedBehavior.ExecuteAsync(context, branchContext);
+                        parameters.Behavior = BlockedBehavior;
+                        parameters.Parameters = parameters.Behavior.DeserializeStart(
+                            parameters.Context, parameters.BranchContext);
                         return;
                     }
                 }
-                
-                if (hit)
+
+                if (parameters.Hit)
                 {
-                    await FindAndHitTargets(context, branchContext);
+                    parameters.Behavior = ActionBehavior;
+                    DeserializeBehaviorForMultipleTargets(parameters);
                 }
                 else
                 {
-                    await MissBehavior.ExecuteAsync(context, branchContext);
+                    parameters.Behavior = MissBehavior;
+                    parameters.Parameters = parameters.Behavior.DeserializeStart(
+                        parameters.Context, parameters.BranchContext);
                 }
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override async Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    await parameters.Behavior.ExecuteStart(parameter);
+                }
+            }
+            else
+            {
+                await parameters.Behavior.ExecuteStart(parameters.Parameters);
+            }
+        }
+
+        /// <summary>
+        /// Finds all targets in the area and optionally hits them if not missed and not blocked
+        /// </summary>
+        /// <param name="parameters">The parameters to find and hit targets for</param>
+        /// <returns>A list of the execution parameters to run</returns>
+        private void DeserializeBehaviorForMultipleTargets(
+            TacArcBehaviorExecutionParameters parameters)
+        {
+            var targetCount = parameters.Context.Reader.Read<uint>();
+            var targets = new List<GameObject>();
+
+            // Find all targets for this hit
+            for (var i = 0; i < targetCount; i++)
+            {
+                var targetId = parameters.Context.Reader.Read<long>();
+                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                {
+                    Logger.Error($"{parameters.Context.Associate} sent invalid TacArc target: {targetId}");
+                    continue;
+                }
+                targets.Add(target);
+            }
+
+            // Hit all targets
+            foreach (var target in targets)
+            {
+                var res = parameters.Behavior.DeserializeStart(parameters.Context,
+                    parameters.BranchContext);
+                res.BranchContext.Target = target;
+                parameters.ParametersList.Add(res);
+            }
+        }
+
+        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) || !context.Alive)
                 return;
@@ -81,7 +134,7 @@ namespace Uchu.World.Systems.Behaviors
             // If there's a single target to hit, hit them and exit
             if (UsePickedTarget && context.ExplicitTarget != null)
             {
-                await ActionBehavior.CalculateAsync(context, branchContext);
+                await ActionBehavior.SerializeStart(context, branchContext);
             }
             else
             {
@@ -97,12 +150,12 @@ namespace Uchu.World.Systems.Behaviors
                     {
                         foreach (var target in targets)
                         {
-                            var branch = new ExecutionBranchContext(target)
+                            var branch = new ExecutionBranchContext()
                             {
                                 Duration = branchContext.Duration,
                                 Target = target
                             };
-                            await BlockedBehavior.CalculateAsync(context, branch);
+                            await BlockedBehavior.SerializeStart(context, branch);
                         }
                         return;
                     }
@@ -124,54 +177,19 @@ namespace Uchu.World.Systems.Behaviors
                     // Hit all targets
                     foreach (var target in targets)
                     {
-                        var branch = new ExecutionBranchContext(target)
+                        var branch = new ExecutionBranchContext()
                         {
                             Duration = branchContext.Duration,
                             Target = target
                         };
-                        await ActionBehavior.CalculateAsync(context, branch);
+                        await ActionBehavior.SerializeStart(context, branch);
                     }
                 }
                 else
                 {
                     // If this isn't a hit, miss (obviously)
-                    await MissBehavior.CalculateAsync(context, branchContext);
+                    await MissBehavior.SerializeStart(context, branchContext);
                 }
-            }
-        }
-        
-        
-        /// <summary>
-        /// Finds all targets in the area and optionally hits them if not missed and not blocked
-        /// </summary>
-        /// <param name="context">The context to find the targets from</param>
-        /// <param name="branchContext">The branch context to execute further behaviors from</param>
-        private async Task FindAndHitTargets(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            var targetCount = context.Reader.Read<uint>();
-            var targets = new List<GameObject>();
-
-            // Find all targets for this hit
-            for (var i = 0; i < targetCount; i++)
-            {
-                var targetId = context.Reader.Read<long>();
-                if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
-                {
-                    Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
-                    continue;
-                }
-                targets.Add(target);
-            }
-
-            // Hit all targets
-            foreach (var target in targets)
-            {
-                var branch = new ExecutionBranchContext(target)
-                {
-                    Duration = branchContext.Duration
-                };
-
-                await ActionBehavior.ExecuteAsync(context, branch);
             }
         }
 
