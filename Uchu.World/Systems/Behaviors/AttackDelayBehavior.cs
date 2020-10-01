@@ -6,6 +6,7 @@ namespace Uchu.World.Systems.Behaviors
     public class AttackDelayBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public uint Handle { get; set; }
+        public BehaviorExecutionParameters Parameters { get; set; }
     }
     
     public class AttackDelayBehavior : BehaviorBase<AttackDelayBehaviorExecutionParameters>
@@ -45,9 +46,15 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
+        {
+            behaviorExecutionParameters.Parameters = Action.DeserializeStart(behaviorExecutionParameters.Context,
+                behaviorExecutionParameters.BranchContext);
+        }
+
         protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await Action.ExecuteStart(behaviorExecutionParameters);
+            await Action.ExecuteStart(behaviorExecutionParameters.Parameters);
         }
 
         public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)

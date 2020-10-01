@@ -35,7 +35,7 @@ namespace Uchu.World.Systems.Behaviors
             
             behaviorExecutionParameters.TargetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
             
-            behaviorExecutionParameters.ActionParameters = behaviorExecutionParameters.Action.DeserializeSync(
+            behaviorExecutionParameters.ActionParameters = behaviorExecutionParameters.Action.DeserializeStart(
                 behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 

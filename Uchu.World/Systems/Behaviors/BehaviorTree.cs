@@ -347,7 +347,7 @@ namespace Uchu.World.Systems.Behaviors
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
                 foreach (var executionPreparation in rootBehaviorList)
-                {
+                d{
                     await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
                 }
             }
@@ -355,9 +355,9 @@ namespace Uchu.World.Systems.Behaviors
 
         public async Task<ExecutionContext> UseAsync(GameObject associate, BitReader reader, GameObject target)
         {
-            var context = new ExecutionContext(associate, reader, default);
-
-            if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list)) return context;
+            var context = Deserialize(associate, reader, target: target);
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list))
+                return context;
 
             foreach (var behaviorExecution in list)
             {
@@ -369,10 +369,9 @@ namespace Uchu.World.Systems.Behaviors
 
         public async Task<ExecutionContext> MountAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()),
-                new BitWriter(new MemoryStream()));
-
-            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
+            var context = Deserialize(associate, new BitReader(new MemoryStream()));
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list))
+                return context;
 
             foreach (var executionPreparation in list)
             {
@@ -384,10 +383,9 @@ namespace Uchu.World.Systems.Behaviors
 
         public async Task<ExecutionContext> DismantleAsync(GameObject associate)
         {
-            var context = new ExecutionContext(associate, new BitReader(new MemoryStream()),
-                new BitWriter(new MemoryStream()));
-
-            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) return context;
+            var context = Deserialize(associate, new BitReader(new MemoryStream()));
+            if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) 
+                return context;
 
             foreach (var executionPreparation in list)
             {
