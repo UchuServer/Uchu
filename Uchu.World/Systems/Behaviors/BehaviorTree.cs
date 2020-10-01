@@ -60,9 +60,14 @@ namespace Uchu.World.Systems.Behaviors
                 _behaviors = new Dictionary<BehaviorTemplateId, Type>();
 
                 // Get all implemented behaviors for the assembly
-                var behaviors = typeof(BehaviorBase).Assembly.GetTypes().Where(
-                    t => t.BaseType == typeof(BehaviorBase) && t != typeof(BehaviorBase)
-                ).ToArray();
+                var behaviors = typeof(BehaviorBase).Assembly.GetTypes().Where(t =>
+                    t.BaseType != null
+                    && t.BaseType.IsGenericType
+                    && t.BaseType.GetGenericTypeDefinition() == typeof(BehaviorBase<>)
+                    || t.BaseType != null
+                    && t.BaseType == typeof(BehaviorBase)
+                    && t != typeof(BehaviorBase)
+                    && !t.IsGenericType).ToArray();
 
                 // Store all found behaviors by their skill ID
                 foreach (var behavior in behaviors)
