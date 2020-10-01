@@ -280,6 +280,40 @@ namespace Uchu.World
             return flagValues;
         }
 
+        public async Task TriggerCelebration(int CelebrationID)
+        {
+            var Celebration = (await new CdClientContext().CelebrationParametersTable.Where(t => t.Id == CelebrationID).ToArrayAsync())[0];
+
+            this.Message(new StartCelebrationEffectMessage
+            {
+                Animation = Celebration.Animation,
+                BackgroundObject = new Lot(Celebration.BackgroundObject.Value),
+                CameraPathLOT = new Lot(Celebration.CameraPathLOT.Value),
+                CeleLeadIn = Celebration.CeleLeadIn.Value,
+                CeleLeadOut = Celebration.CeleLeadOut.Value,
+                CelebrationID = Celebration.Id.Value,
+                Duration = Celebration.Duration.Value,
+                IconID = Celebration.IconID.Value,
+                MainText = Celebration.MainText,
+                MixerProgram = Celebration.MixerProgram,
+                MusicCue = Celebration.MusicCue,
+                PathNodeName = Celebration.PathNodeName,
+                SoundGUID = Celebration.SoundGUID,
+                SubText = Celebration.SubText
+            }); // Start effect
+
+            await Task.Run(async () =>
+             {
+                 await Task.Delay((int)Math.Round((float)Celebration.Duration) * 1000);
+
+                 this.Message(new CelebrationCompletedMessage
+                 {
+                     CelebrationToFinishID = CelebrationID,
+                     Animation = Celebration.Animation
+                 });
+             }); // End effect
+        }
+
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
             //

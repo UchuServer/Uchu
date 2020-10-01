@@ -1035,6 +1035,18 @@ namespace Uchu.World.Handlers.Commands
             return $"Set flag {arguments[1]}";
         }
 
+        [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
+        public string TriggerCelebrat(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1) return "/triggercelebrate <CelebrationID>";
+
+            if (!int.TryParse(arguments[1], out int ID)) return "/triggercelebrate <CelebrationID>";
+
+            player.TriggerCelebration(ID);
+
+            return $"Triggered Celebration {arguments[1]}";
+        }
+
         [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
         public string RemoveFlag(string[] arguments, Player player)
         {
