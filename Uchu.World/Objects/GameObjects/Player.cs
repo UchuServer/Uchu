@@ -302,17 +302,6 @@ namespace Uchu.World
                 SoundGUID = Celebration.SoundGUID,
                 SubText = Celebration.SubText
             }); // Start effect
-
-            await Task.Run(async () =>
-             {
-                 await Task.Delay((int)Math.Round((float)Celebration.Duration) * 1000);
-
-                 this.Message(new CelebrationCompletedMessage
-                 {
-                     CelebrationToFinishID = CelebrationID,
-                     Animation = Celebration.Animation
-                 });
-             }); // End effect
         }
 
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)

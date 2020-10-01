@@ -24,7 +24,7 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
-            // this is how DLU does it I am sorry
+            // This is how DLU handles this GM and it works so who cares.
 
             writer.Write<uint>(0);
             writer.WriteBit(false);
@@ -41,8 +41,6 @@ namespace Uchu.World
             writer.Write<uint>(0);
             writer.Write<uint>(0);
             writer.Write<uint>(0);
-
-            Utilities.SavePacket.Write(writer, "test.bin"); 
         }
     }
 }

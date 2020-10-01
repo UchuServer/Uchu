@@ -55,28 +55,6 @@ namespace Uchu.World
 
         private void OnInteract(Player player)
         {
-
-            /*if(GameObject.TryGetComponent<MissionGiverComponent>(out MissionGiverComponent MissionComponent))
-            {
-                var MissionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
-                (Missions, MissionNPCComponent)[] MissionInventory = MissionComponent.Missions;
-
-                foreach (var (mission, component) in MissionInventory)
-                {
-                    var playerMissions = MissionInventoryComponent.GetMissions();
-                    if (mission.Id == default) continue;
-                    var questId = mission.Id.Value;
-                    var playerMission = playerMissions.FirstOrDefault(p => p.MissionId == questId);
-
-                    MissionState missionState;
-
-                    if (playerMission != default && (component.AcceptsMission ?? false))
-                    {
-                        return;
-                    }
-                }
-            }*/
-
             player.Message(new OpenVendorWindowMessage
             {
                 Associate = GameObject

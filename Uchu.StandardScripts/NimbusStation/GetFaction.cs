@@ -19,7 +19,7 @@ namespace Uchu.StandardScripts.NimbusStation
                 Listen(player.OnRespondToMission, async (missionID, playerObject, rewardItem)  => {
                     if (missionID != MissionID) return;
 
-                    if (rewardItem.Id == -1) return;
+                    if (rewardItem.Id == -1) return; // If no reward chosen 
 
                     int[] Missions = new int[3];
                     int CelebrationID = -1;
@@ -27,35 +27,35 @@ namespace Uchu.StandardScripts.NimbusStation
 
                     if (rewardItem.Id == 6980) // Venture
                     {
-                        Missions[0] = 555;
+                        Missions[0] = 555; // Venture Missions
                         Missions[1] = 556;
                         Missions[2] = 778;
-                        CelebrationID = 14;
-                        FactionFlag = 46;
+                        CelebrationID = 14; // Venture Celebration;
+                        FactionFlag = 46; // Venture Faction Flag
                     }
                     else if (rewardItem.Id == 6979) // Assembly
                     {
-                        Missions[0] = 544;
+                        Missions[0] = 544; // Assembly Missions
                         Missions[1] = 545;
                         Missions[2] = 778;
-                        CelebrationID = 15;
-                        FactionFlag = 47;
+                        CelebrationID = 15; // Assembly Celebration;
+                        FactionFlag = 47; // Assembly Faction Flag
                     } 
                     else if (rewardItem.Id == 6981) // Paradox
                     {
-                        Missions[0] = 577;
+                        Missions[0] = 577; // Paradox Missions
                         Missions[1] = 578;
                         Missions[2] = 778;
-                        CelebrationID = 16;
-                        FactionFlag = 48;
+                        CelebrationID = 16; // Paradox Celebration
+                        FactionFlag = 48; // Paradox Faction Flag
                     }  
                     else if (rewardItem.Id == 6978) // Sentinel
                     {
-                        Missions[0] = 566;
+                        Missions[0] = 566; // Sentinel Missions
                         Missions[1] = 567;
                         Missions[2] = 778;
-                        CelebrationID = 17;
-                        FactionFlag = 49;
+                        CelebrationID = 17; // Sentinel Celebration
+                        FactionFlag = 49; // Sentinel Faction Flag
                     }
 
                     if (CelebrationID != -1)
@@ -63,7 +63,6 @@ namespace Uchu.StandardScripts.NimbusStation
                         // Play effect
                         await player.TriggerCelebration(CelebrationID);
                     }
-
 
                     MissionInventoryComponent MissionInventory = player.GetComponent<MissionInventoryComponent>(); 
 
