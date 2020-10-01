@@ -286,6 +286,7 @@ namespace Uchu.World
 
             this.Message(new StartCelebrationEffectMessage
             {
+                Associate = this,
                 Animation = Celebration.Animation,
                 BackgroundObject = new Lot(Celebration.BackgroundObject.Value),
                 CameraPathLOT = new Lot(Celebration.CameraPathLOT.Value),

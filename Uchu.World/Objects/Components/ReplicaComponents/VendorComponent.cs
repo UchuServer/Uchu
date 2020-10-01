@@ -45,7 +45,7 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.WriteBit(false);
+            writer.WriteBit(true);
 
 
             // This flag is only true if construction is true
@@ -56,7 +56,7 @@ namespace Uchu.World
         private void OnInteract(Player player)
         {
 
-            if(GameObject.TryGetComponent<MissionGiverComponent>(out MissionGiverComponent MissionComponent))
+            /*if(GameObject.TryGetComponent<MissionGiverComponent>(out MissionGiverComponent MissionComponent))
             {
                 var MissionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
                 (Missions, MissionNPCComponent)[] MissionInventory = MissionComponent.Missions;
@@ -75,7 +75,7 @@ namespace Uchu.World
                         return;
                     }
                 }
-            }
+            }*/
 
             player.Message(new OpenVendorWindowMessage
             {
