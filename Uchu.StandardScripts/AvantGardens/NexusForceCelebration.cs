@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Uchu.World.Scripting.Native;
+using Uchu.World;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
@@ -9,8 +10,12 @@ namespace Uchu.StandardScripts.AvantGardens
         public override Task LoadAsync()
         {
             Listen(Zone.OnPlayerLoad, player => {
-                Listen(player.OnRespondToMission, async (missionID, playerObject, rewardItem) =>
+
+                player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent Component);
+                
+                Listen(Component.OnCompleteMission, async (mission) =>
                 {
+                    int missionID = mission.MissionId;
                     if (missionID != MissionID) return;
 
                     await player.TriggerCelebration(22);
