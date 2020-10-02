@@ -45,7 +45,12 @@ namespace Uchu.World
 
         public override void Serialize(BitWriter writer)
         {
-            writer.WriteBit(false);
+            writer.WriteBit(true);
+
+
+            // This flag is only true if construction is true
+            writer.WriteBit(true); // Is Active?
+            writer.WriteBit(false); // Unknown Bit
         }
 
         private void OnInteract(Player player)

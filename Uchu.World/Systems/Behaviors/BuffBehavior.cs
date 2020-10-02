@@ -30,7 +30,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+            if (!context.Associate.TryGetComponent<DestroyableComponent>(out var stats)) return Task.CompletedTask;
 
             stats.MaxHealth += (uint) Life;
             stats.MaxArmor += (uint) Armor;
@@ -41,7 +41,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public override Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
         {
-            if (!context.Associate.TryGetComponent<Stats>(out var stats)) return Task.CompletedTask;
+            if (!context.Associate.TryGetComponent<DestroyableComponent>(out var stats)) return Task.CompletedTask;
 
             stats.MaxHealth -= (uint) Life;
             stats.MaxArmor -= (uint) Armor;

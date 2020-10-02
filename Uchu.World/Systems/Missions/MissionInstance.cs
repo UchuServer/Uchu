@@ -281,7 +281,7 @@ namespace Uchu.World.Systems.Missions
                 await ctx.SaveChangesAsync();
             }
 
-            var stats = Player.GetComponent<Stats>();
+            var stats = Player.GetComponent<DestroyableComponent>();
 
             await stats.BoostBaseHealth((uint) (clientMission.Rewardmaxhealth ?? 0));
             await stats.BoostBaseImagination((uint) (clientMission.Rewardmaximagination ?? 0));

@@ -54,7 +54,7 @@ namespace Uchu.World.Systems.Behaviors
                 throw new Exception("Invalid!");
             }
             
-            if (branchContext.Target == default || !branchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (branchContext.Target == default || !branchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
             {
                 Logger.Error($"Invalid target: {branchContext.Target}");
             }
@@ -102,7 +102,7 @@ namespace Uchu.World.Systems.Behaviors
             {
                 await PlayFxAsync("onhit", branchContext.Target, 1000);
 
-                var stats = branchContext.Target.GetComponent<Stats>();
+                var stats = branchContext.Target.GetComponent<DestroyableComponent>();
 
                 stats.Damage(damage, context.Associate, EffectHandler);
                 

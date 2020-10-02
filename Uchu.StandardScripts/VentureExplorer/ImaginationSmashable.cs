@@ -63,7 +63,7 @@ namespace Uchu.StandardScripts.VentureExplorer
             
             Listen(destructibleComponent.OnSmashed, (killer, owner) =>
             {
-                if (owner.GetComponent<Stats>().MaxImagination == default) return;
+                if (owner.GetComponent<DestroyableComponent>().MaxImagination == default) return;
 
                 //
                 // Spawn imagination drops

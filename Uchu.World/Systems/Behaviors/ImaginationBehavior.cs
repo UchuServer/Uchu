@@ -17,7 +17,7 @@ namespace Uchu.World.Systems.Behaviors
         {
             await base.ExecuteAsync(context, branchContext);
 
-            if (!branchContext.Target.TryGetComponent<Stats>(out var stats)) return;
+            if (!branchContext.Target.TryGetComponent<DestroyableComponent>(out var stats)) return;
             
             stats.Imagination = (uint) ((int) stats.Imagination + Imagination);
         }

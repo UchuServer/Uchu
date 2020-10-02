@@ -288,7 +288,7 @@ namespace Uchu.World
                 
                 HandledSkills[message.SkillHandle] = context;
                 
-                if (GameObject.TryGetComponent<Stats>(out var stats))
+                if (GameObject.TryGetComponent<DestroyableComponent>(out var stats))
                 {
                     var info = tree.BehaviorIds.FirstOrDefault(b => b.SkillId == message.SkillId);
 

@@ -26,7 +26,7 @@ namespace Uchu.StandardScripts.VentureExplorer
 
                     if (missionId != 173 || !isComplete) return;
 
-                    responder.GetComponent<Stats>().Imagination = 6;
+                    responder.GetComponent<DestroyableComponent>().Imagination = 6;
 
                     await responder.GetComponent<MissionInventoryComponent>().CompleteMissionAsync(664);
                 });
