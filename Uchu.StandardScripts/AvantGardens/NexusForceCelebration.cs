@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Uchu.World.Scripting.Native;
 using Uchu.World;
+using Uchu.Core.Resources;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
@@ -11,14 +12,14 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(Zone.OnPlayerLoad, player => {
 
-                player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent Component);
+                if (!player.TryGetComponent(out MissionInventoryComponent Component)) { return; }
                 
                 Listen(Component.OnCompleteMission, async (mission) =>
                 {
                     int missionID = mission.MissionId;
                     if (missionID != MissionID) return;
-
-                    await player.TriggerCelebration(22);
+                    
+                    await player.TriggerCelebration((int) Celebrations.JoinNexusForce);
                 });
             });
 

@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
-using Uchu.World.Systems.Missions;
+using Uchu.Core.Resources;
+using Uchu.Core;
 
 namespace Uchu.StandardScripts.NimbusStation
 {
@@ -27,34 +28,34 @@ namespace Uchu.StandardScripts.NimbusStation
 
                     if (rewardItem.Id == 6980) // Venture
                     {
-                        Missions[0] = 555; // Venture Missions
-                        Missions[1] = 556;
-                        Missions[2] = 778;
-                        CelebrationID = 14; // Venture Celebration;
+                        Missions[0] = 555; //
+                        Missions[1] = (int) Core.Resources.Missions.JoinVentureLeague; // Venture Missions
+                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; //
+                        CelebrationID = (int) Celebrations.JoinVenture; // Venture Celebration;
                         FactionFlag = 46; // Venture Faction Flag
                     }
                     else if (rewardItem.Id == 6979) // Assembly
                     {
-                        Missions[0] = 544; // Assembly Missions
-                        Missions[1] = 545;
-                        Missions[2] = 778;
-                        CelebrationID = 15; // Assembly Celebration;
+                        Missions[0] = 544; // 
+                        Missions[1] = (int) Core.Resources.Missions.JoinAssembly; // Assembly Missions
+                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; //
+                        CelebrationID = (int) Celebrations.JoinAssembly; // Assembly Celebration;
                         FactionFlag = 47; // Assembly Faction Flag
                     } 
                     else if (rewardItem.Id == 6981) // Paradox
                     {
-                        Missions[0] = 577; // Paradox Missions
-                        Missions[1] = 578;
-                        Missions[2] = 778;
-                        CelebrationID = 16; // Paradox Celebration
+                        Missions[0] = 577; // 
+                        Missions[1] = (int) Core.Resources.Missions.JoinTheSentinels; // Paradox Missions
+                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; // 
+                        CelebrationID = (int) Celebrations.JoinParadox; // Paradox Celebration
                         FactionFlag = 48; // Paradox Faction Flag
                     }  
                     else if (rewardItem.Id == 6978) // Sentinel
                     {
                         Missions[0] = 566; // Sentinel Missions
-                        Missions[1] = 567;
-                        Missions[2] = 778;
-                        CelebrationID = 17; // Sentinel Celebration
+                        Missions[1] = (int) Core.Resources.Missions.JoinTheSentinels;
+                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction;
+                        CelebrationID = (int) Celebrations.JoinSentinels; // Sentinel Celebration
                         FactionFlag = 49; // Sentinel Faction Flag
                     }
 
