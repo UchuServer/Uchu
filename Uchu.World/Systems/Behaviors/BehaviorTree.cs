@@ -347,7 +347,7 @@ namespace Uchu.World.Systems.Behaviors
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
                 foreach (var executionPreparation in rootBehaviorList)
-                d{
+                {
                     await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
                 }
             }

@@ -66,9 +66,9 @@ namespace Uchu.World.Systems.Behaviors
             behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
             {
                 // TODO: Check if start is locked
+                behaviorExecutionParameters.Context.Reader = reader;
                 var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
                     behaviorExecutionParameters.BranchContext);
-                syncBehaviorExecutionParameters.Context.Reader = reader;
                 
                 await ExecuteSync(syncBehaviorExecutionParameters);
             });
