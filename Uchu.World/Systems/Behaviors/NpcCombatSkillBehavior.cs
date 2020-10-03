@@ -2,7 +2,11 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class NpcCombatSkillBehavior : BehaviorBase
+    public class NpcCombatSkillBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters Parameters { get; set; }
+    }
+    public class NpcCombatSkillBehavior : BehaviorBase<NpcCombatSkillBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.NPCCombatSkill;
 
@@ -19,13 +23,18 @@ namespace Uchu.World.Systems.Behaviors
             SkillTime = await GetParameter<float>("npc skill time");
         }
 
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            context.MinRange = MinRange;
-            context.MaxRange = MaxRange;
-            context.SkillTime = SkillTime;
+            parameters.NpcContext.MinRange = MinRange;
+            parameters.NpcContext.MaxRange = MaxRange;
+            parameters.NpcContext.SkillTime = SkillTime;
             
-            return base.SerializeStart(context, branchContext);
+            parameters.Parameters = Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+        }
+
+        protected override async Task ExecuteStart(NpcCombatSkillBehaviorExecutionParameters executionParameters)
+        {
+            await Behavior.ExecuteStart(executionParameters.Parameters);
         }
     }
 }

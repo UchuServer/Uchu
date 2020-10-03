@@ -126,36 +126,38 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(TacArcBehaviorExecutionParameters parameters)
         {
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) || !context.Alive)
+            if (!(parameters.NpcContext.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) 
+                || parameters.NpcContext.Alive))
                 return;
 
             // If there's a single target to hit, hit them and exit
-            if (UsePickedTarget && context.ExplicitTarget != null)
+            if (UsePickedTarget && parameters.Context.ExplicitTarget != null)
             {
-                await ActionBehavior.SerializeStart(context, branchContext);
+                parameters.Behavior = ActionBehavior;
+                parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                    parameters.BranchContext);
             }
             else
             {
-                var targets = LocateTargets(context);
+                var targets = LocateTargets(parameters.NpcContext);
                 var any = targets.Any();
-                context.Writer.WriteBit(any);
+                parameters.NpcContext.Writer.WriteBit(any);
                 
                 // If we have to check the environment, check if this is a blocked action and notify all the targets
                 if (CheckEnvironment)
                 {
-                    context.Writer.WriteBit(Blocked);
+                    parameters.NpcContext.Writer.WriteBit(Blocked);
                     if (Blocked)
                     {
+                        parameters.Behavior = BlockedBehavior;
                         foreach (var target in targets)
                         {
-                            var branch = new ExecutionBranchContext()
-                            {
-                                Duration = branchContext.Duration,
-                                Target = target
-                            };
-                            await BlockedBehavior.SerializeStart(context, branch);
+                            var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                                    parameters.BranchContext);
+                            targetParameters.BranchContext.Target = target;
+                            parameters.ParametersList.Add(targetParameters);
                         }
                         return;
                     }
@@ -165,30 +167,30 @@ namespace Uchu.World.Systems.Behaviors
                 if (any)
                 {
                     combatAi.Target = targets.First();
-                    context.FoundTarget = true;
-                    context.Writer.Write((uint) targets.Count);
+                    parameters.NpcContext.FoundTarget = true;
+                    parameters.NpcContext.Writer.Write((uint) targets.Count);
 
                     // Register all targets
                     foreach (var target in targets)
                     {
-                        context.Writer.Write((long)target.Id);
+                        parameters.NpcContext.Writer.Write((long)target.Id);
                     }
                     
                     // Hit all targets
+                    parameters.Behavior = ActionBehavior;
                     foreach (var target in targets)
                     {
-                        var branch = new ExecutionBranchContext()
-                        {
-                            Duration = branchContext.Duration,
-                            Target = target
-                        };
-                        await ActionBehavior.SerializeStart(context, branch);
+                        var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                                parameters.BranchContext);
+                        targetParameters.BranchContext.Target = target;
+                        parameters.ParametersList.Add(targetParameters);
                     }
                 }
                 else
                 {
-                    // If this isn't a hit, miss (obviously)
-                    await MissBehavior.SerializeStart(context, branchContext);
+                    parameters.Behavior = MissBehavior;
+                    parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                        parameters.BranchContext);
                 }
             }
         }

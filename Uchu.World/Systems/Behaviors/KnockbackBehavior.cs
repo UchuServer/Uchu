@@ -23,26 +23,32 @@ namespace Uchu.World.Systems.Behaviors
             return base.DeserializeStart(context, branchContext);
         }
 
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             context.Writer.WriteBit(false);
             if (branchContext.Target is Player target)
             {
                 var targetDirection = context.Associate.Transform.Position - target.Transform.Position;
                 var rotation = targetDirection.QuaternionLookRotation(Vector3.UnitY);
-                var forward = rotation.VectorMultiply(Vector3.UnitX);
+                
+                // Forward, currently unused
+                _ = rotation.VectorMultiply(Vector3.UnitX);
 
-                target.Message(new KnockbackMessage
+                // Handled in the background
+                Task.Run(() =>
                 {
-                    Associate = target,
-                    Caster = context.Associate,
-                    Originator = context.Associate,
-                    KnockbackTime = 0,
-                    Vector = Vector3.UnitY * Strength
+                    target.Message(new KnockbackMessage
+                    {
+                        Associate = target,
+                        Caster = context.Associate,
+                        Originator = context.Associate,
+                        KnockbackTime = 0,
+                        Vector = Vector3.UnitY * Strength
+                    });
                 });
             }
 
-            return Task.CompletedTask;
+            return base.SerializeStart(context, branchContext);
         }
     }
 }

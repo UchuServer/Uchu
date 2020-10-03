@@ -30,16 +30,14 @@ namespace Uchu.World
             await target.NetFavorAsync();
 
             var distance = Vector3.Distance(Destination, target.Transform.Position);
-            
-            if (distance > RadiusCheck) return;
+            if (distance > RadiusCheck)
+                return;
             
             var tree = await BehaviorTree.FromLotAsync(Lot);
-
             await using var stream = new MemoryStream(data);
-
             var reader = new BitReader(stream);
-            
-            await tree.UseAsync(Owner, reader, target);
+
+            tree.Deserialize(Owner, reader, target: target);
             
             Zone.BroadcastMessage(new DoClientProjectileImpact
             {
@@ -49,6 +47,8 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
+            
+            await tree.UseAsync();
         }
 
         public async Task CalculateImpactAsync(GameObject target)
@@ -58,16 +58,14 @@ namespace Uchu.World
             await target.NetFavorAsync();
 
             var distance = Vector3.Distance(Destination, target.Transform.Position);
-            
-            if (distance > RadiusCheck) return;
+            if (distance > RadiusCheck)
+                return;
             
             var tree = await BehaviorTree.FromLotAsync(Lot);
-
             await using var stream = new MemoryStream();
-
             var writer = new BitWriter(stream);
 
-            await tree.CalculateAsync(
+            tree.Serialize(
                 Owner,
                 writer,
                 tree.SkillRoots.First().Key,
@@ -84,6 +82,8 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
+
+            await tree.ExecuteAsync();
         }
     }
 }

@@ -69,42 +69,34 @@ namespace Uchu.World.Systems.Behaviors
             return Task.CompletedTask;
         }
         
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            context.Writer.Write(branchContext.Target);
+            parameters.NpcContext.Writer.Write(parameters.BranchContext.Target);
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
             
             for (var i = 0; i < count; i++)
             {
-                SerializeProjectile(context, branchContext.Target);
+                SerializeProjectile(parameters);
             }
-            
-            return Task.CompletedTask;
         }
-        
+
         /// <summary>
         /// Creates a projectile shot at a target
         /// </summary>
-        /// <param name="context">The context to create a projectile for</param>
-        /// <param name="target">The target to direct the projectile at</param>
-        private void SerializeProjectile(ExecutionContext context, GameObject target)
+        /// <param name="parameters">Parameters to write extra data to</param>
+        private void SerializeProjectile(ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            context.Associate.Transform.LookAt(target.Transform.Position);
-            
-            if (target is Player player)
-            {
-                player.SendChatMessage("You are a projectile target!");
-            }
+            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
 
             var projectileId = ObjectId.Standalone;
-            context.Writer.Write(projectileId);
+            parameters.NpcContext.Writer.Write(projectileId);
             
-            var projectile = Object.Instantiate<Projectile>(context.Associate.Zone);
-            projectile.Owner = context.Associate;
+            var projectile = Object.Instantiate<Projectile>(parameters.NpcContext.Associate.Zone);
+            projectile.Owner = parameters.NpcContext.Associate;
             projectile.ClientObjectId = projectileId;
-            projectile.Target = target;
+            projectile.Target = parameters.BranchContext.Target;
             projectile.Lot = ProjectileLot;
-            projectile.Destination = target.Transform.Position;
+            projectile.Destination = parameters.BranchContext.Target.Transform.Position;
             projectile.RadiusCheck = TrackRadius;
             projectile.MaxDistance = MaxDistance;
 
@@ -112,10 +104,12 @@ namespace Uchu.World.Systems.Behaviors
 
             Task.Run(async () =>
             {
-                var distance = Vector3.Distance(context.Associate.Transform.Position, target.Transform.Position);
+                var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
+                    parameters.BranchContext.Target.Transform.Position);
                 var time = (int) (distance / (double) ProjectileSpeed) * 1000;
+                
                 await Task.Delay(time);
-                await projectile.CalculateImpactAsync(target);
+                await projectile.CalculateImpactAsync(parameters.BranchContext.Target);
             });
         }
     }

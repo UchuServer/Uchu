@@ -21,7 +21,8 @@ namespace Uchu.World.Systems.Behaviors
             InteruptCharge = await GetParameter<int>("interupt_charge");
         }
 
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
             if (branchContext.Target != context.Associate)
                 context.Reader.ReadBit();
@@ -32,7 +33,8 @@ namespace Uchu.World.Systems.Behaviors
             return base.DeserializeStart(context, branchContext);
         }
 
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
             if (branchContext.Target != context.Associate)
                 context.Writer.WriteBit(false);
@@ -42,7 +44,7 @@ namespace Uchu.World.Systems.Behaviors
 
             context.Writer.WriteBit(false);
 
-            return Task.CompletedTask;
+            return base.SerializeStart(context, branchContext);
         }
     }
 }

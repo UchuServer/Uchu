@@ -161,17 +161,18 @@ namespace Uchu.World
 
         private async Task MountSkill(Lot item)
         {
-            if (item == default) return;
+            if (item == default)
+                return;
             
             var infos = await BehaviorTree.GetSkillsForObject(item);
-            
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
-
-            if (onEquip == default) return;
+            
+            if (onEquip == default)
+                return;
             
             var tree = await BehaviorTree.FromLotAsync(item);
-
-            await tree.MountAsync(GameObject);
+            tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
+            await tree.MountAsync();
 
             if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
@@ -181,33 +182,31 @@ namespace Uchu.World
 
         private async Task DismountSkill(Lot item)
         {
-            if (item == default) return;
+            if (item == default)
+                return;
             
             var infos = await BehaviorTree.GetSkillsForObject(item);
-
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
-            if (onEquip == default) return;
+            if (onEquip == default)
+                return;
             
             var tree = await BehaviorTree.FromLotAsync(item);
-            
-            await tree.DismantleAsync(GameObject);
+            tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
+            await tree.DismantleAsync();
         }
 
-        public async Task<float> CalculateSkillAsync(int skillId, bool prepare = false)
+        public async Task<float> CalculateSkillAsync(int skillId)
         {
             var tree = await BehaviorTree.FromSkillAsync(skillId);
 
-            if (prepare) return 0;
-            
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
-
             var syncId = ClaimSyncId();
 
-            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position);
-
-            if (!context.FoundTarget) return 0;
+            var context = tree.Serialize(GameObject, writer, skillId, syncId, Transform.Position);
+            if (!context.FoundTarget)
+                return 0;
 
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
@@ -220,6 +219,7 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
+            await tree.ExecuteAsync();
             return context.SkillTime;
         }
 
@@ -231,8 +231,7 @@ namespace Uchu.World
             using var writer = new BitWriter(stream, leaveOpen: true);
 
             var syncId = ClaimSyncId();
-
-            var context = await tree.CalculateAsync(GameObject, writer, skillId, syncId, Transform.Position, target);
+            var context = tree.Serialize(GameObject, writer, skillId, syncId, Transform.Position, target);
 
             Zone.BroadcastMessage(new EchoStartSkillMessage
             {
@@ -245,6 +244,7 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
+            await tree.ExecuteAsync();
             return context.SkillTime;
         }
 
@@ -345,7 +345,7 @@ namespace Uchu.World
             }, GameObject as Player);
         }
 
-        public void SetSkill(BehaviorSlot slot, uint skillId)
+        private void SetSkill(BehaviorSlot slot, uint skillId)
         {
             if (!(GameObject is Player player)) return;
 
@@ -391,11 +391,8 @@ namespace Uchu.World
                     SkillId = currentSkill
                 });
             }
-
-            //
-            // Get default skill
-            //
             
+            // Get default skill
             var skillId = slot switch
             {
                 BehaviorSlot.Invalid => 0u,

@@ -37,28 +37,27 @@ namespace Uchu.World.Systems.Behaviors
                 : ActionFalse.DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
+        protected override void SerializeStart(SwitchBehaviorExecutionParameters parameters)
+        {
+            
+            parameters.State = true;
+            if (Imagination > 0 || !IsEnemyFaction)
+            {
+                parameters.State = parameters.BranchContext.Target != default && parameters.NpcContext.Alive;
+                parameters.NpcContext.Writer.WriteBit(parameters.State);
+            }
+
+            parameters.Parameters = parameters.State
+                ? ActionTrue.SerializeStart(parameters.NpcContext, parameters.BranchContext)
+                : ActionFalse.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+        }
+        
         protected override async Task ExecuteStart(SwitchBehaviorExecutionParameters parameters)
         {
             if (parameters.State)
                 await ActionTrue.ExecuteStart(parameters.Parameters);
             else
                 await ActionFalse.ExecuteStart(parameters.Parameters);
-        }
-
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            
-            var state = true;
-            if (Imagination > 0 || !IsEnemyFaction)
-            {
-                state = branchContext.Target != default && context.Alive;
-                context.Writer.WriteBit(state);
-            }
-
-            if (state)
-                await ActionTrue.SerializeStart(context, branchContext);
-            else
-                await ActionFalse.SerializeStart(context, branchContext);
         }
     }
 }

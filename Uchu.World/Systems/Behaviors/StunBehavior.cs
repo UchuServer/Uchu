@@ -20,11 +20,11 @@ namespace Uchu.World.Systems.Behaviors
             return base.DeserializeStart(context, branchContext);
         }
 
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
         {
             if (StunCaster != 1)
                 context.Writer.WriteBit(false);
-            return Task.CompletedTask;
+            return base.SerializeStart(context, branchContext);
         }
     }
 }
