@@ -24,10 +24,10 @@ namespace Uchu.World.Systems.Behaviors
             ActionDuration = (int) duration.Value;
         }
 
-        protected override void DeserializeStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(DurationBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.ActionExecutionParameters = Action.DeserializeStart(
-                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
+            parameters.ActionExecutionParameters = Action.DeserializeStart(parameters.Context, 
+                parameters.BranchContext);
         }
 
         protected override async Task ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
@@ -36,10 +36,11 @@ namespace Uchu.World.Systems.Behaviors
             await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(DurationBehaviorExecutionParameters parameters)
         {
-            branchContext.Duration = ActionDuration * 1000;
-            await Action.SerializeStart(context, branchContext);
+            parameters.BranchContext.Duration = ActionDuration * 1000;
+            parameters.ActionExecutionParameters = Action.SerializeStart(parameters.NpcContext, 
+                parameters.BranchContext);
         }
     }
 }

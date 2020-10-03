@@ -5,7 +5,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class ChainBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public uint ChainIndex { get; set; }
+        public uint ChainIndex { get; set; } = 1;
         public BehaviorExecutionParameters ChainIndexExecutionParameters { get; set; }
     }
     public class ChainBehavior : BehaviorBase<ChainBehaviorExecutionParameters>
@@ -36,24 +36,24 @@ namespace Uchu.World.Systems.Behaviors
             Delay = (int) delay.Value;
         }
 
-        protected override void DeserializeStart(ChainBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(ChainBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.ChainIndex = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            behaviorExecutionParameters.ChainIndexExecutionParameters = Behaviors[behaviorExecutionParameters.ChainIndex - 1]
-                .DeserializeStart(behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
+            parameters.ChainIndex = parameters.Context.Reader.Read<uint>();
+            parameters.ChainIndexExecutionParameters = Behaviors[parameters.ChainIndex - 1]
+                .DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(ChainBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override async Task ExecuteStart(ChainBehaviorExecutionParameters parameters)
         {
-            await Behaviors[behaviorExecutionParameters.ChainIndex - 1]
-                .ExecuteStart(behaviorExecutionParameters.ChainIndexExecutionParameters);
+            await Behaviors[parameters.ChainIndex - 1]
+                .ExecuteStart(parameters.ChainIndexExecutionParameters);
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(ChainBehaviorExecutionParameters parameters)
         {
-            // TODO
-            context.Writer.Write(1);
-            await Behaviors[1 - 1].SerializeStart(context, branchContext);
+            parameters.NpcContext.Writer.Write(parameters.ChainIndex);
+            parameters.ChainIndexExecutionParameters = Behaviors[1 - 1].SerializeStart(parameters.NpcContext,
+                parameters.BranchContext);
         }
     }
 }

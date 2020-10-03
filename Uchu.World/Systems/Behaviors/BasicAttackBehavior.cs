@@ -85,37 +85,44 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
         {
-            context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
-            await branchContext.Target.NetFavorAsync();
-            context.Writer.Align();
+            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+            parameters.NpcContext.Writer.Align();
             
             // Three unknowns
-            context.Writer.Write<byte>(0);
-            context.Writer.Write<byte>(0);
-            context.Writer.Write<byte>(0);
+            parameters.NpcContext.Writer.Write<byte>(0);
+            parameters.NpcContext.Writer.Write<byte>(0);
+            parameters.NpcContext.Writer.Write<byte>(0);
             
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(true);
+            parameters.NpcContext.Writer.WriteBit(false);
+            parameters.NpcContext.Writer.WriteBit(false);
+            parameters.NpcContext.Writer.WriteBit(true);
             
             // Unknown 2 == true so this should be set
-            context.Writer.Write<uint>(0);
+            parameters.NpcContext.Writer.Write<uint>(0);
 
             var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
-            context.Writer.Write(damage);
+            parameters.NpcContext.Writer.Write(damage);
             
-            context.Writer.WriteBit(!context.Alive);
+            parameters.NpcContext.Writer.WriteBit(!parameters.NpcContext.Alive);
             
-            var success = context.IsValidTarget(branchContext.Target) && context.Alive;
-            context.Writer.Write<uint>((uint)(success ? 1 : 0));
+            var success = parameters.NpcContext.IsValidTarget(parameters.BranchContext.Target) && 
+                          parameters.NpcContext.Alive;
+            parameters.NpcContext.Writer.Write<uint>((uint)(success ? 1 : 0));
 
-            if (success && branchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (success && parameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
             {
-                await PlayFxAsync("onhit", branchContext.Target, 1000);
-                stats.Damage(damage, context.Associate, EffectHandler);
-                await OnSuccess.SerializeStart(context, branchContext);
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
+                    parameters.BranchContext);
+
+                // Handle FX and stats in the background
+                Task.Run(async () =>
+                {
+                    await parameters.BranchContext.Target.NetFavorAsync();
+                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
+                    stats.Damage(damage, parameters.NpcContext.Associate, EffectHandler);
+                });
             }
         }
         

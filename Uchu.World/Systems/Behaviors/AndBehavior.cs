@@ -19,35 +19,35 @@ namespace Uchu.World.Systems.Behaviors
             var actions = GetParameters();
 
             Behaviors = new BehaviorBase[actions.Length];
-
             for (var i = 0; i < actions.Length; i++)
             {
                 Behaviors[i] = await GetBehavior($"behavior {i + 1}");
             }
         }
 
-        protected override void DeserializeStart(AndBehaviorExecutionParameters executionParameters)
+        protected override void DeserializeStart(AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
             {
-                executionParameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.DeserializeStart(executionParameters.Context, executionParameters.BranchContext));
+                parameters.BehaviorExecutionParameters.Add(
+                    behaviorBase.DeserializeStart(parameters.Context, parameters.BranchContext));
             }
         }
 
-        protected override async Task ExecuteStart(AndBehaviorExecutionParameters executionParameters)
+        protected override async Task ExecuteStart(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                await Behaviors[i].ExecuteStart(executionParameters.BehaviorExecutionParameters[i]);
+                await Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
             }
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
         {
-            foreach (var behavior in Behaviors)
+            foreach (var behaviorBase in Behaviors)
             {
-                await behavior.SerializeStart(context, branchContext);
+                parameters.BehaviorExecutionParameters.Add(
+                    behaviorBase.SerializeStart(parameters.NpcContext, parameters.BranchContext));
             }
         }
     }

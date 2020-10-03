@@ -49,6 +49,7 @@ namespace Uchu.World.Systems.Behaviors
                     Target = target,
                     Duration = behaviorExecutionParameters.BranchContext.Duration
                 });
+                
                 behaviorExecutionParameters.TargetActions.Add(behaviorBase);
             }
         }
@@ -61,49 +62,42 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        public override async Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)
         {
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
+            if (!parameters.Context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent))
+                return;
 
             var validTarget = baseCombatAiComponent.SeekValidTargets();
-
-            var sourcePosition = context.CalculatingPosition;
+            var sourcePosition = parameters.NpcContext.CalculatingPosition;
 
             var targets = validTarget.Where(target =>
             {
                 var transform = target.Transform;
-
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
-
                 var valid = distance <= Radius;
-
                 return valid;
             }).ToArray();
 
-            foreach (var target in targets)
-            {
-                if (target is Player player)
-                {
-                    player.SendChatMessage("You are a AOE target!");
-                }
-            }
-            
             if (targets.Length > 0)
-                context.FoundTarget = true;
+                parameters.NpcContext.FoundTarget = true;
 
-            context.Writer.Write((uint) targets.Length);
-
+            // Write all target ids
+            parameters.NpcContext.Writer.Write((uint) targets.Length);
             foreach (var target in targets)
             {
-                context.Writer.Write(target);
+                parameters.NpcContext.Writer.Write(target);
             }
 
             foreach (var target in targets)
             {
-                await Action.SerializeStart(context, new ExecutionBranchContext
-                {
-                    Target = target
-                });
+                var behaviorBase = Action.SerializeStart(parameters.NpcContext, 
+                    new ExecutionBranchContext()
+                    {
+                        Target = target,
+                        Duration = parameters.BranchContext.Duration
+                    });
+                
+                parameters.TargetActions.Add(behaviorBase);
             }
         }
     }

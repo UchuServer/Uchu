@@ -14,15 +14,12 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorTemplateId Id => BehaviorTemplateId.AttackDelay;
 
         private int Delay { get; set; }
-
         private BehaviorBase Action { get; set; }
-
         private int Intervals { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
-
             Intervals = await GetParameter<int>("num_intervals");
 
             if (Intervals == 0)
@@ -31,60 +28,48 @@ namespace Uchu.World.Systems.Behaviors
             }
             
             var delay = await GetParameter("delay");
-            
             if (delay.Value == null) return;
 
             Delay = (int) (delay.Value * 1000);
         }
         
-        protected override void DeserializeStart(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(AttackDelayBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            parameters.Handle = parameters.Context.Reader.Read<uint>();
             for (var i = 0; i < Intervals; i++)
-            {
-                RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
-            }
+                RegisterHandle(parameters.Handle, parameters);
         }
 
-        protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Parameters = Action.DeserializeStart(behaviorExecutionParameters.Context,
-                behaviorExecutionParameters.BranchContext);
+            parameters.Parameters = Action.DeserializeStart(parameters.Context,
+                parameters.BranchContext);
         }
 
-        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void SerializeStart(AttackDelayBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(behaviorExecutionParameters.Parameters);
+            var syncId = parameters.NpcContext.Associate.GetComponent<SkillComponent>().ClaimSyncId();
+            parameters.NpcContext.Writer.Write(syncId);
+
+            for (var i = 0; i < Intervals; i++)
+                RegisterHandle(syncId, parameters);
         }
 
-        public override Task SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            var syncId = context.Associate.GetComponent<SkillComponent>().ClaimSyncId();
+            parameters.Parameters = Action.SerializeStart(parameters.NpcContext, parameters.BranchContext);
 
-            context.Writer.Write(syncId);
-
-            if (branchContext.Target is Player player)
-            {
-                player.SendChatMessage($"Delay. [{context.SkillSyncId}] [{syncId}]");
-            }
-
+            // Handle sync wait in the background
             Task.Run(async () =>
             {
                 await Task.Delay(Delay);
-
-                context = context.Copy();
-                
-                await Action.SerializeStart(context, branchContext);
-
-                context.Sync(syncId);
-                
-                if (branchContext.Target is Player sPlayer)
-                {
-                    sPlayer.SendChatMessage($"Sync. [{context.SkillSyncId}] [{syncId}]");
-                }
+                parameters.NpcContext.Sync(parameters.Handle);
             });
-            
-            return Task.CompletedTask;
+        }
+
+        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
+        {
+            await Action.ExecuteStart(parameters.Parameters);
         }
     }
 }
