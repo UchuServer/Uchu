@@ -40,5 +40,10 @@ namespace Uchu.World.Systems.Behaviors
         {
             Behavior.SerializeSync(parameters.Parameters);
         }
+
+        protected override async Task ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        {
+            await Behavior.ExecuteSync(parameters.Parameters);
+        }
     }
 }

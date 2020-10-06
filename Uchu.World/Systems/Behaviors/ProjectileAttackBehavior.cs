@@ -7,7 +7,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class ProjectileAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool OverrideExecute { get; set; } = false;
+        public bool CalculateImpact { get; set; } = false;
         public GameObject Target { get; set; }
         public List<Projectile> Projectiles { get; } = new List<Projectile>();
     }
@@ -63,40 +63,34 @@ namespace Uchu.World.Systems.Behaviors
             return projectile;
         }
         
-        protected override Task ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
+        protected override async Task ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            if (!parameters.OverrideExecute)
+            foreach (var projectile in parameters.Projectiles)
             {
-                foreach (var projectile in parameters.Projectiles)
-                {
-                    Object.Start(projectile);
-                }
+                Object.Start(projectile);
+                if (!parameters.CalculateImpact)
+                    continue;
+                
+                // Only server side projectiles have to be computed    
+                var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
+                    parameters.BranchContext.Target.Transform.Position);
+                var time = (int) (distance / (double) ProjectileSpeed) * 1000;
+            
+                await Task.Delay(time);
+                await projectile.CalculateImpactAsync(parameters.BranchContext.Target);
             }
-            return Task.CompletedTask;
         }
         
         protected override void SerializeStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.Writer.Write(parameters.BranchContext.Target);
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
-            parameters.OverrideExecute = true;
+            parameters.CalculateImpact = true;
 
             for (var i = 0; i < count; i++)
             {
                 var projectile = SerializeProjectile(parameters);
                 parameters.Projectiles.Add(projectile);
-                
-                RegisterAction(async internalParameters =>
-                {
-                    Object.Start(projectile);
-                    
-                    var distance = Vector3.Distance(internalParameters.Context.Associate.Transform.Position, 
-                        internalParameters.BranchContext.Target.Transform.Position);
-                    var time = (int) (distance / (double) ProjectileSpeed) * 1000;
-            
-                    await Task.Delay(time);
-                    await projectile.CalculateImpactAsync(internalParameters.BranchContext.Target);
-                }, parameters);
             }
         }
 

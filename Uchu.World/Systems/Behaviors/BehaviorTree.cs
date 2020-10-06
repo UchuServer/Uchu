@@ -320,6 +320,9 @@ namespace Uchu.World.Systems.Behaviors
             context.Root = root;
             var branchContext = new ExecutionBranchContext { Target = target };
             var parameters = context.Root.SerializeStart(context, branchContext);
+            
+            // Copy context to reset the writer
+            context.Root.SerializeSync(parameters);
 
             // Setup the behavior for execution
             RootBehaviors[SkillCastType.Default] = new List<BehaviorExecution>()
@@ -330,9 +333,6 @@ namespace Uchu.World.Systems.Behaviors
                     BehaviorExecutionParameters = parameters
                 }
             };
-
-            // Make sure all sync actions are stored
-            context.Root.SerializeSync(parameters);
 
             return context;
         }
@@ -389,9 +389,10 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
                     
-                    // If serialized, execute all the possible actions
+                    // Only server side behaviors will have to manually execute sync
                     if (Serialized)
-                        executionPreparation.BehaviorExecutionParameters.Context.ExecuteActions();
+                        await executionPreparation.BehaviorBase.ExecuteSync(
+                            executionPreparation.BehaviorExecutionParameters);
                 }
             }
         }

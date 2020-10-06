@@ -7,9 +7,6 @@ namespace Uchu.World.Systems.Behaviors
     {
         public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; } 
             = new List<BehaviorExecutionParameters>();
-        
-        public List<BehaviorExecutionParameters> SyncBehaviorExecutionParameters { get; } 
-            = new List<BehaviorExecutionParameters>();
     }
     public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
     {
@@ -59,6 +56,14 @@ namespace Uchu.World.Systems.Behaviors
             for (var i = 0; i < Behaviors.Length; i++)
             {
                 Behaviors[i].SerializeSync(parameters.BehaviorExecutionParameters[i]);
+            }
+        }
+
+        protected override async Task ExecuteSync(AndBehaviorExecutionParameters parameters)
+        {
+            for (var i = 0; i < Behaviors.Length; i++)
+            {
+                await Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
             }
         }
     }

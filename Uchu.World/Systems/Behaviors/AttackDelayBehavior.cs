@@ -5,6 +5,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AttackDelayBehaviorExecutionParameters : BehaviorExecutionParameters
     {
+        public bool WaitAndSync { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
     }
@@ -55,21 +56,20 @@ namespace Uchu.World.Systems.Behaviors
         protected override void SerializeSync(AttackDelayBehaviorExecutionParameters parameters)
         {
             // Copy the context to clear the writer
-            var actionParameters = Action.SerializeStart(parameters.NpcContext.Copy(),
+            parameters.Parameters = Action.SerializeStart(parameters.NpcContext.Copy(),
                 parameters.BranchContext);
-
-            // Handle sync wait in the background
-            RegisterAction(async internalParameters =>
-            {
-                parameters.NpcContext.Sync(parameters.Handle);
-                await Task.Delay(Delay);
-                await Action.ExecuteStart(internalParameters);
-            }, parameters, actionParameters);
+            parameters.WaitAndSync = true;
         }
 
         protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
         {
+            if (parameters.WaitAndSync)
+                await Task.Delay(Delay);
+
             await Action.ExecuteStart(parameters.Parameters);
+            
+            if (parameters.WaitAndSync)
+                parameters.NpcContext.Sync(parameters.Handle);
         }
     }
 }

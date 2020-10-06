@@ -63,7 +63,7 @@ namespace Uchu.World.Systems.Behaviors
             return behaviorExecutionParameters;
         }
         
-        protected virtual void SerializeSync(T behaviorExecutionParameters)
+        protected virtual void SerializeSync(T parameters)
         {
         }
         public override void SerializeSync(BehaviorExecutionParameters parameters)
@@ -78,24 +78,6 @@ namespace Uchu.World.Systems.Behaviors
         public override async Task DismantleAsync(BehaviorExecutionParameters executionParameters)
         {
             await DismantleAsync((T) executionParameters);
-        }
-
-        protected void RegisterHandle(uint handle, BehaviorExecutionParameters behaviorExecutionParameters)
-        {
-            behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
-            {
-                // TODO: Check if start is locked
-                behaviorExecutionParameters.Context.Reader = reader;
-                var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
-                    behaviorExecutionParameters.BranchContext);
-                await ExecuteSync(syncBehaviorExecutionParameters);
-            });
-        }
-
-        protected void RegisterAction(Action<BehaviorExecutionParameters> action,
-            BehaviorExecutionParameters sourceParameters, BehaviorExecutionParameters executionParameters = default)
-        {
-            sourceParameters.Context.RegisterAction(action, executionParameters ?? sourceParameters);
         }
 
         public async Task PlayFxAsync(string type, GameObject target, int time)
@@ -239,7 +221,7 @@ namespace Uchu.World.Systems.Behaviors
             return new BehaviorExecutionParameters(context, branchContext);
         }
 
-        public virtual void SerializeSync(BehaviorExecutionParameters executionParameters)
+        public virtual void SerializeSync(BehaviorExecutionParameters parameters)
         {
         }
         
@@ -253,6 +235,18 @@ namespace Uchu.World.Systems.Behaviors
             ExecutionBranchContext branchContext)
         {
             return new BehaviorExecutionParameters(context, branchContext);
+        }
+        
+        protected void RegisterHandle(uint handle, BehaviorExecutionParameters behaviorExecutionParameters)
+        {
+            behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
+            {
+                // TODO: Check if start is locked
+                behaviorExecutionParameters.Context.Reader = reader;
+                var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
+                    behaviorExecutionParameters.BranchContext);
+                await ExecuteSync(syncBehaviorExecutionParameters);
+            });
         }
     }
 }

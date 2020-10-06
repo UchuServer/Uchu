@@ -93,6 +93,21 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        protected override async Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    await parameters.Behavior.ExecuteSync(parameter);
+                }
+            }
+            else
+            {
+                await parameters.Behavior.ExecuteSync(parameters.Parameters);
+            }
+        }
+
         protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
