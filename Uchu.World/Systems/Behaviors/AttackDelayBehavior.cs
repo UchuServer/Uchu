@@ -48,23 +48,23 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void SerializeStart(AttackDelayBehaviorExecutionParameters parameters)
         {
-            var syncId = parameters.NpcContext.Associate.GetComponent<SkillComponent>().ClaimSyncId();
-            parameters.NpcContext.Writer.Write(syncId);
-
-            for (var i = 0; i < Intervals; i++)
-                RegisterHandle(syncId, parameters);
+            parameters.Handle = parameters.NpcContext.Associate.GetComponent<SkillComponent>().ClaimSyncId();
+            parameters.NpcContext.Writer.Write(parameters.Handle);
         }
 
         protected override void SerializeSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+            // Copy the context to clear the writer
+            var actionParameters = Action.SerializeStart(parameters.NpcContext.Copy(),
+                parameters.BranchContext);
 
             // Handle sync wait in the background
-            Task.Run(async () =>
+            RegisterAction(async internalParameters =>
             {
-                await Task.Delay(Delay);
                 parameters.NpcContext.Sync(parameters.Handle);
-            });
+                await Task.Delay(Delay);
+                await Action.ExecuteStart(internalParameters);
+            }, parameters, actionParameters);
         }
 
         protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)

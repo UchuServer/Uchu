@@ -196,9 +196,11 @@ namespace Uchu.World
             await tree.DismantleAsync();
         }
 
-        public async Task<float> CalculateSkillAsync(int skillId)
+        public async Task<float> CalculateSkillAsync(int skillId, bool precalculate = false)
         {
             var tree = await BehaviorTree.FromSkillAsync(skillId);
+            if (precalculate)
+                return 0;
 
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
@@ -245,6 +247,7 @@ namespace Uchu.World
             });
 
             await tree.ExecuteAsync();
+
             return context.SkillTime;
         }
 

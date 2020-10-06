@@ -28,13 +28,17 @@ namespace Uchu.World.Systems.Behaviors
             parameters.NpcContext.MinRange = MinRange;
             parameters.NpcContext.MaxRange = MaxRange;
             parameters.NpcContext.SkillTime = SkillTime;
-            
             parameters.Parameters = Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(NpcCombatSkillBehaviorExecutionParameters executionParameters)
+        protected override async Task ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            await Behavior.ExecuteStart(executionParameters.Parameters);
+            await Behavior.ExecuteStart(parameters.Parameters);
+        }
+
+        protected override void SerializeSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        {
+            Behavior.SerializeSync(parameters.Parameters);
         }
     }
 }

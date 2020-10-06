@@ -331,6 +331,9 @@ namespace Uchu.World.Systems.Behaviors
                 }
             };
 
+            // Make sure all sync actions are stored
+            context.Root.SerializeSync(parameters);
+
             return context;
         }
 
@@ -385,6 +388,10 @@ namespace Uchu.World.Systems.Behaviors
                 foreach (var executionPreparation in rootBehaviorList)
                 {
                     await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
+                    
+                    // If serialized, execute all the possible actions
+                    if (Serialized)
+                        executionPreparation.BehaviorExecutionParameters.Context.ExecuteActions();
                 }
             }
         }

@@ -59,19 +59,16 @@ namespace Uchu.World.Systems.Behaviors
             ExecutionBranchContext branchContext)
         {
             var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
-            DeserializeStart(behaviorExecutionParameters);
+            SerializeStart(behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
         
         protected virtual void SerializeSync(T behaviorExecutionParameters)
         {
         }
-        public override BehaviorExecutionParameters SerializeSync(NpcExecutionContext context,
-            ExecutionBranchContext branchContext)
+        public override void SerializeSync(BehaviorExecutionParameters parameters)
         {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
-            DeserializeStart(behaviorExecutionParameters);
-            return behaviorExecutionParameters;
+            SerializeSync((T) parameters);
         }
 
         protected virtual Task DismantleAsync(T executionParameters)
@@ -91,9 +88,14 @@ namespace Uchu.World.Systems.Behaviors
                 behaviorExecutionParameters.Context.Reader = reader;
                 var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
                     behaviorExecutionParameters.BranchContext);
-                
                 await ExecuteSync(syncBehaviorExecutionParameters);
             });
+        }
+
+        protected void RegisterAction(Action<BehaviorExecutionParameters> action,
+            BehaviorExecutionParameters sourceParameters, BehaviorExecutionParameters executionParameters = default)
+        {
+            sourceParameters.Context.RegisterAction(action, executionParameters ?? sourceParameters);
         }
 
         public async Task PlayFxAsync(string type, GameObject target, int time)
@@ -237,10 +239,8 @@ namespace Uchu.World.Systems.Behaviors
             return new BehaviorExecutionParameters(context, branchContext);
         }
 
-        public virtual BehaviorExecutionParameters SerializeSync(NpcExecutionContext context,
-            ExecutionBranchContext branchContext)
+        public virtual void SerializeSync(BehaviorExecutionParameters executionParameters)
         {
-            return new BehaviorExecutionParameters(context, branchContext);
         }
         
         public virtual BehaviorExecutionParameters DeserializeStart(ExecutionContext context,

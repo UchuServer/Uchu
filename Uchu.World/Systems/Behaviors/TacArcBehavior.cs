@@ -93,6 +93,21 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    parameters.Behavior.SerializeSync(parameter);
+                }
+            }
+            else
+            {
+                parameters.Behavior.SerializeSync(parameters.Parameters);
+            }
+        }
+
         /// <summary>
         /// Finds all targets in the area and optionally hits them if not missed and not blocked
         /// </summary>

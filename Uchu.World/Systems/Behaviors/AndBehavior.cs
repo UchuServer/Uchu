@@ -5,7 +5,10 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AndBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; set; } 
+        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; } 
+            = new List<BehaviorExecutionParameters>();
+        
+        public List<BehaviorExecutionParameters> SyncBehaviorExecutionParameters { get; } 
             = new List<BehaviorExecutionParameters>();
     }
     public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
@@ -48,6 +51,14 @@ namespace Uchu.World.Systems.Behaviors
             {
                 parameters.BehaviorExecutionParameters.Add(
                     behaviorBase.SerializeStart(parameters.NpcContext, parameters.BranchContext));
+            }
+        }
+
+        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        {
+            for (var i = 0; i < Behaviors.Length; i++)
+            {
+                Behaviors[i].SerializeSync(parameters.BehaviorExecutionParameters[i]);
             }
         }
     }
