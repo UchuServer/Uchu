@@ -7,6 +7,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class ProjectileAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
+        public bool OverrideExecute { get; set; } = false;
         public GameObject Target { get; set; }
         public List<Projectile> Projectiles { get; } = new List<Projectile>();
     }
@@ -64,8 +65,13 @@ namespace Uchu.World.Systems.Behaviors
         
         protected override Task ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            foreach (var projectile in parameters.Projectiles)
-                Object.Start(projectile);
+            if (!parameters.OverrideExecute)
+            {
+                foreach (var projectile in parameters.Projectiles)
+                {
+                    Object.Start(projectile);
+                }
+            }
             return Task.CompletedTask;
         }
         
@@ -73,10 +79,24 @@ namespace Uchu.World.Systems.Behaviors
         {
             parameters.NpcContext.Writer.Write(parameters.BranchContext.Target);
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
-            
+            parameters.OverrideExecute = true;
+
             for (var i = 0; i < count; i++)
             {
-                SerializeProjectile(parameters);
+                var projectile = SerializeProjectile(parameters);
+                parameters.Projectiles.Add(projectile);
+                
+                RegisterAction(async internalParameters =>
+                {
+                    Object.Start(projectile);
+                    
+                    var distance = Vector3.Distance(internalParameters.Context.Associate.Transform.Position, 
+                        internalParameters.BranchContext.Target.Transform.Position);
+                    var time = (int) (distance / (double) ProjectileSpeed) * 1000;
+            
+                    await Task.Delay(time);
+                    await projectile.CalculateImpactAsync(internalParameters.BranchContext.Target);
+                }, parameters);
             }
         }
 
@@ -84,7 +104,7 @@ namespace Uchu.World.Systems.Behaviors
         /// Creates a projectile shot at a target
         /// </summary>
         /// <param name="parameters">Parameters to write extra data to</param>
-        private void SerializeProjectile(ProjectileAttackBehaviorExecutionParameters parameters)
+        private Projectile SerializeProjectile(ProjectileAttackBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
 
@@ -100,17 +120,7 @@ namespace Uchu.World.Systems.Behaviors
             projectile.RadiusCheck = TrackRadius;
             projectile.MaxDistance = MaxDistance;
 
-            Object.Start(projectile);
-
-            Task.Run(async () =>
-            {
-                var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
-                    parameters.BranchContext.Target.Transform.Position);
-                var time = (int) (distance / (double) ProjectileSpeed) * 1000;
-                
-                await Task.Delay(time);
-                await projectile.CalculateImpactAsync(parameters.BranchContext.Target);
-            });
+            return projectile;
         }
     }
 }

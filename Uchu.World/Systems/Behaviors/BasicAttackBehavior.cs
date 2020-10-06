@@ -68,20 +68,23 @@ namespace Uchu.World.Systems.Behaviors
                     behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
         {
+            
             // Make sure the target is valid and damage them
-            if (behaviorExecutionParameters.BranchContext.Target != default && 
-                behaviorExecutionParameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (parameters.BranchContext.Target != default && 
+                parameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
             {
-                stats.Damage(CalculateDamage(behaviorExecutionParameters.Damage), 
-                    behaviorExecutionParameters.Context.Associate);
+                await parameters.BranchContext.Target.NetFavorAsync();
+                await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
+                stats.Damage(CalculateDamage(parameters.Damage), 
+                    parameters.Context.Associate);
             }
             
             // Execute the success state only if some parameters are set
-            if (behaviorExecutionParameters.SuccessState == 1)
+            if (parameters.SuccessState == 1)
             {
-                await OnSuccess.ExecuteStart(behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters);
+                await OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
             }
         }
 
@@ -115,14 +118,6 @@ namespace Uchu.World.Systems.Behaviors
             {
                 parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
                     parameters.BranchContext);
-
-                // Handle FX and stats in the background
-                Task.Run(async () =>
-                {
-                    await parameters.BranchContext.Target.NetFavorAsync();
-                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
-                    stats.Damage(damage, parameters.NpcContext.Associate, EffectHandler);
-                });
             }
         }
         
