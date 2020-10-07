@@ -22,6 +22,8 @@ namespace Uchu.World
         
         private Player()
         {
+            OnRespondToMission = new Event<int, GameObject, Lot>();
+
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
 
             OnPositionUpdate = new Event<Vector3, Quaternion>();
@@ -47,7 +49,7 @@ namespace Uchu.World
 
                 if (TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
-                    destructibleComponent.OnResurrect.AddListener(() => { GetComponent<Stats>().Imagination = 6; });
+                    destructibleComponent.OnResurrect.AddListener(() => { GetComponent<DestroyableComponent>().Imagination = 6; });
                 }
                 
                 await using var ctx = new UchuContext();
@@ -79,6 +81,8 @@ namespace Uchu.World
         }
 
         public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+
+        public Event<int, GameObject, Lot> OnRespondToMission { get; }
 
         public Event<Lot> OnLootPickup { get; }
         
@@ -276,6 +280,30 @@ namespace Uchu.World
             return flagValues;
         }
 
+        public async Task TriggerCelebration(int CelebrationID)
+        {
+            var Celebration = (await new CdClientContext().CelebrationParametersTable.Where(t => t.Id == CelebrationID).ToArrayAsync())[0];
+
+            this.Message(new StartCelebrationEffectMessage
+            {
+                Associate = this,
+                Animation = Celebration.Animation,
+                BackgroundObject = new Lot(Celebration.BackgroundObject.Value),
+                CameraPathLOT = new Lot(Celebration.CameraPathLOT.Value),
+                CeleLeadIn = Celebration.CeleLeadIn.Value,
+                CeleLeadOut = Celebration.CeleLeadOut.Value,
+                CelebrationID = Celebration.Id.Value,
+                Duration = Celebration.Duration.Value,
+                IconID = Celebration.IconID.Value,
+                MainText = Celebration.MainText,
+                MixerProgram = Celebration.MixerProgram,
+                MusicCue = Celebration.MusicCue,
+                PathNodeName = Celebration.PathNodeName,
+                SoundGUID = Celebration.SoundGUID,
+                SubText = Celebration.SubText
+            }); // Start effect
+        }
+
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
             //
@@ -323,7 +351,7 @@ namespace Uchu.World
             
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
             instance.AddComponent<DestructibleComponent>();
-            var stats = instance.GetComponent<Stats>();
+            var stats = instance.GetComponent<DestroyableComponent>();
             var characterComponent = instance.AddComponent<CharacterComponent>();
             var inventory = instance.AddComponent<InventoryComponent>();
             
@@ -406,17 +434,17 @@ namespace Uchu.World
 
         private void OnStayCollision(PhysicsComponent other)
         {
-            // Logger.Information($"{this} stayed {other.GameObject}");
+            Logger.Debug($"{this} stayed {other.GameObject}");
         }
         
         private void OnEnterCollision(PhysicsComponent other)
         {
-            // Logger.Information($"{this} entered {other.GameObject}");
+            Logger.Debug($"{this} entered {other.GameObject}");
         }
         
         private void OnLeaveCollision(PhysicsComponent other)
         {
-            // Logger.Information($"{this} left {other.GameObject}");
+            Logger.Debug($"{this} left {other.GameObject}");
         }
 
         private void UpdatePhysics(Vector3 position, Quaternion rotation)

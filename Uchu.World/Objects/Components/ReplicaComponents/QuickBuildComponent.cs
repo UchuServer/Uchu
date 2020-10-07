@@ -10,7 +10,7 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
-    [RequireComponent(typeof(Stats))]
+    [RequireComponent(typeof(DestroyableComponent))]
     public class QuickBuildComponent : ScriptedActivityComponent
     {
         private float _completeTime;
@@ -123,7 +123,7 @@ namespace Uchu.World
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
                 !GameObject.TryGetComponent<CollectibleComponent>(out _))
-                GameObject.GetComponent<Stats>().Construct(writer);
+                GameObject.GetComponent<DestroyableComponent>().Construct(writer);
             
             SerializeQuickBuild(writer);
 
@@ -138,7 +138,7 @@ namespace Uchu.World
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
                 !GameObject.TryGetComponent<CollectibleComponent>(out _))
-                GameObject.GetComponent<Stats>().Serialize(writer);
+                GameObject.GetComponent<DestroyableComponent>().Serialize(writer);
 
             SerializeQuickBuild(writer);
         }
@@ -181,7 +181,7 @@ namespace Uchu.World
         {
             if (State != RebuildState.Open && State != RebuildState.Incomplete) return;
             
-            var playerStats = player.GetComponent<Stats>();
+            var playerStats = player.GetComponent<DestroyableComponent>();
             
             if (playerStats.Imagination == default) return;
             

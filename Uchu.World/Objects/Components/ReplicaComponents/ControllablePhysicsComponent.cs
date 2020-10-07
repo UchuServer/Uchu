@@ -40,8 +40,8 @@ namespace Uchu.World
             if (hasJetpackEffect)
             {
                 writer.Write(JetpackEffectId);
-                writer.WriteBit(false); // Is in air?
-                writer.WriteBit(false);
+                writer.WriteBit(false); // Is flying?
+                writer.WriteBit(false); // Bypass Checks?
             }
 
             writer.WriteBit(true);

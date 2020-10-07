@@ -24,12 +24,18 @@ namespace Uchu.World.Handlers.GameMessages
                 // Multi-interact is mission
                 //
 
-                if (message.MultiInteractType == default)
+                if (message.MultiInteractType == 0) // Mission Component
                 {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
+                } 
+                else if (message.MultiInteractType == 1) // Any other case
+                {
+                    await message.TargetObject.OnInteract.InvokeAsync(player);
+
+                    await inventory.InteractAsync(message.TargetObject.Lot);
                 }
             }
             else if (message.TargetObject != default)

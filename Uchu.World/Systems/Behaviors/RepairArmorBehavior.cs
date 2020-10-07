@@ -15,7 +15,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public override Task ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            if (parameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
                 stats.Armor = (uint) ((int) stats.Armor + Armor);
             return Task.CompletedTask;
         }

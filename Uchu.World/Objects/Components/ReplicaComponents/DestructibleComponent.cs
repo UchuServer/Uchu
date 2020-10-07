@@ -7,10 +7,10 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
-    [RequireComponent(typeof(Stats))]
+    [RequireComponent(typeof(DestroyableComponent))]
     public class DestructibleComponent : ReplicaComponent
     {
-        private Stats Stats { get; set; }
+        private DestroyableComponent Stats { get; set; }
 
         public override ComponentId Id => ComponentId.DestructibleComponent;
 
@@ -65,7 +65,7 @@ namespace Uchu.World
                         Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
                 }
 
-                if (GameObject.TryGetComponent(out Stats stats))
+                if (GameObject.TryGetComponent(out DestroyableComponent stats))
                 {
                     Stats = stats;
                     
@@ -81,7 +81,7 @@ namespace Uchu.World
                     return;
                 }
                 
-                Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} without a {nameof(World.Stats)} component.");
+                Logger.Error($"{GameObject} has a {nameof(DestructibleComponent)} without a {nameof(World.DestroyableComponent)} component.");
             });
             
             Listen(OnDestroyed, () =>
@@ -97,12 +97,12 @@ namespace Uchu.World
             writer.WriteBit(false);
             writer.WriteBit(false);
             
-            GameObject.GetComponent<Stats>().Construct(writer);
+            GameObject.GetComponent<DestroyableComponent>().Construct(writer);
         }
 
         public override void Serialize(BitWriter writer)
         {
-            GameObject.GetComponent<Stats>().Serialize(writer);
+            GameObject.GetComponent<DestroyableComponent>().Serialize(writer);
         }
 
         public async Task SmashAsync(GameObject smasher, Player owner = default, string animation = "")

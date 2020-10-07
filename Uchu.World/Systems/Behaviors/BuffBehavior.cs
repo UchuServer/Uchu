@@ -30,7 +30,8 @@ namespace Uchu.World.Systems.Behaviors
 
         public override Task ExecuteStart(BehaviorExecutionParameters behaviorExecutionParameters)
         {
-            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<Stats>(out var stats))
+            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
+                out var stats))
                 return Task.CompletedTask;
 
             stats.MaxHealth += (uint) Life;
@@ -42,7 +43,8 @@ namespace Uchu.World.Systems.Behaviors
 
         public override Task DismantleAsync(BehaviorExecutionParameters behaviorExecutionParameters)
         {
-            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<Stats>(out var stats))
+            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
+                out var stats))
                 return Task.CompletedTask;
 
             stats.MaxHealth -= (uint) Life;

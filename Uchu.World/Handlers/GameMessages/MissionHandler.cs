@@ -8,11 +8,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RespondToMissionHandler(RespondToMissionMessage message, Player player)
         {
-            await player.GetComponent<MissionInventoryComponent>().RespondToMissionAsync(
-                message.MissionId,
-                message.Receiver,
-                message.RewardItem
-            );
+            await player.OnRespondToMission.InvokeAsync(message.MissionId, message.Receiver, message.RewardItem);
         }
 
         [PacketHandler]

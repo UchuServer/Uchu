@@ -73,7 +73,7 @@ namespace Uchu.World.Systems.Behaviors
             
             // Make sure the target is valid and damage them
             if (parameters.BranchContext.Target != default && 
-                parameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
+                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
             {
                 await parameters.BranchContext.Target.NetFavorAsync();
                 await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
@@ -114,7 +114,8 @@ namespace Uchu.World.Systems.Behaviors
                           parameters.NpcContext.Alive;
             parameters.NpcContext.Writer.Write<uint>((uint)(success ? 1 : 0));
 
-            if (success && parameters.BranchContext.Target.TryGetComponent<Stats>(out var stats))
+            if (success && parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(
+                out var stats))
             {
                 parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
                     parameters.BranchContext);

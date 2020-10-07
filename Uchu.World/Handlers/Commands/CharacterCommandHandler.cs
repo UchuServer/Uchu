@@ -1,3 +1,5 @@
+using InfectedRose.Lvl;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -5,8 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using InfectedRose.Lvl;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Filters;
@@ -141,7 +141,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (factionSided)
             {
-                if (obj.TryGetComponent<Stats>(out var stats))
+                if (obj.TryGetComponent<DestroyableComponent>(out var stats))
                 {
                     stats.Factions = new[] {int.Parse(arguments[2])};
                     stats.Enemies = new[] {int.Parse(arguments[3])};
@@ -357,7 +357,7 @@ namespace Uchu.World.Handlers.Commands
             {
                 info.Append($"\n{component.GetType().Name}");
 
-                if (component is Stats stats)
+                if (component is DestroyableComponent stats)
                 {
                     info.Append($" {stats.HasStats}");
                 }
@@ -446,7 +446,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (!long.TryParse(arguments[1], out var value)) return "Invalid <value>";
 
-            var stats = player.GetComponent<Stats>();
+            var stats = player.GetComponent<DestroyableComponent>();
 
             var stat = arguments[0].ToLower().Replace("-", "").Replace("_", "");
             switch (stat)
@@ -1021,6 +1021,42 @@ namespace Uchu.World.Handlers.Commands
             }
 
             return "Cleared inventory";
+        }
+
+        [CommandHandler(Signature = "setflag", Help = "Sets a client flag", GameMasterLevel = GameMasterLevel.Admin)]
+        public string SetFlag(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1) return "/setflag <flag>";
+
+            if (!int.TryParse(arguments[1], out int flag)) return "/setflag <flag>";
+
+            player.SetFlagAsync(flag, true);
+
+            return $"Set flag {arguments[1]}";
+        }
+
+        [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
+        public string TriggerCelebrat(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1) return "/triggercelebrate <CelebrationID>";
+
+            if (!int.TryParse(arguments[1], out int ID)) return "/triggercelebrate <CelebrationID>";
+
+            player.TriggerCelebration(ID);
+
+            return $"Triggered Celebration {arguments[1]}";
+        }
+
+        [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
+        public string RemoveFlag(string[] arguments, Player player)
+        {
+            if (arguments.Length != 1) return "/removeflag <flag>";
+
+            if (!int.TryParse(arguments[1], out int flag)) return "/removeflag <flag>";
+
+            player.SetFlagAsync(flag, false);
+
+            return $"Removed flag {arguments[1]}";
         }
 
         [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = GameMasterLevel.Admin)]

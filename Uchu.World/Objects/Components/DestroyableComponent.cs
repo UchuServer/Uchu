@@ -8,7 +8,7 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
-    public class Stats : Component
+    public class DestroyableComponent : Component
     {
         private uint _health;
 
@@ -193,7 +193,7 @@ namespace Uchu.World
 
         public Event OnDeath { get; }
 
-        protected Stats()
+        protected DestroyableComponent()
         {
             OnHealthChanged = new Event<uint, int>();
             

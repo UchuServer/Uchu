@@ -204,12 +204,20 @@ namespace Uchu.Master.Api
                         instance.ApiPort, "server/verify"
                     ).ConfigureAwait(false);
 
-                    if (!verify.Success)
+                    try
                     {
-                        Logger.Error(verify.FailedReason);
+                        if (verify == null) throw new Exception("ReadyCallbackResponse was null");
 
-                        throw new Exception(verify.FailedReason);
+                        if (!verify.Success)
+                        {
+                            Logger.Error(verify.FailedReason);
+
+                            throw new Exception(verify.FailedReason);
+                        }
+                    } catch (Exception e) {
+                        Logger.Log(e.Message, LogLevel.Error);
                     }
+
 
                     instance.Ready = true;
                     

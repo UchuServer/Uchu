@@ -139,10 +139,10 @@ namespace Uchu.World
             writer.WriteBit(IsGameMaster);
             writer.Write(GameMasterLevel);
 
-            writer.WriteBit(false);
-            writer.Write<byte>(0);
+            writer.WriteBit(false); // ???
+            writer.Write<byte>(0); // ???
 
-            writer.WriteBit(true);
+            writer.WriteBit(true); // Active Activity?
             writer.Write((uint) Activity);
 
             var hasGuild = GuildId != -1;
@@ -154,8 +154,8 @@ namespace Uchu.World
             writer.Write(GuildId);
             writer.Write((byte) GuildName.Length);
             writer.WriteString(GuildName, GuildName.Length, true);
-            writer.WriteBit(true);
-            writer.Write(-1);
+            writer.WriteBit(true); // Guild Owner?
+            writer.Write(-1); // Guild Creation date
         }
     }
 }

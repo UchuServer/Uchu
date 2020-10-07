@@ -2,7 +2,7 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    [RequireComponent(typeof(Stats))]
+    [RequireComponent(typeof(DestroyableComponent))]
     public class CollectibleComponent : ReplicaComponent
     {
         public ushort CollectibleId { get; private set; }
@@ -15,14 +15,14 @@ namespace Uchu.World
             {
                 CollectibleId = (ushort) (int) GameObject.Settings["collectible_id"];
 
-                foreach (var stats in GameObject.GetComponents<Stats>()) stats.HasStats = false;
+                foreach (var stats in GameObject.GetComponents<DestroyableComponent>()) stats.HasStats = false;
             });
         }
 
         public override void Construct(BitWriter writer)
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _))
-                GameObject.GetComponent<Stats>().Construct(writer);
+                GameObject.GetComponent<DestroyableComponent>().Construct(writer);
 
             Serialize(writer);
         }
@@ -30,7 +30,7 @@ namespace Uchu.World
         public override void Serialize(BitWriter writer)
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _))
-                GameObject.GetComponent<Stats>().Serialize(writer);
+                GameObject.GetComponent<DestroyableComponent>().Serialize(writer);
 
             writer.Write(CollectibleId);
         }
