@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -14,14 +15,12 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorTemplateId Id => BehaviorTemplateId.MovementSwitch;
 
         private BehaviorBase GroundBehavior { get; set; }
-
         private BehaviorBase JumpBehavior { get; set; }
-
         private BehaviorBase FallingBehavior { get; set; }
-
         private BehaviorBase DoubleJumpBehavior { get; set; }
-
+        private BehaviorBase AirBehavior { get; set; }
         private BehaviorBase JetpackBehavior { get; set; }
+        private BehaviorBase MovingBehavior { get; set; }
 
         public override async Task BuildAsync()
         {
@@ -29,7 +28,9 @@ namespace Uchu.World.Systems.Behaviors
             JumpBehavior = await GetBehavior("jump_action");
             FallingBehavior = await GetBehavior("falling_action");
             DoubleJumpBehavior = await GetBehavior("double_jump_action");
+            AirBehavior = await GetBehavior("air_action");
             JetpackBehavior = await GetBehavior("ground_action");
+            MovingBehavior = await GetBehavior("moving_action");
         }
 
         protected override void DeserializeStart(MovementSwitchBehaviorExecutionParameters parameters)
@@ -37,36 +38,38 @@ namespace Uchu.World.Systems.Behaviors
             parameters.MovementType = (MovementType) parameters.Context.Reader.Read<uint>();
             switch (parameters.MovementType)
             {
+                case MovementType.Moving:
+                    parameters.ToExecute = MovingBehavior;
+                    break;
                 case MovementType.Ground:
-                    parameters.BehaviorExecutionParameters = GroundBehavior.DeserializeStart(parameters.Context, 
-                        parameters.BranchContext);
                     parameters.ToExecute = GroundBehavior;
-                    return;
+                    break;
                 case MovementType.Jump:
-                    parameters.BehaviorExecutionParameters = JumpBehavior.DeserializeStart(parameters.Context,
-                        parameters.BranchContext);
                     parameters.ToExecute = JumpBehavior;
-                    return;
+                    break;
                 case MovementType.Falling:
-                    parameters.BehaviorExecutionParameters = FallingBehavior.DeserializeStart(parameters.Context,
-                        parameters.BranchContext);
                     parameters.ToExecute = FallingBehavior;
-                    return;
+                    break;
                 case MovementType.DoubleJump:
-                    parameters.BehaviorExecutionParameters = DoubleJumpBehavior.DeserializeStart(parameters.Context,
-                        parameters.BranchContext);
                     parameters.ToExecute = DoubleJumpBehavior;
-                    return;
+                    break;
+                case MovementType.Air:
+                    parameters.ToExecute = AirBehavior;
+                    break;
                 case MovementType.Jetpack:
-                    parameters.BehaviorExecutionParameters = JetpackBehavior.DeserializeStart(parameters.Context,
-                        parameters.BranchContext);
                     parameters.ToExecute = JetpackBehavior;
-                    return;
-                case MovementType.Stunned:
-                    return;
+                    break;
+                case MovementType.Unknown:
+                    // TODO: Try to find out if this has to be handled explicitly or fail silently
+                    parameters.ToExecute = AirBehavior;
+                    Logger.Debug($"Received movement type {nameof(MovementType.Unknown)}");
+                    break;
                 default:
                     throw new Exception($"Invalid {nameof(MovementType)}! Got {parameters.MovementType}!");
             }
+            
+            parameters.BehaviorExecutionParameters = parameters.ToExecute.DeserializeStart(parameters.Context, 
+                parameters.BranchContext);
         }
 
         protected override async Task ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)

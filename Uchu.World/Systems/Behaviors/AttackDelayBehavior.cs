@@ -61,15 +61,21 @@ namespace Uchu.World.Systems.Behaviors
             parameters.WaitAndSync = true;
         }
 
-        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            if (parameters.WaitAndSync)
-                await Task.Delay(Delay);
+            // Run this async as otherwise the delay can cause the object to be registered as "stuck"
+            Task.Run(async () =>
+            {
+                if (parameters.WaitAndSync)
+                    await Task.Delay(Delay);
 
-            await Action.ExecuteStart(parameters.Parameters);
-            
-            if (parameters.WaitAndSync)
-                parameters.NpcContext.Sync(parameters.Handle);
+                await Action.ExecuteStart(parameters.Parameters);
+
+                if (parameters.WaitAndSync)
+                    parameters.NpcContext.Sync(parameters.Handle);
+            });
+
+            return Task.CompletedTask;
         }
     }
 }
