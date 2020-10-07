@@ -17,7 +17,6 @@ namespace Uchu.World
         public override void Deserialize(BitReader reader)
         {
             Done = reader.ReadBit();
-
             Content = new byte[reader.Read<uint>()];
 
             for (var i = 0; i < Content.Length; i++) Content[i] = reader.Read<byte>();
@@ -29,14 +28,12 @@ namespace Uchu.World
         public override void SerializeMessage(BitWriter writer)
         {
             writer.WriteBit(Done);
-
             writer.Write((uint) Content.Length);
             
             foreach (var b in Content)
                 writer.Write(b);
 
             writer.Write(BehaviorHandle);
-
             writer.Write(SkillHandle);
         }
     }

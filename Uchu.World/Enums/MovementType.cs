@@ -2,11 +2,13 @@ namespace Uchu.World
 {
     public enum MovementType : uint
     {
-        Ground = 1,
+        Moving,
+        Ground,
         Jump,
         Falling,
         DoubleJump,
-        Jetpack = 6,
-        Stunned
+        Air,
+        Jetpack,
+        Unknown
     }
 }

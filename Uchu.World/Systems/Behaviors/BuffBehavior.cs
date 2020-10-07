@@ -5,18 +5,18 @@ namespace Uchu.World.Systems.Behaviors
     public class BuffBehavior : BehaviorBase
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Buff;
-        
-        public int Life { get; set; }
-        
-        public int Armor { get; set; }
-        
-        public int Imagination { get; set; }
-        
-        public float RunSpeed { get; set; }
-        
-        public float AttackSpeed { get; set; }
-        
-        public float Brain { get; set; }
+
+        private int Life { get; set; }
+
+        private int Armor { get; set; }
+
+        private int Imagination { get; set; }
+
+        private float RunSpeed { get; set; }
+
+        private float AttackSpeed { get; set; }
+
+        private float Brain { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -28,9 +28,11 @@ namespace Uchu.World.Systems.Behaviors
             Brain = await GetParameter<int>("brain");
         }
 
-        public override Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override Task ExecuteStart(BehaviorExecutionParameters behaviorExecutionParameters)
         {
-            if (!context.Associate.TryGetComponent<DestroyableComponent>(out var stats)) return Task.CompletedTask;
+            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
+                out var stats))
+                return Task.CompletedTask;
 
             stats.MaxHealth += (uint) Life;
             stats.MaxArmor += (uint) Armor;
@@ -39,14 +41,16 @@ namespace Uchu.World.Systems.Behaviors
             return Task.CompletedTask;
         }
 
-        public override Task DismantleAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override Task DismantleAsync(BehaviorExecutionParameters behaviorExecutionParameters)
         {
-            if (!context.Associate.TryGetComponent<DestroyableComponent>(out var stats)) return Task.CompletedTask;
+            if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
+                out var stats))
+                return Task.CompletedTask;
 
             stats.MaxHealth -= (uint) Life;
             stats.MaxArmor -= (uint) Armor;
             stats.MaxImagination -= (uint) Imagination;
-            
+
             return Task.CompletedTask;
         }
     }

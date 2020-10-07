@@ -100,7 +100,7 @@ namespace Uchu.World
         
         public string GuildInviteName { get; set; }
         
-        private SemaphoreSlim Lock { get; }
+        public SemaphoreSlim Lock { get; }
         
         public int Ping => Connection.AveragePing;
         

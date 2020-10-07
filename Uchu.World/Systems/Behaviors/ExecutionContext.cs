@@ -8,7 +8,7 @@ using Uchu.Core;
 namespace Uchu.World.Systems.Behaviors
 {
     using SyncDelegate = Func<BitReader, Task>;
-
+    
     public class ExecutionContext
     {
         public GameObject Associate { get; }
@@ -21,7 +21,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public GameObject ExplicitTarget { get; set; }
 
-        public List<BehaviorSyncEntry> BehaviorHandles { get; } = new List<BehaviorSyncEntry>();
+        private List<BehaviorSyncEntry> BehaviorHandles { get; } = new List<BehaviorSyncEntry>();
 
         public ExecutionContext(GameObject associate, BitReader reader, BitWriter writer)
         {
@@ -41,11 +41,10 @@ namespace Uchu.World.Systems.Behaviors
                 if (entry == default)
                 {
                     Logger.Error($"Invalid behavior sync id: {handle}!");
-                    
                     return;
                 }
                 
-                BehaviorHandles.Remove(entry);
+                // BehaviorHandles.Remove(entry);
             }
             
             await entry.Delegate(reader);
@@ -53,11 +52,15 @@ namespace Uchu.World.Systems.Behaviors
 
         public void RegisterHandle(uint handle, SyncDelegate @delegate)
         {
-            BehaviorHandles.Add(new BehaviorSyncEntry
+            lock (BehaviorHandles)
             {
-                Handle = handle,
-                Delegate = @delegate
-            });
+                BehaviorHandles.Add(new BehaviorSyncEntry
+                {
+                    Handle = handle,
+                    Delegate = @delegate
+                });
+                Logger.Debug($"Registered handle for sync id: {handle}");
+            }
         }
 
         public class BehaviorSyncEntry

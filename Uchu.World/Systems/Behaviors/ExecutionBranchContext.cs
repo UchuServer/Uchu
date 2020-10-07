@@ -6,9 +6,8 @@ namespace Uchu.World.Systems.Behaviors
 
         public int Duration { get; set; }
 
-        public ExecutionBranchContext(GameObject target)
+        public ExecutionBranchContext()
         {
-            Target = target;
         }
     }
 }

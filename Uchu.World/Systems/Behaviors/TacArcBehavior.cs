@@ -6,23 +6,26 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class TacArcBehavior : BehaviorBase
+    public class TacArcBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public bool Hit { get; set; }
+        public bool Blocked { get; set; }
+        public BehaviorBase Behavior { get; set; }
+        public BehaviorExecutionParameters Parameters { get; set; }
+        public List<BehaviorExecutionParameters> ParametersList { get; set; } 
+            = new List<BehaviorExecutionParameters>();
+    }
+    public class TacArcBehavior : BehaviorBase<TacArcBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.TacArc;
-        
-        public bool CheckEnvironment { get; set; }
 
-        public bool Blocked { get; set; }
-        
-        public BehaviorBase ActionBehavior { get; set; }
-        
-        public BehaviorBase BlockedBehavior { get; set; }
-        
-        public BehaviorBase MissBehavior { get; set; }
-        
-        public int MaxTargets { get; set; }
-        
-        public bool UsePickedTarget { get; set; }
+        private bool CheckEnvironment { get; set; }
+        private bool Blocked { get; set; }
+        private BehaviorBase ActionBehavior { get; set; }
+        private BehaviorBase BlockedBehavior { get; set; }
+        private BehaviorBase MissBehavior { get; set; }
+        private int MaxTargets { get; set; }
+        private bool UsePickedTarget { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -34,99 +37,218 @@ namespace Uchu.World.Systems.Behaviors
             MissBehavior = await GetBehavior("miss action");
 
             MaxTargets = await GetParameter<int>("max targets");
-
             UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-
-            if (UsePickedTarget && context.ExplicitTarget != null)
+            if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
-                var branch = new ExecutionBranchContext(context.ExplicitTarget)
-                {
-                    Duration = branchContext.Duration
-                };
-
-                await ActionBehavior.ExecuteAsync(context, branch);
-                
-                return;
+                parameters.Behavior = ActionBehavior;
+                parameters.Parameters = parameters.Behavior.DeserializeStart(parameters.Context,
+                    parameters.BranchContext);
             }
-            
-            var hit = context.Reader.ReadBit();
-            
-            if (hit) // Hit
+            else
             {
-                var targets = new List<GameObject>();
-
+                parameters.Hit = parameters.Context.Reader.ReadBit();
                 if (CheckEnvironment)
                 {
-                    context.Reader.ReadBit();
-                }
-
-                var specifiedTargets = context.Reader.Read<uint>();
-
-                for (var i = 0; i < specifiedTargets; i++)
-                {
-                    var targetId = context.Reader.Read<long>();
-
-                    if (!context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                    parameters.Blocked = parameters.Context.Reader.ReadBit();
+                    if (parameters.Blocked)
                     {
-                        Logger.Error($"{context.Associate} sent invalid TacArc target: {targetId}");
-
-                        continue;
+                        parameters.Behavior = BlockedBehavior;
+                        parameters.Parameters = parameters.Behavior.DeserializeStart(
+                            parameters.Context, parameters.BranchContext);
+                        return;
                     }
-
-                    targets.Add(target);
                 }
 
-                foreach (var target in targets)
+                if (parameters.Hit)
                 {
-                    var branch = new ExecutionBranchContext(target)
-                    {
-                        Duration = branchContext.Duration
-                    };
+                    parameters.Behavior = ActionBehavior;
+                    DeserializeBehaviorForMultipleTargets(parameters);
+                }
+                else
+                {
+                    parameters.Behavior = MissBehavior;
+                    parameters.Parameters = parameters.Behavior.DeserializeStart(
+                        parameters.Context, parameters.BranchContext);
+                }
+            }
+        }
 
-                    await ActionBehavior.ExecuteAsync(context, branch);
+        protected override async Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    await parameters.Behavior.ExecuteStart(parameter);
                 }
             }
             else
             {
-                if (Blocked)
-                {
-                    var isBlocked = context.Reader.ReadBit();
+                await parameters.Behavior.ExecuteStart(parameters.Parameters);
+            }
+        }
 
-                    if (isBlocked) // Is blocked
+        protected override async Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    await parameters.Behavior.ExecuteSync(parameter);
+                }
+            }
+            else
+            {
+                await parameters.Behavior.ExecuteSync(parameters.Parameters);
+            }
+        }
+
+        protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    parameters.Behavior.SerializeSync(parameter);
+                }
+            }
+            else
+            {
+                parameters.Behavior.SerializeSync(parameters.Parameters);
+            }
+        }
+
+        /// <summary>
+        /// Finds all targets in the area and optionally hits them if not missed and not blocked
+        /// </summary>
+        /// <param name="parameters">The parameters to find and hit targets for</param>
+        /// <returns>A list of the execution parameters to run</returns>
+        private void DeserializeBehaviorForMultipleTargets(
+            TacArcBehaviorExecutionParameters parameters)
+        {
+            var targetCount = parameters.Context.Reader.Read<uint>();
+            var targets = new List<GameObject>();
+
+            // Find all targets for this hit
+            for (var i = 0; i < targetCount; i++)
+            {
+                var targetId = parameters.Context.Reader.Read<long>();
+                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                {
+                    Logger.Error($"{parameters.Context.Associate} sent invalid TacArc target: {targetId}");
+                    continue;
+                }
+                targets.Add(target);
+            }
+
+            // Hit all targets
+            foreach (var target in targets)
+            {
+                var res = parameters.Behavior.DeserializeStart(parameters.Context,
+                    new ExecutionBranchContext
                     {
-                        await BlockedBehavior.ExecuteAsync(context, branchContext);
+                        Duration = parameters.BranchContext.Duration,
+                        Target = target
+                    });
+                parameters.ParametersList.Add(res);
+            }
+        }
+
+        protected override void SerializeStart(TacArcBehaviorExecutionParameters parameters)
+        {
+            if (!(parameters.NpcContext.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) 
+                || parameters.NpcContext.Alive))
+                return;
+
+            // If there's a single target to hit, hit them and exit
+            if (UsePickedTarget && parameters.BranchContext.Target != null)
+            {
+                parameters.Behavior = ActionBehavior;
+                parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                    parameters.BranchContext);
+            }
+            else
+            {
+                var targets = LocateTargets(parameters.NpcContext);
+                var any = targets.Any();
+                parameters.NpcContext.Writer.WriteBit(any);
+                
+                // If we have to check the environment, check if this is a blocked action and notify all the targets
+                if (CheckEnvironment)
+                {
+                    parameters.NpcContext.Writer.WriteBit(Blocked);
+                    if (Blocked)
+                    {
+                        parameters.Behavior = BlockedBehavior;
+                        foreach (var target in targets)
+                        {
+                            var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                                    new ExecutionBranchContext()
+                                    {
+                                        Duration = parameters.BranchContext.Duration,
+                                        Target = target
+                                    });
+                            parameters.ParametersList.Add(targetParameters);
+                        }
+                        return;
                     }
-                    else
+                }
+                
+                // If there was no target, find targets if the game object is alive
+                if (any)
+                {
+                    combatAi.Target = targets.First();
+                    parameters.NpcContext.FoundTarget = true;
+                    parameters.NpcContext.Writer.Write((uint) targets.Count);
+
+                    // Register all targets
+                    foreach (var target in targets)
                     {
-                        await MissBehavior.ExecuteAsync(context, branchContext);
+                        parameters.NpcContext.Writer.Write((long)target.Id);
+                    }
+                    
+                    // Hit all targets
+                    parameters.Behavior = ActionBehavior;
+                    foreach (var target in targets)
+                    {
+                        var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                                new ExecutionBranchContext()
+                                {
+                                    Duration = parameters.BranchContext.Duration,
+                                    Target = target
+                                });
+                        parameters.ParametersList.Add(targetParameters);
                     }
                 }
                 else
                 {
-                    await MissBehavior.ExecuteAsync(context, branchContext);
+                    parameters.Behavior = MissBehavior;
+                    parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
+                        parameters.BranchContext);
                 }
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        /// <summary>
+        /// Locates all targets within range of a context and returns a list of them
+        /// </summary>
+        /// <param name="context">The NPC context to find targets for</param>
+        /// <returns>A list of targets if they were found, otherwise an empty list</returns>
+        private List<GameObject> LocateTargets(NpcExecutionContext context)
         {
-            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return;
+            if (!context.Associate.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent))
+                return new List<GameObject>();
 
-            var validTarget = baseCombatAiComponent.SeekValidTargets();
-
+            var validTargets = baseCombatAiComponent.SeekValidTargets();
             var sourcePosition = context.CalculatingPosition; // Change back to author position?
-
-            var targets = validTarget.Where(target =>
+            var targets = validTargets.Where(target =>
             {
                 var transform = target.Transform;
-
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
-
                 return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToList();
 
@@ -139,7 +261,6 @@ namespace Uchu.World.Systems.Behaviors
             });
 
             var selectedTargets = new List<GameObject>();
-
             foreach (var target in targets)
             {
                 if (selectedTargets.Count < MaxTargets)
@@ -148,63 +269,7 @@ namespace Uchu.World.Systems.Behaviors
                 }
             }
 
-            if (!context.Alive)
-            {
-                selectedTargets.Clear(); // No targeting if dead
-            }
-
-            var any = selectedTargets.Any();
-
-            context.Writer.WriteBit(any); // Hit
-
-            if (any)
-            {
-                baseCombatAiComponent.Target = selectedTargets.First();
-                
-                context.FoundTarget = true;
-
-                if (CheckEnvironment)
-                {
-                    // TODO
-                    context.Writer.WriteBit(false);
-                }
-
-                context.Writer.Write((uint) selectedTargets.Count);
-
-                foreach (var target in selectedTargets)
-                {
-                    context.Writer.Write(target.Id);
-                }
-
-                foreach (var target in selectedTargets)
-                {
-                    if (!(target is Player player)) continue;
-
-                    player.SendChatMessage($"You are a target! [{context.SkillSyncId}]");
-                }
-
-                foreach (var target in selectedTargets)
-                {
-                    var branch = new ExecutionBranchContext(target)
-                    {
-                        Duration = branchContext.Duration
-                    };
-
-                    await ActionBehavior.CalculateAsync(context, branch);
-                }
-            }
-            else
-            {
-                if (Blocked)
-                {
-                    // TODO
-                    context.Writer.WriteBit(false);
-                }
-                else
-                {
-                    await MissBehavior.CalculateAsync(context, branchContext);
-                }
-            }
+            return selectedTargets;
         }
     }
 }

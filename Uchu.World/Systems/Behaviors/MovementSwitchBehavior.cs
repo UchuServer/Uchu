@@ -1,23 +1,26 @@
 using System;
 using System.Threading.Tasks;
+using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class MovementSwitchBehavior : BehaviorBase
+    public class MovementSwitchBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public MovementType MovementType { get; private set; }
-
+        public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
+        public BehaviorBase ToExecute { get; set; }
+        public MovementType MovementType { get; set; }
+    }
+    public class MovementSwitchBehavior : BehaviorBase<MovementSwitchBehaviorExecutionParameters>
+    {
         public override BehaviorTemplateId Id => BehaviorTemplateId.MovementSwitch;
-        
-        public BehaviorBase GroundBehavior { get; set; }
-        
-        public BehaviorBase JumpBehavior { get; set; }
-        
-        public BehaviorBase FallingBehavior { get; set; }
-        
-        public BehaviorBase DoubleJumpBehavior { get; set; }
-        
-        public BehaviorBase JetpackBehavior { get; set; }
+
+        private BehaviorBase GroundBehavior { get; set; }
+        private BehaviorBase JumpBehavior { get; set; }
+        private BehaviorBase FallingBehavior { get; set; }
+        private BehaviorBase DoubleJumpBehavior { get; set; }
+        private BehaviorBase AirBehavior { get; set; }
+        private BehaviorBase JetpackBehavior { get; set; }
+        private BehaviorBase MovingBehavior { get; set; }
 
         public override async Task BuildAsync()
         {
@@ -25,37 +28,53 @@ namespace Uchu.World.Systems.Behaviors
             JumpBehavior = await GetBehavior("jump_action");
             FallingBehavior = await GetBehavior("falling_action");
             DoubleJumpBehavior = await GetBehavior("double_jump_action");
+            AirBehavior = await GetBehavior("air_action");
             JetpackBehavior = await GetBehavior("ground_action");
+            MovingBehavior = await GetBehavior("moving_action");
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(MovementSwitchBehaviorExecutionParameters parameters)
         {
-            await base.ExecuteAsync(context, branchContext);
-            
-            MovementType = (MovementType) context.Reader.Read<uint>();
-
-            switch (MovementType)
+            parameters.MovementType = (MovementType) parameters.Context.Reader.Read<uint>();
+            switch (parameters.MovementType)
             {
+                case MovementType.Moving:
+                    parameters.ToExecute = MovingBehavior;
+                    break;
                 case MovementType.Ground:
-                    await GroundBehavior.ExecuteAsync(context, branchContext);
-                    return;
+                    parameters.ToExecute = GroundBehavior;
+                    break;
                 case MovementType.Jump:
-                    await JumpBehavior.ExecuteAsync(context, branchContext);
-                    return;
+                    parameters.ToExecute = JumpBehavior;
+                    break;
                 case MovementType.Falling:
-                    await FallingBehavior.ExecuteAsync(context, branchContext);
-                    return;
+                    parameters.ToExecute = FallingBehavior;
+                    break;
                 case MovementType.DoubleJump:
-                    await DoubleJumpBehavior.ExecuteAsync(context, branchContext);
-                    return;
+                    parameters.ToExecute = DoubleJumpBehavior;
+                    break;
+                case MovementType.Air:
+                    parameters.ToExecute = AirBehavior;
+                    break;
                 case MovementType.Jetpack:
-                    await JetpackBehavior.ExecuteAsync(context, branchContext);
-                    return;
-                case MovementType.Stunned:
+                    parameters.ToExecute = JetpackBehavior;
+                    break;
+                case MovementType.Unknown:
+                    Logger.Debug("Received movement switch type unknown");
                     return;
                 default:
-                    throw new Exception($"Invalid {nameof(MovementType)}! Got {MovementType}!");
+                    throw new Exception($"Invalid {nameof(MovementType)}! Got {parameters.MovementType}!");
             }
+            
+            parameters.BehaviorExecutionParameters = parameters.ToExecute.DeserializeStart(parameters.Context, 
+                parameters.BranchContext);
+        }
+
+        protected override async Task ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ToExecute == null)
+                return;    
+            await parameters.ToExecute.ExecuteStart(parameters.BehaviorExecutionParameters);
         }
     }
 }

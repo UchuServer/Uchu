@@ -59,7 +59,7 @@ namespace Uchu.World
                         );
 
                         await SkillComponent.CalculateSkillAsync((int) skillEntry.SkillId, true);
-                        
+
                         SkillEntries.Add(new NpcSkillEntry
                         {
                             SkillId = skillEntry.SkillId,

@@ -2,23 +2,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class VerifyBehavior : BehaviorBase
+    public class VerifyBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters Parameters { get; set; }        
+    }
+    
+    public class VerifyBehavior : BehaviorBase<VerifyBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Verify;
-        
-        public BehaviorBase Action { get; set; }
+
+        private BehaviorBase Action { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override Task ExecuteStart(VerifyBehaviorExecutionParameters parameters)
         {
-            if (branchContext.Target is Player player)
-                player.SendChatMessage($"Verified: [{Action.Id}] {Action.BehaviorId}");
+            return Action.ExecuteStart(parameters.Parameters);
+        }
 
-            await Action.CalculateAsync(context, branchContext);
+        protected override void SerializeStart(VerifyBehaviorExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.SerializeStart(parameters.NpcContext, parameters.BranchContext);
         }
     }
 }

@@ -2,26 +2,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class StartBehavior : BehaviorBase
+    public class StartBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters Parameters { get; set; }
+    }
+    public class StartBehavior : BehaviorBase<StartBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Start;
-        
-        public BehaviorBase Action { get; set; }
-        
-        public int UseTarget { get; set; }
+        private BehaviorBase Action { get; set; }
+        private int UseTarget { get; set; }
         
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
-
             UseTarget = await GetParameter<int>("use_target");
         }
-        
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
-        {
-            await base.ExecuteAsync(context, branchContext);
 
-            await Action.ExecuteAsync(context, branchContext);
+        protected override void DeserializeStart(StartBehaviorExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.DeserializeStart(parameters.Context, parameters.BranchContext);
+        }
+
+        protected override async Task ExecuteStart(StartBehaviorExecutionParameters parameters)
+        {
+            await Action.ExecuteStart(parameters.Parameters);
         }
     }
 }

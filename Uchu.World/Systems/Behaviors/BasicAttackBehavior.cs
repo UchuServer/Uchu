@@ -4,110 +4,145 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class BasicAttackBehavior : BehaviorBase
+    public class BasicAttackBehaviorExecutionParameters : BehaviorExecutionParameters
+    {
+        public bool ServerSide { get; set; } = false;
+        public byte Unknown { get; set; }
+        public byte Unknown1 { get; set; }
+        public bool Flag2 { get; set; }
+        public uint Damage { get; set; }
+        public byte SuccessState { get; set; }
+        public BehaviorExecutionParameters OnSuccessBehaviorExecutionParameters { get; set; }
+    }
+    public class BasicAttackBehavior : BehaviorBase<BasicAttackBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.BasicAttack;
         
-        public BehaviorBase OnSuccess { get; set; }
+        /// <summary>
+        /// The behavior to execute if this behavior succeeded
+        /// </summary>
+        private BehaviorBase OnSuccess { get; set; }
         
-        public int MinDamage { get; set; }
+        /// <summary>
+        /// The minimum damage this attack may do
+        /// </summary>
+        private uint MinDamage { get; set; }
         
-        public int MaxDamage { get; set; }
+        /// <summary>
+        /// The maximum damage this attack may do
+        /// </summary>
+        private uint MaxDamage { get; set; }
         
+        /// <summary>
+        /// Fills the success, min and max damage parameters
+        /// </summary>
+        /// <returns></returns>
         public override async Task BuildAsync()
         {
             OnSuccess = await GetBehavior("on_success");
+            MinDamage = await GetParameter<uint>("min damage");
+            MaxDamage = await GetParameter<uint>("max damage");
 
-            MinDamage = await GetParameter<int>("min damage");
-
-            MaxDamage = await GetParameter<int>("max damage");
+            // Apparently some items have max damage == 0, making them unable to kill enemies
+            if (MaxDamage == 0)
+                MaxDamage = 1;
         }
 
-        public override async Task ExecuteAsync(ExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await base.ExecuteAsync(context, branchContext);
+            behaviorExecutionParameters.Context.Reader.Align();
             
-            context.Reader.Align();
+            behaviorExecutionParameters.Unknown = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
+                ? behaviorExecutionParameters.Unknown
+                : behaviorExecutionParameters.Context.Reader.Read<byte>();
+            
+            // Unused flags
+            behaviorExecutionParameters.Context.Reader.ReadBit();
+            behaviorExecutionParameters.Context.Reader.ReadBit();
+            
+            behaviorExecutionParameters.Flag2 = behaviorExecutionParameters.Context.Reader.ReadBit();
+            if (behaviorExecutionParameters.Flag2)
+                behaviorExecutionParameters.Context.Reader.Read<uint>();
 
-            context.Reader.Read<ushort>();
+            behaviorExecutionParameters.Damage = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            behaviorExecutionParameters.Context.Reader.ReadBit(); // Died?
+            behaviorExecutionParameters.SuccessState = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            
+            if (behaviorExecutionParameters.Unknown1 == 81)
+                behaviorExecutionParameters.Context.Reader.Read<byte>();
+            
+            if (behaviorExecutionParameters.SuccessState == 1)
+                behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(
+                    behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
+        }
 
-            var failImmune = context.Reader.ReadBit();
-
-            if (!failImmune)
+        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
+        {
+            if (parameters.ServerSide)
+                await parameters.BranchContext.Target.NetFavorAsync();
+            
+            // Make sure the target is valid and damage them
+            if (parameters.BranchContext.Target != default && 
+                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
+                (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
             {
-                var unknown = context.Reader.ReadBit();
-                
-                if (!unknown)
-                {
-                    context.Reader.ReadBit();
-                }
-            }
-
-            context.Reader.Read<uint>();
-
-            var damage = context.Reader.Read<uint>();
-
-            if (branchContext == default)
-            {
-                Logger.Error("Invalid Brash Context!");
-                
-                throw new Exception("Invalid!");
+                if (parameters.ServerSide)
+                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
+                stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate);
             }
             
-            if (branchContext.Target == default || !branchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
+            // Execute the success state only if some parameters are set
+            if (parameters.SuccessState == 1)
             {
-                Logger.Error($"Invalid target: {branchContext.Target}");
-            }
-            else
-            {
-                var _ = Task.Run(() =>
-                {
-                    stats.Damage(damage, context.Associate);
-                });
-            }
-
-            var success = context.Reader.ReadBit();
-            
-            if (success)
-            {
-                await OnSuccess.ExecuteAsync(context, branchContext);
+                await OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
             }
         }
 
-        public override async Task CalculateAsync(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
         {
-            context.Associate.Transform.LookAt(branchContext.Target.Transform.Position);
+            parameters.ServerSide = true;
+            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+            parameters.NpcContext.Writer.Align();
             
-            await branchContext.Target.NetFavorAsync();
-
-            context.Writer.Align();
-
-            context.Writer.Write<ushort>(0);
+            // Three unknowns
+            parameters.NpcContext.Writer.Write<byte>(0);
+            parameters.NpcContext.Writer.Write<byte>(0);
+            parameters.NpcContext.Writer.Write<byte>(0);
             
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(false);
-            context.Writer.WriteBit(true);
+            parameters.NpcContext.Writer.WriteBit(false);
+            parameters.NpcContext.Writer.WriteBit(false);
+            parameters.NpcContext.Writer.WriteBit(true);
             
-            context.Writer.Write(0);
+            // flag 2 == true so this should be set
+            parameters.NpcContext.Writer.Write<uint>(0);
 
-            var success = context.IsValidTarget(branchContext.Target) && context.Alive;
-
-            var damage = (uint) (success ? MinDamage : 0);
-
-            context.Writer.Write(damage);
+            var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
+            parameters.NpcContext.Writer.Write(damage);
             
-            context.Writer.WriteBit(success);
+            parameters.NpcContext.Writer.WriteBit(!parameters.NpcContext.Alive);
+            
+            var success = parameters.NpcContext.IsValidTarget(parameters.BranchContext.Target) && 
+                          parameters.NpcContext.Alive;
+            parameters.SuccessState = (byte) (success ? 1 : 0);
+            parameters.NpcContext.Writer.Write(parameters.SuccessState);
 
             if (success)
             {
-                await PlayFxAsync("onhit", branchContext.Target, 1000);
-
-                var stats = branchContext.Target.GetComponent<DestroyableComponent>();
-
-                stats.Damage(damage, context.Associate, EffectHandler);
-                
-                await OnSuccess.CalculateAsync(context, branchContext);
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
+                    parameters.BranchContext);
             }
+        }
+        
+        /// <summary>
+        /// Takes a damage input and ensures that it's between the min and max damage
+        /// </summary>
+        /// <param name="damage">The damage to check</param>
+        /// <returns>the damage, or the min or max damage</returns>
+        private uint CalculateDamage(uint damage)
+        {
+            if (damage <= MaxDamage && damage >= MinDamage) return damage;
+            return damage > MaxDamage ? MaxDamage : MinDamage;
         }
     }
 }
