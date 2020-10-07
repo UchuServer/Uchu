@@ -6,6 +6,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class BasicAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
+        public bool ServerSide { get; set; } = false;
         public byte Unknown { get; set; }
         public byte Unknown1 { get; set; }
         public bool Flag2 { get; set; }
@@ -41,11 +42,16 @@ namespace Uchu.World.Systems.Behaviors
             OnSuccess = await GetBehavior("on_success");
             MinDamage = await GetParameter<uint>("min damage");
             MaxDamage = await GetParameter<uint>("max damage");
+
+            // Apparently some items have max damage == 0, making them unable to kill enemies
+            if (MaxDamage == 0)
+                MaxDamage = 1;
         }
 
         protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
         {
             behaviorExecutionParameters.Context.Reader.Align();
+            
             behaviorExecutionParameters.Unknown = behaviorExecutionParameters.Context.Reader.Read<byte>();
             behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
                 ? behaviorExecutionParameters.Unknown
@@ -56,13 +62,16 @@ namespace Uchu.World.Systems.Behaviors
             behaviorExecutionParameters.Context.Reader.ReadBit();
             
             behaviorExecutionParameters.Flag2 = behaviorExecutionParameters.Context.Reader.ReadBit();
-            if (behaviorExecutionParameters.Flag2) behaviorExecutionParameters.Context.Reader.Read<uint>();
+            if (behaviorExecutionParameters.Flag2)
+                behaviorExecutionParameters.Context.Reader.Read<uint>();
 
             behaviorExecutionParameters.Damage = behaviorExecutionParameters.Context.Reader.Read<uint>();
             behaviorExecutionParameters.Context.Reader.ReadBit(); // Died?
             behaviorExecutionParameters.SuccessState = behaviorExecutionParameters.Context.Reader.Read<byte>();
             
-            if (behaviorExecutionParameters.Unknown1 == 81) behaviorExecutionParameters.Context.Reader.Read<byte>();
+            if (behaviorExecutionParameters.Unknown1 == 81)
+                behaviorExecutionParameters.Context.Reader.Read<byte>();
+            
             if (behaviorExecutionParameters.SuccessState == 1)
                 behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(
                     behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
@@ -70,15 +79,17 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
         {
+            if (parameters.ServerSide)
+                await parameters.BranchContext.Target.NetFavorAsync();
             
             // Make sure the target is valid and damage them
             if (parameters.BranchContext.Target != default && 
-                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
+                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
+                (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
             {
-                await parameters.BranchContext.Target.NetFavorAsync();
-                await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
-                stats.Damage(CalculateDamage(parameters.Damage), 
-                    parameters.Context.Associate);
+                if (parameters.ServerSide)
+                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
+                stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate);
             }
             
             // Execute the success state only if some parameters are set
@@ -90,6 +101,7 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
         {
+            parameters.ServerSide = true;
             parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
             parameters.NpcContext.Writer.Align();
             
@@ -102,7 +114,7 @@ namespace Uchu.World.Systems.Behaviors
             parameters.NpcContext.Writer.WriteBit(false);
             parameters.NpcContext.Writer.WriteBit(true);
             
-            // Unknown 2 == true so this should be set
+            // flag 2 == true so this should be set
             parameters.NpcContext.Writer.Write<uint>(0);
 
             var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
@@ -112,10 +124,10 @@ namespace Uchu.World.Systems.Behaviors
             
             var success = parameters.NpcContext.IsValidTarget(parameters.BranchContext.Target) && 
                           parameters.NpcContext.Alive;
-            parameters.NpcContext.Writer.Write<uint>((uint)(success ? 1 : 0));
+            parameters.SuccessState = (byte) (success ? 1 : 0);
+            parameters.NpcContext.Writer.Write(parameters.SuccessState);
 
-            if (success && parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(
-                out var stats))
+            if (success)
             {
                 parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
                     parameters.BranchContext);

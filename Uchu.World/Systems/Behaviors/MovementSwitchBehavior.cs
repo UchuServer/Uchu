@@ -60,10 +60,8 @@ namespace Uchu.World.Systems.Behaviors
                     parameters.ToExecute = JetpackBehavior;
                     break;
                 case MovementType.Unknown:
-                    // TODO: Try to find out if this has to be handled explicitly or fail silently
-                    parameters.ToExecute = AirBehavior;
-                    Logger.Debug($"Received movement type {nameof(MovementType.Unknown)}");
-                    break;
+                    Logger.Debug("Received movement switch type unknown");
+                    return;
                 default:
                     throw new Exception($"Invalid {nameof(MovementType)}! Got {parameters.MovementType}!");
             }
@@ -74,6 +72,8 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override async Task ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
         {
+            if (parameters.ToExecute == null)
+                return;    
             await parameters.ToExecute.ExecuteStart(parameters.BehaviorExecutionParameters);
         }
     }

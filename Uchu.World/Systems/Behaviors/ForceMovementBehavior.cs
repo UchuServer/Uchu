@@ -39,12 +39,15 @@ namespace Uchu.World.Systems.Behaviors
             var actionId = behaviorExecutionParameters.Context.Reader.Read<uint>();
             behaviorExecutionParameters.Action = await GetBehavior(actionId);
             
-            behaviorExecutionParameters.ActionExecutionParameters = behaviorExecutionParameters.Action.DeserializeStart(
-                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
-            
             var targetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
             behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject((long) targetId, out var target);
-            behaviorExecutionParameters.ActionExecutionParameters.BranchContext.Target = target;
+            
+            behaviorExecutionParameters.ActionExecutionParameters = behaviorExecutionParameters.Action.DeserializeStart(
+                behaviorExecutionParameters.Context, new ExecutionBranchContext()
+                {
+                    Duration = behaviorExecutionParameters.BranchContext.Duration,
+                    Target = target
+                });
         }
 
         protected override async Task ExecuteSync(ForceMovementBehaviorExecutionParameters behaviorExecutionParameters)

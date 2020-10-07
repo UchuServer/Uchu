@@ -42,12 +42,11 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
         {
-            if (UsePickedTarget && parameters.Context.ExplicitTarget != null)
+            if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;
                 parameters.Parameters = parameters.Behavior.DeserializeStart(parameters.Context,
                     parameters.BranchContext);
-                parameters.Parameters.BranchContext.Target = parameters.Context.ExplicitTarget;
             }
             else
             {
@@ -150,8 +149,11 @@ namespace Uchu.World.Systems.Behaviors
             foreach (var target in targets)
             {
                 var res = parameters.Behavior.DeserializeStart(parameters.Context,
-                    parameters.BranchContext);
-                res.BranchContext.Target = target;
+                    new ExecutionBranchContext
+                    {
+                        Duration = parameters.BranchContext.Duration,
+                        Target = target
+                    });
                 parameters.ParametersList.Add(res);
             }
         }
@@ -163,7 +165,7 @@ namespace Uchu.World.Systems.Behaviors
                 return;
 
             // If there's a single target to hit, hit them and exit
-            if (UsePickedTarget && parameters.Context.ExplicitTarget != null)
+            if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;
                 parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
@@ -185,15 +187,18 @@ namespace Uchu.World.Systems.Behaviors
                         foreach (var target in targets)
                         {
                             var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                                    parameters.BranchContext);
-                            targetParameters.BranchContext.Target = target;
+                                    new ExecutionBranchContext()
+                                    {
+                                        Duration = parameters.BranchContext.Duration,
+                                        Target = target
+                                    });
                             parameters.ParametersList.Add(targetParameters);
                         }
                         return;
                     }
                 }
                 
-                // If there was no explicit target, find targets if the game object is alive
+                // If there was no target, find targets if the game object is alive
                 if (any)
                 {
                     combatAi.Target = targets.First();
@@ -211,8 +216,11 @@ namespace Uchu.World.Systems.Behaviors
                     foreach (var target in targets)
                     {
                         var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                                parameters.BranchContext);
-                        targetParameters.BranchContext.Target = target;
+                                new ExecutionBranchContext()
+                                {
+                                    Duration = parameters.BranchContext.Duration,
+                                    Target = target
+                                });
                         parameters.ParametersList.Add(targetParameters);
                     }
                 }

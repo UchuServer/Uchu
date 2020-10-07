@@ -27,20 +27,26 @@ namespace Uchu.World.Systems.Behaviors
         protected override void DeserializeStart(DurationBehaviorExecutionParameters parameters)
         {
             parameters.ActionExecutionParameters = Action.DeserializeStart(parameters.Context, 
-                parameters.BranchContext);
+                new ExecutionBranchContext()
+                {
+                    Target = parameters.BranchContext.Target,
+                    Duration = ActionDuration * 1000
+                });
         }
 
         protected override async Task ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            behaviorExecutionParameters.ActionExecutionParameters.BranchContext.Duration = ActionDuration * 1000;
             await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
         }
 
         protected override void SerializeStart(DurationBehaviorExecutionParameters parameters)
         {
-            parameters.BranchContext.Duration = ActionDuration * 1000;
             parameters.ActionExecutionParameters = Action.SerializeStart(parameters.NpcContext, 
-                parameters.BranchContext);
+                new ExecutionBranchContext()
+                {
+                    Target = parameters.BranchContext.Target,
+                    Duration = ActionDuration * 1000
+                });
         }
     }
 }

@@ -343,19 +343,16 @@ namespace Uchu.World.Systems.Behaviors
             Deserialized = true;
             CastType = castType;
             
-            var context = new ExecutionContext(associate, reader, default)
-            {
-                ExplicitTarget = target
-            };
+            var context = new ExecutionContext(associate, reader, default);
 
-            DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context);
-            DeserializeRootBehaviorsForSkillType(associate, castType, context);
+            DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context, target);
+            DeserializeRootBehaviorsForSkillType(associate, castType, context, target);
 
             return context;
         }
 
         private void DeserializeRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType,
-            ExecutionContext context)
+            ExecutionContext context, GameObject target = default)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
@@ -363,11 +360,13 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     // For each behavior specify behavior specific context (for example duration and explicit target)
                     context.Root = executionPreparation.BehaviorBase;
-                    var branchContext = new ExecutionBranchContext { Target = associate };
-                    
+
                     // Prepare the behavior for execution by populating it with context
                     executionPreparation.BehaviorExecutionParameters = 
-                        executionPreparation.BehaviorBase.DeserializeStart(context, branchContext);
+                        executionPreparation.BehaviorBase.DeserializeStart(context, new ExecutionBranchContext
+                        {
+                            Target = target
+                        });
                 }
             }
         }

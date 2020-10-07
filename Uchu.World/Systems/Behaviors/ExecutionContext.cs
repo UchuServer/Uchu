@@ -44,7 +44,7 @@ namespace Uchu.World.Systems.Behaviors
                     return;
                 }
                 
-                BehaviorHandles.Remove(entry);
+                // BehaviorHandles.Remove(entry);
             }
             
             await entry.Delegate(reader);
