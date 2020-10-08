@@ -42,10 +42,6 @@ namespace Uchu.World.Systems.Behaviors
             OnSuccess = await GetBehavior("on_success");
             MinDamage = await GetParameter<uint>("min damage");
             MaxDamage = await GetParameter<uint>("max damage");
-
-            // Apparently some items have max damage == 0, making them unable to kill enemies
-            if (MaxDamage == 0)
-                MaxDamage = 1;
         }
 
         protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
@@ -141,7 +137,8 @@ namespace Uchu.World.Systems.Behaviors
         /// <returns>the damage, or the min or max damage</returns>
         private uint CalculateDamage(uint damage)
         {
-            if (damage <= MaxDamage && damage >= MinDamage) return damage;
+            if (MinDamage == 0 && MaxDamage == 0 ||damage >= MinDamage && damage <= MaxDamage)
+                return damage;
             return damage > MaxDamage ? MaxDamage : MinDamage;
         }
     }

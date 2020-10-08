@@ -43,8 +43,6 @@ namespace Uchu.World.Systems.Behaviors
                     Logger.Error($"Invalid behavior sync id: {handle}!");
                     return;
                 }
-                
-                // BehaviorHandles.Remove(entry);
             }
             
             await entry.Delegate(reader);
