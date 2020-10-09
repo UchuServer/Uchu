@@ -17,6 +17,22 @@ namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
+        [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Buffme(string[] arguments, Player player)
+        {
+            DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
+
+            comp.MaxArmor = 999;
+            comp.MaxHealth = 999;
+            comp.Armor = 999;
+            comp.Health = 999;
+
+            comp.MaxImagination = 999;
+            comp.Imagination = 999;
+
+            return "Buffed";
+        }
+
         [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]
         public async Task<string> ChangeChatLevel(string[] arguments, Player player)
         {

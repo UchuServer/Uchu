@@ -135,6 +135,7 @@ namespace Uchu.World
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
+            Listen(OnTick, PhysicsStep);
         }
 
         #region Initializing
@@ -564,8 +565,6 @@ namespace Uchu.World
             };
 
             timer.Start();
-
-            Listen(OnTick, PhysicsStep);
 
             return Task.Run(async () =>
             {
