@@ -242,7 +242,7 @@ namespace Uchu.World.Systems.Behaviors
             behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
             {
                 behaviorExecutionParameters.Context.Reader = reader;
-                var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
+                 var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
                     behaviorExecutionParameters.BranchContext);
                 await ExecuteSync(syncBehaviorExecutionParameters);
             });

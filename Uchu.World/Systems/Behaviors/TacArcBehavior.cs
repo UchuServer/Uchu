@@ -42,6 +42,9 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
         {
+            Logger.Debug("TacArc");
+            Logger.Debug(parameters.BranchContext.Target);
+            
             if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;
@@ -77,34 +80,50 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
+        protected override Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    await parameters.Behavior.ExecuteStart(parameter);
+                    Task.Run(async () =>
+                    {
+                        await parameters.Behavior.ExecuteStart(parameter);
+                    });
                 }
             }
             else
             {
-                await parameters.Behavior.ExecuteStart(parameters.Parameters);
+                Task.Run(async () =>
+                {
+                    await parameters.Behavior.ExecuteStart(parameters.Parameters);
+                });
             }
+
+            return Task.CompletedTask;
         }
 
-        protected override async Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
+        protected override Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    await parameters.Behavior.ExecuteSync(parameter);
+                    Task.Run(async () =>
+                    {
+                        await parameters.Behavior.ExecuteSync(parameter);
+                    });
                 }
             }
             else
             {
-                await parameters.Behavior.ExecuteSync(parameters.Parameters);
+                Task.Run(async () =>
+                {
+                    await parameters.Behavior.ExecuteSync(parameters.Parameters);
+                });
             }
+
+            return Task.CompletedTask;
         }
 
         protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)

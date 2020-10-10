@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -34,32 +35,48 @@ namespace Uchu.World.Systems.Behaviors
         protected override void DeserializeStart(AreaOfEffectExecutionParameters behaviorExecutionParameters)
         {
             behaviorExecutionParameters.Length = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            var targets = new List<GameObject>();
             for (var i = 0; i < behaviorExecutionParameters.Length; i++)
             {
-                var targetId = (long) behaviorExecutionParameters.Context.Reader.Read<ulong>();
+                var targetId = behaviorExecutionParameters.Context.Reader.Read<long>();
                 if (!behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject(targetId, 
                     out var target))
                 {
-                    Logger.Error($"{behaviorExecutionParameters.Context.Associate} sent invalid AreaOfEffect target.");
+                    Logger.Error(
+                        $"{behaviorExecutionParameters.Context.Associate} sent invalid AreaOfEffect target.");
+                    continue;
                 }
+                targets.Add(target);
+            }
+            
+            Logger.Debug($"Found {behaviorExecutionParameters.Length} targets");
+            Logger.Debug(targets);
 
+            foreach (var target in targets)
+            {
                 var behaviorBase = Action.DeserializeStart(behaviorExecutionParameters.Context, 
                     new ExecutionBranchContext()
-                {
-                    Target = target,
-                    Duration = behaviorExecutionParameters.BranchContext.Duration
-                });
+                    {
+                        Target = target,
+                        Duration = behaviorExecutionParameters.BranchContext.Duration
+                    });
                 
                 behaviorExecutionParameters.TargetActions.Add(behaviorBase);
             }
         }
 
-        protected override async Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        protected override Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
         {
             foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
             {
-                await Action.ExecuteStart(behaviorExecutionParameters);
+                // Run in the background to avoid waiting for each other
+                Task.Run(async () =>
+                {
+                    await Action.ExecuteStart(behaviorExecutionParameters);
+                });
             }
+
+            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)

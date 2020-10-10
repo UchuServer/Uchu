@@ -52,6 +52,9 @@ namespace Uchu.World.Systems.Behaviors
             behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
                 ? behaviorExecutionParameters.Unknown
                 : behaviorExecutionParameters.Context.Reader.Read<byte>();
+
+            // Unknown 2
+            behaviorExecutionParameters.Context.Reader.Read<byte>();
             
             // Unused flags
             behaviorExecutionParameters.Context.Reader.ReadBit();
