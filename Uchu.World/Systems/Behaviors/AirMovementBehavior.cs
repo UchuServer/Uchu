@@ -29,8 +29,9 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            behaviorExecutionParameters.Action = await GetBehavior(
-                behaviorExecutionParameters.Context.Reader.Read<uint>());
+            var behaviorId = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            Logger.Debug(behaviorId);
+            behaviorExecutionParameters.Action = await GetBehavior(behaviorId);
             
             var targetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
             behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject((long)targetId,
@@ -40,7 +41,7 @@ namespace Uchu.World.Systems.Behaviors
                 behaviorExecutionParameters.Context, new ExecutionBranchContext
                 {
                     Duration = behaviorExecutionParameters.BranchContext.Duration,
-                    Target = target
+                    Target = target ?? behaviorExecutionParameters.BranchContext.Target
                 });
         }
 

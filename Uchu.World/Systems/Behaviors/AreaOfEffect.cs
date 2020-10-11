@@ -48,8 +48,8 @@ namespace Uchu.World.Systems.Behaviors
                 }
                 targets.Add(target);
             }
-            
-            Logger.Debug($"Found {behaviorExecutionParameters.Length} targets");
+
+            Logger.Debug($"Found {targets.Count} targets");
             Logger.Debug(targets);
 
             foreach (var target in targets)
@@ -65,18 +65,12 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        protected override async Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
         {
             foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
             {
-                // Run in the background to avoid waiting for each other
-                Task.Run(async () =>
-                {
-                    await Action.ExecuteStart(behaviorExecutionParameters);
-                });
+                await Action.ExecuteStart(behaviorExecutionParameters);
             }
-
-            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)

@@ -80,50 +80,34 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
+        protected override async Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    Task.Run(async () =>
-                    {
-                        await parameters.Behavior.ExecuteStart(parameter);
-                    });
+                    await parameters.Behavior.ExecuteStart(parameter);
                 }
             }
             else
             {
-                Task.Run(async () =>
-                {
-                    await parameters.Behavior.ExecuteStart(parameters.Parameters);
-                });
+                await parameters.Behavior.ExecuteStart(parameters.Parameters);
             }
-
-            return Task.CompletedTask;
         }
 
-        protected override Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
+        protected override async Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    Task.Run(async () =>
-                    {
-                        await parameters.Behavior.ExecuteSync(parameter);
-                    });
+                    await parameters.Behavior.ExecuteSync(parameter);
                 }
             }
             else
             {
-                Task.Run(async () =>
-                {
-                    await parameters.Behavior.ExecuteSync(parameters.Parameters);
-                });
+                await parameters.Behavior.ExecuteSync(parameters.Parameters);
             }
-
-            return Task.CompletedTask;
         }
 
         protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)

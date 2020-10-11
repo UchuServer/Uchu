@@ -237,14 +237,26 @@ namespace Uchu.World.Systems.Behaviors
             return new BehaviorExecutionParameters(context, branchContext);
         }
         
-        protected void RegisterHandle(uint handle, BehaviorExecutionParameters behaviorExecutionParameters)
+        protected void RegisterHandle(uint handle, BehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
+            parameters.Context.RegisterHandle(handle, async reader =>
             {
-                behaviorExecutionParameters.Context.Reader = reader;
-                 var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
-                    behaviorExecutionParameters.BranchContext);
-                await ExecuteSync(syncBehaviorExecutionParameters);
+                // Only one sync may be deserialized at the same time
+                parameters.Lock.WaitOne();
+                BehaviorExecutionParameters syncParameters;
+                
+                try
+                {
+                    parameters.Context.Reader = reader;
+                    syncParameters = DeserializeSync(parameters.Context,
+                        parameters.BranchContext);
+                }
+                finally
+                {
+                    parameters.Lock.ReleaseMutex();
+                }
+                
+                await ExecuteSync(syncParameters);
             });
         }
     }

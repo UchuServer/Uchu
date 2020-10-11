@@ -1,7 +1,10 @@
+using System.Threading;
+
 namespace Uchu.World.Systems.Behaviors
 {
     public class BehaviorExecutionParameters
     {
+        public Mutex Lock { get; set; } = new Mutex();
         public ExecutionContext Context { get; set; }
         public ExecutionBranchContext BranchContext { get; set; }
 
