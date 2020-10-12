@@ -57,12 +57,17 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        protected override Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
         {
             foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
             {
-                await Action.ExecuteStart(behaviorExecutionParameters);
+                Task.Run(async () =>
+                {
+                    await Action.ExecuteStart(behaviorExecutionParameters);
+                });
             }
+
+            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)

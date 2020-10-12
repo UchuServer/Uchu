@@ -34,12 +34,18 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteStart(AndBehaviorExecutionParameters parameters)
+        protected override Task ExecuteStart(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                await Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
+                var index = i;
+                Task.Run(async () =>
+                {
+                    await Behaviors[index].ExecuteStart(parameters.BehaviorExecutionParameters[index]);
+                });
             }
+
+            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
@@ -59,12 +65,18 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteSync(AndBehaviorExecutionParameters parameters)
+        protected override Task ExecuteSync(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                await Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]); 
+                var index = i;
+                Task.Run(async () =>
+                {
+                    await Behaviors[index].ExecuteSync(parameters.BehaviorExecutionParameters[index]);
+                });
             }
+            
+            return Task.CompletedTask;
         }
     }
 }
