@@ -42,9 +42,6 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
         {
-            Logger.Debug("TacArc");
-            Logger.Debug(parameters.BranchContext.Target);
-            
             if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;

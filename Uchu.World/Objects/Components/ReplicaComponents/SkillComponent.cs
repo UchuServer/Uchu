@@ -273,10 +273,6 @@ namespace Uchu.World
                 Logger.Error(e);
                 return;
             }
-            
-            Logger.Debug("Targets:");
-            Logger.Debug(message.OptionalOriginator);
-            Logger.Debug(message.OptionalTarget);
 
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))

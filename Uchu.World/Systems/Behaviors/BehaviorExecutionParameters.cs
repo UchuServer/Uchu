@@ -4,7 +4,6 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class BehaviorExecutionParameters
     {
-        public Mutex Lock { get; set; } = new Mutex();
         public ExecutionContext Context { get; set; }
         public ExecutionBranchContext BranchContext { get; set; }
 
@@ -20,7 +19,7 @@ namespace Uchu.World.Systems.Behaviors
         public BehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
         {
             Context = context;
-            BranchContext = new ExecutionBranchContext()
+            BranchContext = new ExecutionBranchContext
             {
                 Duration = branchContext.Duration,
                 Target = branchContext.Target

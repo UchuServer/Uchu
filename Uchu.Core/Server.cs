@@ -362,7 +362,10 @@ namespace Uchu.Core
             var parameters = method.GetParameters();
             if (parameters.Length == 0 || !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
                 return;
+            
             var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
+            if (packet == null)
+                return;
 
             var remoteConnectionType = attribute.RemoteConnectionType ?? packet.RemoteConnectionType;
             var packetId = attribute.PacketId ?? packet.PacketId;
@@ -377,12 +380,7 @@ namespace Uchu.Core
                 : $"Handler for packet {packet} overwritten"
             );
 
-            handlers[packetId] = new Handler
-            {
-                Group = instance,
-                Info = method,
-                Packet = packet
-            };
+            handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
         }
 
         /// <summary>
@@ -414,7 +412,7 @@ namespace Uchu.Core
         /// <param name="endPoint">The IP that the packet originated from</param>
         /// <param name="data">Binary data of the packet</param>
         /// <param name="reliability">Reliability of the packet</param>
-        /// <exception cref="ArgumentOutOfRangeException">If the packet is not a user packet</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If the packet is not a valid user packet</exception>
         public async Task HandlePacketAsync(IPEndPoint endPoint, byte[] data, Reliability reliability)
         {
             // Connection can be null when packets are sent over an invalid port
@@ -451,29 +449,30 @@ namespace Uchu.Core
                 {
                     Logger.Error(e);
                 }
-
-                return;
             }
-            
-            // Regular Packet
-            if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
-                !temp.TryGetValue(header.PacketId, out var handler))
+            else
             {
-                Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
-                return;
-            };
+                // Regular Packet
+                if (!HandlerMap.TryGetValue(header.RemoteConnectionType, out var temp) ||
+                    !temp.TryGetValue(header.PacketId, out var handler))
+                {
+                    Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
+                    return;
+                };
 
-            Logger.Debug($"Received {handler.Packet.GetType().FullName}");
-            reader.BaseStream.Position = 8;
+                Logger.Debug($"Received {handler.PacketType.FullName}");
+                reader.BaseStream.Position = 8;
 
-            try
-            {
-                reader.Read(handler.Packet);
-                await InvokeHandlerAsync(handler, connection).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
+                try
+                {
+                    var packet = handler.NewPacket();
+                    reader.Read(packet);
+                    await InvokeHandlerAsync(handler, packet, connection).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
 
@@ -637,11 +636,11 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="handler">The handler to invoke</param>
         /// <param name="endPoint">The endpoint to send a response to</param>
-        private static async Task InvokeHandlerAsync(Handler handler, IRakConnection endPoint)
+        private static async Task InvokeHandlerAsync(Handler handler, IPacket packet, IRakConnection endPoint)
         {
             var task = handler.Info.ReturnType == typeof(Task);
             
-            var parameters = new object[] {handler.Packet, endPoint};
+            var parameters = new object[] {packet, endPoint};
             var res = handler.Info.Invoke(handler.Group, parameters);
 
             if (task && res != null)

@@ -16,9 +16,11 @@ namespace Uchu.World.Systems.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AirMovement;
         
-        public override Task BuildAsync()
+        public BehaviorBase GroundAction { get; set; }
+        
+        public override async Task BuildAsync()
         {
-            return Task.CompletedTask;
+            GroundAction = await GetBehavior("ground_action");
         }
 
         protected override void DeserializeStart(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
@@ -27,21 +29,20 @@ namespace Uchu.World.Systems.Behaviors
             RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
         }
 
-        protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters parameters)
         {
-            var behaviorId = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            Logger.Debug(behaviorId);
-            behaviorExecutionParameters.Action = await GetBehavior(behaviorId);
-            
-            var targetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
-            behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject((long)targetId,
+            var behaviorId = parameters.Context.Reader.Read<uint>();
+            parameters.Action = await GetBehavior(behaviorId);
+
+            var targetId = parameters.Context.Reader.Read<ulong>();
+            parameters.Context.Associate.Zone.TryGetGameObject((long)targetId,
                 out var target);
             
-            behaviorExecutionParameters.ActionParameters = behaviorExecutionParameters.Action.DeserializeStart(
-                behaviorExecutionParameters.Context, new ExecutionBranchContext
+            parameters.ActionParameters = parameters.Action.DeserializeStart(
+                parameters.Context, new ExecutionBranchContext
                 {
-                    Duration = behaviorExecutionParameters.BranchContext.Duration,
-                    Target = target ?? behaviorExecutionParameters.BranchContext.Target
+                    Duration = parameters.BranchContext.Duration,
+                    Target = target ?? parameters.BranchContext.Target
                 });
         }
 

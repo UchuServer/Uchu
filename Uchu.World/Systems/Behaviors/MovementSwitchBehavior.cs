@@ -43,27 +43,21 @@ namespace Uchu.World.Systems.Behaviors
                     parameters.ToExecute = GroundBehavior;
                     break;
                 case MovementType.Ground:
-                    Logger.Debug("Ground");
                     parameters.ToExecute = GroundBehavior;
                     break;
                 case MovementType.Jump:
-                    Logger.Debug("Jump");
                     parameters.ToExecute = JumpBehavior;
                     break;
                 case MovementType.Falling:
-                    Logger.Debug("Falling");
                     parameters.ToExecute = FallingBehavior;
                     break;
                 case MovementType.DoubleJump:
-                    Logger.Debug("DoubleJump");
                     parameters.ToExecute = DoubleJumpBehavior;
                     break;
                 case MovementType.Air:
-                    Logger.Debug("Air");
                     parameters.ToExecute = AirBehavior;
                     break;
                 case MovementType.Jetpack:
-                    Logger.Debug("JetPack");
                     parameters.ToExecute = JetpackBehavior;
                     break;
                 case MovementType.Unknown:

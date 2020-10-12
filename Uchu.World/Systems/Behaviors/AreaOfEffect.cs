@@ -16,52 +16,44 @@ namespace Uchu.World.Systems.Behaviors
     public class AreaOfEffect : BehaviorBase<AreaOfEffectExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AreaOfEffect;
-
         private BehaviorBase Action { get; set; }
-
         private int MaxTargets { get; set; }
-
         private float Radius { get; set; }
-        
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
-
             MaxTargets = await GetParameter<int>("max targets");
-
             Radius = await GetParameter<float>("radius");
         }
 
-        protected override void DeserializeStart(AreaOfEffectExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(AreaOfEffectExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Length = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            parameters.Length = parameters.Context.Reader.Read<uint>();
+
             var targets = new List<GameObject>();
-            for (var i = 0; i < behaviorExecutionParameters.Length; i++)
+            for (var i = 0; i < parameters.Length; i++)
             {
-                var targetId = behaviorExecutionParameters.Context.Reader.Read<long>();
-                if (!behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject(targetId, 
+                var targetId = parameters.Context.Reader.Read<long>();
+                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, 
                     out var target))
                 {
                     Logger.Error(
-                        $"{behaviorExecutionParameters.Context.Associate} sent invalid AreaOfEffect target.");
+                        $"{parameters.Context.Associate} sent invalid AreaOfEffect target.");
                     continue;
                 }
                 targets.Add(target);
             }
 
-            Logger.Debug($"Found {targets.Count} targets");
-            Logger.Debug(targets);
-
             foreach (var target in targets)
             {
-                var behaviorBase = Action.DeserializeStart(behaviorExecutionParameters.Context, 
+                var behaviorBase = Action.DeserializeStart(parameters.Context, 
                     new ExecutionBranchContext()
                     {
                         Target = target,
-                        Duration = behaviorExecutionParameters.BranchContext.Duration
+                        Duration = parameters.BranchContext.Duration
                     });
                 
-                behaviorExecutionParameters.TargetActions.Add(behaviorBase);
+                parameters.TargetActions.Add(behaviorBase);
             }
         }
 
