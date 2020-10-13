@@ -434,7 +434,7 @@ namespace Uchu.World
 
         private void OnStayCollision(PhysicsComponent other)
         {
-            Logger.Debug($"{this} stayed {other.GameObject}");
+            // Logger.Debug($"{this} stayed {other.GameObject}");
         }
         
         private void OnEnterCollision(PhysicsComponent other)
