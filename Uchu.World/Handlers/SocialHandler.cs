@@ -33,16 +33,8 @@ namespace Uchu.World.Handlers
 
             if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
-<<<<<<< Updated upstream
                 if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0))) return;
                 string response = await Server.HandleCommandAsync(
-=======
-<<<<<<< Updated upstream
-                var response = await Server.HandleCommandAsync(
-=======
-                string response = await Server.HandleCommandAsync(
->>>>>>> Stashed changes
->>>>>>> Stashed changes
                     message.Message,
                     player,
                     (GameMasterLevel) character.User.GameMasterLevel
