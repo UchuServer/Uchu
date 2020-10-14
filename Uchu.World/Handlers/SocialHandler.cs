@@ -31,10 +31,18 @@ namespace Uchu.World.Handlers
 
             string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s", "/whisper", "/w", "/tell", "/team", "/t", "/location", "/locate", "/loc", "/faq", "/faqs", "/shop", "/store", "/minigames", "/forums", "/thumbsup", "/thumb", "/thumb", "/victory", "/backflip", "/clap", "/cringe", "/cry", "/dance", "/gasp", "/giggle", "/talk", "/salute", "/shrug", "/sigh", "/wave", "/why", "/thanks", "/yes", "/addfriend", "/removefriend", "/addignore", "/removeignore", "/recommendedperfoptions", "/perfoptionslow", "/perfoptionsmid", "/perfoptionshigh", "/invite", "/tinvite", "/teaminvite", "/inviteteam", "/leaveteam", "/leave", "/tleave", "/teamleave", "/setloot", "/tloot", "/tsetloot", "/teamsetloot", "/kickplayer", "/tkick", "/kick", "/tkickplayer", "/teamkickplayer", "/leader", "/setleader", "/tleader", "/tsetleader", "/teamsetleader", "/cancelqueue" };
 
-            if (message.Message.StartsWith('/'))
+            if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
+<<<<<<< Updated upstream
                 if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0))) return;
                 string response = await Server.HandleCommandAsync(
+=======
+<<<<<<< Updated upstream
+                var response = await Server.HandleCommandAsync(
+=======
+                string response = await Server.HandleCommandAsync(
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                     message.Message,
                     player,
                     (GameMasterLevel) character.User.GameMasterLevel
