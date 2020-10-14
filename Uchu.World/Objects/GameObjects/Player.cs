@@ -107,16 +107,7 @@ namespace Uchu.World
         public override string Name
         {
             get => ObjectName;
-            set
-            {
-                ObjectName = value;
-                
-                Zone.BroadcastMessage(new SetNameMessage
-                {
-                    Associate = this,
-                    Name = value
-                });
-            }
+            set => ObjectName = value;
         }
 
         /// <summary>
