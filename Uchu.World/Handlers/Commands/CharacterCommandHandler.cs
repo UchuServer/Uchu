@@ -182,6 +182,22 @@ namespace Uchu.World.Handlers.Commands
 
             return "You smashed yourself";
         }
+        
+        [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Buffme(string[] arguments, Player player)
+        {
+            DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
+
+            comp.MaxArmor = 999;
+            comp.MaxHealth = 999;
+            comp.Armor = 999;
+            comp.Health = 999;
+
+            comp.MaxImagination = 999;
+            comp.Imagination = 999;
+
+            return "Buffed";
+        }
 
         [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
