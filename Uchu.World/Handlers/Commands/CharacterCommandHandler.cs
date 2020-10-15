@@ -724,7 +724,17 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
-            string WorldName = new CdClientContext().ZoneTableTable.Where(t => t.ZoneID == id).ToArray().ElementAt(0).ZoneName;
+            using CdClientContext ctx = new CdClientContext();
+
+            ZoneTable WorldTable = ctx.ZoneTableTable.FirstOrDefault(t => t.ZoneID == id);
+
+            if (WorldTable == default)
+            {
+                return $"Can't find world with ID {id}";
+            }
+
+            string WorldName = WorldTable.ZoneName;
+
             if (WorldName.EndsWith(".luz"))
             {
                 //
