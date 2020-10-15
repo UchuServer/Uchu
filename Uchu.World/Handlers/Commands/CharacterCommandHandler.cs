@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Uchu.Core;
@@ -722,32 +723,40 @@ namespace Uchu.World.Handlers.Commands
                 return "world <zoneId>";
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
-            
-            //
-            // We don't want to lock up the server on a world server request, as it may take time.
-            //
-            
-            player.Zone.BroadcastMessage(new SetStunnedMessage
-            {
-                Associate = player,
-                CantMove = true,
-                CantJump = true,
-                CantAttack = true,
-                CantTurn = true,
-                CantUseItem = true,
-                CantEquip = true,
-                CantInteract = true
-            });
 
-            var _ = Task.Run(async () =>
+            string WorldName = new CdClientContext().ZoneTableTable.Where(t => t.ZoneID == id).ToArray().ElementAt(0).ZoneName;
+            if (WorldName.EndsWith(".luz"))
             {
-                if (!await player.SendToWorldAsync((ZoneId) id))
+                //
+                // We don't want to lock up the server on a world server request, as it may take time.
+                //
+
+                player.Zone.BroadcastMessage(new SetStunnedMessage
                 {
-                    player.SendChatMessage($"Failed to transfer to {id}, please try later.");
-                }
-            });
-            
-            return $"Requesting transfer to {id}, please wait...";
+                    Associate = player,
+                    CantMove = true,
+                    CantJump = true,
+                    CantAttack = true,
+                    CantTurn = true,
+                    CantUseItem = true,
+                    CantEquip = true,
+                    CantInteract = true
+                });
+
+                var _ = Task.Run(async () =>
+                {
+                    if (!await player.SendToWorldAsync((ZoneId)id))
+                    {
+                        player.SendChatMessage($"Failed to transfer to {id}, please try later.");
+                    }
+                });
+
+                return $"Requesting transfer to {id}, please wait...";
+            } 
+            else
+            {
+                return $"Can't find world with ID {id}";
+            }           
         }
 
         [CommandHandler(Signature = "monitor", Help = "Get server info", GameMasterLevel = GameMasterLevel.Admin)]
