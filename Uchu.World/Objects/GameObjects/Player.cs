@@ -19,19 +19,13 @@ namespace Uchu.World
     public sealed class Player : GameObject
     {
         private float _gravityScale = 1;
-        
         private Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
-
             OnPositionUpdate = new Event<Vector3, Quaternion>();
-
             OnLootPickup = new Event<Lot>();
-            
             OnWorldLoad = new Event();
-
             Lock = new SemaphoreSlim(1, 1);
 
             Listen(OnStart, async () =>
@@ -39,9 +33,7 @@ namespace Uchu.World
                 Connection.Disconnected += reason =>
                 {
                     Connection = default;
-                    
                     Destroy(this);
-                    
                     return Task.CompletedTask;
                 };
 
@@ -63,12 +55,18 @@ namespace Uchu.World
                     await UnlockEmoteAsync(unlockedEmote.EmoteId);
                 }
 
+                // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
                 {
                     await Perspective.TickAsync();
-
-                    await CheckBannedStatusAsync();
                 }, 20 * 5);
+                
+                // Check banned status every minute
+                // TODO: Find an active method instead of polling
+                Zone.Update(this, async () =>
+                {
+                    await CheckBannedStatusAsync();
+                }, 20 * 60);
             });
             
             Listen(OnDestroyed, () =>
@@ -111,10 +109,10 @@ namespace Uchu.World
         }
 
         /// <summary>
-        ///    Negative offset for the SetCurrency message.
+        /// Negative offset for the SetCurrency message.
         /// </summary>
         /// <remarks>
-        ///    Used when the client adds currency by itself. E.g, achievements.
+        /// Used when the client adds currency by itself. E.g, achievements.
         /// </remarks>
         public long HiddenCurrency { get; set; }
 
@@ -271,36 +269,45 @@ namespace Uchu.World
             return flagValues;
         }
 
-        public async Task TriggerCelebration(int CelebrationID)
+        /// <summary>
+        /// Triggers a celebration for the player
+        /// </summary>
+        /// <param name="celebrationId">The Id of the celebration to trigger</param>
+        public async Task TriggerCelebration(int celebrationId)
         {
-            var Celebration = (await new CdClientContext().CelebrationParametersTable.Where(t => t.Id == CelebrationID).ToArrayAsync())[0];
+            var celebration = (await new CdClientContext().CelebrationParametersTable.
+                Where(t => t.Id == celebrationId).ToArrayAsync())[0];
 
             this.Message(new StartCelebrationEffectMessage
             {
                 Associate = this,
-                Animation = Celebration.Animation,
-                BackgroundObject = new Lot(Celebration.BackgroundObject.Value),
-                CameraPathLOT = new Lot(Celebration.CameraPathLOT.Value),
-                CeleLeadIn = Celebration.CeleLeadIn.Value,
-                CeleLeadOut = Celebration.CeleLeadOut.Value,
-                CelebrationID = Celebration.Id.Value,
-                Duration = Celebration.Duration.Value,
-                IconID = Celebration.IconID.Value,
-                MainText = Celebration.MainText,
-                MixerProgram = Celebration.MixerProgram,
-                MusicCue = Celebration.MusicCue,
-                PathNodeName = Celebration.PathNodeName,
-                SoundGUID = Celebration.SoundGUID,
-                SubText = Celebration.SubText
+                Animation = celebration.Animation,
+                BackgroundObject = new Lot(celebration.BackgroundObject.Value),
+                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
+                CeleLeadIn = celebration.CeleLeadIn.Value,
+                CeleLeadOut = celebration.CeleLeadOut.Value,
+                CelebrationID = celebration.Id.Value,
+                Duration = celebration.Duration.Value,
+                IconID = celebration.IconID.Value,
+                MainText = celebration.MainText,
+                MixerProgram = celebration.MixerProgram,
+                MusicCue = celebration.MusicCue,
+                PathNodeName = celebration.PathNodeName,
+                SoundGUID = celebration.SoundGUID,
+                SubText = celebration.SubText
             }); // Start effect
         }
 
+        /// <summary>
+        /// Constructs the player, settings spawn parameters and masks
+        /// </summary>
+        /// <param name="character">The character that should be spawned</param>
+        /// <param name="connection">User endpoint for this character</param>
+        /// <param name="zone">The zone to spawn in</param>
+        /// <returns>The constructed player</returns>
         internal static async Task<Player> ConstructAsync(Character character, IRakConnection connection, Zone zone)
         {
-            //
             // Create base gameobject
-            //
-            
             var instance = Instantiate<Player>(
                 zone,
                 character.Name,
@@ -311,10 +318,7 @@ namespace Uchu.World
                 1
             );
             
-            //
             // Setup layers
-            //
-            
             instance.Layer = StandardLayer.Player;
             
             var layer = StandardLayer.All;
@@ -327,19 +331,14 @@ namespace Uchu.World
             maskFilter.ViewMask = layer;
 
             instance.Perspective.AddFilter<RenderDistanceFilter>();
-            instance.Perspective.AddFilter<FlagFilter>();
+            
+            // TODO: Handles visibility of flags, should be handled in character XML, not here
+            // Causes a major performance penalty, therefore disabled
+            // instance.Perspective.AddFilter<FlagFilter>();
             instance.Perspective.AddFilter<ExcludeFilter>();
-            
-            //
-            // Set connection
-            //
-
             instance.Connection = connection;
-
-            //
-            // Add serialized components
-            //
             
+            // Add serialized components
             var controllablePhysics = instance.AddComponent<ControllablePhysicsComponent>();
             instance.AddComponent<DestructibleComponent>();
             var stats = instance.GetComponent<DestroyableComponent>();
@@ -355,10 +354,7 @@ namespace Uchu.World
             stats.HasStats = true;
             characterComponent.Character = character;
             
-            //
             // Equip items
-            //
-
             await using (var ctx = new UchuContext())
             {
                 var items = await ctx.InventoryItems.Where(
@@ -377,19 +373,13 @@ namespace Uchu.World
                 }
             }
             
-            //
             // Server Components
-            //
-            
             instance.AddComponent<MissionInventoryComponent>();
             instance.AddComponent<InventoryManagerComponent>();
             instance.AddComponent<TeamPlayerComponent>();
             instance.AddComponent<ModularBuilderComponent>();
             
-            //
             // Physics
-            //
-
             var physics = instance.AddComponent<PhysicsComponent>();
 
             var box = CapsuleBody.Create(
@@ -400,24 +390,16 @@ namespace Uchu.World
             );
 
             physics.SetPhysics(box);
-
-            instance.Listen(physics.OnEnter, instance.OnEnterCollision);
-
-            instance.Listen(physics.OnCollision, instance.OnStayCollision);
             
+            instance.Listen(physics.OnEnter, instance.OnEnterCollision);
+            instance.Listen(physics.OnCollision, instance.OnStayCollision);
             instance.Listen(physics.OnLeave, instance.OnLeaveCollision);
             
-            //
             // Register player gameobject in zone
-            //
-            
             Start(instance);
             Construct(instance);
-
-            //
-            // Register player as an active in zone
-            //
             
+            // Register player as an active in zone
             await zone.RegisterPlayer(instance);
 
             return instance;
