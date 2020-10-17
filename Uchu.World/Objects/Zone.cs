@@ -361,11 +361,11 @@ namespace Uchu.World
         {
             await OnPlayerLoad.InvokeAsync(player);
 
-            foreach (var gameObject in GameObjects)
+            foreach (var storedPlayer in Players)
             {
-                if (gameObject.GetType().GetCustomAttribute<UnconstructedAttribute>() != null) continue;
+                if (player.Id == storedPlayer.Id) Destroy(storedPlayer);
 
-                SendConstruction(gameObject, new[] {player});
+                SendConstruction(storedPlayer, new[] {player});
             }
         }
 
