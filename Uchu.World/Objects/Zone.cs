@@ -615,18 +615,18 @@ namespace Uchu.World
                                     updatedObject.Stuck = false;
                                 });
 
-                                var delay = Task.Delay(100);
+                                var delay = Task.Delay(150);
                                 await Task.WhenAny(tickTask, delay);
                                 var elapsed = watch.ElapsedMilliseconds - start;
 
-                                // Any task that takes more than 2 ticks to complete is considered stuck
+                                // Any task that takes more than 3 ticks to complete is considered stuck
                                 if (delay.IsCompleted && !tickTask.IsCompleted)
                                 {
                                     Logger.Warning($"{updatedObject.Associate} is now defined as stuck!");
                                     updatedObject.Stuck = true;
                                 }
-                                // Any task that took more than one tick to execute but less than 2 is considered slow
-                                else if (elapsed > 50)
+                                // Any task that took more than two ticks to execute but less than 3 is considered slow
+                                else if (elapsed > 100)
                                 {
                                     Logger.Warning($"Slow update: {updatedObject.Associate} in {elapsed}ms");
                                 }
