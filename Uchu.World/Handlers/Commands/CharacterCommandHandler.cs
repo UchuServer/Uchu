@@ -211,7 +211,7 @@ namespace Uchu.World.Handlers.Commands
             return "Toggled freecam.";
         }
 
-        [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Fly(string[] arguments, Player player)
         {
             if (arguments.Length != 1 && arguments.Length != 2) return "fly <state(on/off)>";
@@ -1001,7 +1001,7 @@ namespace Uchu.World.Handlers.Commands
             return "Sent announcement";
         }
 
-        [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Complete(string[] arguments, Player player)
         {
             var missions = player.GetComponent<MissionInventoryComponent>().MissionInstances;

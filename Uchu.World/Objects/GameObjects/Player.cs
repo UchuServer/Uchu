@@ -601,6 +601,17 @@ namespace Uchu.World
             return false;
         }
 
+        public void SetName(string name)
+        {
+            this.Name = name;
+
+            this.Message(new SetNameMessage
+            {
+                Associate = this,
+                Name = name
+            });
+        }
+
         private async Task SetCurrencyAsync(long currency)
         {
             await using (var ctx = new UchuContext())
