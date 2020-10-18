@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using RakDotNet.IO;
 
@@ -24,6 +25,9 @@ namespace Uchu.Core
 
         public override void SerializePacket(BitWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize packet");
+            
             writer.Write(GameVersion);
             writer.Write((uint) 0x93);
             writer.Write(ConnectionType);
@@ -34,6 +38,9 @@ namespace Uchu.Core
 
         public override void Deserialize(BitReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader), "Received null reader in deserialize");
+            
             GameVersion = reader.Read<uint>();
             reader.Read<uint>();
             ConnectionType = reader.Read<uint>();

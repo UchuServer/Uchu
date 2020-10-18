@@ -10,6 +10,7 @@ using RakDotNet.IO;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.Physics;
 using Uchu.World.Filters;
 using Uchu.World.Social;
@@ -273,10 +274,10 @@ namespace Uchu.World
         /// Triggers a celebration for the player
         /// </summary>
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
-        public async Task TriggerCelebration(int celebrationId)
+        public async Task TriggerCelebration(Celebration celebrationId)
         {
             var celebration = (await new CdClientContext().CelebrationParametersTable.
-                Where(t => t.Id == celebrationId).ToArrayAsync())[0];
+                Where(t => t.Id == (int)celebrationId).ToArrayAsync())[0];
 
             this.Message(new StartCelebrationEffectMessage
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.Core
 {
+    [SuppressMessage("ReSharper", "CA2225")]
     public struct ObjectId : IEquatable<ObjectId>
     {
         private static readonly Random Random = new Random();

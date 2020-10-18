@@ -16,7 +16,7 @@ namespace Uchu.World.Api
         }
         
         [ApiCommand("world/players")]
-        public async Task<object> ZonePlayers(string zone)
+        public object ZonePlayers(string zone)
         {
             var response = new ZonePlayersResponse();
 

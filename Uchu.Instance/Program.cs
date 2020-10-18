@@ -8,6 +8,7 @@ using Uchu.Api.Models;
 using Uchu.Auth.Handlers;
 using Uchu.Char.Handlers;
 using Uchu.Core;
+using Uchu.Core.Config;
 using Uchu.Core.Providers;
 using Uchu.World;
 using Uchu.World.Handlers;

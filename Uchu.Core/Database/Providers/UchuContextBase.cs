@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Core.Config;
 
 namespace Uchu.Core.Providers
 {
@@ -38,14 +39,14 @@ namespace Uchu.Core.Providers
         
         public DbSet<CharacterFlag> Flags { get; set; }
         
-        public virtual async Task EnsureUpdatedAsync()
+        public async Task EnsureUpdatedAsync()
         {
             await Database.MigrateAsync().ConfigureAwait(false);
         }
 
-        public virtual async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
-            Dispose();
+            return new ValueTask(Task.Run(Dispose));
         }
     }
 }

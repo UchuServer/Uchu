@@ -12,6 +12,6 @@ namespace Uchu.Core
         
         public long CreatorId { get; set; }
         
-        public List<GuildInvite> Invites { get; set; }
+        public List<GuildInvite> Invites { get; }
     }
 }

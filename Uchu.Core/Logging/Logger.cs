@@ -4,13 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Uchu.Core.Config;
 
 namespace Uchu.Core
 {
     public static class Logger
     {
-        private static readonly object Lock = new object();
-
         public static Configuration Config { get; set; }
 
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)

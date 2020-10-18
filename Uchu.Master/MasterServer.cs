@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.Core.Config;
 using Uchu.Core.Providers;
 using Uchu.Master.Api;
 

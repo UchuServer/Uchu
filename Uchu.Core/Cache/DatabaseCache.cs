@@ -50,12 +50,13 @@ namespace Uchu.Core
 
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
+            if (endpoint == null)
+                throw new ArgumentNullException(nameof(endpoint), "Received null endpoint in set character");
+            
             using var ctx = new UchuContext();
 
             var key = _keys[endpoint.ToString()];
-
             var session = ctx.SessionCaches.First(s => s.Key == key);
-
             session.CharacterId = characterId;
 
             ctx.SaveChanges();
@@ -63,6 +64,9 @@ namespace Uchu.Core
 
         public void SetZone(IPEndPoint endpoint, ZoneId zone)
         {
+            if (endpoint == null)
+                throw new ArgumentNullException($"Received null endpoint in set zone.");
+            
             using var ctx = new UchuContext();
 
             var key = _keys[endpoint.ToString()];
@@ -77,18 +81,18 @@ namespace Uchu.Core
         public Session GetSession(IPEndPoint endpoint)
         {
             var task = GetSessionAsync(endpoint);
-
             task.Wait();
-
             return task.Result;
         }
 
         public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
         {
-            await using var ctx = new UchuContext();
-
-            string key;
+            if (endpoint == null)
+                throw new ArgumentNullException($"Received null endpoint in get session");
             
+            await using var ctx = new UchuContext();
+            
+            string key;
             var timeout = 1000;
             
             while (!_keys.TryGetValue(endpoint.ToString(), out key))
@@ -121,17 +125,20 @@ namespace Uchu.Core
 
         public void RegisterKey(IPEndPoint endPoint, string key)
         {
+            if (endPoint == null)
+                throw new ArgumentNullException(nameof(endPoint), "Received null endpoint in register key");
             _keys.Add(endPoint.ToString(), key);
         }
 
         public void DeleteSession(IPEndPoint endpoint)
         {
+            if (endpoint == null)
+                throw new ArgumentNullException(nameof(endpoint), "Received null endpoint in delete session");
+            
             using var ctx = new UchuContext();
 
             var key = _keys[endpoint.ToString()];
-
             var session = ctx.SessionCaches.First(s => s.Key == key);
-
             ctx.SessionCaches.Remove(session);
 
             ctx.SaveChanges();

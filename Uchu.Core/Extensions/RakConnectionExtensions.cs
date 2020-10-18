@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using RakDotNet;
 using RakDotNet.IO;
@@ -8,6 +9,11 @@ namespace Uchu.Core
     {
         public static void Send(this IRakConnection @this, ISerializable serializable)
         {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this), "Received null connection in send");
+            if (serializable == null)
+                throw new ArgumentNullException(nameof(serializable), "Received null serializable in send");
+            
             Logger.Information($"Sending {serializable}");
             
             using var stream = new MemoryStream();
@@ -25,13 +31,12 @@ namespace Uchu.Core
             }
         }
 
-        public static void SavePacket(this IRakConnection @this, ISerializable serializable)
-        {
-            
-        }
-
         public static void Send(this IRakConnection @this, MemoryStream stream)
         {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this), "Received null connection in send");
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream), "Received null stream in send");
             @this.Send(stream.ToArray());
         }
     }

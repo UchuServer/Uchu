@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ using StackExchange.Redis;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core.Api;
+using Uchu.Core.Config;
 using Uchu.Core.IO;
 using Uchu.Core.Providers;
 using Uchu.Sso;
@@ -129,7 +131,7 @@ namespace Uchu.Core
         /// <param name="group">The group to get commands from</param>
         /// <param name="level">The gamemaster level to determine which commands to show</param>
         /// <returns>A string that represents the help message</returns>
-        private string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group, 
+        private static string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group, 
             GameMasterLevel level)
         {
             var help = new StringBuilder();
@@ -160,6 +162,9 @@ namespace Uchu.Core
         /// <exception cref="ArgumentException">If the provided config file can't be found</exception>
         public virtual async Task ConfigureAsync(string configFile)
         {
+            if (configFile == null)
+                throw new ArgumentNullException(nameof(configFile), "Received null config file in configure");
+            
             MasterPath = Path.GetDirectoryName(configFile);
             var serializer = new XmlSerializer(typeof(Configuration));
 
@@ -413,6 +418,7 @@ namespace Uchu.Core
         /// <param name="data">Binary data of the packet</param>
         /// <param name="reliability">Reliability of the packet</param>
         /// <exception cref="ArgumentOutOfRangeException">If the packet is not a valid user packet</exception>
+        [SuppressMessage("ReSharper", "CA1031")]
         public async Task HandlePacketAsync(IPEndPoint endPoint, byte[] data, Reliability reliability)
         {
             // Connection can be null when packets are sent over an invalid port
@@ -447,7 +453,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e);
+                    Logger.Error($"Error when handling GM: {e.Message}");
                 }
             }
             else
@@ -471,7 +477,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e);
+                    Logger.Error($"Error when handling packet: {e.Message}");
                 }
             }
         }

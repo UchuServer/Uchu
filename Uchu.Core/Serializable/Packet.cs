@@ -1,3 +1,4 @@
+using System;
 using RakDotNet;
 using RakDotNet.IO;
 
@@ -14,6 +15,9 @@ namespace Uchu.Core
 
         public virtual void Serialize(BitWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize");
+            
             writer.Write((byte) MessageIdentifier.UserPacketEnum);
             writer.Write((ushort) RemoteConnectionType);
             writer.Write(PacketId);

@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Uchu.Core.Migrations.Sqlite
 {
+    [SuppressMessage("ReSharper", "CA1062")]
     public partial class AddedFlags : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

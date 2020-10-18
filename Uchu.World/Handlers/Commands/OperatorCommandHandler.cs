@@ -61,7 +61,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "save", Help = "Save a serialization", GameMasterLevel = GameMasterLevel.Operator)]
-        public async Task<string> SaveSerialize(string[] arguments, Player player)
+        public string SaveSerialize(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects[0];
 

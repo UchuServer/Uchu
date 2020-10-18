@@ -15,7 +15,7 @@ namespace Uchu.Core
         public int TaskId { get; set; }
 
         [Required]
-        public List<MissionTaskValue> Values { get; set; }
+        public List<MissionTaskValue> Values { get; }
 
         public int MissionId { get; set; }
 

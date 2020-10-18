@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Uchu.Core.Migrations
 {
+    [SuppressMessage("ReSharper", "CA1062")]
     public partial class PostgresMasterRework : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

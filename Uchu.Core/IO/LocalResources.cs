@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
+using Uchu.Core.Config;
 
 namespace Uchu.Core.IO
 {
@@ -80,8 +82,12 @@ namespace Uchu.Core.IO
             return files;
         }
         
+        [SuppressMessage("ReSharper", "CA1304")]
         public Stream GetStream(string path)
         {
+            if (path == null)
+                throw new ArgumentNullException(nameof(path), "Received null path in get stream");
+            
             path = path.Replace('\\', '/').ToLower();
 
             return File.OpenRead(Path.Combine(RootPath, path));

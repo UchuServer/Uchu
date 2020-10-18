@@ -1,3 +1,4 @@
+using System;
 using RakDotNet.IO;
 
 namespace Uchu.Core
@@ -12,11 +13,15 @@ namespace Uchu.Core
 
         public override void SerializePacket(BitWriter writer)
         {
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize packet");
             writer.Write((uint) DisconnectId);
         }
 
         public override void Deserialize(BitReader reader)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader), "Received null reader in deserialize");
             DisconnectId = (DisconnectId) reader.Read<uint>();
         }
     }

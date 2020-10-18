@@ -28,6 +28,6 @@ namespace Uchu.Core
 
         [Required] public int CharacterIndex { get; set; }
 
-        public List<Character> Characters { get; set; }
+        public List<Character> Characters { get; }
     }
 }
