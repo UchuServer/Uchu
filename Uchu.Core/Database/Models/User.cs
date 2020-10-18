@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Uchu.Core
 {
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class User
     {
         [Key]
@@ -28,6 +30,6 @@ namespace Uchu.Core
 
         [Required] public int CharacterIndex { get; set; }
 
-        public List<Character> Characters { get; }
+        public List<Character> Characters { get; set; }
     }
 }

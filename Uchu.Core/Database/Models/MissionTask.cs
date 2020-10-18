@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class MissionTask
     {
         [Key]
@@ -15,7 +17,7 @@ namespace Uchu.Core
         public int TaskId { get; set; }
 
         [Required]
-        public List<MissionTaskValue> Values { get; }
+        public List<MissionTaskValue> Values { get; set; }
 
         public int MissionId { get; set; }
 
