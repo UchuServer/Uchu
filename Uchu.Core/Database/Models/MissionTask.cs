@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
-    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    [SuppressMessage("ReSharper", "CA2227")]
     public class MissionTask
     {
         [Key]

@@ -181,7 +181,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The ports to run the world servers at
         /// </summary>
-        [XmlElement("WorldPort")] public List<int> WorldPorts { get; }
+        [XmlElement("WorldPort")] public List<int> WorldPorts { get; } = new List<int>();
     }
 
     /// <summary>
