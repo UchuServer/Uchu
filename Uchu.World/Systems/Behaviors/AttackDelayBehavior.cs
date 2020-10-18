@@ -5,7 +5,7 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AttackDelayBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool WaitAndSync { get; set; }
+        public bool ServerSide { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
     }
@@ -58,24 +58,18 @@ namespace Uchu.World.Systems.Behaviors
             // Copy the context to clear the writer
             parameters.Parameters = Action.SerializeStart(parameters.NpcContext.Copy(),
                 parameters.BranchContext);
-            parameters.WaitAndSync = true;
+            parameters.ServerSide = true;
         }
 
-        protected override Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            // Run this async as otherwise the delay can cause the object to be registered as "stuck"
-            Task.Run(async () =>
-            {
-                if (parameters.WaitAndSync)
-                    await Task.Delay(Delay);
+            // if (parameters.WaitAndSync)
+            //     await Task.Delay(Delay);
 
-                await Action.ExecuteStart(parameters.Parameters);
+            await Action.ExecuteStart(parameters.Parameters);
 
-                if (parameters.WaitAndSync)
-                    parameters.NpcContext.Sync(parameters.Handle);
-            });
-
-            return Task.CompletedTask;
+            if (parameters.ServerSide)
+                parameters.NpcContext.Sync(parameters.Handle);
         }
     }
 }

@@ -196,6 +196,12 @@ namespace Uchu.World
             await tree.DismantleAsync();
         }
 
+        /// <summary>
+        /// Calculates a skill by serializing it
+        /// </summary>
+        /// <param name="skillId">The skill Id to serialize</param>
+        /// <param name="precalculate">Precalculate the skill, exits execution but adds behavior to cache</param>
+        /// <returns>The skill time in milliseconds</returns>
         public async Task<float> CalculateSkillAsync(int skillId, bool precalculate = false)
         {
             var tree = await BehaviorTree.FromSkillAsync(skillId);
@@ -222,7 +228,7 @@ namespace Uchu.World
             });
 
             await tree.ExecuteAsync();
-            return context.SkillTime;
+            return context.SkillTime * 1000;
         }
 
         public async Task<float> CalculateSkillAsync(int skillId, GameObject target)

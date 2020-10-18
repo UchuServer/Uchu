@@ -547,7 +547,11 @@ namespace Uchu.World
         
         #region Runtime
 
-        private Task ExecuteUpdateAsync()
+        /// <summary>
+        /// Creates a timer that reports ticks per second, time per tick and physics time
+        /// </summary>
+        /// <returns>The timer that was created</returns>
+        private Timer SetupTickReporter()
         {
             var timer = new Timer
             {
@@ -558,102 +562,74 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) =>
             {
                 if (_ticks > 0)
-                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms PHY: {_physicsTime / _ticks} ms");
+                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} " +
+                                 $"TPT: {_passedTickTime / _ticks} ms " +
+                                 $"PHY: {_physicsTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
             };
 
             timer.Start();
+            return timer;
+        }
 
+        /// <summary>
+        /// Executes one tick in the game loop, updating all relevant game objects
+        /// </summary>
+        private async Task Tick()
+        {
+            var players = Players;
+            if (players.Length == 0)
+                return;
+
+            var watch = new Stopwatch();
+            watch.Start();
+                    
+            foreach (var updatedObject in UpdatedObjects.ToArray())
+            {
+                // Skip this tick if the game object is stuck, not on its frequency or not in sight of a player
+                if (updatedObject.Stuck
+                    || updatedObject.Frequency != ++updatedObject.Ticks
+                    || updatedObject.Associate is GameObject gameObject
+                    && players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                    continue;
+
+                updatedObject.Ticks = 0;
+                try
+                {
+                    await updatedObject.Delegate(DeltaTime);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            await OnTick.InvokeAsync();
+                    
+            _ticks++;
+
+            var passedMs = watch.ElapsedMilliseconds;
+            _passedTickTime += passedMs;
+            
+            await Task.Delay((int) Math.Max(1000f / TicksPerSecondLimit - passedMs, 0));
+            DeltaTime = watch.ElapsedMilliseconds;
+        }
+
+        private Task ExecuteUpdateAsync()
+        {
             Listen(OnTick, PhysicsStep);
 
             return Task.Run(async () =>
             {
                 _running = true;
-                var watch = new Stopwatch();
-                
+                var tickReporter = SetupTickReporter();
                 while (_running)
                 {
-                    var players = Players;
-                    if (players.Length == 0)
-                    {
-                        await Task.Delay(1000);
-                        continue;
-                    }
-
-                    if (_ticks >= TicksPerSecondLimit)
-                        continue;
-
-                    watch.Restart();
-
-                    // Update all tick tasks in parallel
-                    var tickTasks = new List<Task>();
-                    foreach (var updatedObject in UpdatedObjects.ToArray())
-                    {
-                        if (updatedObject.Stuck)
-                            continue;
-                        
-                        if (updatedObject.Associate is GameObject gameObject)
-                        {
-                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                                continue;
-                        }
-
-                        updatedObject.DeltaTime += DeltaTime;
-                        if (updatedObject.Frequency != ++updatedObject.Ticks)
-                            continue;
-                        updatedObject.Ticks = 0;
-
-                        tickTasks.Add(Task.Run(async () =>
-                        {
-                            var start = watch.ElapsedMilliseconds;
-                            try
-                            {
-                                var tickTask = Task.Run(async () =>
-                                {
-                                    await updatedObject.Delegate(updatedObject.DeltaTime);
-                                    updatedObject.Stuck = false;
-                                });
-
-                                var delay = Task.Delay(150);
-                                await Task.WhenAny(tickTask, delay);
-                                var elapsed = watch.ElapsedMilliseconds - start;
-
-                                // Any task that takes more than 3 ticks to complete is considered stuck
-                                if (delay.IsCompleted && !tickTask.IsCompleted)
-                                {
-                                    Logger.Warning($"{updatedObject.Associate} is now defined as stuck!");
-                                    updatedObject.Stuck = true;
-                                }
-                                // Any task that took more than two ticks to execute but less than 3 is considered slow
-                                else if (elapsed > 100)
-                                {
-                                    Logger.Warning($"Slow update: {updatedObject.Associate} in {elapsed}ms");
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Error(e);
-                            }
-
-                            updatedObject.DeltaTime = 0;
-                        }));
-                    }
-
-                    await Task.WhenAll(tickTasks);
-                    await OnTick.InvokeAsync();
-                    
-                    _ticks++;
-
-                    var passedMs = watch.ElapsedMilliseconds;
-                    _passedTickTime += passedMs;
-                    
-                    // Sync with the system tick clock
-                    await Task.Delay((int) Math.Max(1000 / TicksPerSecondLimit - passedMs, 0));
-                    
-                    passedMs = watch.ElapsedMilliseconds;
-                    DeltaTime = passedMs / 1000f;
+                    await Tick();
                 }
+                
+                tickReporter.Stop();
             });
         }
 
@@ -703,8 +679,6 @@ namespace Uchu.World
             public int Frequency { get; set; }
             
             public int Ticks { get; set; }
-            
-            public float DeltaTime { get; set; }
             
             public bool Stuck { get; set; }
         }
