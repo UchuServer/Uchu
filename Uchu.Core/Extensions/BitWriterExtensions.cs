@@ -10,14 +10,16 @@ namespace Uchu.Core
         public static int Write(this BitWriter @this, Span<byte> buf)
         {
             if (@this == null)
-                throw new ArgumentNullException(nameof(@this), "Received null writer in write");
+                throw new ArgumentNullException(nameof(@this), 
+                    Resources.ResourceStrings.BitWriter_Write_NullWriterException);
             return @this.Write(buf, buf.Length * 8);
         }
         
         public static void WriteString(this BitWriter @this, string val, int length = 33, bool wide = false)
         {
             if (@this == null)
-                throw new ArgumentNullException(nameof(@this), "Receieved null writer in write string");
+                throw new ArgumentNullException(nameof(@this), 
+                    Resources.ResourceStrings.BitWriter_WriteString_NullWriterException);
             
             val ??= "";
             foreach (var c in val)

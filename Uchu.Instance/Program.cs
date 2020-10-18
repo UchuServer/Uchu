@@ -17,7 +17,7 @@ namespace Uchu.Instance
 {
     internal static class Program
     {
-        private static Server Server { get; set; }
+        private static UchuServer UchuServer { get; set; }
         
         private static Guid Id { get; set; }
         
@@ -42,14 +42,14 @@ namespace Uchu.Instance
                 switch (ServerType)
                 {
                     case ServerType.Authentication:
-                        await Server.StartAsync(typeof(LoginHandler).Assembly, true);
+                        await UchuServer.StartAsync(typeof(LoginHandler).Assembly, true);
                         break;
                     case ServerType.Character:
-                        await Server.StartAsync(typeof(CharacterHandler).Assembly);
+                        await UchuServer.StartAsync(typeof(CharacterHandler).Assembly);
                         break;
                     case ServerType.World:
-                        Server.RegisterAssembly(typeof(CharacterHandler).Assembly);
-                        await Server.StartAsync(typeof(WorldInitializationHandler).Assembly);
+                        UchuServer.RegisterAssembly(typeof(CharacterHandler).Assembly);
+                        await UchuServer.StartAsync(typeof(WorldInitializationHandler).Assembly);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -67,28 +67,28 @@ namespace Uchu.Instance
 
         private static async Task ConfigureAsync(string config)
         {
-            var serializer = new XmlSerializer(typeof(Configuration));
+            var serializer = new XmlSerializer(typeof(UchuConfiguration));
 
             if (!File.Exists(config))
             {
                 throw new ArgumentException($"{config} config file does not exist.");
             }
 
-            Configuration configuration;
+            UchuConfiguration uchuConfiguration;
             
             await using (var fs = File.OpenRead(config))
             {
-                UchuContextBase.Config = configuration = (Configuration) serializer.Deserialize(fs);
+                UchuContextBase.Config = uchuConfiguration = (UchuConfiguration) serializer.Deserialize(fs);
             }
             
             var masterPath = Path.GetDirectoryName(config);
 
             SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
 
-            var api = new ApiManager(configuration.ApiConfig.Protocol, configuration.ApiConfig.Domain);
+            var api = new ApiManager(uchuConfiguration.ApiConfig.Protocol, uchuConfiguration.ApiConfig.Domain);
 
             var instance = await api.RunCommandAsync<InstanceInfoResponse>(
-                configuration.ApiConfig.Port, $"instance/target?i={Id}"
+                uchuConfiguration.ApiConfig.Port, $"instance/target?i={Id}"
             ).ConfigureAwait(false);
 
             if (!instance.Success)
@@ -98,15 +98,15 @@ namespace Uchu.Instance
                 throw new Exception(instance.FailedReason);
             }
 
-            Server = instance.Info.Type == (int) ServerType.World
-                ? new WorldServer(Id)
-                : new Server(Id);
+            UchuServer = instance.Info.Type == (int) ServerType.World
+                ? new WorldUchuServer(Id)
+                : new UchuServer(Id);
             
             Console.Title = $"{(ServerType) instance.Info.Type}:{instance.Info.Port}";
 
             ServerType = (ServerType) instance.Info.Type;
             
-            await Server.ConfigureAsync(config);
+            await UchuServer.ConfigureAsync(config);
         }
     }
 }

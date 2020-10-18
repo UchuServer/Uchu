@@ -1,6 +1,7 @@
 using System;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -14,7 +15,8 @@ namespace Uchu.Core
         public void Serialize(BitWriter writer)
         {
             if (writer == null)
-                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize");
+                throw new ArgumentNullException(nameof(writer), 
+                    ResourceStrings.PacketHeader_Serialize_WriterNullException);
             
             writer.Write((byte) MessageId);
             writer.Write((ushort) RemoteConnectionType);
@@ -25,7 +27,8 @@ namespace Uchu.Core
         public void Deserialize(BitReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException(nameof(reader), "Received null reader in deserialize");
+                throw new ArgumentNullException(nameof(reader), 
+                    ResourceStrings.PacketHeader_Deserialize_NullReaderException);
             
             MessageId = (MessageIdentifier) reader.Read<byte>();
             RemoteConnectionType = (RemoteConnectionType) reader.Read<ushort>();

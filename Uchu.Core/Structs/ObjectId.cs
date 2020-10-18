@@ -25,6 +25,7 @@ namespace Uchu.Core
 
         #region Networking
 
+        [SuppressMessage("ReSharper", "CA2000")]
         public async Task<InventoryItem> FindItemAsync()
         {
             await using var ctx = new UchuContext();

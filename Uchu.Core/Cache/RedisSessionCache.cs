@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 using Uchu.Core.Config;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -31,7 +32,8 @@ namespace Uchu.Core
             }
             else
             {
-                throw new ArgumentNullException(nameof(config), "Can't create redis session cache from null config");
+                throw new ArgumentNullException(nameof(config), 
+                    ResourceStrings.RedisSessionCache_ConfigNullException);
             }
         }
 
@@ -75,9 +77,10 @@ namespace Uchu.Core
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
             if (endpoint == null)
-                throw new ArgumentNullException($"Received null endpoint in setcharacter");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.RedisSessionCache_SetCharacter_EndpointNullException);
+            
             var session = GetSession(endpoint);
-
             session.CharacterId = characterId;
             _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
@@ -90,7 +93,8 @@ namespace Uchu.Core
         public void SetZone(IPEndPoint endpoint, ZoneId zone)
         {
             if (endpoint == null)
-                throw new ArgumentNullException($"Received null endpoint in set zone.");
+                throw new ArgumentNullException(nameof(endpoint),
+                    ResourceStrings.RedisSessionCache_SetZone_EndpointNullException);
             
             var session = GetSession(endpoint);
             session.ZoneId = zone;
@@ -113,7 +117,8 @@ namespace Uchu.Core
         public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
         {
             if (endpoint == null)
-                throw new ArgumentNullException($"Received null endpoint in get session.");
+                throw new ArgumentNullException(nameof(endpoint),
+                    ResourceStrings.RedisSessioncache_GetSessionAsync_EndpointNullException);
             string key;
             
             var timeout = 1000;
@@ -148,7 +153,8 @@ namespace Uchu.Core
         public void RegisterKey(IPEndPoint endPoint, string key)
         {
             if (endPoint == null)
-                throw new ArgumentNullException($"Received null endpoint in register key.");
+                throw new ArgumentNullException(nameof(endPoint), 
+                    ResourceStrings.RedisSessionCache_RegisterKey_EndpointNullException);
             _keys.Add(endPoint.ToString(), key);
         }
 
@@ -159,7 +165,8 @@ namespace Uchu.Core
         public void DeleteSession(IPEndPoint endpoint)
         {
             if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint), "Received null endpoint in delete session");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.RedisSessionCache_DeleteSession_EndpointNullException);
             
             _client.KeyDelete(endpoint.ToString());
         }
@@ -172,9 +179,7 @@ namespace Uchu.Core
         private string GenerateKey(int length = 24)
         {
             var bytes = new byte[length];
-
             _rng.GetBytes(bytes);
-
             return Convert.ToBase64String(bytes).TrimEnd('=');
         }
 

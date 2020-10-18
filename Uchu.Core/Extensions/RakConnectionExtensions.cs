@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using RakDotNet;
 using RakDotNet.IO;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -10,9 +11,11 @@ namespace Uchu.Core
         public static void Send(this IRakConnection @this, ISerializable serializable)
         {
             if (@this == null)
-                throw new ArgumentNullException(nameof(@this), "Received null connection in send");
+                throw new ArgumentNullException(nameof(@this), 
+                    ResourceStrings.RakConnectionExtensions_Send_ConnectionNullException);
             if (serializable == null)
-                throw new ArgumentNullException(nameof(serializable), "Received null serializable in send");
+                throw new ArgumentNullException(nameof(serializable), 
+                    ResourceStrings.RakConnectionExtensions_Send_StreamNullException);
             
             Logger.Information($"Sending {serializable}");
             
@@ -34,9 +37,12 @@ namespace Uchu.Core
         public static void Send(this IRakConnection @this, MemoryStream stream)
         {
             if (@this == null)
-                throw new ArgumentNullException(nameof(@this), "Received null connection in send");
+                throw new ArgumentNullException(nameof(@this),  
+                    ResourceStrings.RakConnectionExtensions_Send_ConnectionNullException);
             if (stream == null)
-                throw new ArgumentNullException(nameof(stream), "Received null stream in send");
+                throw new ArgumentNullException(nameof(stream), 
+                    ResourceStrings.RakConnectionExtensions_Send_StreamNullException);
+            
             @this.Send(stream.ToArray());
         }
     }

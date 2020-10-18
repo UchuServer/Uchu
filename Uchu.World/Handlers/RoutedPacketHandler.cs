@@ -9,7 +9,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task RoutedHandler(ClientRoutedPacket packet, IRakConnection connection)
         {
-            await Server.HandlePacketAsync(connection.EndPoint, packet.Packet, Reliability.ReliableOrdered);
+            await UchuServer.HandlePacketAsync(connection.EndPoint, packet.Packet, Reliability.ReliableOrdered);
         }
     }
 }

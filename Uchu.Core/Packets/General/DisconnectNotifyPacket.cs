@@ -1,5 +1,6 @@
 using System;
 using RakDotNet.IO;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -14,14 +15,18 @@ namespace Uchu.Core
         public override void SerializePacket(BitWriter writer)
         {
             if (writer == null)
-                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize packet");
+                throw new ArgumentNullException(nameof(writer), 
+                    ResourceStrings.DisconnectNotifyPacket_Serialize_PacketWriterNullException);
+            
             writer.Write((uint) DisconnectId);
         }
 
         public override void Deserialize(BitReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException(nameof(reader), "Received null reader in deserialize");
+                throw new ArgumentNullException(nameof(reader), 
+                    ResourceStrings.DisconnectNotifyPacket_Deserialize_ReaderNullException);
+            
             DisconnectId = (DisconnectId) reader.Read<uint>();
         }
     }

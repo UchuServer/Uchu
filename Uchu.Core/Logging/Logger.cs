@@ -10,7 +10,7 @@ namespace Uchu.Core
 {
     public static class Logger
     {
-        public static Configuration Config { get; set; }
+        public static UchuConfiguration Config { get; set; }
 
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {

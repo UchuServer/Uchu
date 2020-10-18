@@ -7,7 +7,7 @@ namespace Uchu.Core.Config
     /// Configuration wrapper used to configure the master server
     /// </summary>
     [XmlRoot("Uchu")]
-    public class Configuration
+    public class UchuConfiguration
     {
         /// <summary>
         /// Database configuration like provider, host and credentials

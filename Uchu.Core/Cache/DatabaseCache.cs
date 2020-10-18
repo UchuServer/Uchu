@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -23,7 +25,6 @@ namespace Uchu.Core
             using var ctx = new UchuContext();
 
             var key = GenerateKey();
-            
             ctx.SessionCaches.Add(new SessionCache
             {
                 Key = key,
@@ -51,7 +52,8 @@ namespace Uchu.Core
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
             if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint), "Received null endpoint in set character");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.DatabaseCache_SetCharacter_NullEndpointException);
             
             using var ctx = new UchuContext();
 
@@ -65,15 +67,13 @@ namespace Uchu.Core
         public void SetZone(IPEndPoint endpoint, ZoneId zone)
         {
             if (endpoint == null)
-                throw new ArgumentNullException($"Received null endpoint in set zone.");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.DatabaseCache_SetZone_NullEndpointException);
             
             using var ctx = new UchuContext();
-
             var key = _keys[endpoint.ToString()];
-
             var session = ctx.SessionCaches.First(s => s.Key == key);
-
-            session.ZoneId = (int) zone;
+            session.ZoneId = zone;
 
             ctx.SaveChanges();
         }
@@ -85,10 +85,12 @@ namespace Uchu.Core
             return task.Result;
         }
 
+        [SuppressMessage("ReSharper", "CA2000")]
         public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
         {
             if (endpoint == null)
-                throw new ArgumentNullException($"Received null endpoint in get session");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.DatabaseCache_GetSessionAsync_NullEndpointException);
             
             await using var ctx = new UchuContext();
             
@@ -119,21 +121,23 @@ namespace Uchu.Core
         public bool IsKey(string key)
         {
             using var ctx = new UchuContext();
-
             return ctx.SessionCaches.Any(c => c.Key == key);
         }
 
         public void RegisterKey(IPEndPoint endPoint, string key)
         {
             if (endPoint == null)
-                throw new ArgumentNullException(nameof(endPoint), "Received null endpoint in register key");
+                throw new ArgumentNullException(nameof(endPoint),
+                    ResourceStrings.DatabaseCache_RegisterKey_NullEndpointException);
+            
             _keys.Add(endPoint.ToString(), key);
         }
 
         public void DeleteSession(IPEndPoint endpoint)
         {
             if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint), "Received null endpoint in delete session");
+                throw new ArgumentNullException(nameof(endpoint), 
+                    ResourceStrings.DatabaseCache_DeleteSession_NullEndpointException);
             
             using var ctx = new UchuContext();
 
@@ -147,9 +151,7 @@ namespace Uchu.Core
         private string GenerateKey(int length = 24)
         {
             var bytes = new byte[length];
-
             _rng.GetBytes(bytes);
-
             return Convert.ToBase64String(bytes).TrimEnd('=');
         }
 

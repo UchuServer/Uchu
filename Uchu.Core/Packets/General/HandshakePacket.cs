@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using RakDotNet.IO;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -26,7 +27,8 @@ namespace Uchu.Core
         public override void SerializePacket(BitWriter writer)
         {
             if (writer == null)
-                throw new ArgumentNullException(nameof(writer), "Received null writer in serialize packet");
+                throw new ArgumentNullException(nameof(writer), 
+                    ResourceStrings.HandshakePacket_Serialize_WriterNullException);
             
             writer.Write(GameVersion);
             writer.Write((uint) 0x93);
@@ -39,7 +41,8 @@ namespace Uchu.Core
         public override void Deserialize(BitReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException(nameof(reader), "Received null reader in deserialize");
+                throw new ArgumentNullException(nameof(reader), 
+                    ResourceStrings.HandshakePacket_Deserialize_ReaderNullException);
             
             GameVersion = reader.Read<uint>();
             reader.Read<uint>();

@@ -7,7 +7,7 @@ namespace Uchu.Core.Providers
 {
     public abstract class UchuContextBase : DbContext, IAsyncDisposable
     {
-        public static Configuration Config { get; set; } = new Configuration();
+        public static UchuConfiguration Config { get; set; } = new UchuConfiguration();
         
         public DbSet<User> Users { get; set; }
 

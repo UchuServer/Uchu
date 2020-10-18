@@ -547,7 +547,7 @@ namespace Uchu.World
             Message(new ServerRedirectionPacket
             {
                 Port = (ushort) specification.Port,
-                Address = Server.Host
+                Address = UchuServer.Host
             });
 
             return true;
@@ -561,7 +561,7 @@ namespace Uchu.World
 
             try
             {
-                server = await ServerHelper.RequestWorldServerAsync(Server, zoneId);
+                server = await ServerHelper.RequestWorldServerAsync(UchuServer, zoneId);
             }
             catch (Exception e)
             {
@@ -577,7 +577,7 @@ namespace Uchu.World
                 return false;
             }
 
-            if (Server.Port != server.Port) return await SendToWorldAsync(server, zoneId);
+            if (UchuServer.Port != server.Port) return await SendToWorldAsync(server, zoneId);
             
             Logger.Error("Could not send a player to the same port as it already has");
 

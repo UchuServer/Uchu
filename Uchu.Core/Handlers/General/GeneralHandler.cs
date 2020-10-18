@@ -1,5 +1,6 @@
 using System;
 using RakDotNet;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core.Handlers
 {
@@ -9,7 +10,8 @@ namespace Uchu.Core.Handlers
         public void Handshake(HandshakePacket packet, IRakConnection connection)
         {
             if (packet == null)
-                throw new ArgumentNullException(nameof(packet), "Received null packet in handshake");
+                throw new ArgumentNullException(nameof(packet), 
+                    ResourceStrings.GeneralHandler_Handshake_PacketNullException);
             
             if (packet.GameVersion != 171022)
             {
@@ -22,8 +24,8 @@ namespace Uchu.Core.Handlers
 
             connection.Send(new HandshakePacket
             {
-                ConnectionType = Server.Port == port ? 0x01u : 0x04u,
-                Address = Server.Host
+                ConnectionType = UchuServer.Port == port ? 0x01u : 0x04u,
+                Address = UchuServer.Host
             });
         }
     }

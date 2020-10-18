@@ -8,11 +8,11 @@ namespace Uchu.World.Api
 {
     public class WorldCommands
     {
-        public WorldServer Server { get; }
+        public WorldUchuServer UchuServer { get; }
 
-        public WorldCommands(WorldServer server)
+        public WorldCommands(WorldUchuServer uchuServer)
         {
-            Server = server;
+            UchuServer = uchuServer;
         }
         
         [ApiCommand("world/players")]
@@ -27,7 +27,7 @@ namespace Uchu.World.Api
                 return response;
             }
 
-            var zoneInstance = Server.Zones.FirstOrDefault(z => z.ZoneId == (ZoneId) zoneId);
+            var zoneInstance = UchuServer.Zones.FirstOrDefault(z => z.ZoneId == (ZoneId) zoneId);
 
             if (zoneInstance == default)
             {
@@ -38,7 +38,7 @@ namespace Uchu.World.Api
 
             response.Success = true;
             
-            response.MaxPlayers = (int) Server.MaxPlayerCount; // TODO: Set
+            response.MaxPlayers = (int) UchuServer.MaxPlayerCount; // TODO: Set
 
             response.Characters = zoneInstance.Players.Select(p => (long) p.Id).ToList();
 

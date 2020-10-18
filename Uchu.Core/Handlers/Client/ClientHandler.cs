@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using RakDotNet;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core.Handlers
 {
@@ -10,9 +11,10 @@ namespace Uchu.Core.Handlers
         public async Task ValidateClient(SessionInfoPacket packet, IRakConnection connection)
         {
             if (packet == null)
-                throw new ArgumentNullException(nameof(packet), "Received null packet in validate client");
+                throw new ArgumentNullException(nameof(packet), 
+                    ResourceStrings.ClientHandler_ValidateClient_PacketNullException);
             
-            await Server.ValidateUserAsync(connection, packet.Username, packet.SessionKey)
+            await UchuServer.ValidateUserAsync(connection, packet.Username, packet.SessionKey)
                 .ConfigureAwait(false);
         }
     }

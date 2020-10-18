@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
@@ -21,6 +22,7 @@ using Uchu.Core.Api;
 using Uchu.Core.Config;
 using Uchu.Core.IO;
 using Uchu.Core.Providers;
+using Uchu.Core.Resources;
 using Uchu.Sso;
 
 namespace Uchu.Core
@@ -32,7 +34,7 @@ namespace Uchu.Core
     /// <summary>
     /// Main server class that handles incoming connections and packets
     /// </summary>
-    public class Server
+    public class UchuServer
     {
         /// <summary>
         /// Map that contains all packet handlers
@@ -62,7 +64,7 @@ namespace Uchu.Core
         /// <summary>
         /// Configuration file used to setup the server
         /// </summary>
-        public Configuration Config { get; private set; }
+        public UchuConfiguration Config { get; private set; }
         
         /// <summary>
         /// The service used for Single Sign On (SSO)
@@ -146,7 +148,7 @@ namespace Uchu.Core
             return help.ToString();
         }
 
-        public Server(Guid id)
+        public UchuServer(Guid id)
         {
             Id = id;
             
@@ -163,10 +165,11 @@ namespace Uchu.Core
         public virtual async Task ConfigureAsync(string configFile)
         {
             if (configFile == null)
-                throw new ArgumentNullException(nameof(configFile), "Received null config file in configure");
+                throw new ArgumentNullException(nameof(configFile), 
+                    ResourceStrings.Server_ConfigureAsync_ConfigFileNullException);
             
             MasterPath = Path.GetDirectoryName(configFile);
-            var serializer = new XmlSerializer(typeof(Configuration));
+            var serializer = new XmlSerializer(typeof(UchuConfiguration));
 
             if (!File.Exists(configFile))
             {
@@ -175,8 +178,11 @@ namespace Uchu.Core
 
             await using (var fs = File.OpenRead(configFile))
             {
-                Logger.Config = Config = (Configuration) serializer.Deserialize(fs);
-                UchuContextBase.Config = Config;
+                using (var xmlReader = XmlReader.Create(fs))
+                {
+                    Logger.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
+                    UchuContextBase.Config = Config;
+                }
             }
 
             await SetupApiAsync().ConfigureAwait(false);
@@ -301,7 +307,7 @@ namespace Uchu.Core
         {
             Logger.Information("Registering assemblies...");
 
-            RegisterAssembly(typeof(Server).Assembly);
+            RegisterAssembly(typeof(UchuServer).Assembly);
             RegisterAssembly(assembly);
 
             RakNetServer.MessageReceived += HandlePacketAsync;
@@ -312,7 +318,7 @@ namespace Uchu.Core
         /// </summary>
         public Task StopAsync()
         {
-            Console.WriteLine("Shutting down...");
+            Console.WriteLine(ResourceStrings.Server_StopAsync_Log);
 
             Running = false;
             ServerStopped?.Invoke();
@@ -583,8 +589,9 @@ namespace Uchu.Core
         /// <summary>
         /// Registers a SSO user from a username if they don't exist yet
         /// </summary>
-        /// <param name="username"></param>
-        /// <returns></returns>
+        /// <param name="username">Username to find a user for</param>
+        /// <returns>The user</returns>
+        [SuppressMessage("ReSharper", "CA2000")]
         private static async Task<User> RegisterSsoUserIfNewForUsername(string username)
         {
             await using var ctx = new UchuContext();
@@ -613,6 +620,7 @@ namespace Uchu.Core
         /// <param name="connection">The connection to close if the user is banned</param>
         /// <param name="username">The username of the SSO user</param>
         /// <returns><c>true</c> if the user is valid, <c>false</c> otherwise.</returns>
+        [SuppressMessage("ReSharper", "CA2000")]
         private async Task<bool> ValidateSsoUserForUsername(IRakConnection connection, string username, string key)
         {
             await using var ctx = new UchuContext();
