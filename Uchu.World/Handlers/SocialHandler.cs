@@ -11,6 +11,14 @@ namespace Uchu.World.Handlers
 {
     public class SocialHandler : HandlerGroup
     {
+        private static string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s",
+            "/whisper", "/w", "/tell", "/team", "/t", "/location", "/locate", "/loc", "/faq", "/faqs", "/shop", "/store", "/minigames", "/forums",
+            "/thumbsup", "/thumb", "/thumb", "/victory", "/backflip", "/clap", "/cringe", "/cry", "/dance", "/gasp", "/giggle", "/talk", "/salute",
+            "/shrug", "/sigh", "/wave", "/why", "/thanks", "/yes", "/addfriend", "/removefriend", "/addignore", "/removeignore", "/recommendedperfoptions",
+            "/perfoptionslow", "/perfoptionsmid", "/perfoptionshigh", "/invite", "/tinvite", "/teaminvite", "/inviteteam", "/leaveteam", "/leave", "/tleave",
+            "/teamleave", "/setloot", "/tloot", "/tsetloot", "/teamsetloot", "/kickplayer", "/tkick", "/kick", "/tkickplayer", "/teamkickplayer", "/leader",
+            "/setleader", "/tleader", "/tsetleader", "/teamsetleader", "/cancelqueue" };
+
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
@@ -28,8 +36,6 @@ namespace Uchu.World.Handlers
             var character = await ctx.Characters.Include(c => c.User).FirstAsync(
                 c => c.Id == player.Id
             );
-
-            string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s", "/whisper", "/w", "/tell", "/team", "/t", "/location", "/locate", "/loc", "/faq", "/faqs", "/shop", "/store", "/minigames", "/forums", "/thumbsup", "/thumb", "/thumb", "/victory", "/backflip", "/clap", "/cringe", "/cry", "/dance", "/gasp", "/giggle", "/talk", "/salute", "/shrug", "/sigh", "/wave", "/why", "/thanks", "/yes", "/addfriend", "/removefriend", "/addignore", "/removeignore", "/recommendedperfoptions", "/perfoptionslow", "/perfoptionsmid", "/perfoptionshigh", "/invite", "/tinvite", "/teaminvite", "/inviteteam", "/leaveteam", "/leave", "/tleave", "/teamleave", "/setloot", "/tloot", "/tsetloot", "/teamsetloot", "/kickplayer", "/tkick", "/kick", "/tkickplayer", "/teamkickplayer", "/leader", "/setleader", "/tleader", "/tsetleader", "/teamsetleader", "/cancelqueue" };
 
             if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
