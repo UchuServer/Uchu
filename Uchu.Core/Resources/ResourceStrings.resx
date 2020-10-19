@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="BitReader_Read_NullReaderException" xml:space="preserve">
+        <value>Received null bit reader in read</value>
+    </data>
+    <data name="BitReader_Read_NullSerializableException" xml:space="preserve">
+        <value>Received null serializable in read</value>
+    </data>
+    <data name="BitReader_Readbytes_NullReaderException" xml:space="preserve">
+        <value>Received null bitreader in read bytes</value>
+    </data>
+    <data name="BitReader_ReadString_NullReaderException" xml:space="preserve">
+        <value>Received null bit reader in read string</value>
+    </data>
+    <data name="BitWriter_Write_NullWriterException" xml:space="preserve">
+        <value>Received null writer in write</value>
+    </data>
+    <data name="BitWriter_WriteString_NullWriterException" xml:space="preserve">
+        <value>Received null writer in write string</value>
+    </data>
+    <data name="DatabaseCache_SetCharacter_NullEndpointException" xml:space="preserve">
+        <value>Received null endpoint in set character</value>
+    </data>
+    <data name="DatabaseCache_SetZone_NullEndpointException" xml:space="preserve">
+        <value>Received null endpoint in set zone.</value>
+    </data>
+    <data name="DatabaseCache_GetSessionAsync_NullEndpointException" xml:space="preserve">
+        <value>Received null endpoint in get session</value>
+    </data>
+    <data name="DatabaseCache_RegisterKey_NullEndpointException" xml:space="preserve">
+        <value>Received null endpoint in register key</value>
+    </data>
+    <data name="DatabaseCache_DeleteSession_NullEndpointException" xml:space="preserve">
+        <value>Received null endpoint in delete session</value>
+    </data>
+    <data name="RakConnectionExtensions_Send_ConnectionNullException" xml:space="preserve">
+        <value>Received null connection in send</value>
+    </data>
+    <data name="RakConnectionExtensions_Send_StreamNullException" xml:space="preserve">
+        <value>Received null stream in send</value>
+    </data>
+    <data name="GeneralHandler_Handshake_PacketNullException" xml:space="preserve">
+        <value>Received null packet in handshake</value>
+    </data>
+    <data name="HandshakePacket_Deserialize_ReaderNullException" xml:space="preserve">
+        <value>Received null reader in deserialize</value>
+    </data>
+    <data name="HandshakePacket_Serialize_WriterNullException" xml:space="preserve">
+        <value>Received null writer in serialize packet</value>
+    </data>
+    <data name="RedisSessionCache_ConfigNullException" xml:space="preserve">
+        <value>Can't create redis session cache from null config</value>
+    </data>
+    <data name="RedisSessionCache_SetCharacter_EndpointNullException" xml:space="preserve">
+        <value>Received null endpoint in setcharacter</value>
+    </data>
+    <data name="RedisSessionCache_SetZone_EndpointNullException" xml:space="preserve">
+        <value>Received null endpoint in set zone.</value>
+    </data>
+    <data name="RedisSessioncache_GetSessionAsync_EndpointNullException" xml:space="preserve">
+        <value>Received null endpoint in get session.</value>
+    </data>
+    <data name="RedisSessionCache_RegisterKey_EndpointNullException" xml:space="preserve">
+        <value>Received null endpoint in register key.</value>
+    </data>
+    <data name="RedisSessionCache_DeleteSession_EndpointNullException" xml:space="preserve">
+        <value>Received null endpoint in delete session</value>
+    </data>
+    <data name="DisconnectNotifyPacket_Serialize_PacketWriterNullException" xml:space="preserve">
+        <value>Received null writer in serialize packet</value>
+    </data>
+    <data name="DisconnectNotifyPacket_Deserialize_ReaderNullException" xml:space="preserve">
+        <value>Received null reader in deserialize</value>
+    </data>
+    <data name="StandardCommandHandler_AddUser_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in add user</value>
+    </data>
+    <data name="StandardCommandHandler_RemoveUser_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in remove user</value>
+    </data>
+    <data name="StandardCommandHandler_RemoveUser_ConfirmationMessage" xml:space="preserve">
+        <value>Write the username again to confirm deletion: </value>
+    </data>
+    <data name="StandardCommandHandler_BanUser_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in ban user</value>
+    </data>
+    <data name="StandardCommandHandler_PardonUser_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in pardon user</value>
+    </data>
+    <data name="StandardCommandHandler_ApproveUsername_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in approve usernames</value>
+    </data>
+    <data name="StandardCommandHandler_RejectUserNames_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in reject user names</value>
+    </data>
+    <data name="StandardCommandHandler_SetGameMasterLevel_ArgumentsNullException" xml:space="preserve">
+        <value>Received null arguments in set game master level</value>
+    </data>
+    <data name="LocalResources_GetStream_PathNullException" xml:space="preserve">
+        <value>Received null path in get stream</value>
+    </data>
+    <data name="ClientHandler_ValidateClient_PacketNullException" xml:space="preserve">
+        <value>Received null packet in validate client</value>
+    </data>
+    <data name="Packet_Serialize_WriterNullException" xml:space="preserve">
+        <value>Received null writer in serialize</value>
+    </data>
+    <data name="PacketHeader_Serialize_WriterNullException" xml:space="preserve">
+        <value>Received null writer in serialize</value>
+    </data>
+    <data name="PacketHeader_Deserialize_NullReaderException" xml:space="preserve">
+        <value>Received null reader in deserialize</value>
+    </data>
+    <data name="StandardCommandHandler_AddUser_PasswordPrompt" xml:space="preserve">
+        <value>Password: </value>
+    </data>
+    <data name="Server_StopAsync_Log" xml:space="preserve">
+        <value>Shutting down ...</value>
+    </data>
+    <data name="ServerStatusCommandHandler_GetPassword_Backspace" xml:space="preserve">
+        <value>&#x8; &#x8;</value>
+    </data>
+    <data name="ServerStatusCommandHandler_GetPassword_Star" xml:space="preserve">
+        <value>*</value>
+    </data>
+    <data name="Server_ConfigureAsync_ConfigFileNullException" xml:space="preserve">
+        <value>Received null config file in configure</value>
+    </data>
+</root>

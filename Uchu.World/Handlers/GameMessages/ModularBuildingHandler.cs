@@ -55,7 +55,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task SetBuildModeHandler(SetBuildModeMessage message, Player player)
+        public void SetBuildModeHandler(SetBuildModeMessage message, Player player)
         {
             player.Message(new SetBuildModeConfirmed
             {

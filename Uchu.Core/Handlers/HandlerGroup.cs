@@ -7,12 +7,12 @@ namespace Uchu.Core
         /// </summary>
 
         private readonly object _lock = new object();
-        protected Server Server { get; private set; }
+        protected UchuServer UchuServer { get; private set; }
 
-        public void SetServer(Server server)
+        public void SetServer(UchuServer uchuServer)
         {
             lock(_lock)
-                Server = server;
+                UchuServer = uchuServer;
         }
     }
 }

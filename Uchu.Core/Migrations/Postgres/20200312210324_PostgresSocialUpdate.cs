@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Uchu.Core.Migrations
 {
+    [SuppressMessage("ReSharper", "CA1062")]
     public partial class PostgresSocialUpdate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

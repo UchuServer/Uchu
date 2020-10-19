@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Uchu.Core.Migrations.MySql
 {
+    [SuppressMessage("ReSharper", "CA1062")]
     public partial class AddedFlags : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
