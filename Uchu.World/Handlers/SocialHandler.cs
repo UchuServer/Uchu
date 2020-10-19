@@ -33,8 +33,11 @@ namespace Uchu.World.Handlers
 
             if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
-                if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0))) return;
-                string response = await Server.HandleCommandAsync(
+
+                if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
+                    return;
+
+                var response = await UchuServer.HandleCommandAsync(
                     message.Message,
                     player,
                     (GameMasterLevel) character.User.GameMasterLevel
@@ -48,8 +51,9 @@ namespace Uchu.World.Handlers
             }
 
             Console.WriteLine($"Message: {message.Message}");
-
-            if (((WorldServer) Server).Whitelist.CheckPhrase(message.Message).Any()) return;
+            
+            if (((WorldUchuServer) UchuServer).Whitelist.CheckPhrase(message.Message).Any())
+                return;
             
             var transcript = new ChatTranscript
             {
@@ -72,8 +76,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task AddFriendRequestHandler(AddFriendRequestPacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -147,8 +151,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task FriendsListRequestHandler(GetFriendListPacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -197,8 +201,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task AddFriendResponseHandler(AddFriendResponsePacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -281,8 +285,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task RemoveFriendHandler(RemoveFriendPacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -321,8 +325,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public void TeamInviteHandler(TeamInvitePacket packet, IRakConnection connection)
         {
-            var session = Server.SessionCache.GetSession(connection.EndPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -342,8 +346,8 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public void TeamInviteResponseHandler(TeamInviteResponse packet, IPEndPoint endPoint)
         {
-            var session = Server.SessionCache.GetSession(endPoint);
-            var zone = ((WorldServer) Server).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
+            var session = UchuServer.SessionCache.GetSession(endPoint);
+            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
 
             if (zone == default)
             {
@@ -366,7 +370,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public void CheckWhitelistRequestHandler(CheckWhitelistRequestPacket packet, IRakConnection connection)
         {
-            var player = Server.FindPlayer(connection);
+            var player = UchuServer.FindPlayer(connection);
             
             if (player == default) return;
             
@@ -374,7 +378,7 @@ namespace Uchu.World.Handlers
                 $"Checking whitelist for [{packet.ChatMode}:{packet.ChatChannel}]: {packet.PrivateReceiver} | [{packet.ChatMessageLength}] {packet.ChatMessage}"
             );
 
-            var redact = ((WorldServer) Server).Whitelist.CheckPhrase(packet.ChatMessage);
+            var redact = ((WorldUchuServer) UchuServer).Whitelist.CheckPhrase(packet.ChatMessage);
             
             player.Message(new ChatModerationResponsePacket
             {

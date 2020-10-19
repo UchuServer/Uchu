@@ -138,8 +138,7 @@ namespace Uchu.World
 
             if (GameObject is Player)
             {
-                await GeneratePlayerYieldsAsync(owner);
-                
+                GeneratePlayerYieldsAsync(owner);
                 return;
             }
 
@@ -179,7 +178,7 @@ namespace Uchu.World
             }
         }
 
-        private async Task GeneratePlayerYieldsAsync(Player owner)
+        private void GeneratePlayerYieldsAsync(Player owner)
         {
             var player = (Player) GameObject;
 

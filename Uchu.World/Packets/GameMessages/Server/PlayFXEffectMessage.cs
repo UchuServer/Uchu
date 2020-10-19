@@ -20,7 +20,7 @@ namespace Uchu.World
         
         public GameObject Secondary { get; set; }
         
-        public bool Serialize { get; set; }
+        public bool Serialized { get; set; }
         
         public override void SerializeMessage(BitWriter writer)
         {
@@ -42,7 +42,7 @@ namespace Uchu.World
             if (writer.Flag(Secondary != default))
                 writer.Write(Secondary);
 
-            writer.WriteBit(Serialize);
+            writer.WriteBit(Serialized);
         }
     }
 }

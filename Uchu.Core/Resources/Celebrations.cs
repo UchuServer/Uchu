@@ -1,7 +1,8 @@
 ﻿namespace Uchu.Core.Resources
 {
-    public enum Celebrations
+    public enum Celebration
     {
+        Invalid = -1,
         LifePoints = 2,
         ImaginationPoints = 5,
         NewItemCollected = 6,

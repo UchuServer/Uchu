@@ -71,7 +71,7 @@ There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), alt
 ### LEGO Universe Client
 You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
 
-Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
+Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://github.com/lcdr/utils).
 
 ### TcpUdp Mod
 The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://github.com/lcdr/raknet_shim_dll/releases) made by lcdr and extract it next to the game's executable.

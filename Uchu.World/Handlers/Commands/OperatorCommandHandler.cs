@@ -18,12 +18,12 @@ namespace Uchu.World.Handlers.Commands
         {
             await using var ctx = new UchuContext();
 
-            var response = await Server.Api.RunCommandAsync<InstanceListResponse>(
-                Server.MasterApi, "instance/list"
+            var response = await UchuServer.Api.RunCommandAsync<InstanceListResponse>(
+                UchuServer.MasterApi, "instance/list"
             ).ConfigureAwait(false);
 
             var world = response.Instances.Where(
-                i => i.Id != Server.Id
+                i => i.Id != UchuServer.Id
             ).FirstOrDefault(i => i.Type == (int) ServerType.World);
 
             foreach (var zonePlayer in player.Zone.Players)
@@ -54,14 +54,14 @@ namespace Uchu.World.Handlers.Commands
 
             await Task.Delay(delay);
 
-            await Server.Api.RunCommandAsync<BaseResponse>(Server.MasterApi, $"instance/decommission?i={Server.Id}")
+            await UchuServer.Api.RunCommandAsync<BaseResponse>(UchuServer.MasterApi, $"instance/decommission?i={UchuServer.Id}")
                 .ConfigureAwait(false);
             
             return "Stopped server";
         }
 
         [CommandHandler(Signature = "save", Help = "Save a serialization", GameMasterLevel = GameMasterLevel.Operator)]
-        public async Task<string> SaveSerialize(string[] arguments, Player player)
+        public string SaveSerialize(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects[0];
 
@@ -76,7 +76,7 @@ namespace Uchu.World.Handlers.Commands
                     current = gameObject;
             }
 
-            var path = Path.Combine(Server.MasterPath, "./packets/");
+            var path = Path.Combine(UchuServer.MasterPath, "./packets/");
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 

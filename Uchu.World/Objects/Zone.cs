@@ -39,7 +39,7 @@ namespace Uchu.World
 
         public ZoneInfo ZoneInfo { get; }
         
-        public new Server Server { get; }
+        public new UchuServer UchuServer { get; }
         
         public uint Checksum { get; private set; }
         
@@ -112,11 +112,11 @@ namespace Uchu.World
         
         public Event<Player, string> OnChatMessage { get; }
         
-        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
+        public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
-            Server = server;
+            UchuServer = uchuServer;
             InstanceId = instanceId;
             CloneId = cloneId;
             
@@ -156,7 +156,7 @@ namespace Uchu.World
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
-            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
 
             if (NavMeshManager.Enabled)
             {
@@ -518,7 +518,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
             }
         }
         
@@ -539,7 +539,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
             }
         }
 
@@ -570,90 +570,88 @@ namespace Uchu.World
             return Task.Run(async () =>
             {
                 _running = true;
-
                 var watch = new Stopwatch();
                 
                 while (_running)
                 {
                     var players = Players;
-                    
                     if (players.Length == 0)
                     {
                         await Task.Delay(1000);
-                        
                         continue;
                     }
 
-                    if (_ticks >= TicksPerSecondLimit) continue;
+                    if (_ticks >= TicksPerSecondLimit)
+                        continue;
 
                     watch.Restart();
 
+                    // Update all tick tasks in parallel
+                    var tickTasks = new List<Task>();
                     foreach (var updatedObject in UpdatedObjects.ToArray())
                     {
-                        if (updatedObject.Stuck) continue;
+                        if (updatedObject.Stuck)
+                            continue;
                         
                         if (updatedObject.Associate is GameObject gameObject)
                         {
-                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
+                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                                continue;
                         }
 
                         updatedObject.DeltaTime += DeltaTime;
-                        
-                        if (updatedObject.Frequency != ++updatedObject.Ticks) continue;
-                        
+                        if (updatedObject.Frequency != ++updatedObject.Ticks)
+                            continue;
                         updatedObject.Ticks = 0;
 
-                        var start = watch.ElapsedMilliseconds;
-
-                        try
+                        tickTasks.Add(Task.Run(async () =>
                         {
-                            var task = Task.Run(async () =>
+                            var start = watch.ElapsedMilliseconds;
+                            try
                             {
-                                await updatedObject.Delegate(updatedObject.DeltaTime);
+                                var tickTask = Task.Run(async () =>
+                                {
+                                    await updatedObject.Delegate(updatedObject.DeltaTime);
+                                    updatedObject.Stuck = false;
+                                });
 
-                                updatedObject.Stuck = false;
-                            });
+                                var delay = Task.Delay(150);
+                                await Task.WhenAny(tickTask, delay);
+                                var elapsed = watch.ElapsedMilliseconds - start;
 
-                            var delay = Task.Delay(250);
-
-                            await Task.WhenAny(task, delay);
-
-                            if (delay.IsCompleted && !task.IsCompleted)
+                                // Any task that takes more than 3 ticks to complete is considered stuck
+                                if (delay.IsCompleted && !tickTask.IsCompleted)
+                                {
+                                    Logger.Warning($"{updatedObject.Associate} is now defined as stuck!");
+                                    updatedObject.Stuck = true;
+                                }
+                                // Any task that took more than two ticks to execute but less than 3 is considered slow
+                                else if (elapsed > 100)
+                                {
+                                    Logger.Warning($"Slow update: {updatedObject.Associate} in {elapsed}ms");
+                                }
+                            }
+                            catch (Exception e)
                             {
-                                Logger.Error($"{updatedObject.Associate} is now defined as stuck!");
-                                
-                                updatedObject.Stuck = true;
+                                Logger.Error(e);
                             }
 
-                            var elapsed = watch.ElapsedMilliseconds - start;
-
-                            if (elapsed > 100)
-                            {
-                                Logger.Warning(
-                                    $"Slow update: {updatedObject.Associate} in {elapsed}ms"
-                                );
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Error(e);
-                        }
-
-                        updatedObject.DeltaTime = 0;
+                            updatedObject.DeltaTime = 0;
+                        }));
                     }
-                    
+
+                    await Task.WhenAll(tickTasks);
                     await OnTick.InvokeAsync();
                     
                     _ticks++;
 
                     var passedMs = watch.ElapsedMilliseconds;
-
                     _passedTickTime += passedMs;
                     
+                    // Sync with the system tick clock
                     await Task.Delay((int) Math.Max(1000 / TicksPerSecondLimit - passedMs, 0));
                     
                     passedMs = watch.ElapsedMilliseconds;
-
                     DeltaTime = passedMs / 1000f;
                 }
             });

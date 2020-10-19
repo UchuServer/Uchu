@@ -5,14 +5,13 @@ namespace Uchu.World.Systems.Behaviors
     public class PlayEffectBehavior : BehaviorBase
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.PlayEffect;
-
-        private int EffectId { get; set; }
+        private int InternalEffectId { get; set; }
         
         public override async Task BuildAsync()
         {
             var effectId = await GetParameter("effectID");
             if (effectId?.Value == null) return;
-            EffectId = (int) effectId.Value;
+            InternalEffectId = (int) effectId.Value;
         }
     }
 }
