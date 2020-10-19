@@ -11,6 +11,14 @@ namespace Uchu.World.Handlers
 {
     public class SocialHandler : HandlerGroup
     {
+        private static string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s",
+            "/whisper", "/w", "/tell", "/team", "/t", "/location", "/locate", "/loc", "/faq", "/faqs", "/shop", "/store", "/minigames", "/forums",
+            "/thumbsup", "/thumb", "/thumb", "/victory", "/backflip", "/clap", "/cringe", "/cry", "/dance", "/gasp", "/giggle", "/talk", "/salute",
+            "/shrug", "/sigh", "/wave", "/why", "/thanks", "/yes", "/addfriend", "/removefriend", "/addignore", "/removeignore", "/recommendedperfoptions",
+            "/perfoptionslow", "/perfoptionsmid", "/perfoptionshigh", "/invite", "/tinvite", "/teaminvite", "/inviteteam", "/leaveteam", "/leave", "/tleave",
+            "/teamleave", "/setloot", "/tloot", "/tsetloot", "/teamsetloot", "/kickplayer", "/tkick", "/kick", "/tkickplayer", "/teamkickplayer", "/leader",
+            "/setleader", "/tleader", "/tsetleader", "/teamsetleader", "/cancelqueue" };
+
         [PacketHandler]
         public async Task ParseChatMessageHandler(ParseChatMessage message, Player player)
         {
@@ -29,10 +37,12 @@ namespace Uchu.World.Handlers
                 c => c.Id == player.Id
             );
 
-            Console.WriteLine($"Message: {message.Message}");
-
-            if (message.Message.StartsWith('/'))
+            if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
+
+                if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
+                    return;
+
                 var response = await UchuServer.HandleCommandAsync(
                     message.Message,
                     player,
@@ -43,11 +53,13 @@ namespace Uchu.World.Handlers
                 {
                     player.SendChatMessage(response, PlayerChatChannel.Normal);
                 }
-                
                 return;
             }
 
-            if (((WorldUchuServer) UchuServer).Whitelist.CheckPhrase(message.Message).Any()) return;
+            Console.WriteLine($"Message: {message.Message}");
+            
+            if (((WorldUchuServer) UchuServer).Whitelist.CheckPhrase(message.Message).Any())
+                return;
             
             var transcript = new ChatTranscript
             {
