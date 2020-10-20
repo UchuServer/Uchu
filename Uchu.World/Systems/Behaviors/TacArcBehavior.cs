@@ -261,12 +261,9 @@ namespace Uchu.World.Systems.Behaviors
             });
 
             var selectedTargets = new List<GameObject>();
-            foreach (var target in targets)
-            {
-                if (selectedTargets.Count < MaxTargets)
-                {
-                    selectedTargets.Add(target);
-                }
+            for (var i = 0; i < targets.Count && i < MaxTargets; i++)
+            { 
+                selectedTargets.Add(targets[i]);
             }
 
             return selectedTargets;

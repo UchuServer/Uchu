@@ -578,8 +578,7 @@ namespace Uchu.World
         /// </summary>
         private async Task Tick()
         {
-            var players = Players;
-            if (players.Length == 0)
+            if (Players.Length == 0)
                 return;
 
             var watch = new Stopwatch();
@@ -587,11 +586,14 @@ namespace Uchu.World
                     
             foreach (var updatedObject in UpdatedObjects.ToArray())
             {
-                // Skip this tick if the game object is stuck, not on its frequency or not in sight of a player
+                // Skip this game object if it's stuck or not in the player view
                 if (updatedObject.Stuck
-                    || updatedObject.Frequency != ++updatedObject.Ticks
                     || updatedObject.Associate is GameObject gameObject
-                    && players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                    && Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                    continue;
+                
+                // Ensure that the object ticks at its frequency
+                if (updatedObject.Frequency > ++updatedObject.Ticks)
                     continue;
 
                 updatedObject.Ticks = 0;
