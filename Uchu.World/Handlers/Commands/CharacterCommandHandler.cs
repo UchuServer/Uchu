@@ -17,6 +17,22 @@ namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
+        [CommandHandler(Signature = "TriggerSound", Help = "Triggers a sound", GameMasterLevel = GameMasterLevel.Admin)]
+        public string TriggerSound(string[] arguments, Player player)
+        {
+            if (arguments.Length > 1)
+            {
+                player.Message(new PlayNDAudioEmitterMessage
+                {
+                    Associate = player,
+                    NDAudioEventGUID = arguments[1]
+                });
+
+                return $"Triggered GUID: {arguments[1]}";
+            }
+            return "/TriggerSound <guid>";
+        }
+
         [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
         public string Buffme(string[] arguments, Player player)
         {

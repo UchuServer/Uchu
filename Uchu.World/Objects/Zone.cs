@@ -275,25 +275,28 @@ namespace Uchu.World
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-            if (obj == null) return;
-
-            obj.Layer = StandardLayer.Hidden;
-
-            var spawner = obj.GetComponent<SpawnerComponent>();
-
-            spawner.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
-
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
             {
-                Position = w.Position,
-                Rotation = Quaternion.Identity
-            }).ToList();
+                var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
-            Start(obj);
-            
-            spawner.SpawnCluster();
+                if (obj == null) return;
+
+                obj.Layer = StandardLayer.Hidden;
+
+                var spawner = obj.GetComponent<SpawnerComponent>();
+
+                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
+
+                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+                {
+                    Position = w.Position,
+                    Rotation = Quaternion.Identity
+                }).ToList();
+
+                Start(obj);
+
+                spawner.SpawnCluster();
+            }
         }
 
         #endregion
