@@ -17,36 +17,41 @@ namespace Uchu.StandardScripts.BlockYard
     public class BlockYardProperty : NativeScript
     {
         static private string GUIDMaelstrom { get; } = "{7881e0a1-ef6d-420c-8040-f59994aa3357}"; // ambient sounds for when the Maelstrom is on
-        static private string GUIDPeacful { get; } = "{c5725665-58d0-465f-9e11-aeb1d21842ba}"; // happy ambient sounds when no Maelstrom is present
+        static private string GUIDPeaceful { get; } = "{c5725665-58d0-465f-9e11-aeb1d21842ba}"; // happy ambient sounds when no Maelstrom is present
         static bool HasOwner { get; set; } = false;
-        static private string[] MaelstromObjects { get; set; } =
+        static private string[] GlobalObjects { get; } =
         {
-            "StrombieWander",
-            "Strombies",
-            "ClaimMarker",
-            "Generator",
-            "MaelstromFX",
-            "MaelstromSpots",
-            "PropertyGuard",
-            "ClaimMarker",
-            "Generator",
-            "Guard",
-            "PropertyPlaque",
-            "PropertyVendor",
-            "Spots",
-            "maelstrom",
-            "strombies",
             "FXObject",
-            "Mailbox"
+            "Mailbox",
+            "PropertyGuard",
+            "Launcher"
+        };
+        static private string[] MaelstromObjects { get; } =
+        {
+            "DestroyMaelstrom",
+            "SpiderBoss",
+            "SpiderEggs",
+            "Rocks",
+            "DesMaelstromInstance",
+            "Spider_Scream",
+            "ROF_Targets_00",
+            "ROF_Targets_01",
+            "ROF_Targets_02",
+            "ROF_Targets_03",
+            "ROF_Targets_04"
+        };
+        static private string[] PeacefulObjects { get; } =
+        {
 
         };
+
         
 
         public override Task LoadAsync()
         {
             Listen(Zone.OnPlayerLoad, (player) =>
             {
-                if (HasOwner)
+                if (HasOwner) // If the world is peaceful
                 {
                     Peaceful(player);
                 } 
@@ -64,8 +69,8 @@ namespace Uchu.StandardScripts.BlockYard
             player.Message(new PlayNDAudioEmitterMessage
             {
                 Associate = player,
-                NDAudioEventGUID = GUIDPeacful
-            });
+                NDAudioEventGUID = GUIDPeaceful
+            }); // Play peaceful sounds
         }
 
         private void Maelstrom(Player player)
@@ -74,14 +79,32 @@ namespace Uchu.StandardScripts.BlockYard
             {
                 Associate = player,
                 NDAudioEventGUID = GUIDMaelstrom
-            });
+            }); // Play eerie sounds
 
             foreach (var path in Zone.ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
             {
                 try
                 {
-                    if (MaelstromObjects.Contains(path.PathName)) {
-                        SpawnPath(path);
+                    if (MaelstromObjects.Contains(path.PathName) || GlobalObjects.Contains(path.PathName)) {
+                        var obj = InstancingUtilities.Spawner(path, Zone);
+
+                        if (obj == null) return;
+
+                        obj.Layer = StandardLayer.Hidden;
+
+                        var spawner = obj.GetComponent<SpawnerComponent>();
+
+                        spawner.SpawnsToMaintain = (int)path.NumberToMaintain;
+
+                        spawner.SpawnLocations = path.Waypoints.Select(w => new SpawnLocation
+                        {
+                            Position = w.Position,
+                            Rotation = Quaternion.Identity
+                        }).ToList();
+
+                        Start(obj);
+
+                        spawner.SpawnCluster();
                     }
                 }
                 catch (Exception e)
@@ -89,29 +112,27 @@ namespace Uchu.StandardScripts.BlockYard
                     Logger.Warning(e);
                 }
             }
-        }
 
-        private void SpawnPath(LuzSpawnerPath spawnerPath)
-        {
-            var obj = InstancingUtilities.Spawner(spawnerPath, Zone);
-
-            if (obj == null) return;
-
-            obj.Layer = StandardLayer.Hidden;
-
-            var spawner = obj.GetComponent<SpawnerComponent>();
-
-            spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
-
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            foreach (var item in Zone.GameObjects)
             {
-                Position = w.Position,
-                Rotation = Quaternion.Identity
-            }).ToList();
+                if (item.Lot.Id == 14375)
+                {
+                    var destructibleComponent = (World.DestructibleComponent)item.GetComponent(typeof(World.DestructibleComponent));
 
-            Start(obj);
+                    Listen(destructibleComponent.OnSmashed, (killer, lootOwner) =>
+                    {
+                        var spider = GameObject.Instantiate(Zone, 16197, item.Transform.Position);
 
-            spawner.SpawnCluster();
+                        Start(spider);
+
+                        Construct(spider);
+                    });
+                }
+                if (item.Lot.Id == 9524)
+                {
+                    Destroy(item);
+                }  
+            }
         }
     }
 }
