@@ -141,5 +141,14 @@ namespace Uchu.World.Handlers.GameMessages
                 Logger.Debug($"Assigned level {lookup_val} to {character.Name} (They are now currently level {character.Level})");
             }
         }
+
+        [PacketHandler]
+        public async Task PlayerLoadedHandler(PlayerLoadedMessage message, Player player)
+        {
+            player.Message(new PlayerReadyMessage
+            {
+                Associate = player.Zone.ZoneControlObject
+            });
+        }
     }
 }

@@ -215,15 +215,25 @@ namespace Uchu.World.Handlers.Commands
             return "You smashed yourself";
         }
 
-        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "freecam", Help = "Toggle freecam for your player", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Freecam(string[] arguments, Player player)
         {
-            player.Message(new ToggleFreeCamModeMessage
+            if (arguments.Length > 1)
             {
-                Associate = player
-            });
+                int ControlNumber = (arguments[1] == "on" ? 9 : 1);
+                player.Message(new SetPlayerControlSchemeMessage
+                {
+                    Associate = player,
+                    DelayCameraSwitchIfInCinematic = false,
+                    SwitchCamera = true,
+                    ControlScheme = ControlNumber
+                });
 
-            return "Toggled freecam.";
+                return "Toggled freecam.";
+            } else
+            {
+                return "/freecam <on/off>";
+            }
         }
 
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Admin)]
@@ -1102,6 +1112,8 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Set inventory size to: {size}";
         }
+
+
 
         [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = GameMasterLevel.Admin)]
         public string Control(string[] arguments, Player player)

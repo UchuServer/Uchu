@@ -73,6 +73,8 @@ namespace Uchu.World
         
         public Quaternion SpawnRotation { get; private set; }
 
+        public GameObject ZoneControlObject { get; private set; }
+
         //
         // Runtime
         //
@@ -198,6 +200,21 @@ namespace Uchu.World
                     Logger.Error(e);
                 }
             }
+
+
+            using var ctx = new Uchu.Core.Client.CdClientContext();
+
+            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+
+            int Lot = ZoneControlLot ??= 2365;
+
+            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: 70368744177662);
+
+            Start(ZoneObject);
+
+            Objects.Append(ZoneObject);
+
+            ZoneControlObject = ZoneObject;
 
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             

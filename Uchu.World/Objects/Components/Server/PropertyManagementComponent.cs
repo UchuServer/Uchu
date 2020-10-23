@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Uchu.World.Services;
 using Uchu.World;
+using System.Numerics;
 
 namespace Uchu.World
 {
@@ -26,7 +27,20 @@ namespace Uchu.World
                 origin.Message(new DownloadPropertyDataMessage
                 {
                     Associate = message.Associate,
+                    ZoneID = origin.Zone.ZoneId.Id,
+                    VendorMapID = 1100,
+                    OwnerName = "",
+                    OwnerObjID = 0,
+                    SpawnName = "AGSmallProperty",
+                    SpawnPosition = origin.Zone.SpawnPosition,
+                    MaxBuildHeight = 128.0f,
+                    Paths = new List<Vector3>()
+                });
 
+                origin.Message(new UpdatePropertyModelCountMessage
+                {
+                    Associate = message.Associate,
+                    ModelCount = 0
                 });
             });
         }
