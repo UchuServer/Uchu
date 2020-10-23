@@ -10,23 +10,27 @@ namespace Uchu.World.Systems.Behaviors
         public uint Handle { get; set; }
         public BehaviorBase Action { get; set; }
         public BehaviorExecutionParameters ActionParameters { get; set; }
+        public AirMovementBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     
     public class AirMovementBehavior : BehaviorBase<AirMovementBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AirMovement;
-        
-        public BehaviorBase GroundAction { get; set; }
+
+        private BehaviorBase GroundAction { get; set; }
         
         public override async Task BuildAsync()
         {
             GroundAction = await GetBehavior("ground_action");
         }
 
-        protected override void DeserializeStart(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(AirMovementBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
+            parameters.Handle = parameters.Context.Reader.Read<uint>();
+            parameters.RegisterHandle<AirMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
         protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters parameters)
@@ -46,9 +50,9 @@ namespace Uchu.World.Systems.Behaviors
                 });
         }
 
-        protected override async Task ExecuteSync(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void ExecuteSync(AirMovementBehaviorExecutionParameters parameters)
         {
-            await behaviorExecutionParameters.Action.ExecuteStart(behaviorExecutionParameters.ActionParameters);
+            parameters.Action.ExecuteStart(parameters.ActionParameters);
         }
     }
 }

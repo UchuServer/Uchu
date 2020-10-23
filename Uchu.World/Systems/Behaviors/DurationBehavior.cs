@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class DurationBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+
+        public DurationBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class DurationBehavior : BehaviorBase<DurationBehaviorExecutionParameters>
     {

@@ -23,93 +23,51 @@ namespace Uchu.World
 {
     public class Zone : Object
     {
-        //
-        // Consts
-        //
-
         private const int TicksPerSecondLimit = 20;
-
-        //
-        // Zone info
-        //
-
+        
         public uint CloneId { get; }
-        
         public ushort InstanceId { get; }
-
         public ZoneInfo ZoneInfo { get; }
-        
         public new Server Server { get; }
-        
         public uint Checksum { get; private set; }
-        
         public bool Loaded { get; private set; }
-        
         public NavMeshManager NavMeshManager { get; private set; }
-
-        //
+        
         // Managed objects
-        //
-
         private List<Object> ManagedObjects { get; }
-        
         private List<GameObject> SpawnedObjects { get; }
-
-        //
+        
         // Macro properties
-        //
-
         public Object[] Objects => ManagedObjects.ToArray();
-
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
-        
         public Player[] Players => Objects.OfType<Player>().ToArray();
-
         public GameObject[] Spawned => SpawnedObjects.ToArray();
-        
         public ZoneId ZoneId { get; private set; }
-        
         public Vector3 SpawnPosition { get; private set; }
-        
         public Quaternion SpawnRotation { get; private set; }
-
-        //
-        // Runtime
-        //
         
+        // Runtime
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
         private long _physicsTime;
         
         public float DeltaTime { get; private set; }
-        
         public ScriptManager ScriptManager { get; }
-        
         public ManagedScriptEngine ManagedScriptEngine { get; }
-        
         private List<UpdatedObject> UpdatedObjects { get; }
+        private List<ScheduledAction> NewScheduledActions { get; }
+        private List<ScheduledAction> ScheduledActions { get; }
         
-        //
         // Physics
-        //
-        
         public PhysicsSimulation Simulation { get; }
-        
         public Event EarlyPhysics { get; }
-        
         public Event LatePhysics { get; }
         
-        //
         // Events
-        //
-
-        public Event<Player> OnPlayerLoad { get; } 
-
+        public Event<Player> OnPlayerLoad { get; }
         public Event<Object> OnObject { get; }
-
         public Event OnTick { get; }
-        
         public Event<Player, string> OnChatMessage { get; }
         
         public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
@@ -130,6 +88,8 @@ namespace Uchu.World
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
             UpdatedObjects = new List<UpdatedObject>();
+            ScheduledActions = new List<ScheduledAction>();
+            NewScheduledActions = new List<ScheduledAction>();
             ManagedObjects = new List<Object>();
             SpawnedObjects = new List<GameObject>();
             Simulation = new PhysicsSimulation();
@@ -583,32 +543,8 @@ namespace Uchu.World
 
             var watch = new Stopwatch();
             watch.Start();
-                    
-            foreach (var updatedObject in UpdatedObjects.ToArray())
-            {
-                // Skip this game object if it's stuck or not in the player view
-                if (updatedObject.Stuck
-                    || updatedObject.Associate is GameObject gameObject
-                    && Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                    continue;
-                
-                // Ensure that the object ticks at its frequency
-                if (updatedObject.Frequency > ++updatedObject.Ticks)
-                    continue;
-
-                updatedObject.Ticks = 0;
-                try
-                {
-                    await updatedObject.Delegate(DeltaTime);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
-            }
 
             await OnTick.InvokeAsync();
-                    
             _ticks++;
 
             var passedMs = watch.ElapsedMilliseconds;
@@ -620,6 +556,8 @@ namespace Uchu.World
 
         private Task ExecuteUpdateAsync()
         {
+            Listen(OnTick, ExecuteSchedule);
+            Listen(OnTick, UpdateObjects);
             Listen(OnTick, PhysicsStep);
 
             return Task.Run(async () =>
@@ -638,18 +576,99 @@ namespace Uchu.World
         private async Task PhysicsStep()
         {
             var watch = new Stopwatch();
-            
             watch.Start();
             
             await EarlyPhysics.InvokeAsync();
-
             Simulation.Step(DeltaTime);
-            
             await LatePhysics.InvokeAsync();
             
             watch.Stop();
-
             _physicsTime += watch.ElapsedMilliseconds;
+        }
+
+        /// <summary>
+        /// Updates all the ojects in this zone by calling their update delegate
+        /// </summary>
+        /// <remarks>
+        /// Optimizes for objects that are stuck or not in the player view filter
+        /// </remarks>
+        private void UpdateObjects()
+        {
+            foreach (var updatedObject in UpdatedObjects.ToArray())
+            {
+                // Skip this game object if it's stuck or not in the player view
+                if (updatedObject.Stuck
+                    || updatedObject.Associate is GameObject gameObject
+                    && Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                    continue;
+                
+                // Ensure that the object ticks at its frequency
+                if (updatedObject.Frequency > ++updatedObject.Ticks)
+                    continue;
+
+                updatedObject.Ticks = 0;
+                try
+                {
+                    updatedObject.Delegate(DeltaTime);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+        }    
+
+        /// <summary>
+        /// Decrements the delay of all scheduled tasks and executes them if the timeout has been reached
+        /// </summary>
+        private void ExecuteSchedule()
+        {
+            // Before executing the schedule, check all incoming tasks and add them to the working queue
+            lock (NewScheduledActions)
+            {
+                ScheduledActions.AddRange(NewScheduledActions);
+                NewScheduledActions.Clear();
+            }
+
+            // Loop in reverse to allow removal of elements during the loop
+            for (var i = ScheduledActions.Count - 1; i >= 0; i--)
+            {
+                var scheduledAction = ScheduledActions[i];
+                
+                scheduledAction.Delay -= DeltaTime;
+                if (scheduledAction.Delay > 0)
+                    continue;
+
+                try
+                {
+                    scheduledAction.Delegate();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e.Message);
+                }
+                finally
+                {
+                    ScheduledActions.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Schedules an action to be executed in a certain amount of milliseconds
+        /// </summary>
+        /// <param name="delegate">The action to execute</param>
+        /// <param name="delay">The milliseconds delay before execution</param>
+        public void Schedule(Action @delegate, float delay)
+        {
+            lock (NewScheduledActions)
+            {
+                NewScheduledActions.Add(new ScheduledAction
+                {
+                    Delegate = @delegate,
+                    Delay = delay
+                });
+            }
         }
 
         public void Update(Object associate, Func<Task> @delegate, int frequency)
@@ -683,6 +702,22 @@ namespace Uchu.World
             public int Ticks { get; set; }
             
             public bool Stuck { get; set; }
+        }
+        
+        /// <summary>
+        /// A task that may be scheduled to execute in a certain amount of milliseconds
+        /// </summary>
+        private class ScheduledAction
+        {
+            /// <summary>
+            /// The action to execute if the task reaches its scheduled time
+            /// </summary>
+            public Action Delegate { get; set; }
+        
+            /// <summary>
+            /// The amount of milliseconds to wait before executing this task
+            /// </summary>
+            public float Delay { get; set; }
         }
 
         #endregion

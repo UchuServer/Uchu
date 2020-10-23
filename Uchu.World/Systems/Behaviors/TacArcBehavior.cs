@@ -12,8 +12,13 @@ namespace Uchu.World.Systems.Behaviors
         public bool Blocked { get; set; }
         public BehaviorBase Behavior { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
-        public List<BehaviorExecutionParameters> ParametersList { get; set; } 
-            = new List<BehaviorExecutionParameters>();
+        public List<BehaviorExecutionParameters> ParametersList { get; set; }
+
+        public TacArcBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+            ParametersList = new List<BehaviorExecutionParameters>();
+        }
     }
     public class TacArcBehavior : BehaviorBase<TacArcBehaviorExecutionParameters>
     {
@@ -92,18 +97,18 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteSync(TacArcBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    await parameters.Behavior.ExecuteSync(parameter);
+                    parameters.Behavior.ExecuteSync(parameter);
                 }
             }
             else
             {
-                await parameters.Behavior.ExecuteSync(parameters.Parameters);
+                parameters.Behavior.ExecuteSync(parameters.Parameters);
             }
         }
 

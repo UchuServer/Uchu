@@ -4,7 +4,12 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class VerifyBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public BehaviorExecutionParameters Parameters { get; set; }        
+        public BehaviorExecutionParameters Parameters { get; set; }
+
+        public VerifyBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     
     public class VerifyBehavior : BehaviorBase<VerifyBehaviorExecutionParameters>

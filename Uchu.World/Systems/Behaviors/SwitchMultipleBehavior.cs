@@ -9,6 +9,11 @@ namespace Uchu.World.Systems.Behaviors
         public float Value { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
         public BehaviorBase Behavior { get; set; }
+
+        public SwitchMultipleBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class SwitchMultipleBehavior : BehaviorBase<SwitchMultipleBehaviorExecutionParameters>
     {

@@ -5,9 +5,14 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AndBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; } 
-            = new List<BehaviorExecutionParameters>();
+        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; }
+        public AndBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
+            : base(context, branchContext)
+        {
+            BehaviorExecutionParameters = new List<BehaviorExecutionParameters>();
+        }
     }
+    
     public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.And;
@@ -59,11 +64,11 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteSync(AndBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                await Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
+                Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
             }
         }
     }

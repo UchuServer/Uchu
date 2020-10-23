@@ -336,7 +336,7 @@ namespace Uchu.World
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviorHandle, reader);
+                behavior.SyncAsync(message.BehaviorHandle, reader);
             }
 
             if (message.Done)

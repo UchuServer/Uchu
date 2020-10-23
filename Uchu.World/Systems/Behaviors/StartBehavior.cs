@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class StartBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public StartBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class StartBehavior : BehaviorBase<StartBehaviorExecutionParameters>
     {

@@ -8,6 +8,11 @@ namespace Uchu.World.Systems.Behaviors
         public bool ServerSide { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public AttackDelayBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     
     public class AttackDelayBehavior : BehaviorBase<AttackDelayBehaviorExecutionParameters>
@@ -38,7 +43,7 @@ namespace Uchu.World.Systems.Behaviors
         {
             parameters.Handle = parameters.Context.Reader.Read<uint>();
             for (var i = 0; i < Intervals; i++)
-                RegisterHandle(parameters.Handle, parameters);
+                parameters.RegisterHandle<AttackDelayBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
         protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters parameters)
@@ -61,15 +66,20 @@ namespace Uchu.World.Systems.Behaviors
             parameters.ServerSide = true;
         }
 
-        protected override async Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            // if (parameters.WaitAndSync)
-            //     await Task.Delay(Delay);
-
-            await Action.ExecuteStart(parameters.Parameters);
-
             if (parameters.ServerSide)
-                parameters.NpcContext.Sync(parameters.Handle);
+            {
+                parameters.Schedule( async () =>
+                {
+                    await Action.ExecuteStart(parameters.Parameters);
+                    parameters.NpcContext.Sync(parameters.Handle);
+                }, Delay);
+            }
+            else
+            {
+                Action.ExecuteStart(parameters.Parameters);
+            }
         }
     }
 }

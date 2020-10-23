@@ -1,8 +1,10 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
@@ -47,16 +49,21 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-            
-            await tree.UseAsync();
+
+            try
+            {
+                await tree.UseAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.Message);
+            }
         }
 
         public async Task CalculateImpactAsync(GameObject target)
         {
             target ??= Target;
-
-            await target.NetFavorAsync();
-
+            
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
                 return;

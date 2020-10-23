@@ -8,7 +8,7 @@ using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    using SyncDelegate = Func<BitReader, Task>;
+    using SyncDelegate = Action<BitReader>;
     
     /// <summary>
     /// Base context of executing a behavior, contains the caster and the behavior to execute
@@ -57,7 +57,7 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="handle">The behavior handle to sync</param>
         /// <param name="reader">The sync skill bitstream</param>
-        public async Task SyncAsync(uint handle, BitReader reader)
+        public void SyncAsync(uint handle, BitReader reader)
         {
             BehaviorSyncEntry entry;
 
@@ -71,7 +71,7 @@ namespace Uchu.World.Systems.Behaviors
                 }
             }
 
-            await entry.Delegate(reader);
+            entry.Delegate(reader);
         }
 
         /// <summary>

@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class TargetCasterBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public TargetCasterBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class TargetCasterBehavior : BehaviorBase<TargetCasterBehaviorExecutionParameters>
     {

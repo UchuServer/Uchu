@@ -370,15 +370,6 @@ namespace Uchu.World.Systems.Behaviors
                 }
             }
         }
-        
-        public async Task ExecuteAsync()
-        {
-            if (!(Serialized || Deserialized))
-                throw new InvalidOperationException("Can't execute tree: it's neither serialized nor deserialized.");
-            
-            await ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
-            await ExecuteRootBehaviorsForSkillType(CastType);
-        }
 
         private async Task ExecuteRootBehaviorsForSkillType(SkillCastType skillType)
         {
@@ -387,15 +378,34 @@ namespace Uchu.World.Systems.Behaviors
                 foreach (var executionPreparation in rootBehaviorList)
                 {
                     await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
-                    
-                    // Only server side behaviors will have to manually execute sync
-                    if (Serialized)
-                        await executionPreparation.BehaviorBase.ExecuteSync(
-                            executionPreparation.BehaviorExecutionParameters);
                 }
             }
         }
+        
+        /// <summary>
+        /// Executes the tree by executing all skills of the default and casttype skill type
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't (de)serialized</exception>
+        public async Task ExecuteAsync()
+        {
+            if (!(Serialized || Deserialized))
+                throw new InvalidOperationException("Can't execute tree: it's neither serialized nor deserialized.");
 
+            try
+            {
+                await ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
+                await ExecuteRootBehaviorsForSkillType(CastType);
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error in tree execute: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Uses the skill tree by starting all the skills of the OnUse skill type
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
         public async Task UseAsync()
         {
             if (!Deserialized)
@@ -403,12 +413,24 @@ namespace Uchu.World.Systems.Behaviors
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list))
                 return;
 
-            foreach (var behaviorExecution in list)
+            try
             {
-                await behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
+                foreach (var behaviorExecution in list)
+                {
+                    await behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree use: {e.Message}");
             }
         }
 
+        /// <summary>
+        /// Mounts the skill tree by starting all the skills of the equip skill type
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
         public async Task MountAsync()
         {
             if (!Deserialized)
@@ -416,12 +438,24 @@ namespace Uchu.World.Systems.Behaviors
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list))
                 return;
 
-            foreach (var executionPreparation in list)
+            try
             {
-                await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
+                foreach (var executionPreparation in list)
+                {
+                    await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation
+                        .BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree mount: {e.Message}");
             }
         }
 
+        /// <summary>
+        /// Dismantles the skill tree by calling dismantle on all equip skills.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
         public async Task DismantleAsync()
         {
             if (!Deserialized)
@@ -429,9 +463,17 @@ namespace Uchu.World.Systems.Behaviors
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) 
                 return;
 
-            foreach (var executionPreparation in list)
+            try
             {
-                await executionPreparation.BehaviorBase.DismantleAsync(executionPreparation.BehaviorExecutionParameters);
+                foreach (var executionPreparation in list)
+                {
+                    await executionPreparation.BehaviorBase.DismantleAsync(executionPreparation
+                        .BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree dismantle: {e.Message}");
             }
         }
 

@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class NpcCombatSkillBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public NpcCombatSkillBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class NpcCombatSkillBehavior : BehaviorBase<NpcCombatSkillBehaviorExecutionParameters>
     {
@@ -41,9 +46,9 @@ namespace Uchu.World.Systems.Behaviors
             Behavior.SerializeSync(parameters.Parameters);
         }
 
-        protected override async Task ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            await Behavior.ExecuteSync(parameters.Parameters);
+            Behavior.ExecuteSync(parameters.Parameters);
         }
     }
 }

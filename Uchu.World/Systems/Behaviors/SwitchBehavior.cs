@@ -6,6 +6,11 @@ namespace Uchu.World.Systems.Behaviors
     {
         public bool State { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public SwitchBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class SwitchBehavior : BehaviorBase<SwitchBehaviorExecutionParameters>
     {

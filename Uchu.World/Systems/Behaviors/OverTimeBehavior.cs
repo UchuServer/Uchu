@@ -4,7 +4,12 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class OverTimeBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
+        public BehaviorExecutionParameters Parameters { get; set; }
+
+        public OverTimeBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class OverTimeBehavior : BehaviorBase<OverTimeBehaviorExecutionParameters>
     {
@@ -19,13 +24,13 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(OverTimeBehaviorExecutionParameters parameters)
         {
-            parameters.BehaviorExecutionParameters = Action.DeserializeStart(parameters.Context,
+            parameters.Parameters = Action.DeserializeStart(parameters.Context,
                 parameters.BranchContext);
         }
 
         protected override async Task ExecuteStart(OverTimeBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(parameters.BehaviorExecutionParameters);
+            await Action.ExecuteStart(parameters.Parameters);
         }
     }
 }

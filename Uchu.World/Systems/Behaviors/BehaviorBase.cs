@@ -10,8 +10,17 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.World.Systems.Behaviors
 {
     public abstract class BehaviorBase<T> : BehaviorBase
-        where T : BehaviorExecutionParameters, new()
+        where T : BehaviorExecutionParameters
     {
+        /// <summary>
+        /// Creates a new instance of this behavior execution parameter
+        /// </summary>
+        /// <param name="context">The context to pass to the parameters</param>
+        /// <param name="branchContext">The branch context  to pass to the parameters</param>
+        /// <returns>The new instance of <c>T</c></returns>
+        private static T CreateInstance(ExecutionContext context, ExecutionBranchContext branchContext) =>
+            (T) Activator.CreateInstance(typeof(T), context, branchContext);
+
         /// <summary>
         /// Executes the start skill of this behavior using the provided parameters
         /// </summary>
@@ -34,18 +43,17 @@ namespace Uchu.World.Systems.Behaviors
         /// Executes the sync skill of this behavior using the provided parameters 
         /// </summary>
         /// <param name="parameters">The parameters to execute the sync skill with</param>
-        protected virtual Task ExecuteSync(T parameters)
+        protected virtual void ExecuteSync(T parameters)
         {
-            return Task.CompletedTask;
         }
         
         /// <summary>
         /// Wrapper for the generic typed version of this method
         /// </summary>
         /// <param name="parameters">The parameters to execute the sync skill with</param>
-        public override Task ExecuteSync(BehaviorExecutionParameters parameters)
+        public override void ExecuteSync(BehaviorExecutionParameters parameters)
         {
-            return ExecuteSync((T) parameters);
+            ExecuteSync((T) parameters);
         }
 
         /// <summary>
@@ -65,7 +73,7 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
             DeserializeStart(behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
@@ -87,7 +95,7 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
             DeserializeSync(behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
@@ -109,7 +117,7 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
             SerializeStart(behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
@@ -314,9 +322,8 @@ namespace Uchu.World.Systems.Behaviors
         /// Executes the sync skill of this behavior using the provided parameters 
         /// </summary>
         /// <param name="parameters">The parameters to execute the sync skill with</param>
-        public virtual Task ExecuteSync(BehaviorExecutionParameters parameters)
+        public virtual void ExecuteSync(BehaviorExecutionParameters parameters)
         {
-            return Task.CompletedTask;
         }
         
         /// <summary>
@@ -379,59 +386,6 @@ namespace Uchu.World.Systems.Behaviors
             ExecutionBranchContext branchContext)
         {
             return new BehaviorExecutionParameters(context, branchContext);
-        }
-        
-        /// <summary>
-        /// Registers a handle for syncing on the behavior context
-        /// </summary>
-        /// <param name="handle">The handle to register for syncing</param>
-        /// <param name="parameters">The behavior parameters passed to the sync (de)serialization</param>
-        protected void RegisterHandle(uint handle, BehaviorExecutionParameters parameters)
-        {
-            parameters.Context.RegisterHandle(handle, async reader =>
-            {
-                // Only one sync may be deserialized at the same time
-                parameters.Context.Lock.WaitOne();
-                BehaviorExecutionParameters syncParameters;
-                
-                try
-                {
-                    parameters.Context.Reader = reader;
-                    syncParameters = DeserializeSync(parameters.Context,
-                        parameters.BranchContext);
-                }
-                finally
-                {
-                    parameters.Context.Lock.ReleaseMutex();
-                }
-                
-                await ExecuteSync(syncParameters);
-            });
-        }
-
-        /// <summary>
-        /// Plays an effect
-        /// </summary>
-        /// <param name="type">The effect type</param>
-        /// <param name="target">The effect target</param>
-        /// <param name="time">The delay before executing the effect</param>
-        protected async Task PlayFxAsync(string type, GameObject target, int time)
-        {
-            await using var ctx = new CdClientContext();
-
-            var fx = await ctx.BehaviorEffectTable.FirstOrDefaultAsync(
-                e => e.EffectType == type && e.EffectID == EffectId
-            );
-            
-            if (fx == default) return;
-
-            target.PlayFX(fx.EffectName, fx.EffectType, EffectId);
-
-            var _ = Task.Run(async () =>
-            {
-                await Task.Delay(time);
-                target.StopFX(fx.EffectName);
-            });
         }
     }
 }
