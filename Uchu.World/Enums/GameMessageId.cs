@@ -125,6 +125,7 @@ namespace Uchu.World
         SetEmoteLockState = 0x2b5,
         UseItemRequirementsResponse = 0x2bf,
         PlayEmbeddedEffectOnAllClientsNearObject = 0x2c9,
+        DownloadPropertyData = 0x2cc,
         QueryPropertyData = 0x2cd,
         PropertyEditorBegin = 0x2d4,
         PropertyEditorEnd = 0x2d5,
