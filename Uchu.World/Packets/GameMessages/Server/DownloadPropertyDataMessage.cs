@@ -33,7 +33,7 @@ namespace Uchu.World
             writer.Write(ZoneID);
             writer.Write(VendorMapID);
 
-            writer.Write<uint>(0);
+            writer.Write<uint>(551029);
 
             writer.Write<uint>(0); // String length - property name
             writer.Write<uint>(0); // String length - property description
@@ -54,8 +54,8 @@ namespace Uchu.World
 
             writer.Write<ulong>(0);
 
-            writer.Write((uint)OwnerName.Length);
-            writer.WriteString(OwnerName, OwnerName.Length, true);
+            writer.Write((uint)SpawnName.Length);
+            writer.WriteString(SpawnName, SpawnName.Length, true);
 
             writer.Write<uint>(0); // String length
             writer.Write<uint>(0); // String length
@@ -66,15 +66,15 @@ namespace Uchu.World
 
             writer.Write<sbyte>(0);
 
-            writer.Write<ulong>(0);
+            writer.Write<ulong>(104116);
 
-            writer.Write<uint>(0);
+            writer.Write<uint>(1);
 
             writer.Write<uint>(0); // String length
 
             writer.Write<ulong>(0);
 
-            writer.Write<uint>(0);
+            writer.Write<uint>(16);
             writer.Write<uint>(0);
 
             writer.Write(SpawnPosition.X);

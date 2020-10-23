@@ -17,22 +17,6 @@ namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "TriggerSound", Help = "Triggers a sound", GameMasterLevel = GameMasterLevel.Admin)]
-        public string TriggerSound(string[] arguments, Player player)
-        {
-            if (arguments.Length > 1)
-            {
-                player.Message(new PlayNDAudioEmitterMessage
-                {
-                    Associate = player,
-                    NDAudioEventGUID = arguments[1]
-                });
-
-                return $"Triggered GUID: {arguments[1]}";
-            }
-            return "/TriggerSound <guid>";
-        }
-
         [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
         public string Buffme(string[] arguments, Player player)
         {
@@ -218,9 +202,9 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "freecam", Help = "Toggle freecam for your player", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Freecam(string[] arguments, Player player)
         {
-            if (arguments.Length > 1)
+            if (arguments.Length > 0)
             {
-                int ControlNumber = (arguments[1] == "on" ? 9 : 1);
+                int ControlNumber = (arguments[0] == "on" ? 9 : 1);
                 player.Message(new SetPlayerControlSchemeMessage
                 {
                     Associate = player,
@@ -230,7 +214,8 @@ namespace Uchu.World.Handlers.Commands
                 });
 
                 return "Toggled freecam.";
-            } else
+            } 
+            else
             {
                 return "/freecam <on/off>";
             }

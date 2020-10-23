@@ -24,17 +24,26 @@ namespace Uchu.World
 
             Listen(OnQueryPropertyData, (message, origin) =>
             {
+                List<Vector3> Paths = new List<Vector3>();
+                foreach (var item in origin.Zone.ZoneInfo.LuzFile.PathData)
+                {
+                    foreach (var item2 in item.Waypoints)
+                    {
+                        Paths.Add(item2.Position);
+                    }
+                }
+
                 origin.Message(new DownloadPropertyDataMessage
                 {
                     Associate = message.Associate,
                     ZoneID = origin.Zone.ZoneId.Id,
                     VendorMapID = 1100,
-                    OwnerName = "",
-                    OwnerObjID = 0,
+                    OwnerName = origin.Name,
+                    OwnerObjID = (long)origin.Id,
                     SpawnName = "AGSmallProperty",
                     SpawnPosition = origin.Zone.SpawnPosition,
                     MaxBuildHeight = 128.0f,
-                    Paths = new List<Vector3>()
+                    Paths = Paths
                 });
 
                 origin.Message(new UpdatePropertyModelCountMessage
@@ -47,7 +56,7 @@ namespace Uchu.World
 
         public async Task OnInteract(Player player)
         {
-            
+            await player.SetFlagAsync(71, true);
         }
     }
 }

@@ -44,7 +44,8 @@ namespace Uchu.StandardScripts.BlockYard
         {
             "ShowProperty",
             "SunBeam",
-            "BankObj"
+            "BankObj",
+            "AGSmallProperty"
         };
         private GameObject[] SpiderEggs { get; set; } = { };
         private GameObject SpiderQueen { get; set; }
@@ -71,7 +72,6 @@ namespace Uchu.StandardScripts.BlockYard
 
         private void Peaceful(Player player)
         {
-            Task task = player.SetFlagAsync(71, true);
             player.Message(new PlayNDAudioEmitterMessage
             {
                 Associate = player,
