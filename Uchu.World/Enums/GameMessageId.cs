@@ -104,6 +104,7 @@ namespace Uchu.World
         UseNonEquipmentItem = 0x25b,
         UseItemResult = 0x25f,
         FetchModelMetadataRequest = 0x27e,
+        FetchModelMetadataResponse = 0x27f,
         CommandPet = 0x280,
         PetResponse = 0x281,
         RequestActivitySummaryLeaderboardData = 0x288,

@@ -72,6 +72,7 @@ namespace Uchu.StandardScripts.BlockYard
 
         private void Peaceful(Player player)
         {
+            player.SetFlagAsync(79, true);
             player.Message(new PlayNDAudioEmitterMessage
             {
                 Associate = player,
