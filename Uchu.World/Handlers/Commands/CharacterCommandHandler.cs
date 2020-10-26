@@ -31,6 +31,19 @@ namespace Uchu.World.Handlers.Commands
             comp.Imagination = 999;
 
             return "Buffed";
+
+        }
+
+        [CommandHandler(Signature = "testenter", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
+        public string testenter(string[] arguments, Player player)
+        {
+            player.Message(new ScriptNetworkVarUpdate
+            {
+                Associate = player.Zone.ZoneControlObject,
+                LDFInText = "PlayerAction=0:Enter"
+            });
+
+            return "testenter";
         }
 
         [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]

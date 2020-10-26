@@ -24,39 +24,46 @@ namespace Uchu.World
 
             Listen(OnQueryPropertyData, (message, origin) =>
             {
-                List<Vector3> Paths = new List<Vector3>();
-                foreach (var item in origin.Zone.ZoneInfo.LuzFile.PathData)
-                {
-                    foreach (var item2 in item.Waypoints)
+                Listen(message.Associate.OnReady, () => {
+                    origin.Message(new DownloadPropertyDataMessage
                     {
-                        Paths.Add(item2.Position);
-                    }
-                }
+                        Associate = message.Associate,
+                        ZoneID = origin.Zone.ZoneId.Id,
+                        VendorMapID = 1100,
+                        OwnerName = "",
+                        OwnerObjID = (long)0,
+                        SpawnName = "AGSmallProperty",
+                        SpawnPosition = origin.Zone.SpawnPosition,
+                        MaxBuildHeight = 128.0f,
+                        Paths = { }
+                    });
 
-                origin.Message(new DownloadPropertyDataMessage
-                {
-                    Associate = message.Associate,
-                    ZoneID = origin.Zone.ZoneId.Id,
-                    VendorMapID = 1100,
-                    OwnerName = origin.Name,
-                    OwnerObjID = (long)origin.Id,
-                    SpawnName = "AGSmallProperty",
-                    SpawnPosition = origin.Zone.SpawnPosition,
-                    MaxBuildHeight = 128.0f,
-                    Paths = Paths
-                });
+                    origin.Message(new DownloadPropertyDataMessage
+                    {
+                        Associate = message.Associate,
+                        ZoneID = origin.Zone.ZoneId.Id,
+                        VendorMapID = 1100,
+                        OwnerName = origin.Name,
+                        OwnerObjID = (long)origin.Id,
+                        SpawnName = "AGSmallProperty",
+                        SpawnPosition = origin.Zone.SpawnPosition,
+                        MaxBuildHeight = 128.0f,
+                        Paths = { }
+                    });
 
-                origin.Message(new UpdatePropertyModelCountMessage
-                {
-                    Associate = message.Associate,
-                    ModelCount = 0
-                });
+                    origin.Message(new UpdatePropertyModelCountMessage
+                    {
+                        Associate = message.Associate,
+                        ModelCount = 0
+                    });
 
-                origin.Message(new ScriptNetworkVarUpdate
-                {
-                    Associate = origin.Zone.ZoneControlObject,
-                    LDFInText = "unclaimed=7:1"
+                    origin.Message(new ScriptNetworkVarUpdate
+                    {
+                        Associate = origin.Zone.ZoneControlObject,
+                        LDFInText = "unclaimed=7:1"
+                    });
                 });
+                
             });
         }
 

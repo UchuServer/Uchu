@@ -72,7 +72,6 @@ namespace Uchu.StandardScripts.BlockYard
 
         private void Peaceful(Player player)
         {
-            player.SetFlagAsync(79, true);
             player.Message(new PlayNDAudioEmitterMessage
             {
                 Associate = player,
@@ -80,6 +79,36 @@ namespace Uchu.StandardScripts.BlockYard
             }); // Play peaceful sounds
 
             SpawnPaths(false);
+
+            foreach (var item in Zone.GameObjects)
+            {
+                if (item.Lot.Id == 9938)
+                {
+                    Listen(item.OnReady, () => 
+                    {
+                        player.Message(new StopFXEffectMessage
+                        {
+                            Name = "beam",
+                            Associate = item,
+                            KillImmediate = false
+                        });
+
+                        player.Message(new DieMessage
+                        {
+                            Associate = item,
+                            ClientDeath = true,
+                            SpawnLoot = true,
+                            DeathType = "",
+                            DirectionRelativeAngleXz = 0.00f,
+                            DirectionRelativeAngleY = 0.00f,
+                            DirectionRelativeForce = 0.00f,
+                            KillType = 1,
+                            Killer = 0,
+                            LootOwner = 0
+                        });
+                    });
+                }
+            }
         }
 
         private void Maelstrom(Player player)
@@ -273,17 +302,33 @@ namespace Uchu.StandardScripts.BlockYard
                         Associate = item,
                         KillImmediate = true
                     });
+
                     player.Message(new StopFXEffectMessage
                     {
                         Name = "TornadoDebris",
                         Associate = item,
                         KillImmediate = true
                     });
+
                     player.Message(new StopFXEffectMessage
                     {
                         Name = "silhouette",
                         Associate = item,
                         KillImmediate = true
+                    });
+
+                    player.Message(new DieMessage
+                    {
+                        Associate = item,
+                        ClientDeath = true,
+                        SpawnLoot = true,
+                        DeathType = "",
+                        DirectionRelativeAngleXz = 0.00f,
+                        DirectionRelativeAngleY = 0.00f,
+                        DirectionRelativeForce = 0.00f,
+                        KillType = 1,
+                        Killer = 0,
+                        LootOwner = 0
                     });
                 }
             }
