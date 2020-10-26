@@ -4,7 +4,7 @@ namespace Uchu.World
 {
     public class PropertyContentsFromClient : ClientGameMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.BuybackFromVendor;
+        public override GameMessageId GameMessageId => GameMessageId.PropertyContentsFromClient;
 
         bool queryDB = false;
 

@@ -78,6 +78,13 @@ namespace Uchu.World
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
             });
+
+            Listen(OnWorldLoad, () => {
+                this.Message(new PlayerReadyMessage
+                {
+                    Associate = this.Zone.ZoneControlObject
+                });  
+            });
         }
 
         public Event<string, FireServerEventMessage> OnFireServerEvent { get; }

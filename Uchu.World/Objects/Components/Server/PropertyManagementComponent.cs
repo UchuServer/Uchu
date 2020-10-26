@@ -51,6 +51,12 @@ namespace Uchu.World
                     Associate = message.Associate,
                     ModelCount = 0
                 });
+
+                origin.Message(new ScriptNetworkVarUpdate
+                {
+                    Associate = origin.Zone.ZoneControlObject,
+                    LDFInText = "unclaimed=7:1"
+                });
             });
         }
 
