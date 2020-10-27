@@ -85,10 +85,10 @@ namespace Uchu.World.Systems.Behaviors
 
                 parameters.Schedule(() =>
                 {
-                    parameters.NetFavor(async () =>
-                    {
-                        await projectile.CalculateImpactAsync(parameters.BranchContext.Target);
-                    });
+                    // Run in the background as this can trigger database IO
+                    Task.Factory.StartNew(
+                        () => projectile.CalculateImpactAsync(parameters.BranchContext.Target),
+                        TaskCreationOptions.LongRunning);
                 }, time);
             }
         }

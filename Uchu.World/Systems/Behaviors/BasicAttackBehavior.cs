@@ -93,7 +93,11 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     if (parameters.ServerSide)
                         parameters.PlayFX("onhit", EffectId);
-                    stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate);
+
+                    // This is ran as a background task as it may trigger many async messages
+                    Task.Factory.StartNew(
+                        () => stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate),
+                        TaskCreationOptions.LongRunning);
                 }
 
                 // Execute the success state only if some parameters are set

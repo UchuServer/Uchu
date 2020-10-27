@@ -325,7 +325,7 @@ namespace Uchu.World
             );
         }
 
-        public async Task SyncUserSkillAsync(SyncSkillMessage message)
+        public void SyncUserSkillAsync(SyncSkillMessage message)
         {
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);

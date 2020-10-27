@@ -70,7 +70,7 @@ namespace Uchu.World.Systems.Behaviors
         {
             if (parameters.ServerSide)
             {
-                parameters.Schedule( async () =>
+                parameters.Schedule( () =>
                 {
                     Action.ExecuteStart(parameters.Parameters);
                     parameters.NpcContext.Sync(parameters.Handle);

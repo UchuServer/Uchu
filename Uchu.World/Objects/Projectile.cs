@@ -28,9 +28,8 @@ namespace Uchu.World
         public async Task ImpactAsync(byte[] data, GameObject target)
         {
             target ??= Target;
-
-            // TODO: Do this in the behavior
-            // await target.NetFavorAsync();
+            
+            await target.NetFavorAsync();
 
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
@@ -58,8 +57,7 @@ namespace Uchu.World
         {
             target ??= Target;
             
-            // TODO: Do this in the behavior
-            // await target.NetFavorAsync();
+            await target.NetFavorAsync();
             
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
