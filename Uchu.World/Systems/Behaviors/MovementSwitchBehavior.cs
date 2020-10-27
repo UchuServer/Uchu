@@ -77,11 +77,9 @@ namespace Uchu.World.Systems.Behaviors
                 parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
         {
-            if (parameters.ToExecute == null)
-                return;    
-            await parameters.ToExecute.ExecuteStart(parameters.BehaviorExecutionParameters);
+            parameters.ToExecute?.ExecuteStart(parameters.BehaviorExecutionParameters);
         }
     }
 }

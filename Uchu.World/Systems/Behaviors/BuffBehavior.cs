@@ -28,30 +28,26 @@ namespace Uchu.World.Systems.Behaviors
             Brain = await GetParameter<int>("brain");
         }
 
-        public override Task ExecuteStart(BehaviorExecutionParameters behaviorExecutionParameters)
+        public override void ExecuteStart(BehaviorExecutionParameters behaviorExecutionParameters)
         {
             if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
                 out var stats))
-                return Task.CompletedTask;
+                return;
 
             stats.MaxHealth += (uint) Life;
             stats.MaxArmor += (uint) Armor;
             stats.MaxImagination += (uint) Imagination;
-
-            return Task.CompletedTask;
         }
 
-        public override Task DismantleAsync(BehaviorExecutionParameters behaviorExecutionParameters)
+        public override void Dismantle(BehaviorExecutionParameters behaviorExecutionParameters)
         {
             if (!behaviorExecutionParameters.Context.Associate.TryGetComponent<DestroyableComponent>(
                 out var stats))
-                return Task.CompletedTask;
+                return;
 
             stats.MaxHealth -= (uint) Life;
             stats.MaxArmor -= (uint) Armor;
             stats.MaxImagination -= (uint) Imagination;
-
-            return Task.CompletedTask;
         }
     }
 }

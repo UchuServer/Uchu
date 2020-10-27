@@ -32,6 +32,7 @@ namespace Uchu.World
         public uint Checksum { get; private set; }
         public bool Loaded { get; private set; }
         public NavMeshManager NavMeshManager { get; private set; }
+        private Task GameLoop { get; set; }
         
         // Managed objects
         private List<Object> ManagedObjects { get; }
@@ -99,7 +100,7 @@ namespace Uchu.World
 
         #region Initializing
 
-        public async Task<Task> InitializeAsync()
+        public async Task InitializeAsync()
         {
             Checksum = ZoneInfo.LuzFile.GenerateChecksum(ZoneInfo.LvlFiles);
             
@@ -203,8 +204,8 @@ namespace Uchu.World
             Loaded = true;
             
             objects.Clear();
-
-            return ExecuteUpdateAsync();
+            
+            SetupGameLoop();
         }
 
         private void SpawnLevelObject(LevelObjectTemplate levelObject)
@@ -543,6 +544,8 @@ namespace Uchu.World
 
             var watch = new Stopwatch();
             watch.Start();
+            
+            const int timeLimit = (int)1000f / TicksPerSecondLimit;
 
             await OnTick.InvokeAsync();
             _ticks++;
@@ -550,17 +553,20 @@ namespace Uchu.World
             var passedMs = watch.ElapsedMilliseconds;
             _passedTickTime += passedMs;
             
-            await Task.Delay((int) Math.Max(1000f / TicksPerSecondLimit - passedMs, 0));
+            if (passedMs < timeLimit)
+                await Task.Delay((int) Math.Max(timeLimit - passedMs, 0));
+            
             DeltaTime = watch.ElapsedMilliseconds;
         }
 
-        private Task ExecuteUpdateAsync()
+        private void SetupGameLoop()
         {
             Listen(OnTick, ExecuteSchedule);
             Listen(OnTick, UpdateObjects);
             Listen(OnTick, PhysicsStep);
 
-            return Task.Run(async () =>
+            
+            GameLoop = Task.Factory.StartNew(async () =>
             {
                 _running = true;
                 var tickReporter = SetupTickReporter();
@@ -570,7 +576,7 @@ namespace Uchu.World
                 }
                 
                 tickReporter.Stop();
-            });
+            }, TaskCreationOptions.LongRunning);
         }
 
         private async Task PhysicsStep()
@@ -587,7 +593,7 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Updates all the ojects in this zone by calling their update delegate
+        /// Updates all the objects in this zone by calling their update delegate
         /// </summary>
         /// <remarks>
         /// Optimizes for objects that are stuck or not in the player view filter
@@ -663,11 +669,7 @@ namespace Uchu.World
         {
             lock (NewScheduledActions)
             {
-                NewScheduledActions.Add(new ScheduledAction
-                {
-                    Delegate = @delegate,
-                    Delay = delay
-                });
+                NewScheduledActions.Add(new ScheduledAction(@delegate, delay));
             }
         }
 
@@ -709,11 +711,17 @@ namespace Uchu.World
         /// </summary>
         private class ScheduledAction
         {
+            public ScheduledAction(Action @delegate, float delay)
+            {
+                Delegate = @delegate;
+                Delay = delay;
+            }
+            
             /// <summary>
             /// The action to execute if the task reaches its scheduled time
             /// </summary>
-            public Action Delegate { get; set; }
-        
+            public Action Delegate { get; }
+
             /// <summary>
             /// The amount of milliseconds to wait before executing this task
             /// </summary>

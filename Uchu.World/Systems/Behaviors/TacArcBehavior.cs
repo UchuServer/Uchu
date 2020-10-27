@@ -82,19 +82,29 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteStart(TacArcBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(TacArcBehaviorExecutionParameters parameters)
         {
             if (parameters.ParametersList.Count > 0)
             {
                 foreach (var parameter in parameters.ParametersList)
                 {
-                    await parameters.Behavior.ExecuteStart(parameter);
+                    parameters.Behavior.ExecuteStart(parameter);
                 }
             }
             else
             {
-                await parameters.Behavior.ExecuteStart(parameters.Parameters);
+                parameters.Behavior.ExecuteStart(parameters.Parameters);
             }
+        }
+        
+        protected override void SerializeStart(TacArcBehaviorExecutionParameters parameters)
+        {
+            Serialize(parameters);
+        }
+        
+        protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
+        {
+            Serialize(parameters, true);
         }
 
         protected override void ExecuteSync(TacArcBehaviorExecutionParameters parameters)
@@ -112,58 +122,7 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
-        {
-            if (parameters.ParametersList.Count > 0)
-            {
-                foreach (var parameter in parameters.ParametersList)
-                {
-                    parameters.Behavior.SerializeSync(parameter);
-                }
-            }
-            else
-            {
-                parameters.Behavior.SerializeSync(parameters.Parameters);
-            }
-        }
-
-        /// <summary>
-        /// Finds all targets in the area and optionally hits them if not missed and not blocked
-        /// </summary>
-        /// <param name="parameters">The parameters to find and hit targets for</param>
-        /// <returns>A list of the execution parameters to run</returns>
-        private void DeserializeBehaviorForMultipleTargets(
-            TacArcBehaviorExecutionParameters parameters)
-        {
-            var targetCount = parameters.Context.Reader.Read<uint>();
-            var targets = new List<GameObject>();
-
-            // Find all targets for this hit
-            for (var i = 0; i < targetCount; i++)
-            {
-                var targetId = parameters.Context.Reader.Read<long>();
-                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, out var target))
-                {
-                    Logger.Error($"{parameters.Context.Associate} sent invalid TacArc target: {targetId}");
-                    continue;
-                }
-                targets.Add(target);
-            }
-
-            // Hit all targets
-            foreach (var target in targets)
-            {
-                var res = parameters.Behavior.DeserializeStart(parameters.Context,
-                    new ExecutionBranchContext
-                    {
-                        Duration = parameters.BranchContext.Duration,
-                        Target = target
-                    });
-                parameters.ParametersList.Add(res);
-            }
-        }
-
-        protected override void SerializeStart(TacArcBehaviorExecutionParameters parameters)
+        private void Serialize(TacArcBehaviorExecutionParameters parameters, bool sync = false)
         {
             if (!(parameters.NpcContext.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) 
                 || parameters.NpcContext.Alive))
@@ -173,8 +132,9 @@ namespace Uchu.World.Systems.Behaviors
             if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;
-                parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                    parameters.BranchContext);
+                parameters.Parameters = sync
+                    ? parameters.Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext)
+                    : parameters.Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
             }
             else
             {
@@ -191,14 +151,18 @@ namespace Uchu.World.Systems.Behaviors
                         parameters.Behavior = BlockedBehavior;
                         foreach (var target in targets)
                         {
-                            var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                                    new ExecutionBranchContext()
-                                    {
-                                        Duration = parameters.BranchContext.Duration,
-                                        Target = target
-                                    });
+                            var branchContext = new ExecutionBranchContext
+                            {
+                                Duration = parameters.BranchContext.Duration,
+                                Target = target
+                            };
+
+                            var targetParameters = sync
+                                ? parameters.Behavior.SerializeSync(parameters.NpcContext, branchContext)
+                                : parameters.Behavior.SerializeStart(parameters.NpcContext, branchContext);
                             parameters.ParametersList.Add(targetParameters);
                         }
+                        
                         return;
                     }
                 }
@@ -220,20 +184,25 @@ namespace Uchu.World.Systems.Behaviors
                     parameters.Behavior = ActionBehavior;
                     foreach (var target in targets)
                     {
-                        var targetParameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                                new ExecutionBranchContext()
-                                {
-                                    Duration = parameters.BranchContext.Duration,
-                                    Target = target
-                                });
+                        var branchContext = new ExecutionBranchContext()
+                        {
+                            Duration = parameters.BranchContext.Duration,
+                            Target = target
+                        };
+
+                        var targetParameters = sync
+                            ? parameters.Behavior.SerializeSync(parameters.NpcContext, branchContext)
+                            : parameters.Behavior.SerializeStart(parameters.NpcContext, branchContext);
+                                
                         parameters.ParametersList.Add(targetParameters);
                     }
                 }
                 else
                 {
                     parameters.Behavior = MissBehavior;
-                    parameters.Parameters = parameters.Behavior.SerializeStart(parameters.NpcContext,
-                        parameters.BranchContext);
+                    parameters.Parameters = sync
+                        ? parameters.Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext)
+                        : parameters.Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
                 }
             }
         }
@@ -272,6 +241,42 @@ namespace Uchu.World.Systems.Behaviors
             }
 
             return selectedTargets;
+        }
+        
+        /// <summary>
+        /// Finds all targets in the area and optionally hits them if not missed and not blocked
+        /// </summary>
+        /// <param name="parameters">The parameters to find and hit targets for</param>
+        /// <returns>A list of the execution parameters to run</returns>
+        private void DeserializeBehaviorForMultipleTargets(
+            TacArcBehaviorExecutionParameters parameters)
+        {
+            var targetCount = parameters.Context.Reader.Read<uint>();
+            var targets = new List<GameObject>();
+
+            // Find all targets for this hit
+            for (var i = 0; i < targetCount; i++)
+            {
+                var targetId = parameters.Context.Reader.Read<long>();
+                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, out var target))
+                {
+                    Logger.Error($"{parameters.Context.Associate} sent invalid TacArc target: {targetId}");
+                    continue;
+                }
+                targets.Add(target);
+            }
+
+            // Hit all targets
+            foreach (var target in targets)
+            {
+                var res = parameters.Behavior.DeserializeStart(parameters.Context,
+                    new ExecutionBranchContext
+                    {
+                        Duration = parameters.BranchContext.Duration,
+                        Target = target
+                    });
+                parameters.ParametersList.Add(res);
+            }
         }
     }
 }

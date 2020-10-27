@@ -15,6 +15,7 @@ namespace Uchu.World.Systems.Behaviors
         {
         }
     }
+    
     public class SwitchMultipleBehavior : BehaviorBase<SwitchMultipleBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.SwitchMultiple;
@@ -60,9 +61,9 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override async Task ExecuteStart(SwitchMultipleBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(SwitchMultipleBehaviorExecutionParameters parameters)
         {
-            await parameters.Behavior.ExecuteStart(parameters.Parameters);
+            parameters.Behavior.ExecuteStart(parameters.Parameters);
         }
     }
 }

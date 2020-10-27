@@ -28,8 +28,9 @@ namespace Uchu.World
         public async Task ImpactAsync(byte[] data, GameObject target)
         {
             target ??= Target;
-            
-            await target.NetFavorAsync();
+
+            // TODO: Do this in the behavior
+            // await target.NetFavorAsync();
 
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
@@ -49,20 +50,16 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-
-            try
-            {
-                await tree.UseAsync();
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e.Message);
-            }
+            
+            tree.Use();
         }
 
         public async Task CalculateImpactAsync(GameObject target)
         {
             target ??= Target;
+            
+            // TODO: Do this in the behavior
+            // await target.NetFavorAsync();
             
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
@@ -90,7 +87,7 @@ namespace Uchu.World
                 Target = target
             });
 
-            await tree.ExecuteAsync();
+            tree.Execute();
         }
     }
 }

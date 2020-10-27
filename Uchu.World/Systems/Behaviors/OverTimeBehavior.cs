@@ -28,9 +28,9 @@ namespace Uchu.World.Systems.Behaviors
                 parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(OverTimeBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(OverTimeBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(parameters.Parameters);
+            Action.ExecuteStart(parameters.Parameters);
         }
     }
 }

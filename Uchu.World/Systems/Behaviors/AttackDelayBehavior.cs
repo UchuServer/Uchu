@@ -72,7 +72,7 @@ namespace Uchu.World.Systems.Behaviors
             {
                 parameters.Schedule( async () =>
                 {
-                    await Action.ExecuteStart(parameters.Parameters);
+                    Action.ExecuteStart(parameters.Parameters);
                     parameters.NpcContext.Sync(parameters.Handle);
                 }, Delay);
             }

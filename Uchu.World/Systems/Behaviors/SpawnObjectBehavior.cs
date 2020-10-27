@@ -21,7 +21,7 @@ namespace Uchu.World.Systems.Behaviors
             UpdatePositionWithParent = await GetParameter<int>("updatePositionWithParent");
         }
 
-        public override Task ExecuteStart(BehaviorExecutionParameters parameters)
+        public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
             var obj = GameObject.Instantiate<AuthoredGameObject>(
                 parameters.Context.Associate.Zone, 
@@ -40,8 +40,6 @@ namespace Uchu.World.Systems.Behaviors
                 await Task.Delay(parameters.BranchContext.Duration); 
                 Object.Destroy(obj);
             });
-            
-            return Task.CompletedTask;
         }
     }
 }

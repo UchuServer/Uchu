@@ -27,9 +27,9 @@ namespace Uchu.World.Systems.Behaviors
             parameters.Parameters = Action.DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(TargetCasterBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(TargetCasterBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(parameters.Parameters);
+            Action.ExecuteStart(parameters.Parameters);
         }
     }
 }

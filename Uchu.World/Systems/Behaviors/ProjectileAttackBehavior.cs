@@ -70,7 +70,7 @@ namespace Uchu.World.Systems.Behaviors
             return projectile;
         }
         
-        protected override Task ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
             foreach (var projectile in parameters.Projectiles)
             {
@@ -91,8 +91,6 @@ namespace Uchu.World.Systems.Behaviors
                     });
                 }, time);
             }
-            
-            return Task.CompletedTask;
         }
         
         protected override void SerializeStart(ProjectileAttackBehaviorExecutionParameters parameters)

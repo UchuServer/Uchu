@@ -172,7 +172,7 @@ namespace Uchu.World
             
             var tree = await BehaviorTree.FromLotAsync(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
-            await tree.MountAsync();
+            tree.Mount();
 
             if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
@@ -193,7 +193,7 @@ namespace Uchu.World
             
             var tree = await BehaviorTree.FromLotAsync(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
-            await tree.DismantleAsync();
+            tree.Dismantle();
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
-            await tree.ExecuteAsync();
+            tree.Execute();
             return context.SkillTime * 1000;
         }
 
@@ -252,7 +252,7 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
-            await tree.ExecuteAsync();
+            tree.Execute();
 
             return context.SkillTime;
         }
@@ -308,7 +308,7 @@ namespace Uchu.World
                     UsedMouse = message.UsedMouse
                 }, GameObject as Player);
 
-                await tree.ExecuteAsync();
+                tree.Execute();
                 
                 if (GameObject.TryGetComponent<DestroyableComponent>(out var stats))
                 {

@@ -48,9 +48,9 @@ namespace Uchu.World.Systems.Behaviors
                 .DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(ChainBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(ChainBehaviorExecutionParameters parameters)
         {
-            await Behaviors[parameters.ChainIndex - 1]
+            Behaviors[parameters.ChainIndex - 1]
                 .ExecuteStart(parameters.ChainIndexExecutionParameters);
         }
 

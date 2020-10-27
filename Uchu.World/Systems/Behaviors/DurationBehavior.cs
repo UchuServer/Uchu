@@ -39,9 +39,9 @@ namespace Uchu.World.Systems.Behaviors
                 });
         }
 
-        protected override async Task ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
+            Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
         }
 
         protected override void SerializeStart(DurationBehaviorExecutionParameters parameters)

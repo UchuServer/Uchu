@@ -38,15 +38,7 @@ namespace Uchu.World.Systems.Behaviors
                     behaviorBase.DeserializeStart(parameters.Context, parameters.BranchContext));
             }
         }
-
-        protected override async Task ExecuteStart(AndBehaviorExecutionParameters parameters)
-        {
-            for (var i = 0; i < Behaviors.Length; i++)
-            {
-                await Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
-            }
-        }
-
+        
         protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
@@ -56,11 +48,20 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                Behaviors[i].SerializeSync(parameters.BehaviorExecutionParameters[i]);
+                Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
+            }
+        }
+
+        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        {
+            foreach (var behaviorBase in Behaviors)
+            {
+                parameters.BehaviorExecutionParameters.Add(
+                    behaviorBase.SerializeSync(parameters.NpcContext, parameters.BranchContext));
             }
         }
 

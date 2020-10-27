@@ -82,7 +82,7 @@ namespace Uchu.World.Systems.Behaviors
                     behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 
-        protected override Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
         {
             // Store as function as server side and client side execution is scheduled differently
             parameters.NetFavor(() =>
@@ -102,8 +102,6 @@ namespace Uchu.World.Systems.Behaviors
                     OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
                 }
             });
-            
-            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
