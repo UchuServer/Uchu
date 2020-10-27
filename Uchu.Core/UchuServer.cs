@@ -345,18 +345,15 @@ namespace Uchu.Core
                 instance.SetServer(this);
 
                 // Get all packet handlers and add them to the handler map
-                foreach (var method in group.GetMethods().Where(m => !m.IsStatic && !m.IsAbstract))
+                foreach (var method in group.GetMethods().Where(m => !m.IsAbstract))
                 {
-                    var attr = method.GetCustomAttribute<PacketHandlerAttribute>();
-                    if (attr != null)
+                    if (method.GetCustomAttribute<PacketHandlerAttribute>() is {} packetHandlerAttribute)
                     {
-                        RegisterPacketHandler(method, attr, instance);
+                        RegisterPacketHandler(method, packetHandlerAttribute, instance);
                     }
-                    else
+                    else if (method.GetCustomAttribute<CommandHandlerAttribute>() is {} commandHandlerAttribute)
                     {
-                        var cmdAttr = method.GetCustomAttribute<CommandHandlerAttribute>();
-                        if (cmdAttr == null) continue;
-                        RegisterCommandHandler(method, cmdAttr, instance);
+                        RegisterCommandHandler(method, commandHandlerAttribute, instance);
                     }
                 }
             }
