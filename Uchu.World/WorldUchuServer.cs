@@ -76,12 +76,16 @@ namespace Uchu.World
             
             ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
             Logger.Information($"Setting up world server: {Id}");
-            
-            foreach (var zone in info.Info.Zones)
+
+            // The zone creation will run as a background task to ensure the calling server can resume operation
+            _ = Task.Factory.StartNew(async () =>
             {
-                await ZoneParser.LoadZoneDataAsync(zone);
-                await LoadZone(zone);
-            }
+                foreach (var zone in info.Info.Zones)
+                {
+                    await ZoneParser.LoadZoneDataAsync(zone);
+                    await LoadZone(zone);
+                }
+            }, TaskCreationOptions.LongRunning);
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
