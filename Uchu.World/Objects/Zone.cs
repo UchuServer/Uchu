@@ -28,7 +28,9 @@ namespace Uchu.World
         public uint CloneId { get; }
         public ushort InstanceId { get; }
         public ZoneInfo ZoneInfo { get; }
-        public new Server Server { get; }
+        
+        public new UchuServer UchuServer { get; }
+        
         public uint Checksum { get; private set; }
         public bool Loaded { get; private set; }
         public NavMeshManager NavMeshManager { get; private set; }
@@ -71,11 +73,11 @@ namespace Uchu.World
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
         
-        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
+        public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
-            Server = server;
+            UchuServer = uchuServer;
             InstanceId = instanceId;
             CloneId = cloneId;
             
@@ -117,7 +119,7 @@ namespace Uchu.World
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
-            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
 
             if (NavMeshManager.Enabled)
             {
@@ -479,7 +481,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
             }
         }
         
@@ -500,7 +502,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
             }
         }
 

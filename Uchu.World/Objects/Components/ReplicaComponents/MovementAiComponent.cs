@@ -231,7 +231,7 @@ namespace Uchu.World
 
             if (!(target is Player))
             {
-                if (WanderDelay || !Server.Config.GamePlay.AiWander) return;
+                if (WanderDelay || !UchuServer.Config.GamePlay.AiWander) return;
                 
                 Wander();
                 

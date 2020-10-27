@@ -9,7 +9,7 @@ namespace Uchu.StandardScripts.AvantGardens
 {
     public class MonumentLasers : NativeScript
     {
-        public override async Task LoadAsync()
+        public override Task LoadAsync()
         {
             var lasers = new List<GameObject>();
             
@@ -25,7 +25,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 
                 laser.Settings["timeout"] = false;
                 
-                Listen(physics.OnCollision, async other =>
+                Listen(physics.OnCollision,  other =>
                 {
                     if (!(other.GameObject is Player)) return;
 
@@ -59,6 +59,8 @@ namespace Uchu.StandardScripts.AvantGardens
                     });
                 });
             }
+            
+            return Task.CompletedTask;
         }
     }
 }

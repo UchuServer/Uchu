@@ -14,7 +14,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task ClientMailPacketHandler(ClientMailPacket packet, IRakConnection connection)
         {
-            var player = Server.FindPlayer(connection);
+            var player = UchuServer.FindPlayer(connection);
 
             if (player == default)
             {

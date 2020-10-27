@@ -18,7 +18,7 @@ namespace Uchu.World
 {
     using GameMessageHandlerMap = Dictionary<GameMessageId, Handler>;
 
-    public class WorldServer : Server
+    public class WorldUchuServer : UchuServer
     {
         private readonly GameMessageHandlerMap _gameMessageHandlerMap;
 
@@ -32,7 +32,7 @@ namespace Uchu.World
         
         public Whitelist Whitelist { get; private set; }
 
-        public WorldServer(Guid id) : base(id)
+        public WorldUchuServer(Guid id) : base(id)
         {
             Zones = new List<Zone>();
 

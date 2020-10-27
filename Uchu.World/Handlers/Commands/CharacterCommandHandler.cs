@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World.Filters;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
@@ -19,7 +20,7 @@ namespace Uchu.World.Handlers.Commands
     public class CharacterCommandHandler : HandlerGroup
     {
         [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]
-        public async Task<string> ChangeChatLevel(string[] arguments, Player player)
+        public string ChangeChatLevel(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "chat <level>";
 
@@ -1059,37 +1060,43 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "setflag", Help = "Sets a client flag", GameMasterLevel = GameMasterLevel.Admin)]
-        public string SetFlag(string[] arguments, Player player)
+        public async Task<string> SetFlag(string[] arguments, Player player)
         {
-            if (arguments.Length != 1) return "/setflag <flag>";
+            if (arguments.Length != 1)
+                return "/setflag <flag>";
 
-            if (!int.TryParse(arguments[1], out int flag)) return "/setflag <flag>";
+            if (!int.TryParse(arguments[1], out var flag))
+                return "/setflag <flag>";
 
-            player.SetFlagAsync(flag, true);
+            await player.SetFlagAsync(flag, true);
 
             return $"Set flag {arguments[1]}";
         }
 
         [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
-        public string TriggerCelebrat(string[] arguments, Player player)
+        public async Task<string> TriggerCelebrat(string[] arguments, Player player)
         {
-            if (arguments.Length != 1) return "/triggercelebrate <CelebrationID>";
+            if (arguments.Length != 1)
+                return "/triggercelebrate <CelebrationID>";
 
-            if (!int.TryParse(arguments[1], out int ID)) return "/triggercelebrate <CelebrationID>";
+            if (!int.TryParse(arguments[1], out var id))
+                return "/triggercelebrate <CelebrationID>";
 
-            player.TriggerCelebration(ID);
+            await player.TriggerCelebration((Celebration)id);
 
             return $"Triggered Celebration {arguments[1]}";
         }
 
         [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
-        public string RemoveFlag(string[] arguments, Player player)
+        public async Task<string> RemoveFlag(string[] arguments, Player player)
         {
-            if (arguments.Length != 1) return "/removeflag <flag>";
+            if (arguments.Length != 1)
+                return "/removeflag <flag>";
 
-            if (!int.TryParse(arguments[1], out int flag)) return "/removeflag <flag>";
+            if (!int.TryParse(arguments[1], out int flag))
+                return "/removeflag <flag>";
 
-            player.SetFlagAsync(flag, false);
+            await player.SetFlagAsync(flag, false);
 
             return $"Removed flag {arguments[1]}";
         }
