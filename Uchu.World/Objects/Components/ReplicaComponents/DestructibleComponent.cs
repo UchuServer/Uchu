@@ -107,24 +107,30 @@ namespace Uchu.World
 
         public async Task SmashAsync(GameObject smasher, Player owner = default, string animation = "")
         {
-            if (!Alive) return;
+            if (!Alive)
+                return;
 
+            // Determine if this was smashed by a player or a player spawned entity
             if (smasher is AuthoredGameObject authored)
             {
                 owner = authored.Author as Player;
             }
+            owner ??= smasher as Player;
             
             Alive = false;
 
-            owner ??= smasher as Player;
-
+            // A player should have a mission inventory component, if not, this call is invalid
             if (owner != null)
             {
-                var missionInventoryComponent = owner.GetComponent<MissionInventoryComponent>();
-
-                if (missionInventoryComponent == default) return;
-
-                await missionInventoryComponent.SmashAsync(GameObject.Lot);
+                var playerMissionInventory = owner.GetComponent<MissionInventoryComponent>();
+                if (playerMissionInventory == default)
+                    return;
+                
+                // Achievement updates are run in the background as this can take long
+                _ = Task.Factory.StartNew(async () =>
+                {
+                    await playerMissionInventory.SmashAsync(GameObject.Lot);
+                }, TaskCreationOptions.LongRunning);
             }
 
             Zone.BroadcastMessage(new DieMessage
@@ -136,27 +142,25 @@ namespace Uchu.World
                 LootOwner = owner ?? GameObject
             });
 
+            // Determine whether this was a player or a regular game object
             if (GameObject is Player)
             {
                 GeneratePlayerYieldsAsync(owner);
-                return;
             }
-
-            //
-            // Normal Smashable
-            //
-
-            GameObject.Layer -= StandardLayer.Smashable;
-            GameObject.Layer += StandardLayer.Hidden;
-
-            InitializeRespawn();
-            
-            if (owner != null)
+            else
             {
-                await GenerateYieldsAsync(owner);
-            }
+                GameObject.Layer -= StandardLayer.Smashable;
+                GameObject.Layer += StandardLayer.Hidden;
 
-            await OnSmashed.InvokeAsync(smasher, owner);
+                InitializeRespawn();
+                
+                if (owner != null)
+                {
+                    await GenerateYieldsAsync(owner);
+                }
+
+                await OnSmashed.InvokeAsync(smasher, owner);
+            }
         }
         
         private async Task GenerateYieldsAsync(Player owner)
