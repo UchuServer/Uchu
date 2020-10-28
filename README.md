@@ -25,9 +25,6 @@ Uchu is built with .NET Core 3.1 (see below for installation details) which is c
 ### .NET Core 3.1
 Install .NET Core 3.1 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
-#### Entity Framework Command Line Interface
-Run ``dotnet tool install --global dotnet-ef`` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
-
 ### PostgreSQL
 Uchu uses PostgreSQL as its database provider by default. This can be changed in the config file to either MySQL or SQLite.
 
