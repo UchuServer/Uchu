@@ -120,17 +120,12 @@ namespace Uchu.World
             Alive = false;
 
             // A player should have a mission inventory component, if not, this call is invalid
+            MissionInventoryComponent playerMissions = default;
             if (owner != null)
             {
-                var playerMissionInventory = owner.GetComponent<MissionInventoryComponent>();
-                if (playerMissionInventory == default)
+                playerMissions = owner.GetComponent<MissionInventoryComponent>();
+                if (playerMissions == default)
                     return;
-                
-                // Achievement updates are run in the background as this can take long
-                _ = Task.Factory.StartNew(async () =>
-                {
-                    await playerMissionInventory.SmashAsync(GameObject.Lot);
-                }, TaskCreationOptions.LongRunning);
             }
 
             Zone.BroadcastMessage(new DieMessage
@@ -160,6 +155,15 @@ namespace Uchu.World
                 }
 
                 await OnSmashed.InvokeAsync(smasher, owner);
+            }
+            
+            // Finally, check achievements in the background
+            if (playerMissions != default)
+            {
+                _ = Task.Factory.StartNew(async () =>
+                {
+                    await playerMissions.SmashAsync(GameObject.Lot);
+                }, TaskCreationOptions.LongRunning);
             }
         }
         
