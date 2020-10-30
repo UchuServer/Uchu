@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using Uchu.World.Services;
 using Uchu.World;
 using System.Numerics;
+using Uchu.Core.Client;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Uchu.World
 {
@@ -25,18 +28,10 @@ namespace Uchu.World
             Listen(OnQueryPropertyData, (message, origin) =>
             {
                 Listen(message.Associate.OnReady, () => {
-                    origin.Message(new DownloadPropertyDataMessage
-                    {
-                        Associate = message.Associate,
-                        ZoneID = origin.Zone.ZoneId.Id,
-                        VendorMapID = 1100,
-                        OwnerName = "",
-                        OwnerObjID = (long)0,
-                        SpawnName = "AGSmallProperty",
-                        SpawnPosition = origin.Zone.SpawnPosition,
-                        MaxBuildHeight = 128.0f,
-                        Paths = { }
-                    });
+                    using var ctx = new CdClientContext();
+                    var column = ctx.PropertyTemplateTable.FirstOrDefaultAsync(a => a.MapID == 1150);
+
+                    List<string> items = column.Result.Path.Split(' ').ToList();
 
                     origin.Message(new DownloadPropertyDataMessage
                     {
@@ -44,11 +39,11 @@ namespace Uchu.World
                         ZoneID = origin.Zone.ZoneId.Id,
                         VendorMapID = 1100,
                         OwnerName = origin.Name,
-                        OwnerObjID = (long)origin.Id,
+                        OwnerObjID = origin.Id,
                         SpawnName = "AGSmallProperty",
-                        SpawnPosition = origin.Zone.SpawnPosition,
+                        SpawnPosition = new Vector3((float)column.Result.ZoneX, (float)column.Result.ZoneY, (float)column.Result.ZoneZ),
                         MaxBuildHeight = 128.0f,
-                        Paths = { }
+                        Paths = items
                     });
 
                     origin.Message(new UpdatePropertyModelCountMessage
@@ -56,20 +51,12 @@ namespace Uchu.World
                         Associate = message.Associate,
                         ModelCount = 0
                     });
-
-                    origin.Message(new ScriptNetworkVarUpdate
-                    {
-                        Associate = origin.Zone.ZoneControlObject,
-                        LDFInText = "unclaimed=7:1"
-                    });
                 });
-                
             });
         }
 
         public async Task OnInteract(Player player)
         {
-            await player.SetFlagAsync(71, true);
-        }
+            await player.SetFlagAsync(108, true);        }
     }
 }

@@ -22,7 +22,7 @@ namespace Uchu.World
 
         public float MaxBuildHeight;
 
-        public List<Vector3> Paths;
+        public List<string> Paths;
 
         public override void SerializeMessage(BitWriter writer)
         {
@@ -33,7 +33,7 @@ namespace Uchu.World
             writer.Write(ZoneID);
             writer.Write(VendorMapID);
 
-            writer.Write<uint>(551029);
+            writer.Write<uint>(0);
 
             writer.Write<uint>(0); // String length - property name
             writer.Write<uint>(0); // String length - property description
@@ -66,7 +66,7 @@ namespace Uchu.World
 
             writer.Write<sbyte>(0);
 
-            writer.Write<ulong>(104116);
+            writer.Write<ulong>(0);
 
             writer.Write<uint>(1);
 
@@ -74,7 +74,7 @@ namespace Uchu.World
 
             writer.Write<ulong>(0);
 
-            writer.Write<uint>(16);
+            writer.Write<uint>(0);
             writer.Write<uint>(0);
 
             writer.Write(SpawnPosition.X);
@@ -87,13 +87,11 @@ namespace Uchu.World
 
             writer.Write<sbyte>(0);
 
-            writer.Write((uint)Paths.Count);
+            writer.Write((uint)Paths.Count / 3);
 
             foreach (var item in Paths)
             {
-                writer.Write(item.X);
-                writer.Write(item.Y);
-                writer.Write(item.Z);
+                writer.Write(float.Parse(item));
             }
         }
     }
