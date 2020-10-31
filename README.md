@@ -30,11 +30,6 @@ Uchu uses PostgreSQL as its database provider by default. This can be changed in
 
 If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
 
-Make sure to run the following command from the `Uchu.Core` project directory after setting up your database of choice.
-```
-dotnet ef database update -c UchuContext
-```
-
 #### Linux (Debian/Ubuntu)
 ```
 sudo apt update
