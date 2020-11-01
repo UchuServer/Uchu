@@ -93,7 +93,7 @@ namespace Uchu.World.Systems.Behaviors
 
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
-        private SkillCastType CastType = default;
+        private SkillCastType CastType;
         
         /// <summary>
         /// Map of all implemented behaviors, ordered by behavior template id
@@ -322,6 +322,7 @@ namespace Uchu.World.Systems.Behaviors
             uint syncId, Vector3 calculatingPosition, GameObject target = default)
         {
             Serialized = true;
+            CastType = SkillCastType.Default;
             target ??= associate;
 
             var context = new NpcExecutionContext(target, writer, skillId, syncId, calculatingPosition);
@@ -336,7 +337,7 @@ namespace Uchu.World.Systems.Behaviors
             var syncParameters = context.Root.SerializeSync(parameters.NpcContext, new ExecutionBranchContext { Target = target });
 
             // Setup the behavior for execution
-            RootBehaviors[SkillCastType.Default] = new List<BehaviorExecution>()
+            RootBehaviors[CastType] = new List<BehaviorExecution>()
             {
                 new BehaviorExecution
                 {
@@ -345,7 +346,7 @@ namespace Uchu.World.Systems.Behaviors
                     SyncBehaviorExecutionParameters = syncParameters
                 }
             };
-
+            
             return context;
         }
 
@@ -429,7 +430,9 @@ namespace Uchu.World.Systems.Behaviors
             try
             {
                 ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
-                ExecuteRootBehaviorsForSkillType(CastType);
+                
+                if (CastType != SkillCastType.Default)
+                    ExecuteRootBehaviorsForSkillType(CastType);
             }
             catch (Exception e)
             {

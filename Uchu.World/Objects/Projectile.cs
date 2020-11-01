@@ -41,6 +41,8 @@ namespace Uchu.World
 
             tree.Deserialize(Owner, reader, target: target);
             
+            tree.Use();
+            
             Zone.BroadcastMessage(new DoClientProjectileImpact
             {
                 Associate = Owner,
@@ -49,8 +51,6 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-            
-            tree.Use();
         }
 
         public async Task CalculateImpactAsync(GameObject target)
@@ -76,6 +76,8 @@ namespace Uchu.World
                 target
             );
             
+            tree.Execute();
+            
             Zone.BroadcastMessage(new DoClientProjectileImpact
             {
                 Associate = Owner,
@@ -84,8 +86,6 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-
-            tree.Execute();
         }
     }
 }
