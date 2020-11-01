@@ -57,9 +57,21 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void SetBuildModeHandler(SetBuildModeMessage message, Player player)
         {
+            if (message.Associate.Lot == 3315)
+            {
+                player.Message(new NotifyPropertyOfEditMode
+                {
+                    Associate = message.Associate,
+                    EditingActive = message.Start
+                });
+
+                
+            }
+
             player.Message(new SetBuildModeConfirmed
             {
                 Associate = message.Associate,
+                WarnVisitors = false,
                 ModePaused = message.ModePaused,
                 ModeValue = message.ModeValue,
                 Player = player,

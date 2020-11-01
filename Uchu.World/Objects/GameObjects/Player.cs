@@ -25,6 +25,7 @@ namespace Uchu.World
             OnRespondToMission = new Event<int, GameObject, Lot>();
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
+            OnVendorPurchase = new Event<BuyFromVendorMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
             Lock = new SemaphoreSlim(1, 1);
@@ -77,6 +78,13 @@ namespace Uchu.World
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
             });
+
+            Listen(OnWorldLoad, () => {
+                this.Message(new PlayerReadyMessage
+                {
+                    Associate = this.Zone.ZoneControlObject
+                });  
+            });
         }
 
         public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
@@ -88,6 +96,8 @@ namespace Uchu.World
         public Event OnWorldLoad { get; }
 
         public Event<Vector3, Quaternion> OnPositionUpdate { get; }
+
+        public Event<BuyFromVendorMessage> OnVendorPurchase { get; }
 
         public IRakConnection Connection { get; private set; }
 

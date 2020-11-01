@@ -53,6 +53,8 @@ namespace Uchu.World
             
             obj.Zone.RegisterObject(obj);
 
+            obj.Zone.OnObject.Invoke(obj);
+
             obj.OnStart?.Invoke();
         }
 

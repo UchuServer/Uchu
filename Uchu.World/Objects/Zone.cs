@@ -73,6 +73,8 @@ namespace Uchu.World
         
         public Quaternion SpawnRotation { get; private set; }
 
+        public GameObject ZoneControlObject { get; private set; }
+
         //
         // Runtime
         //
@@ -135,6 +137,7 @@ namespace Uchu.World
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
+            Listen(OnTick, PhysicsStep);
         }
 
         #region Initializing
@@ -197,6 +200,21 @@ namespace Uchu.World
                     Logger.Error(e);
                 }
             }
+
+
+            using var ctx = new Uchu.Core.Client.CdClientContext();
+
+            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+
+            int Lot = ZoneControlLot ??= 2365;
+
+            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: 70368744177662);
+
+            Start(ZoneObject);
+
+            Objects.Append(ZoneObject);
+
+            ZoneControlObject = ZoneObject;
 
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             
@@ -274,25 +292,28 @@ namespace Uchu.World
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-            if (obj == null) return;
-
-            obj.Layer = StandardLayer.Hidden;
-
-            var spawner = obj.GetComponent<SpawnerComponent>();
-
-            spawner.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
-
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
             {
-                Position = w.Position,
-                Rotation = Quaternion.Identity
-            }).ToList();
+                var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
-            Start(obj);
-            
-            spawner.SpawnCluster();
+                if (obj == null) return;
+
+                obj.Layer = StandardLayer.Hidden;
+
+                var spawner = obj.GetComponent<SpawnerComponent>();
+
+                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
+
+                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+                {
+                    Position = w.Position,
+                    Rotation = Quaternion.Identity
+                }).ToList();
+
+                Start(obj);
+
+                spawner.SpawnCluster();
+            }
         }
 
         #endregion
@@ -564,8 +585,6 @@ namespace Uchu.World
             };
 
             timer.Start();
-
-            Listen(OnTick, PhysicsStep);
 
             return Task.Run(async () =>
             {
