@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Uchu.Core.Migrations.MySql
 {
+    [SuppressMessage("ReSharper", "CA1062")]
     public partial class MySqlSocialUpdate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

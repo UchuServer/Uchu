@@ -17,62 +17,64 @@ namespace Uchu.StandardScripts.NimbusStation
         public override Task LoadAsync()
         {
             Listen(Zone.OnPlayerLoad, player => {
-                Listen(player.OnRespondToMission, async (missionID, playerObject, rewardItem)  => {
-                    if (missionID != MissionID) return;
+                Listen(player.OnRespondToMission, async (missionId, playerObject, rewardItem)  => {
+                    if (missionId != MissionID) return;
 
                     if (rewardItem.Id == -1) return; // If no reward chosen 
 
-                    int[] Missions = new int[3];
-                    int CelebrationID = -1;
-                    int FactionFlag = 0;
+                    var missions = new int[3];
+                    var celebrationId = -1;
+                    var factionFlag = 0;
 
-                    if (rewardItem.Id == 6980) // Venture
+                    switch (rewardItem.Id)
                     {
-                        Missions[0] = 555; //
-                        Missions[1] = (int) Core.Resources.Missions.JoinVentureLeague; // Venture Missions
-                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; //
-                        CelebrationID = (int) Celebrations.JoinVenture; // Venture Celebration;
-                        FactionFlag = 46; // Venture Faction Flag
-                    }
-                    else if (rewardItem.Id == 6979) // Assembly
-                    {
-                        Missions[0] = 544; // 
-                        Missions[1] = (int) Core.Resources.Missions.JoinAssembly; // Assembly Missions
-                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; //
-                        CelebrationID = (int) Celebrations.JoinAssembly; // Assembly Celebration;
-                        FactionFlag = 47; // Assembly Faction Flag
-                    } 
-                    else if (rewardItem.Id == 6981) // Paradox
-                    {
-                        Missions[0] = 577; // 
-                        Missions[1] = (int) Core.Resources.Missions.JoinTheSentinels; // Paradox Missions
-                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction; // 
-                        CelebrationID = (int) Celebrations.JoinParadox; // Paradox Celebration
-                        FactionFlag = 48; // Paradox Faction Flag
-                    }  
-                    else if (rewardItem.Id == 6978) // Sentinel
-                    {
-                        Missions[0] = 566; // Sentinel Missions
-                        Missions[1] = (int) Core.Resources.Missions.JoinTheSentinels;
-                        Missions[2] = (int) Core.Resources.Missions.JoinaFaction;
-                        CelebrationID = (int) Celebrations.JoinSentinels; // Sentinel Celebration
-                        FactionFlag = 49; // Sentinel Faction Flag
-                    }
-
-                    if (CelebrationID != -1)
-                    {
-                        // Play effect
-                        await player.TriggerCelebration(CelebrationID);
+                        // Venture
+                        case 6980:
+                            missions[0] = 555;
+                            missions[1] = (int) Core.Resources.Mission.JoinVentureLeague;
+                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
+                            celebrationId = (int) Celebration.JoinVenture;
+                            factionFlag = 46; // Venture Faction Flag
+                            break;
+                        // Assembly
+                        case 6979:
+                            missions[0] = 544; 
+                            missions[1] = (int) Core.Resources.Mission.JoinAssembly;
+                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
+                            celebrationId = (int) Celebration.JoinAssembly;
+                            factionFlag = 47; // Assembly Faction Flag
+                            break;
+                        // Paradox
+                        case 6981:
+                            missions[0] = 577; 
+                            missions[1] = (int) Core.Resources.Mission.JoinTheSentinels;
+                            missions[2] = (int) Core.Resources.Mission.JoinaFaction; 
+                            celebrationId = (int) Celebration.JoinParadox;
+                            factionFlag = 48; // Paradox Faction Flag
+                            break;
+                        // Sentinel
+                        case 6978:
+                            missions[0] = 566; // Sentinel Missions
+                            missions[1] = (int) Core.Resources.Mission.JoinTheSentinels;
+                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
+                            celebrationId = (int) Celebration.JoinSentinels;
+                            factionFlag = 49; // Sentinel Faction Flag
+                            break;
                     }
 
-                    MissionInventoryComponent MissionInventory = player.GetComponent<MissionInventoryComponent>(); 
-
-                    foreach (int item in Missions)
+                    var celebration = (Celebration) celebrationId;
+                    if (celebration != Celebration.Invalid)
                     {
-                        await MissionInventory.CompleteMissionAsync(item);
+                        await player.TriggerCelebration(celebration);
                     }
 
-                    await player.SetFlagAsync(FactionFlag, true);
+                    var missionInventory = player.GetComponent<MissionInventoryComponent>();
+                    foreach (var item in missions)
+                    {
+                        await missionInventory.CompleteMissionAsync(item);
+                    }
+
+                    await player.SetFlagAsync(factionFlag, true);
                 });
             });
 

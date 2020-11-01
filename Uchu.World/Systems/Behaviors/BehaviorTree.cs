@@ -327,7 +327,7 @@ namespace Uchu.World.Systems.Behaviors
             // Setup the behavior for execution
             RootBehaviors[SkillCastType.Default] = new List<BehaviorExecution>()
             {
-                new BehaviorExecution()
+                new BehaviorExecution
                 {
                     BehaviorBase = context.Root,
                     BehaviorExecutionParameters = parameters
@@ -365,7 +365,7 @@ namespace Uchu.World.Systems.Behaviors
                     executionPreparation.BehaviorExecutionParameters = 
                         executionPreparation.BehaviorBase.DeserializeStart(context, new ExecutionBranchContext
                         {
-                            Target = target
+                            Target = target,
                         });
                 }
             }

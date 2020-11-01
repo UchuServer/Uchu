@@ -9,7 +9,7 @@ namespace Uchu.World
 
         public Zone Zone { get; protected set; }
 
-        public Server Server => Zone.Server;
+        public UchuServer UchuServer => Zone.UchuServer;
 
         public Event OnStart { get; }
 
@@ -52,8 +52,6 @@ namespace Uchu.World
             obj.Started = true;
             
             obj.Zone.RegisterObject(obj);
-
-            obj.Zone.OnObject.Invoke(obj);
 
             obj.OnStart?.Invoke();
         }

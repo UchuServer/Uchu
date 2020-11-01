@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Api.Models;
+using Uchu.Core.Resources;
 
 namespace Uchu.Core.Handlers.Commands
 {
@@ -12,14 +14,18 @@ namespace Uchu.Core.Handlers.Commands
         [CommandHandler(Signature = "stop", Help = "Stops the server")]
         public async Task StopServer()
         {
-            await Server.Api.RunCommandAsync<BaseResponse>(
-                Server.MasterApi, $"master/decommission?i={Server.Id}"
+            await UchuServer.Api.RunCommandAsync<BaseResponse>(
+                UchuServer.MasterApi, $"master/decommission?i={UchuServer.Id}"
             ).ConfigureAwait(false);
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
-        public string AddUser(string[] arguments)
+        public static string AddUser(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_AddUser_ArgumentsNullException);
+            
             if (arguments.Length != 1)
             {
                 return "adduser <name>";
@@ -38,7 +44,7 @@ namespace Uchu.Core.Handlers.Commands
                 return "A user with that username already exists";
             }
 
-            Console.Write("Password: ");
+            Console.Write(ResourceStrings.StandardCommandHandler_AddUser_PasswordPrompt);
             var password = GetPassword();
 
             if (password.Length > 42)
@@ -59,8 +65,12 @@ namespace Uchu.Core.Handlers.Commands
         }
 
         [CommandHandler(Signature = "removeuser", Help = "Remove a user")]
-        public string RemoveUser(string[] arguments)
+        public static string RemoveUser(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_RemoveUser_ArgumentsNullException);
+            
             if (arguments.Length != 1)
             {
                 return "removeuser <name>";
@@ -76,7 +86,7 @@ namespace Uchu.Core.Handlers.Commands
                 return $"No user with the username of: {name}";
             }
 
-            Console.Write("Write the username again to confirm deletion: ");
+            Console.Write(ResourceStrings.StandardCommandHandler_RemoveUser_ConfirmationMessage);
             if (Console.ReadLine() != name) return "Deletion aborted";
 
             ctx.Users.Remove(user);
@@ -86,8 +96,13 @@ namespace Uchu.Core.Handlers.Commands
         }
 
         [CommandHandler(Signature = "ban", Help = "Ban a user", GameMasterLevel = GameMasterLevel.Mythran)]
-        public async Task<string> BanUser(string[] arguments)
+        [SuppressMessage("ReSharper", "CA2000")]
+        public static async Task<string> BanUser(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_BanUser_ArgumentsNullException);
+            
             if (arguments.Length != 2)
             {
                 return $"{arguments[0]} <name> <reason>";
@@ -97,7 +112,8 @@ namespace Uchu.Core.Handlers.Commands
             var reason = arguments[1];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
+            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name)
+                .ConfigureAwait(false);
 
             if (user == null)
             {
@@ -107,14 +123,19 @@ namespace Uchu.Core.Handlers.Commands
             user.Banned = true;
             user.BannedReason = reason;
 
-            await ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
 
             return $"Successfully banned {name}!";
         }
 
         [CommandHandler(Signature = "pardon", Help = "Pardon a user", GameMasterLevel = GameMasterLevel.Mythran)]
-        public async Task<string> PardonUser(string[] arguments)
+        [SuppressMessage("ReSharper", "CA2000")]
+        public static async Task<string> PardonUser(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_PardonUser_ArgumentsNullException);
+            
             if (arguments.Length != 1)
             {
                 return $"{arguments[0]} <name>";
@@ -123,7 +144,8 @@ namespace Uchu.Core.Handlers.Commands
             var name = arguments[0];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name);
+            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name)
+                .ConfigureAwait(false);
 
             if (user == null)
             {
@@ -133,13 +155,13 @@ namespace Uchu.Core.Handlers.Commands
             user.Banned = false;
             user.BannedReason = null;
 
-            await ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
 
             return $"Successfully pardoned {name}!";
         }
 
         [CommandHandler(Signature = "users", Help = "List all users", GameMasterLevel = GameMasterLevel.Admin)]
-        public string GetUsers()
+        public static string GetUsers()
         {
             using var ctx = new UchuContext();
             var users = ctx.Users;
@@ -149,8 +171,14 @@ namespace Uchu.Core.Handlers.Commands
         }
 
         [CommandHandler(Signature = "approve", Help = "Approve usernames", GameMasterLevel = GameMasterLevel.Mythran)]
-        public async Task<string> ApproveUsernames(string[] arguments)
+        [SuppressMessage("ReSharper", "CA1304")]
+        [SuppressMessage("ReSharper", "CA2000")]
+        public static async Task<string> ApproveUsernames(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments),  
+                    ResourceStrings.StandardCommandHandler_ApproveUsername_ArgumentsNullException);
+            
             await using var ctx = new UchuContext();
             if (arguments.Length == 0 || arguments[0].ToLower() == "all")
             {
@@ -169,14 +197,14 @@ namespace Uchu.Core.Handlers.Commands
                     character.CustomName = "";
                 }
 
-                await ctx.SaveChangesAsync();
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
 
                 return "Successfully approved all names!";
             }
 
             var selectedCharacter = await ctx.Characters.FirstOrDefaultAsync(
                 c => c.CustomName == arguments[1] && !c.NameRejected
-            );
+            ).ConfigureAwait(false);
 
             if (selectedCharacter == null)
             {
@@ -186,14 +214,20 @@ namespace Uchu.Core.Handlers.Commands
             selectedCharacter.Name = selectedCharacter.CustomName;
             selectedCharacter.CustomName = "";
 
-            await ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
 
             return $"Successfully approved \"{selectedCharacter.Name}\"!";
         }
 
         [CommandHandler(Signature = "reject", Help = "Reject usernames", GameMasterLevel = GameMasterLevel.Mythran)]
-        public async Task<string> RejectUserNames(string[] arguments)
+        [SuppressMessage("ReSharper", "CA1304")]
+        [SuppressMessage("ReSharper", "CA2000")]
+        public static async Task<string> RejectUserNames(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_RejectUserNames_ArgumentsNullException);
+            
             await using var ctx = new UchuContext();
             if (arguments.Length == 0 || arguments[0].ToLower() == "all")
             {
@@ -209,12 +243,13 @@ namespace Uchu.Core.Handlers.Commands
                     character.NameRejected = true;
                 }
 
-                ctx.SaveChanges();
-
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
                 return "Successfully rejected all names!";
             }
 
-            var selectedCharacter = await ctx.Characters.FirstOrDefaultAsync(c => c.CustomName == arguments[1] && !c.NameRejected);
+            var selectedCharacter = await ctx.Characters.FirstOrDefaultAsync(
+                c => c.CustomName == arguments[1] && !c.NameRejected)
+                .ConfigureAwait(false);
 
             if (selectedCharacter == null)
             {
@@ -223,14 +258,18 @@ namespace Uchu.Core.Handlers.Commands
 
             selectedCharacter.NameRejected = true;
 
-            await ctx.SaveChangesAsync();
-
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
             return $"Successfully rejected \"{selectedCharacter.CustomName}\"!";
         }
 
         [CommandHandler(Signature = "gamemaster", Help = "Set Game Master level for user")]
-        public async Task<string> SetGameMasterLevel(string[] arguments)
+        [SuppressMessage("ReSharper", "CA2000")]
+        public static async Task<string> SetGameMasterLevel(string[] arguments)
         {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments), 
+                    ResourceStrings.StandardCommandHandler_SetGameMasterLevel_ArgumentsNullException);
+            
             if (arguments.Length != 2)
             {
                 return "gamemaster <username> <level>";
@@ -239,7 +278,8 @@ namespace Uchu.Core.Handlers.Commands
             var username = arguments[0];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == username);
+            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == username)
+                .ConfigureAwait(false);
 
             if (user == default)
             {
@@ -253,7 +293,7 @@ namespace Uchu.Core.Handlers.Commands
 
             user.GameMasterLevel = (int) level;
 
-            await ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync().ConfigureAwait(false);
 
             return$"Successfully set {user.Username}'s Game Master " +
                   $"level to {(GameMasterLevel) user.GameMasterLevel}";
@@ -274,12 +314,12 @@ namespace Uchu.Core.Handlers.Commands
                 {
                     if (pwd.Length <= 0) continue;
                     pwd.Length--;
-                    Console.Write("\b \b");
+                    Console.Write(ResourceStrings.ServerStatusCommandHandler_GetPassword_Backspace);
                 }
                 else if (i.KeyChar != '\u0000')
                 {
                     pwd.Append(i.KeyChar);
-                    Console.Write("*");
+                    Console.Write(ResourceStrings.ServerStatusCommandHandler_GetPassword_Star);
                 }
             }
 

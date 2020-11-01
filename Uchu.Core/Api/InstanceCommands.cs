@@ -6,11 +6,11 @@ namespace Uchu.Core.Api
 {
     public class InstanceCommands
     {
-        public Server Server { get; }
+        public UchuServer UchuServer { get; }
         
-        public InstanceCommands(Server server)
+        public InstanceCommands(UchuServer uchuServer)
         {
-            Server = server;
+            UchuServer = uchuServer;
         }
 
         [ApiCommand("server/verify")]
@@ -18,7 +18,7 @@ namespace Uchu.Core.Api
         {
             var response = new ReadyCallbackResponse();
 
-            if (Server.Id == Guid.Empty)
+            if (UchuServer.Id == Guid.Empty)
             {
                 response.FailedReason = "invalid id";
 

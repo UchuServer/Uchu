@@ -25,18 +25,10 @@ Uchu is built with .NET Core 3.1 (see below for installation details) which is c
 ### .NET Core 3.1
 Install .NET Core 3.1 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
 
-#### Entity Framework Command Line Interface
-Run ``dotnet tool install --global dotnet-ef`` in the terminal to install the interface that is required to build the database. You might have to remove old versions of the tool if you have used Uchu on .NET Core 3.0.
-
 ### PostgreSQL
 Uchu uses PostgreSQL as its database provider by default. This can be changed in the config file to either MySQL or SQLite.
 
 If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
-
-Make sure to run the following command from the `Uchu.Core` project directory after setting up your database of choice.
-```
-dotnet ef database update -c UchuContext
-```
 
 #### Linux (Debian/Ubuntu)
 ```
@@ -71,7 +63,7 @@ There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), alt
 ### LEGO Universe Client
 You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
 
-Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://bitbucket.org/lcdr/utils).
+Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://github.com/lcdr/utils).
 
 ### TcpUdp Mod
 The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://github.com/lcdr/raknet_shim_dll/releases) made by lcdr and extract it next to the game's executable.

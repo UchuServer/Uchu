@@ -36,7 +36,7 @@ namespace Uchu.World
 
         public BaseCombatAiComponent()
         {
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
                 SkillEntries = new List<NpcSkillEntry>();
 

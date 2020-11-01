@@ -96,8 +96,6 @@ namespace Uchu.World
 
         public Event<int, Player> OnEmoteReceived { get; }
 
-        public Event OnReady { get; } 
-
         #endregion
         
         #region Macro
@@ -123,9 +121,7 @@ namespace Uchu.World
             OnInteract = new Event<Player>();
             
             OnEmoteReceived = new Event<int, Player>();
-
-            OnReady = new Event();
-
+            
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);

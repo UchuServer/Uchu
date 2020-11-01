@@ -21,27 +21,29 @@ namespace Uchu.World.Filters
 
         public async Task Tick()
         {
-            foreach (var component in _player.Zone.Objects.OfType<FilterComponent>())
-            {
-                var excluded = _excluded.Contains(component.GameObject);
-
-                var check = await component.CheckAsync(_player);
-
-                if (excluded && check)
+            var filterTasks = _player.Zone.Objects.OfType<FilterComponent>()
+                .Select(component => Task.Run(async () =>
                 {
-                    _excluded.Remove(component.GameObject);
-                }
-                else if (!excluded && !check)
-                {
-                    _excluded.Add(component.GameObject);
-                }
-            }
+                    var excluded = _excluded.Contains(component.GameObject);
+                    var check = await component.CheckAsync(_player);
+
+                    if (excluded && check)
+                    {
+                        _excluded.Remove(component.GameObject);
+                    }
+                    else if (!excluded && !check)
+                    {
+                        _excluded.Add(component.GameObject);
+                    }
+                }))
+                .ToList();
+            await Task.WhenAll(filterTasks);
             
-            for (var index = 0; index < _excluded.Count; index++)
+            for (var i = 0; i < _excluded.Count; i++)
             {
-                var gameObject = _excluded[index];
-                
-                if (!gameObject.Alive) _excluded.Remove(gameObject);
+                var gameObject = _excluded[i];
+                if (!gameObject.Alive)
+                    _excluded.Remove(gameObject);
             }
         }
 

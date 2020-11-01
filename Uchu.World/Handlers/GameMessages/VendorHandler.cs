@@ -9,7 +9,6 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task BuyFromVendorHandler(BuyFromVendorMessage message, Player player)
         {
             await message.Associate.GetComponent<VendorComponent>().Buy(message.Lot, (uint) message.Count, player);
-            await player.OnVendorPurchase.InvokeAsync(message);
         }
         
         [PacketHandler]
