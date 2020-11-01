@@ -39,7 +39,7 @@ namespace Uchu.World
 
         public ZoneInfo ZoneInfo { get; }
         
-        public new UchuServer UchuServer { get; }
+        public new Server Server { get; }
         
         public uint Checksum { get; private set; }
         
@@ -72,6 +72,8 @@ namespace Uchu.World
         public Vector3 SpawnPosition { get; private set; }
         
         public Quaternion SpawnRotation { get; private set; }
+
+        public GameObject ZoneControlObject { get; private set; }
 
         //
         // Runtime
@@ -112,11 +114,11 @@ namespace Uchu.World
         
         public Event<Player, string> OnChatMessage { get; }
         
-        public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
+        public Zone(ZoneInfo zoneInfo, Server server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
-            UchuServer = uchuServer;
+            Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
             
@@ -135,6 +137,7 @@ namespace Uchu.World
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
+            Listen(OnTick, PhysicsStep);
         }
 
         #region Initializing
@@ -156,7 +159,7 @@ namespace Uchu.World
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
 
-            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
 
             if (NavMeshManager.Enabled)
             {
@@ -197,6 +200,21 @@ namespace Uchu.World
                     Logger.Error(e);
                 }
             }
+
+
+            using var ctx = new Uchu.Core.Client.CdClientContext();
+
+            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+
+            int Lot = ZoneControlLot ??= 2365;
+
+            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: 70368744177662);
+
+            Start(ZoneObject);
+
+            Objects.Append(ZoneObject);
+
+            ZoneControlObject = ZoneObject;
 
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             
@@ -274,25 +292,28 @@ namespace Uchu.World
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-            if (obj == null) return;
-
-            obj.Layer = StandardLayer.Hidden;
-
-            var spawner = obj.GetComponent<SpawnerComponent>();
-
-            spawner.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
-
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
             {
-                Position = w.Position,
-                Rotation = Quaternion.Identity
-            }).ToList();
+                var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
-            Start(obj);
-            
-            spawner.SpawnCluster();
+                if (obj == null) return;
+
+                obj.Layer = StandardLayer.Hidden;
+
+                var spawner = obj.GetComponent<SpawnerComponent>();
+
+                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
+
+                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+                {
+                    Position = w.Position,
+                    Rotation = Quaternion.Identity
+                }).ToList();
+
+                Start(obj);
+
+                spawner.SpawnCluster();
+            }
         }
 
         #endregion
@@ -518,7 +539,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
             }
         }
         
@@ -539,7 +560,7 @@ namespace Uchu.World
 
                 var content = stream.ToArray();
 
-                File.WriteAllBytes(Path.Combine(gameObject.UchuServer.MasterPath, path), content);
+                File.WriteAllBytes(Path.Combine(gameObject.Server.MasterPath, path), content);
             }
         }
 
@@ -565,93 +586,93 @@ namespace Uchu.World
 
             timer.Start();
 
-            Listen(OnTick, PhysicsStep);
-
             return Task.Run(async () =>
             {
                 _running = true;
+
                 var watch = new Stopwatch();
                 
                 while (_running)
                 {
                     var players = Players;
+                    
                     if (players.Length == 0)
                     {
                         await Task.Delay(1000);
+                        
                         continue;
                     }
 
-                    if (_ticks >= TicksPerSecondLimit)
-                        continue;
+                    if (_ticks >= TicksPerSecondLimit) continue;
 
                     watch.Restart();
 
-                    // Update all tick tasks in parallel
-                    var tickTasks = new List<Task>();
                     foreach (var updatedObject in UpdatedObjects.ToArray())
                     {
-                        if (updatedObject.Stuck)
-                            continue;
+                        if (updatedObject.Stuck) continue;
                         
                         if (updatedObject.Associate is GameObject gameObject)
                         {
-                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                                continue;
+                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject))) continue;
                         }
 
                         updatedObject.DeltaTime += DeltaTime;
-                        if (updatedObject.Frequency != ++updatedObject.Ticks)
-                            continue;
+                        
+                        if (updatedObject.Frequency != ++updatedObject.Ticks) continue;
+                        
                         updatedObject.Ticks = 0;
 
-                        tickTasks.Add(Task.Run(async () =>
+                        var start = watch.ElapsedMilliseconds;
+
+                        try
                         {
-                            var start = watch.ElapsedMilliseconds;
-                            try
+                            var task = Task.Run(async () =>
                             {
-                                var tickTask = Task.Run(async () =>
-                                {
-                                    await updatedObject.Delegate(updatedObject.DeltaTime);
-                                    updatedObject.Stuck = false;
-                                });
+                                await updatedObject.Delegate(updatedObject.DeltaTime);
 
-                                var delay = Task.Delay(150);
-                                await Task.WhenAny(tickTask, delay);
-                                var elapsed = watch.ElapsedMilliseconds - start;
+                                updatedObject.Stuck = false;
+                            });
 
-                                // Any task that takes more than 3 ticks to complete is considered stuck
-                                if (delay.IsCompleted && !tickTask.IsCompleted)
-                                {
-                                    Logger.Warning($"{updatedObject.Associate} is now defined as stuck!");
-                                    updatedObject.Stuck = true;
-                                }
-                                // Any task that took more than two ticks to execute but less than 3 is considered slow
-                                else if (elapsed > 100)
-                                {
-                                    Logger.Warning($"Slow update: {updatedObject.Associate} in {elapsed}ms");
-                                }
-                            }
-                            catch (Exception e)
+                            var delay = Task.Delay(250);
+
+                            await Task.WhenAny(task, delay);
+
+                            if (delay.IsCompleted && !task.IsCompleted)
                             {
-                                Logger.Error(e);
+                                Logger.Error($"{updatedObject.Associate} is now defined as stuck!");
+                                
+                                updatedObject.Stuck = true;
                             }
 
-                            updatedObject.DeltaTime = 0;
-                        }));
+                            var elapsed = watch.ElapsedMilliseconds - start;
+
+                            if (elapsed > 100)
+                            {
+                                Logger.Warning(
+                                    $"Slow update: {updatedObject.Associate} in {elapsed}ms"
+                                );
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                        }
+
+                        updatedObject.DeltaTime = 0;
                     }
-
-                    await Task.WhenAll(tickTasks);
+                    
                     await OnTick.InvokeAsync();
                     
                     _ticks++;
 
                     var passedMs = watch.ElapsedMilliseconds;
+
                     _passedTickTime += passedMs;
                     
-                    // Sync with the system tick clock
                     await Task.Delay((int) Math.Max(1000 / TicksPerSecondLimit - passedMs, 0));
                     
                     passedMs = watch.ElapsedMilliseconds;
+
                     DeltaTime = passedMs / 1000f;
                 }
             });

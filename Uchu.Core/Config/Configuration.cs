@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace Uchu.Core.Config
+namespace Uchu.Core
 {
     /// <summary>
     /// Configuration wrapper used to configure the master server
     /// </summary>
     [XmlRoot("Uchu")]
-    public class UchuConfiguration
+    public class Configuration
     {
         /// <summary>
         /// Database configuration like provider, host and credentials
@@ -110,12 +110,12 @@ namespace Uchu.Core.Config
         /// <summary>
         /// Additional managed script packs to load
         /// </summary>
-        [XmlElement("Script")] public List<string> Scripts { get; } = new List<string>();
+        [XmlElement("Script")] public List<string> Scripts { get; set; } = new List<string>();
         
         /// <summary>
         /// Additional sources to load managed scripts from
         /// </summary>
-        [XmlElement("Library")] public List<string> Paths { get; } = new List<string>();
+        [XmlElement("Library")] public List<string> Paths { get; set; } = new List<string>();
     }
 
     /// <summary>
@@ -137,7 +137,7 @@ namespace Uchu.Core.Config
         /// The path to the script source DLLs
         /// </summary>
         [XmlElement]
-        public List<string> ScriptDllSource { get; } = new List<string>
+        public List<string> ScriptDllSource { get; set; } = new List<string>
         {
             "Uchu.StandardScripts"
         };
@@ -181,7 +181,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The ports to run the world servers at
         /// </summary>
-        [XmlElement("WorldPort")] public List<int> WorldPorts { get; } = new List<int>();
+        [XmlElement("WorldPort")] public List<int> WorldPorts { get; set; }
     }
 
     /// <summary>

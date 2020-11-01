@@ -15,7 +15,7 @@ namespace Uchu.World
 
         protected TriggerComponent()
         {
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
                 if (!GameObject.Settings.TryGetValue("trigger_id", out var triggerIds)) return;
 
@@ -34,11 +34,11 @@ namespace Uchu.World
                 var fileId = int.Parse(split[0]);
                 var triggerId = int.Parse(split[1]);
 
-                LoadTrigger(fileId, triggerId);
+                await LoadTriggerAsync(fileId, triggerId);
             });
         }
 
-        public void LoadTrigger(int fileId, int triggerId)
+        public async Task LoadTriggerAsync(int fileId, int triggerId)
         {
             var trigger = Zone.ZoneInfo.TriggerDictionary[fileId, triggerId];
                 
@@ -56,10 +56,10 @@ namespace Uchu.World
                 
             if (trigger.Enabled == 0) return;
 
-            LoadTrigger(trigger);
+            await LoadTriggerAsync(trigger);
         }
 
-        public void LoadTrigger(Trigger trigger)
+        public async Task LoadTriggerAsync(Trigger trigger)
         {
             Trigger = trigger;
             
@@ -71,32 +71,32 @@ namespace Uchu.World
                 switch (@event.Id)
                 {
                     case "OnCreate":
-                        ExecuteEvent(@event);
+                        await ExecuteEventAsync(@event);
                         break;
                     case "OnDestroy":
-                        Listen(OnDestroyed, () =>
+                        Listen(OnDestroyed, async () =>
                         {
-                            ExecuteEvent(@event);
+                            await ExecuteEventAsync(@event);
                         });
                         break;
                     case "OnEnter":
                         physics = GameObject.AddComponent<PhysicsComponent>();
                             
-                        Listen(physics.OnEnter, other =>
+                        Listen(physics.OnEnter, async other =>
                         {
                             Logger.Information($"Enter: {other.GameObject}");
 
-                            ExecuteEvent(@event, other.GameObject);
+                            await ExecuteEventAsync(@event, other.GameObject);
                         });
                         break;;
                     case "OnExit":
                         physics = GameObject.AddComponent<PhysicsComponent>();
                             
-                        Listen(physics.OnLeave, other =>
+                        Listen(physics.OnLeave, async other =>
                         {
                             Logger.Information($"Left: {other.GameObject}");
                                 
-                            ExecuteEvent(@event, other.GameObject);
+                            await ExecuteEventAsync(@event, other.GameObject);
                         });
                         break;
                     default:
@@ -106,38 +106,38 @@ namespace Uchu.World
             }
         }
 
-        private void ExecuteEvent(TriggerEvent @event, params object[] arguments)
+        private async Task ExecuteEventAsync(TriggerEvent @event, params object[] arguments)
         {
             foreach (var command in @event.Commands)
             {
-                ExecuteTriggerCommand(command, arguments);
+                await ExecuteTriggerCommandAsync(command, arguments);
             }
         }
 
-        private void ExecuteTriggerCommand(TriggerCommand command, params object[] arguments)
+        private async Task ExecuteTriggerCommandAsync(TriggerCommand command, params object[] arguments)
         {
             Logger.Information($"TRIGGER: {command.Id} -> {string.Join(", ", arguments)}");
             
             switch (command.Id)
             {
                 case "SetPhysicsVolumeEffect":
-                    SetPhysicsVolumeEffect(command);
+                    await SetPhysicsVolumeEffectAsync(command);
                     break;
                 case "CastSkill":
-                    CastSkill(command, arguments);
+                    await CastSkillAsync(command, arguments);
                     break;
                 case "pushObject":
-                    PushObject(command, arguments);
+                    await PushObjectAsync(command, arguments);
                     break;
                 case "repelObject":
-                    RepealObject(command, arguments);
+                    await RepealObjectAsync(command, arguments);
                     break;
             }
 
             GameObject.Serialize(GameObject);
         }
 
-        private void PushObject(TriggerCommand command, params object[] arguments)
+        private async Task PushObjectAsync(TriggerCommand command, params object[] arguments)
         {
             if (!(arguments[0] is Player target)) return;
 
@@ -166,7 +166,7 @@ namespace Uchu.World
             });
         }
 
-        private void RepealObject(TriggerCommand command, params object[] arguments)
+        private async Task RepealObjectAsync(TriggerCommand command, params object[] arguments)
         {
             if (!(arguments[0] is Player target)) return;
 
@@ -190,7 +190,7 @@ namespace Uchu.World
             });
         }
 
-        private void CastSkill(TriggerCommand command, params object[] arguments)
+        private async Task CastSkillAsync(TriggerCommand command, params object[] arguments)
         {
             if (!(arguments[0] is Player target)) return;
             
@@ -216,7 +216,7 @@ namespace Uchu.World
             });
         }
 
-        private void SetPhysicsVolumeEffect(TriggerCommand command)
+        private async Task SetPhysicsVolumeEffectAsync(TriggerCommand command)
         {
             if (!GameObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) return;
 

@@ -1,20 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
-using Uchu.Core.Config;
-using Uchu.Core.Resources;
 
 namespace Uchu.Core.IO
 {
     public class LocalResources : IFileResources
     {
-        private readonly UchuConfiguration _config;
+        private readonly Configuration _config;
 
         public string RootPath => _config.ResourcesConfiguration.GameResourceFolder;
 
-        public LocalResources(UchuConfiguration config)
+        public LocalResources(Configuration config)
         {
             _config = config;
         }
@@ -26,7 +23,6 @@ namespace Uchu.Core.IO
             return await reader.ReadToEndAsync().ConfigureAwait(false);
         }
 
-        [SuppressMessage("ReSharper", "CA2000")]
         public async Task<byte[]> ReadBytesAsync(string path)
         {
             await using var stream = GetStream(path);
@@ -84,13 +80,8 @@ namespace Uchu.Core.IO
             return files;
         }
         
-        [SuppressMessage("ReSharper", "CA1304")]
         public Stream GetStream(string path)
         {
-            if (path == null)
-                throw new ArgumentNullException(nameof(path), 
-                    ResourceStrings.LocalResources_GetStream_PathNullException);
-            
             path = path.Replace('\\', '/').ToLower();
 
             return File.OpenRead(Path.Combine(RootPath, path));

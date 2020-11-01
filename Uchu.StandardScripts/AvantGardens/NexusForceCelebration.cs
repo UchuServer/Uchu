@@ -12,15 +12,14 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(Zone.OnPlayerLoad, player => {
 
-                if (!player.TryGetComponent(out MissionInventoryComponent component)) { return; }
+                if (!player.TryGetComponent(out MissionInventoryComponent Component)) { return; }
                 
-                Listen(component.OnCompleteMission, async (mission) =>
+                Listen(Component.OnCompleteMission, async (mission) =>
                 {
-                    var missionId = mission.MissionId;
-                    if (missionId != MissionID)
-                        return;
+                    int missionID = mission.MissionId;
+                    if (missionID != MissionID) return;
                     
-                    await player.TriggerCelebration(Celebration.JoinNexusForce);
+                    await player.TriggerCelebration((int) Celebrations.JoinNexusForce);
                 });
             });
 

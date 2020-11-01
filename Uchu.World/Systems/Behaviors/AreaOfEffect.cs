@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -16,58 +15,51 @@ namespace Uchu.World.Systems.Behaviors
     public class AreaOfEffect : BehaviorBase<AreaOfEffectExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AreaOfEffect;
+
         private BehaviorBase Action { get; set; }
+
         private int MaxTargets { get; set; }
+
         private float Radius { get; set; }
+        
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
+
             MaxTargets = await GetParameter<int>("max targets");
+
             Radius = await GetParameter<float>("radius");
         }
 
-        protected override void DeserializeStart(AreaOfEffectExecutionParameters parameters)
+        protected override void DeserializeStart(AreaOfEffectExecutionParameters behaviorExecutionParameters)
         {
-            parameters.Length = parameters.Context.Reader.Read<uint>();
-
-            var targets = new List<GameObject>();
-            for (var i = 0; i < parameters.Length; i++)
+            behaviorExecutionParameters.Length = behaviorExecutionParameters.Context.Reader.Read<uint>();
+            for (var i = 0; i < behaviorExecutionParameters.Length; i++)
             {
-                var targetId = parameters.Context.Reader.Read<long>();
-                if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, 
+                var targetId = (long) behaviorExecutionParameters.Context.Reader.Read<ulong>();
+                if (!behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject(targetId, 
                     out var target))
                 {
-                    Logger.Error(
-                        $"{parameters.Context.Associate} sent invalid AreaOfEffect target.");
-                    continue;
+                    Logger.Error($"{behaviorExecutionParameters.Context.Associate} sent invalid AreaOfEffect target.");
                 }
-                targets.Add(target);
-            }
 
-            foreach (var target in targets)
-            {
-                var behaviorBase = Action.DeserializeStart(parameters.Context, 
+                var behaviorBase = Action.DeserializeStart(behaviorExecutionParameters.Context, 
                     new ExecutionBranchContext()
-                    {
-                        Target = target,
-                        Duration = parameters.BranchContext.Duration
-                    });
+                {
+                    Target = target,
+                    Duration = behaviorExecutionParameters.BranchContext.Duration
+                });
                 
-                parameters.TargetActions.Add(behaviorBase);
+                behaviorExecutionParameters.TargetActions.Add(behaviorBase);
             }
         }
 
-        protected override Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        protected override async Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
         {
             foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
             {
-                Task.Run(async () =>
-                {
-                    await Action.ExecuteStart(behaviorExecutionParameters);
-                });
+                await Action.ExecuteStart(behaviorExecutionParameters);
             }
-
-            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)

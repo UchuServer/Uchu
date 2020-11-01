@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Uchu.Core
 {
-    [SuppressMessage("ReSharper", "CA1716")]
     public class Friend
     {
         [Key]

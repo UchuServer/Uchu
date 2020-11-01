@@ -25,11 +25,11 @@ namespace Uchu.World.Scripting.Managed
         {
             Logger.Information($"Loading python script pack: {Name}");
 
-            var location = Path.Combine(Zone.UchuServer.MasterPath, Location);
+            var location = Path.Combine(Zone.Server.MasterPath, Location);
             
             if (File.Exists(location))
             {
-                var source = await File.ReadAllTextAsync(Path.Combine(Zone.UchuServer.MasterPath, location));
+                var source = await File.ReadAllTextAsync(Path.Combine(Zone.Server.MasterPath, location));
 
                 var script = new PythonScript(source, Zone);
 

@@ -1,6 +1,6 @@
 namespace Uchu.Core.Resources
 {
-    public enum Mission
+    public enum Missions
     {
         CannonCoveCrackshot = 1539,
         VertigoDebris = 1541,

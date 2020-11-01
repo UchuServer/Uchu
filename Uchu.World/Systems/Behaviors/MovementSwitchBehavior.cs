@@ -39,8 +39,7 @@ namespace Uchu.World.Systems.Behaviors
             switch (parameters.MovementType)
             {
                 case MovementType.Moving:
-                    Logger.Debug("Received movement switch type moving, guessing ground behavior");
-                    parameters.ToExecute = GroundBehavior;
+                    parameters.ToExecute = MovingBehavior;
                     break;
                 case MovementType.Ground:
                     parameters.ToExecute = GroundBehavior;
@@ -61,9 +60,8 @@ namespace Uchu.World.Systems.Behaviors
                     parameters.ToExecute = JetpackBehavior;
                     break;
                 case MovementType.Unknown:
-                    Logger.Debug("Received movement switch type unknown, guessing ground behavior");
-                    parameters.ToExecute = GroundBehavior;
-                    break;
+                    Logger.Debug("Received movement switch type unknown");
+                    return;
                 default:
                     throw new Exception($"Invalid {nameof(MovementType)}! Got {parameters.MovementType}!");
             }

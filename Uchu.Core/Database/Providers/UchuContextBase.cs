@@ -1,13 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Uchu.Core.Config;
 
 namespace Uchu.Core.Providers
 {
     public abstract class UchuContextBase : DbContext, IAsyncDisposable
     {
-        public static UchuConfiguration Config { get; set; } = new UchuConfiguration();
+        public static Configuration Config { get; set; } = new Configuration();
         
         public DbSet<User> Users { get; set; }
 
@@ -39,14 +38,14 @@ namespace Uchu.Core.Providers
         
         public DbSet<CharacterFlag> Flags { get; set; }
         
-        public async Task EnsureUpdatedAsync()
+        public virtual async Task EnsureUpdatedAsync()
         {
             await Database.MigrateAsync().ConfigureAwait(false);
         }
 
-        public ValueTask DisposeAsync()
+        public virtual async ValueTask DisposeAsync()
         {
-            return new ValueTask(Task.Run(Dispose));
+            Dispose();
         }
     }
 }

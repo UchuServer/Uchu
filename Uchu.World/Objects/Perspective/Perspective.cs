@@ -78,8 +78,10 @@ namespace Uchu.World
 
         internal async Task TickAsync()
         {
-            var tasks = Filters.Select(filter => filter.Tick()).ToList();
-            await Task.WhenAll(tasks);
+            foreach (var filter in Filters)
+            {
+                await filter.Tick();
+            }
         }
 
         public T GetFilter<T>() where T : IPerspectiveFilter => Filters.OfType<T>().First();

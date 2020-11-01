@@ -4,8 +4,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using StackExchange.Redis;
-using Uchu.Core.Config;
-using Uchu.Core.Resources;
 
 namespace Uchu.Core
 {
@@ -24,17 +22,10 @@ namespace Uchu.Core
         /// <param name="config">The Redis cache configuration</param>
         public RedisSessionCache(CacheConfig config)
         {
-            if (config != null)
-            {
-                var manager = ConnectionMultiplexer.Connect($"{config.Host}:{config.Port}");
-                _client = manager.GetDatabase();
-                _rng = new RNGCryptoServiceProvider();
-            }
-            else
-            {
-                throw new ArgumentNullException(nameof(config), 
-                    ResourceStrings.RedisSessionCache_ConfigNullException);
-            }
+            var manager = ConnectionMultiplexer.Connect($"{config.Host}:{config.Port}");
+            _client = manager.GetDatabase();
+                
+            _rng = new RNGCryptoServiceProvider();
         }
 
         /// <summary>
@@ -76,12 +67,10 @@ namespace Uchu.Core
         /// <param name="characterId">The character to link to the connection</param>
         public void SetCharacter(IPEndPoint endpoint, long characterId)
         {
-            if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint), 
-                    ResourceStrings.RedisSessionCache_SetCharacter_EndpointNullException);
-            
             var session = GetSession(endpoint);
+
             session.CharacterId = characterId;
+
             _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
 
@@ -92,13 +81,10 @@ namespace Uchu.Core
         /// <param name="zone">The zone to link to the connection</param>
         public void SetZone(IPEndPoint endpoint, ZoneId zone)
         {
-            if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint),
-                    ResourceStrings.RedisSessionCache_SetZone_EndpointNullException);
-            
             var session = GetSession(endpoint);
-            session.ZoneId = zone;
-            
+
+            session.ZoneId = (ushort) zone;
+
             _client.StringSet(_keys[endpoint.ToString()], session.ToBytes(), TimeSpan.FromDays(1));
         }
 
@@ -116,12 +102,10 @@ namespace Uchu.Core
         /// <returns>If available, the session that belongs to the endpoint</returns>
         public async Task<Session> GetSessionAsync(IPEndPoint endpoint)
         {
-            if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint),
-                    ResourceStrings.RedisSessioncache_GetSessionAsync_EndpointNullException);
             string key;
             
             var timeout = 1000;
+            
             while (!_keys.TryGetValue(endpoint.ToString(), out key))
             {
                 if (timeout <= 0)
@@ -152,9 +136,6 @@ namespace Uchu.Core
         /// <param name="key">The key to register for the connection</param>
         public void RegisterKey(IPEndPoint endPoint, string key)
         {
-            if (endPoint == null)
-                throw new ArgumentNullException(nameof(endPoint), 
-                    ResourceStrings.RedisSessionCache_RegisterKey_EndpointNullException);
             _keys.Add(endPoint.ToString(), key);
         }
 
@@ -163,13 +144,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="endpoint">The user connection to remove from the cache</param>
         public void DeleteSession(IPEndPoint endpoint)
-        {
-            if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint), 
-                    ResourceStrings.RedisSessionCache_DeleteSession_EndpointNullException);
-            
-            _client.KeyDelete(endpoint.ToString());
-        }
+            => _client.KeyDelete(endpoint.ToString());
 
         /// <summary>
         /// Generates a random key
@@ -179,7 +154,9 @@ namespace Uchu.Core
         private string GenerateKey(int length = 24)
         {
             var bytes = new byte[length];
+
             _rng.GetBytes(bytes);
+
             return Convert.ToBase64String(bytes).TrimEnd('=');
         }
 

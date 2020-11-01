@@ -34,11 +34,11 @@ namespace Uchu.World.Handlers
         {
             Logger.Information($"{connection.EndPoint}'s validating client for world!");
 
-            var verified = await UchuServer.ValidateUserAsync(connection, packet.Username, packet.SessionKey);
+            var verified = await Server.ValidateUserAsync(connection, packet.Username, packet.SessionKey);
             
             if (!verified) return;
             
-            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
 
@@ -62,10 +62,10 @@ namespace Uchu.World.Handlers
             var zoneId = (ZoneId) character.LastZone;
             if (zoneId == 0) zoneId = 1000;
 
-            var worldServer = (WorldUchuServer) UchuServer;
+            var worldServer = (WorldServer) Server;
             var zone = await worldServer.GetZoneAsync(zoneId);
 
-            UchuServer.SessionCache.SetZone(connection.EndPoint, zoneId);
+            Server.SessionCache.SetZone(connection.EndPoint, zoneId);
 
             connection.Send(new WorldInfoPacket
             {
@@ -89,7 +89,7 @@ namespace Uchu.World.Handlers
         {
             Logger.Information($"{connection.EndPoint}'s client load completed...");
 
-            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
             var character = await ctx.Characters
@@ -105,38 +105,29 @@ namespace Uchu.World.Handlers
             if (zoneId == 0)
             {
                 zoneId = 1000;
-
+                
                 character.LastZone = zoneId;
 
                 await ctx.SaveChangesAsync();
             }
 
-            Logger.Information("[55%] Setting session zone.");
-            UchuServer.SessionCache.SetZone(connection.EndPoint, zoneId);
+            Server.SessionCache.SetZone(connection.EndPoint, zoneId);
 
             // Zone should already be initialized at this point.
-            Logger.Information("[55%] Getting zone from worldserver.");
-            var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync(zoneId);
+            var zone = await ((WorldServer) Server).GetZoneAsync(zoneId);
 
             // Send the character init XML data for this world to the client
-            Logger.Information("[55%] Sending XML client info.");
             await SendCharacterXmlDataToClient(character, connection, session);
 
-            Logger.Information("[55%] Constructing player.");
             var player = await Player.ConstructAsync(character, connection, zone);
-            
-            Logger.Information("[55%] Checking rocket landing conditions.");
             if (character.LandingByRocket)
             {
-                Logger.Information("[55%] Player landed by rocket, saving changes.");
                 character.LandingByRocket = false;
                 await ctx.SaveChangesAsync();
             }
-
-            Logger.Information("[55%] Player is ready to join world.");
+            
             player.Message(new PlayerReadyMessage {Associate = player});
-
-            Logger.Information("[55%] Server is done loading object.");
+            
             player.Message(new DoneLoadingObjectsMessage {Associate = player});
         }
 

@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Newtonsoft.Json;
 
 namespace Uchu.Core
 {
-    [SuppressMessage("ReSharper", "CA2227")]
     public class MissionTask
     {
         [Key]

@@ -16,14 +16,14 @@ namespace Uchu.Auth.Handlers
             
             var info = new ServerLoginInfoPacket
             {
-                CharacterInstanceAddress = UchuServer.Host,
+                CharacterInstanceAddress = Server.Host,
                 CharacterInstancePort = ushort.MaxValue,
-                ChatInstanceAddress = UchuServer.Host,
+                ChatInstanceAddress = Server.Host,
                 ChatInstancePort = 2004
             };
 
-            var characterSpecification = await UchuServer.Api.RunCommandAsync<InstanceInfoResponse>(
-                UchuServer.MasterApi, $"instance/basic?t={(int) ServerType.Character}"
+            var characterSpecification = await Server.Api.RunCommandAsync<InstanceInfoResponse>(
+                Server.MasterApi, $"instance/basic?t={(int) ServerType.Character}"
             ).ConfigureAwait(false);
 
             if (!characterSpecification.Success)
@@ -72,7 +72,7 @@ namespace Uchu.Auth.Handlers
                         }
                         else
                         {
-                            var key = UchuServer.SessionCache.CreateSession(user.Id);
+                            var key = Server.SessionCache.CreateSession(user.Id);
 
                             info.LoginCode = LoginCode.Success;
                             info.UserKey = key;

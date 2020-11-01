@@ -11,8 +11,6 @@ namespace Uchu.World.Social
         private readonly IFileResources _resources;
         
         public List<string> AcceptedWords { get; }
-
-        public string[] AcceptedPunctuation { get; set; }
         
         public Whitelist(IFileResources resources)
         {

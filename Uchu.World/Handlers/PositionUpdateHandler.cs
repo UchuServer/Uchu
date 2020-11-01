@@ -10,7 +10,7 @@ namespace Uchu.World.Handlers
         [PacketHandler]
         public async Task PositionHandler(PositionUpdatePacket packet, IRakConnection connection)
         {
-            var player = UchuServer.FindPlayer(connection);
+            var player = Server.FindPlayer(connection);
             if (player?.Transform == default) return;
             
             // The server is a slave to the position update packets it gets from the client right now.

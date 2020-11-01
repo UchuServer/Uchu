@@ -69,14 +69,14 @@ namespace Uchu.Char.Handlers
         [PacketHandler]
         public async Task CharacterList(CharacterListRequest packet, IRakConnection connection)
         {
-            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
             await SendCharacterList(connection, session.UserId);
         }
 
         [PacketHandler]
         public async Task CharacterCreate(CharacterCreateRequest packet, IRakConnection connection)
         {
-            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             uint shirtLot;
             uint pantsLot;
@@ -99,9 +99,9 @@ namespace Uchu.Char.Handlers
                 pantsLot = (uint) (pants != null ? pants.Id : 2508); // Select 'Bright Red Pants' if not found.
             }
 
-            var first = (await UchuServer.Resources.ReadTextAsync("names/minifigname_first.txt")).Split('\n');
-            var middle = (await UchuServer.Resources.ReadTextAsync("names/minifigname_middle.txt")).Split('\n');
-            var last = (await UchuServer.Resources.ReadTextAsync("names/minifigname_last.txt")).Split('\n');
+            var first = (await Server.Resources.ReadTextAsync("names/minifigname_first.txt")).Split('\n');
+            var middle = (await Server.Resources.ReadTextAsync("names/minifigname_middle.txt")).Split('\n');
+            var last = (await Server.Resources.ReadTextAsync("names/minifigname_last.txt")).Split('\n');
 
             var name = (
                 first[packet.Predefined.First] +
@@ -213,7 +213,7 @@ namespace Uchu.Char.Handlers
         [PacketHandler]
         public async Task RenameCharacter(CharacterRenameRequest packet, IRakConnection connection)
         {
-            var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            var session = Server.SessionCache.GetSession(connection.EndPoint);
 
             await using var ctx = new UchuContext();
             
@@ -246,7 +246,7 @@ namespace Uchu.Char.Handlers
         [PacketHandler]
         public async Task JoinWorld(JoinWorldRequest packet, IRakConnection connection)
         {
-            UchuServer.SessionCache.SetCharacter(connection.EndPoint, packet.CharacterId);
+            Server.SessionCache.SetCharacter(connection.EndPoint, packet.CharacterId);
 
             await using var ctx = new UchuContext();
             var character = await ctx.Characters.FirstAsync(c => c.Id == packet.CharacterId);
@@ -260,11 +260,11 @@ namespace Uchu.Char.Handlers
             var _ = Task.Run(async () =>
             {
                 // Request world server.
-                var server = await ServerHelper.RequestWorldServerAsync(UchuServer, requestZone);
+                var server = await ServerHelper.RequestWorldServerAsync(Server, requestZone);
                 if (server == default)
                 {
                     // If there's no server available, error
-                    var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+                    var session = Server.SessionCache.GetSession(connection.EndPoint);
                     await SendCharacterList(connection, session.UserId);
 
                     return;
@@ -273,7 +273,7 @@ namespace Uchu.Char.Handlers
                 // Send to world server.
                 connection.Send(new ServerRedirectionPacket
                 {
-                    Address = UchuServer.Host,
+                    Address = Server.Host,
                     Port = (ushort) server.Port
                 });
             });

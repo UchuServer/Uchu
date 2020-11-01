@@ -10,17 +10,16 @@ namespace Uchu.World.Systems.Behaviors
         public uint Handle { get; set; }
         public BehaviorBase Action { get; set; }
         public BehaviorExecutionParameters ActionParameters { get; set; }
+        public ulong TargetId { get; set; }
     }
     
     public class AirMovementBehavior : BehaviorBase<AirMovementBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AirMovement;
         
-        public BehaviorBase GroundAction { get; set; }
-        
-        public override async Task BuildAsync()
+        public override Task BuildAsync()
         {
-            GroundAction = await GetBehavior("ground_action");
+            return Task.CompletedTask;
         }
 
         protected override void DeserializeStart(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
@@ -29,25 +28,23 @@ namespace Uchu.World.Systems.Behaviors
             RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
         }
 
-        protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters parameters)
+        protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            var behaviorId = parameters.Context.Reader.Read<uint>();
-            parameters.Action = await GetBehavior(behaviorId);
-
-            var targetId = parameters.Context.Reader.Read<ulong>();
-            parameters.Context.Associate.Zone.TryGetGameObject((long)targetId,
-                out var target);
+            behaviorExecutionParameters.Action = await GetBehavior(
+                behaviorExecutionParameters.Context.Reader.Read<uint>());
             
-            parameters.ActionParameters = parameters.Action.DeserializeStart(
-                parameters.Context, new ExecutionBranchContext
-                {
-                    Duration = parameters.BranchContext.Duration,
-                    Target = target ?? parameters.BranchContext.Target
-                });
+            behaviorExecutionParameters.TargetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
+            
+            behaviorExecutionParameters.ActionParameters = behaviorExecutionParameters.Action.DeserializeStart(
+                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 
         protected override async Task ExecuteSync(AirMovementBehaviorExecutionParameters behaviorExecutionParameters)
         {
+            behaviorExecutionParameters.ActionParameters.Context.Associate.Zone.TryGetGameObject(
+                (long)behaviorExecutionParameters.TargetId, out var target);
+            behaviorExecutionParameters.ActionParameters.BranchContext.Target = target;
+            
             await behaviorExecutionParameters.Action.ExecuteStart(behaviorExecutionParameters.ActionParameters);
         }
     }

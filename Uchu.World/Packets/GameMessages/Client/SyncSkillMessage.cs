@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using RakDotNet.IO;
-using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -21,8 +19,7 @@ namespace Uchu.World
             Done = reader.ReadBit();
             Content = new byte[reader.Read<uint>()];
 
-            for (var i = 0; i < Content.Length; i++)
-                Content[i] = reader.Read<byte>();
+            for (var i = 0; i < Content.Length; i++) Content[i] = reader.Read<byte>();
 
             BehaviorHandle = reader.Read<uint>();
             SkillHandle = reader.Read<uint>();

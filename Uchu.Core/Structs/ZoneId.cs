@@ -1,10 +1,8 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Uchu.Core
 {
-    [SuppressMessage("ReSharper", "CA2225")]
     public readonly struct ZoneId : IEquatable<ZoneId>
     {
         public ushort Id { get; }

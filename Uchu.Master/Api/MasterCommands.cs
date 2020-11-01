@@ -241,7 +241,7 @@ namespace Uchu.Master.Api
 
 
         [ApiCommand("instance/decommission")]
-        public object DecommissionInstance(string id)
+        public async Task<object> DecommissionInstance(string id)
         {
             var response = new BaseResponse();
             
@@ -365,7 +365,7 @@ namespace Uchu.Master.Api
         }
 
         [ApiCommand("master/status")]
-        public object MasterStatus()
+        public async Task<object> MasterStatus()
         {
             var response = new MasterStatusResponse();
 

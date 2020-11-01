@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Uchu.Core.Client
 {
 	[Table("UGBehaviorSounds")]
-	[SuppressMessage("ReSharper", "CA1720")]
 	public class UGBehaviorSounds
 	{
 		[Key] [Column("efId")]

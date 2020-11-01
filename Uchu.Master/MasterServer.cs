@@ -7,7 +7,6 @@ using System.Xml.Serialization;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
-using Uchu.Core.Config;
 using Uchu.Core.Providers;
 using Uchu.Master.Api;
 
@@ -17,7 +16,7 @@ namespace Uchu.Master
     {
         public static string DllLocation { get; set; }
 
-        public static UchuConfiguration Config { get; set; }
+        public static Configuration Config { get; set; }
 
         public static List<ServerInstance> Instances { get; set; }
         
@@ -174,17 +173,17 @@ namespace Uchu.Master
 
         private static async Task ConfigureAsync()
         {
-            var serializer = new XmlSerializer(typeof(UchuConfiguration));
+            var serializer = new XmlSerializer(typeof(Configuration));
             var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
             if (File.Exists(fn))
             {
                 await using var file = File.OpenRead(fn);
-                Logger.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
+                Logger.Config = Config = (Configuration) serializer.Deserialize(file);
             }
             else
             {
-                Logger.Config = Config = new UchuConfiguration();
+                Logger.Config = Config = new Configuration();
 
                 var backup = File.CreateText("config.default.xml");
 
