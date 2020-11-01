@@ -161,14 +161,21 @@ namespace Uchu.StandardScripts.BlockYard
 
             Listen(player.OnFireServerEvent, (name, message) =>
             {
-                if (message.Arguments == "CleanupSpiders") CleanupSpiders();
-                
+                if (message.Arguments == "CleanupSpiders") {
+                    CleanupSpiders();
+                }
             });
         }
 
         private void CleanupSpiders()
         {
-            foreach (var item in Zone.GameObjects) if (item.Lot.Id == 16197) Destroy(item);
+            foreach (var item in Zone.GameObjects)
+            {
+                if (item.Lot.Id == 16197)
+                {
+                    Destroy(item);
+                }
+            }
         }
 
         private void EggsToSpiders()

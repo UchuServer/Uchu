@@ -1,5 +1,6 @@
 ﻿using RakDotNet.IO;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Uchu.Core;
@@ -89,9 +90,14 @@ namespace Uchu.World
 
             writer.Write((uint)Paths.Count / 3);
 
+            var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+            culture.NumberFormat.NumberDecimalSeparator = ".";
             foreach (var item in Paths)
             {
-                writer.Write(float.Parse(item));
+                if (float.TryParse(item, out float value))
+                {
+                    writer.Write(value);
+                }
             }
         }
     }

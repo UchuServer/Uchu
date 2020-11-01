@@ -10,11 +10,11 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.NotifyPropertyOfEditMode;
 
-        public ushort ZoneID;
+        public bool EditingActive;
 
         public override void SerializeMessage(BitWriter writer)
         {
-            
+            writer.WriteBit(EditingActive);
         }
     }
 }
