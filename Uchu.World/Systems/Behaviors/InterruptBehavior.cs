@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -21,30 +22,28 @@ namespace Uchu.World.Systems.Behaviors
             InteruptCharge = await GetParameter<int>("interupt_charge");
         }
 
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+        public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             if (branchContext.Target != context.Associate)
-                context.Reader.ReadBit();
+                reader.ReadBit();
             if (InterruptBlock == 0)
-                context.Reader.ReadBit();
-            context.Reader.ReadBit();
+                reader.ReadBit();
+            reader.ReadBit();
             
-            return base.DeserializeStart(context, branchContext);
+            return base.DeserializeStart(reader, context, branchContext);
         }
 
-        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context,
+        public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             if (branchContext.Target != context.Associate)
-                context.Writer.WriteBit(false);
-
+                writer.WriteBit(false);
             if (InterruptBlock == 0)
-                context.Writer.WriteBit(false);
+                writer.WriteBit(false);
+            writer.WriteBit(false);
 
-            context.Writer.WriteBit(false);
-
-            return base.SerializeStart(context, branchContext);
+            return base.SerializeStart(writer, context, branchContext);
         }
     }
 }

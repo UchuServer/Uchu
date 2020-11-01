@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -25,11 +26,6 @@ namespace Uchu.World.Systems.Behaviors
         /// The parameters to pass to the behavior for (de)serialization and execution
         /// </summary>
         public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
-        
-        /// <summary>
-        /// The parameters to the behavior for (de)serialization and execution of the sync
-        /// </summary>
-        public BehaviorExecutionParameters SyncBehaviorExecutionParameters { get; set; }
     }
     
     public class BehaviorTree
@@ -325,7 +321,7 @@ namespace Uchu.World.Systems.Behaviors
             CastType = SkillCastType.Default;
             target ??= associate;
 
-            var context = new NpcExecutionContext(target, writer, skillId, syncId, calculatingPosition);
+            var context = new NpcExecutionContext(target, skillId, syncId, calculatingPosition);
             if (!SkillRoots.TryGetValue(skillId, out var root))
             {
                 Logger.Debug($"Failed to find skill: {skillId}");
@@ -333,8 +329,7 @@ namespace Uchu.World.Systems.Behaviors
             }
             
             context.Root = root;
-            var parameters = context.Root.SerializeStart(context, new ExecutionBranchContext { Target = target });
-            var syncParameters = context.Root.SerializeSync(parameters.NpcContext, new ExecutionBranchContext { Target = target });
+            var parameters = context.Root.SerializeStart(writer, context, new ExecutionBranchContext { Target = target });
 
             // Setup the behavior for execution
             RootBehaviors[CastType] = new List<BehaviorExecution>()
@@ -342,8 +337,7 @@ namespace Uchu.World.Systems.Behaviors
                 new BehaviorExecution
                 {
                     BehaviorBase = context.Root,
-                    BehaviorExecutionParameters = parameters,
-                    SyncBehaviorExecutionParameters = syncParameters
+                    BehaviorExecutionParameters = parameters
                 }
             };
             
@@ -364,10 +358,10 @@ namespace Uchu.World.Systems.Behaviors
             Deserialized = true;
             CastType = castType;
             
-            var context = new ExecutionContext(associate, reader, default);
+            var context = new ExecutionContext(associate);
 
-            DeserializeRootBehaviorsForSkillType(SkillCastType.Default, context, target);
-            DeserializeRootBehaviorsForSkillType(castType, context, target);
+            DeserializeRootBehaviorsForSkillType(reader, SkillCastType.Default, context, target);
+            DeserializeRootBehaviorsForSkillType(reader, castType, context, target);
 
             return context;
         }
@@ -379,7 +373,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="skillType">The skill type to deserialize for</param>
         /// <param name="context">The execution context to pass to all behaviors</param>
         /// <param name="target">An optional explicit target to set as initial target</param>
-        private void DeserializeRootBehaviorsForSkillType(SkillCastType skillType,
+        private void DeserializeRootBehaviorsForSkillType(BitReader reader, SkillCastType skillType,
             ExecutionContext context, GameObject target = default)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
@@ -391,7 +385,8 @@ namespace Uchu.World.Systems.Behaviors
 
                     // Prepare the behavior for execution by populating it with context
                     executionPreparation.BehaviorExecutionParameters = 
-                        executionPreparation.BehaviorBase.DeserializeStart(context, new ExecutionBranchContext
+                        executionPreparation.BehaviorBase.DeserializeStart(reader, context,
+                            new ExecutionBranchContext
                         {
                             Target = target,
                         });
@@ -413,7 +408,13 @@ namespace Uchu.World.Systems.Behaviors
                     
                     // If a behavior is serialized (server side) we have to manually sync it
                     if (Serialized)
-                        executionPreparation.BehaviorBase.ExecuteSync(executionPreparation.SyncBehaviorExecutionParameters);
+                    {
+                        using var stream = new MemoryStream();
+                        var writer = new BitWriter(stream);
+                        
+                        executionPreparation.BehaviorBase.SerializeSync(writer, executionPreparation.BehaviorExecutionParameters);
+                        executionPreparation.BehaviorBase.ExecuteSync(executionPreparation.BehaviorExecutionParameters);
+                    }
                 }
             }
         }

@@ -36,21 +36,21 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
         
-        public NpcExecutionContext(GameObject associate, BitWriter writer, int skillId, uint skillSyncId, Vector3 calculatingPosition) 
-            : base(associate, default, writer)
+        public NpcExecutionContext(GameObject associate, int skillId, uint skillSyncId, Vector3 calculatingPosition) 
+            : base(associate)
         {
             CalculatingPosition = calculatingPosition;
             SkillId = skillId;
             SkillSyncId = skillSyncId;
         }
 
-        public void Sync(uint behaviorSyncId)
+        public void Sync(BitWriter writer, uint behaviorSyncId)
         {
             Associate.Zone.BroadcastMessage(new EchoSyncSkillMessage
             {
                 Associate = Associate,
                 SkillHandle = SkillSyncId,
-                Content = (Writer.BaseStream as MemoryStream)?.ToArray(),
+                Content = (writer.BaseStream as MemoryStream)?.ToArray(),
                 Done = true,
                 BehaviorHandle = behaviorSyncId
             });
@@ -58,7 +58,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public NpcExecutionContext Copy()
         {
-            return new NpcExecutionContext(Associate, new BitWriter(new MemoryStream()), SkillId, SkillSyncId, CalculatingPosition)
+            return new NpcExecutionContext(Associate, SkillId, SkillSyncId, CalculatingPosition)
             {
                 MaxRange = MaxRange,
                 MinRange = MinRange

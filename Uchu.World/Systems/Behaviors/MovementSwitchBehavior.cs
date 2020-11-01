@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -38,9 +39,9 @@ namespace Uchu.World.Systems.Behaviors
             MovingBehavior = await GetBehavior("moving_action");
         }
 
-        protected override void DeserializeStart(MovementSwitchBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, MovementSwitchBehaviorExecutionParameters parameters)
         {
-            parameters.MovementType = (MovementType) parameters.Context.Reader.Read<uint>();
+            parameters.MovementType = reader.Read<MovementType>();
             switch (parameters.MovementType)
             {
                 case MovementType.Moving:
@@ -73,7 +74,7 @@ namespace Uchu.World.Systems.Behaviors
                     throw new Exception($"Invalid {nameof(MovementType)}! Got {parameters.MovementType}!");
             }
             
-            parameters.BehaviorExecutionParameters = parameters.ToExecute.DeserializeStart(parameters.Context, 
+            parameters.BehaviorExecutionParameters = parameters.ToExecute.DeserializeStart(reader, parameters.Context, 
                 parameters.BranchContext);
         }
 
