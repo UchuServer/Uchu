@@ -71,7 +71,6 @@ namespace Uchu.World.Handlers.GameMessages
         public void ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
         {
             Logger.Debug($"Loaded: {message.GameObject}");
-            message.Associate.OnReady.Invoke();
         }
 
         [PacketHandler]

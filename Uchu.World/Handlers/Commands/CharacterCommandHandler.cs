@@ -19,23 +19,6 @@ namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Buffme(string[] arguments, Player player)
-        {
-            DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
-
-            comp.MaxArmor = 999;
-            comp.MaxHealth = 999;
-            comp.Armor = 999;
-            comp.Health = 999;
-
-            comp.MaxImagination = 999;
-            comp.Imagination = 999;
-
-            return "Buffed";
-
-        }
-
         [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]
         public string ChangeChatLevel(string[] arguments, Player player)
         {
@@ -218,26 +201,15 @@ namespace Uchu.World.Handlers.Commands
             return "Buffed";
         }
 
-        [CommandHandler(Signature = "freecam", Help = "Toggle freecam for your player", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
         {
-            if (arguments.Length > 0)
+            player.Message(new ToggleFreeCamModeMessage
             {
-                int ControlNumber = (arguments[0] == "on" ? 9 : 1);
-                player.Message(new SetPlayerControlSchemeMessage
-                {
-                    Associate = player,
-                    DelayCameraSwitchIfInCinematic = false,
-                    SwitchCamera = true,
-                    ControlScheme = ControlNumber
-                });
+                Associate = player
+            });
 
-                return "Toggled freecam.";
-            } 
-            else
-            {
-                return "/freecam <on/off>";
-            }
+            return "Toggled freecam.";
         }
 
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
@@ -1140,8 +1112,6 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Set inventory size to: {size}";
         }
-
-
 
         [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = GameMasterLevel.Admin)]
         public string Control(string[] arguments, Player player)

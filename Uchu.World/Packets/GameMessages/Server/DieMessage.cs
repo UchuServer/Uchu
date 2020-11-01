@@ -21,9 +21,9 @@ namespace Uchu.World
 
         public int KillType { get; set; }
 
-        public long Killer { get; set; }
+        public GameObject Killer { get; set; }
 
-        public long LootOwner { get; set; }
+        public GameObject LootOwner { get; set; }
 
         public override void SerializeMessage(BitWriter writer)
         {

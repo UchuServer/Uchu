@@ -24,19 +24,5 @@ namespace Uchu.World.Utilities
 
             Bin.Write(reader.ReadBuffer((uint)reader.BaseStream.Length));
         }
-
-        public static void WritePacket(Uchu.Core.Packet packet, string FileName)
-        {
-            using var stream = new MemoryStream();
-            using var writer = new BitWriter(stream);
-
-            packet.Serialize(writer);
-
-            FileStream Bin = File.OpenWrite(FileName);
-
-            BitReader reader = new BitReader(writer.BaseStream);
-
-            Bin.Write(reader.ReadBuffer((uint)reader.BaseStream.Length));
-        }
     }
 }

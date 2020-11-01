@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
-using Uchu.World;
 
 namespace Uchu.StandardScripts.General
 {
@@ -10,15 +9,13 @@ namespace Uchu.StandardScripts.General
     {
         public override Task LoadAsync()
         {
-            Listen(Zone.OnObject, (obj) => { 
-                if ((obj as GameObject).Lot == 3964)
+            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 3964))
+            {
+                Listen(gameObject.OnInteract, async player =>
                 {
-                    Listen((obj as GameObject).OnInteract, async player =>
-                    {
-                        await player.OpenMailboxGuiAsync();
-                    });
-                }
-            });
+                    await player.OpenMailboxGuiAsync();
+                });
+            }
 
             Listen(Zone.OnPlayerLoad, player =>
             {
