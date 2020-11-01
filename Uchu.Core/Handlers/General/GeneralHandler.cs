@@ -16,7 +16,6 @@ namespace Uchu.Core.Handlers
             if (packet.GameVersion != 171022)
             {
                 Logger.Warning($"Handshake attempted with client of Game version: {packet.GameVersion}");
-                return;
             }
             
             // TODO: Use resource / setting
