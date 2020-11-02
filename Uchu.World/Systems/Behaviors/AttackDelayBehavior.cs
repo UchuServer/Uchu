@@ -1,4 +1,6 @@
+using System.IO;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -8,6 +10,8 @@ namespace Uchu.World.Systems.Behaviors
         public bool ServerSide { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+        
+        public byte[] SyncStream { get; set; }
 
         public AttackDelayBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
             : base(context, branchContext)
@@ -39,30 +43,30 @@ namespace Uchu.World.Systems.Behaviors
             Delay = (int) (delay.Value * 1000);
         }
         
-        protected override void DeserializeStart(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, AttackDelayBehaviorExecutionParameters parameters)
         {
-            parameters.Handle = parameters.Context.Reader.Read<uint>();
+            parameters.Handle = reader.Read<uint>();
             for (var i = 0; i < Intervals; i++)
-                parameters.RegisterHandle<AttackDelayBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
+                parameters.RegisterHandle<AttackDelayBehaviorExecutionParameters>(parameters.Handle, DeserializeSync,
+                    ExecuteSync);
         }
 
-        protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void DeserializeSync(BitReader reader, AttackDelayBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.DeserializeStart(parameters.Context,
-                parameters.BranchContext);
+            parameters.Parameters = Action.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
 
-        protected override void SerializeStart(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, AttackDelayBehaviorExecutionParameters parameters)
         {
             parameters.Handle = parameters.NpcContext.Associate.GetComponent<SkillComponent>().ClaimSyncId();
-            parameters.NpcContext.Writer.Write(parameters.Handle);
+            writer.Write(parameters.Handle);
         }
 
-        protected override void SerializeSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, AttackDelayBehaviorExecutionParameters parameters)
         {
-            // Copy the context to clear the writer
-            parameters.Parameters = Action.SerializeStart(parameters.NpcContext.Copy(),
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext,
                 parameters.BranchContext);
+            parameters.SyncStream = (writer.BaseStream as MemoryStream)?.ToArray();
             parameters.ServerSide = true;
         }
 
@@ -72,8 +76,8 @@ namespace Uchu.World.Systems.Behaviors
             {
                 parameters.Schedule( () =>
                 {
+                    parameters.NpcContext.Sync(parameters.SyncStream, parameters.Handle);
                     Action.ExecuteStart(parameters.Parameters);
-                    parameters.NpcContext.Sync(parameters.Handle);
                 }, Delay);
             }
             else

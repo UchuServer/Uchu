@@ -37,7 +37,6 @@ namespace Uchu.World
         protected SkillComponent()
         {
             ActiveBehaviors = new Dictionary<BehaviorSlot, uint>();
-
             HandledSkills = new Dictionary<uint, ExecutionContext>();
             
             Listen(OnStart, async () =>
@@ -60,7 +59,8 @@ namespace Uchu.World
 
                 await SetupStandardSkills();
                 
-                if (!(GameObject is Player)) return;
+                if (!(GameObject is Player))
+                    return;
 
                 ActiveBehaviors[BehaviorSlot.Primary] = 1;
             });

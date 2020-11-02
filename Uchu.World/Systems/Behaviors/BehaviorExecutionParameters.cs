@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet.IO;
 using Uchu.Core.Client;
 using Uchu.World.Scripting.Native;
 
@@ -76,25 +77,13 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="handle">The handle to register for syncing</param>
         /// <param name="deserializeSync">Function to deserialize the sync skill packet</param>
         /// <param name="executeSync">Function to execute the sync skill packet</param>
-        public void RegisterHandle<T>(uint handle, Action<T> deserializeSync, Action<T> executeSync) 
+        public void RegisterHandle<T>(uint handle, Action<BitReader, T> deserializeSync, Action<T> executeSync) 
             where T : BehaviorExecutionParameters
         {
             Context.RegisterHandle(handle, reader =>
             {
-                // Only one sync may be deserialized at the same time
-                Context.Lock.WaitOne();
-                
                 var syncParameters = (T)Activator.CreateInstance(typeof(T), Context, BranchContext);
-                try
-                {
-                    Context.Reader = reader;
-                    deserializeSync(syncParameters);
-                }
-                finally
-                {
-                    Context.Lock.ReleaseMutex();
-                }
-                
+                deserializeSync(reader, syncParameters);
                 executeSync(syncParameters);
             });
         }

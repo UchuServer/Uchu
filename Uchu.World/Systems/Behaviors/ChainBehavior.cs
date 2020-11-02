@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -41,11 +42,11 @@ namespace Uchu.World.Systems.Behaviors
             Delay = (int) delay.Value;
         }
 
-        protected override void DeserializeStart(ChainBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, ChainBehaviorExecutionParameters parameters)
         {
-            parameters.ChainIndex = parameters.Context.Reader.Read<uint>();
+            parameters.ChainIndex = reader.Read<uint>();
             parameters.ChainIndexExecutionParameters = Behaviors[parameters.ChainIndex - 1]
-                .DeserializeStart(parameters.Context, parameters.BranchContext);
+                .DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
 
         protected override void ExecuteStart(ChainBehaviorExecutionParameters parameters)
@@ -54,10 +55,10 @@ namespace Uchu.World.Systems.Behaviors
                 .ExecuteStart(parameters.ChainIndexExecutionParameters);
         }
 
-        protected override void SerializeStart(ChainBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, ChainBehaviorExecutionParameters parameters)
         {
-            parameters.NpcContext.Writer.Write(parameters.ChainIndex);
-            parameters.ChainIndexExecutionParameters = Behaviors[0].SerializeStart(parameters.NpcContext,
+            writer.Write(parameters.ChainIndex);
+            parameters.ChainIndexExecutionParameters = Behaviors[0].SerializeStart(writer, parameters.NpcContext,
                 parameters.BranchContext);
         }
     }

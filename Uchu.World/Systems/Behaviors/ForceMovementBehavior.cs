@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -32,24 +33,25 @@ namespace Uchu.World.Systems.Behaviors
             HitActionFaction = await GetBehavior("hit_action_faction");
         }
 
-        protected override void DeserializeStart(ForceMovementBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, ForceMovementBehaviorExecutionParameters parameters)
         {
             if (HitAction.BehaviorId == 0 && HitActionEnemy.BehaviorId == 0 && HitActionFaction.BehaviorId == 0)
                 return;
             
-            parameters.Handle = parameters.Context.Reader.Read<uint>();
-            parameters.RegisterHandle<ForceMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
+            parameters.Handle = reader.Read<uint>();
+            parameters.RegisterHandle<ForceMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, 
+                ExecuteSync);
         }
 
-        protected override async void DeserializeSync(ForceMovementBehaviorExecutionParameters parameters)
+        protected override async void DeserializeSync(BitReader reader, ForceMovementBehaviorExecutionParameters parameters)
         {
-            var actionId = parameters.Context.Reader.Read<uint>();
+            var actionId = reader.Read<uint>();
             parameters.Action = await GetBehavior(actionId);
             
-            var targetId = parameters.Context.Reader.Read<ulong>();
+            var targetId = reader.Read<ulong>();
             parameters.Context.Associate.Zone.TryGetGameObject((long) targetId, out var target);
             
-            parameters.ActionExecutionParameters = parameters.Action.DeserializeStart(
+            parameters.ActionExecutionParameters = parameters.Action.DeserializeStart(reader,
                 parameters.Context, new ExecutionBranchContext
                 {
                     Duration = parameters.BranchContext.Duration,

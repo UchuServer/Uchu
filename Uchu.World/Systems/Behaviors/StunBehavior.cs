@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -12,19 +13,20 @@ namespace Uchu.World.Systems.Behaviors
             StunCaster = await GetParameter<int>("stun_caster");
         }
 
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+        public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             if (StunCaster != 1 && branchContext.Target != context.Associate)
-                context.Reader.ReadBit();
-            return base.DeserializeStart(context, branchContext);
+                reader.ReadBit();
+            return base.DeserializeStart(reader, context, branchContext);
         }
 
-        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
             if (StunCaster != 1)
-                context.Writer.WriteBit(false);
-            return base.SerializeStart(context, branchContext);
+                writer.WriteBit(false);
+            return base.SerializeStart(writer, context, branchContext);
         }
     }
 }

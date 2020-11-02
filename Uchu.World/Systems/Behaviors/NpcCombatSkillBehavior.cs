@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -28,13 +29,13 @@ namespace Uchu.World.Systems.Behaviors
             SkillTime = await GetParameter<float>("npc skill time");
         }
 
-        protected override void SerializeStart(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.MinRange = MinRange;
             parameters.NpcContext.MaxRange = MaxRange;
             parameters.NpcContext.SkillTime = SkillTime;
             
-            parameters.Parameters = Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+            parameters.Parameters = Behavior.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
         }
         
         protected override void ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
@@ -42,9 +43,9 @@ namespace Uchu.World.Systems.Behaviors
             Behavior.ExecuteStart(parameters.Parameters);
         }
 
-        protected override void SerializeSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext);
+            Behavior.SerializeSync(writer, parameters.Parameters);
         }
 
         protected override void ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)

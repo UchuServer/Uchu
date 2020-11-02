@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -22,9 +23,9 @@ namespace Uchu.World.Systems.Behaviors
             Action = await GetBehavior("action");
         }
 
-        protected override void DeserializeStart(OverTimeBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, OverTimeBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.DeserializeStart(parameters.Context,
+            parameters.Parameters = Action.DeserializeStart(reader, parameters.Context,
                 parameters.BranchContext);
         }
 

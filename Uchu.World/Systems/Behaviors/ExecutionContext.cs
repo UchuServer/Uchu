@@ -31,25 +31,13 @@ namespace Uchu.World.Systems.Behaviors
         public BehaviorBase Root { get; set; }
 
         /// <summary>
-        /// Used to deserialize a packet from the client
-        /// </summary>
-        public BitReader Reader { get; set; }
-
-        /// <summary>
-        /// Used to serialize a packet to the client
-        /// </summary>
-        public BitWriter Writer { get; set; }
-        
-        /// <summary>
         /// Registered handles for sync skill messages
         /// </summary>
         private List<BehaviorSyncEntry> BehaviorHandles { get; } = new List<BehaviorSyncEntry>();
 
-        public ExecutionContext(GameObject associate, BitReader reader, BitWriter writer)
+        public ExecutionContext(GameObject associate)
         {
             Associate = associate;
-            Reader = reader;
-            Writer = writer;
         }
 
         /// <summary>

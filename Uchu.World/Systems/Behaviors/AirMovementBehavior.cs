@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -27,23 +28,23 @@ namespace Uchu.World.Systems.Behaviors
             GroundAction = await GetBehavior("ground_action");
         }
 
-        protected override void DeserializeStart(AirMovementBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, AirMovementBehaviorExecutionParameters parameters)
         {
-            parameters.Handle = parameters.Context.Reader.Read<uint>();
+            parameters.Handle = reader.Read<uint>();
             parameters.RegisterHandle<AirMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
-        protected override async void DeserializeSync(AirMovementBehaviorExecutionParameters parameters)
+        protected override async void DeserializeSync(BitReader reader, AirMovementBehaviorExecutionParameters parameters)
         {
-            var behaviorId = parameters.Context.Reader.Read<uint>();
+            var behaviorId = reader.Read<uint>();
             parameters.Action = await GetBehavior(behaviorId);
 
-            var targetId = parameters.Context.Reader.Read<ulong>();
+            var targetId = reader.Read<ulong>();
             parameters.Context.Associate.Zone.TryGetGameObject((long)targetId,
                 out var target);
             
-            parameters.ActionParameters = parameters.Action.DeserializeStart(
-                parameters.Context, new ExecutionBranchContext
+            parameters.ActionParameters = parameters.Action.DeserializeStart(reader, parameters.Context,
+                new ExecutionBranchContext
                 {
                     Duration = parameters.BranchContext.Duration,
                     Target = target ?? parameters.BranchContext.Target

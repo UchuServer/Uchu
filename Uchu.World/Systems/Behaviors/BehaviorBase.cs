@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Scripting.Native;
@@ -76,7 +77,7 @@ namespace Uchu.World.Systems.Behaviors
         /// Serializes the passed behavior execution parameters
         /// </summary>
         /// <param name="behaviorExecutionParameters">The parameters to serialize</param>
-        protected virtual void SerializeStart(T behaviorExecutionParameters)
+        protected virtual void SerializeStart(BitWriter writer, T behaviorExecutionParameters)
         {
         }
         
@@ -86,11 +87,11 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by serializing the start skill</returns>
-        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context,
+        public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             var behaviorExecutionParameters = CreateInstance(context, branchContext);
-            SerializeStart(behaviorExecutionParameters);
+            SerializeStart(writer, behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
         
@@ -98,7 +99,7 @@ namespace Uchu.World.Systems.Behaviors
         /// Deserializes behavior execution parameters using a bitstream
         /// </summary>
         /// <param name="parameters">The parameters to deserialize using its bitstream</param>
-        protected virtual void SerializeSync(T parameters)
+        protected virtual void SerializeSync(BitWriter writer, T parameters)
         {
         }
         
@@ -108,19 +109,16 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
-        public override BehaviorExecutionParameters SerializeSync(NpcExecutionContext context,
-            ExecutionBranchContext branchContext)
+        public override void SerializeSync(BitWriter writer, BehaviorExecutionParameters parameters)
         {
-            var behaviorExecutionParameters = CreateInstance(context, branchContext);
-            SerializeSync(behaviorExecutionParameters);
-            return behaviorExecutionParameters;
+            SerializeSync(writer, (T)parameters);
         }
         
-                /// <summary>
+        /// <summary>
         /// Deserializes the provided parameters using a bitstream
         /// </summary>
         /// <param name="parameters">The parameters to deserialize</param>
-        protected virtual void DeserializeStart(T parameters)
+        protected virtual void DeserializeStart(BitReader reader, T parameters)
         {
         }
         
@@ -130,11 +128,11 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the start skill</returns>
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+        public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             var behaviorExecutionParameters = CreateInstance(context, branchContext);
-            DeserializeStart(behaviorExecutionParameters);
+            DeserializeStart(reader, behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
 
@@ -142,7 +140,7 @@ namespace Uchu.World.Systems.Behaviors
         /// Deserializes behavior execution parameters using a bitstream
         /// </summary>
         /// <param name="parameters">The parameters to deserialize using its bitstream</param>
-        protected virtual void DeserializeSync(T parameters)
+        protected virtual void DeserializeSync(BitReader reader, T parameters)
         {
         }
         
@@ -152,11 +150,11 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
-        public override BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
+        public override BehaviorExecutionParameters DeserializeSync(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
             var behaviorExecutionParameters = CreateInstance(context, branchContext);
-            DeserializeSync(behaviorExecutionParameters);
+            DeserializeSync(reader, behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
     }
@@ -351,7 +349,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by serializing the start skill</returns>
-        public virtual BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, 
+        public virtual BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context, 
             ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
 
         /// <summary>
@@ -359,8 +357,9 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch specific context to use</param>
-        public virtual BehaviorExecutionParameters SerializeSync(NpcExecutionContext context,
-            ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
+        public virtual void SerializeSync(BitWriter writer, BehaviorExecutionParameters parameters)
+        {
+        }
         
         /// <summary>
         /// Deserializes a start skill bitstream using the provided context and branch context
@@ -368,7 +367,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the start skill</returns>
-        public virtual BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+        public virtual BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
 
         /// <summary>
@@ -377,7 +376,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">The global context to use</param>
         /// <param name="branchContext">The branch context to use</param>
         /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
-        public virtual BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
+        public virtual BehaviorExecutionParameters DeserializeSync(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
     }
 }

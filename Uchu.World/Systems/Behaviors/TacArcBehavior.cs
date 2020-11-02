@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -45,25 +46,25 @@ namespace Uchu.World.Systems.Behaviors
             UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
         }
 
-        protected override void DeserializeStart(TacArcBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, TacArcBehaviorExecutionParameters parameters)
         {
             if (UsePickedTarget && parameters.BranchContext.Target != null)
             {
                 parameters.Behavior = ActionBehavior;
-                parameters.Parameters = parameters.Behavior.DeserializeStart(parameters.Context,
+                parameters.Parameters = parameters.Behavior.DeserializeStart(reader, parameters.Context,
                     parameters.BranchContext);
             }
             else
             {
-                parameters.Hit = parameters.Context.Reader.ReadBit();
+                parameters.Hit = reader.ReadBit();
                 if (CheckEnvironment)
                 {
-                    parameters.Blocked = parameters.Context.Reader.ReadBit();
+                    parameters.Blocked = reader.ReadBit();
                     if (parameters.Blocked)
                     {
                         parameters.Behavior = BlockedBehavior;
-                        parameters.Parameters = parameters.Behavior.DeserializeStart(
-                            parameters.Context, parameters.BranchContext);
+                        parameters.Parameters = parameters.Behavior.DeserializeStart(reader, parameters.Context,
+                            parameters.BranchContext);
                         return;
                     }
                 }
@@ -71,13 +72,13 @@ namespace Uchu.World.Systems.Behaviors
                 if (parameters.Hit)
                 {
                     parameters.Behavior = ActionBehavior;
-                    DeserializeBehaviorForMultipleTargets(parameters);
+                    DeserializeBehaviorForMultipleTargets(reader, parameters);
                 }
                 else
                 {
                     parameters.Behavior = MissBehavior;
-                    parameters.Parameters = parameters.Behavior.DeserializeStart(
-                        parameters.Context, parameters.BranchContext);
+                    parameters.Parameters = parameters.Behavior.DeserializeStart(reader, parameters.Context,
+                        parameters.BranchContext);
                 }
             }
         }
@@ -97,14 +98,99 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
         
-        protected override void SerializeStart(TacArcBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, TacArcBehaviorExecutionParameters parameters)
         {
-            Serialize(parameters);
+            if (!(parameters.NpcContext.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) 
+                || parameters.NpcContext.Alive))
+                return;
+
+            // If there's a single target to hit, hit them and exit
+            if (UsePickedTarget && parameters.BranchContext.Target != null)
+            {
+                parameters.Behavior = ActionBehavior;
+                parameters.Parameters = parameters.Behavior.SerializeStart(writer, parameters.NpcContext,
+                    parameters.BranchContext);
+            }
+            else
+            {
+                var targets = LocateTargets(parameters.NpcContext);
+                var any = targets.Any();
+                writer.WriteBit(any);
+                
+                // If we have to check the environment, check if this is a blocked action and notify all the targets
+                if (CheckEnvironment)
+                {
+                    writer.WriteBit(Blocked);
+                    if (Blocked)
+                    {
+                        parameters.Behavior = BlockedBehavior;
+                        foreach (var target in targets)
+                        {
+                            var branchContext = new ExecutionBranchContext
+                            {
+                                Duration = parameters.BranchContext.Duration,
+                                Target = target
+                            };
+
+                            var targetParameters = parameters.Behavior.SerializeStart(writer, parameters.NpcContext,
+                                branchContext);
+                            parameters.ParametersList.Add(targetParameters);
+                        }
+                        
+                        return;
+                    }
+                }
+                
+                // If there was no target, find targets if the game object is alive
+                if (any)
+                {
+                    combatAi.Target = targets.First();
+                    parameters.NpcContext.FoundTarget = true;
+                    writer.Write((uint) targets.Count);
+
+                    // Register all targets
+                    foreach (var target in targets)
+                    {
+                        writer.Write((long)target.Id);
+                    }
+                    
+                    // Hit all targets
+                    parameters.Behavior = ActionBehavior;
+                    foreach (var target in targets)
+                    {
+                        var branchContext = new ExecutionBranchContext()
+                        {
+                            Duration = parameters.BranchContext.Duration,
+                            Target = target
+                        };
+
+                        var targetParameters = parameters.Behavior.SerializeStart(writer, parameters.NpcContext, branchContext);
+                                
+                        parameters.ParametersList.Add(targetParameters);
+                    }
+                }
+                else
+                {
+                    parameters.Behavior = MissBehavior;
+                    parameters.Parameters = parameters.Behavior.SerializeStart(writer, parameters.NpcContext,
+                        parameters.BranchContext);
+                }
+            }
         }
         
-        protected override void SerializeSync(TacArcBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, TacArcBehaviorExecutionParameters parameters)
         {
-            Serialize(parameters, true);
+            if (parameters.ParametersList.Count > 0)
+            {
+                foreach (var parameter in parameters.ParametersList)
+                {
+                    parameters.Behavior.SerializeSync(writer, parameter);
+                }
+            }
+            else
+            {
+                parameters.Behavior.SerializeSync(writer, parameters.Parameters);
+            }
         }
 
         protected override void ExecuteSync(TacArcBehaviorExecutionParameters parameters)
@@ -119,91 +205,6 @@ namespace Uchu.World.Systems.Behaviors
             else
             {
                 parameters.Behavior.ExecuteSync(parameters.Parameters);
-            }
-        }
-
-        private void Serialize(TacArcBehaviorExecutionParameters parameters, bool sync = false)
-        {
-            if (!(parameters.NpcContext.Associate.TryGetComponent<BaseCombatAiComponent>(out var combatAi) 
-                || parameters.NpcContext.Alive))
-                return;
-
-            // If there's a single target to hit, hit them and exit
-            if (UsePickedTarget && parameters.BranchContext.Target != null)
-            {
-                parameters.Behavior = ActionBehavior;
-                parameters.Parameters = sync
-                    ? parameters.Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext)
-                    : parameters.Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
-            }
-            else
-            {
-                var targets = LocateTargets(parameters.NpcContext);
-                var any = targets.Any();
-                parameters.NpcContext.Writer.WriteBit(any);
-                
-                // If we have to check the environment, check if this is a blocked action and notify all the targets
-                if (CheckEnvironment)
-                {
-                    parameters.NpcContext.Writer.WriteBit(Blocked);
-                    if (Blocked)
-                    {
-                        parameters.Behavior = BlockedBehavior;
-                        foreach (var target in targets)
-                        {
-                            var branchContext = new ExecutionBranchContext
-                            {
-                                Duration = parameters.BranchContext.Duration,
-                                Target = target
-                            };
-
-                            var targetParameters = sync
-                                ? parameters.Behavior.SerializeSync(parameters.NpcContext, branchContext)
-                                : parameters.Behavior.SerializeStart(parameters.NpcContext, branchContext);
-                            parameters.ParametersList.Add(targetParameters);
-                        }
-                        
-                        return;
-                    }
-                }
-                
-                // If there was no target, find targets if the game object is alive
-                if (any)
-                {
-                    combatAi.Target = targets.First();
-                    parameters.NpcContext.FoundTarget = true;
-                    parameters.NpcContext.Writer.Write((uint) targets.Count);
-
-                    // Register all targets
-                    foreach (var target in targets)
-                    {
-                        parameters.NpcContext.Writer.Write((long)target.Id);
-                    }
-                    
-                    // Hit all targets
-                    parameters.Behavior = ActionBehavior;
-                    foreach (var target in targets)
-                    {
-                        var branchContext = new ExecutionBranchContext()
-                        {
-                            Duration = parameters.BranchContext.Duration,
-                            Target = target
-                        };
-
-                        var targetParameters = sync
-                            ? parameters.Behavior.SerializeSync(parameters.NpcContext, branchContext)
-                            : parameters.Behavior.SerializeStart(parameters.NpcContext, branchContext);
-                                
-                        parameters.ParametersList.Add(targetParameters);
-                    }
-                }
-                else
-                {
-                    parameters.Behavior = MissBehavior;
-                    parameters.Parameters = sync
-                        ? parameters.Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext)
-                        : parameters.Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
-                }
             }
         }
 
@@ -248,16 +249,16 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="parameters">The parameters to find and hit targets for</param>
         /// <returns>A list of the execution parameters to run</returns>
-        private void DeserializeBehaviorForMultipleTargets(
+        private void DeserializeBehaviorForMultipleTargets(BitReader reader,
             TacArcBehaviorExecutionParameters parameters)
         {
-            var targetCount = parameters.Context.Reader.Read<uint>();
+            var targetCount = reader.Read<uint>();
             var targets = new List<GameObject>();
 
             // Find all targets for this hit
             for (var i = 0; i < targetCount; i++)
             {
-                var targetId = parameters.Context.Reader.Read<long>();
+                var targetId = reader.Read<long>();
                 if (!parameters.Context.Associate.Zone.TryGetGameObject(targetId, out var target))
                 {
                     Logger.Error($"{parameters.Context.Associate} sent invalid TacArc target: {targetId}");
@@ -269,7 +270,7 @@ namespace Uchu.World.Systems.Behaviors
             // Hit all targets
             foreach (var target in targets)
             {
-                var res = parameters.Behavior.DeserializeStart(parameters.Context,
+                var res = parameters.Behavior.DeserializeStart(reader, parameters.Context,
                     new ExecutionBranchContext
                     {
                         Duration = parameters.BranchContext.Duration,

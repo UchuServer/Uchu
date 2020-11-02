@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -17,15 +18,17 @@ namespace Uchu.World.Systems.Behaviors
             Time = await GetParameter<int>("time_ms");
         }
 
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
-            context.Reader.ReadBit();
-            return base.DeserializeStart(context, branchContext);
+            reader.ReadBit();
+            return base.DeserializeStart(reader, context, branchContext);
         }
 
-        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, ExecutionBranchContext branchContext)
+        public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
-            context.Writer.WriteBit(false);
+            writer.WriteBit(false);
             if (branchContext.Target is Player target)
             {
                 var targetDirection = context.Associate.Transform.Position - target.Transform.Position;
@@ -48,7 +51,7 @@ namespace Uchu.World.Systems.Behaviors
                 });
             }
 
-            return base.SerializeStart(context, branchContext);
+            return base.SerializeStart(writer, context, branchContext);
         }
     }
 }

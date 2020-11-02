@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -37,15 +38,15 @@ namespace Uchu.World.Systems.Behaviors
             TrackRadius = await GetParameter<float>("track_radius"); // ???
         }
 
-        protected override void DeserializeStart(ProjectileAttackBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            parameters.Target = parameters.Context.Reader.ReadGameObject(
+            parameters.Target = reader.ReadGameObject(
                 parameters.Context.Associate.Zone);
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
 
             for (var i = 0; i < count; i++)
             {
-                parameters.Projectiles.Add(DeserializeProjectile(parameters));
+                parameters.Projectiles.Add(DeserializeProjectile(reader, parameters));
             }
         }
 
@@ -54,9 +55,9 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="parameters">The behavior parameters to deserialize on</param>
         /// <returns>A projectile</returns>
-        private Projectile DeserializeProjectile(ProjectileAttackBehaviorExecutionParameters parameters)
+        private Projectile DeserializeProjectile(BitReader reader, ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            var projectileId = parameters.Context.Reader.Read<long>();
+            var projectileId = reader.Read<long>();
             var projectile = Object.Instantiate<Projectile>(parameters.Context.Associate.Zone);
 
             projectile.Owner = parameters.Context.Associate;
@@ -93,15 +94,15 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
         
-        protected override void SerializeStart(ProjectileAttackBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, ProjectileAttackBehaviorExecutionParameters parameters)
         {
-            parameters.NpcContext.Writer.Write(parameters.BranchContext.Target);
+            writer.Write(parameters.BranchContext.Target);
             var count = ProjectileCount == 0 ? 1 : ProjectileCount;
             parameters.CalculateImpact = true;
 
             for (var i = 0; i < count; i++)
             {
-                var projectile = SerializeProjectile(parameters);
+                var projectile = SerializeProjectile(writer, parameters);
                 parameters.Projectiles.Add(projectile);
             }
         }
@@ -110,12 +111,12 @@ namespace Uchu.World.Systems.Behaviors
         /// Creates a projectile shot at a target
         /// </summary>
         /// <param name="parameters">Parameters to write extra data to</param>
-        private Projectile SerializeProjectile(ProjectileAttackBehaviorExecutionParameters parameters)
+        private Projectile SerializeProjectile(BitWriter writer, ProjectileAttackBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
 
             var projectileId = ObjectId.Standalone;
-            parameters.NpcContext.Writer.Write(projectileId);
+            writer.Write(projectileId);
             
             var projectile = Object.Instantiate<Projectile>(parameters.NpcContext.Associate.Zone);
             projectile.Owner = parameters.NpcContext.Associate;

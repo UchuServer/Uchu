@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -50,36 +51,36 @@ namespace Uchu.World.Systems.Behaviors
             MaxDamage = await GetParameter<uint>("max damage");
         }
 
-        protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(BitReader reader, BasicAttackBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Context.Reader.Align();
+            reader.Align();
             
-            behaviorExecutionParameters.Unknown = behaviorExecutionParameters.Context.Reader.Read<byte>();
-            behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
-                ? behaviorExecutionParameters.Unknown
-                : behaviorExecutionParameters.Context.Reader.Read<byte>();
+            parameters.Unknown = reader.Read<byte>();
+            parameters.Unknown1 = parameters.Unknown > 0
+                ? parameters.Unknown
+                : reader.Read<byte>();
 
             // Unknown 2
-            behaviorExecutionParameters.Context.Reader.Read<byte>();
+            reader.Read<byte>();
             
             // Unused flags
-            behaviorExecutionParameters.Context.Reader.ReadBit();
-            behaviorExecutionParameters.Context.Reader.ReadBit();
+            reader.ReadBit();
+            reader.ReadBit();
             
-            behaviorExecutionParameters.Flag2 = behaviorExecutionParameters.Context.Reader.ReadBit();
-            if (behaviorExecutionParameters.Flag2)
-                behaviorExecutionParameters.Context.Reader.Read<uint>();
+            parameters.Flag2 = reader.ReadBit();
+            if (parameters.Flag2)
+                reader.Read<uint>();
 
-            behaviorExecutionParameters.Damage = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            behaviorExecutionParameters.Context.Reader.ReadBit(); // Died?
-            behaviorExecutionParameters.SuccessState = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            parameters.Damage = reader.Read<uint>();
+            reader.ReadBit(); // Died?
+            parameters.SuccessState = reader.Read<byte>();
             
-            if (behaviorExecutionParameters.Unknown1 == 81)
-                behaviorExecutionParameters.Context.Reader.Read<byte>();
+            if (parameters.Unknown1 == 81)
+                reader.Read<byte>();
             
-            if (behaviorExecutionParameters.SuccessState == 1)
-                behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(
-                    behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
+            if (parameters.SuccessState == 1)
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(reader, parameters.Context,
+                    parameters.BranchContext);
         }
 
         protected override void ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
@@ -108,37 +109,37 @@ namespace Uchu.World.Systems.Behaviors
             });
         }
 
-        protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, BasicAttackBehaviorExecutionParameters parameters)
         {
             parameters.ServerSide = true;
             parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
-            parameters.NpcContext.Writer.Align();
+            writer.Align();
             
             // Three unknowns
-            parameters.NpcContext.Writer.Write<byte>(0);
-            parameters.NpcContext.Writer.Write<byte>(0);
-            parameters.NpcContext.Writer.Write<byte>(0);
+            writer.Write<byte>(0);
+            writer.Write<byte>(0);
+            writer.Write<byte>(0);
             
-            parameters.NpcContext.Writer.WriteBit(false);
-            parameters.NpcContext.Writer.WriteBit(false);
-            parameters.NpcContext.Writer.WriteBit(true);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
+            writer.WriteBit(true);
             
             // flag 2 == true so this should be set
-            parameters.NpcContext.Writer.Write<uint>(0);
+            writer.Write<uint>(0);
 
             var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
-            parameters.NpcContext.Writer.Write(damage);
+            writer.Write(damage);
             
-            parameters.NpcContext.Writer.WriteBit(!parameters.NpcContext.Alive);
+            writer.WriteBit(!parameters.NpcContext.Alive);
             
             var success = parameters.NpcContext.IsValidTarget(parameters.BranchContext.Target) && 
                           parameters.NpcContext.Alive;
             parameters.SuccessState = (byte) (success ? 1 : 0);
-            parameters.NpcContext.Writer.Write(parameters.SuccessState);
+            writer.Write(parameters.SuccessState);
 
             if (success)
             {
-                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(writer, parameters.NpcContext,
                     parameters.BranchContext);
             }
         }

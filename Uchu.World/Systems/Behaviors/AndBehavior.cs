@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -30,21 +31,21 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void DeserializeStart(AndBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
             {
                 parameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.DeserializeStart(parameters.Context, parameters.BranchContext));
+                    behaviorBase.DeserializeStart(reader, parameters.Context, parameters.BranchContext));
             }
         }
         
-        protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
             {
                 parameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.SerializeStart(parameters.NpcContext, parameters.BranchContext));
+                    behaviorBase.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext));
             }
         }
 
@@ -56,12 +57,11 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, AndBehaviorExecutionParameters parameters)
         {
-            foreach (var behaviorBase in Behaviors)
+            for (var i = 0; i < Behaviors.Length; i++)
             {
-                parameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.SerializeSync(parameters.NpcContext, parameters.BranchContext));
+                Behaviors[i].SerializeSync(writer, parameters.BehaviorExecutionParameters[i]);
             }
         }
 

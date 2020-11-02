@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -28,9 +29,9 @@ namespace Uchu.World.Systems.Behaviors
             Action.ExecuteStart(parameters.Parameters);
         }
 
-        protected override void SerializeStart(VerifyBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, VerifyBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
         }
     }
 }
