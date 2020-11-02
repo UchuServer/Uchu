@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class NpcCombatSkillBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public NpcCombatSkillBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class NpcCombatSkillBehavior : BehaviorBase<NpcCombatSkillBehaviorExecutionParameters>
     {
@@ -28,22 +33,23 @@ namespace Uchu.World.Systems.Behaviors
             parameters.NpcContext.MinRange = MinRange;
             parameters.NpcContext.MaxRange = MaxRange;
             parameters.NpcContext.SkillTime = SkillTime;
+            
             parameters.Parameters = Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
         }
-
-        protected override async Task ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
+        
+        protected override void ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            await Behavior.ExecuteStart(parameters.Parameters);
+            Behavior.ExecuteStart(parameters.Parameters);
         }
 
         protected override void SerializeSync(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            Behavior.SerializeSync(parameters.Parameters);
+            parameters.Parameters = Behavior.SerializeSync(parameters.NpcContext, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            await Behavior.ExecuteSync(parameters.Parameters);
+            Behavior.ExecuteSync(parameters.Parameters);
         }
     }
 }

@@ -5,9 +5,14 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AttackDelayBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool WaitAndSync { get; set; }
+        public bool ServerSide { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public AttackDelayBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     
     public class AttackDelayBehavior : BehaviorBase<AttackDelayBehaviorExecutionParameters>
@@ -38,7 +43,7 @@ namespace Uchu.World.Systems.Behaviors
         {
             parameters.Handle = parameters.Context.Reader.Read<uint>();
             for (var i = 0; i < Intervals; i++)
-                RegisterHandle(parameters.Handle, parameters);
+                parameters.RegisterHandle<AttackDelayBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
         protected override void DeserializeSync(AttackDelayBehaviorExecutionParameters parameters)
@@ -58,24 +63,23 @@ namespace Uchu.World.Systems.Behaviors
             // Copy the context to clear the writer
             parameters.Parameters = Action.SerializeStart(parameters.NpcContext.Copy(),
                 parameters.BranchContext);
-            parameters.WaitAndSync = true;
+            parameters.ServerSide = true;
         }
 
-        protected override Task ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
         {
-            // Run this async as otherwise the delay can cause the object to be registered as "stuck"
-            Task.Run(async () =>
+            if (parameters.ServerSide)
             {
-                if (parameters.WaitAndSync)
-                    await Task.Delay(Delay);
-
-                await Action.ExecuteStart(parameters.Parameters);
-
-                if (parameters.WaitAndSync)
+                parameters.Schedule( () =>
+                {
+                    Action.ExecuteStart(parameters.Parameters);
                     parameters.NpcContext.Sync(parameters.Handle);
-            });
-
-            return Task.CompletedTask;
+                }, Delay);
+            }
+            else
+            {
+                Action.ExecuteStart(parameters.Parameters);
+            }
         }
     }
 }

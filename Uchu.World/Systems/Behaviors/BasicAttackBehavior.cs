@@ -6,13 +6,19 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class BasicAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool ServerSide { get; set; } = false;
+        public bool ServerSide { get; set; }
         public byte Unknown { get; set; }
         public byte Unknown1 { get; set; }
         public bool Flag2 { get; set; }
         public uint Damage { get; set; }
         public byte SuccessState { get; set; }
         public BehaviorExecutionParameters OnSuccessBehaviorExecutionParameters { get; set; }
+        
+        public BasicAttackBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+            ServerSide = false;
+        }
     }
     public class BasicAttackBehavior : BehaviorBase<BasicAttackBehaviorExecutionParameters>
     {
@@ -76,26 +82,30 @@ namespace Uchu.World.Systems.Behaviors
                     behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
         {
-            if (parameters.ServerSide)
-                await parameters.BranchContext.Target.NetFavorAsync();
-            
-            // Make sure the target is valid and damage them
-            if (parameters.BranchContext.Target != default && 
-                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
-                (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
+            // Store as function as server side and client side execution is scheduled differently
+            parameters.NetFavor(() =>
             {
-                if (parameters.ServerSide)
-                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
-                stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate);
-            }
-            
-            // Execute the success state only if some parameters are set
-            if (parameters.SuccessState == 1)
-            {
-                await OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
-            }
+                if (parameters.BranchContext.Target != default &&
+                    parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
+                    (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
+                {
+                    if (parameters.ServerSide)
+                        parameters.PlayFX("onhit", EffectId);
+
+                    // This is ran as a background task as it may trigger many async messages
+                    Task.Factory.StartNew(
+                        () => stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate),
+                        TaskCreationOptions.LongRunning);
+                }
+
+                // Execute the success state only if some parameters are set
+                if (parameters.SuccessState == 1)
+                {
+                    OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
+                }
+            });
         }
 
         protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)

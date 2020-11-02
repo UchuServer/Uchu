@@ -74,19 +74,18 @@ namespace Uchu.World
 
             Api.RegisterCommandCollection<WorldCommands>(this);
             
-            var _ = Task.Run(async () =>
+            ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
+            Logger.Information($"Setting up world server: {Id}");
+
+            // The zone creation will run as a background task to ensure the calling server can resume operation
+            _ = Task.Factory.StartNew(async () =>
             {
                 foreach (var zone in info.Info.Zones)
                 {
                     await ZoneParser.LoadZoneDataAsync(zone);
-
                     await LoadZone(zone);
                 }
-            });
-
-            ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
-            
-            Logger.Information($"Setting up world server: {Id}");
+            }, TaskCreationOptions.LongRunning);
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
@@ -105,32 +104,30 @@ namespace Uchu.World
             return Task.CompletedTask;
         }
 
-        private async Task LoadZone(int zone)
+        private async Task LoadZone(int zoneId)
         {
-            if (ZoneParser.Zones == default) await ZoneParser.LoadZoneDataAsync(zone);
+            if (ZoneParser.Zones == default)
+                await ZoneParser.LoadZoneDataAsync(zoneId);
 
-            Logger.Information($"Starting {zone}");
+            Logger.Information($"Starting {zoneId}");
 
-            if (ZoneParser?.Zones == default || !ZoneParser.Zones.TryGetValue(zone, out var info))
+            if (ZoneParser?.Zones == default || !ZoneParser.Zones.TryGetValue(zoneId, out var info))
             {
-                throw new Exception($"Failed to find info for {(ZoneId) zone}");
+                throw new Exception($"Failed to find info for {(ZoneId) zoneId}");
             }
 
-            var zoneInstance = new Zone(info, this, 0, 0); // TODO Instance/Clone
+            // TODO instance / clone
+            var zone = new Zone(info, this, 0, 0);
+            Zones.Add(zone);
             
-            Zones.Add(zoneInstance);
-            
-            await zoneInstance.InitializeAsync();
+            await zone.InitializeAsync();
         }
 
         public async Task<Zone> GetZoneAsync(ZoneId zoneId)
         {
             if (ZoneId == zoneId)
             {
-                //
-                // Wait for zone to load
-                //
-                
+                // Wait for zone to load, TODO: Use event here
                 while (Running)
                 {
                     var zone = Zones.FirstOrDefault(z => z.ZoneId == zoneId);
@@ -168,7 +165,6 @@ namespace Uchu.World
                     if (attr != null)
                     {
                         // Packet handlers and game messages
-                        
                         var parameters = method.GetParameters();
                         if (parameters.Length == 0 || !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
                             continue;
@@ -207,7 +203,6 @@ namespace Uchu.World
                     else
                     {
                         // Command handlers
-                        
                         var cmdAttr = method.GetCustomAttribute<CommandHandlerAttribute>();
                         if (cmdAttr == null)
                             continue;

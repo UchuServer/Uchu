@@ -21,95 +21,63 @@ using Uchu.World.Systems.AI;
 
 namespace Uchu.World
 {
+    /// <summary>
+    /// Represents a zone in a world server, for example Avant Gardens, Nimbus Station or Gnarled Forest
+    /// </summary>
+    /// <remarks>
+    /// Runs a game loop that manages physics, AI and other scheduled events that might have been scheduled on received
+    /// packets.
+    /// </remarks>
     public class Zone : Object
     {
-        //
-        // Consts
-        //
-
         private const int TicksPerSecondLimit = 20;
-
-        //
-        // Zone info
-        //
-
-        public uint CloneId { get; }
         
+        public uint CloneId { get; }
         public ushort InstanceId { get; }
-
         public ZoneInfo ZoneInfo { get; }
         
         public new UchuServer UchuServer { get; }
         
         public uint Checksum { get; private set; }
-        
         public bool Loaded { get; private set; }
-        
         public NavMeshManager NavMeshManager { get; private set; }
-
-        //
+        private Task GameLoop { get; set; }
+        
         // Managed objects
-        //
-
         private List<Object> ManagedObjects { get; }
-        
         private List<GameObject> SpawnedObjects { get; }
-
-        //
+        
         // Macro properties
-        //
-
         public Object[] Objects => ManagedObjects.ToArray();
-
         public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
-        
         public Player[] Players => Objects.OfType<Player>().ToArray();
-
         public GameObject[] Spawned => SpawnedObjects.ToArray();
-        
         public ZoneId ZoneId { get; private set; }
-        
         public Vector3 SpawnPosition { get; private set; }
-        
         public Quaternion SpawnRotation { get; private set; }
-
-        //
-        // Runtime
-        //
         
+        // Runtime
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
         private long _physicsTime;
         
         public float DeltaTime { get; private set; }
-        
         public ScriptManager ScriptManager { get; }
-        
         public ManagedScriptEngine ManagedScriptEngine { get; }
-        
         private List<UpdatedObject> UpdatedObjects { get; }
+        private List<ScheduledAction> NewScheduledActions { get; }
+        private List<ScheduledAction> ScheduledActions { get; }
         
-        //
         // Physics
-        //
-        
         public PhysicsSimulation Simulation { get; }
-        
         public Event EarlyPhysics { get; }
-        
         public Event LatePhysics { get; }
         
-        //
         // Events
-        //
-
-        public Event<Player> OnPlayerLoad { get; } 
-
+        public Event<Player> OnPlayerLoad { get; }
         public Event<Object> OnObject { get; }
-
         public Event OnTick { get; }
-        
         public Event<Player, string> OnChatMessage { get; }
         
         public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
@@ -130,6 +98,8 @@ namespace Uchu.World
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
             UpdatedObjects = new List<UpdatedObject>();
+            ScheduledActions = new List<ScheduledAction>();
+            NewScheduledActions = new List<ScheduledAction>();
             ManagedObjects = new List<Object>();
             SpawnedObjects = new List<GameObject>();
             Simulation = new PhysicsSimulation();
@@ -139,51 +109,73 @@ namespace Uchu.World
 
         #region Initializing
 
-        public async Task<Task> InitializeAsync()
+        /// <summary>
+        /// Initializes the zone by loading level files, NPCs and enemies and setting up the game loop
+        /// </summary>
+        public async Task InitializeAsync()
         {
             Checksum = ZoneInfo.LuzFile.GenerateChecksum(ZoneInfo.LvlFiles);
+            ZoneId = (ZoneId) ZoneInfo.LuzFile.WorldId;
+            SpawnPosition = ZoneInfo.LuzFile.SpawnPoint;
+            SpawnRotation = ZoneInfo.LuzFile.SpawnRotation;
             
             Logger.Information($"Checksum: 0x{Checksum:X}");
-            
             Logger.Information($"Collecting objects for {ZoneId}");
 
-            var objects = new List<LevelObjectTemplate>();
+            await LoadObjects();
+            await LoadScripts();
 
+            SetupGameLoop();
+            
+            Loaded = true;
+        }
+
+        /// <summary>
+        /// Uses the script manager of this zone to find and load all native and managed scripts
+        /// </summary>
+        private async Task LoadScripts()
+        {
+            await ScriptManager.LoadDefaultScriptsAsync();
+            
+            foreach (var scriptPack in ScriptManager.ScriptPacks)
+            {
+                try
+                {
+                    Logger.Information($"Running: {scriptPack.Name}");
+                    await scriptPack.LoadAsync();
+                }
+                catch (Exception e)
+                {
+                    Logger.Information(e);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Loads all objects, NPCs and enemies from the zone info and spawns them
+        /// </summary>
+        private async Task LoadObjects()
+        {
+            var objects = new List<LevelObjectTemplate>();
             foreach (var lvlFile in ZoneInfo.LvlFiles.Where(lvlFile => lvlFile.LevelObjects?.Templates != default))
             {
                 objects.AddRange(lvlFile.LevelObjects.Templates);
             }
 
             Logger.Information($"Loading {objects.Count} objects for {ZoneId}");
-
-            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
-
-            if (NavMeshManager.Enabled)
-            {
-                Logger.Information("Generating navigation way points.");
-
-                await NavMeshManager.GeneratePointsAsync();
+            await LoadNavMeshes();
             
-                Logger.Information("Finished generating navigation way points.");
-            }
-
-            ZoneId = (ZoneId) ZoneInfo.LuzFile.WorldId;
-
-            SpawnPosition = ZoneInfo.LuzFile.SpawnPoint;
-            
-            SpawnRotation = ZoneInfo.LuzFile.SpawnRotation;
-
             ZoneInfo.LvlFiles = new List<LvlFile>();
-
             ZoneInfo.TerrainFile = default;
-
+            
             GC.Collect();
-
+            
+            // Spawns all the NPCs in the area
             foreach (var levelObject in objects)
             {
                 if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
                 {
-                    Logger.Information($"Trigger: {trigger}");
+                    Logger.Debug($"Trigger: {trigger}");
                 }
                 
                 Logger.Debug($"Loading {levelObject.Lot} [{levelObject.ObjectId}]...");
@@ -196,55 +188,49 @@ namespace Uchu.World
                 {
                     Logger.Error(e);
                 }
-            }
-
-            Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
-            
-            if (ZoneInfo.LuzFile.PathData != default)
-            {
-                foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
-                {
-                    Logger.Information($"Loading {path.PathName}");
-                    
-                    try
-                    {
-                        SpawnPath(path);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
-                }
-            }
-            
-            Logger.Information($"Loaded {Objects.Length} objects for {ZoneId}");
-
-            //
-            // Load zone scripts
-            //
-
-            await ScriptManager.LoadDefaultScriptsAsync();
-            
-            foreach (var scriptPack in ScriptManager.ScriptPacks)
                 
+            }
+            
+            Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
+            LoadSpawnPaths();
+            Logger.Information($"Loaded {Objects.Length} objects for {ZoneId}");
+        }
+
+        /// <summary>
+        /// Generates the navmesh for this zone and initializes the pathfinding graph
+        /// </summary>
+        private async Task LoadNavMeshes()
+        {
+            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
+            if (NavMeshManager.Enabled)
             {
+                Logger.Information("Generating navigation way points.");
+                await NavMeshManager.GeneratePointsAsync();
+                Logger.Information("Finished generating navigation way points.");
+            }
+        }
+
+        /// <summary>
+        /// Loads all the spawners in the zone and sets up all the spawned objects
+        /// </summary>
+        private void LoadSpawnPaths()
+        {
+            if (ZoneInfo.LuzFile.PathData == default)
+                return;
+            
+            foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
+            {
+                Logger.Information($"Loading {path.PathName}");
+                    
                 try
                 {
-                    Logger.Information($"Running: {scriptPack.Name}");
-                
-                    await scriptPack.LoadAsync();
+                    SpawnPath(path);
                 }
                 catch (Exception e)
                 {
-                    Logger.Information(e);
+                    Logger.Error(e);
                 }
             }
-            
-            Loaded = true;
-            
-            objects.Clear();
-
-            return ExecuteUpdateAsync();
         }
 
         private void SpawnLevelObject(LevelObjectTemplate levelObject)
@@ -265,10 +251,7 @@ namespace Uchu.World
 
             Start(obj);
             
-            //
             // Only spawns should get constructed on the client.
-            //
-
             spawner?.SpawnCluster();
         }
 
@@ -547,7 +530,11 @@ namespace Uchu.World
         
         #region Runtime
 
-        private Task ExecuteUpdateAsync()
+        /// <summary>
+        /// Creates a timer that reports ticks per second, time per tick and physics time
+        /// </summary>
+        /// <returns>The timer that was created</returns>
+        private Timer SetupTickReporter()
         {
             var timer = new Timer
             {
@@ -558,122 +545,179 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) =>
             {
                 if (_ticks > 0)
-                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} TPT: {_passedTickTime / _ticks} ms PHY: {_physicsTime / _ticks} ms");
+                    Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} " +
+                                 $"TPT: {_passedTickTime / _ticks} ms " +
+                                 $"PHY: {_physicsTime / _ticks} ms");
                 _passedTickTime = 0;
                 _ticks = 0;
             };
 
             timer.Start();
-
-            Listen(OnTick, PhysicsStep);
-
-            return Task.Run(async () =>
-            {
-                _running = true;
-                var watch = new Stopwatch();
-                
-                while (_running)
-                {
-                    var players = Players;
-                    if (players.Length == 0)
-                    {
-                        await Task.Delay(1000);
-                        continue;
-                    }
-
-                    if (_ticks >= TicksPerSecondLimit)
-                        continue;
-
-                    watch.Restart();
-
-                    // Update all tick tasks in parallel
-                    var tickTasks = new List<Task>();
-                    foreach (var updatedObject in UpdatedObjects.ToArray())
-                    {
-                        if (updatedObject.Stuck)
-                            continue;
-                        
-                        if (updatedObject.Associate is GameObject gameObject)
-                        {
-                            if (players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                                continue;
-                        }
-
-                        updatedObject.DeltaTime += DeltaTime;
-                        if (updatedObject.Frequency != ++updatedObject.Ticks)
-                            continue;
-                        updatedObject.Ticks = 0;
-
-                        tickTasks.Add(Task.Run(async () =>
-                        {
-                            var start = watch.ElapsedMilliseconds;
-                            try
-                            {
-                                var tickTask = Task.Run(async () =>
-                                {
-                                    await updatedObject.Delegate(updatedObject.DeltaTime);
-                                    updatedObject.Stuck = false;
-                                });
-
-                                var delay = Task.Delay(150);
-                                await Task.WhenAny(tickTask, delay);
-                                var elapsed = watch.ElapsedMilliseconds - start;
-
-                                // Any task that takes more than 3 ticks to complete is considered stuck
-                                if (delay.IsCompleted && !tickTask.IsCompleted)
-                                {
-                                    Logger.Warning($"{updatedObject.Associate} is now defined as stuck!");
-                                    updatedObject.Stuck = true;
-                                }
-                                // Any task that took more than two ticks to execute but less than 3 is considered slow
-                                else if (elapsed > 100)
-                                {
-                                    Logger.Warning($"Slow update: {updatedObject.Associate} in {elapsed}ms");
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Error(e);
-                            }
-
-                            updatedObject.DeltaTime = 0;
-                        }));
-                    }
-
-                    await Task.WhenAll(tickTasks);
-                    await OnTick.InvokeAsync();
-                    
-                    _ticks++;
-
-                    var passedMs = watch.ElapsedMilliseconds;
-                    _passedTickTime += passedMs;
-                    
-                    // Sync with the system tick clock
-                    await Task.Delay((int) Math.Max(1000 / TicksPerSecondLimit - passedMs, 0));
-                    
-                    passedMs = watch.ElapsedMilliseconds;
-                    DeltaTime = passedMs / 1000f;
-                }
-            });
+            return timer;
         }
 
+        /// <summary>
+        /// Executes one tick in the game loop, updating all entities subscribed to the <c>OnTick</c> event
+        /// </summary>
+        private async Task Tick()
+        {
+            if (Players.Length == 0)
+                return;
+
+            var watch = new Stopwatch();
+            watch.Start();
+            
+            const int timeLimit = (int)1000f / TicksPerSecondLimit;
+
+            await OnTick.InvokeAsync();
+            _ticks++;
+
+            var passedMs = watch.ElapsedMilliseconds;
+            _passedTickTime += passedMs;
+            
+            if (passedMs < timeLimit)
+                await Task.Delay((int) Math.Max(timeLimit - passedMs, 0));
+            
+            DeltaTime = watch.ElapsedMilliseconds;
+        }
+
+        /// <summary>
+        /// Sets up the game loop, initializing the scheduler, object updater and physics engine.
+        /// </summary>
+        /// <remarks>
+        /// The game loop is started as long running task.
+        /// </remarks>
+        private void SetupGameLoop()
+        {
+            if (GameLoop != null)
+                throw new ArgumentException("Can't setup game loop, game loop is already setup.");
+            
+            Listen(OnTick, ExecuteSchedule);
+            Listen(OnTick, UpdateObjects);
+            Listen(OnTick, PhysicsStep);
+
+            
+            GameLoop = Task.Factory.StartNew(async () =>
+            {
+                _running = true;
+                var tickReporter = SetupTickReporter();
+                while (_running)
+                {
+                    await Tick();
+                }
+                
+                tickReporter.Stop();
+            }, TaskCreationOptions.LongRunning);
+        }
+
+        /// <summary>
+        /// Steps the physics by one step
+        /// </summary>
         private async Task PhysicsStep()
         {
             var watch = new Stopwatch();
-            
             watch.Start();
             
             await EarlyPhysics.InvokeAsync();
-
             Simulation.Step(DeltaTime);
-            
             await LatePhysics.InvokeAsync();
             
             watch.Stop();
-
             _physicsTime += watch.ElapsedMilliseconds;
         }
 
+        /// <summary>
+        /// Updates all the objects in this zone by calling their update delegate
+        /// </summary>
+        /// <remarks>
+        /// Optimizes for objects that are stuck or not in the player view filter
+        /// </remarks>
+        private void UpdateObjects()
+        {
+            foreach (var updatedObject in UpdatedObjects.ToArray())
+            {
+                // Skip this game object if it's stuck or not in the player view
+                if (updatedObject.Stuck
+                    || updatedObject.Associate is GameObject gameObject
+                    && Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
+                    continue;
+                
+                // Ensure that the object ticks at its frequency
+                if (updatedObject.Frequency > ++updatedObject.Ticks)
+                    continue;
+
+                updatedObject.Ticks = 0;
+                try
+                {
+                    updatedObject.Delegate(DeltaTime);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+        }    
+
+        /// <summary>
+        /// Decrements the delay of all scheduled tasks and executes them if the timeout has been reached
+        /// </summary>
+        private void ExecuteSchedule()
+        {
+            // Before executing the schedule, check all incoming tasks and add them to the working queue
+            lock (NewScheduledActions)
+            {
+                ScheduledActions.AddRange(NewScheduledActions);
+                NewScheduledActions.Clear();
+            }
+
+            // Loop in reverse to allow removal of elements during the loop
+            for (var i = ScheduledActions.Count - 1; i >= 0; i--)
+            {
+                var scheduledAction = ScheduledActions[i];
+                
+                scheduledAction.Delay -= DeltaTime;
+                if (scheduledAction.Delay > 0)
+                    continue;
+
+                try
+                {
+                    scheduledAction.Delegate();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e.Message);
+                }
+                finally
+                {
+                    ScheduledActions.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Schedules an action to be executed in a certain amount of milliseconds
+        /// </summary>
+        /// <remarks>
+        /// Warning: only schedule fine grained operations! Scheduled tasks should only directly calculate and run code,
+        /// if any IO (for example database or networking) is needed make sure to run those parts of code inside a long
+        /// running task using <c>Task.Factory.StartNew(() => {}, TaskCreationOptions.LongRunning);</c>.
+        /// </remarks>
+        /// <param name="delegate">The action to execute</param>
+        /// <param name="delay">The milliseconds delay before execution</param>
+        public void Schedule(Action @delegate, float delay)
+        {
+            lock (NewScheduledActions)
+            {
+                NewScheduledActions.Add(new ScheduledAction(@delegate, delay));
+            }
+        }
+
+        /// <summary>
+        /// Register an object as a managed object, calling its update function on a defined tick frequency
+        /// </summary>
+        /// <param name="associate">The game object to manage in the game loop</param>
+        /// <param name="delegate">The function to execute on update</param>
+        /// <param name="frequency">After how many ticks the action should be executed, 1 == every tick</param>
         public void Update(Object associate, Func<Task> @delegate, int frequency)
         {
             UpdatedObjects.Add(new UpdatedObject
@@ -684,6 +728,12 @@ namespace Uchu.World
             });
         }
         
+        /// <summary>
+        /// Register an object as a managed object, calling its update function on a defined tick frequency
+        /// </summary>
+        /// <param name="associate">The game object to manage in the game loop</param>
+        /// <param name="delegate">The function to execute on update, the delta time is passed as argument to this function</param>
+        /// <param name="frequency">After how many ticks the action should be executed, 1 == every tick</param>
         public void Update(Object associate, Func<float, Task> @delegate, int frequency)
         {
             UpdatedObjects.Add(new UpdatedObject
@@ -694,19 +744,61 @@ namespace Uchu.World
             });
         }
         
+        /// <summary>
+        /// An object managed by this zone. Whenever it's frequency is reached in the game loop, its update delegate is
+        /// called.
+        /// </summary>
         private class UpdatedObject
         {
+            /// <summary>
+            /// The game object to update
+            /// </summary>
             public Object Associate { get; set; }
             
+            /// <summary>
+            /// The function to call on update, the delta time between ticks is passed to this function as argument
+            /// </summary>
             public Func<float, Task> Delegate { get; set; }
             
+            /// <summary>
+            /// The frequency to execute on
+            /// </summary>
+            /// <remarks>
+            /// 1 is every tick, 2 is every other tick, 10 is every 10 ticks, etc.
+            /// </remarks>
             public int Frequency { get; set; }
             
+            /// <summary>
+            /// The amount of ticks that have passed since updating the object
+            /// </summary>
             public int Ticks { get; set; }
             
-            public float DeltaTime { get; set; }
-            
+            /// <summary>
+            /// If execution takes long, an object will be defined as stuck and exempted from the game loop 
+            /// </summary>
             public bool Stuck { get; set; }
+        }
+        
+        /// <summary>
+        /// A task that may be scheduled to execute in a certain amount of milliseconds
+        /// </summary>
+        private class ScheduledAction
+        {
+            public ScheduledAction(Action @delegate, float delay)
+            {
+                Delegate = @delegate;
+                Delay = delay;
+            }
+            
+            /// <summary>
+            /// The action to execute if the task reaches its scheduled time
+            /// </summary>
+            public Action Delegate { get; }
+
+            /// <summary>
+            /// The amount of milliseconds to wait before executing this task
+            /// </summary>
+            public float Delay { get; set; }
         }
 
         #endregion

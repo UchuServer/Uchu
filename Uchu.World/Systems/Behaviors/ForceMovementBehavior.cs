@@ -9,6 +9,11 @@ namespace Uchu.World.Systems.Behaviors
         public uint Handle { get; set; }
         public BehaviorBase Action { get; set; }
         public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+
+        public ForceMovementBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class ForceMovementBehavior : BehaviorBase<ForceMovementBehaviorExecutionParameters>
     {
@@ -27,33 +32,34 @@ namespace Uchu.World.Systems.Behaviors
             HitActionFaction = await GetBehavior("hit_action_faction");
         }
 
-        protected override void DeserializeStart(ForceMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(ForceMovementBehaviorExecutionParameters parameters)
         {
-            if (HitAction.BehaviorId == 0 && HitActionEnemy.BehaviorId == 0 && HitActionFaction.BehaviorId == 0) return;
-            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
+            if (HitAction.BehaviorId == 0 && HitActionEnemy.BehaviorId == 0 && HitActionFaction.BehaviorId == 0)
+                return;
+            
+            parameters.Handle = parameters.Context.Reader.Read<uint>();
+            parameters.RegisterHandle<ForceMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
-        protected override async void DeserializeSync(ForceMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override async void DeserializeSync(ForceMovementBehaviorExecutionParameters parameters)
         {
-            var actionId = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            behaviorExecutionParameters.Action = await GetBehavior(actionId);
+            var actionId = parameters.Context.Reader.Read<uint>();
+            parameters.Action = await GetBehavior(actionId);
             
-            var targetId = behaviorExecutionParameters.Context.Reader.Read<ulong>();
-            behaviorExecutionParameters.Context.Associate.Zone.TryGetGameObject((long) targetId, out var target);
+            var targetId = parameters.Context.Reader.Read<ulong>();
+            parameters.Context.Associate.Zone.TryGetGameObject((long) targetId, out var target);
             
-            behaviorExecutionParameters.ActionExecutionParameters = behaviorExecutionParameters.Action.DeserializeStart(
-                behaviorExecutionParameters.Context, new ExecutionBranchContext()
+            parameters.ActionExecutionParameters = parameters.Action.DeserializeStart(
+                parameters.Context, new ExecutionBranchContext
                 {
-                    Duration = behaviorExecutionParameters.BranchContext.Duration,
+                    Duration = parameters.BranchContext.Duration,
                     Target = target
                 });
         }
 
-        protected override async Task ExecuteSync(ForceMovementBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void ExecuteSync(ForceMovementBehaviorExecutionParameters parameters)
         {
-            await behaviorExecutionParameters.Action.ExecuteStart(behaviorExecutionParameters
-                .ActionExecutionParameters);
+            parameters.Action.ExecuteStart(parameters.ActionExecutionParameters);
         }
     }
 }

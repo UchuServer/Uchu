@@ -10,9 +10,15 @@ namespace Uchu.World.Systems.Behaviors
     public class AreaOfEffectExecutionParameters : BehaviorExecutionParameters
     {
         public uint Length { get; set; }
-        public List<BehaviorExecutionParameters> TargetActions { get; } = 
-            new List<BehaviorExecutionParameters>();
+        public List<BehaviorExecutionParameters> TargetActions { get; }
+        
+        public AreaOfEffectExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+            TargetActions = new List<BehaviorExecutionParameters>();
+        }
     }
+    
     public class AreaOfEffect : BehaviorBase<AreaOfEffectExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.AreaOfEffect;
@@ -57,17 +63,12 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override Task ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
+        protected override void ExecuteStart(AreaOfEffectExecutionParameters behaviorExecutionsParameters)
         {
             foreach (var behaviorExecutionParameters in behaviorExecutionsParameters.TargetActions)
             {
-                Task.Run(async () =>
-                {
-                    await Action.ExecuteStart(behaviorExecutionParameters);
-                });
+                Action.ExecuteStart(behaviorExecutionParameters);
             }
-
-            return Task.CompletedTask;
         }
 
         protected override void SerializeStart(AreaOfEffectExecutionParameters parameters)

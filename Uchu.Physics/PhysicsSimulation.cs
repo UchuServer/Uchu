@@ -41,6 +41,10 @@ namespace Uchu.Physics
             Simulation = Simulation.Create(Buffer, NarrowPhaseCallbacks, PoseIntegratorCallbacks);
         }
 
+        /// <summary>
+        /// Steps the physics
+        /// </summary>
+        /// <param name="deltaTime">Delta time in milliseconds since last tick</param>
         public void Step(float deltaTime)
         {
             /*
@@ -65,7 +69,7 @@ namespace Uchu.Physics
                 }
             }
 
-            Simulation.Timestep(deltaTime);
+            Simulation.Timestep(deltaTime / 1000);
         }
 
         internal void Register(PhysicsObject obj)

@@ -11,10 +11,25 @@ using Uchu.Core.Client;
 
 namespace Uchu.World.Systems.Behaviors
 {
+    /// <summary>
+    /// Links a behavior to execute with the parameters to execute it with
+    /// </summary>
     public class BehaviorExecution
     {
+        /// <summary>
+        /// The behavior to execute
+        /// </summary>
         public BehaviorBase BehaviorBase { get; set; }
+        
+        /// <summary>
+        /// The parameters to pass to the behavior for (de)serialization and execution
+        /// </summary>
         public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
+        
+        /// <summary>
+        /// The parameters to the behavior for (de)serialization and execution of the sync
+        /// </summary>
+        public BehaviorExecutionParameters SyncBehaviorExecutionParameters { get; set; }
     }
     
     public class BehaviorTree
@@ -31,7 +46,7 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         public BehaviorInfo[] BehaviorIds { get; private set; }
 
-        private bool _deserialized = false;
+        private bool _deserialized;
         
         /// <summary>
         /// Whether this tree is deserialized
@@ -78,7 +93,7 @@ namespace Uchu.World.Systems.Behaviors
 
         private static Dictionary<BehaviorTemplateId, Type> _behaviors;
 
-        private SkillCastType CastType = default;
+        private SkillCastType CastType;
         
         /// <summary>
         /// Map of all implemented behaviors, ordered by behavior template id
@@ -119,7 +134,8 @@ namespace Uchu.World.Systems.Behaviors
         public static async Task<BehaviorTree> FromLotAsync(Lot lot)
         {
             var tree = new BehaviorTree();
-
+            
+            // TODO: Cache this. NPCs always use the same lot, no reason to look this up each time.
             await using var cdClient = new CdClientContext();
 
             var objectSkills = cdClient.ObjectSkillsTable.Where(i =>
@@ -131,13 +147,11 @@ namespace Uchu.World.Systems.Behaviors
             for (var index = 0; index < objectSkills.Length; index++)
             {
                 var objectSkill = objectSkills[index];
-
                 var behavior = cdClient.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == objectSkill.SkillID);
 
                 if (behavior == default)
                 {
                     Logger.Error($"Could not find behavior for skill: {objectSkill.SkillID}");
-
                     continue;
                 }
 
@@ -308,6 +322,7 @@ namespace Uchu.World.Systems.Behaviors
             uint syncId, Vector3 calculatingPosition, GameObject target = default)
         {
             Serialized = true;
+            CastType = SkillCastType.Default;
             target ??= associate;
 
             var context = new NpcExecutionContext(target, writer, skillId, syncId, calculatingPosition);
@@ -318,25 +333,31 @@ namespace Uchu.World.Systems.Behaviors
             }
             
             context.Root = root;
-            var branchContext = new ExecutionBranchContext { Target = target };
-            var parameters = context.Root.SerializeStart(context, branchContext);
-            
-            // Copy context to reset the writer
-            context.Root.SerializeSync(parameters);
+            var parameters = context.Root.SerializeStart(context, new ExecutionBranchContext { Target = target });
+            var syncParameters = context.Root.SerializeSync(parameters.NpcContext, new ExecutionBranchContext { Target = target });
 
             // Setup the behavior for execution
-            RootBehaviors[SkillCastType.Default] = new List<BehaviorExecution>()
+            RootBehaviors[CastType] = new List<BehaviorExecution>()
             {
                 new BehaviorExecution
                 {
                     BehaviorBase = context.Root,
-                    BehaviorExecutionParameters = parameters
+                    BehaviorExecutionParameters = parameters,
+                    SyncBehaviorExecutionParameters = syncParameters
                 }
             };
-
+            
             return context;
         }
 
+        /// <summary>
+        /// Deserializes the entire skill tree by taking a reader and parsing that into behaviors
+        /// </summary>
+        /// <param name="associate">The caster of the skill</param>
+        /// <param name="reader">The reader to parse the behaviors from</param>
+        /// <param name="castType">The specific cast type of this skill</param>
+        /// <param name="target">An explicit initial target for each root skill</param>
+        /// <returns>The shared execution context that was created for all behaviors</returns>
         public ExecutionContext Deserialize(GameObject associate, BitReader reader,
             SkillCastType castType = SkillCastType.OnEquip, GameObject target = default)
         {
@@ -345,13 +366,20 @@ namespace Uchu.World.Systems.Behaviors
             
             var context = new ExecutionContext(associate, reader, default);
 
-            DeserializeRootBehaviorsForSkillType(associate, SkillCastType.Default, context, target);
-            DeserializeRootBehaviorsForSkillType(associate, castType, context, target);
+            DeserializeRootBehaviorsForSkillType(SkillCastType.Default, context, target);
+            DeserializeRootBehaviorsForSkillType(castType, context, target);
 
             return context;
         }
 
-        private void DeserializeRootBehaviorsForSkillType(GameObject associate, SkillCastType skillType,
+        /// <summary>
+        /// Deserializes a this behavior tree for a certain skill type by taking a reader and parsing it into
+        /// behaviors
+        /// </summary>
+        /// <param name="skillType">The skill type to deserialize for</param>
+        /// <param name="context">The execution context to pass to all behaviors</param>
+        /// <param name="target">An optional explicit target to set as initial target</param>
+        private void DeserializeRootBehaviorsForSkillType(SkillCastType skillType,
             ExecutionContext context, GameObject target = default)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
@@ -370,68 +398,120 @@ namespace Uchu.World.Systems.Behaviors
                 }
             }
         }
-        
-        public async Task ExecuteAsync()
-        {
-            if (!(Serialized || Deserialized))
-                throw new InvalidOperationException("Can't execute tree: it's neither serialized nor deserialized.");
-            
-            await ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
-            await ExecuteRootBehaviorsForSkillType(CastType);
-        }
 
-        private async Task ExecuteRootBehaviorsForSkillType(SkillCastType skillType)
+        /// <summary>
+        /// Executes all the behaviors in this tree that correspond to a certain root skill type
+        /// </summary>
+        /// <param name="skillType">The skill type to execute behaviors for</param>
+        private void ExecuteRootBehaviorsForSkillType(SkillCastType skillType)
         {
             if (RootBehaviors.TryGetValue(skillType, out var rootBehaviorList))
             {
                 foreach (var executionPreparation in rootBehaviorList)
                 {
-                    await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
+                    executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
                     
-                    // Only server side behaviors will have to manually execute sync
+                    // If a behavior is serialized (server side) we have to manually sync it
                     if (Serialized)
-                        await executionPreparation.BehaviorBase.ExecuteSync(
-                            executionPreparation.BehaviorExecutionParameters);
+                        executionPreparation.BehaviorBase.ExecuteSync(executionPreparation.SyncBehaviorExecutionParameters);
                 }
             }
         }
+        
+        /// <summary>
+        /// Executes the tree by executing all skills of the default and casttype skill type
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't (de)serialized</exception>
+        public void Execute()
+        {
+            if (!(Serialized || Deserialized))
+                throw new InvalidOperationException("Can't execute tree: it's neither serialized nor deserialized.");
 
-        public async Task UseAsync()
+            try
+            {
+                ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
+                
+                if (CastType != SkillCastType.Default)
+                    ExecuteRootBehaviorsForSkillType(CastType);
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error in tree execute: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Uses the skill tree by starting all the skills of the OnUse skill type
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
+        public void Use()
         {
             if (!Deserialized)
                 throw new InvalidOperationException("Can't use behavior: tree is not deserialized.");
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list))
                 return;
 
-            foreach (var behaviorExecution in list)
+            try
             {
-                await behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
+                foreach (var behaviorExecution in list)
+                {
+                    behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree use: {e.Message}");
             }
         }
 
-        public async Task MountAsync()
+        /// <summary>
+        /// Mounts the skill tree by starting all the skills of the equip skill type
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
+        public void Mount()
         {
             if (!Deserialized)
                 throw new InvalidOperationException("Can't mount tree: tree is not deserialized.");
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list))
                 return;
 
-            foreach (var executionPreparation in list)
+            try
             {
-                await executionPreparation.BehaviorBase.ExecuteStart(executionPreparation.BehaviorExecutionParameters);
+                foreach (var executionPreparation in list)
+                {
+                    executionPreparation.BehaviorBase.ExecuteStart(executionPreparation
+                        .BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree mount: {e.Message}");
             }
         }
 
-        public async Task DismantleAsync()
+        /// <summary>
+        /// Dismantles the skill tree by calling dismantle on all equip skills.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If the tree isn't deserialized</exception>
+        public void Dismantle()
         {
             if (!Deserialized)
                 throw new InvalidOperationException("Can't dismantle tree: tree is not deserialized.");
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) 
                 return;
 
-            foreach (var executionPreparation in list)
+            try
             {
-                await executionPreparation.BehaviorBase.DismantleAsync(executionPreparation.BehaviorExecutionParameters);
+                foreach (var executionPreparation in list)
+                {
+                    executionPreparation.BehaviorBase.Dismantle(executionPreparation
+                        .BehaviorExecutionParameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Encountered error during tree dismantle: {e.Message}");
             }
         }
 

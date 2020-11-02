@@ -6,7 +6,13 @@ namespace Uchu.World.Systems.Behaviors
     {
         public bool State { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public SwitchBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
+    
     public class SwitchBehavior : BehaviorBase<SwitchBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Switch;
@@ -52,12 +58,12 @@ namespace Uchu.World.Systems.Behaviors
                 : ActionFalse.SerializeStart(parameters.NpcContext, parameters.BranchContext);
         }
         
-        protected override async Task ExecuteStart(SwitchBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(SwitchBehaviorExecutionParameters parameters)
         {
             if (parameters.State)
-                await ActionTrue.ExecuteStart(parameters.Parameters);
+                ActionTrue.ExecuteStart(parameters.Parameters);
             else
-                await ActionFalse.ExecuteStart(parameters.Parameters);
+                ActionFalse.ExecuteStart(parameters.Parameters);
         }
     }
 }

@@ -9,6 +9,11 @@ namespace Uchu.World.Systems.Behaviors
         public BehaviorExecutionParameters BehaviorExecutionParameters { get; set; }
         public BehaviorBase ToExecute { get; set; }
         public MovementType MovementType { get; set; }
+
+        public MovementSwitchBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
+            : base(context, branchContext)
+        {
+        }
     }
     public class MovementSwitchBehavior : BehaviorBase<MovementSwitchBehaviorExecutionParameters>
     {
@@ -39,7 +44,7 @@ namespace Uchu.World.Systems.Behaviors
             switch (parameters.MovementType)
             {
                 case MovementType.Moving:
-                    Logger.Debug("Received movement switch type moving, guessing ground behavior");
+                    // Should be handled as ground behavior
                     parameters.ToExecute = GroundBehavior;
                     break;
                 case MovementType.Ground:
@@ -61,7 +66,7 @@ namespace Uchu.World.Systems.Behaviors
                     parameters.ToExecute = JetpackBehavior;
                     break;
                 case MovementType.Unknown:
-                    Logger.Debug("Received movement switch type unknown, guessing ground behavior");
+                    // Should be handled as ground behavior
                     parameters.ToExecute = GroundBehavior;
                     break;
                 default:
@@ -72,11 +77,9 @@ namespace Uchu.World.Systems.Behaviors
                 parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(MovementSwitchBehaviorExecutionParameters parameters)
         {
-            if (parameters.ToExecute == null)
-                return;    
-            await parameters.ToExecute.ExecuteStart(parameters.BehaviorExecutionParameters);
+            parameters.ToExecute?.ExecuteStart(parameters.BehaviorExecutionParameters);
         }
     }
 }

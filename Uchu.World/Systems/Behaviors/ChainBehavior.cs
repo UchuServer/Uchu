@@ -7,6 +7,11 @@ namespace Uchu.World.Systems.Behaviors
     {
         public uint ChainIndex { get; set; } = 1;
         public BehaviorExecutionParameters ChainIndexExecutionParameters { get; set; }
+
+        public ChainBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class ChainBehavior : BehaviorBase<ChainBehaviorExecutionParameters>
     {
@@ -43,16 +48,16 @@ namespace Uchu.World.Systems.Behaviors
                 .DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(ChainBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(ChainBehaviorExecutionParameters parameters)
         {
-            await Behaviors[parameters.ChainIndex - 1]
+            Behaviors[parameters.ChainIndex - 1]
                 .ExecuteStart(parameters.ChainIndexExecutionParameters);
         }
 
         protected override void SerializeStart(ChainBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.Writer.Write(parameters.ChainIndex);
-            parameters.ChainIndexExecutionParameters = Behaviors[1 - 1].SerializeStart(parameters.NpcContext,
+            parameters.ChainIndexExecutionParameters = Behaviors[0].SerializeStart(parameters.NpcContext,
                 parameters.BranchContext);
         }
     }

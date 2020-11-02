@@ -5,6 +5,11 @@ namespace Uchu.World.Systems.Behaviors
     public class DurationBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+
+        public DurationBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class DurationBehavior : BehaviorBase<DurationBehaviorExecutionParameters>
     {
@@ -34,9 +39,9 @@ namespace Uchu.World.Systems.Behaviors
                 });
         }
 
-        protected override async Task ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void ExecuteStart(DurationBehaviorExecutionParameters behaviorExecutionParameters)
         {
-            await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
+            Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
         }
 
         protected override void SerializeStart(DurationBehaviorExecutionParameters parameters)

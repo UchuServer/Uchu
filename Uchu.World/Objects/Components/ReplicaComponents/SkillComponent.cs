@@ -172,7 +172,7 @@ namespace Uchu.World
             
             var tree = await BehaviorTree.FromLotAsync(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
-            await tree.MountAsync();
+            tree.Mount();
 
             if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
@@ -193,9 +193,15 @@ namespace Uchu.World
             
             var tree = await BehaviorTree.FromLotAsync(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
-            await tree.DismantleAsync();
+            tree.Dismantle();
         }
 
+        /// <summary>
+        /// Calculates a skill by serializing it
+        /// </summary>
+        /// <param name="skillId">The skill Id to serialize</param>
+        /// <param name="precalculate">Precalculate the skill, exits execution but adds behavior to cache</param>
+        /// <returns>The skill time in milliseconds</returns>
         public async Task<float> CalculateSkillAsync(int skillId, bool precalculate = false)
         {
             var tree = await BehaviorTree.FromSkillAsync(skillId);
@@ -221,8 +227,8 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
-            await tree.ExecuteAsync();
-            return context.SkillTime;
+            tree.Execute();
+            return context.SkillTime * 1000;
         }
 
         public async Task<float> CalculateSkillAsync(int skillId, GameObject target)
@@ -246,7 +252,7 @@ namespace Uchu.World
                 OriginatorRotation = GameObject.Transform.Rotation
             });
 
-            await tree.ExecuteAsync();
+            tree.Execute();
 
             return context.SkillTime;
         }
@@ -302,7 +308,7 @@ namespace Uchu.World
                     UsedMouse = message.UsedMouse
                 }, GameObject as Player);
 
-                await tree.ExecuteAsync();
+                tree.Execute();
                 
                 if (GameObject.TryGetComponent<DestroyableComponent>(out var stats))
                 {
@@ -319,7 +325,7 @@ namespace Uchu.World
             );
         }
 
-        public async Task SyncUserSkillAsync(SyncSkillMessage message)
+        public void SyncUserSkillAsync(SyncSkillMessage message)
         {
             var stream = new MemoryStream(message.Content);
             using var reader = new BitReader(stream, leaveOpen: true);
@@ -330,7 +336,7 @@ namespace Uchu.World
 
             if (found)
             {
-                await behavior.SyncAsync(message.BehaviorHandle, reader);
+                behavior.SyncAsync(message.BehaviorHandle, reader);
             }
 
             if (message.Done)

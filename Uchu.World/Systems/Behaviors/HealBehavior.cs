@@ -13,11 +13,10 @@ namespace Uchu.World.Systems.Behaviors
             Health = await GetParameter<int>("health");
         }
 
-        public override Task ExecuteStart(BehaviorExecutionParameters parameters)
+        public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
             if (parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats))
                 stats.Health = (uint) ((int) stats.Health + Health);
-            return Task.CompletedTask;
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Uchu.World.Systems.Behaviors
             SpawnFailAction = await GetBehavior("spawn_fail_action");
         }
 
-        public override Task ExecuteStart(BehaviorExecutionParameters parameters)
+        public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
             var quickBuild = GameObject.Instantiate(
                 parameters.Context.Associate.Zone,
@@ -56,8 +56,6 @@ namespace Uchu.World.Systems.Behaviors
                 await Task.Delay(parameters.BranchContext.Duration);
                 Object.Destroy(quickBuild);
             });
-            
-            return Task.CompletedTask;
         }
     }
 }

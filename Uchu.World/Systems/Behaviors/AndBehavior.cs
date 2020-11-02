@@ -5,9 +5,14 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class AndBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; } 
-            = new List<BehaviorExecutionParameters>();
+        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; }
+        public AndBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
+            : base(context, branchContext)
+        {
+            BehaviorExecutionParameters = new List<BehaviorExecutionParameters>();
+        }
     }
+    
     public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.And;
@@ -33,21 +38,7 @@ namespace Uchu.World.Systems.Behaviors
                     behaviorBase.DeserializeStart(parameters.Context, parameters.BranchContext));
             }
         }
-
-        protected override Task ExecuteStart(AndBehaviorExecutionParameters parameters)
-        {
-            for (var i = 0; i < Behaviors.Length; i++)
-            {
-                var index = i;
-                Task.Run(async () =>
-                {
-                    await Behaviors[index].ExecuteStart(parameters.BehaviorExecutionParameters[index]);
-                });
-            }
-
-            return Task.CompletedTask;
-        }
-
+        
         protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
@@ -57,26 +48,29 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                Behaviors[i].SerializeSync(parameters.BehaviorExecutionParameters[i]);
+                Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
             }
         }
 
-        protected override Task ExecuteSync(AndBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        {
+            foreach (var behaviorBase in Behaviors)
+            {
+                parameters.BehaviorExecutionParameters.Add(
+                    behaviorBase.SerializeSync(parameters.NpcContext, parameters.BranchContext));
+            }
+        }
+
+        protected override void ExecuteSync(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                var index = i;
-                Task.Run(async () =>
-                {
-                    await Behaviors[index].ExecuteSync(parameters.BehaviorExecutionParameters[index]);
-                });
+                Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
             }
-            
-            return Task.CompletedTask;
         }
     }
 }

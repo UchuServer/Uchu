@@ -7,9 +7,16 @@ namespace Uchu.World.Systems.Behaviors
 {
     public class ProjectileAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool CalculateImpact { get; set; } = false;
+        public bool CalculateImpact { get; set; }
         public GameObject Target { get; set; }
-        public List<Projectile> Projectiles { get; } = new List<Projectile>();
+        public List<Projectile> Projectiles { get; }
+
+        public ProjectileAttackBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+            CalculateImpact = false;
+            Projectiles = new List<Projectile>();
+        }
     }
     public class ProjectileAttackBehavior : BehaviorBase<ProjectileAttackBehaviorExecutionParameters>
     {
@@ -63,7 +70,7 @@ namespace Uchu.World.Systems.Behaviors
             return projectile;
         }
         
-        protected override async Task ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(ProjectileAttackBehaviorExecutionParameters parameters)
         {
             foreach (var projectile in parameters.Projectiles)
             {
@@ -75,9 +82,14 @@ namespace Uchu.World.Systems.Behaviors
                 var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
                     parameters.BranchContext.Target.Transform.Position);
                 var time = (int) (distance / (double) ProjectileSpeed) * 1000;
-            
-                await Task.Delay(time);
-                await projectile.CalculateImpactAsync(parameters.BranchContext.Target);
+
+                parameters.Schedule(() =>
+                {
+                    // Run in the background as this can trigger database IO
+                    Task.Factory.StartNew(
+                        () => projectile.CalculateImpactAsync(parameters.BranchContext.Target),
+                        TaskCreationOptions.LongRunning);
+                }, time);
             }
         }
         

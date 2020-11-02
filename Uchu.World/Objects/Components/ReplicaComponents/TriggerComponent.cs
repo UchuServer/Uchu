@@ -210,7 +210,7 @@ namespace Uchu.World
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Logger.Error(e.Message);
                     throw;
                 }
             });

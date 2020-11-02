@@ -5,7 +5,13 @@ namespace Uchu.World.Systems.Behaviors
     public class StartBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public StartBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
+    
     public class StartBehavior : BehaviorBase<StartBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Start;
@@ -23,9 +29,9 @@ namespace Uchu.World.Systems.Behaviors
             parameters.Parameters = Action.DeserializeStart(parameters.Context, parameters.BranchContext);
         }
 
-        protected override async Task ExecuteStart(StartBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(StartBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(parameters.Parameters);
+            Action.ExecuteStart(parameters.Parameters);
         }
     }
 }
