@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -9,6 +10,8 @@ namespace Uchu.World.Systems.Behaviors
         public bool ServerSide { get; set; }
         public uint Handle { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+        
+        public byte[] SyncStream { get; set; }
 
         public AttackDelayBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
             : base(context, branchContext)
@@ -61,15 +64,10 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void SerializeSync(BitWriter writer, AttackDelayBehaviorExecutionParameters parameters)
         {
-            // Copy the context to clear the writer
-            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext.Copy(),
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext,
                 parameters.BranchContext);
+            parameters.SyncStream = (writer.BaseStream as MemoryStream)?.ToArray();
             parameters.ServerSide = true;
-            
-            parameters.Schedule(() =>
-            {
-                parameters.NpcContext.Sync(writer, parameters.Handle);
-            }, Delay);
         }
 
         protected override void ExecuteSync(AttackDelayBehaviorExecutionParameters parameters)
@@ -78,6 +76,7 @@ namespace Uchu.World.Systems.Behaviors
             {
                 parameters.Schedule( () =>
                 {
+                    parameters.NpcContext.Sync(parameters.SyncStream, parameters.Handle);
                     Action.ExecuteStart(parameters.Parameters);
                 }, Delay);
             }

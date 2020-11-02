@@ -44,13 +44,13 @@ namespace Uchu.World.Systems.Behaviors
             SkillSyncId = skillSyncId;
         }
 
-        public void Sync(BitWriter writer, uint behaviorSyncId)
+        public void Sync(byte[] content, uint behaviorSyncId)
         {
             Associate.Zone.BroadcastMessage(new EchoSyncSkillMessage
             {
                 Associate = Associate,
                 SkillHandle = SkillSyncId,
-                Content = (writer.BaseStream as MemoryStream)?.ToArray(),
+                Content = content,
                 Done = true,
                 BehaviorHandle = behaviorSyncId
             });
