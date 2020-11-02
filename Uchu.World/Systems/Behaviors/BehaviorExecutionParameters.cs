@@ -82,19 +82,8 @@ namespace Uchu.World.Systems.Behaviors
         {
             Context.RegisterHandle(handle, reader =>
             {
-                // Only one sync may be deserialized at the same time
-                Context.Lock.WaitOne();
-                
                 var syncParameters = (T)Activator.CreateInstance(typeof(T), Context, BranchContext);
-                try
-                {
-                    deserializeSync(reader, syncParameters);
-                }
-                finally
-                {
-                    Context.Lock.ReleaseMutex();
-                }
-                
+                deserializeSync(reader, syncParameters);
                 executeSync(syncParameters);
             });
         }

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Scripting.Hosting.Shell;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -71,7 +70,7 @@ namespace Uchu.World.Systems.Behaviors
             set
             {
                 if (Deserialized && value)
-                    throw new InvalidOptionException("Can't serialize tree, tree is already deserialized.");
+                    throw new InvalidOperationException("Can't serialize tree, tree is already deserialized.");
                 _serialized = value;
             }
         }

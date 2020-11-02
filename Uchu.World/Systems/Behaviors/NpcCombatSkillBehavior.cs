@@ -45,7 +45,7 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void SerializeSync(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            Behavior.SerializeSync(writer, parameters);
+            Behavior.SerializeSync(writer, parameters.Parameters);
         }
 
         protected override void ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)

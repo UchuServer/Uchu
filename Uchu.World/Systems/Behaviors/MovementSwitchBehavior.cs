@@ -41,7 +41,7 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(BitReader reader, MovementSwitchBehaviorExecutionParameters parameters)
         {
-            parameters.MovementType = reader.Read<MovementType>();
+            parameters.MovementType = (MovementType)reader.Read<uint>();
             switch (parameters.MovementType)
             {
                 case MovementType.Moving:
