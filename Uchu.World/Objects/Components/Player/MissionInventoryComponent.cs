@@ -295,16 +295,15 @@ namespace Uchu.World
             { 
                 foreach (var instance in MissionInstances)
                 {
-                    var state = await instance.GetMissionStateAsync();
-                
-                    if (state != MissionState.Active && state != MissionState.CompletedActive) continue;
+                    if (instance.State != MissionState.Active && instance.State != MissionState.CompletedActive)
+                        continue;
 
                     foreach (var task in instance.Tasks.OfType<T>())
                     {
                         var isComplete = await task.IsCompleteAsync();
-                    
-                        if (isComplete) continue;
-
+                        if (isComplete)
+                            continue;
+                        
                         tasks.Add(task);
                     }
                 }

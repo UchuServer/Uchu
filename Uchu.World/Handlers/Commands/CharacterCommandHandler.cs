@@ -1025,13 +1025,10 @@ namespace Uchu.World.Handlers.Commands
             
             foreach (var mission in missions)
             {
-                var state = await mission.GetMissionStateAsync();
-                
-                if (state == MissionState.Completed) continue;
+                if (mission.State == MissionState.Completed)
+                    continue;
 
-                var isMission = await mission.IsMissionAsync();
-                
-                if (!isMission && !achievements) continue;
+                if (!mission.IsMission && !achievements) continue;
                 
                 if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
 

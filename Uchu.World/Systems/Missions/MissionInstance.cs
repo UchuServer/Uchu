@@ -12,10 +12,18 @@ namespace Uchu.World.Systems.Missions
     {
         public Player Player { get; }
         
+        // Template properties
         public int MissionId { get; }
-        
+        public bool IsMission { get; private set; }
+        public bool IsRandom { get; private set; }
+        public string DefinedType { get; private set; }
+        public string DefinedSubType { get; private set; }
         public MissionTaskBase[] Tasks { get; private set; }
-
+        
+        // Instance properties
+        public bool HasStarted { get; private set; }
+        public MissionState State { get; private set; }
+        
         private static Dictionary<MissionTaskType, Type> TaskTypes { get; }
         
         static MissionInstance()
@@ -46,13 +54,57 @@ namespace Uchu.World.Systems.Missions
         public MissionInstance(Player player, int missionId)
         {
             Player = player;
-
             MissionId = missionId;
+        }
+
+        /// <summary>
+        /// Loads generic CdClient information about the mission.
+        /// </summary>
+        public async Task LoadMissionTemplate()
+        {
+            await using var cdClient = new CdClientContext();
+            
+            var mission = await cdClient.MissionsTable.FirstAsync(
+                m => m.Id == MissionId
+            );
+            
+            IsMission = mission.IsMission ?? true;
+            IsRandom = mission.IsRandom ?? true;
+            DefinedType = mission.Definedtype;
+            DefinedSubType = mission.Definedsubtype;
+        }
+        
+        /// <summary>
+        /// Loads specific UchuContext information about the mission.
+        /// </summary>
+        private void LoadMissionInstance(Mission mission)
+        {
+            HasStarted = true;
+            State = (MissionState)mission.State;
+        }
+
+        private async Task LoadMissionInstance()
+        {
+            await using var ctx = new UchuContext();
+
+            // Mission instance information
+            var mission = await ctx.Missions.FirstOrDefaultAsync(
+                m => m.CharacterId == Player.Id && m.MissionId == MissionId
+            );
+            
+            // Not yet started
+            if (mission == default)
+                return;
+
+            LoadMissionInstance(mission);
         }
 
         public async Task LoadAsync()
         {
             await using var cdClient = new CdClientContext();
+
+            await LoadMissionTemplate();
+            await LoadMissionInstance();
 
             var clientTasks = await cdClient.MissionTasksTable.Where(
                 t => t.Id == MissionId
@@ -90,24 +142,17 @@ namespace Uchu.World.Systems.Missions
 
         public async Task StartAsync()
         {
+            if (HasStarted)
+                return;
+            
             await using var ctx = new UchuContext();
             await using var cdClient = new CdClientContext();
-
-            //
-            // Setup new mission
-            //
-
-            var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.Id && m.MissionId == MissionId
-            );
             
             var tasks = await cdClient.MissionTasksTable.Where(
                 t => t.Id == MissionId
             ).ToArrayAsync();
-            
-            if (mission != default) return;
 
-            await ctx.Missions.AddAsync(new Mission
+            var mission = new Mission
             {
                 CharacterId = Player.Id,
                 MissionId = MissionId,
@@ -115,8 +160,9 @@ namespace Uchu.World.Systems.Missions
                 {
                     TaskId = task.Uid ?? 0
                 }).ToList()
-            });
+            };
 
+            await ctx.Missions.AddAsync(mission);
             await ctx.SaveChangesAsync();
 
             await UpdateMissionStateAsync(MissionState.Active);
@@ -124,8 +170,8 @@ namespace Uchu.World.Systems.Missions
             var clientMission = await cdClient.MissionsTable.FirstAsync(
                 m => m.Id == MissionId
             );
-
-            MessageMissionTypeState(MissionLockState.New, clientMission.Definedsubtype, clientMission.Definedtype);
+            
+            MessageMissionTypeState(MissionLockState.New, DefinedSubType, DefinedType);
 
             await CatchupAsync();
 
@@ -133,6 +179,8 @@ namespace Uchu.World.Systems.Missions
             {
                 await missionInventory.OnAcceptMission.InvokeAsync(this);
             }
+
+            LoadMissionInstance(mission);
         }
 
         private async Task CatchupAsync()
@@ -172,13 +220,9 @@ namespace Uchu.World.Systems.Missions
                 m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
 
-            if (mission == default)
+            if (!HasStarted)
             {
                 await StartAsync();
-                
-                mission = await ctx.Missions.FirstOrDefaultAsync(
-                    m => m.CharacterId == Player.Id && m.MissionId == MissionId
-                );
             }
 
             //
@@ -392,17 +436,6 @@ namespace Uchu.World.Systems.Missions
             await CompleteAsync();
         }
 
-        public async Task<MissionState> GetMissionStateAsync()
-        {
-            await using var ctx = new UchuContext();
-            
-            var mission = await ctx.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.Id && m.MissionId == MissionId
-            );
-
-            return (MissionState) mission.State;
-        }
-        
         public async Task UpdateMissionStateAsync(MissionState state, bool sendingRewards = false)
         {
             await using (var ctx = new UchuContext())
@@ -412,9 +445,10 @@ namespace Uchu.World.Systems.Missions
                 );
 
                 mission.State = (int) state;
-
                 await ctx.SaveChangesAsync();
             }
+
+            State = state;
             
             Player.Message(new NotifyMissionMessage
             {
@@ -434,17 +468,6 @@ namespace Uchu.World.Systems.Missions
                 SubType = subType,
                 Type = type
             });
-        }
-
-        public async Task<bool> IsMissionAsync()
-        {
-            await using var cdClient = new CdClientContext();
-
-            var clientMission = await cdClient.MissionsTable.FirstAsync(
-                m => m.Id == MissionId
-            );
-
-            return clientMission.IsMission ?? true;
         }
     }
 }
