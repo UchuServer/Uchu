@@ -642,10 +642,17 @@ namespace Uchu.World
         {
             var watch = new Stopwatch();
             watch.Start();
-            
-            await EarlyPhysics.InvokeAsync();
-            Simulation.Step(DeltaTime);
-            await LatePhysics.InvokeAsync();
+
+            try
+            {
+                await EarlyPhysics.InvokeAsync();
+                Simulation.Step(DeltaTime);
+                await LatePhysics.InvokeAsync();
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Physics error: {e.Message}");
+            }
             
             watch.Stop();
             _physicsTime += watch.ElapsedMilliseconds;
