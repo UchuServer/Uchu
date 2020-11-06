@@ -78,14 +78,14 @@ namespace Uchu.World
             Logger.Information($"Setting up world server: {Id}");
 
             // The zone creation will run as a background task to ensure the calling server can resume operation
-            _ = Task.Factory.StartNew(async () =>
+            _ = Task.Run(async () =>
             {
                 foreach (var zone in info.Info.Zones)
                 {
                     await ZoneParser.LoadZoneDataAsync(zone);
                     await LoadZone(zone);
                 }
-            }, TaskCreationOptions.LongRunning);
+            });
         }
 
         private Task HandleDisconnect(IPEndPoint point, CloseReason reason)

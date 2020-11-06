@@ -31,6 +31,7 @@ namespace Uchu.World
     public class Zone : Object
     {
         private const int TicksPerSecondLimit = 20;
+        private const float TimePerTickLimit = 1000f / TicksPerSecondLimit;
         
         public uint CloneId { get; }
         public ushort InstanceId { get; }
@@ -41,7 +42,7 @@ namespace Uchu.World
         public uint Checksum { get; private set; }
         public bool Loaded { get; private set; }
         public NavMeshManager NavMeshManager { get; private set; }
-        private Task GameLoop { get; set; }
+        private Timer GameLoop { get; set; }
         
         // Managed objects
         private List<Object> ManagedObjects { get; }
@@ -61,7 +62,10 @@ namespace Uchu.World
         private bool _running;
         private int _ticks;
         private long _physicsTime;
+        private long _objectUpdateTime;
+        private long _scheduleUpdateTime;
         
+        public bool CalculatingTick { get; set; }
         public float DeltaTime { get; private set; }
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
@@ -546,9 +550,13 @@ namespace Uchu.World
             {
                 if (_ticks > 0)
                     Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} " +
-                                 $"TPT: {_passedTickTime / _ticks} ms " +
-                                 $"PHY: {_physicsTime / _ticks} ms");
+                                 $"TPT: {_passedTickTime / _ticks}ms [{_physicsTime / _ticks}|" +
+                                 $"{_objectUpdateTime / _ticks}|{_scheduleUpdateTime / _ticks}]");
+
+                _scheduleUpdateTime = 0;
+                _objectUpdateTime = 0;
                 _passedTickTime = 0;
+                _physicsTime = 0;
                 _ticks = 0;
             };
 
@@ -563,22 +571,27 @@ namespace Uchu.World
         {
             if (Players.Length == 0)
                 return;
+            
+            if (CalculatingTick)
+            {
+                Logger.Warning("Can't keep up! Skipping tick.");
+                return;
+            }
 
+            CalculatingTick = true;
+            
             var watch = new Stopwatch();
             watch.Start();
-            
-            const int timeLimit = (int)1000f / TicksPerSecondLimit;
 
             await OnTick.InvokeAsync();
             _ticks++;
 
             var passedMs = watch.ElapsedMilliseconds;
             _passedTickTime += passedMs;
+
+            DeltaTime = Math.Max(TimePerTickLimit, passedMs);
             
-            if (passedMs < timeLimit)
-                await Task.Delay((int) Math.Max(timeLimit - passedMs, 0));
-            
-            DeltaTime = watch.ElapsedMilliseconds;
+            CalculatingTick = false;
         }
 
         /// <summary>
@@ -596,18 +609,30 @@ namespace Uchu.World
             Listen(OnTick, UpdateObjects);
             Listen(OnTick, PhysicsStep);
 
-            
-            GameLoop = Task.Factory.StartNew(async () =>
+            _running = true;
+
+            var tickReporter = SetupTickReporter();
+            var gameLoop = new Timer
             {
-                _running = true;
-                var tickReporter = SetupTickReporter();
-                while (_running)
+                Interval = TimePerTickLimit,
+                AutoReset = true
+            };
+
+            gameLoop.Elapsed += async (sender, args) =>
+            {
+                if (!_running)
                 {
-                    await Tick();
+                    gameLoop.Enabled = false;
+                    tickReporter.Enabled = false;
+                    return;
                 }
                 
-                tickReporter.Stop();
-            }, TaskCreationOptions.LongRunning);
+                await Tick();
+            };
+            
+            gameLoop.Start();
+
+            GameLoop = gameLoop;
         }
 
         /// <summary>
@@ -634,28 +659,37 @@ namespace Uchu.World
         /// </remarks>
         private void UpdateObjects()
         {
-            foreach (var updatedObject in UpdatedObjects.ToArray())
+            var watch = new Stopwatch();
+            watch.Start();
+            
+            var visibleObjects = UpdatedObjects.Select(o => o.Associate)
+                .Intersect(Players.SelectMany(p => p.Perspective.LoadedObjects)).ToHashSet();
+            var objectsToUpdate = UpdatedObjects.ToArray().Where(
+                o => visibleObjects.Contains(o.Associate));
+            
+            foreach (var updatedObject in objectsToUpdate)
             {
                 // Skip this game object if it's stuck or not in the player view
-                if (updatedObject.Stuck
-                    || updatedObject.Associate is GameObject gameObject
-                    && Players.All(p => !p.Perspective.LoadedObjects.Contains(gameObject)))
-                    continue;
-                
-                // Ensure that the object ticks at its frequency
-                if (updatedObject.Frequency > ++updatedObject.Ticks)
-                    continue;
+                if (!updatedObject.Stuck)
+                {
+                    // Ensure that the object ticks at its frequency
+                    if (updatedObject.Frequency > ++updatedObject.Ticks)
+                        continue;
 
-                updatedObject.Ticks = 0;
-                try
-                {
-                    updatedObject.Delegate(DeltaTime);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
+                    updatedObject.Ticks = 0;
+                    try
+                    {
+                        updatedObject.Delegate(DeltaTime);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
                 }
             }
+            
+            watch.Stop();
+            _objectUpdateTime += watch.ElapsedMilliseconds;
         }    
 
         /// <summary>
@@ -663,6 +697,9 @@ namespace Uchu.World
         /// </summary>
         private void ExecuteSchedule()
         {
+            var watch = new Stopwatch();
+            watch.Start();
+            
             // Before executing the schedule, check all incoming tasks and add them to the working queue
             lock (NewScheduledActions)
             {
@@ -692,6 +729,9 @@ namespace Uchu.World
                     ScheduledActions.RemoveAt(i);
                 }
             }
+
+            watch.Stop();
+            _scheduleUpdateTime += watch.ElapsedMilliseconds;
         }
 
         /// <summary>

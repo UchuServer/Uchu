@@ -160,10 +160,7 @@ namespace Uchu.World
             // Finally, check achievements in the background
             if (playerMissions != default)
             {
-                _ = Task.Factory.StartNew(async () =>
-                {
-                    await playerMissions.SmashAsync(GameObject.Lot);
-                }, TaskCreationOptions.LongRunning);
+                _ = Task.Run(async () => await playerMissions.SmashAsync(GameObject.Lot));
             }
         }
         
