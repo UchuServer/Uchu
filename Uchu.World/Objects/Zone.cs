@@ -669,22 +669,18 @@ namespace Uchu.World
             
             foreach (var updatedObject in objectsToUpdate)
             {
-                // Skip this game object if it's stuck or not in the player view
-                if (!updatedObject.Stuck)
-                {
-                    // Ensure that the object ticks at its frequency
-                    if (updatedObject.Frequency > ++updatedObject.Ticks)
-                        continue;
+                // Ensure that the object ticks at its frequency
+                if (updatedObject.Frequency > ++updatedObject.Ticks)
+                    continue;
 
-                    updatedObject.Ticks = 0;
-                    try
-                    {
-                        updatedObject.Delegate(DeltaTime);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e);
-                    }
+                updatedObject.Ticks = 0;
+                try
+                {
+                    updatedObject.Delegate(DeltaTime);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
                 }
             }
             
@@ -812,11 +808,6 @@ namespace Uchu.World
             /// The amount of ticks that have passed since updating the object
             /// </summary>
             public int Ticks { get; set; }
-            
-            /// <summary>
-            /// If execution takes long, an object will be defined as stuck and exempted from the game loop 
-            /// </summary>
-            public bool Stuck { get; set; }
         }
         
         /// <summary>
