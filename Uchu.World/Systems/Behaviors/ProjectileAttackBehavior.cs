@@ -87,9 +87,7 @@ namespace Uchu.World.Systems.Behaviors
                 parameters.Schedule(() =>
                 {
                     // Run in the background as this can trigger database IO
-                    Task.Factory.StartNew(
-                        () => projectile.CalculateImpactAsync(parameters.BranchContext.Target),
-                        TaskCreationOptions.LongRunning);
+                    Task.Run(() => projectile.CalculateImpactAsync(parameters.BranchContext.Target));
                 }, time);
             }
         }

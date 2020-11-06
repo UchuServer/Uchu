@@ -33,14 +33,14 @@ namespace Uchu.World.Systems.Behaviors
             obj.Author = parameters.Context.Associate;
 
             // Run in the background as long running task as game object construction can lead to game messages
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 Object.Start(obj);
                 GameObject.Construct(obj);
                 
                 // Schedule the destruction in the game loop
                 parameters.Schedule(() => Object.Destroy(obj), parameters.BranchContext.Duration);
-            }, TaskCreationOptions.LongRunning);
+            });
         }
     }
 }
