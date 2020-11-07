@@ -61,6 +61,7 @@ namespace Uchu.World
         private long _passedTickTime;
         private bool _running;
         private int _ticks;
+        private int _skippedTicks;
         private long _physicsTime;
         private long _objectUpdateTime;
         private long _scheduleUpdateTime;
@@ -549,14 +550,20 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) =>
             {
                 if (_ticks > 0)
+                {
                     Logger.Debug($"TPS: {_ticks}/{TicksPerSecondLimit} " +
                                  $"TPT: {_passedTickTime / _ticks}ms [{_physicsTime / _ticks}|" +
                                  $"{_objectUpdateTime / _ticks}|{_scheduleUpdateTime / _ticks}]");
+                }
+                
+                if (_skippedTicks >= TicksPerSecondLimit / 2)
+                    Logger.Warning($"Can't keep up, skipped {_skippedTicks}/{TicksPerSecondLimit} ticks!");
 
-                _scheduleUpdateTime = 0;
-                _objectUpdateTime = 0;
                 _passedTickTime = 0;
+                _objectUpdateTime = 0;
                 _physicsTime = 0;
+                _scheduleUpdateTime = 0;
+                _skippedTicks = 0;
                 _ticks = 0;
             };
 
@@ -574,7 +581,7 @@ namespace Uchu.World
             
             if (CalculatingTick)
             {
-                Logger.Warning("Can't keep up! Skipping tick.");
+                _skippedTicks++;
                 return;
             }
 
