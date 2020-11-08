@@ -9,9 +9,14 @@ namespace Uchu.World.Systems.Missions
 {
     public abstract class MissionTaskInstance
     {
-        public Player Player { get; private set; }
+        public MissionTaskInstance(MissionInstance mission, int taskId)
+        {
+            Mission = mission;
+            TaskId = taskId;
+        }
         
-        public int MissionId { get; private set; }
+        #region properties
+        public MissionInstance Mission { get; private set; }
         
         public int TaskId { get; private set; }
         
@@ -36,22 +41,18 @@ namespace Uchu.World.Systems.Missions
         public int[] Parameters { get; private set; }
         
         public abstract MissionTaskType Type { get; }
+        #endregion properties
 
-        public async Task LoadAsync(Player player, int missionId, int taskId)
-        {
-            Player = player;
-            MissionId = missionId;
-            TaskId = taskId;
-
-            await LoadRequirementsAsync();
-        }
-
-        private async Task LoadRequirementsAsync()
+        public async Task LoadAsync()
         {
             await using var cdClient = new CdClientContext();
-
+            await LoadAsync(cdClient);
+        }
+        
+        public async Task LoadAsync(CdClientContext cdClient)
+        {
             var clientTask = await cdClient.MissionTasksTable.FirstAsync(
-                t => t.Uid == TaskId && t.Id == MissionId
+                t => t.Uid == TaskId && t.Id == Mission.MissionId
             );
 
             Target = clientTask.Target ?? 0;
@@ -105,7 +106,7 @@ namespace Uchu.World.Systems.Missions
                 Parameters = new int[0];
             }
         }
-
+        
         public async Task AddProgressAsync(float value)
         {
             await using var ctx = new UchuContext();
@@ -176,7 +177,7 @@ namespace Uchu.World.Systems.Missions
             var progress = await GetProgressAsync();
 
             return progress == TargetValue;
-        }
+        }''
 
         public async Task CheckMissionCompleteAsync()
         {

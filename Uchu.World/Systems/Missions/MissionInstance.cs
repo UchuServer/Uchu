@@ -17,12 +17,8 @@ namespace Uchu.World.Systems.Missions
     public class MissionInstance
     {
         #region properties
-        // Template properties
-        /// <summary>
-        /// The player that started this mission
-        /// </summary>
-        public Player Player { get; }
         
+        #region template
         /// <summary>
         /// The id of the mission in the CdClient
         /// </summary>
@@ -47,12 +43,7 @@ namespace Uchu.World.Systems.Missions
         /// Meta information regarding the sub type of this mission
         /// </summary>
         public string DefinedSubType { get; private set; }
-        
-        /// <summary>
-        /// All the tasks that need to be completed for this mission
-        /// </summary>
-        public HashSet<MissionTaskInstance> Tasks { get; private set; }
-        
+
         /// <summary>
         /// Currency that's rewarded once the mission is completed
         /// </summary>
@@ -182,8 +173,14 @@ namespace Uchu.World.Systems.Missions
         /// The amount of fourth item that's rewarded once the mission is completed more than once
         /// </summary>
         public int RewardItem4RepeatableCount { get; private set; }
+        #endregion template
         
-        // Instance properties
+        #region instance
+        /// <summary>
+        /// The player that started this mission
+        /// </summary>
+        public Player Player { get; }
+        
         /// <summary>
         /// The current state of this mission for the player
         /// </summary>
@@ -203,11 +200,17 @@ namespace Uchu.World.Systems.Missions
         /// If this player is repeating this mission
         /// </summary>
         public bool Repeat => CompletionCount != 0;
+        #endregion instance
         
         /// <summary>
         /// Map that contains all the possible mission tasks with their associated assembly types
         /// </summary>
         private static Dictionary<MissionTaskType, Type> TaskTypes { get; }
+        
+        /// <summary>
+        /// All the tasks that need to be completed for this mission
+        /// </summary>
+        public HashSet<MissionTaskInstance> Tasks { get; private set; }
         #endregion properties
         
         #region fields
@@ -325,15 +328,18 @@ namespace Uchu.World.Systems.Missions
                     continue;
                 }
 
-                var instance = (MissionTaskInstance) Activator.CreateInstance(type);
-                if (instance == default || clientTask.Uid == default)
+                if (clientTask.Uid != null)
                 {
-                    Logger.Error($"Invalid task: {type} [{clientTask.Uid}]");
-                    continue;
-                }
+                    var instance = (MissionTaskInstance) Activator.CreateInstance(type, this, clientTask.Uid.Value);
+                    if (instance == default || clientTask.Uid == default)
+                    {
+                        Logger.Error($"Invalid task: {type} [{clientTask.Uid}]");
+                        continue;
+                    }
                 
-                await instance.LoadAsync(Player, MissionId, clientTask.Uid.Value);
-                tasks.Add(instance);
+                    await instance.LoadAsync(cdClient);
+                    tasks.Add(instance);
+                }
             }
 
             Tasks = tasks;
