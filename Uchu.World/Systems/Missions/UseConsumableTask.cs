@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseConsumableTask : MissionTaskBase
+    public class UseConsumableTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.UseConsumable;
 

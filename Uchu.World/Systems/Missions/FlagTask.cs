@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class FlagTask : MissionTaskBase
+    public class FlagTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.Flag;
 

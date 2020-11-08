@@ -35,9 +35,8 @@ namespace Uchu.World
         {
             if (reader.ReadBit())
                 LockState = (MissionLockState) reader.Read<int>();
-
-            SubType = reader.ReadString((int) reader.Read<uint>()); 
             
+            SubType = reader.ReadString((int) reader.Read<uint>());
             Type = reader.ReadString((int) reader.Read<uint>());
         }
     }

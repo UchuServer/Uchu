@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class QuickBuildTask : MissionTaskBase
+    public class QuickBuildTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.QuickBuild;
 

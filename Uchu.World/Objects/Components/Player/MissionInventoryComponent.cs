@@ -215,16 +215,7 @@ namespace Uchu.World
             
             if (!isComplete)
             {
-                //
-                // Mission is not complete.
-                //
-
-                var currentState = await mission.GetMissionStateAsync();
-
-                await mission.UpdateMissionStateAsync(currentState);
-
                 MessageOfferMission(missionId, missionGiver);
-
                 return;
             }
 
@@ -285,7 +276,7 @@ namespace Uchu.World
             await mission.CompleteAsync();
         }
 
-        public async Task<T[]> FindActiveTasksAsync<T>() where T : MissionTaskBase
+        public async Task<T[]> FindActiveTasksAsync<T>() where T : MissionTaskInstance
         {
             var tasks = new List<T>();
 
@@ -545,7 +536,7 @@ namespace Uchu.World
         }
 
         // TODO: Improve
-        private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null) where T : MissionTaskBase
+        private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null) where T : MissionTaskInstance
         {
             await using var cdClient = new CdClientContext();
             

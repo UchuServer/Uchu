@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class MissionCompleteTask : MissionTaskBase
+    public class MissionCompleteTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.MissionComplete;
 

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class SmashTask : MissionTaskBase
+    public class SmashTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.Smash;
         

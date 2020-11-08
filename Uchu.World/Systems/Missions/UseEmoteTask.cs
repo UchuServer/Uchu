@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseEmoteTask : MissionTaskBase
+    public class UseEmoteTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.UseEmote;
 

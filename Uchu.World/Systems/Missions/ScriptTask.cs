@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class ScriptTask : MissionTaskBase
+    public class ScriptTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.Script;
 

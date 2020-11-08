@@ -7,7 +7,7 @@ using Uchu.Core.Client;
 
 namespace Uchu.World.Systems.Missions
 {
-    public abstract class MissionTaskBase
+    public abstract class MissionTaskInstance
     {
         public Player Player { get; private set; }
         
@@ -40,9 +40,7 @@ namespace Uchu.World.Systems.Missions
         public async Task LoadAsync(Player player, int missionId, int taskId)
         {
             Player = player;
-
             MissionId = missionId;
-
             TaskId = taskId;
 
             await LoadRequirementsAsync();
@@ -57,7 +55,6 @@ namespace Uchu.World.Systems.Missions
             );
 
             Target = clientTask.Target ?? 0;
-
             TargetValue = clientTask.TargetValue ?? 0;
 
             if (clientTask.TargetGroup != default)

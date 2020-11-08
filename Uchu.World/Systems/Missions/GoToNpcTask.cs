@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class GoToNpcTask : MissionTaskBase
+    public class GoToNpcTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.GoToNpc;
 

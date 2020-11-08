@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class InteractTask : MissionTaskBase
+    public class InteractTask : MissionTaskInstance
     {
         public override MissionTaskType Type => MissionTaskType.Interact;
 
