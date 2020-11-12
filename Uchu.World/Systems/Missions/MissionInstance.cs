@@ -211,6 +211,12 @@ namespace Uchu.World.Systems.Missions
         /// All the tasks that need to be completed for this mission
         /// </summary>
         public HashSet<MissionTaskInstance> Tasks { get; private set; }
+        
+        /// <summary>
+        /// Checks if this mission is completed by checking if all sub-tasks are completed
+        /// </summary>
+        /// <returns><c>true</c> if completed, <c>false</c> otherwise</returns>
+        public bool Completed => Tasks.All(t => t.Completed);
         #endregion properties
         
         #region fields
@@ -258,15 +264,25 @@ namespace Uchu.World.Systems.Missions
             Player = player;
             MissionId = missionId;
         }
+        
+        /// <summary>
+        /// Loads the mission template from the cd client and optionally the mission instance from the uchu database
+        /// if it's been started before.
+        /// </summary>
+        public async Task LoadAsync()
+        {
+            await LoadTemplateAsync();
+            await LoadInstanceAsync();
+        }
 
         /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        public async Task LoadMissionTemplateAsync()
+        private async Task LoadTemplateAsync()
         {
-            await using var cdClient = new CdClientContext();
+            await using var context = new CdClientContext();
             
-            var mission = await cdClient.MissionsTable.FirstAsync(
+            var mission = await context.MissionsTable.FirstAsync(
                 m => m.Id == MissionId
             );
             
@@ -313,59 +329,60 @@ namespace Uchu.World.Systems.Missions
             RewardItem4Repeatable = mission.Rewarditem4repeatable ?? 0;
             RewardItem4RepeatableCount = mission.Rewarditem4repeatcount ?? 1;
 
-            var clientTasks = await cdClient.MissionTasksTable.Where(
+            var tasks = await context.MissionTasksTable.Where(
                 t => t.Id == MissionId
             ).ToArrayAsync();
 
             // Load all the tasks for this mission
-            var tasks = new HashSet<MissionTaskInstance>();
-            foreach (var clientTask in clientTasks)
+            Tasks = new HashSet<MissionTaskInstance>();
+
+            var index = 0;
+            foreach (var task in tasks)
             {
-                var taskType = (MissionTaskType) (clientTask.TaskType ?? 0);
+                var taskType = (MissionTaskType) (task.TaskType ?? 0);
                 if (!TaskTypes.TryGetValue(taskType, out var type))
                 {
                     Logger.Error($"No {nameof(MissionTaskInstance)} for {taskType} found.");
                     continue;
                 }
 
-                if (clientTask.Uid != null)
+                if (task.Uid != null)
                 {
-                    var instance = (MissionTaskInstance) Activator.CreateInstance(type, this, clientTask.Uid.Value);
-                    if (instance == default || clientTask.Uid == default)
+                    var instance = (MissionTaskInstance) Activator.CreateInstance(type, this, 
+                        task.Uid.Value, index);
+                    if (instance == default || task.Uid == default)
                     {
-                        Logger.Error($"Invalid task: {type} [{clientTask.Uid}]");
+                        Logger.Error($"Invalid task: {type} [{task.Uid}]");
                         continue;
                     }
                 
-                    await instance.LoadAsync(cdClient);
-                    tasks.Add(instance);
+                    instance.LoadTemplate(task);
+                    Tasks.Add(instance);
                 }
-            }
 
-            Tasks = tasks;
+                index++;
+            }
+            
             _loaded = true;
         }
         
         /// <summary>
-        /// Saves the current in-memory mission instance to the database
+        /// Loads specific uchu context information about the mission
         /// </summary>
-        private async Task SaveMissionInstanceAsync()
+        private async Task LoadInstanceAsync()
         {
-            if (!_instantiated)
-                throw new InvalidOperationException($"Can't save a mission instance that's not instantiated. " +
-                                                    $"Call {nameof(LoadMissionInstance)} first.");
-            
-            await using var ctx = new UchuContext();
-            
-            var mission = await ctx.Missions.FirstOrDefaultAsync(
+            await using var context = new UchuContext();
+
+            // Mission instance information
+            var mission = await context.Missions.FirstOrDefaultAsync(
                 m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
+            
+            // Not yet started
+            if (mission == default)
+                return;
 
-            mission.State = (int) State;
-            mission.CompletionCount = CompletionCount;
-            mission.LastCompletion = LastCompletion;
-
-            await ctx.SaveChangesAsync();
+            LoadMissionInstance(mission);
         }
         
         /// <summary>
@@ -377,35 +394,37 @@ namespace Uchu.World.Systems.Missions
             CompletionCount = mission.CompletionCount;
             LastCompletion = mission.LastCompletion;
             _instantiated = true;
+
+            foreach (MissionTaskInstance task in Tasks)
+            {
+                var taskInstance = mission.Tasks.First(t => t.TaskId == task.TaskId);
+                if (taskInstance == default)
+                    continue;
+                
+                task.LoadInstance(taskInstance);
+            }
         }
-
+        
         /// <summary>
-        /// Loads specific uchu context information about the mission
+        /// Saves the current in-memory mission instance state to the database
         /// </summary>
-        private async Task LoadMissionInstanceAsync()
+        private async Task SaveMissionInstanceAsync()
         {
-            await using var ctx = new UchuContext();
-
-            // Mission instance information
-            var mission = await ctx.Missions.FirstOrDefaultAsync(
+            if (!_instantiated)
+                throw new InvalidOperationException($"Can't save a mission instance that's not instantiated. " +
+                                                    $"Call {nameof(LoadMissionInstance)} first.");
+            
+            await using var context = new UchuContext();
+            
+            var mission = await context.Missions.FirstOrDefaultAsync(
                 m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
-            
-            // Not yet started
-            if (mission == default)
-                return;
 
-            LoadMissionInstance(mission);
-        }
+            mission.State = (int) State;
+            mission.CompletionCount = CompletionCount;
+            mission.LastCompletion = LastCompletion;
 
-        /// <summary>
-        /// Loads the mission template from the cd client and optionally the mission instance from the uchu database
-        /// if it's been started before.
-        /// </summary>
-        public async Task LoadAsync()
-        {
-            await LoadMissionTemplateAsync();
-            await LoadMissionInstanceAsync();
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -413,7 +432,7 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         private async Task CreateInstanceAsync()
         {
-            await using var ctx = new UchuContext();
+            await using var context = new UchuContext();
             
             var mission = new Mission
             {
@@ -426,11 +445,11 @@ namespace Uchu.World.Systems.Missions
                 }).ToList()
             };
 
-            await ctx.Missions.AddAsync(mission);
-            await ctx.SaveChangesAsync();
-            
             // Now that the mission is created, save everything in memory and notify the client
             LoadMissionInstance(mission);
+            
+            await context.Missions.AddAsync(mission);
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -471,13 +490,14 @@ namespace Uchu.World.Systems.Missions
 
                 foreach (var task in obtainTasks)
                 {
-                    var toGive = items.Where(i => task.Targets.Contains((int) i.Lot)).Sum(i => i.Count);
+                    var toGive = items.Where(i => task.Targets.Contains((int) i.Lot))
+                        .Sum(i => i.Count);
 
                     for (var i = 0; i < toGive; i++)
                     {
-                        await task.Progress(task.Target);
-
-                        if (await task.IsCompleteAsync()) break;
+                        await task.ReportProgress(task.Target);
+                        if (task.Completed)
+                            break;
                     }
                 }
             }
@@ -527,10 +547,14 @@ namespace Uchu.World.Systems.Missions
         /// rewarded if it's in one of the mission rewards.</param>
         private async Task SendRewardsAsync(int rewardItem)
         {
-            await RewardPlayerCurrency();
-            await RewardPlayerEmotes();
-            await RewardPlayerStats();
+            await using var context = new UchuContext();
+            
+            await RewardPlayerCurrency(context);
+            await RewardPlayerEmotes(context);
+            RewardPlayerStats(context);
             RewardPlayerLoot(rewardItem);
+
+            await context.SaveChangesAsync();
         }
 
 
@@ -541,7 +565,7 @@ namespace Uchu.World.Systems.Missions
         /// If this is an achievement the currency is updated silently without a notify message
         /// as the client updates the currency locally.
         /// </remarks>
-        private async Task RewardPlayerCurrency()
+        private async Task RewardPlayerCurrency(UchuContext context)
         {
             var currency = !Repeat ? RewardCurrencyRepeatable : RewardCurrency;
             var score = Repeat ? 0 : RewardScore;
@@ -553,9 +577,7 @@ namespace Uchu.World.Systems.Missions
             }
             else
             {
-                await using var ctx = new UchuContext();
-                
-                var character = await ctx.Characters.FirstAsync(
+                var character = await context.Characters.FirstAsync(
                     c => c.Id == Player.Id
                 );
                 
@@ -566,31 +588,29 @@ namespace Uchu.World.Systems.Missions
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.
                 Player.HiddenCurrency += currency;
-
-                await ctx.SaveChangesAsync();
             }
         }
         
         /// <summary>
         /// Rewards the player with emotes that might be unlocked from completing this mission
         /// </summary>
-        private async Task RewardPlayerEmotes()
+        private async Task RewardPlayerEmotes(UchuContext context)
         {
             var emotes = new[] { RewardEmote1, RewardEmote2, RewardEmote3, RewardEmote4 };
             foreach (var i in emotes.Where(e => e != -1))
             {
-                await Player.UnlockEmoteAsync(i);
+                await Player.UnlockEmoteAsync(context, i);
             }
         }
 
         /// <summary>
         /// Rewards the mission instance player with the stat rewards associated to this mission
         /// </summary>
-        private async Task RewardPlayerStats()
+        private void RewardPlayerStats(UchuContext context)
         {
             var stats = Player.GetComponent<DestroyableComponent>();
-            await stats.BoostBaseHealth((uint) RewardMaxHealth);
-            await stats.BoostBaseImagination((uint) RewardMaxImagination);
+            stats.BoostBaseHealth(context, (uint) RewardMaxHealth);
+            stats.BoostBaseImagination(context, (uint) RewardMaxImagination);
         }
 
         /// <summary>
@@ -652,22 +672,6 @@ namespace Uchu.World.Systems.Missions
         }
 
         /// <summary>
-        /// Checks if this mission is completed by checking if all sub-tasks are completed
-        /// </summary>
-        /// <returns><c>true</c> if completed, <c>false</c> otherwise</returns>
-        public async Task<bool> IsCompleteAsync()
-        {
-            foreach (var task in Tasks)
-            {
-                var isComplete = await task.IsCompleteAsync();
-                if (!isComplete)
-                    return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// If this mission is an achievement, completes it. If this mission is a mission, allows the player to complete
         /// it at the mission giver.
         /// </summary>
@@ -692,7 +696,7 @@ namespace Uchu.World.Systems.Missions
         /// </remarks>
         /// <param name="state">The new state to set this mission to</param>
         /// <param name="sendingRewards">Whether or not this state will result in rewards</param>
-        public async Task UpdateMissionStateAsync(MissionState state, bool sendingRewards = false)
+        private async Task UpdateMissionStateAsync(MissionState state, bool sendingRewards = false)
         {
             await using (var ctx = new UchuContext())
             {

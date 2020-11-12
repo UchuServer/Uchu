@@ -5,23 +5,24 @@ namespace Uchu.World.Systems.Missions
 {
     public class UseSkillTask : MissionTaskInstance
     {
+        public UseSkillTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.UseSkill;
 
-        public override async Task<bool> IsCompleteAsync()
+        public override bool Completed => Parameters.Any(t => Progress.Contains(t));
+
+        public async Task ReportProgress(int skillId)
         {
-            var values = await GetProgressValuesAsync();
+            if (!Parameters.Contains(skillId))
+                return;
 
-            return Parameters.Any(t => values.Contains(t));
-        }
-
-        public async Task Progress(int skillId)
-        {
-            if (!Parameters.Contains(skillId)) return;
-
-            await AddProgressAsync(skillId);
+            AddProgress(skillId);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

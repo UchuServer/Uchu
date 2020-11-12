@@ -9,58 +9,96 @@ namespace Uchu.World.Systems.Missions
 {
     public abstract class MissionTaskInstance
     {
-        public MissionTaskInstance(MissionInstance mission, int taskId)
+        public MissionTaskInstance(MissionInstance mission, int taskId, int missionTaskIndex)
         {
             Mission = mission;
             TaskId = taskId;
+            MissionTaskIndex = missionTaskIndex;
         }
         
         #region properties
+        
+        /// <summary>
+        /// The mission this task belongs to
+        /// </summary>
         public MissionInstance Mission { get; private set; }
         
+        /// <summary>
+        /// The index of this task in the list of missions
+        /// </summary>
+        public int MissionTaskIndex { get; }
+        
+        /// <summary>
+        /// The id of this task
+        /// </summary>
         public int TaskId { get; private set; }
         
+        /// <summary>
+        /// A possible target of this task, for example a specific item to obtain
+        /// </summary>
         public int Target { get; private set; }
         
-        public int[] TargetGroup { get; private set; }
-
+        /// <summary>
+        /// If there's more than one target, they're stored in this list
+        /// </summary>
+        private int[] TargetGroup { get; set; }
+        
+        /// <summary>
+        /// All targets for this task, target + target group
+        /// </summary>
         public int[] Targets
         {
             get
             {
                 var targets = TargetGroup?.ToList() ?? new List<int>();
-
                 targets.Add(Target);
-
                 return targets.ToArray();
             }
         }
         
-        public int TargetValue { get; private set; }
+        /// <summary>
+        /// The complete overview of player progress for this task
+        /// </summary>
+        /// <example>
+        /// If the task is to obtain 6 items and the player has collected 3 of them, this list might contain that lot
+        /// 3 times to indicate its progress in the mission.
+        /// </example>
+        public List<float> Progress { get; private set; }
         
+        /// <summary>
+        /// The total progress (or values) this task requires for completion
+        /// </summary>
+        public int RequiredProgress { get; private set; }
+        
+        /// <summary>
+        /// The current progress (or values) this task has
+        /// </summary>
+        public int CurrentProgress => Progress.Count;
+        
+        /// <summary>
+        /// If the task is completed
+        /// </summary>
+        public virtual bool Completed => CurrentProgress == RequiredProgress;
         public int[] Parameters { get; private set; }
         
+        /// <summary>
+        /// The type of this task
+        /// </summary>
         public abstract MissionTaskType Type { get; }
         #endregion properties
 
-        public async Task LoadAsync()
+        /// <summary>
+        /// Loads the information from a database task into this instance
+        /// </summary>
+        /// <param name="task">The database task to use as a template</param>
+        public void LoadTemplate(MissionTasks task)
         {
-            await using var cdClient = new CdClientContext();
-            await LoadAsync(cdClient);
-        }
-        
-        public async Task LoadAsync(CdClientContext cdClient)
-        {
-            var clientTask = await cdClient.MissionTasksTable.FirstAsync(
-                t => t.Uid == TaskId && t.Id == Mission.MissionId
-            );
+            Target = task.Target ?? 0;
+            RequiredProgress = task.TargetValue ?? 0;
 
-            Target = clientTask.Target ?? 0;
-            TargetValue = clientTask.TargetValue ?? 0;
-
-            if (clientTask.TargetGroup != default)
+            if (task.TargetGroup != default)
             {
-                var targetGroup = clientTask.TargetGroup
+                var targetGroup = task.TargetGroup
                     .Replace(" ", "")
                     .Split(',')
                     .Where(c => !string.IsNullOrEmpty(c)).ToList();
@@ -82,9 +120,9 @@ namespace Uchu.World.Systems.Missions
                 TargetGroup = new int[0];
             }
 
-            if (clientTask.TaskParam1 != default)
+            if (task.TaskParam1 != default)
             {
-                var targetParameters = clientTask.TaskParam1
+                var targetParameters = task.TaskParam1
                     .Replace(" ", "")
                     .Split(',')
                     .Where(c => !string.IsNullOrEmpty(c)).ToList();
@@ -106,90 +144,68 @@ namespace Uchu.World.Systems.Missions
                 Parameters = new int[0];
             }
         }
-        
-        public async Task AddProgressAsync(float value)
+
+        /// <summary>
+        /// Loads the player progress for this task instance
+        /// </summary>
+        /// <param name="task">The player task information</param>
+        public void LoadInstance(MissionTask task)
         {
-            await using var ctx = new UchuContext();
-
-            var mission = await ctx.Missions
-                .Include(m => m.Tasks)
-                .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
-
-            var task = mission.Tasks.First(m => m.TaskId == TaskId);
-
-            task.Add(value);
-
-            await ctx.SaveChangesAsync();
-
-            await MessageUpdateMissionTaskAsync(new[] {(float) task.ValueArray().Length});
+            Progress = task.ValueArray().ToList();
         }
 
-        public async Task<int> GetProgressAsync()
+        /// <summary>
+        /// Updates the progress for this task, a notification is sent to the client
+        /// </summary>
+        /// <param name="value">The value to add to the progress</param>
+        /// <example>
+        /// If the player were to obtain a certain amount of collectibles, <c>value</c> might be the item lot here.
+        /// </example>
+        protected void AddProgress(float value)
         {
-            await using var ctx = new UchuContext();
-            
-            var mission = await ctx.Missions
-                .Include(m => m.Tasks)
-                .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
-            
-            var task = mission.Tasks.First(m => m.TaskId == TaskId);
-
-            return task.ValueLength();
-        }
-        
-        public async Task<float[]> GetProgressValuesAsync()
-        {
-            await using var ctx = new UchuContext();
-
-            var mission = await ctx.Missions
-                .Include(m => m.Tasks)
-                .ThenInclude(t => t.Values)
-                .FirstAsync(m => m.MissionId == MissionId && m.CharacterId == Player.Id);
-            
-            var task = mission.Tasks.First(m => m.TaskId == TaskId);
-
-            return task.ValueArray();
-        }
-
-        public async Task MessageUpdateMissionTaskAsync(float[] updates)
-        {
-            await using var cdClient = new CdClientContext();
-
-            var clientTasks = await cdClient.MissionTasksTable.Where(
-                t => t.Id == MissionId
-            ).ToArrayAsync();
-
-            var clientTask = clientTasks.First(c => c.Uid == TaskId);
-            
-            Player.Message(new NotifyMissionTaskMessage
+            // Saving the progress can happen in the background
+            _ = Task.Run(async () =>
             {
-                Associate = Player,
-                MissionId = MissionId,
-                TaskIndex = clientTasks.IndexOf(clientTask),
-                Updates = updates
+                await using var ctx = new UchuContext();
+
+                var mission = await ctx.Missions
+                    .Include(m => m.Tasks)
+                    .ThenInclude(t => t.Values)
+                    .FirstAsync(m => m.MissionId == Mission.MissionId && m.CharacterId == Mission.Player.Id);
+                var task = mission.Tasks.First(m => m.TaskId == TaskId);
+                task.Add(value);
+
+                await ctx.SaveChangesAsync();
+            });
+                
+            Progress.Add(value);
+            MessageUpdateMissionTask();
+        }
+
+        /// <summary>
+        /// Sends a message to the player updating them on the progress of a task
+        /// </summary>
+        private void MessageUpdateMissionTask()
+        {
+            Mission.Player.Message(new NotifyMissionTaskMessage
+            {
+                Associate = Mission.Player,
+                MissionId = Mission.MissionId,
+                TaskIndex = MissionTaskIndex,
+                Updates = new[] { (float)CurrentProgress }
             });
         }
 
-        public virtual async Task<bool> IsCompleteAsync()
+        /// <summary>
+        /// Checks if the parent mission is complete when this task is completed, if so the mission is notified of
+        /// completion.
+        /// </summary>
+        protected async Task CheckMissionCompletedAsync()
         {
-            var progress = await GetProgressAsync();
-
-            return progress == TargetValue;
-        }''
-
-        public async Task CheckMissionCompleteAsync()
-        {
-            var component = Player.GetComponent<MissionInventoryComponent>();
-
-            var mission = component.MissionInstances.First(m => m.MissionId == MissionId);
-
-            var isComplete = await mission.IsCompleteAsync();
+            if (!Mission.Completed)
+                return;
             
-            if (!isComplete) return;
-
-            await mission.SoftCompleteAsync();
+            await Mission.SoftCompleteAsync();
         }
     }
 }

@@ -5,22 +5,28 @@ namespace Uchu.World.Systems.Missions
 {
     public class QuickBuildTask : MissionTaskInstance
     {
+        public QuickBuildTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.QuickBuild;
 
-        public async Task Progress(int lot, int activity)
+        public async Task ReportProgress(int lot, int activity)
         {
-            if (!await TryProgress(lot))
-                await TryProgress(activity);
+            if (!TryProgress(lot))
+                TryProgress(activity);
 
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
 
-        public async Task<bool> TryProgress(int value)
+        private bool TryProgress(int value)
         {
-            if (!Targets.Contains(value)) return false;
+            if (!Targets.Contains(value))
+                return false;
             
-            await AddProgressAsync(value);
+            AddProgress(value);
 
             return true;
         }

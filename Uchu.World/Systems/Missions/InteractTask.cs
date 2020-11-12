@@ -5,23 +5,24 @@ namespace Uchu.World.Systems.Missions
 {
     public class InteractTask : MissionTaskInstance
     {
+        public InteractTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.Interact;
 
-        public override async Task<bool> IsCompleteAsync()
+        public override bool Completed => Progress.Contains(Target);
+
+        public async Task ReportProgress(Lot lot)
         {
-            var values = await GetProgressValuesAsync();
+            if (Target != lot)
+                return;
 
-            return values.Contains(Target);
-        }
-
-        public async Task Progress(Lot lot)
-        {
-            if (Target != lot) return;
-
-            await AddProgressAsync(lot);
+            AddProgress(lot);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

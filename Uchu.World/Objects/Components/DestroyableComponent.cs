@@ -355,38 +355,26 @@ namespace Uchu.World
             Health += Math.Min(value, MaxHealth - Health);
         }
 
-        public async Task BoostBaseHealth(uint delta)
+        public void BoostBaseHealth(UchuContext context, uint delta)
         {
-            if (!(GameObject is Player)) return;
-
-            await using var ctx = new UchuContext();
-
-            var character = ctx.Characters.First(c => c.Id == GameObject.Id);
-
+            if (!(GameObject is Player))
+                return;
+            
+            var character = context.Characters.First(c => c.Id == GameObject.Id);
             character.BaseHealth += (int) delta;
-
             MaxHealth += delta;
-
             Health += delta;
-
-            await ctx.SaveChangesAsync();
         }
 
-        public async Task BoostBaseImagination(uint delta)
+        public void BoostBaseImagination(UchuContext context, uint delta)
         {
-            if (!(GameObject is Player)) return;
-
-            await using var ctx = new UchuContext();
-
-            var character = ctx.Characters.First(c => c.Id == GameObject.Id);
-
+            if (!(GameObject is Player))
+                return;
+            
+            var character = context.Characters.First(c => c.Id == GameObject.Id);
             character.BaseImagination += (int) delta;
-
             MaxImagination += delta;
-
             Imagination += delta;
-
-            await ctx.SaveChangesAsync();
         }
 
         private void CollectObjectStats()

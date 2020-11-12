@@ -5,20 +5,26 @@ namespace Uchu.World.Systems.Missions
 {
     public class CollectTask : MissionTaskInstance
     {
+        public CollectTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.Collect;
         
-        public async Task Progress(GameObject gameObject)
+        public async Task ReportProgress(GameObject gameObject)
         {
             var component = gameObject.GetComponent<CollectibleComponent>();
 
-            if (!Targets.Contains((int) gameObject.Lot)) return;
+            if (!Targets.Contains((int) gameObject.Lot))
+                return;
 
             var shiftedId = component.CollectibleId + ((int) gameObject.Zone.ZoneId << 8);
 
-            await AddProgressAsync(shiftedId);
+            AddProgress(shiftedId);
 
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

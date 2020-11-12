@@ -5,25 +5,24 @@ namespace Uchu.World.Systems.Missions
 {
     public class UseEmoteTask : MissionTaskInstance
     {
+        public UseEmoteTask(MissionInstance mission, int taskId, int missionTaskIndex)
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.UseEmote;
 
-        public override async Task<bool> IsCompleteAsync()
+        public override bool Completed => Progress.Contains(Parameters.FirstOrDefault());
+
+        public async Task ReportProgress(GameObject gameObject, int emote)
         {
-            var values = await GetProgressValuesAsync();
+            if (gameObject.Lot != Target || Parameters.FirstOrDefault() != emote)
+                return;
 
-            return values.Contains(Parameters.FirstOrDefault());
-        }
+            AddProgress(emote);
 
-        public async Task Progress(GameObject gameObject, int emote)
-        {
-            if (gameObject.Lot != Target) return;
-            
-            if (Parameters.FirstOrDefault() != emote) return;
-
-            await AddProgressAsync(emote);
-
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

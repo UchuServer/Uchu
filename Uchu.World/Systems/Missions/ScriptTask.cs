@@ -4,21 +4,21 @@ namespace Uchu.World.Systems.Missions
 {
     public class ScriptTask : MissionTaskInstance
     {
+        public ScriptTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.Script;
 
-        public override async Task<bool> IsCompleteAsync()
-        {
-            var length = await GetProgressAsync();
+        public override bool Completed => CurrentProgress > 0;
 
-            return length > 0;
-        }
-
-        public async Task Progress(int id)
+        public async Task ReportProgress(int id)
         {
-            await AddProgressAsync(id);
+            AddProgress(id);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }
