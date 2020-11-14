@@ -22,7 +22,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void RequestLinkedMissionHandler(RequestLinkedMissionMessage message, Player player)
         {
-            message.Associate.GetComponent<MissionGiverComponent>().OfferMission(player);
+            message.Associate.GetComponent<MissionGiverComponent>().HandleInteraction(player);
         }
         
         [PacketHandler]

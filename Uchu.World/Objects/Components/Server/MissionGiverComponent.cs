@@ -20,7 +20,7 @@ namespace Uchu.World
             {
                 CollectMissions();
 
-                Listen(GameObject.OnInteract, OfferMission);
+                Listen(GameObject.OnInteract, HandleInteraction);
             });
         }
 
@@ -61,7 +61,13 @@ namespace Uchu.World
             );
         }
 
-        public void OfferMission(Player player)
+        /// <summary>
+        /// Handles the interaction between a mission giver and a player, completing any missions ready to complete or offering
+        /// new missions a player may start.
+        /// </summary>
+        /// <param name="player">The player that interacted with the mission giver</param>
+        /// <exception cref="ArgumentOutOfRangeException">If an invalid mission state was provided</exception>
+        public void HandleInteraction(Player player)
         {
             var missionInventory = player.GetComponent<MissionInventoryComponent>();
 
@@ -69,107 +75,60 @@ namespace Uchu.World
             {
                 foreach (var (mission, component) in Missions)
                 {
-                    //
-                    // Get all of the missions the player has active, completed, or otherwise interacted with.
-                    // I.e Missions not started will not be included.
-                    //
-
-                    var playerMissions = missionInventory.GetMissions();
-
                     // Get the quest id.
-                    if (mission.Id == default) continue;
+                    if (mission.Id == default)
+                        continue;
+                    
                     var questId = mission.Id.Value;
-
-                    //
-                    // See if the player has interacted with this mission and could passably hand it in.
-                    //
-
-                    var playerMission = playerMissions.FirstOrDefault(p => p.MissionId == questId);
-
-                    MissionState missionState;
-
-                    if (playerMission != default && (component.AcceptsMission ?? false))
+                    
+                    var playerMission = missionInventory.Missions.FirstOrDefault(p => p.MissionId == questId);
+                    
+                    // If the player is ready to hand this mission in, allow them to complete the mission
+                    if (playerMission != default && (component.AcceptsMission ?? false) && playerMission.State == MissionState.ReadyToComplete)
                     {
-                        missionState = (MissionState) playerMission.State;
-
-                        //
-                        // Check if the player can hand in any missions.
-                        //
-
-                        if (missionState == MissionState.ReadyToComplete)
-                        {
-                            //
-                            // Offer mission hand in to the player.
-                            //
-
                             missionInventory.MessageOfferMission(questId, GameObject);
-
-                            //
-                            // Can only hand in one mission at a time.
-                            //
-
                             return;
-                        }
                     }
 
-                    if (!(component.OffersMission ?? false)) continue;
+                    if (!(component.OffersMission ?? false))
+                        continue;
 
                     if (playerMission != default)
                     {
-                        missionState = (MissionState) playerMission.State;
-
-                        switch (missionState)
+                        switch (playerMission.State)
                         {
-                            //
-                            // If the mission is available but not started for some reason the mission is ready to be pickup up.
-                            //
-
                             case MissionState.Available:
                             case MissionState.CompletedAvailable:
-                                break;
-
-                            //
-                            // If the mission is active in some way or unavailable the player cannot take on this mission.
-                            //
-
+                                // If this is a mission a player hasn't started yet, offer it if the prerequisites are met
+                                var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
+                                    mission.PrereqMissionID,
+                                    missionInventory.CompletedMissions
+                                );
+                    
+                                if (!hasPrerequisite)
+                                    continue;
+                                missionInventory.MessageOfferMission(questId, GameObject);
+                                return;
                             case MissionState.Active:
                             case MissionState.CompletedActive:
+                                // If this is an active mission show the offer popup again for information
                                 player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                                     playerMission.MissionId,
                                     GameObject
                                 );
-                                
                                 continue;
                             case MissionState.ReadyToComplete:
                             case MissionState.Unavailable:
                             case MissionState.Completed:
                             case MissionState.CompletedReadyToComplete:
+                                // Any other missions are skipped
                                 continue;
                             default:
                                 throw new ArgumentOutOfRangeException(
-                                    nameof(missionState), $"{missionState} is not a valid {nameof(MissionState)}"
+                                    nameof(playerMission.State), $"{playerMission.State} is not a valid {nameof(MissionState)}"
                                 );
                         }
                     }
-
-                    //
-                    // Check if player has completed the required missions to take on this new mission.
-                    //
-                    
-                    var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
-                        mission.PrereqMissionID,
-                        missionInventory.GetCompletedMissions()
-                    );
-                    
-                    if (!hasPrerequisite) continue;
-
-                    //
-                    // Offer new mission to the player.
-                    //
-
-                    missionInventory.MessageOfferMission(questId, GameObject);
-
-                    return;
                 }
             }
             catch (Exception e)

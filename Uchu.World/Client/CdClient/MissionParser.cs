@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Systems.Missions;
 
 namespace Uchu.World.Client
 {
@@ -50,9 +51,10 @@ namespace Uchu.World.Client
             return completed.Any(c => c.MissionId == id);
         }
 
-        public static bool CheckPrerequiredMissions(string missions, Mission[] completed)
+        public static bool CheckPrerequiredMissions(string missions, MissionInstance[] completed)
         {
-            if (string.IsNullOrWhiteSpace(missions)) return true;
+            if (string.IsNullOrWhiteSpace(missions))
+                return true;
 
             Logger.Information($"Pre: {missions}");
 

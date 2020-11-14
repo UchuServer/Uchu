@@ -28,9 +28,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
         public static void Mount(GameObject gameObject)
         {
-            var component = gameObject.AddComponent<FilterComponent>();
-            
-            component.OnMissions.Add(1880);
+            gameObject.AddComponent<MissionFilterComponent>().AddMissionIdToFiler(1880);
         }
     }
 }

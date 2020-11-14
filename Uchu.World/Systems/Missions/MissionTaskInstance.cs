@@ -202,10 +202,8 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         protected async Task CheckMissionCompletedAsync()
         {
-            if (!Mission.Completed)
-                return;
-            
-            await Mission.SoftCompleteAsync();
+            if (Mission.Completed)
+                await Mission.SoftCompleteAsync();
         }
     }
 }

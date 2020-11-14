@@ -13,62 +13,84 @@ namespace Uchu.World
 {
     public class MissionInventoryComponent : Component
     {
+        public MissionInventoryComponent()
+        {
+            OnAcceptMission = new Event<MissionInstance>();
+            OnCompleteMission = new Event<MissionInstance>();
+            
+            Listen(OnStart, async () =>
+            {
+                await LoadAsync();
+            });
+        }
+
         public Event<MissionInstance> OnAcceptMission { get; }
         
         public Event<MissionInstance> OnCompleteMission { get; }
         
-        private SemaphoreSlim Lock { get; }
-        
-        public HashSet<MissionInstance> MissionInstances { get; private set; }
+        public HashSet<MissionInstance> Missions { get; private set; }
 
-        public Mission[] GetCompletedMissions()
+        public MissionInstance[] CompletedMissions
         {
-            using var ctx = new UchuContext();
-            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.Id == GameObject.Id && m.CompletionCount > 0
-            ).ToArray();
+            get
+            {
+                lock (Missions)
+                {
+                    return Missions.Where(m => m.Completed).ToArray();
+                }
+            }
         }
 
-        public Mission[] GetActiveMissions()
+        private async Task LoadAsync()
         {
-            using var ctx = new UchuContext();
-            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.Id == GameObject.Id &&
-                     m.State == (int) MissionState.Active ||
-                     m.State == (int) MissionState.CompletedActive
-            ).ToArray();
+            if (GameObject is Player player)
+            {
+                await using var cdContext = new CdClientContext();
+                await using var uchuContext = new UchuContext();
+
+                var missions = await uchuContext.Missions.Where(
+                    m => m.CharacterId == GameObject.Id
+                ).ToArrayAsync();
+
+                Missions = new HashSet<MissionInstance>();
+                
+                foreach (var mission in missions)
+                {
+                    var instance = new MissionInstance(player, mission.MissionId);
+                    Missions.Add(instance);
+                    await instance.LoadAsync(cdContext, uchuContext);
+                }
+
+                Listen(player.OnRespondToMission, async (missionId, receiver, rewardLot) =>
+                {
+                    await RespondToMissionAsync(missionId, receiver, rewardLot);
+                });
+            }
         }
 
-        public Mission[] GetMissions()
+        public bool HasActive(int id)
         {
-            using var ctx = new UchuContext();
-            return ctx.Missions.Include(m => m.Tasks).ThenInclude(m => m.Values).Where(
-                m => m.Character.Id == GameObject.Id
-            ).ToArray();
+            lock (Missions)
+            {
+                return Missions.Any(m => m.MissionId == id && m.State == MissionState.Active 
+                                         || m.State == MissionState.CompletedActive);
+            }
         }
 
-        public async Task<bool> HasCompletedAsync(int id)
+        public bool HasCompleted(int id)
         {
-            await using var ctx = new UchuContext();
-
-            return await ctx.Missions.AnyAsync(
-                m => m.CharacterId == GameObject.Id && m.Id == id && m.State >= (int) MissionState.Completed
-            );
-        }
-
-        public async Task<bool> OnMissionAsync(int id)
-        {
-            await using var ctx = new UchuContext();
-
-            return await ctx.Missions.AnyAsync(
-                m => m.CharacterId == GameObject.Id && m.MissionId == id &&
-                    (m.State == (int) MissionState.Active || m.State == (int) MissionState.CompletedActive)
-            );
+            lock (Missions)
+            {
+                return Missions.Any(m => m.MissionId == id && m.State >= MissionState.Completed);
+            }
         }
 
         public bool HasMission(int id)
         {
-            return MissionInstances.Select(m => m.MissionId).Contains(id);
+            lock (Missions)
+            {
+                return Missions.Any(m => m.MissionId == id);
+            }
         }
 
         public async Task<bool> CanAcceptAsync(int id)
@@ -79,20 +101,8 @@ namespace Uchu.World
             
             return MissionParser.CheckPrerequiredMissions(
                 mission.PrereqMissionID,
-                GetCompletedMissions()
+                CompletedMissions
             );
-        }
-
-        public async Task<bool> RequiresItemAsync(Lot lot)
-        {
-            foreach (var task in MissionInstances.SelectMany(instance => instance.Tasks.OfType<ObtainItemTask>()))
-            {
-                if (task.Completed)
-                    continue;
-                if (task.Targets.Contains((int) lot)) return true;
-            }
-
-            return await RequiredForNewAchievementsAsync(MissionTaskType.ObtainItem, lot);
         }
 
         public void MessageOfferMission(int missionId, GameObject missionGiver)
@@ -114,175 +124,79 @@ namespace Uchu.World
             });
         }
 
-        public MissionInventoryComponent()
+        private async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
         {
-            OnAcceptMission = new Event<MissionInstance>();
-            
-            OnCompleteMission = new Event<MissionInstance>();
-            
-            Lock = new SemaphoreSlim(1, 1);
-            
-            Listen(OnStart, async () =>
-            {
-                await LoadAsync();
-            });
-        }
-
-        public async Task LoadAsync()
-        {
-            await using var ctx = new UchuContext();
-
-            var missions = await ctx.Missions.Where(
-                m => m.CharacterId == GameObject.Id
-            ).ToArrayAsync();
-
-            MissionInstances = new HashSet<MissionInstance>();
-
-            Player player = GameObject as Player;
-
-            foreach (var mission in missions)
-            {
-                var instance = new MissionInstance(player, mission.MissionId);
-                
-                MissionInstances.Add(instance);
-
-                await instance.LoadAsync();
-            }
-
-            Listen(player.OnRespondToMission, async (MissionID, Reciever, RewardLOT) =>
-            {
-                await RespondToMissionAsync(MissionID, Reciever, RewardLOT);
-            });
-        }
-        
-        public async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
-        {
-            //
-            // The player has clicked on the accept or complete button.
-            //
-
-            await using var ctx = new UchuContext();
-            await using var cdClient = new CdClientContext();
-
-            //
-            // Get the mission the player is responding to.
-            //
-
             MissionInstance mission;
-
-            await Lock.WaitAsync();
             
-            try
-            {
-                mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
-            }
-            finally
-            {
-                Lock.Release();
+            lock (Missions) {
+                mission = Missions.FirstOrDefault(m => m.MissionId == missionId);
             }
             
-            //
-            // Check if the player is accepting a mission or responding to one.
-            //
+            await using var uchuContext = new UchuContext();
 
+            // If the user doesn't have this mission yet, start it
             if (mission == default)
             {
+                await using var cdContext = new CdClientContext();
+
                 var instance = new MissionInstance(GameObject as Player, missionId);
-
-                await Lock.WaitAsync();
-
-                try
-                {
-                    MissionInstances.Add(instance);
-                }
-                finally
-                {
-                    Lock.Release();
+                lock (Missions) {
+                    Missions.Add(instance);
                 }
 
-                await instance.LoadAsync();
-
-                await instance.StartAsync();
-                
+                await instance.LoadAsync(cdContext, uchuContext);
                 return;
             }
-
-            //
-            // Player is responding to an active mission.
-            //
             
+            // Player is responding to an active mission.
             if (!mission.Completed)
             {
                 MessageOfferMission(missionId, missionGiver);
                 return;
             }
-
-            //
-            // Complete mission.
-            //
-
-            await mission.CompleteAsync(rewardItem);
-
-            missionGiver?.GetComponent<MissionGiverComponent>().OfferMission(GameObject as Player);
+            
+            // Complete mission
+            await mission.CompleteAsync(uchuContext, rewardItem);
+            missionGiver?.GetComponent<MissionGiverComponent>().HandleInteraction((Player)GameObject);
         }
 
         public async Task CompleteMissionAsync(int missionId)
         {
-            //
-            // Get the mission the player is responding to.
-            //
-            
             MissionInstance mission;
-
-            await Lock.WaitAsync();
-            
-            try
+            lock (Missions)
             {
-                mission = MissionInstances.FirstOrDefault(m => m.MissionId == missionId);
-            }
-            finally
-            {
-                Lock.Release();
+                mission = Missions.FirstOrDefault(m => m.MissionId == missionId);
             }
             
-            //
-            // Check if the player is accepting a mission or responding to one.
-            //
-
+            await using var uchuContext = new UchuContext();
+            
+            // If the player is completing a mission that hasn't started, start it first
             if (mission == default)
             {
-                var instance = new MissionInstance(GameObject as Player, missionId);
+                await using var cdContext = new CdClientContext();
                 
-                await Lock.WaitAsync();
-
-                try
+                var instance = new MissionInstance((Player)GameObject, missionId);
+                lock (Missions)
                 {
-                    MissionInstances.Add(instance);
-                }
-                finally
-                {
-                    Lock.Release();
+                    Missions.Add(instance);
                 }
 
-                await instance.LoadAsync();
-
-                await instance.CompleteAsync();
+                await instance.LoadAsync(cdContext, uchuContext);
+                await instance.CompleteAsync(uchuContext);
                 
                 return;
             }
 
-            await mission.CompleteAsync();
+            await mission.CompleteAsync(uchuContext);
         }
 
         public async Task<T[]> FindActiveTasksAsync<T>() where T : MissionTaskInstance
         {
             var tasks = new List<T>();
-
-            await Lock.WaitAsync();
-
-            try
+            
+            lock (Missions)
             { 
-                foreach (var instance in MissionInstances)
+                foreach (var instance in Missions)
                 {
                     if (instance.State != MissionState.Active && instance.State != MissionState.CompletedActive)
                         continue;
@@ -294,10 +208,6 @@ namespace Uchu.World
                         tasks.Add(task);
                     }
                 }
-            }
-            finally
-            {
-                Lock.Release();
             }
 
             return tasks.ToArray();
@@ -459,177 +369,70 @@ namespace Uchu.World
             });
         }
 
-        private async Task<bool> RequiredForNewAchievementsAsync(MissionTaskType type, Lot lot)
-        {
-            await using var cdClient = new CdClientContext();
-            
-            //
-            // Collect tasks which fits the requirements of this action.
-            //
-
-            var otherTasks = new List<MissionTasks>();
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var missionTask in ClientCache.Tasks)
-                if (MissionParser.GetTargets(missionTask).Contains(lot))
-                    otherTasks.Add(missionTask);
-
-            foreach (var task in otherTasks)
-            {
-                var mission = await cdClient.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
-
-                if (mission == default) continue;
-
-                //
-                // Check if mission is an achievement and has a task of the correct type.
-                //
-
-                if (mission.OfferobjectID != -1 ||
-                    mission.TargetobjectID != -1 ||
-                    (mission.IsMission ?? true) ||
-                    task.TaskType != (int) type)
-                    continue;
-
-                //
-                // Get the mission on the character. If present.
-                //
-
-                MissionInstance characterMission;
-
-                await Lock.WaitAsync();
-
-                try
-                {
-                    characterMission = MissionInstances.FirstOrDefault(m => m.MissionId == mission.Id);
-                }
-                finally
-                {
-                    Lock.Release();
-                }
-
-                //
-                // Check if the player could passably start this achievement.
-                //
-
-                if (characterMission != default) continue;
-
-                //
-                // Check if player has the Prerequisites to start this achievement.
-                //
-
-                var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
-                    mission.PrereqMissionID,
-                    GetCompletedMissions()
-                );
-
-                if (hasPrerequisites)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         // TODO: Improve
         private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null) where T : MissionTaskInstance
         {
-            await using var cdClient = new CdClientContext();
+            await using var cdContext = new CdClientContext();
+            await using var uchuContext = new UchuContext();
             
-            //
             // Collect tasks which fits the requirements of this action.
-            //
-
             var otherTasks = new List<MissionTasks>();
 
-            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var missionTask in ClientCache.Tasks)
                 if (MissionParser.GetTargets(missionTask).Contains(lot))
                     otherTasks.Add(missionTask);
 
             foreach (var task in otherTasks)
             {
-                var mission = await cdClient.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
-
-                if (mission == default) continue;
+                var mission = await cdContext.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
+                if (mission == default)
+                    continue;
                 
-                //
-                // Check if mission is an achievement and has a task of the correct type.
-                //
-
+                // Ensure that the mission is an achievement and has a task of the correct type.
                 if (mission.OfferobjectID != -1 ||
                     mission.TargetobjectID != -1 ||
                     (mission.IsMission ?? true) ||
                     task.TaskType != (int) type)
                     continue;
-
-                //
+                
                 // Get the mission on the character. If present.
-                //
-
                 MissionInstance characterMission;
-
-                await Lock.WaitAsync();
-            
-                try
+                lock (Missions)
                 {
-                    characterMission = MissionInstances.FirstOrDefault(m => m.MissionId == mission.Id);
-                }
-                finally
-                {
-                    Lock.Release();
+                    characterMission = Missions.FirstOrDefault(m => m.MissionId == mission.Id);
                 }
                 
-                //
-                // Check if the player could passably start this achievement.
-                //
-
-                if (characterMission != default) continue;
-
-                //
+                // Check if the player could possibly start this achievement.
+                if (characterMission != default)
+                    continue;
+                
                 // Check if player has the Prerequisites to start this achievement.
-                //
-
                 var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
                     mission.PrereqMissionID,
-                    GetCompletedMissions()
+                    CompletedMissions
                 );
 
-                if (!hasPrerequisites) continue;
-
-                //
+                if (!hasPrerequisites)
+                    continue;
+                
                 // Player can start achievement.
-                //
-
                 // Get Mission Id of new achievement.
-                if (mission.Id == default) continue;
+                if (mission.Id == default)
+                    continue;
                 
                 var missionId = mission.Id.Value;
-
-                //
+                
                 // Setup new achievement.
-                //
-                
                 var instance = new MissionInstance(GameObject as Player, missionId);
-
-                await Lock.WaitAsync();
                 
-                try
+                lock (Missions)
                 {
-                    MissionInstances.Add(instance);
-                }
-                finally
-                {
-                    Lock.Release();
+                    Missions.Add(instance);
                 }
                 
-                await instance.LoadAsync();
-
-                // TODO: Silent?
-                await instance.StartAsync();
+                await instance.LoadAsync(cdContext, uchuContext);
 
                 var activeTask = instance.Tasks.First(t => t.TaskId == task.Uid);
-
                 if (progress != null)
                 {
                     var _ = Task.Run(async () => await progress(activeTask as T));

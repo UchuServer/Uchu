@@ -21,11 +21,11 @@ namespace Uchu.World.Filters
 
         public async Task Tick()
         {
-            var filterTasks = _player.Zone.Objects.OfType<FilterComponent>()
-                .Select(component => Task.Run(async () =>
+            var filterTasks = _player.Zone.Objects.OfType<MissionFilterComponent>()
+                .Select(component => Task.Run(() =>
                 {
                     var excluded = _excluded.Contains(component.GameObject);
-                    var check = await component.CheckAsync(_player);
+                    var check = component.CheckAsync(_player);
 
                     if (excluded && check)
                     {
@@ -35,8 +35,8 @@ namespace Uchu.World.Filters
                     {
                         _excluded.Add(component.GameObject);
                     }
-                }))
-                .ToList();
+                })).ToList();
+            
             await Task.WhenAll(filterTasks);
             
             for (var i = 0; i < _excluded.Count; i++)

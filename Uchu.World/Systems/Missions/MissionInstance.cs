@@ -264,24 +264,24 @@ namespace Uchu.World.Systems.Missions
             Player = player;
             MissionId = missionId;
         }
-        
+
         /// <summary>
         /// Loads the mission template from the cd client and optionally the mission instance from the uchu database
         /// if it's been started before.
         /// </summary>
-        public async Task LoadAsync()
+        /// <param name="cdContext">The cd client context to use when loading the mission templates</param>
+        /// <param name="uchuContext">The uchu database context to use when loading all the mission instances</param>
+        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext)
         {
-            await LoadTemplateAsync();
-            await LoadInstanceAsync();
+            await LoadTemplateAsync(cdContext);
+            await LoadInstanceAsync(uchuContext);
         }
 
         /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        private async Task LoadTemplateAsync()
+        private async Task LoadTemplateAsync(CdClientContext context)
         {
-            await using var context = new CdClientContext();
-            
             var mission = await context.MissionsTable.FirstAsync(
                 m => m.Id == MissionId
             );
@@ -367,22 +367,25 @@ namespace Uchu.World.Systems.Missions
         }
         
         /// <summary>
-        /// Loads specific uchu context information about the mission
+        /// Loads specific uchu context information about the mission, if the mission is not started yet, this starts
+        /// it.
         /// </summary>
-        private async Task LoadInstanceAsync()
+        private async Task LoadInstanceAsync(UchuContext context)
         {
-            await using var context = new UchuContext();
-
             // Mission instance information
             var mission = await context.Missions.FirstOrDefaultAsync(
                 m => m.CharacterId == Player.Id && m.MissionId == MissionId
             );
             
-            // Not yet started
+            // Start the mission if it hasn't been started, otherwise load the database information
             if (mission == default)
-                return;
-
-            LoadMissionInstance(mission);
+            {
+                await StartAsync(context);
+            }
+            else
+            {
+                LoadMissionInstance(mission);
+            }
         }
         
         /// <summary>
@@ -408,13 +411,11 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Saves the current in-memory mission instance state to the database
         /// </summary>
-        private async Task SaveMissionInstanceAsync()
+        private async Task SaveMissionInstanceAsync(UchuContext context)
         {
             if (!_instantiated)
                 throw new InvalidOperationException($"Can't save a mission instance that's not instantiated. " +
                                                     $"Call {nameof(LoadMissionInstance)} first.");
-            
-            await using var context = new UchuContext();
             
             var mission = await context.Missions.FirstOrDefaultAsync(
                 m => m.CharacterId == Player.Id && m.MissionId == MissionId
@@ -426,14 +427,15 @@ namespace Uchu.World.Systems.Missions
 
             await context.SaveChangesAsync();
         }
-
+        
         /// <summary>
-        /// Creates a new mission instance in the database from the template and stores it in memory
+        /// Starts this mission instance and notifies the client
         /// </summary>
-        private async Task CreateInstanceAsync()
+        private async Task StartAsync(UchuContext context)
         {
-            await using var context = new UchuContext();
-            
+            if (_instantiated)
+                return;
+
             var mission = new Mission
             {
                 CharacterId = Player.Id,
@@ -450,17 +452,6 @@ namespace Uchu.World.Systems.Missions
             
             await context.Missions.AddAsync(mission);
             await context.SaveChangesAsync();
-        }
-
-        /// <summary>
-        /// Starts this mission instance and notifies the client
-        /// </summary>
-        public async Task StartAsync()
-        {
-            if (_instantiated)
-                return;
-
-            await CreateInstanceAsync();
             
             MessageNotifyMission();
             MessageMissionTypeState(MissionLockState.New);
@@ -506,27 +497,26 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Completes this mission by updating the state, notifying the player and handing out all the rewards
         /// </summary>
+        /// <param name="context">The context to use to complete this mission</param>
         /// <param name="rewardItem">If this mission had a reward choice, this item will be chosen as reward</param>
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
-        public async Task CompleteAsync(int rewardItem = default)
+        public async Task CompleteAsync(UchuContext context, int rewardItem = default)
         {
             if (!_loaded)
                 throw new InvalidOperationException("Can't complete mission as it's not been loaded yet. " +
                                                     $"Call {nameof(LoadAsync)} before calling {nameof(CompleteAsync)}.");
-            if (!_instantiated)
-                await StartAsync();
 
             if (State == MissionState.Completed)
                 return;
             
-            await UpdateMissionStateAsync(MissionState.Unavailable, true);
-            await SendRewardsAsync(rewardItem);
+            await UpdateMissionStateAsync(context, MissionState.Unavailable, true);
+            await SendRewardsAsync(context, rewardItem);
             
             LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
             State = MissionState.Completed;
             CompletionCount++;
             
-            await SaveMissionInstanceAsync();
+            await SaveMissionInstanceAsync(context);
             MessageNotifyMission();
 
             if (!Player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
@@ -545,16 +535,12 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private async Task SendRewardsAsync(int rewardItem)
+        private async Task SendRewardsAsync(UchuContext context, int rewardItem)
         {
-            await using var context = new UchuContext();
-            
             await RewardPlayerCurrency(context);
             await RewardPlayerEmotes(context);
             RewardPlayerStats(context);
             RewardPlayerLoot(rewardItem);
-
-            await context.SaveChangesAsync();
         }
 
 
@@ -677,13 +663,17 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         public async Task SoftCompleteAsync()
         {
+            // TODO: Preferably this context should be provided by the caller.
+            // TODO: Due to the complexity of the callers this hasn't been implemented yet.
+            await using var context = new UchuContext();
+            
             if (IsMission)
             {
-                await UpdateMissionStateAsync(MissionState.ReadyToComplete);
+                await UpdateMissionStateAsync(context, MissionState.ReadyToComplete);
                 return;
             }
 
-            await CompleteAsync();
+            await CompleteAsync(context);
         }
 
         /// <summary>
@@ -694,21 +684,13 @@ namespace Uchu.World.Systems.Missions
         /// save using <c>SaveInstanceAsync</c> and notify the client using <c>MessageNotifyMission</c>
         /// afterwards, this results in less database sessions.
         /// </remarks>
+        /// <param name="context">The context to use to store the mission state in</param>
         /// <param name="state">The new state to set this mission to</param>
         /// <param name="sendingRewards">Whether or not this state will result in rewards</param>
-        private async Task UpdateMissionStateAsync(MissionState state, bool sendingRewards = false)
+        private async Task UpdateMissionStateAsync(UchuContext context, MissionState state, bool sendingRewards = false)
         {
-            await using (var ctx = new UchuContext())
-            {
-                var mission = await ctx.Missions.FirstOrDefaultAsync(
-                    m => m.CharacterId == Player.Id && m.MissionId == MissionId
-                );
-
-                mission.State = (int) state;
-                await ctx.SaveChangesAsync();
-            }
-            
             State = state;
+            await SaveMissionInstanceAsync(context);
             MessageNotifyMission(sendingRewards);
         }
 

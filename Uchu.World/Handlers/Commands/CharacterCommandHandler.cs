@@ -1005,15 +1005,13 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Complete(string[] arguments, Player player)
         {
-            var missions = player.GetComponent<MissionInventoryComponent>().MissionInstances;
-
+            var missions = player.GetComponent<MissionInventoryComponent>().Missions;
             var args = new List<int>();
-
             var achievements = arguments.Contains("-a");
-
             var list = arguments.ToList();
 
-            if (achievements) list.Remove("-a");
+            if (achievements)
+                list.Remove("-a");
 
             arguments = list.ToArray();
             
@@ -1023,6 +1021,7 @@ namespace Uchu.World.Handlers.Commands
                     args.Add(id);
             }
             
+            await using var context = new UchuContext();
             foreach (var mission in missions)
             {
                 if (mission.State == MissionState.Completed)
@@ -1034,11 +1033,10 @@ namespace Uchu.World.Handlers.Commands
 
                 try
                 {
-                    await mission.CompleteAsync();
+                    await mission.CompleteAsync(context);
                 }
                 catch
                 {
-                    // Ignored
                 }
             }
 
