@@ -87,8 +87,8 @@ namespace Uchu.World
         {
             foreach (var task in MissionInstances.SelectMany(instance => instance.Tasks.OfType<ObtainItemTask>()))
             {
-                if (await task.IsCompleteAsync()) continue;
-
+                if (task.Completed)
+                    continue;
                 if (task.Targets.Contains((int) lot)) return true;
             }
 
@@ -210,10 +210,8 @@ namespace Uchu.World
             //
             // Player is responding to an active mission.
             //
-
-            var isComplete = await mission.IsCompleteAsync();
             
-            if (!isComplete)
+            if (!mission.Completed)
             {
                 MessageOfferMission(missionId, missionGiver);
                 return;
@@ -291,10 +289,8 @@ namespace Uchu.World
 
                     foreach (var task in instance.Tasks.OfType<T>())
                     {
-                        var isComplete = await task.IsCompleteAsync();
-                        if (isComplete)
+                        if (task.Completed)
                             continue;
-                        
                         tasks.Add(task);
                     }
                 }
@@ -311,12 +307,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<SmashTask>())
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             }
 
             await SearchForNewAchievementsAsync<SmashTask>(MissionTaskType.Smash, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             });
         }
 
@@ -324,12 +320,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<CollectTask>())
             {
-                await task.Progress(gameObject);
+                await task.ReportProgress(gameObject);
             }
 
             await SearchForNewAchievementsAsync<CollectTask>(MissionTaskType.Collect, gameObject.Lot, async task =>
             {
-                await task.Progress(gameObject);
+                await task.ReportProgress(gameObject);
             });
         }
 
@@ -337,12 +333,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<ScriptTask>())
             {
-                await task.Progress(id);
+                await task.ReportProgress(id);
             }
 
             await SearchForNewAchievementsAsync<ScriptTask>(MissionTaskType.Script, id, async task =>
             {
-                await task.Progress(id);
+                await task.ReportProgress(id);
             });
         }
 
@@ -350,12 +346,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<QuickBuildTask>())
             {
-                await task.Progress(lot, activity);
+                await task.ReportProgress(lot, activity);
             }
 
             await SearchForNewAchievementsAsync<QuickBuildTask>(MissionTaskType.QuickBuild, lot, async task =>
             {
-                await task.Progress(lot, activity);
+                await task.ReportProgress(lot, activity);
             });
         }
 
@@ -363,12 +359,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<GoToNpcTask>())
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             }
             
             await SearchForNewAchievementsAsync<GoToNpcTask>(MissionTaskType.GoToNpc, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             });
         }
         
@@ -376,12 +372,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<InteractTask>())
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             }
             
             await SearchForNewAchievementsAsync<InteractTask>(MissionTaskType.Interact, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             });
         }
 
@@ -389,12 +385,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<UseEmoteTask>())
             {
-                await task.Progress(gameObject, emote);
+                await task.ReportProgress(gameObject, emote);
             }
 
             await SearchForNewAchievementsAsync<UseEmoteTask>(MissionTaskType.UseEmote, emote, async task =>
             {
-                await task.Progress(gameObject, emote);
+                await task.ReportProgress(gameObject, emote);
             });
         }
 
@@ -402,12 +398,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<UseConsumableTask>())
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             }
 
             await SearchForNewAchievementsAsync<UseConsumableTask>(MissionTaskType.UseConsumable, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             });
         }
 
@@ -415,12 +411,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<UseSkillTask>())
             {
-                await task.Progress(skillId);
+                await task.ReportProgress(skillId);
             }
 
             await SearchForNewAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
             {
-                await task.Progress(skillId);
+                await task.ReportProgress(skillId);
             });
         }
 
@@ -428,12 +424,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<ObtainItemTask>())
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             }
 
             await SearchForNewAchievementsAsync<ObtainItemTask>(MissionTaskType.ObtainItem, lot, async task =>
             {
-                await task.Progress(lot);
+                await task.ReportProgress(lot);
             });
         }
 
@@ -441,12 +437,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<MissionCompleteTask>())
             {
-                await task.Progress(id);
+                await task.ReportProgress(id);
             }
 
             await SearchForNewAchievementsAsync<MissionCompleteTask>(MissionTaskType.MissionComplete, id, async task =>
             {
-                await task.Progress(id);
+                await task.ReportProgress(id);
             });
         }
 
@@ -454,12 +450,12 @@ namespace Uchu.World
         {
             foreach (var task in await FindActiveTasksAsync<FlagTask>())
             {
-                await task.Progress(flag);
+                await task.ReportProgress(flag);
             }
 
             await SearchForNewAchievementsAsync<FlagTask>(MissionTaskType.Flag, flag, async task =>
             {
-                await task.Progress(flag);
+                await task.ReportProgress(flag);
             });
         }
 
