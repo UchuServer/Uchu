@@ -78,7 +78,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// If the task is completed
         /// </summary>
-        public virtual bool Completed => CurrentProgress == RequiredProgress;
+        public virtual bool Completed => CurrentProgress >= RequiredProgress;
         public int[] Parameters { get; private set; }
         
         /// <summary>

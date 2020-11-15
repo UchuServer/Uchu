@@ -1005,7 +1005,7 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Complete(string[] arguments, Player player)
         {
-            var missions = player.GetComponent<MissionInventoryComponent>().Missions;
+            var missions = player.GetComponent<MissionInventoryComponent>().AllMissions;
             var args = new List<int>();
             var achievements = arguments.Contains("-a");
             var list = arguments.ToList();
@@ -1029,7 +1029,8 @@ namespace Uchu.World.Handlers.Commands
 
                 if (!mission.IsMission && !achievements) continue;
                 
-                if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
+                if (args.Count > 0 && !args.Contains(mission.MissionId))
+                    continue;
 
                 try
                 {

@@ -132,9 +132,9 @@ namespace Uchu.World.Services
                 case PreconditionType.DoesNotHaveItem:
                     return DoesNotHaveItem(precondition, player);
                 case PreconditionType.HasAchievement:
-                    return HasAchievementAsync(precondition, player);
+                    return HasAchievement(precondition, player);
                 case PreconditionType.MissionAvailable:
-                    return await MissionAvailableAsync(precondition, player);
+                    return MissionAvailable(precondition, player);
                 case PreconditionType.OnMission:
                     return OnMission(precondition, player);
                 case PreconditionType.MissionComplete:
@@ -204,16 +204,15 @@ namespace Uchu.World.Services
             return inventory.Items.All(i => i.Lot != lot);
         }
 
-        private static bool HasAchievementAsync(Preconditions preconditions, Player player) 
+        private static bool HasAchievement(Preconditions preconditions, Player player) 
             => MissionComplete(preconditions, player);
 
-        private static async Task<bool> MissionAvailableAsync(Preconditions preconditions, Player player)
+        private static bool MissionAvailable(Preconditions preconditions, Player player)
         {
             var missions = player.GetComponent<MissionInventoryComponent>();
-            
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.CanAcceptAsync(id);
+            return missions.CanAccept(id);
         }
 
         private static bool OnMission(Preconditions preconditions, Player player)

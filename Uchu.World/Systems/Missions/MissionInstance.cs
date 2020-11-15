@@ -25,6 +25,11 @@ namespace Uchu.World.Systems.Missions
         public int MissionId { get; }
         
         /// <summary>
+        /// The prerequisite missions of this mission
+        /// </summary>
+        public string PrerequisiteMissions { get; private set; }
+        
+        /// <summary>
         /// Whether this is a mission or an achievement
         /// </summary>
         public bool IsMission { get; private set; }
@@ -210,7 +215,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// All the tasks that need to be completed for this mission
         /// </summary>
-        public HashSet<MissionTaskInstance> Tasks { get; private set; }
+        public List<MissionTaskInstance> Tasks { get; private set; }
         
         /// <summary>
         /// Checks if this mission is completed by checking if all sub-tasks are completed
@@ -285,7 +290,8 @@ namespace Uchu.World.Systems.Missions
             var mission = await context.MissionsTable.FirstAsync(
                 m => m.Id == MissionId
             );
-            
+
+            PrerequisiteMissions = mission.PrereqMissionID;
             IsMission = mission.IsMission ?? true;
             IsChoiceReward = mission.IsChoiceReward ?? false;
             DefinedType = mission.Definedtype;
@@ -334,7 +340,7 @@ namespace Uchu.World.Systems.Missions
             ).ToArrayAsync();
 
             // Load all the tasks for this mission
-            Tasks = new HashSet<MissionTaskInstance>();
+            Tasks = new List<MissionTaskInstance>();
 
             var index = 0;
             foreach (var task in tasks)

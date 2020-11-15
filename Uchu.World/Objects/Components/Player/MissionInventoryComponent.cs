@@ -28,7 +28,18 @@ namespace Uchu.World
         
         public Event<MissionInstance> OnCompleteMission { get; }
         
-        public HashSet<MissionInstance> Missions { get; private set; }
+        private List<MissionInstance> Missions { get; set; }
+        
+        public MissionInstance[] AllMissions
+        {
+            get
+            {
+                lock (Missions)
+                {
+                    return Missions.ToArray();
+                }
+            }
+        }
 
         public MissionInstance[] CompletedMissions
         {
@@ -40,7 +51,7 @@ namespace Uchu.World
                 }
             }
         }
-
+        
         private async Task LoadAsync()
         {
             if (GameObject is Player player)
@@ -52,7 +63,7 @@ namespace Uchu.World
                     m => m.CharacterId == GameObject.Id
                 ).ToArrayAsync();
 
-                Missions = new HashSet<MissionInstance>();
+                Missions = new List<MissionInstance>();
                 
                 foreach (var mission in missions)
                 {
@@ -93,17 +104,16 @@ namespace Uchu.World
             }
         }
 
-        public async Task<bool> CanAcceptAsync(int id)
+        public MissionInstance GetMission(int id)
         {
-            await using var ctx = new CdClientContext();
-
-            var mission = await ctx.MissionsTable.FirstAsync(m => m.Id == id);
-            
-            return MissionParser.CheckPrerequiredMissions(
-                mission.PrereqMissionID,
-                CompletedMissions
-            );
+            lock (Missions)
+            {
+                return Missions.FirstOrDefault(m => m.MissionId == id);
+            }
         }
+
+        public bool CanAccept(int id) => GetMission(id) is { } mission
+                   && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
 
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {

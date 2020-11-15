@@ -15,39 +15,33 @@ namespace Uchu.World.Client
         {
             return mode switch
             {
-                Mode.And => (a && b),
-                Mode.Or => (a || b),
+                Mode.And => a && b,
+                Mode.Or => a || b,
                 Mode.None => false,
                 _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
             };
         }
 
-        private static bool IsCompleted(string str, Mission[] completed)
+        private static bool IsCompleted(string str, MissionInstance[] completed)
         {
-            if (string.IsNullOrWhiteSpace(str)) return true;
+            if (string.IsNullOrWhiteSpace(str))
+                return true;
 
+            // This mission requires a specific state to be set to completed
             if (str.Contains(':'))
             {
                 var colonIndex = str.IndexOf(':');
-                var misId = int.Parse(str.Substring(0, colonIndex));
-                var taskIndex = int.Parse(str.Substring(colonIndex + 1));
+                var missionId = int.Parse(str.Substring(0, colonIndex));
+                var requiredState = int.Parse(str.Substring(colonIndex + 1));
 
-                var chrMis = completed.FirstOrDefault(m => m.MissionId == misId);
-
-                if (chrMis == default)
+                var mission = completed.FirstOrDefault(m => m.MissionId == missionId);
+                if (mission == default)
                     return false;
-
-                using var cdClient = new CdClientContext();
-                var tasks = cdClient.MissionTasksTable.Where(m => m.Id == misId).ToArray();
-
-                var task = tasks[taskIndex];
-                var chrTask = chrMis.Tasks[taskIndex];
-
-                return chrTask.Values.Count >= task.TargetValue;
+                
+                return (int) mission.State >= requiredState;
             }
-
+            
             var id = int.Parse(str);
-
             return completed.Any(c => c.MissionId == id);
         }
 

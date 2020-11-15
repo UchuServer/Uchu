@@ -81,7 +81,7 @@ namespace Uchu.World
                     
                     var questId = mission.Id.Value;
                     
-                    var playerMission = missionInventory.Missions.FirstOrDefault(p => p.MissionId == questId);
+                    var playerMission = missionInventory.GetMission(questId);
                     
                     // If the player is ready to hand this mission in, allow them to complete the mission
                     if (playerMission != default && (component.AcceptsMission ?? false) && playerMission.State == MissionState.ReadyToComplete)
