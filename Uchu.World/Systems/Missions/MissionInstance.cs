@@ -238,30 +238,21 @@ namespace Uchu.World.Systems.Missions
 
         static MissionInstance()
         {
-            TaskTypes = new Dictionary<MissionTaskType, Type>();
-            
-            // Get all possible mission task types
-            var types = typeof(MissionInstance).Assembly.GetTypes().Where(
-                t => t.BaseType == typeof(MissionTaskInstance)
-            );
-            
-            foreach (var type in types)
+            TaskTypes = new Dictionary<MissionTaskType, Type>()
             {
-                if (type.IsAbstract)
-                    continue;
-                
-                var instance = (MissionTaskInstance) Activator.CreateInstance(type);
-
-                try
-                {
-                    if (instance != null)
-                        TaskTypes[instance.Type] = type;
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
-                }
-            }
+                [MissionTaskType.Smash] = typeof(SmashTask),
+                [MissionTaskType.Script] = typeof(ScriptTask),
+                [MissionTaskType.QuickBuild] = typeof(QuickBuildTask),
+                [MissionTaskType.Collect] = typeof(CollectTask),
+                [MissionTaskType.GoToNpc] = typeof(GoToNpcTask),
+                [MissionTaskType.UseEmote] = typeof(UseEmoteTask),
+                [MissionTaskType.UseConsumable] = typeof(UseConsumableTask),
+                [MissionTaskType.UseSkill] = typeof(UseSkillTask),
+                [MissionTaskType.ObtainItem] = typeof(ObtainItemTask),
+                [MissionTaskType.Interact] = typeof(InteractTask),
+                [MissionTaskType.MissionComplete] = typeof(MissionCompleteTask),
+                [MissionTaskType.Flag] = typeof(FlagTask)
+            };
         }
         
         public MissionInstance(Player player, int missionId)
@@ -379,9 +370,10 @@ namespace Uchu.World.Systems.Missions
         private async Task LoadInstanceAsync(UchuContext context)
         {
             // Mission instance information
-            var mission = await context.Missions.FirstOrDefaultAsync(
-                m => m.CharacterId == Player.Id && m.MissionId == MissionId
-            );
+            var mission = await context.Missions
+                .Include(m => m.Tasks)
+                .ThenInclude(t => t.Values)
+                .FirstOrDefaultAsync(m => m.CharacterId == Player.Id && m.MissionId == MissionId);
             
             // Start the mission if it hasn't been started, otherwise load the database information
             if (mission == default)
@@ -508,7 +500,7 @@ namespace Uchu.World.Systems.Missions
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
         public async Task CompleteAsync(UchuContext context, int rewardItem = default)
         {
-            if (!_loaded)
+           if (!_loaded)
                 throw new InvalidOperationException("Can't complete mission as it's not been loaded yet. " +
                                                     $"Call {nameof(LoadAsync)} before calling {nameof(CompleteAsync)}.");
 

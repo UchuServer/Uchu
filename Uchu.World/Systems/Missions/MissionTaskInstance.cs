@@ -151,7 +151,14 @@ namespace Uchu.World.Systems.Missions
         /// <param name="task">The player task information</param>
         public void LoadInstance(MissionTask task)
         {
-            Progress = task.ValueArray().ToList();
+            if (task.Values != null)
+            {
+                Progress = task.ValueArray().ToList();
+            }
+            else
+            {
+                Progress = new List<float>();
+            }
         }
 
         /// <summary>

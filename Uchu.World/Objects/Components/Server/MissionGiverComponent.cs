@@ -80,7 +80,6 @@ namespace Uchu.World
                         continue;
                     
                     var questId = mission.Id.Value;
-                    
                     var playerMission = missionInventory.GetMission(questId);
                     
                     // If the player is ready to hand this mission in, allow them to complete the mission
@@ -99,16 +98,9 @@ namespace Uchu.World
                         {
                             case MissionState.Available:
                             case MissionState.CompletedAvailable:
-                                // If this is a mission a player hasn't started yet, offer it if the prerequisites are met
-                                var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
-                                    mission.PrereqMissionID,
-                                    missionInventory.CompletedMissions
-                                );
-                    
-                                if (!hasPrerequisite)
-                                    continue;
-                                missionInventory.MessageOfferMission(questId, GameObject);
-                                return;
+                                // If this is a mission a player hasn't started yet, but somehow has in their inventory
+                                // Allow them to start it
+                                break;
                             case MissionState.Active:
                             case MissionState.CompletedActive:
                                 // If this is an active mission show the offer popup again for information
@@ -129,6 +121,18 @@ namespace Uchu.World
                                 );
                         }
                     }
+                    
+                    var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
+                        mission.PrereqMissionID,
+                        missionInventory.CompletedMissions
+                    );
+                    
+                    if (!hasPrerequisite)
+                        continue;
+                    
+                    // If this is a mission the player doesn't have yet or hasn't started yet, offer it
+                    missionInventory.MessageOfferMission(questId, GameObject);
+                    return;
                 }
             }
             catch (Exception e)

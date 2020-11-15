@@ -136,25 +136,22 @@ namespace Uchu.World
 
         private async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
         {
-            MissionInstance mission;
-            
-            lock (Missions) {
-                mission = Missions.FirstOrDefault(m => m.MissionId == missionId);
-            }
-            
             await using var uchuContext = new UchuContext();
 
+            MissionInstance mission = GetMission(missionId);
+            
             // If the user doesn't have this mission yet, start it
             if (mission == default)
             {
                 await using var cdContext = new CdClientContext();
 
                 var instance = new MissionInstance(GameObject as Player, missionId);
+                await instance.LoadAsync(cdContext, uchuContext);
+                
                 lock (Missions) {
                     Missions.Add(instance);
                 }
-
-                await instance.LoadAsync(cdContext, uchuContext);
+                
                 return;
             }
             
