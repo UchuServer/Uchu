@@ -432,7 +432,8 @@ namespace Uchu.World.Systems.Missions
         private async Task StartAsync(UchuContext context)
         {
             if (_instantiated)
-                return;
+                throw new InvalidOperationException("Can't start a mission that hasn't been instantiated, call" +
+                                                    $"{nameof(LoadAsync)} before starting a mission!");
 
             var mission = new Mission
             {
@@ -499,32 +500,27 @@ namespace Uchu.World.Systems.Missions
         /// <param name="rewardItem">If this mission had a reward choice, this item will be chosen as reward</param>
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
         public async Task CompleteAsync(UchuContext context, int rewardItem = default)
-        {
-           if (!_loaded)
-                throw new InvalidOperationException("Can't complete mission as it's not been loaded yet. " +
-                                                    $"Call {nameof(LoadAsync)} before calling {nameof(CompleteAsync)}.");
-
-            if (State == MissionState.Completed)
-                return;
+        { 
+            if (!_loaded)
+                await StartAsync(context);
             
-            await UpdateMissionStateAsync(context, MissionState.Unavailable, true);
+            if (State == MissionState.Completed) 
+               return;
+            
+            await UpdateMissionStateAsync(context, MissionState.Unavailable, true); 
             await SendRewardsAsync(context, rewardItem);
             
-            LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds();
-            State = MissionState.Completed;
-            CompletionCount++;
-            
+            LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds(); 
+            State = MissionState.Completed; 
+            CompletionCount++; 
             await SaveMissionInstanceAsync(context);
+            
             MessageNotifyMission();
-
-            if (!Player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+            
+            if (!Player.TryGetComponent<MissionInventoryComponent>(out var missionInventory)) 
                 return;
             
-            var _ = Task.Run(async () =>
-            {
-                await missionInventory.MissionCompleteAsync(MissionId);
-            });
-            
+            await missionInventory.MissionCompleteAsync(MissionId); 
             await missionInventory.OnCompleteMission.InvokeAsync(this);
         }
 

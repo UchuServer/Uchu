@@ -47,7 +47,7 @@ namespace Uchu.World
             {
                 lock (Missions)
                 {
-                    return Missions.Where(m => m.Completed).ToArray();
+                    return Missions.Where(m => m.State == MissionState.Completed).ToArray();
                 }
             }
         }
