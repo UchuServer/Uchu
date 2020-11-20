@@ -180,7 +180,8 @@ If the server did not output a line saying the api is ready, attempt to rebind t
 Please ensure you are using an unpacked client. See Prerequisite -> LEGO Universe Client
 
 #### Two windows open and immediately close
-Attempt the specify a different character port. See Network ports -> Servers
+Attempt to specify a different character port. See Network ports -> Servers.
+If that doesn't work double check that the Uchu.Instance and Uchu.StandardScripts paths are correct. See Configuration -> Define Uchu.Instance and Uchu.StandardScripts.
 
 #### Cannot load into world
 Attempt the specify a couple of world server ports. See Network ports -> Servers
