@@ -1078,7 +1078,7 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[1], out var id))
                 return "/triggercelebrate <CelebrationID>";
 
-            await player.TriggerCelebration((Celebration)id);
+            await player.TriggerCelebration((CelebrationId)id);
 
             return $"Triggered Celebration {arguments[1]}";
         }

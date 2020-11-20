@@ -31,39 +31,39 @@ namespace Uchu.StandardScripts.NimbusStation
                         // Venture
                         case 6980:
                             missions[0] = 555;
-                            missions[1] = (int) Core.Resources.Mission.JoinVentureLeague;
-                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
-                            celebrationId = (int) Celebration.JoinVenture;
+                            missions[1] = (int) MissionId.JoinVentureLeague;
+                            missions[2] = (int) MissionId.JoinaFaction;
+                            celebrationId = (int) CelebrationId.JoinVenture;
                             factionFlag = 46; // Venture Faction Flag
                             break;
                         // Assembly
                         case 6979:
                             missions[0] = 544; 
-                            missions[1] = (int) Core.Resources.Mission.JoinAssembly;
-                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
-                            celebrationId = (int) Celebration.JoinAssembly;
+                            missions[1] = (int) MissionId.JoinAssembly;
+                            missions[2] = (int) MissionId.JoinaFaction;
+                            celebrationId = (int) CelebrationId.JoinAssembly;
                             factionFlag = 47; // Assembly Faction Flag
                             break;
                         // Paradox
                         case 6981:
                             missions[0] = 577; 
-                            missions[1] = (int) Core.Resources.Mission.JoinTheSentinels;
-                            missions[2] = (int) Core.Resources.Mission.JoinaFaction; 
-                            celebrationId = (int) Celebration.JoinParadox;
+                            missions[1] = (int) MissionId.JoinTheSentinels;
+                            missions[2] = (int) MissionId.JoinaFaction; 
+                            celebrationId = (int) CelebrationId.JoinParadox;
                             factionFlag = 48; // Paradox Faction Flag
                             break;
                         // Sentinel
                         case 6978:
                             missions[0] = 566; // Sentinel Missions
-                            missions[1] = (int) Core.Resources.Mission.JoinTheSentinels;
-                            missions[2] = (int) Core.Resources.Mission.JoinaFaction;
-                            celebrationId = (int) Celebration.JoinSentinels;
+                            missions[1] = (int) MissionId.JoinTheSentinels;
+                            missions[2] = (int) MissionId.JoinaFaction;
+                            celebrationId = (int) CelebrationId.JoinSentinels;
                             factionFlag = 49; // Sentinel Faction Flag
                             break;
                     }
 
-                    var celebration = (Celebration) celebrationId;
-                    if (celebration != Celebration.Invalid)
+                    var celebration = (CelebrationId) celebrationId;
+                    if (celebration != CelebrationId.Invalid)
                     {
                         await player.TriggerCelebration(celebration);
                     }

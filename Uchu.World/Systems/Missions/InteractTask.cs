@@ -9,6 +9,10 @@ namespace Uchu.World.Systems.Missions
             : base(mission, taskId, missionTaskIndex)
         {
         }
+
+        public InteractTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
+        {
+        }
         
         public override MissionTaskType Type => MissionTaskType.Interact;
 

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -28,7 +29,11 @@ namespace Uchu.StandardScripts.AvantGardens
 
         public static void Mount(GameObject gameObject)
         {
-            gameObject.AddComponent<MissionFilterComponent>().AddMissionIdToFiler(1880);
+            if (!gameObject.TryGetComponent<MissionFilterComponent>(out var missionFilter))
+            {
+                missionFilter = gameObject.AddComponent<MissionFilterComponent>();
+            }
+            missionFilter.AddMissionIdToFilter(MissionId.SixShooter);
         }
     }
 }

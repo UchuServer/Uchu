@@ -1,34 +1,33 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Uchu.World.Services;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
     public class MissionFilterComponent : Component
     {
-        public List<int> MissionIdFilter { get; set; }
+        public List<MissionId> MissionIdFilter { get; set; }
 
         public MissionFilterComponent()
         {
-            MissionIdFilter = new List<int>();
+            MissionIdFilter = new List<MissionId>();
         }
 
-        public void AddMissionIdToFiler(int id)
+        public void AddMissionIdToFilter(MissionId missionId)
         {
             lock (MissionIdFilter)
             {
-                MissionIdFilter.Add(id);
+                MissionIdFilter.Add(missionId);
             }
         }
 
-        public bool CheckAsync(Player player)
+        public bool Check(Player player)
         {
             if (MissionIdFilter.Count > 0)
             {
                 var inventory = player.GetComponent<MissionInventoryComponent>();
-                foreach (var mission in MissionIdFilter)
+                foreach (var missionId in MissionIdFilter)
                 {
-                    if (inventory.HasActive(mission))
+                    if (inventory.HasActive((int)missionId))
                         return false;
                 }
             }

@@ -15,6 +15,17 @@ namespace Uchu.World.Systems.Missions
             TaskId = taskId;
             MissionTaskIndex = missionTaskIndex;
         }
+
+        public MissionTaskInstance(MissionInstance mission, MissionTaskInstance cachedInstance)
+        {
+            Mission = mission;
+            TaskId = cachedInstance.TaskId;
+            MissionTaskIndex = cachedInstance.MissionTaskIndex;
+            Target = cachedInstance.Target;
+            TargetGroup = (int[])cachedInstance.TargetGroup.Clone();
+            Parameters = (int[])cachedInstance.Parameters.Clone();
+            RequiredProgress = cachedInstance.RequiredProgress;
+        }
         
         #region properties
         
@@ -42,6 +53,8 @@ namespace Uchu.World.Systems.Missions
         /// If there's more than one target, they're stored in this list
         /// </summary>
         private int[] TargetGroup { get; set; }
+
+        private int[] _targets;
         
         /// <summary>
         /// All targets for this task, target + target group
@@ -50,9 +63,14 @@ namespace Uchu.World.Systems.Missions
         {
             get
             {
-                var targets = TargetGroup?.ToList() ?? new List<int>();
-                targets.Add(Target);
-                return targets.ToArray();
+                if (_targets == default)
+                {
+                    var targets = TargetGroup?.ToList() ?? new List<int>();
+                    targets.Add(Target);
+                    _targets = targets.ToArray();
+                }
+                
+                return _targets;
             }
         }
         

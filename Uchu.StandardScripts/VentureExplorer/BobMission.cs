@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
-using MRS = Uchu.Core.Resources.Mission;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
@@ -24,7 +24,7 @@ namespace Uchu.StandardScripts.VentureExplorer
                 Listen(missionGiverComponent.OnMissionOk, async message =>
                 {
                     var (missionId, isComplete, _, responder) = message;
-                    if (missionId != (int)MRS.YourCreativeSpark || !isComplete)
+                    if (missionId != (int)MissionId.YourCreativeSpark || !isComplete)
                         return;
                     
                     // await responder.GetComponent<MissionInventoryComponent>().CompleteMissionAsync(MRS.UnlockYourImagination);

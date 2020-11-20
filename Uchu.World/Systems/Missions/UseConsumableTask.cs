@@ -9,6 +9,11 @@ namespace Uchu.World.Systems.Missions
             : base(mission, taskId, missionTaskIndex)
         {
         }
+
+        public UseConsumableTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
+            cachedInstance)
+        {
+        }
         
         public override MissionTaskType Type => MissionTaskType.UseConsumable;
 

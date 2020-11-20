@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Systems.Missions
 {
@@ -184,7 +185,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// The player that started this mission
         /// </summary>
-        public Player Player { get; }
+        public Player Player { get; private set; }
         
         /// <summary>
         /// The current state of this mission for the player
@@ -255,10 +256,26 @@ namespace Uchu.World.Systems.Missions
             };
         }
         
-        public MissionInstance(Player player, int missionId)
+        public MissionInstance(int missionId)
         {
-            Player = player;
             MissionId = missionId;
+        }
+
+        /// <summary>
+        /// Loads the mission template from the cd client and ignores instance information
+        /// </summary>
+        /// <param name="cdContext">The cd client to load the mission information from</param>
+        public async Task LoadAsync(CdClientContext cdContext)
+        {
+            var cachedMission = ClientCache.Missions.FirstOrDefault(m => m.MissionId == MissionId);
+            if (cachedMission != default)
+            {
+                LoadTemplateFromCache(cachedMission);
+            }
+            else
+            {
+                await LoadTemplateFromDatabaseAsync(cdContext);
+            }
         }
 
         /// <summary>
@@ -267,16 +284,77 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="cdContext">The cd client context to use when loading the mission templates</param>
         /// <param name="uchuContext">The uchu database context to use when loading all the mission instances</param>
-        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext)
+        /// <param name="player">The player to load this mission for, if not specified only the template information
+        /// will be loaded</param>
+        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext, Player player)
         {
-            await LoadTemplateAsync(cdContext);
+            if (Player == default)
+                throw new InvalidOperationException("Can't instantiate mission instance without player, call" +
+                                                    $"{nameof(LoadAsync)} without player argument to load just the template.");
+            
+            Player = player;
+            await LoadAsync(cdContext);
             await LoadInstanceAsync(uchuContext);
+        }
+
+        /// <summary>
+        /// Loads generic cd client information about the mission from a cached instance of that mission
+        /// </summary>
+        /// <param name="cachedMission">The cached instance to load parameters for</param>
+        private void LoadTemplateFromCache(MissionInstance cachedMission)
+        {
+            PrerequisiteMissions = cachedMission.PrerequisiteMissions;
+            IsMission = cachedMission.IsMission;
+            IsChoiceReward = cachedMission.IsChoiceReward;
+            DefinedType = cachedMission.DefinedType;
+            DefinedSubType = cachedMission.DefinedSubType;
+            
+            // Possible stat rewards
+            RewardMaxHealth = cachedMission.RewardMaxHealth;
+            RewardMaxImagination = cachedMission.RewardMaxImagination;
+            RewardMaxInventory = cachedMission.RewardMaxInventory;
+            RewardCurrency = cachedMission.RewardCurrency;
+            RewardCurrencyRepeatable = cachedMission.RewardCurrencyRepeatable;
+            RewardScore = cachedMission.RewardScore;
+            
+            // Emotes
+            RewardEmote1 = cachedMission.RewardEmote1;
+            RewardEmote2 = cachedMission.RewardEmote2;
+            RewardEmote3 = cachedMission.RewardEmote3;
+            RewardEmote4 = cachedMission.RewardEmote4;
+            
+            // First optional reward item
+            RewardItem1 = cachedMission.RewardItem1;
+            RewardItem1Count = cachedMission.RewardItem1Count;
+            RewardItem1Repeatable = cachedMission.RewardItem1Repeatable;
+            RewardItem1RepeatableCount = cachedMission.RewardItem1RepeatableCount;
+            
+            // Second optional reward item
+            RewardItem2 = cachedMission.RewardItem2;
+            RewardItem2Count = cachedMission.RewardItem2Count;
+            RewardItem2Repeatable = cachedMission.RewardItem2Repeatable;
+            RewardItem2RepeatableCount = cachedMission.RewardItem2RepeatableCount;
+            
+            // Third optional reward item
+            RewardItem3 = cachedMission.RewardItem3;
+            RewardItem3Count = cachedMission.RewardItem3Count;
+            RewardItem3Repeatable = cachedMission.RewardItem3Repeatable;
+            RewardItem3RepeatableCount = cachedMission.RewardItem3RepeatableCount;
+            
+            // Fourth optional reward item
+            RewardItem4 = cachedMission.RewardItem4;
+            RewardItem4Count = cachedMission.RewardItem4Count;
+            RewardItem4Repeatable = cachedMission.RewardItem4Repeatable;
+            RewardItem4RepeatableCount = cachedMission.RewardItem4RepeatableCount;
+
+            Tasks = cachedMission.Tasks.Select(t => 
+                (MissionTaskInstance) Activator.CreateInstance(t.GetType(), this, t)).ToList();
         }
 
         /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        private async Task LoadTemplateAsync(CdClientContext context)
+        private async Task LoadTemplateFromDatabaseAsync(CdClientContext context)
         {
             var mission = await context.MissionsTable.FirstAsync(
                 m => m.Id == MissionId

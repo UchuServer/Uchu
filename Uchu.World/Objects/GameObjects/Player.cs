@@ -274,7 +274,7 @@ namespace Uchu.World
         /// Triggers a celebration for the player
         /// </summary>
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
-        public async Task TriggerCelebration(Celebration celebrationId)
+        public async Task TriggerCelebration(CelebrationId celebrationId)
         {
             var celebration = (await new CdClientContext().CelebrationParametersTable.
                 Where(t => t.Id == (int)celebrationId).ToArrayAsync())[0];

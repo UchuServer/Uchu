@@ -9,6 +9,10 @@ namespace Uchu.World.Systems.Missions
             : base(mission, taskId, missionTaskIndex)
         {
         }
+
+        public SmashTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
+        {
+        }
         
         public override MissionTaskType Type => MissionTaskType.Smash;
         

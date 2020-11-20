@@ -1,6 +1,6 @@
 ﻿namespace Uchu.Core.Resources
 {
-    public enum Celebration
+    public enum CelebrationId
     {
         Invalid = -1,
         LifePoints = 2,

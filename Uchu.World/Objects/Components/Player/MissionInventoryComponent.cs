@@ -29,6 +29,18 @@ namespace Uchu.World
         public Event<MissionInstance> OnCompleteMission { get; }
         
         private List<MissionInstance> Missions { get; set; }
+
+        private MissionInstance[] ActiveMissions
+        {
+            get
+            {
+                lock (Missions)
+                {
+                    return Missions.Where(m => m.State == MissionState.Active
+                                               || m.State == MissionState.CompletedActive).ToArray();
+                }
+            }
+        }
         
         public MissionInstance[] AllMissions
         {
@@ -67,9 +79,13 @@ namespace Uchu.World
                 
                 foreach (var mission in missions)
                 {
-                    var instance = new MissionInstance(player, mission.MissionId);
-                    Missions.Add(instance);
-                    await instance.LoadAsync(cdContext, uchuContext);
+                    var instance = new MissionInstance(mission.MissionId);
+                    await instance.LoadAsync(cdContext, uchuContext, player);
+
+                    lock (Missions)
+                    {
+                        Missions.Add(instance);
+                    }
                 }
 
                 Listen(player.OnRespondToMission, async (missionId, receiver, rewardLot) =>
@@ -83,8 +99,7 @@ namespace Uchu.World
         {
             lock (Missions)
             {
-                return Missions.Any(m => m.MissionId == id && m.State == MissionState.Active 
-                                         || m.State == MissionState.CompletedActive);
+                return ActiveMissions.Any(m => m.MissionId == id);
             }
         }
 
@@ -145,8 +160,8 @@ namespace Uchu.World
             {
                 await using var cdContext = new CdClientContext();
 
-                var instance = new MissionInstance(GameObject as Player, missionId);
-                await instance.LoadAsync(cdContext, uchuContext);
+                var instance = new MissionInstance(missionId);
+                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
                 
                 lock (Missions) {
                     Missions.Add(instance);
@@ -182,14 +197,14 @@ namespace Uchu.World
             {
                 await using var cdContext = new CdClientContext();
                 
-                var instance = new MissionInstance((Player)GameObject, missionId);
+                var instance = new MissionInstance(missionId);
+                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
+                await instance.CompleteAsync(uchuContext);
+                
                 lock (Missions)
                 {
                     Missions.Add(instance);
                 }
-
-                await instance.LoadAsync(cdContext, uchuContext);
-                await instance.CompleteAsync(uchuContext);
                 
                 return;
             }
@@ -197,32 +212,12 @@ namespace Uchu.World
             await mission.CompleteAsync(uchuContext);
         }
 
-        public async Task<T[]> FindActiveTasksAsync<T>() where T : MissionTaskInstance
-        {
-            var tasks = new List<T>();
-            
-            lock (Missions)
-            { 
-                foreach (var instance in Missions)
-                {
-                    if (instance.State != MissionState.Active && instance.State != MissionState.CompletedActive)
-                        continue;
-
-                    foreach (var task in instance.Tasks.OfType<T>())
-                    {
-                        if (task.Completed)
-                            continue;
-                        tasks.Add(task);
-                    }
-                }
-            }
-
-            return tasks.ToArray();
-        }
+        private IEnumerable<T> FindActiveTasksAsync<T>() where T : MissionTaskInstance => ActiveMissions
+                .SelectMany(m => m.Tasks.OfType<T>().Where(t => !t.Completed));
 
         public async Task SmashAsync(Lot lot)
         {
-            foreach (var task in await FindActiveTasksAsync<SmashTask>())
+            foreach (var task in FindActiveTasksAsync<SmashTask>())
             {
                 await task.ReportProgress(lot);
             }
@@ -235,7 +230,7 @@ namespace Uchu.World
 
         public async Task CollectAsync(GameObject gameObject)
         {
-            foreach (var task in await FindActiveTasksAsync<CollectTask>())
+            foreach (var task in FindActiveTasksAsync<CollectTask>())
             {
                 await task.ReportProgress(gameObject);
             }
@@ -248,7 +243,7 @@ namespace Uchu.World
 
         public async Task ScriptAsync(int id)
         {
-            foreach (var task in await FindActiveTasksAsync<ScriptTask>())
+            foreach (var task in FindActiveTasksAsync<ScriptTask>())
             {
                 await task.ReportProgress(id);
             }
@@ -261,7 +256,7 @@ namespace Uchu.World
 
         public async Task QuickBuildAsync(Lot lot, int activity)
         {
-            foreach (var task in await FindActiveTasksAsync<QuickBuildTask>())
+            foreach (var task in FindActiveTasksAsync<QuickBuildTask>())
             {
                 await task.ReportProgress(lot, activity);
             }
@@ -274,7 +269,7 @@ namespace Uchu.World
 
         public async Task GoToNpcAsync(Lot lot)
         {
-            foreach (var task in await FindActiveTasksAsync<GoToNpcTask>())
+            foreach (var task in FindActiveTasksAsync<GoToNpcTask>())
             {
                 await task.ReportProgress(lot);
             }
@@ -287,7 +282,7 @@ namespace Uchu.World
         
         public async Task InteractAsync(Lot lot)
         {
-            foreach (var task in await FindActiveTasksAsync<InteractTask>())
+            foreach (var task in FindActiveTasksAsync<InteractTask>())
             {
                 await task.ReportProgress(lot);
             }
@@ -300,7 +295,7 @@ namespace Uchu.World
 
         public async Task UseEmoteAsync(GameObject gameObject, int emote)
         {
-            foreach (var task in await FindActiveTasksAsync<UseEmoteTask>())
+            foreach (var task in FindActiveTasksAsync<UseEmoteTask>())
             {
                 await task.ReportProgress(gameObject, emote);
             }
@@ -313,7 +308,7 @@ namespace Uchu.World
 
         public async Task UseConsumableAsync(Lot lot)
         {
-            foreach (var task in await FindActiveTasksAsync<UseConsumableTask>())
+            foreach (var task in FindActiveTasksAsync<UseConsumableTask>())
             {
                 await task.ReportProgress(lot);
             }
@@ -326,7 +321,7 @@ namespace Uchu.World
 
         public async Task UseSkillAsync(int skillId)
         {
-            foreach (var task in await FindActiveTasksAsync<UseSkillTask>())
+            foreach (var task in FindActiveTasksAsync<UseSkillTask>())
             {
                 await task.ReportProgress(skillId);
             }
@@ -339,7 +334,7 @@ namespace Uchu.World
 
         public async Task ObtainItemAsync(Lot lot)
         {
-            foreach (var task in await FindActiveTasksAsync<ObtainItemTask>())
+            foreach (var task in FindActiveTasksAsync<ObtainItemTask>())
             {
                 await task.ReportProgress(lot);
             }
@@ -352,7 +347,7 @@ namespace Uchu.World
 
         public async Task MissionCompleteAsync(int id)
         {
-            foreach (var task in await FindActiveTasksAsync<MissionCompleteTask>())
+            foreach (var task in FindActiveTasksAsync<MissionCompleteTask>())
             {
                 await task.ReportProgress(id);
             }
@@ -365,7 +360,7 @@ namespace Uchu.World
 
         public async Task FlagAsync(int flag)
         {
-            foreach (var task in await FindActiveTasksAsync<FlagTask>())
+            foreach (var task in FindActiveTasksAsync<FlagTask>())
             {
                 await task.ReportProgress(flag);
             }
@@ -376,74 +371,33 @@ namespace Uchu.World
             });
         }
 
-        // TODO: Improve
-        private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null) where T : MissionTaskInstance
+        private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null)
+            where T : MissionTaskInstance
         {
-            await using var cdContext = new CdClientContext();
-            await using var uchuContext = new UchuContext();
-            
-            // Collect tasks which fits the requirements of this action.
-            var otherTasks = new List<MissionTasks>();
-
-            foreach (var missionTask in ClientCache.Tasks)
-                if (MissionParser.GetTargets(missionTask).Contains(lot))
-                    otherTasks.Add(missionTask);
-
-            foreach (var task in otherTasks)
+            // A player may start an achievement if the achievement is of the requested type,
+            // a player hasn't started it yet and the player has the proper prerequisites
+            foreach (var achievement in ClientCache.Achievements.Where(m =>
+                m.Tasks.OfType<T>().Any(t => t.Type == type && t.Targets.Contains((int)lot))
+                && !HasMission(m.MissionId)
+                && MissionParser.CheckPrerequiredMissions(m.PrerequisiteMissions, CompletedMissions)))
             {
-                var mission = await cdContext.MissionsTable.FirstOrDefaultAsync(m => m.Id == task.Id);
-                if (mission == default)
-                    continue;
+                // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
+                // new achievement are much lower than not starting an achievement, that's why doing this in the loop
+                // allows us to open less db transactions in the long run
+                await using var cdContext = new CdClientContext();
+                await using var uchuContext = new UchuContext();
                 
-                // Ensure that the mission is an achievement and has a task of the correct type.
-                if (mission.OfferobjectID != -1 ||
-                    mission.TargetobjectID != -1 ||
-                    (mission.IsMission ?? true) ||
-                    task.TaskType != (int) type)
-                    continue;
-                
-                // Get the mission on the character. If present.
-                MissionInstance characterMission;
-                lock (Missions)
-                {
-                    characterMission = Missions.FirstOrDefault(m => m.MissionId == mission.Id);
-                }
-                
-                // Check if the player could possibly start this achievement.
-                if (characterMission != default)
-                    continue;
-                
-                // Check if player has the Prerequisites to start this achievement.
-                var hasPrerequisites = MissionParser.CheckPrerequiredMissions(
-                    mission.PrereqMissionID,
-                    CompletedMissions
-                );
-
-                if (!hasPrerequisites)
-                    continue;
-                
-                // Player can start achievement.
-                // Get Mission Id of new achievement.
-                if (mission.Id == default)
-                    continue;
-                
-                var missionId = mission.Id.Value;
-                
-                // Setup new achievement.
-                var instance = new MissionInstance(GameObject as Player, missionId);
+                var instance = new MissionInstance(achievement.MissionId);
+                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
                 
                 lock (Missions)
                 {
                     Missions.Add(instance);
                 }
                 
-                await instance.LoadAsync(cdContext, uchuContext);
-
-                var activeTask = instance.Tasks.First(t => t.TaskId == task.Uid);
+                // For achievements there's always only one task
                 if (progress != null)
-                {
-                    var _ = Task.Run(async () => await progress(activeTask as T));
-                }
+                    await progress(instance.Tasks.First() as T);
             }
         }
     }
