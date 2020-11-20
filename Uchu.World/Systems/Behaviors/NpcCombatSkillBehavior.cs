@@ -1,10 +1,16 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
     public class NpcCombatSkillBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public NpcCombatSkillBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     public class NpcCombatSkillBehavior : BehaviorBase<NpcCombatSkillBehaviorExecutionParameters>
     {
@@ -23,27 +29,28 @@ namespace Uchu.World.Systems.Behaviors
             SkillTime = await GetParameter<float>("npc skill time");
         }
 
-        protected override void SerializeStart(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)
         {
             parameters.NpcContext.MinRange = MinRange;
             parameters.NpcContext.MaxRange = MaxRange;
             parameters.NpcContext.SkillTime = SkillTime;
-            parameters.Parameters = Behavior.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+            
+            parameters.Parameters = Behavior.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
+        }
+        
+        protected override void ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
+        {
+            Behavior.ExecuteStart(parameters.Parameters);
         }
 
-        protected override async Task ExecuteStart(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            await Behavior.ExecuteStart(parameters.Parameters);
+            Behavior.SerializeSync(writer, parameters.Parameters);
         }
 
-        protected override void SerializeSync(NpcCombatSkillBehaviorExecutionParameters parameters)
+        protected override void ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
         {
-            Behavior.SerializeSync(parameters.Parameters);
-        }
-
-        protected override async Task ExecuteSync(NpcCombatSkillBehaviorExecutionParameters parameters)
-        {
-            await Behavior.ExecuteSync(parameters.Parameters);
+            Behavior.ExecuteSync(parameters.Parameters);
         }
     }
 }

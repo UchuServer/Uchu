@@ -1,8 +1,10 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
@@ -39,6 +41,8 @@ namespace Uchu.World
 
             tree.Deserialize(Owner, reader, target: target);
             
+            tree.Use();
+            
             Zone.BroadcastMessage(new DoClientProjectileImpact
             {
                 Associate = Owner,
@@ -47,16 +51,14 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-            
-            await tree.UseAsync();
         }
 
         public async Task CalculateImpactAsync(GameObject target)
         {
             target ??= Target;
-
+            
             await target.NetFavorAsync();
-
+            
             var distance = Vector3.Distance(Destination, target.Transform.Position);
             if (distance > RadiusCheck)
                 return;
@@ -74,6 +76,8 @@ namespace Uchu.World
                 target
             );
             
+            tree.Execute();
+            
             Zone.BroadcastMessage(new DoClientProjectileImpact
             {
                 Associate = Owner,
@@ -82,8 +86,6 @@ namespace Uchu.World
                 ProjectileId = ClientObjectId,
                 Target = target
             });
-
-            await tree.ExecuteAsync();
         }
     }
 }

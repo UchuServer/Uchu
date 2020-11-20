@@ -1,5 +1,7 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using RakDotNet.IO;
+using Uchu.Physics;
 
 namespace Uchu.World
 {
@@ -64,9 +66,24 @@ namespace Uchu.World
                 {
                     SwitchUserRequirement = (uint) requiredUsers;
                 }
-                
-                Listen(GameObject.OnInteract, async player =>
+
+                var physics = this.GameObject.AddComponent<PhysicsComponent>();
+
+                var size = Vector3.One;
+
+                var physicsObject = BoxBody.Create(
+                    this.GameObject.Zone.Simulation,
+                    this.GameObject.Transform.Position,
+                    this.GameObject.Transform.Rotation,
+                    size
+                );
+
+                physics.SetPhysics(physicsObject);
+
+                Listen(physics.OnEnter, async other =>
                 {
+                    if (!(other.GameObject is Player player)) return;
+
                     await Activate(player);
                 });
             });

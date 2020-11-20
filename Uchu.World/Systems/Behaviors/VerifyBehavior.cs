@@ -1,10 +1,16 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
     public class VerifyBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public BehaviorExecutionParameters Parameters { get; set; }        
+        public BehaviorExecutionParameters Parameters { get; set; }
+
+        public VerifyBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
     
     public class VerifyBehavior : BehaviorBase<VerifyBehaviorExecutionParameters>
@@ -18,14 +24,14 @@ namespace Uchu.World.Systems.Behaviors
             Action = await GetBehavior("action");
         }
 
-        protected override Task ExecuteStart(VerifyBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(VerifyBehaviorExecutionParameters parameters)
         {
-            return Action.ExecuteStart(parameters.Parameters);
+            Action.ExecuteStart(parameters.Parameters);
         }
 
-        protected override void SerializeStart(VerifyBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, VerifyBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
         }
     }
 }

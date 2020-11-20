@@ -1,18 +1,25 @@
 using System;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
 {
     public class BasicAttackBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public bool ServerSide { get; set; } = false;
+        public bool ServerSide { get; set; }
         public byte Unknown { get; set; }
         public byte Unknown1 { get; set; }
         public bool Flag2 { get; set; }
         public uint Damage { get; set; }
         public byte SuccessState { get; set; }
         public BehaviorExecutionParameters OnSuccessBehaviorExecutionParameters { get; set; }
+        
+        public BasicAttackBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+            ServerSide = false;
+        }
     }
     public class BasicAttackBehavior : BehaviorBase<BasicAttackBehaviorExecutionParameters>
     {
@@ -48,88 +55,93 @@ namespace Uchu.World.Systems.Behaviors
                 MaxDamage = 1;
         }
 
-        protected override void DeserializeStart(BasicAttackBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(BitReader reader, BasicAttackBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Context.Reader.Align();
+            reader.Align();
             
-            behaviorExecutionParameters.Unknown = behaviorExecutionParameters.Context.Reader.Read<byte>();
-            behaviorExecutionParameters.Unknown1 = behaviorExecutionParameters.Unknown > 0
-                ? behaviorExecutionParameters.Unknown
-                : behaviorExecutionParameters.Context.Reader.Read<byte>();
+            parameters.Unknown = reader.Read<byte>();
+            parameters.Unknown1 = parameters.Unknown > 0
+                ? parameters.Unknown
+                : reader.Read<byte>();
+
+            // Unknown 2
+            reader.Read<byte>();
             
             // Unused flags
-            behaviorExecutionParameters.Context.Reader.ReadBit();
-            behaviorExecutionParameters.Context.Reader.ReadBit();
+            reader.ReadBit();
+            reader.ReadBit();
             
-            behaviorExecutionParameters.Flag2 = behaviorExecutionParameters.Context.Reader.ReadBit();
-            if (behaviorExecutionParameters.Flag2)
-                behaviorExecutionParameters.Context.Reader.Read<uint>();
+            parameters.Flag2 = reader.ReadBit();
+            if (parameters.Flag2)
+                reader.Read<uint>();
 
-            behaviorExecutionParameters.Damage = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            behaviorExecutionParameters.Context.Reader.ReadBit(); // Died?
-            behaviorExecutionParameters.SuccessState = behaviorExecutionParameters.Context.Reader.Read<byte>();
+            parameters.Damage = reader.Read<uint>();
+            reader.ReadBit(); // Died?
+            parameters.SuccessState = reader.Read<byte>();
             
-            if (behaviorExecutionParameters.Unknown1 == 81)
-                behaviorExecutionParameters.Context.Reader.Read<byte>();
+            if (parameters.Unknown1 == 81)
+                reader.Read<byte>();
             
-            if (behaviorExecutionParameters.SuccessState == 1)
-                behaviorExecutionParameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(
-                    behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
-        }
-
-        protected override async Task ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
-        {
-            if (parameters.ServerSide)
-                await parameters.BranchContext.Target.NetFavorAsync();
-            
-            // Make sure the target is valid and damage them
-            if (parameters.BranchContext.Target != default && 
-                parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
-                (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
-            {
-                if (parameters.ServerSide)
-                    await PlayFxAsync("onhit", parameters.BranchContext.Target, 1000);
-                stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate);
-            }
-            
-            // Execute the success state only if some parameters are set
             if (parameters.SuccessState == 1)
-            {
-                await OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
-            }
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.DeserializeStart(reader, parameters.Context,
+                    parameters.BranchContext);
         }
 
-        protected override void SerializeStart(BasicAttackBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(BasicAttackBehaviorExecutionParameters parameters)
+        {
+            // Store as function as server side and client side execution is scheduled differently
+            parameters.NetFavor(() =>
+            {
+                if (parameters.BranchContext.Target != default &&
+                    parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out var stats) &&
+                    (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
+                {
+                    if (parameters.ServerSide)
+                        parameters.PlayFX("onhit", EffectId);
+
+                    // This is ran as a background task as it may trigger many async messages
+                    Task.Run(() => stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate));
+                }
+
+                // Execute the success state only if some parameters are set
+                if (parameters.SuccessState == 1)
+                {
+                    OnSuccess.ExecuteStart(parameters.OnSuccessBehaviorExecutionParameters);
+                }
+            });
+        }
+
+        protected override void SerializeStart(BitWriter writer, BasicAttackBehaviorExecutionParameters parameters)
         {
             parameters.ServerSide = true;
             parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
-            parameters.NpcContext.Writer.Align();
+            writer.Align();
             
             // Three unknowns
-            parameters.NpcContext.Writer.Write<byte>(0);
-            parameters.NpcContext.Writer.Write<byte>(0);
-            parameters.NpcContext.Writer.Write<byte>(0);
+            writer.Write<byte>(0);
+            writer.Write<byte>(0);
+            writer.Write<byte>(0);
             
-            parameters.NpcContext.Writer.WriteBit(false);
-            parameters.NpcContext.Writer.WriteBit(false);
-            parameters.NpcContext.Writer.WriteBit(true);
+            writer.WriteBit(false);
+            writer.WriteBit(false);
+            writer.WriteBit(true);
             
             // flag 2 == true so this should be set
-            parameters.NpcContext.Writer.Write<uint>(0);
+            writer.Write<uint>(0);
 
             var damage = (uint)new Random().Next((int)MinDamage, (int)MaxDamage);
-            parameters.NpcContext.Writer.Write(damage);
+            writer.Write(damage);
             
-            parameters.NpcContext.Writer.WriteBit(!parameters.NpcContext.Alive);
+            writer.WriteBit(!parameters.NpcContext.Alive);
             
             var success = parameters.NpcContext.IsValidTarget(parameters.BranchContext.Target) && 
                           parameters.NpcContext.Alive;
             parameters.SuccessState = (byte) (success ? 1 : 0);
-            parameters.NpcContext.Writer.Write(parameters.SuccessState);
+            writer.Write(parameters.SuccessState);
 
             if (success)
             {
-                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(parameters.NpcContext,
+                parameters.OnSuccessBehaviorExecutionParameters = OnSuccess.SerializeStart(writer, parameters.NpcContext,
                     parameters.BranchContext);
             }
         }

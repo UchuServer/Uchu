@@ -68,9 +68,14 @@ namespace Uchu.World
                 Zone.Update(this, async () =>
                 {
                     await Perspective.TickAsync();
-
+                }, 1000);
+                
+                // Check banned status every minute
+                // TODO: Find an active method instead of polling
+                Zone.Update(this, async () =>
+                {
                     await CheckBannedStatusAsync();
-                }, 20 * 5);
+                }, 20 * 60);
             });
             
             Listen(OnDestroyed, () =>

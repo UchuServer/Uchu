@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World.Systems.Behaviors
@@ -7,6 +8,11 @@ namespace Uchu.World.Systems.Behaviors
     {
         public uint Handle { get; set; }
         public BehaviorExecutionParameters ActionExecutionParameters { get; set; }
+
+        public ChargeUpBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
+            : base(context, branchContext)
+        {
+        }
     }
     public class ChargeUpBehavior : BehaviorBase<ChargeUpBehaviorExecutionParameters>
     {
@@ -22,18 +28,21 @@ namespace Uchu.World.Systems.Behaviors
             MaxDuration = await GetParameter<float>("max_duration");
         }
 
-        protected override void DeserializeStart(ChargeUpBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeStart(BitReader reader, ChargeUpBehaviorExecutionParameters parameters)
         {
-            behaviorExecutionParameters.Handle = behaviorExecutionParameters.Context.Reader.Read<uint>();
-            behaviorExecutionParameters.ActionExecutionParameters = Action.DeserializeStart(
-                behaviorExecutionParameters.Context, behaviorExecutionParameters.BranchContext);
-            
-            RegisterHandle(behaviorExecutionParameters.Handle, behaviorExecutionParameters);
+            parameters.Handle = reader.Read<uint>();
+            parameters.RegisterHandle<ChargeUpBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
-        protected override async Task ExecuteSync(ChargeUpBehaviorExecutionParameters behaviorExecutionParameters)
+        protected override void DeserializeSync(BitReader reader, ChargeUpBehaviorExecutionParameters parameters)
         {
-            await Action.ExecuteStart(behaviorExecutionParameters.ActionExecutionParameters);
+            parameters.ActionExecutionParameters = parameters.ActionExecutionParameters = Action.DeserializeStart(
+                reader, parameters.Context, parameters.BranchContext);
+        }
+
+        protected override void ExecuteSync(ChargeUpBehaviorExecutionParameters parameters)
+        {
+            Action.ExecuteStart(parameters.ActionExecutionParameters);
         }
     }
 }

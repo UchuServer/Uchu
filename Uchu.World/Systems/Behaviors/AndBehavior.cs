@@ -1,13 +1,19 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
     public class AndBehaviorExecutionParameters : BehaviorExecutionParameters
     {
-        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; } 
-            = new List<BehaviorExecutionParameters>();
+        public List<BehaviorExecutionParameters> BehaviorExecutionParameters { get; }
+        public AndBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext)
+            : base(context, branchContext)
+        {
+            BehaviorExecutionParameters = new List<BehaviorExecutionParameters>();
+        }
     }
+    
     public class AndBehavior : BehaviorBase<AndBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.And;
@@ -25,45 +31,45 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
-        protected override void DeserializeStart(AndBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
             {
                 parameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.DeserializeStart(parameters.Context, parameters.BranchContext));
+                    behaviorBase.DeserializeStart(reader, parameters.Context, parameters.BranchContext));
             }
         }
-
-        protected override async Task ExecuteStart(AndBehaviorExecutionParameters parameters)
-        {
-            for (var i = 0; i < Behaviors.Length; i++)
-            {
-                await Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
-            }
-        }
-
-        protected override void SerializeStart(AndBehaviorExecutionParameters parameters)
+        
+        protected override void SerializeStart(BitWriter writer, AndBehaviorExecutionParameters parameters)
         {
             foreach (var behaviorBase in Behaviors)
             {
                 parameters.BehaviorExecutionParameters.Add(
-                    behaviorBase.SerializeStart(parameters.NpcContext, parameters.BranchContext));
+                    behaviorBase.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext));
             }
         }
 
-        protected override void SerializeSync(AndBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                Behaviors[i].SerializeSync(parameters.BehaviorExecutionParameters[i]);
+                Behaviors[i].ExecuteStart(parameters.BehaviorExecutionParameters[i]);
             }
         }
 
-        protected override async Task ExecuteSync(AndBehaviorExecutionParameters parameters)
+        protected override void SerializeSync(BitWriter writer, AndBehaviorExecutionParameters parameters)
         {
             for (var i = 0; i < Behaviors.Length; i++)
             {
-                await Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
+                Behaviors[i].SerializeSync(writer, parameters.BehaviorExecutionParameters[i]);
+            }
+        }
+
+        protected override void ExecuteSync(AndBehaviorExecutionParameters parameters)
+        {
+            for (var i = 0; i < Behaviors.Length; i++)
+            {
+                Behaviors[i].ExecuteSync(parameters.BehaviorExecutionParameters[i]);
             }
         }
     }

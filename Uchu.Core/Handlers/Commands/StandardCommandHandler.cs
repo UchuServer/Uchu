@@ -152,15 +152,15 @@ namespace Uchu.Core.Handlers.Commands
         public async Task<string> ApproveUsernames(string[] arguments)
         {
             await using var ctx = new UchuContext();
-            if (arguments.Length == 0 || arguments[0].ToLower() == "all")
+            if (arguments.Length == 0 || arguments[0].ToLower() == "*" || arguments[0] == "")
             {
                 var unApproved = ctx.Characters.Where(c => !c.NameRejected && c.Name != c.CustomName && !string.IsNullOrEmpty(c.CustomName));
 
-                if (arguments.Length != 1 || arguments[0] != "all")
+                if (arguments.Length != 1 || arguments[0] != "*")
                 {
                     return string.Join("\n",
-                               unApproved.Select(s => s.CustomName)
-                           ) + "\napprove <name> / all";
+                                unApproved.Select(s => s.CustomName)
+                            ) + "\napprove <name> / *";
                 }
 
                 foreach (var character in unApproved)
@@ -175,8 +175,8 @@ namespace Uchu.Core.Handlers.Commands
             }
 
             var selectedCharacter = await ctx.Characters.FirstOrDefaultAsync(
-                c => c.CustomName == arguments[1] && !c.NameRejected
-            );
+                c => c.CustomName == arguments[0] && !c.NameRejected
+            ).ConfigureAwait(false);
 
             if (selectedCharacter == null)
             {

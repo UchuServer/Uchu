@@ -322,6 +322,16 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Damages a game object
+        /// </summary>
+        /// <remarks>
+        /// Be careful when calling this method as it can trigger DieMessages and DropClientLootMessages causing a long
+        /// runtime.
+        /// </remarks>
+        /// <param name="value">The amount of damage</param>
+        /// <param name="source">The game object that caused the damage</param>
+        /// <param name="effectHandler">Optional effect handler to display</param>
         public void Damage(uint value, GameObject source, string effectHandler = "")
         {
             LatestDamageSource = source;

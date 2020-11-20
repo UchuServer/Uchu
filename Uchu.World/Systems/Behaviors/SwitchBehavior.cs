@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -6,7 +7,13 @@ namespace Uchu.World.Systems.Behaviors
     {
         public bool State { get; set; }
         public BehaviorExecutionParameters Parameters { get; set; }
+
+        public SwitchBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
     }
+    
     public class SwitchBehavior : BehaviorBase<SwitchBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Switch;
@@ -26,38 +33,38 @@ namespace Uchu.World.Systems.Behaviors
             IsEnemyFaction = (await GetParameter("isEnemyFaction"))?.Value > 0;
         }
 
-        protected override void DeserializeStart(SwitchBehaviorExecutionParameters parameters)
+        protected override void DeserializeStart(BitReader reader, SwitchBehaviorExecutionParameters parameters)
         {
             parameters.State = true;
             if (Imagination > 0 || !IsEnemyFaction)
-                parameters.State = parameters.Context.Reader.ReadBit();
+                parameters.State = reader.ReadBit();
 
             parameters.Parameters = parameters.State
-                ? ActionTrue.DeserializeStart(parameters.Context, parameters.BranchContext)
-                : ActionFalse.DeserializeStart(parameters.Context, parameters.BranchContext);
+                ? ActionTrue.DeserializeStart(reader, parameters.Context, parameters.BranchContext)
+                : ActionFalse.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
 
-        protected override void SerializeStart(SwitchBehaviorExecutionParameters parameters)
+        protected override void SerializeStart(BitWriter writer, SwitchBehaviorExecutionParameters parameters)
         {
             
             parameters.State = true;
             if (Imagination > 0 || !IsEnemyFaction)
             {
                 parameters.State = parameters.BranchContext.Target != default && parameters.NpcContext.Alive;
-                parameters.NpcContext.Writer.WriteBit(parameters.State);
+                writer.WriteBit(parameters.State);
             }
 
             parameters.Parameters = parameters.State
-                ? ActionTrue.SerializeStart(parameters.NpcContext, parameters.BranchContext)
-                : ActionFalse.SerializeStart(parameters.NpcContext, parameters.BranchContext);
+                ? ActionTrue.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext)
+                : ActionFalse.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
         }
         
-        protected override async Task ExecuteStart(SwitchBehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(SwitchBehaviorExecutionParameters parameters)
         {
             if (parameters.State)
-                await ActionTrue.ExecuteStart(parameters.Parameters);
+                ActionTrue.ExecuteStart(parameters.Parameters);
             else
-                await ActionFalse.ExecuteStart(parameters.Parameters);
+                ActionFalse.ExecuteStart(parameters.Parameters);
         }
     }
 }

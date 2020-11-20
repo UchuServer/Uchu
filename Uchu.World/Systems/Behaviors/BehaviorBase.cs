@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Scripting.Native;
@@ -10,74 +11,151 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.World.Systems.Behaviors
 {
     public abstract class BehaviorBase<T> : BehaviorBase
-        where T : BehaviorExecutionParameters, new()
+        where T : BehaviorExecutionParameters
     {
-        protected virtual Task ExecuteStart(T executionParameters)
+        /// <summary>
+        /// Creates a new instance of this behavior execution parameter
+        /// </summary>
+        /// <param name="context">The context to pass to the parameters</param>
+        /// <param name="branchContext">The branch context  to pass to the parameters</param>
+        /// <returns>The new instance of <c>T</c></returns>
+        private static T CreateInstance(ExecutionContext context, ExecutionBranchContext branchContext) =>
+            (T) Activator.CreateInstance(typeof(T), context, branchContext);
+
+        /// <summary>
+        /// Executes the start skill of this behavior using the provided parameters
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the start skill with</param>
+        protected virtual void ExecuteStart(T parameters)
         {
-            return Task.CompletedTask;
         }
-        public override Task ExecuteStart(BehaviorExecutionParameters executionParameters)
+        
+        /// <summary>
+        /// Wrapper for the generic typed version of this method
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the start skill with</param>
+        public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            return ExecuteStart((T) executionParameters);
+            ExecuteStart((T) parameters);
         }
 
-        protected virtual Task ExecuteSync(T executionParameters)
+        /// <summary>
+        /// Executes the sync skill of this behavior using the provided parameters 
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the sync skill with</param>
+        protected virtual void ExecuteSync(T parameters)
         {
-            return Task.CompletedTask;
         }
-        public override Task ExecuteSync(BehaviorExecutionParameters executionParameters)
+        
+        /// <summary>
+        /// Wrapper for the generic typed version of this method
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the sync skill with</param>
+        public override void ExecuteSync(BehaviorExecutionParameters parameters)
         {
-            return ExecuteSync((T) executionParameters);
+            ExecuteSync((T) parameters);
+        }
+        
+        
+        /// <summary>
+        /// Undo the effects of an OnEquip using the provided parameters
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the dismantle with</param>
+        protected virtual void Dismantle(T parameters)
+        {
+        }
+        
+        /// <summary>
+        /// Wrapper to call the generic typed version of this method
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the dismantle with</param>
+        public override void Dismantle(BehaviorExecutionParameters parameters)
+        {
         }
 
-        protected virtual void DeserializeStart(T behaviorExecutionParameters)
+        /// <summary>
+        /// Serializes the passed behavior execution parameters
+        /// </summary>
+        /// <param name="behaviorExecutionParameters">The parameters to serialize</param>
+        protected virtual void SerializeStart(BitWriter writer, T behaviorExecutionParameters)
         {
         }
-        public override BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
+        
+        /// <summary>
+        /// Wrapper to call the generic typed version of this method
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by serializing the start skill</returns>
+        public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
-            DeserializeStart(behaviorExecutionParameters);
-            return behaviorExecutionParameters;
-        }
-
-        protected virtual void DeserializeSync(T behaviorExecutionParameters)
-        {
-        }
-        public override BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
-            ExecutionBranchContext branchContext)
-        {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
-            DeserializeSync(behaviorExecutionParameters);
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
+            SerializeStart(writer, behaviorExecutionParameters);
             return behaviorExecutionParameters;
         }
         
-        protected virtual void SerializeStart(T behaviorExecutionParameters)
+        /// <summary>
+        /// Deserializes behavior execution parameters using a bitstream
+        /// </summary>
+        /// <param name="parameters">The parameters to deserialize using its bitstream</param>
+        protected virtual void SerializeSync(BitWriter writer, T parameters)
         {
-        }
-        public override BehaviorExecutionParameters SerializeStart(NpcExecutionContext context,
-            ExecutionBranchContext branchContext)
-        {
-            var behaviorExecutionParameters = new T {Context = context, BranchContext = branchContext};
-            SerializeStart(behaviorExecutionParameters);
-            return behaviorExecutionParameters;
         }
         
-        protected virtual void SerializeSync(T parameters)
+        /// <summary>
+        /// Deserializes a sync skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
+        public override void SerializeSync(BitWriter writer, BehaviorExecutionParameters parameters)
+        {
+            SerializeSync(writer, (T)parameters);
+        }
+        
+        /// <summary>
+        /// Deserializes the provided parameters using a bitstream
+        /// </summary>
+        /// <param name="parameters">The parameters to deserialize</param>
+        protected virtual void DeserializeStart(BitReader reader, T parameters)
         {
         }
-        public override void SerializeSync(BehaviorExecutionParameters parameters)
+        
+        /// <summary>
+        /// Deserializes a start skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the start skill</returns>
+        public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
-            SerializeSync((T) parameters);
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
+            DeserializeStart(reader, behaviorExecutionParameters);
+            return behaviorExecutionParameters;
         }
 
-        protected virtual Task DismantleAsync(T executionParameters)
+        /// <summary>
+        /// Deserializes behavior execution parameters using a bitstream
+        /// </summary>
+        /// <param name="parameters">The parameters to deserialize using its bitstream</param>
+        protected virtual void DeserializeSync(BitReader reader, T parameters)
         {
-            return Task.CompletedTask;
         }
-        public override async Task DismantleAsync(BehaviorExecutionParameters executionParameters)
+        
+        /// <summary>
+        /// Deserializes a sync skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
+        public override BehaviorExecutionParameters DeserializeSync(BitReader reader, ExecutionContext context,
+            ExecutionBranchContext branchContext)
         {
-            await DismantleAsync((T) executionParameters);
+            var behaviorExecutionParameters = CreateInstance(context, branchContext);
+            DeserializeSync(reader, behaviorExecutionParameters);
+            return behaviorExecutionParameters;
         }
 
         public async Task PlayFxAsync(string type, GameObject target, int time)
@@ -199,53 +277,65 @@ namespace Uchu.World.Systems.Behaviors
                 p.BehaviorID == BehaviorId
             );
         }
-
-        public virtual Task ExecuteSync(BehaviorExecutionParameters executionParameters)
-        {
-            return Task.CompletedTask;
-        }
         
-        public virtual Task ExecuteStart(BehaviorExecutionParameters executionParameters)
+        /// <summary>
+        /// Undo the effects of an OnEquip using the provided parameters
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the dismantle with</param>
+        public virtual void Dismantle(BehaviorExecutionParameters parameters)
         {
-            return Task.CompletedTask;
         }
 
-        public virtual Task DismantleAsync(BehaviorExecutionParameters executionParameters)
-        {
-            return Task.CompletedTask;
-        }
-
-        public virtual BehaviorExecutionParameters SerializeStart(NpcExecutionContext context, 
-            ExecutionBranchContext branchContext)
-        {
-            return new BehaviorExecutionParameters(context, branchContext);
-        }
-
-        public virtual void SerializeSync(BehaviorExecutionParameters parameters)
+        /// <summary>
+        /// Executes the sync skill of this behavior using the provided parameters 
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the sync skill with</param>
+        public virtual void ExecuteSync(BehaviorExecutionParameters parameters)
         {
         }
         
-        public virtual BehaviorExecutionParameters DeserializeStart(ExecutionContext context,
-            ExecutionBranchContext branchContext)
+        /// <summary>
+        /// Executes the start skill of this behavior using the provided parameters
+        /// </summary>
+        /// <param name="parameters">The parameters to execute the start skill with</param>
+        public virtual void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            return new BehaviorExecutionParameters(context, branchContext);
         }
 
-        public virtual BehaviorExecutionParameters DeserializeSync(ExecutionContext context,
-            ExecutionBranchContext branchContext)
+        /// <summary>
+        /// Serializes a start skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by serializing the start skill</returns>
+        public virtual BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context, 
+            ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
+
+        /// <summary>
+        /// Creates the behavior execution parameters for a certain behavior given a context and a branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch specific context to use</param>
+        public virtual void SerializeSync(BitWriter writer, BehaviorExecutionParameters parameters)
         {
-            return new BehaviorExecutionParameters(context, branchContext);
         }
         
-        protected void RegisterHandle(uint handle, BehaviorExecutionParameters behaviorExecutionParameters)
-        {
-            behaviorExecutionParameters.Context.RegisterHandle(handle, async reader =>
-            {
-                behaviorExecutionParameters.Context.Reader = reader;
-                var syncBehaviorExecutionParameters = DeserializeSync(behaviorExecutionParameters.Context,
-                    behaviorExecutionParameters.BranchContext);
-                await ExecuteSync(syncBehaviorExecutionParameters);
-            });
-        }
+        /// <summary>
+        /// Deserializes a start skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the start skill</returns>
+        public virtual BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
+            ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
+
+        /// <summary>
+        /// Deserializes a sync skill bitstream using the provided context and branch context
+        /// </summary>
+        /// <param name="context">The global context to use</param>
+        /// <param name="branchContext">The branch context to use</param>
+        /// <returns><c>BehaviorExecutionParameters</c> gained by deserializing the sync skill</returns>
+        public virtual BehaviorExecutionParameters DeserializeSync(BitReader reader, ExecutionContext context,
+            ExecutionBranchContext branchContext) => new BehaviorExecutionParameters(context, branchContext);
     }
 }
