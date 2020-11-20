@@ -26,7 +26,7 @@ namespace Uchu.World
 
         private async Task OnInteract(Player player)
         {
-            if (!ClaimedProperty)
+            if (!ClaimedProperty) // This needs proper checks and to be linked up to a DB table
             {
                 player.Message(new OpenPropertyVendorMessage
                 {

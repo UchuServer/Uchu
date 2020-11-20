@@ -35,11 +35,7 @@ namespace Uchu.World
 
         public async Task OnInteract(Player player)
         {
-            /*var args = new Dictionary<string, object>();
-
-            args.Add("bPaused", false);
-
-            await Social.UiHelper.MessageGuiAsync(player, "UpdatePropertyStatus", args);*/
+            
         }
     }
 }
