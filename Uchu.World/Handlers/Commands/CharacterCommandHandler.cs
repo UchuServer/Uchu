@@ -717,7 +717,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully added {type.Name} to {player}";
         }
         
-        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
         public string World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)

@@ -1,4 +1,4 @@
-# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/master.svg?style=flat-square&logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu)
+# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/master.svg?logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/zM5uXAe2)
 
 LEGO Universe server written in C#
 
@@ -7,9 +7,6 @@ LEGO Universe server written in C#
 
 ## Contributions
 Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
-
-## Discord
-Message Wincent01#7921 on Discord to get an invite to the development Discord server. Note, the server is not meant to be a hub for support.
 
 ## Python scripting
 Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
@@ -183,7 +180,8 @@ If the server did not output a line saying the api is ready, attempt to rebind t
 Please ensure you are using an unpacked client. See Prerequisite -> LEGO Universe Client
 
 #### Two windows open and immediately close
-Attempt the specify a different character port. See Network ports -> Servers
+Attempt to specify a different character port. See Network ports -> Servers.
+If that doesn't work double check that the Uchu.Instance and Uchu.StandardScripts paths are correct. See Configuration -> Define Uchu.Instance and Uchu.StandardScripts.
 
 #### Cannot load into world
 Attempt the specify a couple of world server ports. See Network ports -> Servers
