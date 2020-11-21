@@ -6,6 +6,7 @@ namespace Uchu.StandardScripts.AvantGardens
     /// <summary>
     ///     LUA Reference: l_ag_saluting_npcs.lua
     /// </summary>
+    [ZoneSpecific(1100)]
     public class SalutingNpc : NativeScript
     {
         private const string ScriptName = "l_ag_saluting_npcs.lua";

@@ -5,6 +5,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
+    [ZoneSpecific(1100)]
     public class TargetFilter : NativeScript
     {
         public override Task LoadAsync()

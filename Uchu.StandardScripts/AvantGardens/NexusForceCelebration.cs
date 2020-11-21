@@ -5,6 +5,7 @@ using Uchu.Core.Resources;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
+    [ZoneSpecific(1100)]
     public class NexusForceCelebration : NativeScript
     {
         int MissionID = 1851;
