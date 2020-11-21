@@ -114,7 +114,7 @@ namespace Uchu.Master.Api
 
             if (string.IsNullOrWhiteSpace(level))
             {
-                response.FailedReason = "username null";
+                response.FailedReason = "level null";
 
                 return response;
             }
