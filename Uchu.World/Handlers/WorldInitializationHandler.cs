@@ -135,6 +135,7 @@ namespace Uchu.World.Handlers
 
             Logger.Information("[55%] Player is ready to join world.");
             player.Message(new PlayerReadyMessage {Associate = player});
+            player.Message(new PlayerReadyMessage { Associate = player.Zone.ZoneControlObject });
 
             Logger.Information("[55%] Server is done loading object.");
             player.Message(new DoneLoadingObjectsMessage {Associate = player});
