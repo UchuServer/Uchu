@@ -11,6 +11,6 @@ namespace Uchu.Core
 
         public string Help { get; set; }
 
-        public GameMasterLevel GameMasterLevel { get; set; } = GameMasterLevel.Console;
+        public int GameMasterLevel { get; set; } = 9;
     }
 }

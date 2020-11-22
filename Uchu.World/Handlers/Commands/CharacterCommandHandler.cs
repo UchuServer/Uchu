@@ -19,7 +19,7 @@ namespace Uchu.World.Handlers.Commands
 {
     public class CharacterCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = GameMasterLevel.Player)]
+        [CommandHandler(Signature = "chat", Help = "Change chat level", GameMasterLevel = 0)]
         public string ChangeChatLevel(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "chat <level>";
@@ -31,10 +31,10 @@ namespace Uchu.World.Handlers.Commands
             return $"Changed chat level to: {player.ChatChannel}";
         }
         
-        [CommandHandler(Signature = "give", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gmadditem", Help = "Give an item to yourself", GameMasterLevel = 6)]
         public async Task<string> GiveItem(string[] arguments, Player player)
         {
-            if (arguments.Length == default) return "give <lot> <count(optional)> <inventory(optional)>";
+            if (arguments.Length == default) return "gmadditem <lot> <count(optional)> <inventory(optional)>";
 
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
@@ -63,7 +63,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "remove", Help = "Remove an item from yourself",
-            GameMasterLevel = GameMasterLevel.Admin)]
+            GameMasterLevel = 6)]
         public async Task<string> RemoveItem(string[] arguments, Player player)
         {
             if (arguments.Length == 0 || arguments.Length > 2) return "remove <lot> <count(optional)>";
@@ -81,7 +81,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "coin", Help = "Add or remove coin from yourself",
-            GameMasterLevel = GameMasterLevel.Admin)]
+            GameMasterLevel = 6)]
         public string ChangeCoin(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "coin <delta>";
@@ -93,7 +93,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} coins";
         }
 
-        [CommandHandler(Signature = "spawn", Help = "Spawn an object", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "spawn", Help = "Spawn an object", GameMasterLevel = 6)]
         public string Spawn(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -158,19 +158,19 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully spawned {lot} at\npos: {position}\nrot: {rotation}";
         }
 
-        [CommandHandler(Signature = "position", Help = "Get your position", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "position", Help = "Get your position", GameMasterLevel = 2)]
         public string Position(string[] arguments, Player player)
         {
             return $"{player.Transform.Position}";
         }
 
-        [CommandHandler(Signature = "rotation", Help = "Get your rotation", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "rotation", Help = "Get your rotation", GameMasterLevel = 2)]
         public string Rotation(string[] arguments, Player player)
         {
             return $"{player.Transform.Rotation}";
         }
 
-        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = 6)]
         public async Task<string> Smash(string[] arguments, Player player)
         {
             var animation = "violent";
@@ -185,7 +185,7 @@ namespace Uchu.World.Handlers.Commands
             return "You smashed yourself";
         }
         
-        [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = 6)]
         public string Buffme(string[] arguments, Player player)
         {
             DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
@@ -201,7 +201,7 @@ namespace Uchu.World.Handlers.Commands
             return "Buffed";
         }
 
-        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = 6)]
         public string Freecam(string[] arguments, Player player)
         {
             player.Message(new ToggleFreeCamModeMessage
@@ -212,7 +212,7 @@ namespace Uchu.World.Handlers.Commands
             return "Toggled freecam.";
         }
 
-        [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = 2)]
         public string Fly(string[] arguments, Player player)
         {
             if (arguments.Length != 1 && arguments.Length != 2) return "fly <state(on/off)>";
@@ -258,7 +258,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Toggled jetpack state: {state}";
         }
 
-        [CommandHandler(Signature = "group", Help = "Search for objects with group", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "group", Help = "Search for objects with group", GameMasterLevel = 6)]
         public string Group(string[] arguments, Player player)
         {
             var builder = new StringBuilder();
@@ -285,7 +285,7 @@ namespace Uchu.World.Handlers.Commands
             return builder.ToString();
         }
 
-        [CommandHandler(Signature = "fx", Help = "Play FX", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "fx", Help = "Play FX", GameMasterLevel = 6)]
         public string Fx(string[] arguments, Player player)
         {
             if (arguments.Length != 3) return "fx <name> <type> <id>";
@@ -306,7 +306,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully played FX: {name}, {type}, {id}";
         }
 
-        [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = GameMasterLevel.Player)]
+        [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = 0)]
         public string Near(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects[0];
@@ -396,7 +396,7 @@ namespace Uchu.World.Handlers.Commands
             return info.ToString();
         }
 
-        [CommandHandler(Signature = "setname", Help = "Set name of gameobject", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "setname", Help = "Set name of gameobject", GameMasterLevel = 6)]
         public string SetName(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -429,7 +429,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set name to {arguments[0]}";
         }
 
-        [CommandHandler(Signature = "score", Help = "Change your U-score", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "score", Help = "Change your U-score", GameMasterLevel = 6)]
         public string Score(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "score <delta>";
@@ -443,7 +443,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} score";
         }
 
-        [CommandHandler(Signature = "level", Help = "Set your level", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "level", Help = "Set your level", GameMasterLevel = 6)]
         public string Level(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "level <level>";
@@ -457,7 +457,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set your level to {level}";
         }
         
-        [CommandHandler(Signature = "stat", Help = "Set a stat", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "stat", Help = "Set a stat", GameMasterLevel = 6)]
         public string Stat(string[] arguments, Player player)
         {
             if (arguments.Length != 2) return "stat <stat> <value>";
@@ -496,7 +496,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set {arguments[0]} to {value}";
         }
         
-        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = 6)]
         public string Pvp(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "pvp <state(on/off)>";
@@ -523,7 +523,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set your pvp state to {state}";
         }
 
-        [CommandHandler(Signature = "gm", Help = "Change Game Master state", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "gm", Help = "Change Game Master state", GameMasterLevel = 2)]
         public string GameMaster(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "gm <state(on/off)>";
@@ -550,7 +550,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set your GameMaster state to {state}";
         }
 
-        [CommandHandler(Signature = "gmlevel", Help = "Set GameMaster Level state", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gmlevel", Help = "Set GameMaster Level state", GameMasterLevel = 6)]
         public string GmLevel(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "gmlevel <level>";
@@ -564,7 +564,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set your GameMaster level to {gmlevel}";
         }
 
-        [CommandHandler(Signature = "layer", Help = "Change your layer", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "layer", Help = "Change your layer", GameMasterLevel = 6)]
         public string Layer(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "layer <layer>";
@@ -581,7 +581,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "brick", Help = "Spawns a floating brick",
-            GameMasterLevel = GameMasterLevel.Mythran)]
+            GameMasterLevel = 2)]
         public async Task<string> Brick(string[] arguments, Player player)
         {
             var bricks = new List<GameObject>();
@@ -615,7 +615,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Spawned thing";
         }
 
-        [CommandHandler(Signature = "tp", Help = "Teleport", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "tp", Help = "Teleport", GameMasterLevel = 6)]
         public string Teleport(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -658,7 +658,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Going to {position}";
         }
 
-        [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = 2)]
         public string Animate(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -702,7 +702,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Attempting to play {arguments[0]} animation";
         }
 
-        [CommandHandler(Signature = "addcomponent", Help = "Add a component to an object", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "addcomponent", Help = "Add a component to an object", GameMasterLevel = 6)]
         public string AddComponent(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
@@ -717,13 +717,13 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully added {type.Name} to {player}";
         }
         
-        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "testmap", Help = "Transfer to world", GameMasterLevel = 2)]
         public string World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
-                return "world <zoneId>";
+                return "testmap <zoneId>";
 
-            if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
+            if (!int.TryParse(arguments[0], out var id)) return "testmap <zoneId>";
 
             using CdClientContext ctx = new CdClientContext();
 
@@ -770,7 +770,7 @@ namespace Uchu.World.Handlers.Commands
             }           
         }
 
-        [CommandHandler(Signature = "monitor", Help = "Get server info", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "monitor", Help = "Get server info", GameMasterLevel = 6)]
         public async Task<string> Monitor(string[] arguments, Player player)
         {
             var process = Process.GetCurrentProcess();
@@ -859,7 +859,7 @@ namespace Uchu.World.Handlers.Commands
             return builder.ToString();
         }
         
-        [CommandHandler(Signature = "getemote", Help = "Unlock an emote", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "getemote", Help = "Unlock an emote", GameMasterLevel = 6)]
         public async Task<string> GetEmote(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -911,7 +911,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set emote: \"{emote.AnimationName}\" [{emote.Id}] lock state to {state}";
         }
 
-        [CommandHandler(Signature = "unload", Help = "Unload scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "unload", Help = "Unload scripts", GameMasterLevel = 6)]
         public async Task<string> Unload(string[] arguments, Player player)
         {
             var builder = new StringBuilder();
@@ -931,7 +931,7 @@ namespace Uchu.World.Handlers.Commands
             return builder.ToString();
         }
 
-        [CommandHandler(Signature = "reload", Help = "Reload scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "reload", Help = "Reload scripts", GameMasterLevel = 6)]
         public async Task<string> Reload(string[] arguments, Player player)
         {
             var builder = new StringBuilder();
@@ -951,7 +951,7 @@ namespace Uchu.World.Handlers.Commands
             return builder.ToString();
         }
 
-        [CommandHandler(Signature = "mailbox", Help = "Set mailbox state", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "mailbox", Help = "Set mailbox state", GameMasterLevel = 6)]
         public async Task<string> MailBox(string[] arguments, Player player)
         {
             if (arguments.Length == 0) return "/mailbox <state(on/off)>";
@@ -983,7 +983,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set mailbox state to: {state}";
         }
 
-        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = 2)]
         public async Task<string> Announce(string[] arguments, Player player)
         {
             if (arguments.Length < 2) return "/annouce <title> <message>";
@@ -1002,7 +1002,7 @@ namespace Uchu.World.Handlers.Commands
             return "Sent announcement";
         }
 
-        [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = 2)]
         public async Task<string> Complete(string[] arguments, Player player)
         {
             var missions = player.GetComponent<MissionInventoryComponent>().MissionInstances;
@@ -1048,7 +1048,7 @@ namespace Uchu.World.Handlers.Commands
             return "Completed missions";
         }
 
-        [CommandHandler(Signature = "clear", Help = "Clears your inventory", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "clear", Help = "Clears your inventory", GameMasterLevel = 6)]
         public string Clear(string[] arguments, Player player)
         {
             foreach (var item in player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Items)
@@ -1059,7 +1059,7 @@ namespace Uchu.World.Handlers.Commands
             return "Cleared inventory";
         }
 
-        [CommandHandler(Signature = "setflag", Help = "Sets a client flag", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "setflag", Help = "Sets a client flag", GameMasterLevel = 6)]
         public async Task<string> SetFlag(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
@@ -1073,7 +1073,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set flag {arguments[1]}";
         }
 
-        [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = 6)]
         public async Task<string> TriggerCelebrat(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
@@ -1087,7 +1087,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Triggered Celebration {arguments[1]}";
         }
 
-        [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = 6)]
         public async Task<string> RemoveFlag(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
@@ -1101,7 +1101,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Removed flag {arguments[1]}";
         }
 
-        [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = 6)]
         public string Inventory(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "inventory <size>";
@@ -1113,7 +1113,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set inventory size to: {size}";
         }
 
-        [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "control", Help = "Change control scheme", GameMasterLevel = 6)]
         public string Control(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "control <scheme-id>";
@@ -1150,7 +1150,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Switched control scheme to: {controlScheme}";
         }
 
-        [CommandHandler(Signature = "mimic", Help = "Active mimic test", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "mimic", Help = "Active mimic test", GameMasterLevel = 6)]
         public string Mimic(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "mimic <lot>";
@@ -1165,7 +1165,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Active mimic on: {gameObject}";
         }
 
-        [CommandHandler(Signature = "gravity", Help = "Sets gravity scale", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gravity", Help = "Sets gravity scale", GameMasterLevel = 6)]
         public string Gravity(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "gravity <scale (0-2)>";

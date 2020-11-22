@@ -133,8 +133,7 @@ namespace Uchu.Core
         /// <param name="group">The group to get commands from</param>
         /// <param name="level">The gamemaster level to determine which commands to show</param>
         /// <returns>A string that represents the help message</returns>
-        private static string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group, 
-            GameMasterLevel level)
+        private static string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group, int level)
         {
             var help = new StringBuilder();
             foreach (var handlerInfo in group.Values.Where(handlerInfo => level >= handlerInfo.GameMasterLevel))
@@ -293,7 +292,7 @@ namespace Uchu.Core
 
                     if (string.IsNullOrWhiteSpace(command)) continue;
 
-                    Console.WriteLine(await HandleCommandAsync(command, null, GameMasterLevel.Console)
+                    Console.WriteLine(await HandleCommandAsync(command, null, 9)
                         .ConfigureAwait(false));
                 }
             });
@@ -491,7 +490,7 @@ namespace Uchu.Core
         /// <param name="command">The fulltext command to execute</param>
         /// <param name="author">Author of the command</param>
         /// <param name="gameMasterLevel">The game master level of the author</param>
-        public async Task<string> HandleCommandAsync(string command, object author, GameMasterLevel gameMasterLevel)
+        public async Task<string> HandleCommandAsync(string command, object author, int gameMasterLevel)
         {
             // Check if the command exists and is valid
             if (command == default) return default;

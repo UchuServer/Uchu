@@ -46,7 +46,7 @@ namespace Uchu.World.Handlers
                 var response = await UchuServer.HandleCommandAsync(
                     message.Message,
                     player,
-                    (GameMasterLevel) character.User.GameMasterLevel
+                    character.User.GameMasterLevel
                 );
 
                 if (!string.IsNullOrWhiteSpace(response))

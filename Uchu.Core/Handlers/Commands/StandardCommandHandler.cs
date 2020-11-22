@@ -95,7 +95,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully deleted user: {name}";
         }
 
-        [CommandHandler(Signature = "ban", Help = "Ban a user", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "ban", Help = "Ban a user", GameMasterLevel = 2)]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> BanUser(string[] arguments)
         {
@@ -128,7 +128,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully banned {name}!";
         }
 
-        [CommandHandler(Signature = "pardon", Help = "Pardon a user", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "pardon", Help = "Pardon a user", GameMasterLevel = 2)]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> PardonUser(string[] arguments)
         {
@@ -160,7 +160,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully pardoned {name}!";
         }
 
-        [CommandHandler(Signature = "users", Help = "List all users", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "users", Help = "List all users", GameMasterLevel = 6)]
         public static string GetUsers()
         {
             using var ctx = new UchuContext();
@@ -170,7 +170,7 @@ namespace Uchu.Core.Handlers.Commands
                 : string.Join("\n", users.Select(s => s.Username));
         }
 
-        [CommandHandler(Signature = "approve", Help = "Approve usernames", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "approve", Help = "Approve usernames", GameMasterLevel = 2)]
         [SuppressMessage("ReSharper", "CA1304")]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> ApproveUsernames(string[] arguments)
@@ -219,7 +219,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully approved \"{selectedCharacter.Name}\"!";
         }
 
-        [CommandHandler(Signature = "reject", Help = "Reject usernames", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "reject", Help = "Reject usernames", GameMasterLevel = 2)]
         [SuppressMessage("ReSharper", "CA1304")]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> RejectUserNames(string[] arguments)

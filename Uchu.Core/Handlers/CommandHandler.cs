@@ -8,7 +8,7 @@ namespace Uchu.Core
         
         public MethodInfo Info { get; set; }
 
-        public GameMasterLevel GameMasterLevel { get; set; } = GameMasterLevel.Console;
+        public int GameMasterLevel { get; set; } = 9;
         
         public string Signature { get; set; }
         

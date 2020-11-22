@@ -13,7 +13,7 @@ namespace Uchu.World.Handlers.Commands
 {
     public class OperatorCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "stop", Help = "Stop the server", GameMasterLevel = GameMasterLevel.Operator)]
+        [CommandHandler(Signature = "stop", Help = "Stop the server", GameMasterLevel = 9)]
         public async Task<string> Stop(string[] arguments, Player player)
         {
             await using var ctx = new UchuContext();
@@ -60,7 +60,7 @@ namespace Uchu.World.Handlers.Commands
             return "Stopped server";
         }
 
-        [CommandHandler(Signature = "save", Help = "Save a serialization", GameMasterLevel = GameMasterLevel.Operator)]
+        [CommandHandler(Signature = "save", Help = "Save a serialization", GameMasterLevel = 9)]
         public string SaveSerialize(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects[0];
@@ -86,7 +86,7 @@ namespace Uchu.World.Handlers.Commands
             return "Saved packets";
         }
 
-        [CommandHandler(Signature = "python", Help = "Run python", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "python", Help = "Run python", GameMasterLevel = 6)]
         public async Task<string> Python(string[] arguments, Player player)
         {
             if (arguments.Length <= 1) return $"python <id> <python code to run>";
@@ -104,7 +104,7 @@ namespace Uchu.World.Handlers.Commands
             return "Attempting to run python script...";
         }
 
-        [CommandHandler(Signature = "python-load", Help = "Load a python file", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "python-load", Help = "Load a python file", GameMasterLevel = 6)]
         public async Task<string> PythonLoad(string[] arguments, Player player)
         {
             if (arguments.Length == 0) return "python-load <file>";
@@ -114,7 +114,7 @@ namespace Uchu.World.Handlers.Commands
             return "Attempting to run python pack...";
         }
 
-        [CommandHandler(Signature = "python-unload", Help = "Unload a python script", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "python-unload", Help = "Unload a python script", GameMasterLevel = 6)]
         public async Task<string> PythonUnload(string[] arguments, Player player)
         {
             if (arguments.Length == 0) return "python-unload <id>";
@@ -124,7 +124,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Unloaded: {arguments[0]}";
         }
 
-        [CommandHandler(Signature = "python-list", Help = "List all python scripts", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "python-list", Help = "List all python scripts", GameMasterLevel = 6)]
         public string PythonList(string[] arguments, Player python)
         {
             var builder = new StringBuilder();
@@ -139,7 +139,7 @@ namespace Uchu.World.Handlers.Commands
             return builder.ToString();
         }
 
-        [CommandHandler(Signature = "failed", Help = "Display failed message", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "failed", Help = "Display failed message", GameMasterLevel = 6)]
         public string Failed(string[] arguments, Player player)
         {
             if (arguments.Length == default) return "failed <id> <...message...>";
@@ -164,7 +164,7 @@ namespace Uchu.World.Handlers.Commands
             return "Sent failed condition.";
         }
         
-        [CommandHandler(Signature = "state", Help = "Send UI state message", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "state", Help = "Send UI state message", GameMasterLevel = 6)]
         public async Task<string> State(string[] arguments, Player player)
         {
             var state = string.Join(" ", arguments);
@@ -174,7 +174,7 @@ namespace Uchu.World.Handlers.Commands
             return "Sent ui message.";
         }
         
-        [CommandHandler(Signature = "toggle", Help = "Send toggle ui message", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "toggle", Help = "Send toggle ui message", GameMasterLevel = 6)]
         public async Task<string> Toggle(string[] arguments, Player player)
         {
             if (arguments.Length != 2) return "toggle <name> <state>";
@@ -184,7 +184,7 @@ namespace Uchu.World.Handlers.Commands
             return "Sent ui message.";
         }
 
-        [CommandHandler(Signature = "imagination", Help = "Send imagination ui message", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "imagination", Help = "Send imagination ui message", GameMasterLevel = 6)]
         public async Task<string> Imagination(string[] arguments, Player player)
         {
             var current = uint.Parse(arguments[0]);
@@ -200,13 +200,13 @@ namespace Uchu.World.Handlers.Commands
             return "Sent";
         }
 
-        [CommandHandler(Signature = "ping", Help = "Get you average ping", GameMasterLevel = GameMasterLevel.Player)]
+        [CommandHandler(Signature = "ping", Help = "Get you average ping", GameMasterLevel = 0)]
         public string Ping(string[] arguments, Player player)
         {
             return $"{player.Ping}ms";
         }
 
-        [CommandHandler(Signature = "ai", Help = "Toggle the ai all npcs", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "ai", Help = "Toggle the ai all npcs", GameMasterLevel = 6)]
         public static string Ai(string[] arguments, Player player)
         {
             foreach (var component in player.Zone.Objects.OfType<BaseCombatAiComponent>())
@@ -217,7 +217,7 @@ namespace Uchu.World.Handlers.Commands
             return "Toggled";
         }
 
-        [CommandHandler(Signature = "target", Help = "Get target of npc", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "target", Help = "Get target of npc", GameMasterLevel = 6)]
         public string Target(string[] arguments, Player player)
         {
             var current = player.Zone.GameObjects.First();

@@ -8,7 +8,7 @@ namespace Uchu.World.Handlers.Commands
 {
     public class GuildCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "guild", Help = "Guild commands", GameMasterLevel = GameMasterLevel.Player)]
+        [CommandHandler(Signature = "guild", Help = "Guild commands", GameMasterLevel = 0)]
         public async Task<string> Guild(string[] arguments, Player player)
         {
             if (player.GuildGuiState == GuildGuiState.Suppress)
