@@ -193,6 +193,11 @@ namespace Uchu.World.Systems.Missions
         public MissionState State { get; private set; }
         
         /// <summary>
+        /// Whether the player may repeat this mission
+        /// </summary>
+        public bool Repeatable { get; private set; }
+        
+        /// <summary>
         /// The amount of times the player completed this mission
         /// </summary>
         public int CompletionCount { get; private set; }
@@ -310,6 +315,7 @@ namespace Uchu.World.Systems.Missions
             IsChoiceReward = cachedMission.IsChoiceReward;
             DefinedType = cachedMission.DefinedType;
             DefinedSubType = cachedMission.DefinedSubType;
+            Repeatable = cachedMission.Repeatable;
             
             // Possible stat rewards
             RewardMaxHealth = cachedMission.RewardMaxHealth;

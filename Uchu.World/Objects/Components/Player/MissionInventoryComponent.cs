@@ -11,6 +11,10 @@ using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
 {
+    /// <summary>
+    /// Component responsible for missions and achievements a player has. Used for starting, updating and completing
+    /// missions and achievements.
+    /// </summary>
     public class MissionInventoryComponent : Component
     {
         public MissionInventoryComponent()
@@ -24,12 +28,25 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Called when a player accepted a new mission, provides the mission that was accepted
+        /// </summary>
         public Event<MissionInstance> OnAcceptMission { get; }
         
+        /// <summary>
+        /// Called when a player completed a mission, provides the mission that was completed
+        /// </summary>
         public Event<MissionInstance> OnCompleteMission { get; }
         
+        /// <summary>
+        /// Complete list of missions this player has, either active or completed
+        /// </summary>
         private List<MissionInstance> Missions { get; set; }
 
+        /// <summary>
+        /// Missions and achievements that the player has that are currently not completed. Provided as an array for
+        /// memory safe access.
+        /// </summary>
         private MissionInstance[] ActiveMissions
         {
             get
@@ -42,6 +59,9 @@ namespace Uchu.World
             }
         }
         
+        /// <summary>
+        /// Missions and achievements that a player has. Provided as an array for memory safe access.
+        /// </summary>
         public MissionInstance[] AllMissions
         {
             get
@@ -53,6 +73,9 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Missions and achievements that a player has completed. Provided as an array for memory safe access.
+        /// </summary>
         public MissionInstance[] CompletedMissions
         {
             get
@@ -71,6 +94,7 @@ namespace Uchu.World
                 await using var cdContext = new CdClientContext();
                 await using var uchuContext = new UchuContext();
 
+                // On load, load all the missions from database and store them in memory
                 var missions = await uchuContext.Missions.Where(
                     m => m.CharacterId == GameObject.Id
                 ).ToArrayAsync();
@@ -95,6 +119,11 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Whether a player has an active mission that has the provided id as mission id.
+        /// </summary>
+        /// <param name="id">The id of the mission to find in the mission inventory</param>
+        /// <returns><c>true</c> if the player has an active mission with the given id, <c>false</c> otherwise</returns>
         public bool HasActive(int id)
         {
             lock (Missions)
@@ -103,6 +132,11 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Whether a player has completed a mission that has the provided id as mission id.
+        /// </summary>
+        /// <param name="id">The id of the mission to find in the mission inventory</param>
+        /// <returns><c>true</c> if the player has a completed mission with the given id, <c>false</c> otherwise</returns>
         public bool HasCompleted(int id)
         {
             lock (Missions)
@@ -111,6 +145,11 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Whether a player has a mission that has the provided id as mission id.
+        /// </summary>
+        /// <param name="id">The id of the mission to find in the mission inventory</param>
+        /// <returns><c>true</c> if the player has a mission with the given id, <c>false</c> otherwise</returns>
         public bool HasMission(int id)
         {
             lock (Missions)
@@ -119,6 +158,11 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Returns the mission with a given id from the mission inventory.
+        /// </summary>
+        /// <param name="id">The id of the mission to get from the inventory</param>
+        /// <returns>A mission instance if the player has this mission, <c>default</c> otherwise.</returns>
         public MissionInstance GetMission(int id)
         {
             lock (Missions)
@@ -127,8 +171,24 @@ namespace Uchu.World
             }
         }
 
-        public bool CanAccept(int id) => GetMission(id) is { } mission
-                   && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
+        /// <summary>
+        /// Checks if the player can accept a mission based on whether it's repeatable, already started and if the
+        /// requirements are met.
+        /// </summary>
+        /// <param name="mission"></param>
+        /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
+        public bool CanAccept(MissionInstance mission) => 
+            (mission.Repeatable || !HasMission(mission.MissionId)) 
+            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
+        
+        /// <summary>
+        /// Checks if the player has a mission available that hasn't been started yet because of incorrect prerequisites.
+        /// If the player now has the proper prerequisites this returns <c>true</c>.
+        /// </summary>
+        /// <param name="id">The mission id of the mission to check if the player has it available</param>
+        /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
+        public bool HasAvailable(int id) => GetMission(id) is { } mission 
+                                            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
 
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
@@ -378,8 +438,7 @@ namespace Uchu.World
             // a player hasn't started it yet and the player has the proper prerequisites
             foreach (var achievement in ClientCache.Achievements.Where(m =>
                 m.Tasks.OfType<T>().Any(t => t.Type == type && t.Targets.Contains((int)lot))
-                && !HasMission(m.MissionId)
-                && MissionParser.CheckPrerequiredMissions(m.PrerequisiteMissions, CompletedMissions)))
+                && CanAccept(m)))
             {
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
                 // new achievement are much lower than not starting an achievement, that's why doing this in the loop

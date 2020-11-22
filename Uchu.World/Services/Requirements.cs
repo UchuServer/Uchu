@@ -212,7 +212,7 @@ namespace Uchu.World.Services
             var missions = player.GetComponent<MissionInventoryComponent>();
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return missions.CanAccept(id);
+            return missions.HasAvailable(id);
         }
 
         private static bool OnMission(Preconditions preconditions, Player player)
