@@ -41,7 +41,7 @@ namespace Uchu.World.Client
             await Task.WhenAll(missionTasks);
             
             Missions = missionTasks.Select(t => t.Result).ToArray();
-            Achievements = Missions.Where(m => m.IsMission).ToArray();
+            Achievements = Missions.Where(m => !m.IsMission).ToArray();
         }
     }
 }

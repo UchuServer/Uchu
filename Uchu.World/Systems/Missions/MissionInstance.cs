@@ -229,12 +229,12 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// If this mission has loaded CdClient information
         /// </summary>
-        private bool _loaded = false;
+        private bool _loaded;
         
         /// <summary>
         /// If this mission has loaded Uchu database information
         /// </summary>
-        private bool _instantiated = false;
+        private bool _instantiated;
         #endregion fields
 
         static MissionInstance()
@@ -276,6 +276,8 @@ namespace Uchu.World.Systems.Missions
             {
                 await LoadTemplateFromDatabaseAsync(cdContext);
             }
+            
+            _loaded = true;
         }
 
         /// <summary>
@@ -437,8 +439,6 @@ namespace Uchu.World.Systems.Missions
 
                 index++;
             }
-            
-            _loaded = true;
         }
         
         /// <summary>
@@ -462,6 +462,8 @@ namespace Uchu.World.Systems.Missions
             {
                 LoadMissionInstance(mission);
             }
+
+            _instantiated = true;
         }
         
         /// <summary>
@@ -472,7 +474,6 @@ namespace Uchu.World.Systems.Missions
             State = (MissionState)mission.State;
             CompletionCount = mission.CompletionCount;
             LastCompletion = mission.LastCompletion;
-            _instantiated = true;
 
             foreach (MissionTaskInstance task in Tasks)
             {
@@ -509,8 +510,8 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         private async Task StartAsync(UchuContext context)
         {
-            if (_instantiated)
-                throw new InvalidOperationException("Can't start a mission that hasn't been instantiated, call" +
+            if (!_loaded)
+                throw new InvalidOperationException("Can't start a mission that hasn't been loaded, call" +
                                                     $"{nameof(LoadAsync)} before starting a mission!");
 
             var mission = new Mission
@@ -579,7 +580,7 @@ namespace Uchu.World.Systems.Missions
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
         public async Task CompleteAsync(UchuContext context, int rewardItem = default)
         { 
-            if (!_loaded)
+            if (!_instantiated)
                 await StartAsync(context);
             
             if (State == MissionState.Completed) 

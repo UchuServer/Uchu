@@ -25,6 +25,7 @@ namespace Uchu.World.Systems.Missions
             TargetGroup = (int[])cachedInstance.TargetGroup.Clone();
             Parameters = (int[])cachedInstance.Parameters.Clone();
             RequiredProgress = cachedInstance.RequiredProgress;
+            Progress = new List<float>();
         }
         
         #region properties
