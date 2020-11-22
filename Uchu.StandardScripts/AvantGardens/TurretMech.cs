@@ -4,7 +4,6 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
-    [ZoneSpecific(1100)]
     public class TurretMech : NativeScript
     {
         public override Task LoadAsync()
