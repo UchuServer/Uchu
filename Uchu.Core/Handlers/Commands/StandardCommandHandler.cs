@@ -286,17 +286,17 @@ namespace Uchu.Core.Handlers.Commands
                 return $"No user with the username of: {username}";
             }
 
-            if (!Enum.TryParse<GameMasterLevel>(arguments[1], out var level))
+            if (!int.TryParse(arguments[1], out var level))
             {
                 return "Invalid <level>";
             }
 
-            user.GameMasterLevel = (int) level;
+            user.GameMasterLevel = level;
 
             await ctx.SaveChangesAsync().ConfigureAwait(false);
 
             return$"Successfully set {user.Username}'s Game Master " +
-                  $"level to {(GameMasterLevel) user.GameMasterLevel}";
+                  $"level to {user.GameMasterLevel}";
         }
 
         private static string GetPassword()
