@@ -41,8 +41,6 @@ namespace Uchu.World.Scripting
             
             foreach (var scriptPackPath in Zone.UchuServer.Config.DllSource.ScriptDllSource)
             {
-                Console.WriteLine(scriptPackPath);
-                
                 try
                 {
                     var scriptPack = new NativeScriptPack(Zone, scriptPackPath);
