@@ -180,7 +180,7 @@ namespace Uchu.Core.Handlers.Commands
                     ResourceStrings.StandardCommandHandler_ApproveUsername_ArgumentsNullException);
             
             await using var ctx = new UchuContext();
-            if (arguments.Length == 0 || arguments[0].ToLower() == "*" || arguments[0] == "")
+            if (arguments.Length == 0 || arguments[0].ToLower() == "*" || string.IsNullOrEmpty(arguments[0]))
             {
                 var unApproved = ctx.Characters.Where(c => !c.NameRejected && c.Name != c.CustomName && !string.IsNullOrEmpty(c.CustomName));
 

@@ -56,6 +56,7 @@ namespace Uchu.World
         public ZoneId ZoneId { get; private set; }
         public Vector3 SpawnPosition { get; private set; }
         public Quaternion SpawnRotation { get; private set; }
+        public GameObject ZoneControlObject { get; private set; }
         
         // Runtime
         private long _passedTickTime;
@@ -195,7 +196,21 @@ namespace Uchu.World
                 }
                 
             }
-            
+
+            using var ctx = new Uchu.Core.Client.CdClientContext();
+
+            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+
+            int Lot = ZoneControlLot ??= 2365;
+
+            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: 70368744177662);
+
+            Start(ZoneObject);
+
+            Objects.Append(ZoneObject);
+
+            ZoneControlObject = ZoneObject;
+
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             LoadSpawnPaths();
             Logger.Information($"Loaded {Objects.Length} objects for {ZoneId}");
@@ -262,25 +277,28 @@ namespace Uchu.World
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-            if (obj == null) return;
-
-            obj.Layer = StandardLayer.Hidden;
-
-            var spawner = obj.GetComponent<SpawnerComponent>();
-
-            spawner.SpawnsToMaintain = (int) spawnerPath.NumberToMaintain;
-
-            spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
             {
-                Position = w.Position,
-                Rotation = Quaternion.Identity
-            }).ToList();
+                var obj = InstancingUtilities.Spawner(spawnerPath, this);
 
-            Start(obj);
-            
-            spawner.SpawnCluster();
+                if (obj == null) return;
+
+                obj.Layer = StandardLayer.Hidden;
+
+                var spawner = obj.GetComponent<SpawnerComponent>();
+
+                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
+
+                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
+                {
+                    Position = w.Position,
+                    Rotation = Quaternion.Identity
+                }).ToList();
+
+                Start(obj);
+
+                spawner.SpawnCluster();
+            }
         }
 
         #endregion
