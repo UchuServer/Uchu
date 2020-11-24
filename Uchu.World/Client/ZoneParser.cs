@@ -97,9 +97,9 @@ namespace Uchu.World.Client
                     
                 var triggers = await TriggerDictionary.FromDirectoryAsync(Path.Combine(_resources.RootPath, path));
                     
-                Logger.Information($"Parsed: {(ZoneId) luz.WorldId}");
+                Logger.Information($"Parsed: {seek}");
 
-                Zones[(int) luz.WorldId] = new ZoneInfo
+                Zones[seek] = new ZoneInfo
                 {
                     LuzFile = luz,
                     LvlFiles = lvlFiles,
