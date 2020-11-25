@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -9,18 +10,17 @@ namespace Uchu.StandardScripts.AvantGardens
     {
         public override Task LoadAsync()
         {
-            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 14718 || g.Lot == 14380))
+            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 14380))
             {
                 Mount(gameObject);
             }
 
-            Listen(Zone.OnObject, obj =>
+            Listen(Zone.OnObject, @object =>
             {
-                if (!(obj is GameObject gameObject)) return;
-                
-                if (gameObject.Lot != 14718 && gameObject.Lot != 14380) return;
-
-                Mount(gameObject);
+                if (@object is GameObject gameObject && gameObject.Lot == 14380)
+                {
+                    Mount(gameObject);
+                }
             });
             
             return Task.CompletedTask;
@@ -28,9 +28,11 @@ namespace Uchu.StandardScripts.AvantGardens
 
         public static void Mount(GameObject gameObject)
         {
-            var component = gameObject.AddComponent<FilterComponent>();
-            
-            component.OnMissions.Add(1880);
+            if (!gameObject.TryGetComponent<MissionFilterComponent>(out var missionFilter))
+            {
+                missionFilter = gameObject.AddComponent<MissionFilterComponent>();
+            }
+            missionFilter.AddMissionIdToFilter(MissionId.SixShooter);
         }
     }
 }

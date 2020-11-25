@@ -3,24 +3,35 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class QuickBuildTask : MissionTaskBase
+    public class QuickBuildTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.QuickBuild;
-
-        public async Task Progress(int lot, int activity)
+        public QuickBuildTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
         {
-            if (!await TryProgress(lot))
-                await TryProgress(activity);
-
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
         }
 
-        public async Task<bool> TryProgress(int value)
+        public QuickBuildTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
+            cachedInstance)
         {
-            if (!Targets.Contains(value)) return false;
+        }
+        
+        public override MissionTaskType Type => MissionTaskType.QuickBuild;
+
+        public async Task ReportProgress(int lot, int activity)
+        {
+            if (!TryProgress(lot))
+                TryProgress(activity);
+
+            if (Completed)
+                await CheckMissionCompletedAsync();
+        }
+
+        private bool TryProgress(int value)
+        {
+            if (!Targets.Contains(value))
+                return false;
             
-            await AddProgressAsync(value);
+            AddProgress(value);
 
             return true;
         }

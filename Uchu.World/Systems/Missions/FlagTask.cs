@@ -3,29 +3,28 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class FlagTask : MissionTaskBase
+    public class FlagTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.Flag;
-
-        public override async Task<bool> IsCompleteAsync()
+        public FlagTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
         {
-            var values = await GetProgressAsync();
+        }
 
-            return values >= TargetValue;
+        public FlagTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
+        {
         }
         
-        public async Task Progress(int id)
+        public override MissionTaskType Type => MissionTaskType.Flag;
+        public override bool Completed => CurrentProgress >= RequiredProgress;
+        public async Task ReportProgress(int id)
         {
-            if (!Targets.Contains(id)) return;
-            
-            var progress = await GetProgressValuesAsync();
-            
-            if (progress.Contains(id)) return;
+            if (!Targets.Contains(id) || Progress.Contains(id))
+                return;
 
-            await AddProgressAsync(id);
-            
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            AddProgress(id);
+
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

@@ -132,13 +132,13 @@ namespace Uchu.World.Services
                 case PreconditionType.DoesNotHaveItem:
                     return DoesNotHaveItem(precondition, player);
                 case PreconditionType.HasAchievement:
-                    return await HasAchievementAsync(precondition, player);
+                    return HasAchievement(precondition, player);
                 case PreconditionType.MissionAvailable:
-                    return await MissionAvailableAsync(precondition, player);
+                    return MissionAvailable(precondition, player);
                 case PreconditionType.OnMission:
-                    return await OnMissionAsync(precondition, player);
+                    return OnMission(precondition, player);
                 case PreconditionType.MissionComplete:
-                    return await MissionCompleteAsync(precondition, player);
+                    return MissionComplete(precondition, player);
                 case PreconditionType.PetDeployed:
                     break;
                 case PreconditionType.HasFlag:
@@ -204,36 +204,31 @@ namespace Uchu.World.Services
             return inventory.Items.All(i => i.Lot != lot);
         }
 
-        private static async Task<bool> HasAchievementAsync(Preconditions preconditions, Player player)
-        {
-            return await MissionCompleteAsync(preconditions, player);
-        }
+        private static bool HasAchievement(Preconditions preconditions, Player player) 
+            => MissionComplete(preconditions, player);
 
-        private static async Task<bool> MissionAvailableAsync(Preconditions preconditions, Player player)
+        private static bool MissionAvailable(Preconditions preconditions, Player player)
         {
             var missions = player.GetComponent<MissionInventoryComponent>();
-            
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.CanAcceptAsync(id);
+            return missions.HasAvailable(id);
         }
 
-        private static async Task<bool> OnMissionAsync(Preconditions preconditions, Player player)
+        private static bool OnMission(Preconditions preconditions, Player player)
         {
-            var missions = player.GetComponent<MissionInventoryComponent>();
-            
+            var missionInventory = player.GetComponent<MissionInventoryComponent>();
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.OnMissionAsync(id);
+            return missionInventory.HasActive(id);
         }
 
-        private static async Task<bool> MissionCompleteAsync(Preconditions preconditions, Player player)
+        private static bool MissionComplete(Preconditions preconditions, Player player)
         {
-            var missions = player.GetComponent<MissionInventoryComponent>();
-            
+            var missionInventory = player.GetComponent<MissionInventoryComponent>();
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
-            return await missions.HasCompletedAsync(id);
+            return missionInventory.HasCompleted(id);
         }
     }
 }

@@ -64,24 +64,18 @@ namespace Uchu.World
             {
                 var count = Random.Next(matrix.Minimum, matrix.Maximum);
                 var entries = matrix.Entries.ToList();
-
-                // NOTE: This check removes all items for which a user does not have a proper mission active.
-                // NOTE: As of 30-10-2020 this has been temporarily disabled as it causes very expensive database queries.
-                // NOTE: This sometimes takes ~4 seconds to run, so it's disabled until a better solution is found.
-                // if (owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
-                // {
-                //     var missionEntries = entries.Where(e => e.Mission).ToArray();
-                //
-                //     foreach (var entry in missionEntries)
-                //     {
-                //         if (await missionInventory.RequiresItemAsync(entry.Lot))
-                //             continue;
-                //         entries.Remove(entry);
-                //     }
-                // }
+                
+                if (owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                {
+                    foreach (var entry in entries.Where(e => e.Mission).ToArray())
+                    {
+                        if (missionInventory.HasActiveForItem(entry.Lot))
+                            continue;
+                        entries.Remove(entry);
+                    }
+                }
 
                 var filterList = entries.ToArray();
-
                 foreach (var entry in filterList)
                 {
                     var restricted = false;

@@ -3,27 +3,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseEmoteTask : MissionTaskBase
+    public class UseEmoteTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.UseEmote;
-
-        public override async Task<bool> IsCompleteAsync()
+        public UseEmoteTask(MissionInstance mission, int taskId, int missionTaskIndex)
+            : base(mission, taskId, missionTaskIndex)
         {
-            var values = await GetProgressValuesAsync();
-
-            return values.Contains(Parameters.FirstOrDefault());
         }
 
-        public async Task Progress(GameObject gameObject, int emote)
+        public UseEmoteTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
         {
-            if (gameObject.Lot != Target) return;
-            
-            if (Parameters.FirstOrDefault() != emote) return;
+        }
+        
+        public override MissionTaskType Type => MissionTaskType.UseEmote;
 
-            await AddProgressAsync(emote);
+        public override bool Completed => Progress.Contains(Parameters.FirstOrDefault());
 
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+        public async Task ReportProgress(GameObject gameObject, int emote)
+        {
+            if (gameObject.Lot != Target || Parameters.FirstOrDefault() != emote)
+                return;
+
+            AddProgress(emote);
+
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

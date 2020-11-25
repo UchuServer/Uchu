@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -23,12 +24,13 @@ namespace Uchu.StandardScripts.VentureExplorer
                 Listen(missionGiverComponent.OnMissionOk, async message =>
                 {
                     var (missionId, isComplete, _, responder) = message;
-
-                    if (missionId != 173 || !isComplete) return;
-
-                    responder.GetComponent<DestroyableComponent>().Imagination = 6;
-
-                    await responder.GetComponent<MissionInventoryComponent>().CompleteMissionAsync(664);
+                    if (missionId == (int)MissionId.YourCreativeSpark 
+                        && isComplete 
+                        && responder.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                    {
+                        responder.GetComponent<DestroyableComponent>().Imagination = 6;
+                        await missionInventory.ScriptAsync(4009);
+                    }
                 });
             }
 

@@ -3,25 +3,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class GoToNpcTask : MissionTaskBase
+    public class GoToNpcTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.GoToNpc;
-
-        public override async Task<bool> IsCompleteAsync()
+        public GoToNpcTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
         {
-            var values = await GetProgressValuesAsync();
-
-            return values.Contains(Target);
         }
 
-        public async Task Progress(Lot lot)
+        public GoToNpcTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
         {
-            if (Target != lot) return;
+        }
+        
+        public override MissionTaskType Type => MissionTaskType.GoToNpc;
 
-            await AddProgressAsync(lot);
+        public override bool Completed => Progress.Contains(Target);
+
+        public async Task ReportProgress(Lot lot)
+        {
+            if (Target != lot)
+                return;
+
+            AddProgress(lot);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

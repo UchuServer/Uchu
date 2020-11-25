@@ -3,18 +3,28 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class SmashTask : MissionTaskBase
+    public class SmashTask : MissionTaskInstance
     {
+        public SmashTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+
+        public SmashTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.Smash;
         
-        public async Task Progress(int lot)
+        public async Task ReportProgress(int lot)
         {
-            if (!Targets.Contains(lot)) return;
+            if (!Targets.Contains(lot))
+                return;
             
-            await AddProgressAsync(lot);
+            AddProgress(lot);
 
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

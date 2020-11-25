@@ -3,25 +3,30 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseSkillTask : MissionTaskBase
+    public class UseSkillTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.UseSkill;
-
-        public override async Task<bool> IsCompleteAsync()
+        public UseSkillTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
         {
-            var values = await GetProgressValuesAsync();
-
-            return Parameters.Any(t => values.Contains(t));
         }
 
-        public async Task Progress(int skillId)
+        public UseSkillTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
         {
-            if (!Parameters.Contains(skillId)) return;
+        }
+        
+        public override MissionTaskType Type => MissionTaskType.UseSkill;
 
-            await AddProgressAsync(skillId);
+        public override bool Completed => Parameters.Any(t => Progress.Contains(t));
+
+        public async Task ReportProgress(int skillId)
+        {
+            if (!Parameters.Contains(skillId))
+                return;
+
+            AddProgress(skillId);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

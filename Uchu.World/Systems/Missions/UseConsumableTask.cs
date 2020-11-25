@@ -3,25 +3,31 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseConsumableTask : MissionTaskBase
+    public class UseConsumableTask : MissionTaskInstance
     {
-        public override MissionTaskType Type => MissionTaskType.UseConsumable;
-
-        public override async Task<bool> IsCompleteAsync()
+        public UseConsumableTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
         {
-            var values = await GetProgressValuesAsync();
-
-            return values.Contains(Target);
         }
 
-        public async Task Progress(int lot)
+        public UseConsumableTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
+            cachedInstance)
         {
-            if (Target != lot) return;
-            
-            await AddProgressAsync(lot);
+        }
+        
+        public override MissionTaskType Type => MissionTaskType.UseConsumable;
 
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+        public override bool Completed => Progress.Contains(Target);
+
+        public async Task ReportProgress(int lot)
+        {
+            if (Target != lot)
+                return;
+            
+            AddProgress(lot);
+
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }

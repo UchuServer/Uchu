@@ -1,40 +1,53 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Uchu.World.Services;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
-    public class FilterComponent : Component
+    /// <summary>
+    /// Filter to hide a game if a player doesn't have the correct filter to show it
+    /// </summary>
+    public class MissionFilterComponent : Component
     {
-        public string Condition { get; set; }
-        
-        public List<int> OnMissions { get; set; }
-
-        public FilterComponent()
+        public MissionFilterComponent()
         {
-            Condition = null;
-            
-            OnMissions = new List<int>();
+            MissionIdFilter = new List<MissionId>();
+        }
+        
+        /// <summary>
+        /// List of mission ids required to show 
+        /// </summary>
+        private List<MissionId> MissionIdFilter { get; set; }
+
+        /// <summary>
+        /// Adds a mission id to the filter, if a player has this mission active the game object will be hidden
+        /// </summary>
+        /// <param name="missionId"></param>
+        public void AddMissionIdToFilter(MissionId missionId)
+        {
+            lock (MissionIdFilter)
+            {
+                MissionIdFilter.Add(missionId);
+            }
         }
 
-        public async Task<bool> CheckAsync(Player player)
+        /// <summary>
+        /// Checks if the player has an active mission from the filter
+        /// </summary>
+        /// <param name="player">The player to check the missions inventory of</param>
+        /// <returns><c>true</c> if the player has an active mission from the filter, <c>false</c> otherwise</returns>
+        public bool Show(Player player)
         {
-            if (!string.IsNullOrWhiteSpace(Condition))
-            {
-                if (!await Requirements.CheckRequirementsAsync(Condition, player)) return false;
-            }
-
-            if (OnMissions.Count != default)
+            if (MissionIdFilter.Count > 0)
             {
                 var inventory = player.GetComponent<MissionInventoryComponent>();
-                
-                foreach (var mission in OnMissions)
+                foreach (var missionId in MissionIdFilter)
                 {
-                    if (!await inventory.OnMissionAsync(mission)) return false;
+                    if (inventory.HasActive((int)missionId))
+                        return true;
                 }
             }
 
-            return true;
+            return false;
         }
     }
 }

@@ -1005,15 +1005,13 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "complete", Help = "Complete active missions", GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> Complete(string[] arguments, Player player)
         {
-            var missions = player.GetComponent<MissionInventoryComponent>().MissionInstances;
-
+            var missions = player.GetComponent<MissionInventoryComponent>().AllMissions;
             var args = new List<int>();
-
             var achievements = arguments.Contains("-a");
-
             var list = arguments.ToList();
 
-            if (achievements) list.Remove("-a");
+            if (achievements)
+                list.Remove("-a");
 
             arguments = list.ToArray();
             
@@ -1023,25 +1021,23 @@ namespace Uchu.World.Handlers.Commands
                     args.Add(id);
             }
             
+            await using var context = new UchuContext();
             foreach (var mission in missions)
             {
-                var state = await mission.GetMissionStateAsync();
-                
-                if (state == MissionState.Completed) continue;
+                if (mission.State == MissionState.Completed)
+                    continue;
 
-                var isMission = await mission.IsMissionAsync();
+                if (!mission.IsMission && !achievements) continue;
                 
-                if (!isMission && !achievements) continue;
-                
-                if (args.Count > 0 && !args.Contains(mission.MissionId)) continue;
+                if (args.Count > 0 && !args.Contains(mission.MissionId))
+                    continue;
 
                 try
                 {
-                    await mission.CompleteAsync();
+                    await mission.CompleteAsync(context);
                 }
                 catch
                 {
-                    // Ignored
                 }
             }
 
@@ -1082,7 +1078,7 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[1], out var id))
                 return "/triggercelebrate <CelebrationID>";
 
-            await player.TriggerCelebration((Celebration)id);
+            await player.TriggerCelebration((CelebrationId)id);
 
             return $"Triggered Celebration {arguments[1]}";
         }

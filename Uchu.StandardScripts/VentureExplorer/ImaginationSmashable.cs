@@ -4,8 +4,7 @@ using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
-
-using RS = Uchu.Core.Resources;
+using Uchu.Core.Resources;
 using DestructibleComponent = Uchu.World.DestructibleComponent;
 
 namespace Uchu.StandardScripts.VentureExplorer
@@ -57,7 +56,7 @@ namespace Uchu.StandardScripts.VentureExplorer
             {
                 // Manually spawn imagination if a user has the prerequisite mission as it's not in the crate LT
                 var missionInventory = owner.GetComponent<MissionInventoryComponent>();
-                if (missionInventory != default && missionInventory.HasMission((int) RS.Mission.UnlockYourImagination))
+                if (missionInventory != default && missionInventory.HasMission((int) MissionId.UnlockYourImagination))
                 {
                     for (var i = 0; i < _random.Next(1, 3); i++)
                     {

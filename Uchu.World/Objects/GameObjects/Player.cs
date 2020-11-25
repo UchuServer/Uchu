@@ -45,22 +45,22 @@ namespace Uchu.World
                     destructibleComponent.OnResurrect.AddListener(() => { GetComponent<DestroyableComponent>().Imagination = 6; });
                 }
                 
-                await using var ctx = new UchuContext();
+                await using var context = new UchuContext();
                 
-                var character = await ctx.Characters
+                var character = await context.Characters
                     .Include(c => c.UnlockedEmotes)
                     .FirstAsync(c => c.Id == Id);
 
                 foreach (var unlockedEmote in character.UnlockedEmotes)
                 {
-                    await UnlockEmoteAsync(unlockedEmote.EmoteId);
+                    await UnlockEmoteAsync(context, unlockedEmote.EmoteId);
                 }
 
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
                 {
                     await Perspective.TickAsync();
-                }, 1000);
+                }, 20 * 5);
                 
                 // Check banned status every minute
                 // TODO: Find an active method instead of polling
@@ -274,7 +274,7 @@ namespace Uchu.World
         /// Triggers a celebration for the player
         /// </summary>
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
-        public async Task TriggerCelebration(Celebration celebrationId)
+        public async Task TriggerCelebration(CelebrationId celebrationId)
         {
             var celebration = (await new CdClientContext().CelebrationParametersTable.
                 Where(t => t.Id == (int)celebrationId).ToArrayAsync())[0];
@@ -438,11 +438,9 @@ namespace Uchu.World
             physics.LinearVelocity = details.HasVelocity ? details.Velocity : Vector3.Zero;
         }
 
-        public async Task UnlockEmoteAsync(int emoteId)
+        public async Task UnlockEmoteAsync(UchuContext context, int emoteId)
         {
-            await using var ctx = new UchuContext();
-
-            var character = await ctx.Characters
+            var character = await context.Characters
                 .Include(c => c.UnlockedEmotes)
                 .FirstAsync(c => c.Id == Id);
 
@@ -452,8 +450,6 @@ namespace Uchu.World
                 {
                     EmoteId = emoteId
                 });
-
-                await ctx.SaveChangesAsync();
             }
             
             Message(new SetEmoteLockStateMessage

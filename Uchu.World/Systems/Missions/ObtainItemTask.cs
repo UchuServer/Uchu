@@ -3,18 +3,29 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class ObtainItemTask : MissionTaskBase
+    public class ObtainItemTask : MissionTaskInstance
     {
+        public ObtainItemTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+            : base(mission, taskId, missionTaskIndex)
+        {
+        }
+
+        public ObtainItemTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
+            cachedInstance)
+        {
+        }
+        
         public override MissionTaskType Type => MissionTaskType.ObtainItem;
 
-        public async Task Progress(int lot)
+        public async Task ReportProgress(int lot)
         {
-            if (!Targets.Contains(lot)) return;
+            if (!Targets.Contains(lot))
+                return;
 
-            await AddProgressAsync(lot);
+            AddProgress(lot);
             
-            if (await IsCompleteAsync())
-                await CheckMissionCompleteAsync();
+            if (Completed)
+                await CheckMissionCompletedAsync();
         }
     }
 }
