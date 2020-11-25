@@ -87,6 +87,9 @@ namespace Uchu.World
             }
         }
         
+        /// <summary>
+        /// Loads all player missions, combining the cd client and uchu database into mission instances
+        /// </summary>
         private async Task LoadAsync()
         {
             if (GameObject is Player player)
@@ -205,6 +208,11 @@ namespace Uchu.World
         public bool HasAvailable(int id) => GetMission(id) is { } mission 
                                             && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
 
+        /// <summary>
+        /// Messages the client about a mission offer
+        /// </summary>
+        /// <param name="missionId">The id of the mission the mission to offer</param>
+        /// <param name="missionGiver">The giver of the mission</param>
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
             var player = (Player) GameObject;
@@ -224,6 +232,13 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Makes the player respond to a mission offer, if not started it starts it, if not completed it show a repeat
+        /// of the mission offer, if completable it completes it
+        /// </summary>
+        /// <param name="missionId">The id of the mission to respond to</param>
+        /// <param name="missionGiver">The giver of the mission</param>
+        /// <param name="rewardItem">Whether items should be rewarded (multi-select)</param>
         private async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
         {
             await using var uchuContext = new UchuContext();
@@ -257,6 +272,10 @@ namespace Uchu.World
             missionGiver?.GetComponent<MissionGiverComponent>().HandleInteraction((Player)GameObject);
         }
 
+        /// <summary>
+        /// Completes a mission
+        /// </summary>
+        /// <param name="missionId">The id of the mission to complete</param>
         public async Task CompleteMissionAsync(int missionId)
         {
             MissionInstance mission;
@@ -287,9 +306,18 @@ namespace Uchu.World
             await mission.CompleteAsync(uchuContext);
         }
 
+        /// <summary>
+        /// Finds all active tasks of a certain mission task type
+        /// </summary>
+        /// <typeparam name="T">The type of the mission task instance to use</typeparam>
+        /// <returns>List of tasks that are active and of the seeked after type</returns>
         private IEnumerable<T> FindActiveTasksAsync<T>() where T : MissionTaskInstance => ActiveMissions
                 .SelectMany(m => m.Tasks.OfType<T>().Where(t => !t.Completed));
 
+        /// <summary>
+        /// Progresses all the smash tasks using the provided lot
+        /// </summary>
+        /// <param name="lot">The lot to progress the smash tasks with</param>
         public async Task SmashAsync(Lot lot)
         {
             foreach (var task in FindActiveTasksAsync<SmashTask>())
@@ -303,6 +331,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all collect tasks using the game object that was collected
+        /// </summary>
+        /// <param name="gameObject">The game object that was collected</param>
         public async Task CollectAsync(GameObject gameObject)
         {
             foreach (var task in FindActiveTasksAsync<CollectTask>())
@@ -316,6 +348,11 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all script tasks using the given scripted id
+        /// </summary>
+        /// <param name="id">The id to progress the script tasks with</param>
+        /// <returns></returns>
         public async Task ScriptAsync(int id)
         {
             foreach (var task in FindActiveTasksAsync<ScriptTask>())
@@ -329,6 +366,11 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all quick build tasks using the lot of the quick build and the quickbuild activity id
+        /// </summary>
+        /// <param name="lot">The lot of the object that was build</param>
+        /// <param name="activity">The id of the quickbuild activity</param>
         public async Task QuickBuildAsync(Lot lot, int activity)
         {
             foreach (var task in FindActiveTasksAsync<QuickBuildTask>())
@@ -342,6 +384,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses the go to npc tasks using the given lot
+        /// </summary>
+        /// <param name="lot">The lot of the object that was interacted with</param>
         public async Task GoToNpcAsync(Lot lot)
         {
             foreach (var task in FindActiveTasksAsync<GoToNpcTask>())
@@ -355,6 +401,10 @@ namespace Uchu.World
             });
         }
         
+        /// <summary>
+        /// Progresses all the tasks of the interact type using the given lot
+        /// </summary>
+        /// <param name="lot">The lot to progress the interact tasks with</param>
         public async Task InteractAsync(Lot lot)
         {
             foreach (var task in FindActiveTasksAsync<InteractTask>())
@@ -368,6 +418,11 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses the use emote tasks using the emote id
+        /// </summary>
+        /// <param name="gameObject">The game object that did the emote</param>
+        /// <param name="emote">The id of the emote to progress the tasks with</param>
         public async Task UseEmoteAsync(GameObject gameObject, int emote)
         {
             foreach (var task in FindActiveTasksAsync<UseEmoteTask>())
@@ -381,6 +436,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all use consumable tasks using the given lot
+        /// </summary>
+        /// <param name="lot">The lot to progress the tasks with</param>
         public async Task UseConsumableAsync(Lot lot)
         {
             foreach (var task in FindActiveTasksAsync<UseConsumableTask>())
@@ -394,6 +453,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all use skill tasks using the given skill id
+        /// </summary>
+        /// <param name="skillId">The skill id to progress the tasks with</param>
         public async Task UseSkillAsync(int skillId)
         {
             foreach (var task in FindActiveTasksAsync<UseSkillTask>())
@@ -407,6 +470,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses the obtain item tasks using the given lot
+        /// </summary>
+        /// <param name="lot">The lot to progress the obtain item tasks with</param>
         public async Task ObtainItemAsync(Lot lot)
         {
             foreach (var task in FindActiveTasksAsync<ObtainItemTask>())
@@ -420,6 +487,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all the mission complete tasks using the mission id
+        /// </summary>
+        /// <param name="id">The id to progress the mission complete tasks with</param>
         public async Task MissionCompleteAsync(int id)
         {
             foreach (var task in FindActiveTasksAsync<MissionCompleteTask>())
@@ -433,6 +504,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Progresses all flag tasks using the given flag
+        /// </summary>
+        /// <param name="flag">The flag to report to flag tasks</param>
         public async Task FlagAsync(int flag)
         {
             foreach (var task in FindActiveTasksAsync<FlagTask>())

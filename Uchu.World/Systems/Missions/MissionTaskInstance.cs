@@ -7,6 +7,9 @@ using Uchu.Core.Client;
 
 namespace Uchu.World.Systems.Missions
 {
+    /// <summary>
+    /// Instance of a mission task, combines CdClient info and Uchu database info for an in-memory representation of both
+    /// </summary>
     public abstract class MissionTaskInstance
     {
         public MissionTaskInstance(MissionInstance mission, int taskId, int missionTaskIndex)
@@ -98,6 +101,10 @@ namespace Uchu.World.Systems.Missions
         /// If the task is completed
         /// </summary>
         public virtual bool Completed => CurrentProgress >= RequiredProgress;
+        
+        /// <summary>
+        /// Mission parameters, works basically like targets
+        /// </summary>
         public int[] Parameters { get; private set; }
         
         /// <summary>

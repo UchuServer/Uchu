@@ -728,7 +728,6 @@ namespace Uchu.World.Systems.Missions
                     {
                         var _ = Task.Run(async () =>
                         {
-                            await Task.Delay(10000);
                             await inventory.AddItemAsync(lot, (uint) count);
                         });
                     }
@@ -788,6 +787,10 @@ namespace Uchu.World.Systems.Missions
             });
         }
 
+        /// <summary>
+        /// Notifies the player of the lock state of a mission
+        /// </summary>
+        /// <param name="state">The state to send to the player</param>
         private void MessageMissionTypeState(MissionLockState state)
         {
             Player.Message(new SetMissionTypeStateMessage

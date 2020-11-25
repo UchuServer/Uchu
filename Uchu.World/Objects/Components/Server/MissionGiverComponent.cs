@@ -7,11 +7,12 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
+    /// <summary>
+    /// Component responsible for giving missions to the player
+    /// </summary>
     [ServerComponent(Id = ComponentId.MissionNPCComponent)]
     public class MissionGiverComponent : Component
     {
-        public Event<(int missionId, bool isComplete, MissionState state, GameObject responder)> OnMissionOk { get; }
-
         protected MissionGiverComponent()
         {
             OnMissionOk = new Event<(int, bool, MissionState, GameObject)>();
@@ -24,8 +25,19 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Event that's called when a player accepts a mission
+        /// </summary>
+        public Event<(int missionId, bool isComplete, MissionState state, GameObject responder)> OnMissionOk { get; }
+        
+        /// <summary>
+        /// All missions this giver can offer
+        /// </summary>
         public (Missions, MissionNPCComponent)[] Missions { get; set; }
 
+        /// <summary>
+        /// Finds all the missions that this giver may offer and stores them
+        /// </summary>
         private void CollectMissions()
         {
             using (var ctx = new CdClientContext())
@@ -122,14 +134,11 @@ namespace Uchu.World
                         }
                     }
                     
-                    var hasPrerequisite = MissionParser.CheckPrerequiredMissions(
+                    if (!MissionParser.CheckPrerequiredMissions(
                         mission.PrereqMissionID,
-                        missionInventory.CompletedMissions
-                    );
-                    
-                    if (!hasPrerequisite)
+                        missionInventory.CompletedMissions))
                         continue;
-                    
+
                     // If this is a mission the player doesn't have yet or hasn't started yet, offer it
                     missionInventory.MessageOfferMission(questId, GameObject);
                     return;
