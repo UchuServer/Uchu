@@ -15,13 +15,12 @@ namespace Uchu.StandardScripts.AvantGardens
                 Mount(gameObject);
             }
 
-            Listen(Zone.OnObject, obj =>
+            Listen(Zone.OnObject, @object =>
             {
-                if (!(obj is GameObject gameObject)) return;
-                
-                if (gameObject.Lot != 14718) return;
-
-                Mount(gameObject);
+                if (@object is GameObject gameObject && gameObject.Lot == 14718)
+                {
+                    Mount(gameObject);
+                }
             });
             
             return Task.CompletedTask;

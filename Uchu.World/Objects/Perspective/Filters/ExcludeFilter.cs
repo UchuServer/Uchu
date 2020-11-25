@@ -32,32 +32,24 @@ namespace Uchu.World.Filters
         /// <summary>
         /// Ticks the exclude filter, updating visible objects based on the filter components in the filter
         /// </summary>
-        public async Task Tick()
+        public Task Tick()
         {
-            var filterTasks = Player.Zone.Objects.OfType<MissionFilterComponent>()
-                .Select(component => Task.Run(() =>
-                {
-                    var excluded = Excluded.Contains(component.GameObject);
-                    var check = component.Check(Player);
-
-                    if (excluded && check)
-                    {
-                        Excluded.Remove(component.GameObject);
-                    }
-                    else if (!excluded && !check)
-                    {
-                        Excluded.Add(component.GameObject);
-                    }
-                })).ToList();
-            
-            await Task.WhenAll(filterTasks);
-            
-            for (var i = 0; i < Excluded.Count; i++)
+            foreach (var filter in Player.Zone.Objects.OfType<MissionFilterComponent>())
             {
-                var gameObject = Excluded[i];
-                if (!gameObject.Alive)
-                    Excluded.Remove(gameObject);
+                var excluded = Excluded.Contains(filter.GameObject);
+                var show = filter.Show(Player);
+
+                if (show && excluded)
+                {
+                    Include(filter.GameObject);
+                }
+                else if (!show && !excluded)
+                {
+                    Exclude(filter.GameObject);
+                }
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

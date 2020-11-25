@@ -133,6 +133,21 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Checks if there's a mission that requires a certain item lot to be obtained
+        /// </summary>
+        /// <param name="lot">The lot to check for</param>
+        /// <returns><c>true</c> if there's an active mission that requires the given item lot, <c>false</c> otherwise</returns>
+        public bool HasActiveForItem(Lot lot)
+        {
+            lock (Missions)
+            {
+                return ActiveMissions
+                    .SelectMany(m => m.Tasks)
+                    .Any(t => t.Type == MissionTaskType.ObtainItem && t.Targets.Contains((int)lot));
+            }
+        }
+
+        /// <summary>
         /// Whether a player has completed a mission that has the provided id as mission id.
         /// </summary>
         /// <param name="id">The id of the mission to find in the mission inventory</param>
@@ -282,7 +297,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot);
             }
 
-            await SearchForNewAchievementsAsync<SmashTask>(MissionTaskType.Smash, lot, async task =>
+            await StartUnlockableAchievementsAsync<SmashTask>(MissionTaskType.Smash, lot, async task =>
             {
                 await task.ReportProgress(lot);
             });
@@ -295,7 +310,7 @@ namespace Uchu.World
                 await task.ReportProgress(gameObject);
             }
 
-            await SearchForNewAchievementsAsync<CollectTask>(MissionTaskType.Collect, gameObject.Lot, async task =>
+            await StartUnlockableAchievementsAsync<CollectTask>(MissionTaskType.Collect, gameObject.Lot, async task =>
             {
                 await task.ReportProgress(gameObject);
             });
@@ -308,7 +323,7 @@ namespace Uchu.World
                 await task.ReportProgress(id);
             }
 
-            await SearchForNewAchievementsAsync<ScriptTask>(MissionTaskType.Script, id, async task =>
+            await StartUnlockableAchievementsAsync<ScriptTask>(MissionTaskType.Script, id, async task =>
             {
                 await task.ReportProgress(id);
             });
@@ -321,7 +336,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot, activity);
             }
 
-            await SearchForNewAchievementsAsync<QuickBuildTask>(MissionTaskType.QuickBuild, lot, async task =>
+            await StartUnlockableAchievementsAsync<QuickBuildTask>(MissionTaskType.QuickBuild, lot, async task =>
             {
                 await task.ReportProgress(lot, activity);
             });
@@ -334,7 +349,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot);
             }
             
-            await SearchForNewAchievementsAsync<GoToNpcTask>(MissionTaskType.GoToNpc, lot, async task =>
+            await StartUnlockableAchievementsAsync<GoToNpcTask>(MissionTaskType.GoToNpc, lot, async task =>
             {
                 await task.ReportProgress(lot);
             });
@@ -347,7 +362,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot);
             }
             
-            await SearchForNewAchievementsAsync<InteractTask>(MissionTaskType.Interact, lot, async task =>
+            await StartUnlockableAchievementsAsync<InteractTask>(MissionTaskType.Interact, lot, async task =>
             {
                 await task.ReportProgress(lot);
             });
@@ -360,7 +375,7 @@ namespace Uchu.World
                 await task.ReportProgress(gameObject, emote);
             }
 
-            await SearchForNewAchievementsAsync<UseEmoteTask>(MissionTaskType.UseEmote, emote, async task =>
+            await StartUnlockableAchievementsAsync<UseEmoteTask>(MissionTaskType.UseEmote, emote, async task =>
             {
                 await task.ReportProgress(gameObject, emote);
             });
@@ -373,7 +388,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot);
             }
 
-            await SearchForNewAchievementsAsync<UseConsumableTask>(MissionTaskType.UseConsumable, lot, async task =>
+            await StartUnlockableAchievementsAsync<UseConsumableTask>(MissionTaskType.UseConsumable, lot, async task =>
             {
                 await task.ReportProgress(lot);
             });
@@ -386,7 +401,7 @@ namespace Uchu.World
                 await task.ReportProgress(skillId);
             }
 
-            await SearchForNewAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
+            await StartUnlockableAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
             });
@@ -399,7 +414,7 @@ namespace Uchu.World
                 await task.ReportProgress(lot);
             }
 
-            await SearchForNewAchievementsAsync<ObtainItemTask>(MissionTaskType.ObtainItem, lot, async task =>
+            await StartUnlockableAchievementsAsync<ObtainItemTask>(MissionTaskType.ObtainItem, lot, async task =>
             {
                 await task.ReportProgress(lot);
             });
@@ -412,7 +427,7 @@ namespace Uchu.World
                 await task.ReportProgress(id);
             }
 
-            await SearchForNewAchievementsAsync<MissionCompleteTask>(MissionTaskType.MissionComplete, id, async task =>
+            await StartUnlockableAchievementsAsync<MissionCompleteTask>(MissionTaskType.MissionComplete, id, async task =>
             {
                 await task.ReportProgress(id);
             });
@@ -425,20 +440,39 @@ namespace Uchu.World
                 await task.ReportProgress(flag);
             }
 
-            await SearchForNewAchievementsAsync<FlagTask>(MissionTaskType.Flag, flag, async task =>
+            await StartUnlockableAchievementsAsync<FlagTask>(MissionTaskType.Flag, flag, async task =>
             {
                 await task.ReportProgress(flag);
             });
         }
 
-        private async Task SearchForNewAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null)
+        /// <summary>
+        /// Returns a list of achievements that a player may start for a certain task type due to meeting it's prerequisites
+        /// </summary>
+        /// <remarks>
+        /// A player may start an achievement if the achievement is of the requested type,
+        ///  a player hasn't started it yet and the player has the proper prerequisites
+        /// </remarks>
+        /// <param name="type">The <see cref="MissionTaskType"/> of the achievement we seek</param>
+        /// <param name="lot">The lot for which we check if there's an achievement attached to it</param>
+        /// <typeparam name="T">The mission task instance type we want to look for, linked to <c>type</c> param</typeparam>
+        /// <returns>A list of all the achievements a player can unlock, given the task type and the lot</returns>
+        private MissionInstance[] UnlockableAchievements<T>(MissionTaskType type, Lot lot)
+            where T : MissionTaskInstance => ClientCache.Achievements.Where(m =>
+                m.Tasks.OfType<T>().Any(t => t.Type == type && t.Targets.Contains((int) lot))
+                && CanAccept(m)).ToArray();
+
+        /// <summary>
+        /// Looks for possibly unlockable achievements given a mission task type and a lot and starts them
+        /// </summary>
+        /// <param name="type">The type of tasks we wish to look for achievements for</param>
+        /// <param name="lot">The lot an achievement might have in its targets</param>
+        /// <param name="progress">Progress callback function to call if an unlockable achievement is found</param>
+        /// <typeparam name="T">The type of mission task type we wish to search for, linked to <c>type</c> param.</typeparam>
+        private async Task StartUnlockableAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null)
             where T : MissionTaskInstance
         {
-            // A player may start an achievement if the achievement is of the requested type,
-            // a player hasn't started it yet and the player has the proper prerequisites
-            foreach (var achievement in ClientCache.Achievements.Where(m =>
-                m.Tasks.OfType<T>().Any(t => t.Type == type && t.Targets.Contains((int)lot))
-                && CanAccept(m)))
+            foreach (var achievement in UnlockableAchievements<T>(type, lot))
             {
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
                 // new achievement are much lower than not starting an achievement, that's why doing this in the loop

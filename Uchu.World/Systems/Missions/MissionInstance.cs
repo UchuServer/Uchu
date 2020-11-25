@@ -425,7 +425,7 @@ namespace Uchu.World.Systems.Missions
                 var taskType = (MissionTaskType) (task.TaskType ?? 0);
                 if (!TaskTypes.TryGetValue(taskType, out var type))
                 {
-                    Logger.Error($"No {nameof(MissionTaskInstance)} for {taskType} found.");
+                    Logger.Debug($"No {nameof(MissionTaskInstance)} for {taskType} found.");
                     continue;
                 }
 

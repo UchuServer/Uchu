@@ -76,13 +76,15 @@ namespace Uchu.World
             
             ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
 
-            Logger.Information("Loading CDClient cache");
-            await ClientCache.LoadAsync();
-            
-            // The zone creation will run as a background task to ensure the calling server can resume operation
-            Logger.Information($"Setting up zones for world server {Id}");
             _ = Task.Run(async () =>
             {
+                Logger.Information("Loading CDClient cache");
+                await ClientCache.LoadAsync();
+            });
+            
+            _ = Task.Run(async () =>
+            {
+                Logger.Information($"Setting up zones for world server {Id}");
                 foreach (var zone in info.Info.Zones)
                 {
                     await ZoneParser.LoadZoneDataAsync(zone);
