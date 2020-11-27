@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
@@ -161,7 +162,18 @@ namespace Uchu.World
             
             foreach (var lot in await container.GenerateLootYieldsAsync(owner))
             {
-                var drop = InstancingUtilities.InstantiateLoot(lot, owner, GameObject, Transform.Position);
+                Lot item = lot;
+                
+                if (lot == Lot.FactionTokenProxy)
+                {
+                    if (await owner.GetFlagAsync((int) FactionFlags.Assembly)) item = Lot.AssemblyFactionToken;
+                    if (await owner.GetFlagAsync((int) FactionFlags.Paradox)) item = Lot.ParadoxFactionToken;
+                    if (await owner.GetFlagAsync((int) FactionFlags.Sentinel)) item = Lot.SentinelFactionToken;
+                    if (await owner.GetFlagAsync((int) FactionFlags.Venture)) item = Lot.VentureFactionToken;
+                    if (item == lot) continue;
+                }
+                
+                var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
 
                 Start(drop);
             }
