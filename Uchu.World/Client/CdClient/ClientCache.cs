@@ -14,9 +14,6 @@ namespace Uchu.World.Client
         /// <summary>
         /// All missions in the cd client
         /// </summary>
-        /// <remarks>
-        /// TODO: Can be optimized so that only missions in this zone are loaded
-        /// </remarks>
         public static MissionInstance[] Missions { get; private set; } = { };
 
         /// <summary>
