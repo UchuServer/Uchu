@@ -18,7 +18,7 @@ namespace Uchu.StandardScripts.BlockYard
     {
         static private string GUIDMaelstrom { get; } = "{7881e0a1-ef6d-420c-8040-f59994aa3357}"; // ambient sounds for when the Maelstrom is on
         static private string GUIDPeaceful { get; } = "{c5725665-58d0-465f-9e11-aeb1d21842ba}"; // happy ambient sounds when no Maelstrom is present
-        static bool HasOwner { get; set; } = false;
+        static bool HasOwner { get; set; } = true;
         static private string[] GlobalObjects { get; } = // Objects you always spawn
         {
             "Mailbox",
