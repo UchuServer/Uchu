@@ -217,7 +217,7 @@ namespace Uchu.World.Handlers
         /// The generated XML data is based on https://docs.google.com/document/d/1XDh_HcXMjSdaGeniG1dND5CA7jOFXIPA_fxCnjvjaO4/edit#
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
-        /// <param name="GMLevel">The GM level of the user</param>
+        /// <param name="gmLevel">The GM level of the user</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
         private static XmlData GenerateCharacterXmlData(Character character, int gmLevel)
         {
@@ -298,7 +298,7 @@ namespace Uchu.World.Handlers
         /// Creates a character node, containing billing info and subscription info
         /// </summary>
         /// <param name="character">The character to create a node from</param>
-        /// <param name="GMLevel">The gamemaster level of the user</param>
+        /// <param name="gmLevel">The gamemaster level of the user</param>
         /// <returns>The character node created from the character</returns>
         private static CharacterNode CharacterNode(Character character, int gmLevel)
         {
