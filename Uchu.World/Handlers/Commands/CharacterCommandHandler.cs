@@ -31,10 +31,10 @@ namespace Uchu.World.Handlers.Commands
             return $"Changed chat level to: {player.ChatChannel}";
         }
         
-        [CommandHandler(Signature = "give", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gmadditem", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> GiveItem(string[] arguments, Player player)
         {
-            if (arguments.Length == default) return "give <lot> <count(optional)> <inventory(optional)>";
+            if (arguments.Length == default) return "gmadditem <lot> <count(optional)> <inventory(optional)>";
 
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
@@ -717,11 +717,11 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully added {type.Name} to {player}";
         }
         
-        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "testmap", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
         public string World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
-                return "world <zoneId>";
+                return "testmap <zoneId>";
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
