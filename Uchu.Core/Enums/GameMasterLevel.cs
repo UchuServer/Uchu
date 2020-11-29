@@ -4,7 +4,7 @@ namespace Uchu.Core
     {
         Player = 0,
         Mythran = 1,
-        MytranWithGlow = 2,
+        MythranWithGlow = 2,
         Admin = 5,
         Operator = 9,
         Console
