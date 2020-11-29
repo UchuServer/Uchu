@@ -184,7 +184,7 @@ namespace Uchu.World.Handlers
             var gmLevel = ctx.Users.Where(i => i.Id == character.UserId).First().GameMasterLevel;
             
             // Get the XML data for this character for the initial character packet
-            var xmlData = GenerateCharacterXmlData(character, gmlevel);
+            var xmlData = GenerateCharacterXmlData(character, gmLevel);
 
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
@@ -195,11 +195,11 @@ namespace Uchu.World.Handlers
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
             
-            var template = gmLevel == GameMasterLevel.MythranWithGlow ? 10103 : 1;
+            var template = gmLevel == (int)GameMasterLevel.MythranWithGlow ? 10103 : 1;
             
             var ldf = new LegoDataDictionary
             {
-                ["gmlevel", 1] = gmlevel,
+                ["gmlevel", 1] = gmLevel,
                 ["name"] = character.Name,
                 ["objid", 9] = character.Id,
                 ["template", 1] = template,
