@@ -180,8 +180,11 @@ namespace Uchu.World.Handlers
         /// <param name="session">The session cache for the connection</param>
         private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
+            await using var ctx = new UchuContext();
+            var gmlevel = ctx.Users.Where(i => i.Id == character.UserId).First().GameMasterLevel;
+            
             // Get the XML data for this character for the initial character packet
-            var xmlData = GenerateCharacterXmlData(character);
+            var xmlData = GenerateCharacterXmlData(character, gmlevel);
 
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
@@ -191,13 +194,15 @@ namespace Uchu.World.Handlers
             var xml = new byte[bytes.Length - 3];
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
-
+            
+            var template = gmlevel >= 2 && gmlevel < 5 ? 10103 : 1;
+            
             var ldf = new LegoDataDictionary
             {
-                ["accountId"] = session.UserId,
-                ["objid", 9] = character.Id,
+                ["gmlevel", 1] = gmlevel,
                 ["name"] = character.Name,
-                ["template"] = 1,
+                ["objid", 9] = character.Id,
+                ["template", 1] = template,
                 ["xmlData"] = xml
             };
 
@@ -212,13 +217,14 @@ namespace Uchu.World.Handlers
         /// The generated XML data is based on https://docs.google.com/document/d/1XDh_HcXMjSdaGeniG1dND5CA7jOFXIPA_fxCnjvjaO4/edit#
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
+        /// <param name="GMLevel">The GM level of the user</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private static XmlData GenerateCharacterXmlData(Character character)
+        private static XmlData GenerateCharacterXmlData(Character character, int GMLevel)
         {
             var xmlData = new XmlData
             {
                 Inventory = InventoryNode(character),
-                Character = CharacterNode(character),
+                Character = CharacterNode(character, GMLevel),
                 Level = LevelNode(character),
                 Flags = FlagNodes(character),
                 Missions = MissionsNode(character),
@@ -292,15 +298,17 @@ namespace Uchu.World.Handlers
         /// Creates a character node, containing billing info and subscription info
         /// </summary>
         /// <param name="character">The character to create a node from</param>
+        /// <param name="GMLevel">The gamemaster level of the user</param>
         /// <returns>The character node created from the character</returns>
-        private static CharacterNode CharacterNode(Character character)
+        private static CharacterNode CharacterNode(Character character, int GMLevel)
         {
             return new CharacterNode
             {
                 AccountId = character.User.Id,
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
-                UniverseScore = character.UniverseScore
+                UniverseScore = character.UniverseScore,
+                GmLevel = GMLevel
             };
         }
 

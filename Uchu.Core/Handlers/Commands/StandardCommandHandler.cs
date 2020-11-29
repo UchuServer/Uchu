@@ -290,13 +290,20 @@ namespace Uchu.Core.Handlers.Commands
             {
                 return "Invalid <level>";
             }
+            
+            if (Enum.IsDefined(typeof(GameMasterLevel), int.Parse(arguments[1])))
+            {
+                user.GameMasterLevel = (int) level;
 
-            user.GameMasterLevel = (int) level;
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
 
-            await ctx.SaveChangesAsync().ConfigureAwait(false);
-
-            return$"Successfully set {user.Username}'s Game Master " +
-                  $"level to {(GameMasterLevel) user.GameMasterLevel}";
+                return$"Successfully set {user.Username}'s Game Master " +
+                      $"level to {(GameMasterLevel) user.GameMasterLevel}";
+            }
+            else
+            {
+                return "Invalid <level>";
+            }
         }
 
         private static string GetPassword()
