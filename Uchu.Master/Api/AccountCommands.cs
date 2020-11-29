@@ -18,14 +18,14 @@ namespace Uchu.Master.Api
             if (string.IsNullOrWhiteSpace(accountName))
             {
                 response.FailedReason = "username null";
-                
+
                 return response;
             }
 
             if (string.IsNullOrWhiteSpace(accountPassword))
             {
                 response.FailedReason = "password null";
-                
+
                 return response;
             }
 
@@ -36,10 +36,10 @@ namespace Uchu.Master.Api
                 if (duplicate)
                 {
                     response.FailedReason = "duplicate username";
-                    
+
                     return response;
                 }
-                
+
                 var password = BCrypt.Net.BCrypt.EnhancedHashPassword(accountPassword);
 
                 await ctx.Users.AddAsync(new User
@@ -62,7 +62,7 @@ namespace Uchu.Master.Api
                 response.Username = user.Username;
                 response.Hash = user.Password;
             }
-            
+
             return response;
         }
 
@@ -77,7 +77,7 @@ namespace Uchu.Master.Api
 
                 return response;
             }
-            
+
             await using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == accountName);
@@ -99,12 +99,12 @@ namespace Uchu.Master.Api
 
             return response;
         }
-        
+
         [ApiCommand("account/level")]
         public async Task<object> AdminAccount(string accountName, string level)
         {
             var response = new AccountAdminResponse();
-            
+
             if (string.IsNullOrWhiteSpace(accountName))
             {
                 response.FailedReason = "username null";
@@ -133,7 +133,7 @@ namespace Uchu.Master.Api
                 if (!Enum.TryParse<GameMasterLevel>(level, out var gameMasterLevel))
                 {
                     response.FailedReason = "invalid level";
-                    
+
                     return response;
                 }
 
@@ -192,7 +192,7 @@ namespace Uchu.Master.Api
 
             return response;
         }
-        
+
         [ApiCommand("account/pardon")]
         public async Task<object> PardonAccount(string accountName)
         {
@@ -204,7 +204,7 @@ namespace Uchu.Master.Api
 
                 return response;
             }
-            
+
             await using (var ctx = new UchuContext())
             {
                 var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == accountName);
@@ -267,7 +267,7 @@ namespace Uchu.Master.Api
         public async Task<object> Accounts()
         {
             var response = new AccountListResponse();
-            
+
             await using var ctx = new UchuContext();
 
             response.Success = true;
