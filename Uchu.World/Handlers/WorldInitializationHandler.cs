@@ -195,7 +195,7 @@ namespace Uchu.World.Handlers
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
             
-            var template = gmlevel >= 2 && gmlevel < 5 ? 10103 : 1;
+            var template = gmlevel == GameMasterLevel.MythranWithGlow ? 10103 : 1
             
             var ldf = new LegoDataDictionary
             {
