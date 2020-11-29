@@ -129,8 +129,9 @@ namespace Uchu.Master.Api
 
                     return response;
                 }
-                
-                if (!Enum.TryParse<GameMasterLevel>(level, out var gameMasterLevel))
+
+                if (!Enum.TryParse<GameMasterLevel>(level, out var gameMasterLevel) ||
+                    !Enum.IsDefined(typeof(GameMasterLevel), gameMasterLevel))
                 {
                     response.FailedReason = "invalid level";
 
