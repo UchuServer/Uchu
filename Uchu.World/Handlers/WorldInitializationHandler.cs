@@ -219,12 +219,12 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to generate the XML data for</param>
         /// <param name="GMLevel">The GM level of the user</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private static XmlData GenerateCharacterXmlData(Character character, int GMLevel)
+        private static XmlData GenerateCharacterXmlData(Character character, int gmLevel)
         {
             var xmlData = new XmlData
             {
                 Inventory = InventoryNode(character),
-                Character = CharacterNode(character, GMLevel),
+                Character = CharacterNode(character, gmLevel),
                 Level = LevelNode(character),
                 Flags = FlagNodes(character),
                 Missions = MissionsNode(character),
@@ -300,7 +300,7 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to create a node from</param>
         /// <param name="GMLevel">The gamemaster level of the user</param>
         /// <returns>The character node created from the character</returns>
-        private static CharacterNode CharacterNode(Character character, int GMLevel)
+        private static CharacterNode CharacterNode(Character character, int gmLevel)
         {
             return new CharacterNode
             {
@@ -308,7 +308,7 @@ namespace Uchu.World.Handlers
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
                 UniverseScore = character.UniverseScore,
-                GmLevel = GMLevel
+                GmLevel = gmLevel
             };
         }
 
