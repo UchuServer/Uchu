@@ -23,9 +23,9 @@ namespace Uchu.Core.Handlers.Commands
         public static string AddUser(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_AddUser_ArgumentsNullException);
-            
+
             if (arguments.Length != 1)
             {
                 return "adduser <name>";
@@ -68,9 +68,9 @@ namespace Uchu.Core.Handlers.Commands
         public static string RemoveUser(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_RemoveUser_ArgumentsNullException);
-            
+
             if (arguments.Length != 1)
             {
                 return "removeuser <name>";
@@ -100,9 +100,9 @@ namespace Uchu.Core.Handlers.Commands
         public static async Task<string> BanUser(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_BanUser_ArgumentsNullException);
-            
+
             if (arguments.Length != 2)
             {
                 return $"{arguments[0]} <name> <reason>";
@@ -133,9 +133,9 @@ namespace Uchu.Core.Handlers.Commands
         public static async Task<string> PardonUser(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_PardonUser_ArgumentsNullException);
-            
+
             if (arguments.Length != 1)
             {
                 return $"{arguments[0]} <name>";
@@ -176,9 +176,9 @@ namespace Uchu.Core.Handlers.Commands
         public static async Task<string> ApproveUsernames(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments),  
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_ApproveUsername_ArgumentsNullException);
-            
+
             await using var ctx = new UchuContext();
             if (arguments.Length == 0 || arguments[0].ToLower() == "*" || string.IsNullOrEmpty(arguments[0]))
             {
@@ -225,9 +225,9 @@ namespace Uchu.Core.Handlers.Commands
         public static async Task<string> RejectUserNames(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_RejectUserNames_ArgumentsNullException);
-            
+
             await using var ctx = new UchuContext();
             if (arguments.Length == 0 || arguments[0].ToLower() == "all")
             {
@@ -267,9 +267,9 @@ namespace Uchu.Core.Handlers.Commands
         public static async Task<string> SetGameMasterLevel(string[] arguments)
         {
             if (arguments == null)
-                throw new ArgumentNullException(nameof(arguments), 
+                throw new ArgumentNullException(nameof(arguments),
                     ResourceStrings.StandardCommandHandler_SetGameMasterLevel_ArgumentsNullException);
-            
+
             if (arguments.Length != 2)
             {
                 return "gamemaster <username> <level>";
