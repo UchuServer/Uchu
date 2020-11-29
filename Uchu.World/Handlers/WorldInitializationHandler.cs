@@ -181,7 +181,7 @@ namespace Uchu.World.Handlers
         private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
         {
             await using var ctx = new UchuContext();
-            var gmlevel = ctx.Users.Where(i => i.Id == character.UserId).First().GameMasterLevel;
+            var gmLevel = ctx.Users.Where(i => i.Id == character.UserId).First().GameMasterLevel;
             
             // Get the XML data for this character for the initial character packet
             var xmlData = GenerateCharacterXmlData(character, gmlevel);
@@ -195,7 +195,7 @@ namespace Uchu.World.Handlers
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
             
-            var template = gmlevel == GameMasterLevel.MythranWithGlow ? 10103 : 1
+            var template = gmLevel == GameMasterLevel.MythranWithGlow ? 10103 : 1;
             
             var ldf = new LegoDataDictionary
             {
