@@ -8,6 +8,7 @@ namespace Uchu.StandardScripts.VentureExplorer
     /// <summary>
     ///     LUA Reference: l_ag_ship_player_shock_server.lua
     /// </summary>
+    [ZoneSpecific(1000)]
     public class BrokenConsole : NativeScript
     {
         private const string ScriptName = "l_ag_ship_player_shock_server.lua";
