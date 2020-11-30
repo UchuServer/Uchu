@@ -137,7 +137,7 @@ namespace Uchu.World
 
             writer.WriteBit(IsPvP);
             writer.WriteBit(IsGameMaster);
-            writer.Write(GameMasterLevel);
+            writer.Write(GameMasterLevel != 1 ? GameMasterLevel : 0);
 
             writer.WriteBit(false); // ???
             writer.Write<byte>(0); // ???

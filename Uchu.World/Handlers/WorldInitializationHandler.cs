@@ -194,15 +194,13 @@ namespace Uchu.World.Handlers
             var xml = new byte[bytes.Length - 3];
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
-            
-            var template = gmLevel == (int)GameMasterLevel.MythranWithGlow ? 10103 : 1;
-            
+
             var ldf = new LegoDataDictionary
             {
-                ["gmlevel", 1] = gmLevel,
+                ["gmlevel", 1] = gmLevel != 1 ? gmLevel : 0,
                 ["name"] = character.Name,
                 ["objid", 9] = character.Id,
-                ["template", 1] = template,
+                ["template", 1] = 1,
                 ["xmlData"] = xml
             };
 
