@@ -11,75 +11,74 @@ namespace Uchu.World
     [Unconstructed]
     public class Item : GameObject
     {
-        public bool IsPackage { get; private set; }
-        
-        public bool IsConsumable { get; private set; }
-        
-        protected Item()
+        public Item()
         {
             OnConsumed = new Event();
 
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
-                IsPackage = Lot.GetComponentId(ComponentId.PackageComponent) != default;
-                
-                using var cdClient = new CdClientContext();
-
-                var skills = cdClient.ObjectSkillsTable.Where(
-                    s => s.ObjectTemplate == Lot
-                ).ToArray();
-
-                IsConsumable = skills.Any(
-                    s => s.CastOnType == (int) SkillCastType.OnConsumed
-                );
+                await LoadAsync();
             });
             
             Listen(OnDestroyed, () => Inventory.UnManageItem(this));
         }
 
-        public ItemComponent ItemComponent
+        public static Item Instantiate(Lot lot, ObjectId parentObjectId = ObjectId.Standalone)
         {
-            get
-            {
-                using var cdClient = new CdClientContext();
-
-                var id = Lot.GetComponentId(ComponentId.ItemComponent);
-
-                return cdClient.ItemComponentTable.FirstOrDefault(c => c.Id == id);
-            }
+            var instance = Instantiate<Item>
+            (
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: ObjectId.Standalone, lot: lot
+            );
+            
+            var instance = Instantiate<Item>
+            (
+                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: itemId, lot: item.Lot
+            );
         }
-        
+
+        public async Task LoadAsync(CdClientContext clientContext, UchuContext uchuContext)
+        {
+            IsPackage = Lot.GetComponentId(ComponentId.PackageComponent) != default;
+            
+            var skills = clientContext.ObjectSkillsTable.Where(
+                s => s.ObjectTemplate == Lot
+            ).ToArray();
+
+            IsConsumable = skills.Any(
+                s => s.CastOnType == (int) SkillCastType.OnConsumed
+            );
+
+            var id = Lot.GetComponentId(ComponentId.ItemComponent);
+            ItemComponent = clientContext.ItemComponentTable.FirstOrDefault(c => c.Id == id);
+            
+            var info = uchuContext.InventoryItems.First(i => i.Id == Id);
+            
+            Count = (uint) info.Count;
+            Slot = (uint) info.Slot;
+
+            ParentId = info.ParentId;
+            IsEquipped = info.IsEquipped;
+            IsBound = info.IsBound;
+        }
+
+        public ItemComponent ItemComponent { get; private set; }
         public Event OnConsumed { get; }
-
         public Inventory Inventory { get; private set; }
-
         public Player Player { get; private set; }
+        public uint Count { get; set; }
+        public bool IsEquipped { get; set; }
+        public bool IsBound { get; private set; }
+        public bool IsPackage { get; private set; }
+        public bool IsConsumable { get; private set; }
+        public ObjectId ParentId { get; private set; }
 
-        public uint Count
-        {
-            get
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
-
-                return (uint) info.Count;
-            }
-            set
-            {
-                UpdateCountAsync(value).Wait();
-                
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.FirstOrDefault(i => i.Id == Id);
-
-                if (info == default) return;
-                
-                info.Count = value;
-                
-                ctx.SaveChanges();
-            }
-        }
+        /// <summary>
+        /// Returns the lots of the sub items of this item
+        /// </summary>
+        public Lot[] SubItemLots => !string.IsNullOrWhiteSpace(ItemComponent.SubItems)
+            ? ItemComponent.SubItems.Replace(" ", "").Split(',')
+                .Select(i => (Lot) int.Parse(i)).ToArray()
+            : new Lot[] { };
 
         /// <summary>
         ///     The slot this item inhabits.
@@ -87,27 +86,7 @@ namespace Uchu.World
         /// <remarks>
         ///     Should only be set as a response to a client request.
         /// </remarks>
-        public uint Slot
-        {
-            get
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
-
-                return (uint) info.Slot;
-            }
-            set
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
-
-                info.Slot = (int) value;
-                
-                ctx.SaveChanges();
-            }
-        }
+        public uint Slot { get; private set; }
 
         public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
@@ -115,44 +94,17 @@ namespace Uchu.World
         {
             if (ItemComponent.IsBOE ?? false)
             {
-                await BindAsync();
+                IsBound = true;
             }
 
             var inventory = Player.GetComponent<InventoryComponent>();
-
             await inventory.EquipItemAsync(this, skipAllChecks);
         }
 
         public async Task UnEquipAsync()
         {
             var inventory = Player.GetComponent<InventoryComponent>();
-
             await inventory.UnEquipItemAsync(this);
-        }
-
-        public async Task<bool> IsEquippedAsync()
-        {
-            var item = await Id.FindItemAsync();
-
-            return item.IsEquipped;
-        }
-
-        public async Task<bool> IsBoundAsync()
-        {
-            var item = await Id.FindItemAsync();
-
-            return item.IsBound;
-        }
-
-        public async Task BindAsync()
-        {
-            await using var ctx = new UchuContext();
-
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-
-            item.IsBound = true;
-
-            await ctx.SaveChangesAsync();
         }
 
         public async Task UseNonEquipmentItem()
@@ -228,11 +180,9 @@ namespace Uchu.World
         public static Item Instantiate(Lot lot, Inventory inventory, uint count, LegoDataDictionary extraInfo = default)
         {
             uint slot = default;
-
             for (var index = 0; index < inventory.Size; index++)
             {
                 if (inventory.Items.All(i => i.Slot != index)) break;
-
                 slot++;
             }
 
@@ -242,7 +192,6 @@ namespace Uchu.World
         public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot, LegoDataDictionary extraInfo = default)
         {
             using var cdClient = new CdClientContext();
-            using var ctx = new UchuContext();
             
             var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
                 o => o.Id == lot
@@ -271,26 +220,7 @@ namespace Uchu.World
 
             instance.Inventory = inventory;
             instance.Player = inventory.ManagerComponent.GameObject as Player;
-
-            var playerCharacter = ctx.Characters.Include(c => c.Items).First(
-                c => c.Id == inventory.ManagerComponent.GameObject.Id
-            );
-
-            var inventoryItem = new InventoryItem
-            {
-                Count = count,
-                InventoryType = (int) inventory.InventoryType,
-                Id = instance.Id,
-                IsBound = itemComponent.IsBOP ?? false,
-                Slot = (int) slot,
-                Lot = lot,
-                ExtraInfo = extraInfo?.ToString()
-            };
-
-            playerCharacter.Items.Add(inventoryItem);
-
-            ctx.SaveChanges();
-
+            
             var message = new AddItemToInventoryMessage
             {
                 Associate = inventory.ManagerComponent.GameObject,
@@ -301,7 +231,7 @@ namespace Uchu.World
                 ItemLot = lot,
                 IsBoundOnEquip = itemComponent.IsBOE ?? false,
                 IsBoundOnPickup = itemComponent.IsBOP ?? false,
-                IsBound = inventoryItem.IsBound,
+                IsBound = instance.IsBound,
                 Item = instance,
                 ExtraInfo = extraInfo
             };
@@ -334,7 +264,7 @@ namespace Uchu.World
 
             if (count <= 0)
             {
-                if (await IsEquippedAsync())
+                if (IsEquipped)
                     await UnEquipAsync();
                 
                 ctx.InventoryItems.Remove(item);
@@ -358,32 +288,23 @@ namespace Uchu.World
         {
             if (count >= Count)
             {
-                AddCount(count);
+                MessageAddItem(count);
             }
             else
             {
-                RemoveCount(count);
+                MessageRemoveItem(count);
             }
 
-            if (count > 0) return;
-            
-            await using var ctx = new UchuContext();
+            Count = count;
 
-            var item = await ctx.InventoryItems.FirstOrDefaultAsync(
-                i => i.Id == Id
-            );
+            if (count > 0)
+                return;
 
-            if (item == default) return;
-
-            if (await IsEquippedAsync())
+            if (IsEquipped)
                 await UnEquipAsync();
 
-            ctx.InventoryItems.Remove(item);
-            
-            await ctx.SaveChangesAsync();
-
             // Disassemble item.
-            if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+            if (Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
                 foreach (var part in (LegoDataList) list)
                 {
@@ -394,35 +315,25 @@ namespace Uchu.World
             Destroy(this);
         }
 
-        private void AddCount(uint count)
+        private void MessageAddItem(uint count)
         {
-            using var ctx = new UchuContext();
-            
-            var item = ctx.InventoryItems.First(i => i.Id == Id);
-
-            var message = new AddItemToInventoryMessage
+            Player.Message(new AddItemToInventoryMessage
             {
                 Associate = Player,
                 Item = this,
                 ItemLot = Lot,
-                Delta = (uint) (count - item.Count),
+                Delta = count - Count,
                 Slot = (int) Slot,
                 InventoryType = (int) Inventory.InventoryType,
                 ShowFlyingLoot = count != default,
                 TotalItems = count,
                 ExtraInfo = null // TODO
-            };
-                
-            Player.Message(message);
+            });
         }
 
-        private void RemoveCount(uint count)
+        private void MessageRemoveItem(uint count)
         {
-            using var ctx = new UchuContext();
-            
-            var item = ctx.InventoryItems.First(i => i.Id == Id);
-
-            var message = new RemoveItemToInventoryMessage
+            Player.Message(new RemoveItemToInventoryMessage
             {
                 Associate = Player,
                 Confirmed = true,
@@ -433,11 +344,9 @@ namespace Uchu.World
                 ExtraInfo = null, // TODO
                 ForceDeletion = true,
                 Item = this,
-                Delta = (uint) Math.Abs(count - item.Count),
+                Delta = (uint) Math.Abs(count - Count),
                 TotalItems = count
-            };
-
-            Player.Message(message);
+            });
         }
 
         private async Task RemoveFromInventoryAsync()

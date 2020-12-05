@@ -25,7 +25,8 @@ namespace Uchu.World
         public Lot Lot { get; private set; }
         
         /// <summary>
-        ///     Also known as ExtraInfo
+        /// Also known as ExtraInfo
+        /// TODO: Rename?
         /// </summary>
         public LegoDataDictionary Settings { get; set; }
 

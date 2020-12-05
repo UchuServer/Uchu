@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,22 +10,38 @@ using Uchu.Core.Client;
 
 namespace Uchu.World
 {
+    /// <summary>
+    /// Represents the equipped inventory of a GameObject, not to be confused with the <see cref="InventoryManagerComponent"/>
+    /// which represents the entire inventory of a GameObject. Also note that <see cref="InventoryComponent"/> is a
+    /// replica component that was available in live while <see cref="InventoryManagerComponent"/> is a new component
+    /// for efficient handling of the entire inventory of a game object.
+    /// </summary>
     public class InventoryComponent : ReplicaComponent
     {
+        /// <summary>
+        /// Component Id of this component
+        /// </summary>
         public override ComponentId Id => ComponentId.InventoryComponent;
         
-        public Dictionary<EquipLocation, EquippedItem> Items { get; }
+        /// <summary>
+        /// Mapping of items and their equipped slots on the game object
+        /// </summary>
+        public Dictionary<EquipLocation, Item> Items { get; }
         
+        /// <summary>
+        /// Called when a new item is equipped
+        /// </summary>
         public Event<Item> OnEquipped { get; }
         
+        /// <summary>
+        /// Called when an item is unequipped
+        /// </summary>
         public Event<Item> OnUnEquipped { get; }
 
         protected InventoryComponent()
         {
-            Items = new Dictionary<EquipLocation, EquippedItem>();
-            
+            Items = new Dictionary<EquipLocation, Item>();
             OnEquipped = new Event<Item>();
-            
             OnUnEquipped = new Event<Item>();
 
             Listen(OnDestroyed, () =>
@@ -33,365 +50,269 @@ namespace Uchu.World
                 OnUnEquipped.Clear();
             });
             
-            Listen(OnStart, () =>
+            Listen(OnStart, async () =>
             {
-                if (GameObject is Player) return;
-                
-                using var cdClient = new CdClientContext();
-                
-                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
-                    c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-
-                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
-
-                foreach (var item in items)
-                {
-                    if (item.Itemid == default) continue;
-                    
-                    var lot = (Lot) item.Itemid;
-
-                    var componentId = lot.GetComponentId(ComponentId.ItemComponent);
-
-                    var info = cdClient.ItemComponentTable.First(i => i.Id == componentId);
-                    
-                    var location = (EquipLocation) info.EquipLocation;
-                    
-                    Items[location] = new EquippedItem
-                    {
-                        Id = ObjectId.Standalone,
-                        Lot = lot
-                    };
-                }
+                await LoadAsync();
             });
         }
 
-        private async Task UpdateSlotAsync(EquipLocation slot, EquippedItem item)
+        /// <summary>
+        /// Loads the inventory for the game object, if this object has a <see cref="InventoryManagerComponent"/>, the
+        /// equipped items from that inventory will be used, otherwise the CdClient inventory will be used.
+        /// </summary>
+        private async Task LoadAsync()
         {
-            if (Items.TryGetValue(slot, out var previous))
+            // If this is a player, load the items from the uchu database, otherwise load the items from the cd client
+            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventoryComponent))
             {
-                var id = await FindRootAsync(previous.Id);
+                foreach (var item in inventoryComponent.Items.Where(i => i.IsEquipped))
+                {
+                    await EquipAsync(item);
+                }
+            }
+            else
+            {
+                await using var clientContext = new CdClientContext();
+                
+                var component = clientContext.ComponentsRegistryTable.FirstOrDefault(c =>
+                    c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
+                var items = clientContext.InventoryComponentTable
+                    .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
 
-                await UnEquipAsync(id);
+                foreach (var item in items)
+                {
+                    var lot = (Lot) item.Itemid;
+                    var componentId = lot.GetComponentId(ComponentId.ItemComponent);
+                    var info = clientContext.ItemComponentTable.First(i => i.Id == componentId);
+                    var location = (EquipLocation) info.EquipLocation;
+                    
+                    // TODO: Create item
+                    Items[location] = item;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates a slot in the inventory, swapping a previous item for a new one
+        /// </summary>
+        /// <param name="slot">The slot to equip an item to</param>
+        /// <param name="item">The item to place in the slot</param>
+        private async Task UpdateSlotAsync(Item item)
+        {
+            var equipLocation = item.ItemComponent.EquipLocation;
+            if (Items.TryGetValue(equipLocation, out var previouslyEquippedItem))
+            {
+                await UnEquipAsync(previouslyEquippedItem);
             }
 
-            Items[slot] = item;
+            Items[equipLocation] = item;
         }
 
-        private EquipLocation FindSlot(ObjectId id)
+        /// <summary>
+        /// Gets the slot an object is potentially located at
+        /// </summary>
+        /// <param name="itemId">The object id to find the equiplocation for</param>
+        /// <returns>The equip location if the object could be found, default otherwise</returns>
+        private EquipLocation GetSlot(ObjectId itemId) => Items.FirstOrDefault(i => i.Value == itemId)?.Key;
+
+        /// <summary>
+        /// Whether the game object has this lot equipped
+        /// </summary>
+        /// <param name="lot">The lot to find items for</param>
+        /// <returns><c>true</c> if the game object has this lot equipped</returns>
+        public bool HasEquipped(Lot lot) => Items.Any(i => i.Value.Lot == lot);
+
+        /// <summary>
+        /// Equips an item for a game object, updating the equipped items list. Should be used at run-time, not at
+        /// loading time as it also calls events and serializes the game object.
+        /// </summary>
+        /// <param name="item">The item to load for the player</param>
+        /// <param name="ignoreAllChecks">Disables item checks, which checks for example if a player is building</param>
+        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
         {
-            var reference = Items.FirstOrDefault(i => i.Value.Id == id);
+            var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
-            return reference.Key;
-        }
-
-        public async Task EquipAsync(EquippedItem item)
-        {
-            await using var cdClient = new CdClientContext();
-
-            var componentId = item.Lot.GetComponentId(ComponentId.ItemComponent);
-
-            var info = await cdClient.ItemComponentTable.FirstAsync(i => i.Id == componentId);
+            // TODO: What does this do?
+            if (!ignoreAllChecks 
+                && GameObject is Player player 
+                && player.TryGetComponent<ModularBuilderComponent>(out var modularBuilderComponent)
+                && !modularBuilderComponent.IsBuilding
+                && (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle 
+                    || item.Lot == 6086))
+            {
+                return;
+            }
             
-            var location = (EquipLocation) info.EquipLocation;
+            await OnEquipped.InvokeAsync(item);
+            await EquipAsync(item);
+            GameObject.Serialize(GameObject);
+        }
+        
+        /// <summary>
+        /// Internal item equipping logic, also equips all sub items for this item.
+        /// </summary>
+        /// <param name="item">The item to equip</param>
+        private async Task EquipAsync(Item item)
+        {
+            await UpdateSlotAsync(item);
+            item.IsEquipped = true;
 
-            await UpdateSlotAsync(location, item);
-
+            // Update all the new skills the player gets from this item
             var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
-
             if (skills)
             {
                 await skillComponent.MountItemAsync(item.Lot);
             }
 
-            await UpdateEquipState(item.Id, true);
-
-            var proxies = await GenerateProxiesAsync(item.Id);
-
-            foreach (var proxy in proxies)
+            // Finally mount all the sub items for this item
+            var subItems = await GenerateSubItemsAsync(item);
+            foreach (var subItem in subItems)
             {
-                var instance = await proxy.FindItemAsync();
-
-                var lot = (Lot) instance.Lot;
-                
-                componentId = lot.GetComponentId(ComponentId.ItemComponent);
-
-                info = await cdClient.ItemComponentTable.FirstOrDefaultAsync(i => i.Id == componentId);
-            
-                if (info == default) continue;
-                
-                location = (EquipLocation) info.EquipLocation;
-                
-                await UpdateSlotAsync(location, new EquippedItem
-                {
-                    Id = proxy,
-                    Lot = lot
-                });
-
-                await UpdateEquipState(proxy, true);
+                await UpdateSlotAsync(subItem);
+                subItem.IsEquipped = true;
                 
                 if (skills)
                 {
-                    await skillComponent.MountItemAsync(lot);
+                    await skillComponent.MountItemAsync(subItem.Lot);
                 }
             }
         }
 
-        public bool HasEquipped(Lot lot)
-        {
-            return Items.Any(i => i.Value.Lot == lot);
-        }
-
-        private async Task UnEquipAsync(ObjectId id)
-        {
-            id = await FindRootAsync(id);
-
-            var slot = FindSlot(id);
-
-            if (!Items.TryGetValue(slot, out var info)) return;
-
-            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
-            
-            if (skills)
-            {
-                await skillComponent.DismountItemAsync(info.Lot);
-            }
-
-            await UpdateEquipState(id, false);
-
-            Items.Remove(slot);
-
-            var proxies = await FindProxiesAsync(id);
-
-            foreach (var proxy in proxies)
-            {
-                slot = FindSlot(proxy);
-
-                if (Items.TryGetValue(slot, out info))
-                {
-                    if (skills)
-                    {
-                        await skillComponent.DismountItemAsync(info.Lot);
-                    }
-
-                    Items.Remove(slot);
-                }
-
-                await UpdateEquipState(proxy, false);
-            }
-
-            await ClearProxiesAsync(id);
-        }
-
-        public async Task<bool> EquipItemAsync(Item item, bool ignoreAllChecks = false)
-        {
-            var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
-
-            if (!ignoreAllChecks)
-            {
-                if (GameObject is Player player)
-                {
-                    if (!player.GetComponent<ModularBuilderComponent>().IsBuilding)
-                    {
-                        if (itemType == ItemType.Model || itemType == ItemType.LootModel ||
-                            itemType == ItemType.Vehicle || item.Lot == 6086)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            
-            await OnEquipped.InvokeAsync(item);
-
-            await MountItemAsync(item.Id);
-
-            GameObject.Serialize(GameObject);
-
-            return true;
-        }
-
+        /// <summary>
+        /// Unequips an item for a player.
+        /// </summary>
+        /// <remarks>Should be used at run-time instead of directly calling <see cref="UnEquipAsync"/> as this
+        /// also calls unequip events</remarks>
+        /// <param name="item">The item to enequip</param>
         public async Task UnEquipItemAsync(Item item)
         {
             await OnUnEquipped.InvokeAsync(item);
             
-            if (item?.Id <= 0) return;
-
+            if (item?.Id <= 0)
+                return;
+            
             if (item != null)
             {
-                await UnMountItemAsync(item.Id);
+                await UnEquipAsync(item);
             }
 
             GameObject.Serialize(GameObject);
         }
-
-        private static async Task<Lot[]> ParseProxyItemsAsync(Lot item)
+        
+        /// <summary>
+        /// Unequips an item by unequipping it or its root item, if available.
+        /// </summary>
+        /// <param name="item">The item to unequip or unequip the root item for</param>
+        private async Task UnEquipAsync(Item item)
         {
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
-            );
-
-            if (itemInfo == default) return new Lot[0];
-
-            if (string.IsNullOrWhiteSpace(itemInfo.SubItems)) return new Lot[0];
-            
-            var proxies = itemInfo.SubItems
-                .Replace(" ", "")
-                .Split(',')
-                .Select(i => (Lot) int.Parse(i));
-            
-            return proxies.ToArray();
-        }
-
-        private static async Task<ObjectId> FindRootAsync(ObjectId id)
-        {
-            var item = await id.FindItemAsync();
-
-            if (item == default) return ObjectId.Invalid;
-
-            if (item.ParentId == ObjectId.Invalid) return id;
-
-            return item.ParentId;
-        }
-
-        private static async Task<ObjectId[]> GenerateProxiesAsync(ObjectId id)
-        {
-            var item = await id.FindItemAsync();
-
-            if (item == default) return new ObjectId[0];
-
-            var proxies = await ParseProxyItemsAsync(item.Lot);
-            
-            await using var ctx = new UchuContext();
-
-            var references = new ObjectId[proxies.Length];
-
-            for (var index = 0; index < proxies.Length; index++)
+            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory) 
+                && inventory.GetRootItem(item) is {} rootItem)
             {
-                var proxy = proxies[index];
-                
-                var instance = await ctx.InventoryItems.FirstOrDefaultAsync(
-                    i => i.ParentId == id && i.Lot == proxy
-                ).ConfigureAwait(false);
+                if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
+                    await skillComponent.DismountItemAsync(rootItem.Lot);
 
-                if (instance == default)
+                var parentSlot = GetSlot(rootItem.Id);
+                Items.Remove(parentSlot);
+                rootItem.IsEquipped = false;
+
+                foreach (var subItem in GetSubItems(rootItem))
                 {
-                    instance = new InventoryItem
+                    var subSlot = GetSlot(subItem.Id);
+                    if (Items.TryGetValue(subSlot, out var equippedSubItem))
                     {
-                        Id = ObjectId.Standalone,
-                        Lot = proxy,
-                        Count = 0,
-                        Slot = -1,
-                        InventoryType = (int) InventoryType.Hidden,
-                        CharacterId = item.CharacterId,
-                        ParentId = id
-                    };
-
-                    await ctx.InventoryItems.AddAsync(instance);
-
-                    await ctx.SaveChangesAsync();
+                        if (skillComponent != default)
+                            await skillComponent.DismountItemAsync(equippedSubItem.Lot);
+                        Items.Remove(subSlot);
+                    }
+                    
+                    subItem.IsEquipped = false;
                 }
-
-                references[index] = instance.Id;
             }
-
-            return references;
         }
 
-        private static async Task<ObjectId[]> FindProxiesAsync(ObjectId id)
+        /// <summary>
+        /// Generates all the item objects for the sub item lot list provided by the given item.
+        /// </summary>
+        /// <param name="item">The item to get the sub items for</param>
+        /// <returns>The list of sub items of this item</returns>
+        private async Task<Item[]> GenerateSubItemsAsync(Item item)
         {
-            await using var ctx = new UchuContext();
-
-            var proxies = await ctx.InventoryItems.Where(
-                i => i.ParentId == id
-            ).ToArrayAsync().ConfigureAwait(false);
-
-            return proxies.Select(i => (ObjectId) i.Id).ToArray();
-        }
-
-        private static async Task ClearProxiesAsync(ObjectId id)
-        {
-            await using var ctx = new UchuContext();
-
-            var proxies = await ctx.InventoryItems.Where(
-                i => i.ParentId == id
-            ).ToArrayAsync().ConfigureAwait(false);
-
-            foreach (var proxy in proxies)
-            {
-                ctx.InventoryItems.Remove(proxy);
-            }
-
-            await ctx.SaveChangesAsync();
-        }
-
-        private static async Task UpdateEquipState(ObjectId id, bool state)
-        {
-            await using var ctx = new UchuContext();
-
-            var item = await ctx.InventoryItems.FirstOrDefaultAsync(i => i.Id == id);
-
-            item.IsEquipped = state;
-
-            await ctx.SaveChangesAsync();
-        }
-
-        private async Task MountItemAsync(ObjectId id)
-        {
-            var root = await id.FindItemAsync();
+            var subItems = new List<Item>();
             
-            await EquipAsync(new EquippedItem
+            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                Id = id,
-                Lot = root.Lot
-            });
+                // Make sure that all sub items are available in the inventory, if not: add them.
+                foreach (var subItemLot in item.SubItemLots)
+                {
+                    var subItem = inventory.FindItem(subItemLot);
+                    if (subItem == default)
+                    {
+                        // TODO: Create item
+                    }
+                    else
+                    {
+                        subItems.Add(subItem);
+                    }
+                }
+            }
+
+            return subItems.ToArray();
         }
 
-        private async Task UnMountItemAsync(ObjectId id)
+        /// <summary>
+        /// Gets all the sub items of an item by fetching them from the game object inventory
+        /// </summary>
+        /// <param name="item">The object to get the sub items for</param>
+        /// <returns>A list of all the sub items for this item</returns>
+        private Item[] GetSubItems(Item item)
         {
-            var root = await FindRootAsync(id);
+            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
+            {
+                return inventory.Items.Where(i => i.ParentId == item.Id).ToArray();
+            }
 
-            await UnEquipAsync(root);
+            return new Item[] { };
         }
 
+        /// <summary>
+        /// Constructs the component
+        /// </summary>
+        /// <param name="writer">The writer to serialize to</param>
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);
         }
 
+        /// <summary>
+        /// Serializes the component
+        /// </summary>
+        /// <param name="writer">The writer to serialize to</param>
         public override void Serialize(BitWriter writer)
         {
             writer.WriteBit(true);
 
             var items = Items.Values.ToArray();
-
             writer.Write((uint) items.Length);
 
             foreach (var item in items)
             {
                 writer.Write(item.Id);
                 writer.Write(item.Lot);
-
+                writer.WriteBit(false);
+                writer.WriteBit(false);
+                writer.WriteBit(false);
                 writer.WriteBit(false);
 
-                writer.WriteBit(false);
-
-                writer.WriteBit(false);
-
-                writer.WriteBit(false);
-
-                var info = item.Id.FindItem();
-
-                if (info == default)
+                if (item.ItemComponent == default)
                 {
                     writer.WriteBit(false);
                 }
                 else
                 {
-                    if (writer.Flag(!string.IsNullOrWhiteSpace(info.ExtraInfo)))
+                    var info = item.Settings.ToString();
+                    if (writer.Flag(!string.IsNullOrWhiteSpace(info)))
                     {
-                        writer.WriteLdfCompressed(LegoDataDictionary.FromString(info.ExtraInfo));
+                        writer.WriteLdfCompressed(LegoDataDictionary.FromString(info));
                     }
                 }
 

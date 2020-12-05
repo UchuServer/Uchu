@@ -593,7 +593,7 @@ namespace Uchu.World.Systems.Missions
                return;
             
             await UpdateMissionStateAsync(context, MissionState.Unavailable, true); 
-            await SendRewardsAsync(context, rewardItem);
+            SendRewards(rewardItem);
             
             LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds(); 
             State = MissionState.Completed; 
@@ -614,11 +614,11 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private async Task SendRewardsAsync(UchuContext context, int rewardItem)
+        private void SendRewards(int rewardItem)
         {
-            await RewardPlayerCurrency(context);
-            await RewardPlayerEmotes(context);
-            RewardPlayerStats(context);
+            RewardPlayerCurrency();
+            RewardPlayerEmotes();
+            RewardPlayerStats();
             RewardPlayerLoot(rewardItem);
         }
 
@@ -630,52 +630,58 @@ namespace Uchu.World.Systems.Missions
         /// If this is an achievement the currency is updated silently without a notify message
         /// as the client updates the currency locally.
         /// </remarks>
-        private async Task RewardPlayerCurrency(UchuContext context)
+        private void RewardPlayerCurrency()
         {
+
+            if (!Player.TryGetComponent<CharacterComponent>(out var character))
+                return;
+            
             var currency = !Repeat ? RewardCurrencyRepeatable : RewardCurrency;
             var score = Repeat ? 0 : RewardScore;
             
             if (IsMission)
             {
-                Player.Currency += currency;
-                Player.UniverseScore += score;
+                character.Currency += currency;
+                character.UniverseScore += score;
             }
             else
             {
-                var character = await context.Characters.FirstAsync(
-                    c => c.Id == Player.Id
-                );
-                
+                // TODO: Silent?
                 // Achievement, client adds these itself so we don't need to notify
                 character.Currency += currency;
                 character.UniverseScore += score;
 
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.
-                Player.HiddenCurrency += currency;
+                character.HiddenCurrency += currency;
             }
         }
         
         /// <summary>
         /// Rewards the player with emotes that might be unlocked from completing this mission
         /// </summary>
-        private async Task RewardPlayerEmotes(UchuContext context)
+        private void RewardPlayerEmotes()
         {
+            if (!Player.TryGetComponent<CharacterComponent>(out var character))
+                return;
+            
             var emotes = new[] { RewardEmote1, RewardEmote2, RewardEmote3, RewardEmote4 };
             foreach (var i in emotes.Where(e => e != -1))
             {
-                await Player.UnlockEmoteAsync(context, i);
+                character.AddEmote(i);
             }
         }
 
         /// <summary>
         /// Rewards the mission instance player with the stat rewards associated to this mission
         /// </summary>
-        private void RewardPlayerStats(UchuContext context)
+        private void RewardPlayerStats()
         {
-            var stats = Player.GetComponent<DestroyableComponent>();
-            stats.BoostBaseHealth(context, (uint) RewardMaxHealth);
-            stats.BoostBaseImagination(context, (uint) RewardMaxImagination);
+            if (!Player.TryGetComponent<DestroyableComponent>(out var stats))
+                return;
+            
+            stats.BoostBaseHealth((uint) RewardMaxHealth);
+            stats.BoostBaseImagination((uint) RewardMaxImagination);
         }
 
         /// <summary>
@@ -686,7 +692,9 @@ namespace Uchu.World.Systems.Missions
         /// rewarded if it's in one of the mission rewards.</param>
         private void RewardPlayerLoot(int rewardItem)
         {
-            var inventory = Player.GetComponent<InventoryManagerComponent>();
+            if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventory))
+                return;
+            
             inventory[InventoryType.Items].Size += Repeat ? 0 : RewardMaxInventory;
             
             var rewards = new (Lot, int)[]

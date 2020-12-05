@@ -29,9 +29,7 @@ namespace Uchu.World
                 foreach (var value in Enum.GetValues(typeof(InventoryType)))
                 {
                     var id = (InventoryType) value;
-
-                    Logger.Information($"[{id}]");
-
+                    Logger.Debug($"Loading {id} inventory.");
                     _inventories.Add(id, new Inventory(id, this));
                 }
             });
@@ -39,12 +37,19 @@ namespace Uchu.World
             Listen(OnDestroyed, () =>
             {
                 OnLotAdded.Clear();
-                
                 OnLotRemoved.Clear();
                 
-                foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items)) Destroy(item);
+                foreach (var item in _inventories.Values.SelectMany(inventory => inventory.Items))
+                    Destroy(item);
             });
         }
+
+        /// <summary>
+        /// If this is a sub item, it returns the root item of this item. If this item is a root item, it returns itself.
+        /// </summary>
+        /// <param name="item">The item to find the root item for</param>
+        /// <returns>The root item of this item if it is a sub item, the same item otherwise</returns>
+        public Item GetRootItem(Item item) => Items.FirstOrDefault(i => i.Id == item.ParentId) ?? item;
 
         public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
 
@@ -119,11 +124,10 @@ namespace Uchu.World
 
         #endregion
         
-        public async Task AddItemAsync(Lot lot, uint count, LegoDataDictionary extraInfo = default)
+        public async Task AddItemAsync(CdClientContext clientContext, Lot lot, uint count,
+            LegoDataDictionary extraInfo = default)
         {
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
+            var componentId = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -133,29 +137,29 @@ namespace Uchu.World
                 return;
             }
 
-            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+            var component = await clientContext.ItemComponentTable.FirstOrDefaultAsync(
                 i => i.Id == componentId.Componentid
             );
 
-            if (component == default)
+            if (component?.ItemType == null)
             {
                 Logger.Error(
-                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
+                    $"{lot} has a corrupted component registry." +
+                    $"There is no Item component of Id: {componentId.Componentid}"
                 );
                 return;
             }
 
-            Debug.Assert(component.ItemType != null, "component.ItemType != null");
-
             await AddItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
         }
 
-        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
+        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType,
+            LegoDataDictionary extraInfo = default)
         {
-            if (!(GameObject is Player player)) return;
+            if (!(GameObject is Player player))
+                return;
 
             var itemCount = count;
-            
             var _ = Task.Run(() =>
             {
                 OnLotAdded.Invoke(lot, itemCount);
@@ -164,89 +168,45 @@ namespace Uchu.World
             if (!_inventories.TryGetValue(inventoryType, out var inventory))
             {
                 inventory = new Inventory(inventoryType, this);
-
                 _inventories[inventoryType] = inventory;
             }
 
-            // The math here cannot be executed in parallel
-            
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-            );
-
-            if (componentId == default)
-            {
-                Logger.Error($"{lot} does not have a Item component");
-                return;
-            }
-
-            var component = cdClient.ItemComponentTable.FirstOrDefault(
-                i => i.Id == componentId.Componentid
-            );
-
-            if (component == default)
-            {
-                Logger.Error(
-                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                );
-                return;
-            }
-
-            player.SendChatMessage($"Calculating for {lot} x {count} [{inventoryType}]");
-            
-            var stackSize = component.StackSize ?? 1;
-            
             // Bricks and alike does not have a stack limit.
-            if (stackSize == default) stackSize = int.MaxValue;
-            
-            //
-            // Update quest tasks
-            //
+            // TODO: Get stack size from item
+            var stackSize = 1;
+            if (stackSize == default)
+                stackSize = int.MaxValue;
 
-            var questInventory = GameObject.GetComponent<MissionInventoryComponent>();
-
-            for (var i = 0; i < count; i++)
+            if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
-                await questInventory.ObtainItemAsync(lot);
+                for (var i = 0; i < count; i++)
+                {
+                    await missionInventory.ObtainItemAsync(lot);
+                }
             }
             
-            //
             // Fill stacks
-            //
-
             lock (_lock)
             {
-                foreach (var item in inventory.Items.Where(i => i.Lot == lot))
+                foreach (var item in inventory.Items.Where(i => i.Lot == lot && i.Settings.Count == default 
+                                                           && i.Count == stackSize))
                 {
-                    if (item.Settings.Count != default) continue;
-
-                    if (item.Count == stackSize) continue;
-
                     var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
 
                     item.Count += toAdd;
-
                     count -= toAdd;
 
-                    if (count <= 0) return;
+                    if (count <= 0)
+                        return;
                 }
-
-                //
+                
                 // Create new stacks
-                //
-
                 var toCreate = count;
-
                 while (toCreate != default)
                 {
                     var toAdd = (uint) Min(stackSize, (int) toCreate);
-
                     var item = Item.Instantiate(lot, inventory, toAdd, extraInfo);
-
                     Start(item);
-
                     toCreate -= toAdd;
                 }
             }

@@ -215,7 +215,8 @@ namespace Uchu.World
         /// <param name="missionGiver">The giver of the mission</param>
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
-            var player = (Player) GameObject;
+            if (!(GameObject is Player player))
+                return;
             
             player.Message(new OfferMissionMessage
             {
@@ -223,7 +224,7 @@ namespace Uchu.World
                 MissionId = missionId,
                 QuestGiver = missionGiver
             });
-            
+                
             player.Message(new OfferMissionMessage
             {
                 Associate = missionGiver,

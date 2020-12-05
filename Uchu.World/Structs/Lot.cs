@@ -77,7 +77,7 @@ namespace Uchu.World
         {
             return GetComponentIds((int) componentType);
         }
-
+        
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;

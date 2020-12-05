@@ -88,43 +88,23 @@ namespace Uchu.World.Handlers
         public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
             Logger.Information($"{connection.EndPoint}'s client load completed...");
-
+            
             var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
-
-            await using var ctx = new UchuContext();
-            var character = await ctx.Characters
-                .Include(c => c.Flags)
-                .Include(c => c.Items)
-                .Include(c => c.User)
-                .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks)
-                .ThenInclude(m => m.Values)
-                .SingleAsync(c => c.Id == session.CharacterId);
-
-            var zoneId = (ZoneId) character.LastZone;
-            if (zoneId == 0)
-            {
-                zoneId = 1000;
-
-                character.LastZone = zoneId;
-
-                await ctx.SaveChangesAsync();
-            }
-
-            Logger.Information("[55%] Setting session zone.");
-            UchuServer.SessionCache.SetZone(connection.EndPoint, zoneId);
 
             // Zone should already be initialized at this point.
             Logger.Information("[55%] Getting zone from worldserver.");
-            var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync(zoneId);
+            var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync((ZoneId)session.ZoneId);
+            
+            Logger.Information("[55%] Constructing player.");
+            var player = await Player.Create(connection, zone, (int)session.CharacterId);
+
+            Logger.Information("[55%] Setting session zone.");
+            UchuServer.SessionCache.SetZone(connection.EndPoint, player.LastZone);
 
             // Send the character init XML data for this world to the client
             Logger.Information("[55%] Sending XML client info.");
             await SendCharacterXmlDataToClient(character, connection, session);
 
-            Logger.Information("[55%] Constructing player.");
-            var player = await Player.ConstructAsync(character, connection, zone);
-            
             Logger.Information("[55%] Checking rocket landing conditions.");
             if (character.LandingByRocket)
             {

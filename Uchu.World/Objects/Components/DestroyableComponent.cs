@@ -355,26 +355,32 @@ namespace Uchu.World
             Health += Math.Min(value, MaxHealth - Health);
         }
 
-        public void BoostBaseHealth(UchuContext context, uint delta)
+        /// <summary>
+        /// Boosts the base health of the game object, in case of a character also updates the base health there
+        /// </summary>
+        /// <param name="delta">The increase of the base health</param>
+        public void BoostBaseHealth(uint delta)
         {
-            if (!(GameObject is Player))
-                return;
-            
-            var character = context.Characters.First(c => c.Id == GameObject.Id);
-            character.BaseHealth += (int) delta;
             MaxHealth += delta;
             Health += delta;
+            
+            if (!(GameObject is Player player && player.TryGetComponent<CharacterComponent>(out var character)))
+                return;
+            character.BaseHealth += (int) delta;
         }
 
-        public void BoostBaseImagination(UchuContext context, uint delta)
+        /// <summary>
+        /// Boosts the base imagination of the game object, in case of a character also updates the base imagination there
+        /// </summary>
+        /// <param name="delta">The increase of the base imagination</param>
+        public void BoostBaseImagination(uint delta)
         {
-            if (!(GameObject is Player))
-                return;
-            
-            var character = context.Characters.First(c => c.Id == GameObject.Id);
-            character.BaseImagination += (int) delta;
             MaxImagination += delta;
             Imagination += delta;
+            
+            if (!(GameObject is Player player && player.TryGetComponent<CharacterComponent>(out var character)))
+                return;
+            character.BaseImagination += (int) delta;
         }
 
         private void CollectObjectStats()
