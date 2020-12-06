@@ -1,4 +1,4 @@
-# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/master.svg?logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
+# Uchu [![appveyor](https://ci.appveyor.com/api/projects/status/of25uoxf8um5ejc3?svg=true)](https://ci.appveyor.com/project/jettford/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
 
 LEGO Universe server written in C#
 
