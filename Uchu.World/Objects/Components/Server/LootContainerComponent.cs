@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Uchu.Core;
 using Uchu.Core.Client;
 
 namespace Uchu.World
@@ -56,9 +57,9 @@ namespace Uchu.World
             Restrictions.Add(restriction);
         }
 
-        public async Task<Lot[]> GenerateLootYieldsAsync(Player owner)
+        public async Task<Dictionary<Lot, uint>> GenerateLootYieldsAsync(Player owner)
         {
-            var yields = new List<Lot>();
+            var yields = new Dictionary<Lot, uint>();
             
             foreach (var matrix in Entries)
             {
@@ -107,12 +108,12 @@ namespace Uchu.World
 
                     if (result <= matrix.Percentage)
                     {
-                        yields.Add(entry.Lot);
+                        yields.Add(entry.Lot, (uint)count);
                     }
                 }
             }
 
-            return yields.ToArray();
+            return yields;
         }
 
         public int GenerateCurrencyYields()

@@ -471,23 +471,15 @@ namespace Uchu.World
 
         internal void UpdateView()
         {
+            var loadedObjects = Perspective.LoadedObjects.ToArray();
             foreach (var gameObject in Zone.Spawned)
             {
-                var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+                var spawned = loadedObjects.Contains(gameObject);
+                if (spawned) continue;
 
                 var view = Perspective.View(gameObject);
-                    
-                if (spawned && !view)
-                {
-                    Zone.SendDestruction(gameObject, this);
 
-                    continue;
-                }
-
-                if (!spawned && view)
-                {
-                    Zone.SendConstruction(gameObject, this);
-                }
+                if (view) Zone.SendConstruction(gameObject, this);
             }
         }
         

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IronPython.Modules;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -160,8 +161,9 @@ namespace Uchu.World
         {
             var container = GameObject.GetComponent<LootContainerComponent>();
             
-            foreach (var lot in await container.GenerateLootYieldsAsync(owner))
+            foreach (var ItemPair in await container.GenerateLootYieldsAsync(owner))
             {
+                var lot = ItemPair.Key;
                 Lot item = lot;
                 
                 if (lot == Lot.FactionTokenProxy)
@@ -172,10 +174,13 @@ namespace Uchu.World
                     if (await owner.GetFlagAsync((int) FactionFlags.Venture)) item = Lot.VentureFactionToken;
                     if (item == lot) continue;
                 }
-                
-                var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
 
-                Start(drop);
+                for (int i = 0; i < ItemPair.Value; ++i)
+                {
+                    var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
+
+                    Start(drop);
+                }
             }
 
             var currency = container.GenerateCurrencyYields();

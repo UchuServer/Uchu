@@ -169,9 +169,9 @@ namespace Uchu.World
             
             var manager = Inventory.ManagerComponent;
             
-            foreach (var lot in await container.GenerateLootYieldsAsync(Player))
+            foreach (var item in await container.GenerateLootYieldsAsync(Player))
             {
-                await manager.AddItemAsync(lot, 1);
+                await manager.AddItemAsync(item.Key, item.Value);
             }
         }
         
