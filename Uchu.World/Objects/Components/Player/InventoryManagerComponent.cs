@@ -7,6 +7,7 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
@@ -150,10 +151,21 @@ namespace Uchu.World
             await AddItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
         }
 
-        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
+        public async Task AddItemAsync(int itemLot, uint count, InventoryType inventoryType, LegoDataDictionary extraInfo = default)
         {
             if (!(GameObject is Player player)) return;
 
+            Lot lot = itemLot;
+                
+            if (lot == Lot.FactionTokenProxy)
+            {
+                if (await (GameObject as Player).GetFlagAsync((int) FactionFlags.Assembly)) lot = Lot.AssemblyFactionToken;
+                if (await (GameObject as Player).GetFlagAsync((int) FactionFlags.Paradox)) lot = Lot.ParadoxFactionToken;
+                if (await (GameObject as Player).GetFlagAsync((int) FactionFlags.Sentinel)) lot = Lot.SentinelFactionToken;
+                if (await (GameObject as Player).GetFlagAsync((int) FactionFlags.Venture)) lot = Lot.VentureFactionToken;
+                if (itemLot == lot) return;
+            }
+            
             var itemCount = count;
             
             var _ = Task.Run(() =>
