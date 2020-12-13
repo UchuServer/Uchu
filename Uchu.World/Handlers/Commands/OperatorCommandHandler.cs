@@ -131,7 +131,7 @@ namespace Uchu.World.Handlers.Commands
 
             builder.Append("Loaded scripts:");
 
-            foreach (var scriptPack in python.Zone.ScriptManager.ScriptPacks.OfType<PythonScriptPack>())
+            foreach (var scriptPack in python.Zone.ScriptManager.ManagedScriptPacks)
             {
                 builder.Append($"\n{scriptPack.Name}");
             }

@@ -17,6 +17,8 @@ using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
 using Uchu.World.Scripting;
+using Uchu.World.Scripting.Native;
+using Uchu.World.Scripting.Lua;
 using Uchu.World.Systems.AI;
 
 namespace Uchu.World
@@ -71,10 +73,11 @@ namespace Uchu.World
         public float DeltaTime { get; private set; }
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
+        public List<LuaNativeScript> ObjectScripts { get; }
         private List<UpdatedObject> UpdatedObjects { get; }
         private List<ScheduledAction> NewScheduledActions { get; }
         private List<ScheduledAction> ScheduledActions { get; }
-        
+
         // Physics
         public PhysicsSimulation Simulation { get; }
         public Event EarlyPhysics { get; }
@@ -106,6 +109,7 @@ namespace Uchu.World
             UpdatedObjects = new List<UpdatedObject>();
             ScheduledActions = new List<ScheduledAction>();
             NewScheduledActions = new List<ScheduledAction>();
+            ObjectScripts = new List<LuaNativeScript>();
             ManagedObjects = new List<Object>();
             SpawnedObjects = new List<GameObject>();
             Simulation = new PhysicsSimulation();
@@ -128,12 +132,28 @@ namespace Uchu.World
             Logger.Information($"Checksum: 0x{Checksum:X}");
             Logger.Information($"Collecting objects for {ZoneId}");
 
+            await LoadLuaScripts();
             await LoadObjects();
             await LoadScripts();
-
+            
             SetupGameLoop();
             
             Loaded = true;
+        }     
+        
+        /// <summary>
+        /// Searches through the current scripts in Uchu.World and places them in an array
+        /// </summary>
+        private async Task LoadLuaScripts()
+        {
+            foreach (var item in typeof(LuaNativeScript).Assembly.GetTypes()
+                .Where(type => type.BaseType == typeof(LuaNativeScript)))
+            {
+                var script = (LuaNativeScript) Activator.CreateInstance(item);
+                Logger.Information($"Found Lua script: {script.ScriptName}");
+                script.SetZone(this);
+                ObjectScripts.Add(script);
+            }
         }
 
         /// <summary>
@@ -143,7 +163,7 @@ namespace Uchu.World
         {
             await ScriptManager.LoadDefaultScriptsAsync();
             
-            foreach (var scriptPack in ScriptManager.ScriptPacks)
+            foreach (var scriptPack in ScriptManager.NativeScriptPacks)
             {
                 try
                 {

@@ -43,7 +43,13 @@ namespace Uchu.World
                 }
                 
                 ClientScriptName = script.Clientscriptname;
-            
+
+                var luaNativeScript = Zone.ObjectScripts.Where(i => i.ScriptName == ScriptName).FirstOrDefault();
+
+                if (luaNativeScript == default) return;
+
+                luaNativeScript.LoadAsync(this.GameObject);
+                
                 Logger.Debug($"{GameObject} -> {ScriptName}");
             });
         }

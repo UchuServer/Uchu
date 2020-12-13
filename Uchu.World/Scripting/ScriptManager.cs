@@ -16,7 +16,8 @@ namespace Uchu.World.Scripting
         
         private ManagedScriptEngine ManagedScriptEngine { get; }
         
-        internal List<ScriptPack> ScriptPacks { get; private set; }
+        internal List<NativeScriptPack> NativeScriptPacks { get; private set; }
+        internal List<PythonScriptPack> ManagedScriptPacks { get; private set; }
 
         public ScriptManager(Zone zone)
         {
@@ -27,17 +28,16 @@ namespace Uchu.World.Scripting
         
         internal async Task LoadDefaultScriptsAsync()
         {
-            ScriptPacks = new List<ScriptPack>();
-            
-            ScriptPacks.AddRange(LoadNativeScripts());
-            ScriptPacks.AddRange(await LoadManagedScriptsAsync());
+            NativeScriptPacks = new List<NativeScriptPack>();
+            NativeScriptPacks.AddRange(LoadNativeScripts());
+            ManagedScriptPacks.AddRange(await LoadManagedScriptsAsync());
         }
 
-        private List<ScriptPack> LoadNativeScripts()
+        private List<NativeScriptPack> LoadNativeScripts()
         {
             Logger.Information($"Loading native scripts...");
             
-            var scriptPacks = new List<ScriptPack>();
+            var scriptPacks = new List<NativeScriptPack>();
             
             foreach (var scriptPackPath in Zone.UchuServer.Config.DllSource.ScriptDllSource)
             {
@@ -60,11 +60,11 @@ namespace Uchu.World.Scripting
             return scriptPacks;
         }
 
-        private async Task<List<ScriptPack>> LoadManagedScriptsAsync()
+        private async Task<List<PythonScriptPack>> LoadManagedScriptsAsync()
         {
             Logger.Information($"Loading managed scripts...");
 
-            var scriptPacks = new List<ScriptPack>();
+            var scriptPacks = new List<PythonScriptPack>();
             
             ManagedScriptEngine.Init();
 
@@ -91,9 +91,9 @@ namespace Uchu.World.Scripting
 
         public async Task SetManagedScript(string location, string source = default)
         {
-            var list = ScriptPacks.ToList();
+            var list = ManagedScriptPacks.ToList();
             
-            foreach (var pack in ScriptPacks.OfType<PythonScriptPack>())
+            foreach (var pack in ManagedScriptPacks)
             {
                 if (pack.Name != location) continue;
 
@@ -102,7 +102,7 @@ namespace Uchu.World.Scripting
                 list.Remove(pack);
             }
 
-            ScriptPacks = list;
+            ManagedScriptPacks = list;
 
             location = Path.Combine(Zone.UchuServer.MasterPath, location);
 
@@ -114,7 +114,7 @@ namespace Uchu.World.Scripting
 
             var managedScript = new PythonScriptPack(Zone, location, source);
 
-            ScriptPacks.Add(managedScript);
+            ManagedScriptPacks.Add(managedScript);
 
             await managedScript.LoadAsync();
         }

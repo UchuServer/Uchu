@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RakDotNet", "RakDotNet\RakD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Master", "Uchu.Master\Uchu.Master.csproj", "{0833B033-154E-41EA-9D8F-AEA1EF93D4F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.StandardScripts", "Uchu.StandardScripts\Uchu.StandardScripts.csproj", "{9C6A623B-F047-48BB-8E86-C1471B14F7B1}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Instance", "Uchu.Instance\Uchu.Instance.csproj", "{ED3C9253-23BD-4ED3-963E-70B3CE8AE7DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Core", "Uchu.Core\Uchu.Core.csproj", "{B6EBC62E-43E6-488F-BA4A-056609601A6F}"

@@ -30,20 +30,17 @@ namespace Uchu.World.Scripting.Native
 
             foreach (var type in _assembly.GetTypes())
             {
-                if (type.BaseType != typeof(NativeScript)) return;
-
-                var zoneSpecific = type.GetCustomAttribute<ZoneSpecificAttribute>();
-
-                if (zoneSpecific != null)
+                if (type.BaseType == typeof(NativeScript))
                 {
-                    if (zoneSpecific.ZoneId != Zone.ZoneId) continue;
-                }
+                    var zoneSpecific = type.GetCustomAttribute<ZoneSpecificAttribute>();
+                    if (zoneSpecific != null) if (zoneSpecific.ZoneId != Zone.ZoneId) continue;
 
-                var instance = (NativeScript) Activator.CreateInstance(type);
+                    var instance = (NativeScript) Activator.CreateInstance(type);
                 
-                instance.SetZone(Zone);
+                    instance.SetZone(Zone);
 
-                _scripts.Add(instance);
+                    _scripts.Add(instance);
+                }
             }
         }
 

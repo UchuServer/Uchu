@@ -23,7 +23,6 @@ namespace Uchu.World
         private Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-            OnFireServerEvent = new Event<string, FireServerEventMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
@@ -78,8 +77,6 @@ namespace Uchu.World
                 OnPositionUpdate.Clear();
             });
         }
-
-        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
 

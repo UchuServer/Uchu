@@ -916,7 +916,7 @@ namespace Uchu.World.Handlers.Commands
         {
             var builder = new StringBuilder();
             
-            foreach (var scriptPack in player.Zone.ScriptManager.ScriptPacks)
+            foreach (var scriptPack in player.Zone.ScriptManager.NativeScriptPacks)
             {
                 if (arguments.Length != 0 && !arguments.Contains(scriptPack.Name)) continue;
 
@@ -936,7 +936,7 @@ namespace Uchu.World.Handlers.Commands
         {
             var builder = new StringBuilder();
             
-            foreach (var scriptPack in player.Zone.ScriptManager.ScriptPacks)
+            foreach (var scriptPack in player.Zone.ScriptManager.NativeScriptPacks)
             {
                 if (arguments.Length != 0 && !arguments.Contains(scriptPack.Name)) continue;
                 

@@ -19,6 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Scripts" />
       <Folder Include="Systems" />
     </ItemGroup>
 

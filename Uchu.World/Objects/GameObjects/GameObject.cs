@@ -95,6 +95,8 @@ namespace Uchu.World
         public Event<Player> OnInteract { get; }
 
         public Event<int, Player> OnEmoteReceived { get; }
+        
+        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
 
         #endregion
         
@@ -121,6 +123,8 @@ namespace Uchu.World
             OnInteract = new Event<Player>();
             
             OnEmoteReceived = new Event<int, Player>();
+
+            OnFireServerEvent = new Event<string, FireServerEventMessage>();
             
             Listen(OnStart, () =>
             {
