@@ -201,13 +201,34 @@ namespace Uchu.World.Handlers.Commands
             return "Buffed";
         }
 
-        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "freecam", Help = "Fly around in a free camera. Initial positon is at 0, 0, 0.", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
         {
-            player.Message(new ToggleFreeCamModeMessage
+            switch (arguments[0].ToLower())
             {
-                Associate = player
-            });
+                case "true":
+                case "on":
+                    player.Message(new SetPlayerControlSchemeMessage
+                    {
+                        Associate = player,
+                        DelayCameraSwitchIfInCinematic = false,
+                        SwitchCamera = true,
+                        ControlScheme = 9
+                    });
+                    break;
+                case "false":
+                case "off":
+                    player.Message(new SetPlayerControlSchemeMessage
+                    {
+                        Associate = player,
+                        DelayCameraSwitchIfInCinematic = false,
+                        SwitchCamera = true,
+                        ControlScheme = 0
+                    });
+                    break;
+                default:
+                    return "Invalid <state(on/off)>";
+            }
 
             return "Toggled freecam.";
         }
@@ -622,6 +643,28 @@ namespace Uchu.World.Handlers.Commands
                 return "tp <target>/<x> <y> <z>";
 
             Vector3 position;
+            //Quaternion rotation;
+
+            //Logger.Debug($"Current Position: {player.Transform.Position}");
+            //position.X = player.Transform.Position.X;
+            //position.Y = player.Transform.Position.Y + 1000;
+            //position.Z = player.Transform.Position.Z;
+
+            ////player.Transform.Rotation
+
+            //Logger.Debug($"Teleporting to: {position}");
+
+            //player.Message(new TeleportMessage
+            //{
+            //    Associate = player,
+            //    Position = position
+            //});
+
+
+            ////player.Teleport(position, player.Transform.Rotation);
+            //Logger.Debug($"Sent Teleport GM");
+            //return $"Going to {position}";
+
 
             var relativeX = arguments[0].StartsWith('~');
             if (relativeX) arguments[0] = arguments[0].Remove(default, 1);
@@ -1061,12 +1104,12 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/setflag <flag>";
 
-            if (!int.TryParse(arguments[1], out var flag))
+            if (!int.TryParse(arguments[0], out var flag))
                 return "/setflag <flag>";
 
             await player.SetFlagAsync(flag, true);
 
-            return $"Set flag {arguments[1]}";
+            return $"Set flag {arguments[0]}";
         }
 
         [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
@@ -1075,12 +1118,12 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/triggercelebrate <CelebrationID>";
 
-            if (!int.TryParse(arguments[1], out var id))
+            if (!int.TryParse(arguments[0], out var id))
                 return "/triggercelebrate <CelebrationID>";
 
             await player.TriggerCelebration((CelebrationId)id);
 
-            return $"Triggered Celebration {arguments[1]}";
+            return $"Triggered Celebration {arguments[0]}";
         }
 
         [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
@@ -1089,12 +1132,12 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/removeflag <flag>";
 
-            if (!int.TryParse(arguments[1], out int flag))
+            if (!int.TryParse(arguments[0], out int flag))
                 return "/removeflag <flag>";
 
             await player.SetFlagAsync(flag, false);
 
-            return $"Removed flag {arguments[1]}";
+            return $"Removed flag {arguments[0]}";
         }
 
         [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = GameMasterLevel.Admin)]
