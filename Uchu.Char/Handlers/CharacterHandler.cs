@@ -269,6 +269,8 @@ namespace Uchu.Char.Handlers
 
                     return;
                 }
+
+                Logger.Error("About transfer to world");
                 
                 // Send to world server.
                 connection.Send(new ServerRedirectionPacket

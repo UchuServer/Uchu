@@ -38,9 +38,10 @@ namespace Uchu.World.Scripting
             Logger.Information($"Loading native scripts...");
             
             var scriptPacks = new List<NativeScriptPack>();
-            
+
             foreach (var scriptPackPath in Zone.UchuServer.Config.DllSource.ScriptDllSource)
             {
+                if (scriptPackPath == "Uchu.StandardScripts") continue;
                 try
                 {
                     var scriptPack = new NativeScriptPack(Zone, scriptPackPath);
