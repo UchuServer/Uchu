@@ -517,7 +517,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set {arguments[0]} to {value}";
         }
         
-        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Admin)]
         public string Pvp(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "pvp <state(on/off)>";
