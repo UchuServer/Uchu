@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
@@ -86,6 +87,7 @@ namespace Uchu.World.Handlers.Commands
         {
             if (arguments.Length != 1) return "coin <delta>";
 
+            /// We parse this as an int instead of long, due to the max long causing bugs. Currency maxes out at a long.
             if (!int.TryParse(arguments[0], out var delta) || delta == default) return "Invalid <delta>";
 
             player.Currency += delta;
@@ -170,7 +172,7 @@ namespace Uchu.World.Handlers.Commands
             return $"{player.Transform.Rotation}";
         }
 
-        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Player)]
         public async Task<string> Smash(string[] arguments, Player player)
         {
             var animation = "violent";
@@ -759,7 +761,7 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Successfully added {type.Name} to {player}";
         }
-        
+
         [CommandHandler(Signature = "testmap", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
         public string World(string[] arguments, Player player)
         {
@@ -777,9 +779,9 @@ namespace Uchu.World.Handlers.Commands
                 return $"Can't find world with ID {id}";
             }
 
-            string WorldName = WorldTable.ZoneName;
+            var path = Path.Combine(UchuServer.Config.ResourcesConfiguration?.GameResourceFolder, Path.Combine("maps", WorldTable.ZoneName.ToLower()));
 
-            if (WorldName.EndsWith(".luz"))
+            if (File.Exists(path) && WorldTable.LocStatus > 0)
             {
                 //
                 // We don't want to lock up the server on a world server request, as it may take time.

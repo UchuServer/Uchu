@@ -8,6 +8,7 @@ using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.World.Scripting.Managed;
 using Uchu.World.Social;
+using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -235,6 +236,58 @@ namespace Uchu.World.Handlers.Commands
             if (!current.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return "Invalid nearby";
 
             return $"Target: {baseCombatAiComponent.Target}";
+        }
+
+
+        [CommandHandler(Signature = "execute", Help = "Execute a command as another player", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Execute(string[] arguments, Player executor)
+        {
+            List<Player> players = new List<Player>();
+            if (arguments[0] == "*") {
+                foreach (var player in executor.Zone.Players) {
+                    players.Add(player);
+                }
+            } else {
+                var player = executor.Zone.Players.FirstOrDefault(p => p.Name == arguments[0]);  // This throws an error if no character is found :shrug:
+                if (player == default) return $"No player named {arguments[0]}";
+                players.Add(player);
+            }
+
+            await using var ctx = new UchuContext();
+            var character = await ctx.Characters.Include(c => c.User).FirstAsync(
+                c => c.Id == executor.Id
+            );
+
+            var _com = new List<string>(arguments);
+            _com.RemoveAt(0);
+
+            var message = string.Join(" ", _com);
+
+            if (!message.StartsWith('/')) {
+                message = "/" + message;
+            }
+
+            if (!SocialHandler.ClientCommands.Contains(message.Split(" ").ElementAt(0)) && message.Split(" ").ElementAt(0) != "/execute" && message.Length > 1) {
+                foreach (Player player in players) {
+                    player.SendChatMessage("You feel a magical power...", PlayerChatChannel.Normal);
+                    var response = await UchuServer.HandleCommandAsync(
+                        message, player, (GameMasterLevel)character.User.GameMasterLevel
+                    );
+
+                    if (!string.IsNullOrWhiteSpace(response)) {
+                        //executor.SendChatMessage($"{player.Name}: {response}", PlayerChatChannel.Normal);
+                        player.SendChatMessage(response, PlayerChatChannel.Normal);
+                    }
+                }
+
+                return $"Executed \"{message}\" as {players.Count} {(players.Count == 1 ? "person" : "people")}";
+            }
+            else
+            {
+                return $"Unable to execute \"{message}\"";
+            }
+
+            return "Failed to execute command";
         }
     }
 }
