@@ -139,7 +139,7 @@ namespace Uchu.World
             writer.WriteBit(IsGameMaster);
             //writer.Write(GameMasterLevel); // Original code
             //writer.Write((GameMasterLevel != 1 ? GameMasterLevel : 0)); // This broke the component
-            writer.Write((byte)(GameMasterLevel != 1 ? GameMasterLevel : 0)); // This casts to the correct type (u8)
+            writer.Write(GameMasterLevel != 1 ? GameMasterLevel : (byte)0); // This casts to the correct type (u8)
 
             writer.WriteBit(false); // ???
             writer.Write<byte>(0); // ???
