@@ -645,28 +645,6 @@ namespace Uchu.World.Handlers.Commands
                 return "tp <target>/<x> <y> <z>";
 
             Vector3 position;
-            //Quaternion rotation;
-
-            //Logger.Debug($"Current Position: {player.Transform.Position}");
-            //position.X = player.Transform.Position.X;
-            //position.Y = player.Transform.Position.Y + 1000;
-            //position.Z = player.Transform.Position.Z;
-
-            ////player.Transform.Rotation
-
-            //Logger.Debug($"Teleporting to: {position}");
-
-            //player.Message(new TeleportMessage
-            //{
-            //    Associate = player,
-            //    Position = position
-            //});
-
-
-            ////player.Teleport(position, player.Transform.Rotation);
-            //Logger.Debug($"Sent Teleport GM");
-            //return $"Going to {position}";
-
 
             var relativeX = arguments[0].StartsWith('~');
             if (relativeX) arguments[0] = arguments[0].Remove(default, 1);
