@@ -87,7 +87,7 @@ namespace Uchu.World.Handlers.Commands
         {
             if (arguments.Length != 1) return "coin <delta>";
 
-            /// We parse this as an int instead of long, due to the max long causing bugs. Currency maxes out at a long.
+            // We parse this as an int instead of long, due to the max long causing bugs. Currency maxes out at a long.
             if (!int.TryParse(arguments[0], out var delta) || delta == default) return "Invalid <delta>";
 
             player.Currency += delta;

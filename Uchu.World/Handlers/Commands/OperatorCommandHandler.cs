@@ -238,17 +238,30 @@ namespace Uchu.World.Handlers.Commands
             return $"Target: {baseCombatAiComponent.Target}";
         }
 
-
+        /// <summary>
+        /// Executes a command as another player or every player in the session.
+        /// To execute a command as player "Tracer": /execute Tracer <command>
+        /// To execute a command as everyone: /execute * <command>
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <param name="executor"></param>
         [CommandHandler(Signature = "execute", Help = "Execute a command as another player", GameMasterLevel = GameMasterLevel.Admin)]
-        public async Task<string> Execute(string[] arguments, Player executor)
+        public async Task<string> ExecuteAs(string[] arguments, Player executor)
         {
+            if (arguments.Length == default) return "execute <playerName or *> <command>";
+
             List<Player> players = new List<Player>();
-            if (arguments[0] == "*") {
-                foreach (var player in executor.Zone.Players) {
+            if (arguments[0] == "*")
+            {
+                foreach (var player in executor.Zone.Players)
+                {
                     players.Add(player);
                 }
-            } else {
-                var player = executor.Zone.Players.FirstOrDefault(p => p.Name == arguments[0]);  // This throws an error if no character is found :shrug:
+            }
+            else
+            {
+                // Todo: Fix this throwing an error if no player is found.
+                var player = executor.Zone.Players.FirstOrDefault(p => p.Name == arguments[0]);
                 if (player == default) return $"No player named {arguments[0]}";
                 players.Add(player);
             }
@@ -258,36 +271,40 @@ namespace Uchu.World.Handlers.Commands
                 c => c.Id == executor.Id
             );
 
-            var _com = new List<string>(arguments);
-            _com.RemoveAt(0);
+            var message = new List<string>(arguments);
+            message.RemoveAt(0);
 
-            var message = string.Join(" ", _com);
+            var command = string.Join(" ", message);
 
-            if (!message.StartsWith('/')) {
-                message = "/" + message;
+            if (!command.StartsWith('/'))
+            {
+                command = "/" + command;
             }
 
-            if (!SocialHandler.ClientCommands.Contains(message.Split(" ").ElementAt(0)) && message.Split(" ").ElementAt(0) != "/execute" && message.Length > 1) {
-                foreach (Player player in players) {
+            if (!SocialHandler.ClientCommands.Contains(command.Split(" ").ElementAt(0)) && command.Split(" ").ElementAt(0) != "/execute" && command.Length > 1)
+            {
+                foreach (Player player in players)
+                {
                     player.SendChatMessage("You feel a magical power...", PlayerChatChannel.Normal);
                     var response = await UchuServer.HandleCommandAsync(
-                        message, player, (GameMasterLevel)character.User.GameMasterLevel
+                        command,
+                        player,
+                        (GameMasterLevel)character.User.GameMasterLevel
                     );
 
-                    if (!string.IsNullOrWhiteSpace(response)) {
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
                         //executor.SendChatMessage($"{player.Name}: {response}", PlayerChatChannel.Normal);
                         player.SendChatMessage(response, PlayerChatChannel.Normal);
                     }
                 }
 
-                return $"Executed \"{message}\" as {players.Count} {(players.Count == 1 ? "person" : "people")}";
+                return $"Executed \"{command}\" as {players.Count} {(players.Count == 1 ? "person" : "people")}";
             }
             else
             {
-                return $"Unable to execute \"{message}\"";
+                return $"Unable to execute \"{command}\"";
             }
-
-            return "Failed to execute command";
         }
     }
 }
