@@ -55,6 +55,19 @@ namespace Uchu.World.Handlers
                 {
                     player.SendChatMessage(response, PlayerChatChannel.Normal);
                 }
+                
+                var CommandTranscript = new ChatTranscript
+                {
+                    Author = character.Id,
+                    Message = message.Message,
+                    Receiver = 0,
+                    SentTime = DateTime.Now
+                };
+
+                await ctx.ChatTranscript.AddAsync(CommandTranscript);
+
+                await ctx.SaveChangesAsync();
+                
                 return;
             }
 
