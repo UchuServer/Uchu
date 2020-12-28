@@ -96,7 +96,7 @@ namespace Uchu.World.Handlers
             var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync((ZoneId)session.ZoneId);
             
             Logger.Information("[55%] Constructing player.");
-            var player = await Player.Create(connection, zone, (int)session.CharacterId);
+            var player = await Player.Instantiate(connection, zone, (int)session.CharacterId);
 
             Logger.Information("[55%] Setting session zone.");
             UchuServer.SessionCache.SetZone(connection.EndPoint, player.LastZone);

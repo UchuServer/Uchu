@@ -76,18 +76,19 @@ namespace Uchu.World
                 
                 var component = clientContext.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-                var items = clientContext.InventoryComponentTable
+                var cdClientItems = clientContext.InventoryComponentTable
                     .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
 
-                foreach (var item in items)
+                foreach (var cdClientItem in cdClientItems)
                 {
-                    var lot = (Lot) item.Itemid;
-                    var componentId = lot.GetComponentId(ComponentId.ItemComponent);
-                    var info = clientContext.ItemComponentTable.First(i => i.Id == componentId);
-                    var location = (EquipLocation) info.EquipLocation;
+                    // var lot = (Lot) item.Itemid;
+                    // var componentId = lot.GetComponentId(ComponentId.ItemComponent);
+                    // var info = clientContext.ItemComponentTable.First(i => i.Id == componentId);
+                    // var location = (EquipLocation) info.EquipLocation;
                     
                     // TODO: Create item
-                    Items[location] = item;
+                    // Items[location] = item;
+                    var item = Item.Instantiate((Lot)cdClientItem.Itemid, GameObject);
                 }
             }
         }
@@ -113,8 +114,11 @@ namespace Uchu.World
         /// </summary>
         /// <param name="itemId">The object id to find the equiplocation for</param>
         /// <returns>The equip location if the object could be found, default otherwise</returns>
-        private EquipLocation GetSlot(ObjectId itemId) => Items.FirstOrDefault(i => i.Value == itemId)?.Key;
-
+        private EquipLocation GetSlot(ObjectId itemId) => 
+            Items.FirstOrDefault(i => i.Value == itemId) is {} keyValue 
+                ? keyValue.Key
+                : default;
+        
         /// <summary>
         /// Whether the game object has this lot equipped
         /// </summary>
@@ -161,7 +165,7 @@ namespace Uchu.World
             var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
             if (skills)
             {
-                await skillComponent.MountItemAsync(item.Lot);
+                await skillComponent.MountItem(item);
             }
 
             // Finally mount all the sub items for this item
@@ -173,7 +177,7 @@ namespace Uchu.World
                 
                 if (skills)
                 {
-                    await skillComponent.MountItemAsync(subItem.Lot);
+                    await skillComponent.MountItem(subItem);
                 }
             }
         }
@@ -209,10 +213,9 @@ namespace Uchu.World
                 && inventory.GetRootItem(item) is {} rootItem)
             {
                 if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                    await skillComponent.DismountItemAsync(rootItem.Lot);
-
-                var parentSlot = GetSlot(rootItem.Id);
-                Items.Remove(parentSlot);
+                    await skillComponent.DismountItemAsync(item);
+                
+                Items.Remove(GetSlot(rootItem.Id));
                 rootItem.IsEquipped = false;
 
                 foreach (var subItem in GetSubItems(rootItem))
@@ -221,7 +224,7 @@ namespace Uchu.World
                     if (Items.TryGetValue(subSlot, out var equippedSubItem))
                     {
                         if (skillComponent != default)
-                            await skillComponent.DismountItemAsync(equippedSubItem.Lot);
+                            await skillComponent.DismountItemAsync(equippedSubItem);
                         Items.Remove(subSlot);
                     }
                     
@@ -315,10 +318,8 @@ namespace Uchu.World
                         writer.WriteLdfCompressed(LegoDataDictionary.FromString(info));
                     }
                 }
-
                 writer.WriteBit(true);
             }
-
             writer.WriteBit(false);
         }
     }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
+using IronPython.Modules;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -117,204 +118,141 @@ namespace Uchu.World
             return _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToArray();
         }
 
-        public uint CountItems(Lot lot)
+        /// <summary>
+        /// Returns the total sum of items a game object has of a certain lot.
+        /// </summary>
+        /// <param name="lot">The lot to calculate the count for</param>
+        /// <returns>The total count of a certain lot in the inventory</returns>
+        private uint InventoryCount(Lot lot)
         {
-            return (uint) Items.Sum(item => item.Count);
+            return (uint) Items.Where(i => i.Lot == lot).Sum(i => i.Count);
         }
 
         #endregion
-        
-        public async Task AddItemAsync(CdClientContext clientContext, Lot lot, uint count,
-            LegoDataDictionary extraInfo = default)
+
+        /// <summary>
+        /// Adds a new lot to the inventory. The lot will automatically instantiated as the required amount of items
+        /// based on the provided count and the stack size of that item.
+        /// </summary>
+        /// <param name="clientContext">The client context to fetch the item info from</param>
+        /// <param name="lot">The lot to add to the inventory</param>
+        /// <param name="count">The count of the lot we want to add to the inventory</param>
+        /// <param name="settings">Optional <c>LegoDataDictionary</c> to instantiate the item with</param>
+        public async Task AddLotAsync(CdClientContext clientContext, Lot lot, uint count,
+            LegoDataDictionary settings = default)
         {
-            var componentId = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
-                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-            );
-
-            if (componentId == default)
-            {
-                Logger.Error($"{lot} does not have a Item component");
-                return;
-            }
-
-            var component = await clientContext.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == componentId.Componentid
-            );
-
-            if (component?.ItemType == null)
-            {
-                Logger.Error(
-                    $"{lot} has a corrupted component registry." +
-                    $"There is no Item component of Id: {componentId.Componentid}"
-                );
-                return;
-            }
-
-            await AddItemAsync(lot, count, ((ItemType) component.ItemType).GetInventoryType(), extraInfo);
-        }
-
-        public async Task AddItemAsync(int lot, uint count, InventoryType inventoryType,
-            LegoDataDictionary extraInfo = default)
-        {
-            if (!(GameObject is Player player))
-                return;
-
-            var itemCount = count;
-            var _ = Task.Run(() =>
-            {
-                OnLotAdded.Invoke(lot, itemCount);
-            });
-
+            // First create an unmanaged skeleton of this item. Updating stacks will be handled later on
+            var itemSkeleton = await Item.Instantiate(clientContext, GameObject, lot, default, count, 
+                extraInfo: settings);
+            
+            if (itemSkeleton.ItemComponent.ItemType == default)
+                throw new InvalidOperationException("Could not add item: cannot determine inventory type.");
+            
+            // Get the proper inventory for this game object, if it has no inventory of that type yet, create it
+            var inventoryType = ((ItemType) itemSkeleton.ItemComponent.ItemType).GetInventoryType();
             if (!_inventories.TryGetValue(inventoryType, out var inventory))
             {
                 inventory = new Inventory(inventoryType, this);
                 _inventories[inventoryType] = inventory;
             }
 
-            // Bricks and alike does not have a stack limit.
-            // TODO: Get stack size from item
-            var stackSize = 1;
-            if (stackSize == default)
-                stackSize = int.MaxValue;
+            // Some items have no stack size, like bricks
+            var stackSize = itemSkeleton.ItemComponent.StackSize ?? int.MaxValue;
+            
+            // Fill stacks
+            lock (_lock)
+            {
+                // Fill all old stacks
+                foreach (var item in inventory.Items.Where(i => i.Lot == lot && i.Count < stackSize))
+                {
+                    var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count,
+                        (int) (stackSize - item.Count));
 
+                    item.Count += toAdd;
+                    itemSkeleton.Count -= toAdd;
+
+                    // Exit if no new stacks are required to hold the lot
+                    if (itemSkeleton.Count <= 0)
+                        return;
+                }
+                
+                // Create new stacks
+                while (itemSkeleton.Count > 0)
+                {
+                    var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count);
+                    
+                    var item = await Item.Instantiate(clientContext, itemSkeleton.Owner, itemSkeleton.Lot, inventory, 
+                        toAdd, extraInfo: itemSkeleton.Settings);
+                    Start(item);
+                    
+                    // TODO: Message player of lot addition
+                    
+                    itemSkeleton.Count -= toAdd;
+                }
+            }
+            
+            // Complete all the collectible tasks for this game object
             if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
-                for (var i = 0; i < count; i++)
+                for (var i = 0; i < itemSkeleton.Count; i++)
                 {
                     await missionInventory.ObtainItemAsync(lot);
                 }
             }
             
-            // Fill stacks
-            lock (_lock)
+            var _ = Task.Run(() =>
             {
-                foreach (var item in inventory.Items.Where(i => i.Lot == lot && i.Settings.Count == default 
-                                                           && i.Count == stackSize))
-                {
-                    var toAdd = (uint) Min(stackSize, (int) count, (int) (stackSize - item.Count));
-
-                    item.Count += toAdd;
-                    count -= toAdd;
-
-                    if (count <= 0)
-                        return;
-                }
-                
-                // Create new stacks
-                var toCreate = count;
-                while (toCreate != default)
-                {
-                    var toAdd = (uint) Min(stackSize, (int) toCreate);
-                    var item = Item.Instantiate(lot, inventory, toAdd, extraInfo);
-                    Start(item);
-                    toCreate -= toAdd;
-                }
-            }
+                OnLotAdded.Invoke(lot, itemSkeleton.Count);
+            });
         }
 
+        /// <summary>
+        /// Removes all occurrences of a certain lot from the inventory
+        /// </summary>
+        /// <param name="lot">The lot to remove</param>
+        /// <param name="silent">Whether to notify the game object of the updated item counts</param>
         public Task RemoveAllAsync(Lot lot, bool silent = false)
         {
-            return RemoveItemAsync(lot, CountItems(lot), silent);
-        }
-        
-        public async Task RemoveItemAsync(Lot lot, uint count, bool silent = false)
-        {
-            if (count == default) return;
-            
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
-                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-            );
-
-            if (componentId == default)
-            {
-                Logger.Error($"{lot} does not have a Item component");
-                return;
-            }
-
-            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == componentId.Componentid
-            );
-
-            if (component == default)
-            {
-                Logger.Error(
-                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                );
-                
-                return;
-            }
-
-            Debug.Assert(component.ItemType != null, "component.ItemType != null");
-
-            RemoveItem(lot, count, ((ItemType) component.ItemType).GetInventoryType(), silent);
+            return RemoveLotAsync(lot, InventoryCount(lot), silent);
         }
 
-        public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
+        /// <summary>
+        /// Removes <c>count</c> items of a certain lot from inventory of the GameObject.
+        /// </summary>
+        /// <param name="lot">The lot of the item to remove</param>
+        /// <param name="count">The number of items to remove</param>
+        /// <param name="silent">Whether to send the updated count to the game object or not</param>
+        /// <exception cref="InvalidOperationException">If the passed item does not have an item component</exception>
+        public async Task RemoveLotAsync(Lot lot, uint count, bool silent = false)
         {
-            OnLotRemoved.Invoke(lot, count);
+            await OnLotRemoved.InvokeAsync(lot, count);
+            var itemsToRemove = Items.Where(i => i.Lot == lot).ToList();
 
-            using var cdClient = new CdClientContext();
-            
-            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
-            );
-
-            if (componentId == default)
-            {
-                Logger.Error($"{lot} does not have a Item component");
-                return;
-            }
-
-            var component = cdClient.ItemComponentTable.FirstOrDefault(
-                i => i.Id == componentId.Componentid
-            );
-
-            if (component == default)
-            {
-                Logger.Error(
-                    $"{lot} has a corrupted component registry. There is no Item component of Id: {componentId.Componentid}"
-                );
-                return;
-            }
-
-            var items = _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToList();
-
-            //
             // Sort to make sure we remove from the stacks with the lowest count first.
-            //
-
-            items.Sort((i1, i2) => (int) (i1.Count - i2.Count));
-
-            foreach (var item in items)
+            itemsToRemove.Sort((i1, i2) => (int) (i1.Count - i2.Count));
+            foreach (var itemToRemove in itemsToRemove)
             {
-                var toRemove = (uint) Min((int) count, (int) item.Count);
-
+                var amountToRemove = (uint) Min((int) count, (int) itemToRemove.Count);
                 if (!silent)
                 {
-                    item.Count -= toRemove;
+                    itemToRemove.Count -= amountToRemove;
                 }
                 else
                 {
-                    var storedCount = item.Count - toRemove;
+                    var storedCount = itemToRemove.Count - amountToRemove;
                     
                     var _ = Task.Run(async () =>
                     {
-                        await item.SetCountSilentAsync(storedCount);
+                        await itemToRemove.SetCountSilentAsync(storedCount);
                     });
                 }
 
-                count -= toRemove;
-
-                if (count != default) continue;
+                count -= amountToRemove;
+                if (count != default)
+                    continue;
 
                 return;
             }
-
-            Logger.Error(
-                $"Trying to remove {lot} x {count} when {GameObject} does not have that many of {lot} in their {inventoryType} inventory"
-            );
         }
 
         public async Task MoveItemsBetweenInventoriesAsync(Item item, Lot lot, uint count, InventoryType source, InventoryType destination, bool silent = false)

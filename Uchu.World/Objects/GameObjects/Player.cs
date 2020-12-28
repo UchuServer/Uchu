@@ -21,9 +21,9 @@ namespace Uchu.World
 {
     public sealed class Player : GameObject
     {
-        public static async Task<Player> Create(IRakConnection connection, Zone zone, int id)
+        public static async Task<Player> Instantiate(IRakConnection connection, Zone zone, int id)
         {
-            // Create base gameobject
+            // Create base game object
             var instance = Instantiate<Player>(
                 zone,
                 position: zone.SpawnPosition,
