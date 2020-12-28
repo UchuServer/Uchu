@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Systems.Missions;
 
 namespace Uchu.World.Handlers
 {
@@ -104,7 +105,7 @@ namespace Uchu.World.Handlers
             // Send the character init XML data for this world to the client
             Logger.Information("[55%] Sending XML client info.");
             var character = player.GetComponent<CharacterComponent>();
-            await SendCharacterXmlDataToClient(character, connection, session);
+            await SendCharacterXmlDataToClient(player, connection, session);
 
             Logger.Information("[55%] Checking rocket landing conditions.");
             if (character.LandingByRocket)
@@ -155,13 +156,13 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Sends the character initialization packet for a character to the current connection
         /// </summary>
-        /// <param name="character">The character to generate the initialization data for</param>
+        /// <param name="player">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
         /// <param name="session">The session cache for the connection</param>
-        private async Task SendCharacterXmlDataToClient(CharacterComponent character, IRakConnection connection, Session session)
+        private async Task SendCharacterXmlDataToClient(GameObject player, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
-            var xmlData = GenerateCharacterXmlData(character);
+            var xmlData = GenerateCharacterXmlData(player);
 
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
@@ -172,10 +173,11 @@ namespace Uchu.World.Handlers
 
             Buffer.BlockCopy(bytes, 3, xml, 0, bytes.Length - 3);
 
+            var character = player.GetComponent<CharacterComponent>();
             var ldf = new LegoDataDictionary
             {
                 ["accountId"] = session.UserId,
-                ["objid", 9] = character.Id,
+                ["objid", 9] = character.CharacterId,
                 ["name"] = character.Name,
                 ["template"] = 1,
                 ["xmlData"] = xml
@@ -193,17 +195,17 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private static XmlData GenerateCharacterXmlData(CharacterComponent character)
+        private static XmlData GenerateCharacterXmlData(GameObject player)
         {
             var xmlData = new XmlData
             {
-                Inventory = InventoryNode(character),
-                Character = CharacterNode(character),
-                Level = LevelNode(character),
-                Flags = FlagNodes(character),
-                Missions = MissionsNode(character),
-                Minifigure = MinifigureNode(character),
-                Stats = StatsNode(character)
+                Inventory = InventoryNode(player),
+                Character = CharacterNode(player),
+                Level = LevelNode(player),
+                Flags = FlagNodes(player),
+                Missions = MissionsNode(player),
+                Minifigure = MinifigureNode(player),
+                Stats = StatsNode(player)
             };
 
             return xmlData;
@@ -212,18 +214,18 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Generates the inventory node based for a character, containing information about the items and bricks of a player
         /// </summary>
-        /// <param name="character">The character to generate an inventory for</param>
+        /// <param name="player">The character to generate an inventory for</param>
         /// <returns>An inventory node for the character</returns>
-        private static InventoryNode InventoryNode(CharacterComponent character)
+        private static InventoryNode InventoryNode(GameObject player)
         {
             return new InventoryNode
             {
                 ItemContainers = new[]
                 {
-                    ItemContainerNode(character, InventoryType.Items),
-                    ItemContainerNode(character, InventoryType.Bricks),
-                    ItemContainerNode(character, InventoryType.Models),
-                    ItemContainerNode(character, InventoryType.Behaviors)
+                    ItemContainerNode(player, InventoryType.Items),
+                    ItemContainerNode(player, InventoryType.Bricks),
+                    ItemContainerNode(player, InventoryType.Models),
+                    ItemContainerNode(player, InventoryType.Behaviors)
                 }
             };
         }
@@ -234,33 +236,33 @@ namespace Uchu.World.Handlers
         /// <remarks>
         /// For inventory type <c>Models</c>, extra information is added
         /// </remarks>
-        /// <param name="character">The character to create an item container for</param>
+        /// <param name="player">The character to create an item container for</param>
         /// <param name="type">The type of container to create, see remarks for extra info</param>
         /// <returns></returns>
-        private static ItemContainerNode ItemContainerNode(Character character, InventoryType type)
+        private static ItemContainerNode ItemContainerNode(GameObject player, InventoryType type)
         {
+            var inventory = player.GetComponent<InventoryManagerComponent>()[type];
+            
             return new ItemContainerNode
             {
                 Type = (int) type,
-                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i =>
+                Items = inventory.Items.Select(item =>
                 {
                     var node = new ItemNode
                     {
-                        Count = (int) i.Count,
-                        Slot = i.Slot,
-                        Lot = i.Lot,
-                        ObjectId = i.Id,
-                        Equipped = i.IsEquipped ? 1 : 0,
-                        Bound = i.IsBound ? 1 : 0
+                        Count = (int) item.Count,
+                        Slot = (int) item.Slot,
+                        Lot = item.Lot,
+                        ObjectId = item.Id,
+                        Equipped = item.IsEquipped ? 1 : 0,
+                        Bound = item.IsBound ? 1 : 0
                     };
 
-                    if (string.IsNullOrWhiteSpace(i.ExtraInfo)) return node;
-
-                    if (!LegoDataDictionary.FromString(i.ExtraInfo).TryGetValue("assemblyPartLOTs", out var value))
+                    if (item.Settings == default)
                         return node;
 
                     node.ExtraInfo = type == InventoryType.Models ? new ExtraInfoNode {
-                            ModuleAssemblyInfo = "0:" + value
+                            ModuleAssemblyInfo = "0:" + item.Settings
                     } : null;
                     
                     return node;
@@ -271,13 +273,15 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates a character node, containing billing info and subscription info
         /// </summary>
-        /// <param name="character">The character to create a node from</param>
+        /// <param name="player">The character to create a node from</param>
         /// <returns>The character node created from the character</returns>
-        private static CharacterNode CharacterNode(Character character)
+        private static CharacterNode CharacterNode(GameObject player)
         {
+            var character = player.GetComponent<CharacterComponent>();
+            
             return new CharacterNode
             {
-                AccountId = character.User.Id,
+                AccountId = character.CharacterId,
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
                 UniverseScore = character.UniverseScore
@@ -287,10 +291,12 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the level node for a character, containing the level of the player
         /// </summary>
-        /// <param name="character">The character to create the level node for</param>
+        /// <param name="player">The character to create the level node for</param>
         /// <returns>The level node for the character</returns>
-        private static LevelNode LevelNode(Character character)
+        private static LevelNode LevelNode(GameObject player)
         {
+            var character = player.GetComponent<CharacterComponent>();
+            
             return new LevelNode
             {
                 Level = character.Level
@@ -300,33 +306,18 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the flag nodes from a character, containing all the flags a player has obtained
         /// </summary>
-        /// <param name="character">The character to create the flag nodes for</param>
+        /// <param name="player">The character to create the flag nodes for</param>
         /// <returns>An array of flag nodes</returns>
-        private static FlagNode[] FlagNodes(Character character)
+        private static FlagNode[] FlagNodes(GameObject player)
         {
+            var character = player.GetComponent<CharacterComponent>();
             var flags = new Dictionary<int, FlagNode>();
-            using var cdContext = new CdClientContext();
-
-            /*
-            // Keep a list of all tasks ids that belong to flag tasks
-            var flagTaskIds = cdContext.MissionTasksTable
-                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
-                .Select(t => t.Uid);
-
-            // Get all the mission task values that correspond to flag values
-            var flagValues = character.Missions
-                .SelectMany(m => m.Tasks
-                    .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.ValueArray()));
-            */
-
-            var flagValues = character.Flags.Select(f => (float) f.Flag);
 
             // The flags are stored as one long list of bits by separating them in unsigned longs
-            foreach (var value in flagValues)
+            foreach (var value in character.FlagsList)
             {
                 // Find the long this flag belongs to
-                var index = (int) Math.Floor(value / 64);
+                var index = (int) Math.Floor(value / 64.0);
                 ulong shiftedValue = 1;
                 shiftedValue <<= (int) value % 64;
 
@@ -347,18 +338,19 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the missions node for a character, containing the completed and active missions separately
         /// </summary>
-        /// <param name="character">The character to create a mission node for</param>
+        /// <param name="player">The character to create a mission node for</param>
         /// <returns>The missions node for the character</returns>
-        private static MissionsNode MissionsNode(Character character)
+        private static MissionsNode MissionsNode(GameObject player)
         {
             // Completed and active missions are stored in two separate lists
+            var missionsInventory = player.GetComponent<MissionInventoryComponent>();
             var completed = new List<CompletedMissionNode>();
             var missions = new List<MissionNode>();
 
             // For all missions split them into active and completed missions
-            foreach (var mission in character.Missions)
+            foreach (var mission in missionsInventory.AllMissions)
             {
-                if (mission.State == (int) MissionState.Completed)
+                if (mission.State == MissionState.Completed)
                 {
                     completed.Add(new CompletedMissionNode
                     {
@@ -393,22 +385,27 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="mission">The mission to create progress nodes for</param>
         /// <returns>All the progress nodes for a mission</returns>
-        private static MissionProgressNode[] ProgressArrayForMission(Mission mission)
+        private static MissionProgressNode[] ProgressArrayForMission(MissionInstance mission)
         {
             return mission.Tasks.OrderBy(task => task.TaskId).Select(task =>
                 {
                     // Return the mission task progress as list as there might be more nodes for this task
                     var progressNodes = new List<MissionProgressNode>
-                        {new MissionProgressNode {Value = task.Values.Sum(v => v.Count)}};
-
-                    using var cdClient = new CdClientContext();
-                    var cdTask = cdClient.MissionTasksTable.First(t => t.Uid == task.TaskId);
+                    {
+                        new MissionProgressNode
+                        {
+                            Value = task.CurrentProgress
+                        }
+                    };
 
                     // If the task type is collectible, also send all collectible ids
-                    if (cdTask.TaskType != null && ((MissionTaskType) cdTask.TaskType) == MissionTaskType.Collect)
+                    if (task.Type == MissionTaskType.Collect)
                     {
-                        progressNodes.AddRange(task.ValueArray()
-                            .Select(value => new MissionProgressNode {Value = value}));
+                        progressNodes.AddRange(task.Progress
+                            .Select(value => new MissionProgressNode
+                            {
+                                Value = value
+                            }));
                     }
 
                     return progressNodes;
@@ -419,10 +416,12 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the minifigure node for a character, containing information about hair and mouth styles for example
         /// </summary>
-        /// <param name="character"></param>
-        /// <returns></returns>
-        private static MinifigureNode MinifigureNode(Character character)
+        /// <param name="player">The player to create the minifigure node for</param>
+        /// <returns>The mini figure node created from the player</returns>
+        private static MinifigureNode MinifigureNode(GameObject player)
         {
+            var character = player.GetComponent<CharacterComponent>();
+            
             return new MinifigureNode
             {
                 EyebrowStyle = character.EyebrowStyle,
@@ -440,18 +439,20 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the statistics node for a character, containing information about the max / current health, armor and imagination
         /// </summary>
-        /// <param name="character">The character to create the statistics node for</param>
+        /// <param name="player">The character to create the statistics node for</param>
         /// <returns>The statistics node for this character</returns>
-        private static DestNode StatsNode(Character character)
+        private static DestNode StatsNode(GameObject player)
         {
+            var character = player.GetComponent<DestroyableComponent>();
+            
             return new DestNode
             {
-                MaximumArmor = character.MaximumArmor,
-                CurrentArmor = character.CurrentArmor,
-                MaximumHealth = character.MaximumHealth,
-                CurrentHealth = character.CurrentHealth,
-                MaximumImagination = character.MaximumImagination,
-                CurrentImagination = character.CurrentImagination
+                MaximumArmor = (int) character.MaxArmor,
+                CurrentArmor = (int) character.Armor,
+                MaximumHealth = (int) character.MaxHealth,
+                CurrentHealth = (int) character.Health,
+                MaximumImagination = (int) character.MaxImagination,
+                CurrentImagination = (int) character.Imagination
             };
         }
     }

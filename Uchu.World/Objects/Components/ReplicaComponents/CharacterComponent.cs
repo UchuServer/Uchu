@@ -87,9 +87,13 @@ namespace Uchu.World
                 LaunchedRocketFrom = character.LaunchedRocketFrom;
                 CharacterId = character.Id;
                 InventorySize = character.InventorySize;
+                Lh = character.Lh;
+                Rh = character.Rh;
+                Name = character.Name;
             }
         }
-        
+
+
         public GameObject VehicleObject { get; set; }
         
         public bool IsPvP { get; set; }
@@ -107,7 +111,8 @@ namespace Uchu.World
         public override ComponentId Id => ComponentId.CharacterComponent;
         
         #region traits
-        public long CharacterId { get; set; }
+        public string Name { get; private set; }
+        public long CharacterId { get; private set; }
         public int InventorySize { get; set; }
         public int BaseImagination { get; set; }
         public int BaseHealth { get; set; }
@@ -115,7 +120,9 @@ namespace Uchu.World
         public int LaunchedRocketFrom { get; set; }
         public long LastActivity { get; private set; }
         public bool FreeToPlay { get; private set; }
-        public bool LandingByRocket { get; private set; }
+        public bool LandingByRocket { get; set; }
+        public long Rh { get; private set; }
+        public long Lh { get; private set; }
         public long HairColor { get; private set; }
         public long HairStyle { get; private set; }
         public long ShirtColor { get; private set; }
@@ -187,6 +194,11 @@ namespace Uchu.World
         /// The flags this player has
         /// </summary>
         private HashSet<int> Flags { get; } = new HashSet<int>();
+
+        /// <summary>
+        /// List of all the flags this user has unlocked
+        /// </summary>
+        public IEnumerable<int> FlagsList => Flags.ToList();
         
         /// <summary>
         /// Returns the flag value for a flag id
