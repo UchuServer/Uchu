@@ -43,7 +43,7 @@ namespace Uchu.World
                 // Cache all character flags
                 foreach (var flag in character.Flags.Where(flag => flag.Id != default))
                 {
-                    await SetFlag((int)flag.Id, true);
+                    await SetFlagAsync((int)flag.Id, true);
                 }
 
                 HairColor = character.HairColor;
@@ -84,6 +84,9 @@ namespace Uchu.World
                 FreeToPlay = character.FreeToPlay;
                 LandingByRocket = character.LandingByRocket;
                 Rocket = character.Rocket;
+                LaunchedRocketFrom = character.LaunchedRocketFrom;
+                CharacterId = character.Id;
+                InventorySize = character.InventorySize;
             }
         }
         
@@ -104,9 +107,12 @@ namespace Uchu.World
         public override ComponentId Id => ComponentId.CharacterComponent;
         
         #region traits
+        public long CharacterId { get; set; }
+        public int InventorySize { get; set; }
         public int BaseImagination { get; set; }
         public int BaseHealth { get; set; }
         public string Rocket { get; private set; }
+        public int LaunchedRocketFrom { get; set; }
         public long LastActivity { get; private set; }
         public bool FreeToPlay { get; private set; }
         public bool LandingByRocket { get; private set; }
@@ -175,7 +181,7 @@ namespace Uchu.World
         }
         #endregion emotes
         
-        #region flags;
+        #region flags
         
         /// <summary>
         /// The flags this player has
@@ -194,7 +200,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="flagId">The id of the flag to change</param>
         /// <param name="state"><c>true</c> if the flag should be added, <c>false</c> if the flag should be removed</param>
-        public async Task SetFlag(int flagId, bool state)
+        public async Task SetFlagAsync(int flagId, bool state)
         {
             if (GameObject is Player player)
             {

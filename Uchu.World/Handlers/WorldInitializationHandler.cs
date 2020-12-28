@@ -103,6 +103,7 @@ namespace Uchu.World.Handlers
 
             // Send the character init XML data for this world to the client
             Logger.Information("[55%] Sending XML client info.");
+            var character = player.GetComponent<CharacterComponent>();
             await SendCharacterXmlDataToClient(character, connection, session);
 
             Logger.Information("[55%] Checking rocket landing conditions.");
@@ -110,7 +111,6 @@ namespace Uchu.World.Handlers
             {
                 Logger.Information("[55%] Player landed by rocket, saving changes.");
                 character.LandingByRocket = false;
-                await ctx.SaveChangesAsync();
             }
 
             Logger.Information("[55%] Player is ready to join world.");
@@ -158,7 +158,7 @@ namespace Uchu.World.Handlers
         /// <param name="character">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
         /// <param name="session">The session cache for the connection</param>
-        private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
+        private async Task SendCharacterXmlDataToClient(CharacterComponent character, IRakConnection connection, Session session)
         {
             // Get the XML data for this character for the initial character packet
             var xmlData = GenerateCharacterXmlData(character);
@@ -193,7 +193,7 @@ namespace Uchu.World.Handlers
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private static XmlData GenerateCharacterXmlData(Character character)
+        private static XmlData GenerateCharacterXmlData(CharacterComponent character)
         {
             var xmlData = new XmlData
             {
@@ -214,7 +214,7 @@ namespace Uchu.World.Handlers
         /// </summary>
         /// <param name="character">The character to generate an inventory for</param>
         /// <returns>An inventory node for the character</returns>
-        private static InventoryNode InventoryNode(Character character)
+        private static InventoryNode InventoryNode(CharacterComponent character)
         {
             return new InventoryNode
             {

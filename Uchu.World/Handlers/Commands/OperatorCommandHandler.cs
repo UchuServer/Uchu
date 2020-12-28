@@ -41,8 +41,7 @@ namespace Uchu.World.Handlers.Commands
                 var zone = (ZoneId) world.Zones.First();
 
                 zonePlayer.SendChatMessage($"This zone is closing, going to {zone}!");
-
-                await zonePlayer.SendToWorldAsync(world, zone);
+                zonePlayer.SendToWorldAsync(world, zone);
             }
 
             var delay = 1000;

@@ -593,7 +593,7 @@ namespace Uchu.World.Systems.Missions
                return;
             
             await UpdateMissionStateAsync(context, MissionState.Unavailable, true); 
-            SendRewards(rewardItem);
+            await SendRewardsAsync(rewardItem);
             
             LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds(); 
             State = MissionState.Completed; 
@@ -614,12 +614,12 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private void SendRewards(int rewardItem)
+        private async Task SendRewardsAsync(int rewardItem)
         {
             RewardPlayerCurrency();
             RewardPlayerEmotes();
             RewardPlayerStats();
-            RewardPlayerLoot(rewardItem);
+            await RewardPlayerLootAsync(rewardItem);
         }
 
 
@@ -690,7 +690,7 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private void RewardPlayerLoot(int rewardItem)
+        private async Task RewardPlayerLootAsync(int rewardItem)
         {
             if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventory))
                 return;
@@ -705,15 +705,13 @@ namespace Uchu.World.Systems.Missions
                 (Repeat ? RewardItem4Repeatable : RewardItem4, Repeat ? RewardItem4RepeatableCount : RewardItem4Count),
             };
 
+            await using var clientContext = new CdClientContext();
             if (IsChoiceReward)
             {
                 var (_, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
                 count = Math.Max(count, 1);
                 
-                var _ = Task.Run(async () =>
-                {
-                    await inventory.AddItemAsync(rewardItem, (uint) count);
-                });
+                await inventory.AddLotAsync(clientContext, rewardItem, (uint) count);
             }
             else
             {
@@ -727,17 +725,7 @@ namespace Uchu.World.Systems.Missions
 
                     if (IsMission)
                     {
-                        var _ = Task.Run(async () =>
-                        {
-                            await inventory.AddItemAsync(lot, (uint) count);
-                        });
-                    }
-                    else
-                    {
-                        var _ = Task.Run(async () =>
-                        {
-                            await inventory.AddItemAsync(lot, (uint) count);
-                        });
+                        await inventory.AddLotAsync(clientContext, lot, (uint) count);
                     }
                 }
             }

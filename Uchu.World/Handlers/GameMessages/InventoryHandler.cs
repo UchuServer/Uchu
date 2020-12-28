@@ -29,7 +29,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void RemoveItemHandler(RemoveItemToInventoryMessage message, Player player)
+        public async Task RemoveItemHandler(RemoveItemToInventoryMessage message, Player player)
         {
             if (!message.Confirmed) return;
 
@@ -37,7 +37,8 @@ namespace Uchu.World.Handlers.GameMessages
             
             var inventoryManager = player.GetComponent<InventoryManagerComponent>();
             
-            inventoryManager.RemoveItem(message.Item.Lot, message.Item.Count - message.TotalItems, message.InventoryType, true);
+            await inventoryManager.RemoveLotAsync(message.Item.Lot, message.Item.Count - message.TotalItems, 
+                message.InventoryType, true);
         }
 
         [PacketHandler]

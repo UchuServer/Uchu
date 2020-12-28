@@ -176,15 +176,13 @@ namespace Uchu.World
 
         private void GeneratePlayerYieldsAsync(Player owner)
         {
-            var player = (Player) GameObject;
+            if (GameObject.TryGetComponent<CharacterComponent>(out var character))
+            {
+                var coinToDrop = Math.Min((long) Math.Round(character.Currency * 0.1), 10000);
+                character.Currency -= coinToDrop;
 
-            var currency = player.Currency;
-            
-            var coinToDrop = Math.Min((long) Math.Round(currency * 0.1), 10000);
-
-            player.Currency -= coinToDrop;
-
-            InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+                InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+            }
         }
 
         private void InitializeRespawn()

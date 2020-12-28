@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
+using Uchu.Core.Client;
 using static Uchu.World.ClientMailPacket;
 using static Uchu.World.ServerMailPacket;
 
@@ -15,11 +16,9 @@ namespace Uchu.World.Handlers
         public async Task ClientMailPacketHandler(ClientMailPacket packet, IRakConnection connection)
         {
             var player = UchuServer.FindPlayer(connection);
-
             if (player == default)
             {
                 Logger.Error($"Could not find player for: {connection}");
-                
                 return;
             }
 
@@ -52,60 +51,50 @@ namespace Uchu.World.Handlers
             await using var ctx = new UchuContext();
             
             var response = new SendResponse();
-
+            
             var recipient = await ctx.Characters.FirstOrDefaultAsync(c => c.Name == packet.RecipientName);
-
             if (recipient == default)
             {
                 response.Code = MailResponseCode.RecipientNotFound;
-                
                 goto sendResponse;
             }
 
-            var author = await player.GetCharacterAsync();
-
-            if (recipient.Id == author.Id)
+            var author = player.GetComponent<CharacterComponent>();
+            if (recipient.Id == author.CharacterId)
             {
                 response.Code = MailResponseCode.CannotMailYourself;
-                
                 goto sendResponse;
             }
 
-            if (player.Currency < (long) packet.Currency)
+            if (author.Currency < (long) packet.Currency)
             {
                 response.Code = MailResponseCode.NotEnoughCurrency;
-
                 goto sendResponse;
             }
 
             Item item = default;
-            
             if (packet.Attachment > 0)
             {
                 if (!player.Zone.TryGetGameObject(packet.Attachment, out item))
                 {
                     response.Code = MailResponseCode.InvalidAttachment;
-
                     goto sendResponse;
                 }
-
-                var bound = await item.IsBoundAsync();
                 
-                if (bound)
+                if (item.IsBound)
                 {
                     response.Code = MailResponseCode.ItemCannotBeMailed;
-
                     goto sendResponse;
                 }
                 
-                await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(
+                await player.GetComponent<InventoryManagerComponent>().RemoveLotAsync(
                     item.Lot, packet.AttachmentCount
                 );
             }
 
             var mail = new CharacterMail
             {
-                AuthorId = author.Id,
+                AuthorId = author.CharacterId,
                 RecipientId = recipient.Id,
                 AttachmentCurrency = packet.Currency,
                 AttachmentLot = item?.Lot ?? -1,
@@ -117,15 +106,11 @@ namespace Uchu.World.Handlers
             };
 
             await ctx.Mails.AddAsync(mail);
-
-            player.Currency -= 25; // Hard coded cost for filing a mail
-
+            author.Currency -= 25; // Hard coded cost for filing a mail
             response.Code = MailResponseCode.Success;
 
             sendResponse:
-
             await ctx.SaveChangesAsync();
-            
             player.Message(new ServerMailPacket
             {
                 Id = ServerMailPacketId.SendResponse,
@@ -137,10 +122,9 @@ namespace Uchu.World.Handlers
         {
             await using var ctx = new UchuContext();
 
-            var author = await player.GetCharacterAsync();
-
+            var author = player.GetComponent<CharacterComponent>();
             var mails = await ctx.Mails.Where(
-                m => m.RecipientId == author.Id
+                m => m.RecipientId == author.CharacterId
             ).ToArrayAsync();
 
             var response = new MailData
@@ -163,13 +147,12 @@ namespace Uchu.World.Handlers
             };
             
             await using var ctx = new UchuContext();
+            await using var clientContext = new CdClientContext();
 
             var mail = await ctx.Mails.FirstOrDefaultAsync(m => m.Id == packet.MailId);
-
             if (mail == default)
             {
                 response.Code = MailAttachmentCollectCode.MailForFound;
-                
                 goto sendResponse;
             }
 
@@ -180,15 +163,15 @@ namespace Uchu.World.Handlers
                 goto sendResponse;
             }
 
-            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(
-                mail.AttachmentLot, mail.AttachmentCount
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(
+                clientContext, mail.AttachmentLot, mail.AttachmentCount
             );
 
             mail.AttachmentLot = -1;
             mail.AttachmentCount = 0;
 
-            player.Currency += (long) mail.AttachmentCurrency;
-
+            var character = player.GetComponent<CharacterComponent>();
+            character.Currency += (long) mail.AttachmentCurrency;
             response.Code = MailAttachmentCollectCode.Success;
             
             sendResponse:

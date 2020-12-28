@@ -110,13 +110,16 @@ namespace Uchu.World
             
             if (count == default || itemComponent.BaseValue <= 0) return;
 
+            var character = player.GetComponent<CharacterComponent>();
             var cost = (uint) ((itemComponent.BaseValue ?? 0) * count);
             
-            if (cost > player.Currency) return;
+            if (cost > character.Currency)
+                return;
 
-            player.Currency -= cost;
+            character.Currency -= cost;
             
-            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
+            await using var clientContext = new CdClientContext();
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(clientContext, lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -147,7 +150,8 @@ namespace Uchu.World
                     (itemComponent.SellMultiplier ?? 0.1f)
                 ) * count;
 
-            player.Currency += (uint) returnCurrency;
+            var character = player.GetComponent<CharacterComponent>();
+            character.Currency += (uint) returnCurrency;
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -170,15 +174,18 @@ namespace Uchu.World
                     (itemComponent.SellMultiplier ?? 0.1f)
                 ) * count;
 
-            if (cost > player.Currency) return;
+            var character = player.GetComponent<CharacterComponent>();
+            
+            if (cost > character.Currency)
+                return;
 
-            player.Currency -= cost;
+            character.Currency -= cost;
             
             var manager = player.GetComponent<InventoryManagerComponent>();
+            await manager.RemoveLotAsync(item.Lot, count, InventoryType.VendorBuyback);
             
-            manager.RemoveItem(item.Lot, count, InventoryType.VendorBuyback);
-            
-            await manager.AddItemAsync(item.Lot, count);
+            await using var clientContext = new CdClientContext();
+            await manager.AddLotAsync(clientContext, item.Lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {

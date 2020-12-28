@@ -16,6 +16,15 @@ namespace Uchu.World
     /// replica component that was available in live while <see cref="InventoryManagerComponent"/> is a new component
     /// for efficient handling of the entire inventory of a game object.
     /// </summary>
+    /// <remarks>
+    /// In case of a player, the <see cref="InventoryManagerComponent"/> has to be loaded first, as only then this
+    /// component can equip all the items from the inventory manager.
+    /// It's possible for this component to add new items to the <see cref="InventoryManagerComponent"/> as the manager
+    /// component might contain a root item that on equip, loads new items that listen to the root item. Take for example
+    /// the trial faction kit: once the kit is equipped, it loads in all the trial gear of the kit. The inventory
+    /// manager however only contains the faction kit item initially, this component then handles the logic of adding and
+    /// removing all the sub items on equip and unequip.
+    /// </remarks>
     public class InventoryComponent : ReplicaComponent
     {
         /// <summary>
@@ -62,7 +71,8 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadAsync()
         {
-            // If this is a player, load the items from the uchu database, otherwise load the items from the cd client
+            // If this is a player, load the items from the uchu database, otherwise load the pre-defined
+            // items from the cd client
             if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventoryComponent))
             {
                 foreach (var item in inventoryComponent.Items.Where(i => i.IsEquipped))
@@ -76,19 +86,24 @@ namespace Uchu.World
                 
                 var component = clientContext.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-                var cdClientItems = clientContext.InventoryComponentTable
+                var clientItems = clientContext.InventoryComponentTable
                     .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
 
-                foreach (var cdClientItem in cdClientItems)
+                foreach (var clientItem in clientItems)
                 {
-                    // var lot = (Lot) item.Itemid;
-                    // var componentId = lot.GetComponentId(ComponentId.ItemComponent);
-                    // var info = clientContext.ItemComponentTable.First(i => i.Id == componentId);
-                    // var location = (EquipLocation) info.EquipLocation;
-                    
-                    // TODO: Create item
-                    // Items[location] = item;
-                    var item = Item.Instantiate((Lot)cdClientItem.Itemid, GameObject);
+                    if (clientItem.Itemid != default)
+                    {
+                        var lot = (Lot) clientItem.Itemid;
+                        var itemComponent = clientContext.ItemComponentTable.First(
+                            i => i.Id == lot.GetComponentId(ComponentId.ItemComponent));
+
+                        if (itemComponent.ItemType != default)
+                        {
+                            var item = await Item.Instantiate(clientContext, GameObject, lot, default,
+                                (uint)(clientItem.Count ?? 1));
+                            Items[(EquipLocation) itemComponent.EquipLocation] = item;
+                        }
+                    }
                 }
             }
         }
@@ -164,9 +179,7 @@ namespace Uchu.World
             // Update all the new skills the player gets from this item
             var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
             if (skills)
-            {
                 await skillComponent.MountItem(item);
-            }
 
             // Finally mount all the sub items for this item
             var subItems = await GenerateSubItemsAsync(item);
@@ -176,9 +189,7 @@ namespace Uchu.World
                 subItem.IsEquipped = true;
                 
                 if (skills)
-                {
                     await skillComponent.MountItem(subItem);
-                }
             }
         }
 
@@ -187,7 +198,7 @@ namespace Uchu.World
         /// </summary>
         /// <remarks>Should be used at run-time instead of directly calling <see cref="UnEquipAsync"/> as this
         /// also calls unequip events</remarks>
-        /// <param name="item">The item to enequip</param>
+        /// <param name="item">The item to unequip</param>
         public async Task UnEquipItemAsync(Item item)
         {
             await OnUnEquipped.InvokeAsync(item);
@@ -241,21 +252,17 @@ namespace Uchu.World
         private async Task<Item[]> GenerateSubItemsAsync(Item item)
         {
             var subItems = new List<Item>();
-            
+
             if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
+                await using var clientContext = new CdClientContext();
+                
                 // Make sure that all sub items are available in the inventory, if not: add them.
                 foreach (var subItemLot in item.SubItemLots)
                 {
-                    var subItem = inventory.FindItem(subItemLot);
-                    if (subItem == default)
-                    {
-                        // TODO: Create item
-                    }
-                    else
-                    {
-                        subItems.Add(subItem);
-                    }
+                    var subItem = inventory.FindItem(subItemLot) 
+                                  ?? await Item.Instantiate(clientContext, GameObject, subItemLot, item.Inventory, 1);
+                    subItems.Add(subItem);
                 }
             }
 
@@ -271,7 +278,7 @@ namespace Uchu.World
         {
             if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                return inventory.Items.Where(i => i.ParentId == item.Id).ToArray();
+                return inventory.Items.Where(i => i.RootItem?.Id == item.Id).ToArray();
             }
 
             return new Item[] { };

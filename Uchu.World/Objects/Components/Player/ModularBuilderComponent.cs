@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
 using Uchu.Core;
+using Uchu.Core.Client;
 
 namespace Uchu.World
 {
@@ -91,7 +92,7 @@ namespace Uchu.World
 
             foreach (var module in models)
             {
-                inventory.RemoveItem(module, 1, InventoryType.TemporaryModels);
+                await inventory.RemoveLotAsync(module, 1, InventoryType.TemporaryModels);
             }
 
             var model = new LegoDataDictionary
@@ -99,7 +100,8 @@ namespace Uchu.World
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
             
-            await inventory.AddItemAsync(6416, 1, InventoryType.Models, model);
+            await using var clientContext = new CdClientContext();
+            await inventory.AddLotAsync(clientContext, 6416, 1, model, InventoryType.Models);
 
             await ConfirmFinish();
         }

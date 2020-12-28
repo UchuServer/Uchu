@@ -14,25 +14,20 @@ namespace Uchu.World
         public Item()
         {
             OnConsumed = new Event();
-            Listen(OnDestroyed, () => Inventory.UnManageItem(this));
+            Listen(OnDestroyed, () => Inventory.RemoveItem(this));
         }
 
         /// <summary>
         /// Instantiates an item using saved information from the player (e.g. the count, slot and LDD)
         /// </summary>
         /// <param name="clientContext">The client context to fetch item info from</param>
-        /// <param name="uchuContext">The uchu context to fetch item instance info from</param>
+        /// <param name="itemInstance">An item as fetched from the Uchu database to base this item on</param>
         /// <param name="owner">The owner (generally player) of this item</param>
         /// <param name="inventory">The inventory to add the item to</param>
-        /// <param name="itemId">The instance item Id to look up</param>
         /// <returns>The instantiated item</returns>
-        public static async Task<Item> Instantiate(CdClientContext clientContext, UchuContext uchuContext,
-            GameObject owner, Inventory inventory, long itemId)
+        public static async Task<Item> Instantiate(CdClientContext clientContext, InventoryItem itemInstance,
+            GameObject owner, Inventory inventory)
         {
-            var itemInstance = await uchuContext.InventoryItems.FirstAsync(
-                i => i.Id == itemId && i.Character.Id == owner.Id
-            );
-
             return await Instantiate(clientContext, owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
                 (uint)itemInstance.Slot, LegoDataDictionary.FromString(itemInstance.ExtraInfo),
                 itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound);
@@ -107,7 +102,7 @@ namespace Uchu.World
                 s => s.CastOnType == (int) SkillCastType.OnConsumed
             );
 
-            instance.Inventory?.ManageItem(instance);
+            instance.Inventory?.AddItem(instance);
 
             return instance;
         }
@@ -115,7 +110,7 @@ namespace Uchu.World
         public ItemComponent ItemComponent { get; private set; }
         public Event OnConsumed { get; }
         public GameObject Owner { get; private set; }
-        public uint Count { get; set; }
+        public uint Count { get; private set; }
         public bool IsEquipped { get; set; }
         public bool IsBound { get; private set; }
         public bool IsPackage { get; private set; }
@@ -137,16 +132,21 @@ namespace Uchu.World
         /// <remarks>
         /// Should only be set as a response to a client request.
         /// </remarks>
-        public uint Slot { get; private set; }
+        public uint Slot { get; set; }
 
+        /// <summary>
+        /// The type of this item
+        /// </summary>
         public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
 
+        /// <summary>
+        /// Equips the item in the owners inventory
+        /// </summary>
+        /// <param name="skipAllChecks">Pass skill all checks to the inventory component</param>
         public async Task EquipAsync(bool skipAllChecks = false)
         {
             if (ItemComponent.IsBOE ?? false)
-            {
                 IsBound = true;
-            }
 
             if (Owner.TryGetComponent<InventoryComponent>(out var inventory))
             {
@@ -154,6 +154,9 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Unequips the item from the owners inventory
+        /// </summary>
         public async Task UnEquipAsync()
         {
             if (Owner.TryGetComponent<InventoryComponent>(out var inventory))
@@ -183,7 +186,7 @@ namespace Uchu.World
                 
                 foreach (var lot in await container.GenerateLootYieldsAsync((Player)Owner))
                 {
-                    await inventory.AddLotAsync(lot, 1);
+                    await inventory.AddLotAsync(clientContext, lot, 1);
                 }
             }
         }
@@ -204,54 +207,23 @@ namespace Uchu.World
                 await inventory.RemoveLotAsync(Lot, 1);
         }
 
-        public async Task SetCountSilentAsync(uint count)
+        public async Task IncrementCountAsync(uint amount, bool silent = false)
         {
-            await using var ctx = new UchuContext();
-            
-            if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
-            {
-                Logger.Error(
-                    $"Trying to set {Lot} count to {Count}, this is beyond the item's stack-size; Setting it to stack-size"
-                );
-
-                count = (uint) ItemComponent.StackSize;
-            }
-
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-            
-            item.Count = count;
-            
-            Logger.Debug($"Setting {this}'s stack size to {item.Count}");
-
-            if (count <= 0)
-            {
-                if (IsEquipped)
-                    await UnEquipAsync();
-                
-                ctx.InventoryItems.Remove(item);
-                
-                Destroy(this);
-
-                // Disassemble item.
-                if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
-                {
-                    foreach (var part in (LegoDataList) list)
-                    {
-                        await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
-                    }
-                }
-            }
-                
-            await ctx.SaveChangesAsync();
+            await SetCountAsync(Count + amount, silent);
         }
-        
-        private async Task UpdateCountAsync(uint count)
+
+        public async Task DecrementCountAsync(uint amount, bool silent = false)
         {
-            if (count >= Count)
+            await SetCountAsync(Count - amount, silent);
+        }
+
+        private async Task SetCountAsync(uint count, bool silent = false)
+        {
+            if (!silent && count >= Count)
             {
                 MessageAddItem(count);
             }
-            else
+            else if (!silent)
             {
                 MessageRemoveItem(count);
             }
@@ -265,60 +237,65 @@ namespace Uchu.World
                 await UnEquipAsync();
 
             // Disassemble item.
-            if (Settings.TryGetValue("assemblyPartLOTs", out var list))
+            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
+                && Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
+                await using var clientContext = new CdClientContext();
                 foreach (var part in (LegoDataList) list)
                 {
-                    await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
+                    await inventory.AddLotAsync(clientContext, (int) part, 1);
                 }
             }
 
             Destroy(this);
         }
 
+        /// <summary>
+        /// Messages the player that <c>count</c> items of this lot have been added
+        /// </summary>
+        /// <param name="count">The amount of items that have been added</param>
         private void MessageAddItem(uint count)
         {
-            Player.Message(new AddItemToInventoryMessage
+            if (Owner is Player player)
             {
-                Associate = Player,
-                Item = this,
-                ItemLot = Lot,
-                Delta = count - Count,
-                Slot = (int) Slot,
-                InventoryType = (int) Inventory.InventoryType,
-                ShowFlyingLoot = count != default,
-                TotalItems = count,
-                ExtraInfo = null // TODO
-            });
+                player.Message(new AddItemToInventoryMessage
+                {
+                    Associate = player,
+                    Item = this,
+                    ItemLot = Lot,
+                    Delta = count - Count,
+                    Slot = (int) Slot,
+                    InventoryType = (int) Inventory.InventoryType,
+                    ShowFlyingLoot = count != default,
+                    TotalItems = count,
+                    ExtraInfo = Settings
+                });
+            }
         }
 
+        /// <summary>
+        /// Messages the player that <c>count</c> items of this lot have been removed
+        /// </summary>
+        /// <param name="count">The amount of items that have been removed</param>
         private void MessageRemoveItem(uint count)
         {
-            Player.Message(new RemoveItemToInventoryMessage
+            if (Owner is Player player)
             {
-                Associate = Player,
-                Confirmed = true,
-                DeleteItem = true,
-                OutSuccess = false,
-                ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
-                InventoryType = Inventory.InventoryType,
-                ExtraInfo = null, // TODO
-                ForceDeletion = true,
-                Item = this,
-                Delta = (uint) Math.Abs(count - Count),
-                TotalItems = count
-            });
-        }
-
-        private async Task RemoveFromInventoryAsync()
-        {
-            await using var ctx = new UchuContext();
-            
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-
-            item.Character.Items.Remove(item);
-
-            await ctx.SaveChangesAsync();
+                player.Message(new RemoveItemToInventoryMessage
+                {
+                    Associate = player,
+                    Confirmed = true,
+                    DeleteItem = true,
+                    OutSuccess = false,
+                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
+                    InventoryType = Inventory.InventoryType,
+                    ExtraInfo = Settings,
+                    ForceDeletion = true,
+                    Item = this,
+                    Delta = (uint) Math.Abs(count - Count),
+                    TotalItems = count
+                });
+            }
         }
     }
 }
