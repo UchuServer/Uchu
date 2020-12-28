@@ -23,17 +23,17 @@ namespace Uchu.World
 
         public override void SerializeMessage(BitWriter writer)
         {
-            writer.WriteBit(NoGravity);
             writer.WriteBit(IgnoreY);
             writer.WriteBit(SetRotation);
             writer.WriteBit(SkipAllChecks);
 
             writer.Write(Position);
 
-            writer.Write(UseNavMesh);
+            writer.WriteBit(UseNavMesh);
+            writer.WriteBit(NoGravity);
 
-            writer.WriteBit(true);
             writer.Write(Rotation);
+
         }
     }
 }

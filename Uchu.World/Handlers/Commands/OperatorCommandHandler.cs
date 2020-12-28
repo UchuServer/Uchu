@@ -8,6 +8,7 @@ using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.World.Scripting.Managed;
 using Uchu.World.Social;
+using Microsoft.EntityFrameworkCore;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -235,6 +236,75 @@ namespace Uchu.World.Handlers.Commands
             if (!current.TryGetComponent<BaseCombatAiComponent>(out var baseCombatAiComponent)) return "Invalid nearby";
 
             return $"Target: {baseCombatAiComponent.Target}";
+        }
+
+        /// <summary>
+        /// Executes a command as another player or every player in the session.
+        /// To execute a command as player "Tracer": /execute Tracer <command>
+        /// To execute a command as everyone: /execute * <command>
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <param name="executor"></param>
+        [CommandHandler(Signature = "execute", Help = "Execute a command as another player", GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> ExecuteAs(string[] arguments, Player executor)
+        {
+            if (arguments.Length == default) return "execute <playerName or *> <command>";
+
+            List<Player> players = new List<Player>();
+            if (arguments[0] == "*")
+            {
+                foreach (var player in executor.Zone.Players)
+                {
+                    players.Add(player);
+                }
+            }
+            else
+            {
+                // Todo: Fix this throwing an error if no player is found.
+                var player = executor.Zone.Players.FirstOrDefault(p => p.Name == arguments[0]);
+                if (player == default) return $"No player named {arguments[0]}";
+                players.Add(player);
+            }
+
+            await using var ctx = new UchuContext();
+            var character = await ctx.Characters.Include(c => c.User).FirstAsync(
+                c => c.Id == executor.Id
+            );
+
+            var message = new List<string>(arguments);
+            message.RemoveAt(0);
+
+            var command = string.Join(" ", message);
+
+            if (!command.StartsWith('/'))
+            {
+                command = "/" + command;
+            }
+
+            if (!SocialHandler.ClientCommands.Contains(command.Split(" ").ElementAt(0)) && command.Split(" ").ElementAt(0) != "/execute" && command.Length > 1)
+            {
+                foreach (Player player in players)
+                {
+                    player.SendChatMessage("You feel a magical power...", PlayerChatChannel.Normal);
+                    var response = await UchuServer.HandleCommandAsync(
+                        command,
+                        player,
+                        (GameMasterLevel)character.User.GameMasterLevel
+                    );
+
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
+                        //executor.SendChatMessage($"{player.Name}: {response}", PlayerChatChannel.Normal);
+                        player.SendChatMessage(response, PlayerChatChannel.Normal);
+                    }
+                }
+
+                return $"Executed \"{command}\" as {players.Count} {(players.Count == 1 ? "person" : "people")}";
+            }
+            else
+            {
+                return $"Unable to execute \"{command}\"";
+            }
         }
     }
 }
