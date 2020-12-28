@@ -460,12 +460,13 @@ namespace Uchu.World
             });
         }
 
-        public void Teleport(Vector3 position)
+        public void Teleport(Vector3 position, bool ignore = false)
         {
             Message(new TeleportMessage
             {
                 Associate = this,
-                Position = position
+                Position = position,
+                IgnoreY = ignore
             });
         }
 
