@@ -111,7 +111,8 @@ namespace Uchu.Char.Handlers
 
             await using (var ctx = new UchuContext())
             {
-                if (ctx.Characters.Any(c => c.Name == packet.CharacterName || c.CustomName == packet.CharacterName))
+                if (!string.IsNullOrEmpty(packet.CharacterName) 
+                    && ctx.Characters.Any(c => c.Name == packet.CharacterName || c.CustomName == packet.CharacterName))
                 {
                     Logger.Debug($"{connection} character create rejected due to duplicate name");
                     connection.Send(new CharacterCreateResponse
