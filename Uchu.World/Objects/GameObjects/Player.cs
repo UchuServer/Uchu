@@ -324,12 +324,13 @@ namespace Uchu.World
         /// Teleports the player to a different position
         /// </summary>
         /// <param name="position">The position to teleport the player to</param>
-        public void Teleport(Vector3 position)
+        public void Teleport(Vector3 position, bool ignore = false)
         {
             Message(new TeleportMessage
             {
                 Associate = this,
-                Position = position
+                Position = position,
+                IgnoreY = ignore
             });
         }
 
@@ -339,6 +340,7 @@ namespace Uchu.World
         /// </summary>
         internal void UpdateView()
         {
+            var loadedObjects = Perspective.LoadedObjects.ToArray();
             foreach (var gameObject in Zone.Spawned)
             {
                 TriggerViewUpdate(gameObject);
@@ -353,12 +355,6 @@ namespace Uchu.World
         {
             var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
             var view = Perspective.View(gameObject);
-                    
-            if (spawned && !view)
-            {
-                Zone.SendDestruction(gameObject, this);
-                return;
-            }
 
             if (!spawned && view)
             {

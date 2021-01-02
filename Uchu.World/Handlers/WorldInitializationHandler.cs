@@ -161,6 +161,8 @@ namespace Uchu.World.Handlers
         /// <param name="session">The session cache for the connection</param>
         private async Task SendCharacterXmlDataToClient(GameObject player, IRakConnection connection, Session session)
         {
+            await using var ctx = new UchuContext();
+            
             // Get the XML data for this character for the initial character packet
             var xmlData = GenerateCharacterXmlData(player);
 
@@ -176,10 +178,10 @@ namespace Uchu.World.Handlers
             var character = player.GetComponent<CharacterComponent>();
             var ldf = new LegoDataDictionary
             {
-                ["accountId"] = session.UserId,
-                ["objid", 9] = character.CharacterId,
+                ["gmlevel", 1] = character.GameMasterLevel != 1 ? character.GameMasterLevel : 0,
                 ["name"] = character.Name,
-                ["template"] = 1,
+                ["objid", 9] = character.Id,
+                ["template", 1] = 1,
                 ["xmlData"] = xml
             };
 
@@ -194,6 +196,7 @@ namespace Uchu.World.Handlers
         /// The generated XML data is based on https://docs.google.com/document/d/1XDh_HcXMjSdaGeniG1dND5CA7jOFXIPA_fxCnjvjaO4/edit#
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
+        /// <param name="gmLevel">The GM level of the user</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
         private static XmlData GenerateCharacterXmlData(GameObject player)
         {
@@ -284,7 +287,8 @@ namespace Uchu.World.Handlers
                 AccountId = character.CharacterId,
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
-                UniverseScore = character.UniverseScore
+                UniverseScore = character.UniverseScore,
+                GmLevel = character.GameMasterLevel
             };
         }
 

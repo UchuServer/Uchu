@@ -9,6 +9,7 @@ using IronPython.Modules;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
@@ -184,6 +185,40 @@ namespace Uchu.World
         {
             return (uint) Items.Where(i => i.Lot == lot).Sum(i => i.Count);
         }
+
+        /// <summary>
+        /// Checks if a lot is a faction token proxy and tries to assign the proper faction token according to a
+        /// possibly related character component. In case there's no character component for the GameObject or the
+        /// lot is isn't a faction token proxy, nothing is done.
+        /// </summary>
+        /// <param name="lot">The lot to check</param>
+        /// <returns>Whether the lot is valid for use, in case of a faction token proxy this means that the proxy
+        /// could be properly replaced with a faction token</returns>
+        private bool HandleFactionToken(ref Lot lot)
+        {
+            // If this is not a faction token or the game object doesn't have a character, there's nothing to check
+            if (lot != Lot.FactionTokenProxy) return true;
+            if (!GameObject.TryGetComponent<CharacterComponent>(out var character)) return true;
+
+            var possibleLots = new List<Lot>();
+            
+            if (character.IsAssembly) possibleLots.Add(Lot.AssemblyFactionToken);
+            if (character.IsParadox) possibleLots.Add(Lot.ParadoxFactionToken);
+            if (character.IsSentinel) possibleLots.Add(Lot.SentinelFactionToken);
+            if (character.IsVentureLeague) possibleLots.Add(Lot.VentureFactionToken);
+
+            // If this is a character with no valid factions, don't drop anything
+            if (possibleLots.Count == 0)
+                return false;
+            
+            // Generally this will return the same faction token
+            // but for characters with multiple factions this equally distributes the drops
+            lot = possibleLots.Count == 1 
+                ? possibleLots[0] 
+                : possibleLots[new Random().Next(0, possibleLots.Count)];
+            
+            return true;
+        }
         
         /// <summary>
         /// Adds a new lot to the inventory. The lot will automatically instantiated as the required amount of items
@@ -198,13 +233,18 @@ namespace Uchu.World
         public async Task AddLotAsync(CdClientContext clientContext, Lot lot, uint count, 
             LegoDataDictionary settings = default, InventoryType inventoryType = default)
         {
+            // For players, the faction token proxy needs to be replaced with an actual faction token
+            // If this wasn't possible, exit
+            if (!HandleFactionToken(ref lot))
+                return;
+            
             // First create an unmanaged skeleton of this item. Updating stacks will be handled later on
             var itemSkeleton = await Item.Instantiate(clientContext, GameObject, lot, default, count, 
                 extraInfo: settings);
             
             if (itemSkeleton.ItemComponent.ItemType == default)
                 throw new InvalidOperationException("Could not add item: cannot determine inventory type.");
-            
+
             inventoryType = inventoryType != default 
                 ? inventoryType 
                 : ((ItemType) itemSkeleton.ItemComponent.ItemType).GetInventoryType();

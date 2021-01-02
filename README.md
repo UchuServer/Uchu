@@ -1,4 +1,4 @@
-# Uchu [![appveyor](https://img.shields.io/appveyor/ci/yuwui/Uchu/master.svg?logo=appveyor)](https://ci.appveyor.com/project/yuwui/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
+# Uchu [![appveyor](https://ci.appveyor.com/api/projects/status/of25uoxf8um5ejc3?svg=true)](https://ci.appveyor.com/project/jettford/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
 
 LEGO Universe server written in C#
 
@@ -148,8 +148,8 @@ If your operating system does not allow you to host a server on any specific net
 
 ### Infrastructure
 
-#### Single-Sing-On authentication
-If you are using a Single-Sing-On (SSO) authentication server (https://github.com/lcdr/sso_auth), you need to specify the domain it is located on.
+#### Single-Sign-On authentication
+If you are using a Single-Sign-On (SSO) authentication server (https://github.com/lcdr/sso_auth), you need to specify the domain it is located on.
 1. Open the config file and find the `<Sso></Sso>` section.
 2. Input the domain where the SSO authentication server is hosted in between the `<Domain></Domain>` tags.
 3. Set the `<HostAuthentication></HostAuthentication>` variable in the `<Networking></Networking>` section to `false`.

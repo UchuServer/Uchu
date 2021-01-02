@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
@@ -20,77 +21,74 @@ namespace Uchu.World
 
         private async Task LoadAsync()
         {
-            if (GameObject is Player player)
+            await using var uchuContext = new UchuContext();
+                
+            var character = await uchuContext.Characters.FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+            if (character == default)
+                return;
+
+            Currency = character.Currency;
+            UniverseScore = character.UniverseScore;
+            Level = character.Level;
+            BaseHealth = character.BaseHealth;
+            BaseImagination = character.BaseImagination;
+            
+            // Cache all character emotes
+            foreach (var unlockedEmote in character.UnlockedEmotes)
             {
-                await using var uchuContext = new UchuContext();
-                
-                var character = await uchuContext.Characters.FirstOrDefaultAsync(c => c.Id == player.Id);
-                if (character == default)
-                    return;
-
-                Currency = character.Currency;
-                UniverseScore = character.UniverseScore;
-                Level = character.Level;
-                BaseHealth = character.BaseHealth;
-                BaseImagination = character.BaseImagination;
-                
-                // Cache all character emotes
-                foreach (var unlockedEmote in character.UnlockedEmotes)
-                {
-                    AddEmote(unlockedEmote.EmoteId);
-                }
-                
-                // Cache all character flags
-                foreach (var flag in character.Flags.Where(flag => flag.Id != default))
-                {
-                    await SetFlagAsync((int)flag.Id, true);
-                }
-
-                HairColor = character.HairColor;
-                HairStyle = character.HairStyle;
-                ShirtColor = character.ShirtColor;
-                PantsColor = character.PantsColor;
-                EyebrowStyle = character.EyebrowStyle;
-                EyeStyle = character.EyeStyle;
-                MouthStyle = character.MouthStyle;
-                TotalCurrencyCollected = character.TotalCurrencyCollected;
-                TotalBricksCollected = character.TotalBricksCollected;
-                TotalSmashablesSmashed = character.TotalSmashablesSmashed;
-                TotalQuickBuildsCompleted = character.TotalQuickBuildsCompleted;
-                TotalEnemiesSmashed = character.TotalEnemiesSmashed;
-                TotalRocketsUsed = character.TotalRocketsUsed;
-                TotalMissionsCompleted = character.TotalMissionsCompleted;
-                TotalPetsTamed = character.TotalPetsTamed;
-                TotalImaginationPowerUpsCollected = character.TotalImaginationPowerUpsCollected;
-                TotalLifePowerUpsCollected = character.TotalLifePowerUpsCollected;
-                TotalArmorPowerUpsCollected = character.TotalArmorPowerUpsCollected;
-                TotalDistanceTraveled = character.TotalDistanceTraveled;
-                TotalSuicides = character.TotalSuicides;
-                TotalDamageTaken = character.TotalDamageTaken;
-                TotalDamageHealed = character.TotalDamageHealed;
-                TotalArmorRepaired = character.TotalArmorRepaired;
-                TotalImaginationRestored = character.TotalImaginationRestored;
-                TotalImaginationUsed = character.TotalImaginationUsed;
-                TotalDistanceDriven = character.TotalDistanceDriven;
-                TotalTimeAirborne = character.TotalTimeAirborne;
-                TotalRacingImaginationPowerUpsCollected = character.TotalRacingImaginationPowerUpsCollected;
-                TotalRacingImaginationCratesSmashed = character.TotalRacingImaginationCratesSmashed;
-                TotalRacecarBoostsActivated = character.TotalRacecarBoostsActivated;
-                TotalRacecarWrecks = character.TotalRacecarWrecks;
-                TotalRacingSmashablesSmashed = character.TotalRacingSmashablesSmashed;
-                TotalRacesFinished = character.TotalRacesFinished;
-                TotalFirstPlaceFinishes = character.TotalFirstPlaceFinishes;
-                LastActivity = character.LastActivity;
-                FreeToPlay = character.FreeToPlay;
-                LandingByRocket = character.LandingByRocket;
-                Rocket = character.Rocket;
-                LaunchedRocketFrom = character.LaunchedRocketFrom;
-                CharacterId = character.Id;
-                InventorySize = character.InventorySize;
-                Lh = character.Lh;
-                Rh = character.Rh;
-                Name = character.Name;
+                AddEmote(unlockedEmote.EmoteId);
             }
+            
+            // Cache all character flags
+            foreach (var flag in character.Flags.Where(flag => flag.Id != default))
+            {
+                await SetFlagAsync((int)flag.Id, true);
+            }
+
+            HairColor = character.HairColor;
+            HairStyle = character.HairStyle;
+            ShirtColor = character.ShirtColor;
+            PantsColor = character.PantsColor;
+            EyebrowStyle = character.EyebrowStyle;
+            EyeStyle = character.EyeStyle;
+            MouthStyle = character.MouthStyle;
+            TotalCurrencyCollected = character.TotalCurrencyCollected;
+            TotalBricksCollected = character.TotalBricksCollected;
+            TotalSmashablesSmashed = character.TotalSmashablesSmashed;
+            TotalQuickBuildsCompleted = character.TotalQuickBuildsCompleted;
+            TotalEnemiesSmashed = character.TotalEnemiesSmashed;
+            TotalRocketsUsed = character.TotalRocketsUsed;
+            TotalMissionsCompleted = character.TotalMissionsCompleted;
+            TotalPetsTamed = character.TotalPetsTamed;
+            TotalImaginationPowerUpsCollected = character.TotalImaginationPowerUpsCollected;
+            TotalLifePowerUpsCollected = character.TotalLifePowerUpsCollected;
+            TotalArmorPowerUpsCollected = character.TotalArmorPowerUpsCollected;
+            TotalDistanceTraveled = character.TotalDistanceTraveled;
+            TotalSuicides = character.TotalSuicides;
+            TotalDamageTaken = character.TotalDamageTaken;
+            TotalDamageHealed = character.TotalDamageHealed;
+            TotalArmorRepaired = character.TotalArmorRepaired;
+            TotalImaginationRestored = character.TotalImaginationRestored;
+            TotalImaginationUsed = character.TotalImaginationUsed;
+            TotalDistanceDriven = character.TotalDistanceDriven;
+            TotalTimeAirborne = character.TotalTimeAirborne;
+            TotalRacingImaginationPowerUpsCollected = character.TotalRacingImaginationPowerUpsCollected;
+            TotalRacingImaginationCratesSmashed = character.TotalRacingImaginationCratesSmashed;
+            TotalRacecarBoostsActivated = character.TotalRacecarBoostsActivated;
+            TotalRacecarWrecks = character.TotalRacecarWrecks;
+            TotalRacingSmashablesSmashed = character.TotalRacingSmashablesSmashed;
+            TotalRacesFinished = character.TotalRacesFinished;
+            TotalFirstPlaceFinishes = character.TotalFirstPlaceFinishes;
+            LastActivity = character.LastActivity;
+            FreeToPlay = character.FreeToPlay;
+            LandingByRocket = character.LandingByRocket;
+            Rocket = character.Rocket;
+            LaunchedRocketFrom = character.LaunchedRocketFrom;
+            CharacterId = character.Id;
+            InventorySize = character.InventorySize;
+            Lh = character.Lh;
+            Rh = character.Rh;
+            Name = character.Name;
         }
 
 
@@ -206,6 +204,33 @@ namespace Uchu.World
         /// <param name="flagId">The flag to find for the player</param>
         /// <returns><c>true</c> or <c>false</c> based on whether the player has the flag or not</returns>
         public bool GetFlag(int flagId) => Flags.Contains(flagId);
+
+        /// <summary>
+        /// Whether a player has a certain faction or not
+        /// </summary>
+        /// <param name="factionFlagId">The flag Id to look up for the player</param>
+        /// <returns>True if the player has a certain faction</returns>
+        public bool HasFaction(FactionFlags factionFlagId) => GetFlag((int) factionFlagId);
+
+        /// <summary>
+        /// Whether this character belongs to the sentinel faction
+        /// </summary>
+        public bool IsSentinel => HasFaction(FactionFlags.Sentinel);
+        
+        /// <summary>
+        /// Whether this character belongs to the assembly faction
+        /// </summary>
+        public bool IsAssembly => HasFaction(FactionFlags.Assembly);
+        
+        /// <summary>
+        /// Whether this player belongs to the paradox faction
+        /// </summary>
+        public bool IsParadox => HasFaction(FactionFlags.Paradox);
+        
+        /// <summary>
+        /// Whether this player belongs to the paradox faction
+        /// </summary>
+        public bool IsVentureLeague => HasFaction(FactionFlags.Venture);
         
         /// <summary>
         /// Adds or removes a flag from the player based on the <c>state</c>
@@ -462,7 +487,10 @@ namespace Uchu.World
 
             writer.WriteBit(IsPvP);
             writer.WriteBit(IsGameMaster);
-            writer.Write(GameMasterLevel);
+
+            //writer.Write(GameMasterLevel); // Original code
+            //writer.Write((GameMasterLevel != 1 ? GameMasterLevel : 0)); // This broke the component
+            writer.Write(GameMasterLevel != 1 ? GameMasterLevel : (byte)0); // This casts to the correct type (u8)
 
             writer.WriteBit(false); // ???
             writer.Write<byte>(0); // ???

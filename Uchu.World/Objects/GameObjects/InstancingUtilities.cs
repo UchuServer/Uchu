@@ -126,6 +126,7 @@ namespace Uchu.World
         public static void InstantiateCurrency(int currency, Player owner, GameObject source, Vector3 spawn)
         {
             if (owner is null) return;
+            if (currency <= 0) return;
             
             try
             {

@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
@@ -31,10 +32,10 @@ namespace Uchu.World.Handlers.Commands
             return $"Changed chat level to: {player.ChatChannel}";
         }
         
-        [CommandHandler(Signature = "give", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "gmadditem", Help = "Give an item to yourself", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> GiveItem(string[] arguments, Player player)
         {
-            if (arguments.Length == default) return "give <lot> <count(optional)> <inventory(optional)>";
+            if (arguments.Length == default) return "gmadditem <lot> <count(optional)> <inventory(optional)>";
 
             if (!int.TryParse(arguments[0], out var lot)) return "Invalid <lot>";
 
@@ -88,6 +89,7 @@ namespace Uchu.World.Handlers.Commands
         {
             if (arguments.Length != 1) return "coin <delta>";
 
+            // We parse this as an int instead of long, due to the max long causing bugs. Currency maxes out at a long.
             if (!int.TryParse(arguments[0], out var delta) || delta == default) return "Invalid <delta>";
 
             var character = player.GetComponent<CharacterComponent>();
@@ -173,7 +175,7 @@ namespace Uchu.World.Handlers.Commands
             return $"{player.Transform.Rotation}";
         }
 
-        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "smash", Help = "Smash yourself", GameMasterLevel = GameMasterLevel.Player)]
         public async Task<string> Smash(string[] arguments, Player player)
         {
             var animation = "violent";
@@ -204,13 +206,34 @@ namespace Uchu.World.Handlers.Commands
             return "Buffed";
         }
 
-        [CommandHandler(Signature = "freecam", Help = "(Broken)", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "freecam", Help = "Fly around in a free camera. Initial positon is at 0, 0, 0.", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
         {
-            player.Message(new ToggleFreeCamModeMessage
+            switch (arguments[0].ToLower())
             {
-                Associate = player
-            });
+                case "true":
+                case "on":
+                    player.Message(new SetPlayerControlSchemeMessage
+                    {
+                        Associate = player,
+                        DelayCameraSwitchIfInCinematic = false,
+                        SwitchCamera = true,
+                        ControlScheme = 9
+                    });
+                    break;
+                case "false":
+                case "off":
+                    player.Message(new SetPlayerControlSchemeMessage
+                    {
+                        Associate = player,
+                        DelayCameraSwitchIfInCinematic = false,
+                        SwitchCamera = true,
+                        ControlScheme = 0
+                    });
+                    break;
+                default:
+                    return "Invalid <state(on/off)>";
+            }
 
             return "Toggled freecam.";
         }
@@ -501,7 +524,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Successfully set {arguments[0]} to {value}";
         }
         
-        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Admin)]
+        [CommandHandler(Signature = "pvp", Help = "Change PvP state", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Pvp(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "pvp <state(on/off)>";
@@ -721,12 +744,12 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Successfully added {type.Name} to {player}";
         }
-        
-        [CommandHandler(Signature = "world", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
+
+        [CommandHandler(Signature = "testmap", Help = "Transfer to world", GameMasterLevel = GameMasterLevel.Mythran)]
         public string World(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
-                return "world <zoneId>";
+                return "testmap <zoneId>";
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
@@ -739,9 +762,9 @@ namespace Uchu.World.Handlers.Commands
                 return $"Can't find world with ID {id}";
             }
 
-            string WorldName = WorldTable.ZoneName;
+            var path = Path.Combine(UchuServer.Config.ResourcesConfiguration?.GameResourceFolder, Path.Combine("maps", WorldTable.ZoneName.ToLower()));
 
-            if (WorldName.EndsWith(".luz"))
+            if (File.Exists(path) && WorldTable.LocStatus > 0)
             {
                 //
                 // We don't want to lock up the server on a world server request, as it may take time.
@@ -1066,13 +1089,13 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/setflag <flag>";
 
-            if (!int.TryParse(arguments[1], out var flag))
+            if (!int.TryParse(arguments[0], out var flag))
                 return "/setflag <flag>";
 
             var character = player.GetComponent<CharacterComponent>();
             await character.SetFlagAsync(flag, true);
 
-            return $"Set flag {arguments[1]}";
+            return $"Set flag {arguments[0]}";
         }
 
         [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
@@ -1081,12 +1104,12 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/triggercelebrate <CelebrationID>";
 
-            if (!int.TryParse(arguments[1], out var id))
+            if (!int.TryParse(arguments[0], out var id))
                 return "/triggercelebrate <CelebrationID>";
 
             await player.TriggerCelebration((CelebrationId)id);
 
-            return $"Triggered Celebration {arguments[1]}";
+            return $"Triggered Celebration {arguments[0]}";
         }
 
         [CommandHandler(Signature = "removeflag", Help = "Removes a client flag", GameMasterLevel = GameMasterLevel.Admin)]
@@ -1095,13 +1118,13 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length != 1)
                 return "/removeflag <flag>";
 
-            if (!int.TryParse(arguments[1], out int flag))
+            if (!int.TryParse(arguments[0], out int flag))
                 return "/removeflag <flag>";
 
             var character = player.GetComponent<CharacterComponent>();
             await character.SetFlagAsync(flag, false);
 
-            return $"Removed flag {arguments[1]}";
+            return $"Removed flag {arguments[0]}";
         }
 
         [CommandHandler(Signature = "inventory", Help = "Set inventory size", GameMasterLevel = GameMasterLevel.Admin)]

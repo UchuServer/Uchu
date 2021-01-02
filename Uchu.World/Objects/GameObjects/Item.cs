@@ -184,9 +184,9 @@ namespace Uchu.World
                 await inventory.RemoveLotAsync(Lot, 1);
                 await using var clientContext = new CdClientContext();
                 
-                foreach (var lot in await container.GenerateLootYieldsAsync((Player)Owner))
+                foreach (var loot in await container.GenerateLootYieldsAsync((Player)Owner))
                 {
-                    await inventory.AddLotAsync(clientContext, lot, 1);
+                    await inventory.AddLotAsync(clientContext, loot.Key, loot.Value);
                 }
             }
         }

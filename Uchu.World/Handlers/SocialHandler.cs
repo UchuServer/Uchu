@@ -11,7 +11,7 @@ namespace Uchu.World.Handlers
 {
     public class SocialHandler : HandlerGroup
     {
-        private static string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s",
+        public static string[] ClientCommands = { "/quit", "/exit", "/logoutcharacter", "/camp", "/logoutaccount", "/logout", "/say", "/s",
             "/whisper", "/w", "/tell", "/team", "/t", "/location", "/locate", "/loc", "/faq", "/faqs", "/shop", "/store", "/minigames", "/forums",
             "/thumbsup", "/thumb", "/thumb", "/victory", "/backflip", "/clap", "/cringe", "/cry", "/dance", "/gasp", "/giggle", "/talk", "/salute",
             "/shrug", "/sigh", "/wave", "/why", "/thanks", "/yes", "/addfriend", "/removefriend", "/addignore", "/removeignore", "/recommendedperfoptions",
@@ -40,6 +40,8 @@ namespace Uchu.World.Handlers
             if (message.Message.StartsWith('/') && !ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
             {
 
+                //Logger.Debug($"message.Message: {message.Message}");
+
                 if (ClientCommands.Contains(message.Message.Split(" ").ElementAt(0)))
                     return;
 
@@ -53,6 +55,19 @@ namespace Uchu.World.Handlers
                 {
                     player.SendChatMessage(response, PlayerChatChannel.Normal);
                 }
+                
+                var CommandTranscript = new ChatTranscript
+                {
+                    Author = character.Id,
+                    Message = message.Message,
+                    Receiver = 0,
+                    SentTime = DateTime.Now
+                };
+
+                await ctx.ChatTranscript.AddAsync(CommandTranscript);
+
+                await ctx.SaveChangesAsync();
+                
                 return;
             }
 

@@ -6,6 +6,7 @@ using Uchu.Core.Resources;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
+    [ZoneSpecific(1100)]
     public class MaelstromSample : NativeScript
     {
         public override Task LoadAsync()
