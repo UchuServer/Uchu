@@ -39,7 +39,7 @@ namespace Uchu.World
         /// <summary>
         /// The items in this inventory
         /// </summary>
-        private readonly List<Item> _items;
+        private readonly List<Item> _items = new List<Item>();
         
         /// <summary>
         /// The type of this inventory

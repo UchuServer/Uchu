@@ -21,7 +21,7 @@ namespace Uchu.World
 {
     public sealed class Player : GameObject
     {
-        public static async Task<Player> Instantiate(IRakConnection connection, Zone zone, int id)
+        public static async Task<Player> Instantiate(IRakConnection connection, Zone zone, ObjectId id)
         {
             // Create base game object
             var instance = Instantiate<Player>(
@@ -104,12 +104,6 @@ namespace Uchu.World
         {
             await using var uchuContext = new UchuContext();
             var character = await uchuContext.Characters
-                .Include(c => c.Flags)
-                .Include(c => c.Items)
-                .Include(c => c.User)
-                .Include(c => c.Missions)
-                .ThenInclude(m => m.Tasks)
-                .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.Id == Id);
 
             Connection = connection;

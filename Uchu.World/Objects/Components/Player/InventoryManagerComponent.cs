@@ -66,18 +66,23 @@ namespace Uchu.World
                 var playerCharacter = uchuContext.Characters
                     .Include(c => c.Items)
                     .First(c => c.Id == GameObject.Id);
+
+                var inventoryTypesToCreate = playerCharacter.Items
+                    .Select(i => (InventoryType) i.InventoryType)
+                    .Distinct();
                 
                 // Load all the already owned items of the player
-                foreach (var value in Enum.GetValues(typeof(InventoryType)))
+                foreach (var inventoryType in inventoryTypesToCreate)
                 {
-                    var id = (InventoryType) value;
-                    var inventory = new Inventory(id, this);
                     
-                    Logger.Debug($"Loading {id} inventory.");
+                    Logger.Debug($"Loading {inventoryType} inventory.");
+                    var inventory = new Inventory(inventoryType, this);
+                    
                     await inventory.LoadItems(clientContext, playerCharacter.Items
-                        .Where(item => item.ParentId == ObjectId.Invalid && (InventoryType) item.InventoryType == id));
+                        .Where(item => item.ParentId == ObjectId.Invalid 
+                                       && (InventoryType) item.InventoryType == inventoryType));
                     
-                    _inventories.Add(id, inventory);
+                    _inventories.Add(inventoryType, inventory);
                 }
             });
 
@@ -94,8 +99,9 @@ namespace Uchu.World
         
         #region operators
         
-        public Inventory this[InventoryType inventoryType] => _inventories[inventoryType];
-        
+        public Inventory this[InventoryType inventoryType] => _inventories.TryGetValue(inventoryType, out var inventory) 
+            ? inventory : default;
+
         #endregion operators
 
         #region methods
@@ -242,6 +248,9 @@ namespace Uchu.World
             var itemSkeleton = await Item.Instantiate(clientContext, GameObject, lot, default, count, 
                 extraInfo: settings);
             
+            if (itemSkeleton == null)
+                return;
+            
             if (itemSkeleton.ItemComponent.ItemType == default)
                 throw new InvalidOperationException("Could not add item: cannot determine inventory type.");
 
@@ -290,6 +299,7 @@ namespace Uchu.World
                         toAdd, extraInfo: itemSkeleton.Settings);
                     Start(item);
                     
+                    await item.IncrementCountAsync(toAdd);
                     await itemSkeleton.DecrementCountAsync(toAdd);
                 }
             }

@@ -23,7 +23,11 @@ namespace Uchu.World
         {
             await using var uchuContext = new UchuContext();
                 
-            var character = await uchuContext.Characters.FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+            var character = await uchuContext.Characters
+                .Include(c => c.Flags)
+                .Include(c => c.UnlockedEmotes)
+                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+            
             if (character == default)
                 return;
 
@@ -42,7 +46,7 @@ namespace Uchu.World
             // Cache all character flags
             foreach (var flag in character.Flags.Where(flag => flag.Id != default))
             {
-                await SetFlagAsync((int)flag.Id, true);
+                await SetFlagAsync((int)flag.Id, true, true);
             }
 
             HairColor = character.HairColor;
@@ -161,7 +165,7 @@ namespace Uchu.World
         /// <summary>
         /// The emotes this player has unlocked
         /// </summary>
-        private HashSet<int> Emotes { get; }
+        private HashSet<int> Emotes { get; } = new HashSet<int>();
 
         /// <summary>
         /// Adds an emote to the player emote inventory
@@ -231,29 +235,30 @@ namespace Uchu.World
         /// Whether this player belongs to the paradox faction
         /// </summary>
         public bool IsVentureLeague => HasFaction(FactionFlags.Venture);
-        
+
         /// <summary>
         /// Adds or removes a flag from the player based on the <c>state</c>
         /// </summary>
         /// <param name="flagId">The id of the flag to change</param>
         /// <param name="state"><c>true</c> if the flag should be added, <c>false</c> if the flag should be removed</param>
-        public async Task SetFlagAsync(int flagId, bool state)
+        /// <param name="silent">Whether mission progress and user flag updates are sent</param>
+        public async Task SetFlagAsync(int flagId, bool state, bool silent = false)
         {
-            if (GameObject is Player player)
+            if (state)
             {
-                if (state)
-                {
-                    if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
-                        await missionInventory.FlagAsync(flagId);
+                if (!silent && GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                    await missionInventory.FlagAsync(flagId);
 
-                    if (!GetFlag(flagId))
-                        Flags.Add(flagId);
-                }
-                else if (GetFlag(flagId))
-                {
-                    Flags.Remove(flagId);
-                }
+                if (!GetFlag(flagId))
+                    Flags.Add(flagId);
+            }
+            else if (GetFlag(flagId))
+            {
+                Flags.Remove(flagId);
+            }
 
+            if (!silent && GameObject is Player player)
+            {
                 player.Message(new NotifyClientFlagChangeMessage
                 {
                     Associate = player,

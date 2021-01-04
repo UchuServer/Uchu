@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
+using IronPython.Modules;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -14,7 +15,7 @@ namespace Uchu.World
         public Item()
         {
             OnConsumed = new Event();
-            Listen(OnDestroyed, () => Inventory.RemoveItem(this));
+            Listen(OnDestroyed, () => Inventory?.RemoveItem(this));
         }
 
         /// <summary>
@@ -61,10 +62,7 @@ namespace Uchu.World
             );
 
             if (itemTemplate == default || itemRegistryEntry == default)
-            {
-                Logger.Error($"New item [{lot}] is not a valid item");
                 return null;
-            }
 
             // If no object Id is provided (for example for a NPC), generate a random one
             objectId = objectId == default ? ObjectId.Standalone : objectId;
@@ -116,6 +114,11 @@ namespace Uchu.World
         public bool IsPackage { get; private set; }
         public bool IsConsumable { get; private set; }
         public Item RootItem { get; private set; }
+        
+        /// <summary>
+        /// The inventory this item belongs to, can be null, signifying that this is a skeleton item that other
+        /// items may be based on
+        /// </summary>
         public Inventory Inventory { get; private set; }
 
         /// <summary>
@@ -256,7 +259,7 @@ namespace Uchu.World
         /// <param name="count">The amount of items that have been added</param>
         private void MessageAddItem(uint count)
         {
-            if (Owner is Player player)
+            if (Owner is Player player && Inventory != null)
             {
                 player.Message(new AddItemToInventoryMessage
                 {
@@ -279,7 +282,7 @@ namespace Uchu.World
         /// <param name="count">The amount of items that have been removed</param>
         private void MessageRemoveItem(uint count)
         {
-            if (Owner is Player player)
+            if (Owner is Player player && Inventory != null)
             {
                 player.Message(new RemoveItemToInventoryMessage
                 {
