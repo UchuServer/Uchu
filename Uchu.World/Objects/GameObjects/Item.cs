@@ -105,14 +105,50 @@ namespace Uchu.World
             return instance;
         }
 
+        /// <summary>
+        /// The CdClient item component that contains extra meta information about this item
+        /// </summary>
         public ItemComponent ItemComponent { get; private set; }
+        
+        /// <summary>
+        /// Event calls if the player consumes the item, 
+        /// </summary>
         public Event OnConsumed { get; }
+        
+        /// <summary>
+        /// GameObject that owns this item
+        /// </summary>
         public GameObject Owner { get; private set; }
+        
+        /// <summary>
+        /// The amount this item carries
+        /// </summary>
         public uint Count { get; private set; }
+        
+        /// <summary>
+        /// If this item is equipped
+        /// </summary>
         public bool IsEquipped { get; set; }
+        
+        /// <summary>
+        /// If this item is bound, e.g. it cannot be directly traded or sold, determined by the CdClient
+        /// </summary>
         public bool IsBound { get; private set; }
+        
+        /// <summary>
+        /// If this item is a package, for example a brick bag
+        /// </summary>
         public bool IsPackage { get; private set; }
+        
+        /// <summary>
+        /// If this item can be consumed
+        /// </summary>
         public bool IsConsumable { get; private set; }
+        
+        /// <summary>
+        /// An optional parent item this item is bound to, for example the trial faction gear proxy item that a trial
+        /// faction gear item would belong to
+        /// </summary>
         public Item RootItem { get; private set; }
         
         /// <summary>
@@ -169,8 +205,8 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Uses a consumable item, removing that item from inventory and adding the yield produced by that item
-        /// to the inventory
+        /// Uses a package item, like a brick bag, removing that item from inventory and adding the yield produced by
+        /// that item to the inventory
         /// </summary>
         public async Task UseNonEquipmentItem()
         {
@@ -210,16 +246,32 @@ namespace Uchu.World
                 await inventory.RemoveLotAsync(Lot, 1);
         }
 
+        /// <summary>
+        /// Increments the count of this item, if not silent also notifies the player
+        /// </summary>
+        /// <param name="amount">the amount to increment the count with</param>
+        /// <param name="silent">whether to not notify the player</param>
         public async Task IncrementCountAsync(uint amount, bool silent = false)
         {
             await SetCountAsync(Count + amount, silent);
         }
 
+        /// <summary>
+        /// Decrements the count of this item, if not silent also notifies the player
+        /// </summary>
+        /// <param name="amount">the amount to decrement the count with</param>
+        /// <param name="silent">whether to not notify the player</param>
         public async Task DecrementCountAsync(uint amount, bool silent = false)
         {
             await SetCountAsync(Count - amount, silent);
         }
 
+        /// <summary>
+        /// Sets the count of this item, preferred over updating <see cref="Count"/> directly as this also handles
+        /// unequipping, player messaging and destroying of the item
+        /// </summary>
+        /// <param name="count">the count to set <see cref="Count"/> to</param>
+        /// <param name="silent">whether to not notify the player</param>
         private async Task SetCountAsync(uint count, bool silent = false)
         {
             if (!silent && count >= Count)
@@ -239,7 +291,7 @@ namespace Uchu.World
             if (IsEquipped)
                 await UnEquipAsync();
 
-            // Disassemble item.
+            // Disassemble item
             if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
                 && Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
@@ -251,6 +303,32 @@ namespace Uchu.World
             }
 
             Destroy(this);
+        }
+
+        /// <summary>
+        /// Messages the player of the creation of this item, should only be sent once
+        /// </summary>
+        /// <remarks>
+        /// If an item is already created, you can update its count with <see cref="IncrementCountAsync"/> or
+        /// <see cref="DecrementCountAsync"/>.
+        /// </remarks>
+        public void MessageCreation()
+        {
+            if (Owner is Player player && Inventory != null)
+            {
+                player.Message(new AddItemToInventoryMessage
+                {
+                    Associate = player,
+                    Item = this,
+                    ItemLot = Lot,
+                    Delta = Count,
+                    Slot = (int) Slot,
+                    InventoryType = (int) Inventory.InventoryType,
+                    ShowFlyingLoot = true,
+                    TotalItems = Count,
+                    ExtraInfo = Settings
+                });
+            }
         }
 
         /// <summary>

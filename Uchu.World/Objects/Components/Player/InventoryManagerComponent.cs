@@ -292,14 +292,12 @@ namespace Uchu.World
                 while (itemSkeleton.Count > 0)
                 {
                     var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count);
-                    
-                    // TODO: Add method to instantiate from other item?
-                    
                     var item = await Item.Instantiate(clientContext, itemSkeleton.Owner, itemSkeleton.Lot, inventory, 
                         toAdd, extraInfo: itemSkeleton.Settings);
+                    
                     Start(item);
                     
-                    await item.IncrementCountAsync(toAdd);
+                    item.MessageCreation();
                     await itemSkeleton.DecrementCountAsync(toAdd);
                 }
             }
