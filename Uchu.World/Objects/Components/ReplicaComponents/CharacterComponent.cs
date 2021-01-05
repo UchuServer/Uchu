@@ -208,34 +208,7 @@ namespace Uchu.World
         /// <param name="flagId">The flag to find for the player</param>
         /// <returns><c>true</c> or <c>false</c> based on whether the player has the flag or not</returns>
         public bool GetFlag(int flagId) => Flags.Contains(flagId);
-
-        /// <summary>
-        /// Whether a player has a certain faction or not
-        /// </summary>
-        /// <param name="factionFlagId">The flag Id to look up for the player</param>
-        /// <returns>True if the player has a certain faction</returns>
-        public bool HasFaction(FactionFlags factionFlagId) => GetFlag((int) factionFlagId);
-
-        /// <summary>
-        /// Whether this character belongs to the sentinel faction
-        /// </summary>
-        public bool IsSentinel => HasFaction(FactionFlags.Sentinel);
         
-        /// <summary>
-        /// Whether this character belongs to the assembly faction
-        /// </summary>
-        public bool IsAssembly => HasFaction(FactionFlags.Assembly);
-        
-        /// <summary>
-        /// Whether this player belongs to the paradox faction
-        /// </summary>
-        public bool IsParadox => HasFaction(FactionFlags.Paradox);
-        
-        /// <summary>
-        /// Whether this player belongs to the paradox faction
-        /// </summary>
-        public bool IsVentureLeague => HasFaction(FactionFlags.Venture);
-
         /// <summary>
         /// Adds or removes a flag from the player based on the <c>state</c>
         /// </summary>
@@ -267,7 +240,34 @@ namespace Uchu.World
                 });
             }
         }
+
+        /// <summary>
+        /// Whether a player has a certain faction or not
+        /// </summary>
+        /// <param name="factionFlagId">The flag Id to look up for the player</param>
+        /// <returns>True if the player has a certain faction</returns>
+        public bool HasFaction(FactionFlags factionFlagId) => GetFlag((int) factionFlagId);
+
+        /// <summary>
+        /// Whether this character belongs to the sentinel faction
+        /// </summary>
+        public bool IsSentinel => HasFaction(FactionFlags.Sentinel);
         
+        /// <summary>
+        /// Whether this character belongs to the assembly faction
+        /// </summary>
+        public bool IsAssembly => HasFaction(FactionFlags.Assembly);
+        
+        /// <summary>
+        /// Whether this player belongs to the paradox faction
+        /// </summary>
+        public bool IsParadox => HasFaction(FactionFlags.Paradox);
+        
+        /// <summary>
+        /// Whether this player belongs to the paradox faction
+        /// </summary>
+        public bool IsVentureLeague => HasFaction(FactionFlags.Venture);
+
         #endregion flags
         
         #region currency

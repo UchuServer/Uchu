@@ -266,7 +266,11 @@ namespace Uchu.World
             }
 
             // Some items have no stack size, like bricks
-            var stackSize = itemSkeleton.ItemComponent.StackSize ?? int.MaxValue;
+            var stackSize = itemSkeleton.ItemComponent.StackSize ?? 1;
+            if (stackSize == default) 
+                stackSize = int.MaxValue;
+            
+            var totalAdded = 0L;
 
             // Acquire the lock for a single lot to update the lot in the inventory
             var lotLock = GetLotLock(itemSkeleton.Lot);
@@ -283,6 +287,8 @@ namespace Uchu.World
                     await item.IncrementCountAsync(toAdd);
                     await itemSkeleton.DecrementCountAsync(toAdd, true);
 
+                    totalAdded += toAdd;
+
                     // Exit if no new stacks are required to hold the lot
                     if (itemSkeleton.Count <= 0)
                         return;
@@ -292,6 +298,8 @@ namespace Uchu.World
                 while (itemSkeleton.Count > 0)
                 {
                     var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count);
+                    
+                    // TODO: Could be optimized further by being able to clone an Item and simply setting the inventory
                     var item = await Item.Instantiate(clientContext, itemSkeleton.Owner, itemSkeleton.Lot, inventory, 
                         toAdd, extraInfo: itemSkeleton.Settings);
                     
@@ -299,26 +307,28 @@ namespace Uchu.World
                     
                     item.MessageCreation();
                     await itemSkeleton.DecrementCountAsync(toAdd);
+
+                    totalAdded += toAdd;
                 }
             }
             finally
             {
                 lotLock.Release();
-            }
-            
-            // Complete all the collectible tasks for this game object
-            if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
-            {
-                for (var i = 0; i < itemSkeleton.Count; i++)
+                
+                // Complete all the collectible tasks for this game object
+                if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                 {
-                    await missionInventory.ObtainItemAsync(lot);
+                    for (var i = 0; i < totalAdded; i++)
+                    {
+                        await missionInventory.ObtainItemAsync(lot);
+                    }
                 }
+                
+                var _ = Task.Run(() =>
+                {
+                    OnLotAdded.Invoke(lot, (uint)totalAdded);
+                });
             }
-            
-            var _ = Task.Run(() =>
-            {
-                OnLotAdded.Invoke(lot, itemSkeleton.Count);
-            });
         }
 
         /// <summary>
