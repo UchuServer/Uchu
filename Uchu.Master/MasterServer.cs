@@ -163,7 +163,7 @@ namespace Uchu.Master
 
             if (hostAuthentication)
             {
-                await StartInstanceAsync(ServerType.Authentication, 21836);
+                await StartInstanceAsync(ServerType.Authentication, Config.Networking.AuthenticationPort);
             }
 
             if (hostCharacter)
