@@ -11,7 +11,7 @@ namespace Uchu.StandardScripts.AvantGardens
     {
         public override Task LoadAsync()
         {
-            Listen(Zone.OnObject, async obj =>
+            Listen(Zone.OnObject, obj =>
             {
                 if (!(obj is AuthoredGameObject gameObject)) return;
                 
@@ -34,7 +34,10 @@ namespace Uchu.StandardScripts.AvantGardens
 
                 var smashable = selected.GetComponent<DestructibleComponent>();
 
-                await smashable.SmashAsync(gameObject, gameObject.Author as Player);
+                Task.Run(async () =>
+                {
+                    await smashable.SmashAsync(gameObject, gameObject.Author as Player);
+                });
             });
             
             return Task.CompletedTask;
