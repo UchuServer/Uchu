@@ -345,11 +345,11 @@ namespace Uchu.World
                     Item = this,
                     ItemLot = Lot,
                     Delta = count - Count,
-                    Slot = (int) Slot,
-                    InventoryType = (int) Inventory.InventoryType,
-                    ShowFlyingLoot = count != default,
                     TotalItems = count,
-                    ExtraInfo = Settings
+                    InventoryType = (int) Inventory.InventoryType,
+                    ExtraInfo = Settings,
+                    Slot = (int) Slot,
+                    ShowFlyingLoot = count != default
                 });
             }
         }
@@ -362,20 +362,22 @@ namespace Uchu.World
         {
             if (Owner is Player player && Inventory != null)
             {
-                player.Message(new RemoveItemToInventoryMessage
+                var message = new RemoveItemToInventoryMessage
                 {
                     Associate = player,
+                    Item = this,
+                    Delta = (uint) Math.Abs((int) count - Count),
+                    TotalItems = count,
+                    InventoryType = Inventory.InventoryType,
+                    ExtraInfo = null,
+                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
                     Confirmed = true,
                     DeleteItem = true,
                     OutSuccess = false,
-                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
-                    InventoryType = Inventory.InventoryType,
-                    ExtraInfo = Settings,
-                    ForceDeletion = true,
-                    Item = this,
-                    Delta = (uint) Math.Abs(count - Count),
-                    TotalItems = count
-                });
+                    ForceDeletion = true
+                };
+                
+                player.Message(message);
             }
         }
     }

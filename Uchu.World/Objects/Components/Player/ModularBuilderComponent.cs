@@ -32,16 +32,15 @@ namespace Uchu.World
 
         public async Task StartBuildingAsync(StartBuildingWithItemMessage message)
         {
-            if (!(GameObject is Player player)) return;
+            if (!(GameObject is Player player))
+                return;
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-            
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
 
             await thinkingHat.EquipAsync(true);
             
             IsBuilding = true;
-            
             BasePlate = message.Associate;
             
             player.Message(new StartArrangingWithItemMessage
@@ -90,9 +89,10 @@ namespace Uchu.World
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
-            foreach (var module in models)
+            // Remove all the items that were used for building this module
+            foreach (var lot in models)
             {
-                await inventory.RemoveLotAsync(module, 1, InventoryType.TemporaryModels);
+                await inventory.RemoveLotAsync(lot, 1, InventoryType.TemporaryModels);
             }
 
             var model = new LegoDataDictionary
@@ -129,7 +129,8 @@ namespace Uchu.World
 
         public async Task ConfirmFinish()
         {
-            if (!(GameObject is Player player)) return;
+            if (!(GameObject is Player player))
+                return;
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
@@ -145,7 +146,6 @@ namespace Uchu.World
             }
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
-
             await thinkingHat.UnEquipAsync();
             
             player.Message(new FinishArrangingWithItemMessage

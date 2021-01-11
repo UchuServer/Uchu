@@ -396,18 +396,16 @@ namespace Uchu.World
         /// <param name="zoneId">The zone id to travel to</param>
         public void SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId)
         {
-            LastZone = zoneId;
-
+            // Don't redirect the user to a world they're already in
             if (UchuServer.Port == serverInformation.Port)
-            {
-                Message(new ServerRedirectionPacket
-                {
-                    Port = (ushort) serverInformation.Port,
-                    Address = UchuServer.Host
-                });
-            }
+                return;
             
-            // TODO: Save?
+            LastZone = zoneId;
+            Message(new ServerRedirectionPacket
+            {
+                Port = (ushort) serverInformation.Port,
+                Address = UchuServer.Host
+            });
         }
         
         /// <summary>

@@ -244,19 +244,19 @@ namespace Uchu.World
             if (!HandleFactionToken(ref lot))
                 return;
             
-            // First create an unmanaged skeleton of this item. Updating stacks will be handled later on
-            var itemSkeleton = await Item.Instantiate(clientContext, GameObject, lot, default, count, 
-                extraInfo: settings);
+            var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
+                r => r.Id == lot && r.Componenttype == 11
+            );
             
-            if (itemSkeleton == null)
-                return;
+            var itemComponent = await clientContext.ItemComponentTable.FirstAsync(
+                i => i.Id == itemRegistryEntry.Componentid);
             
-            if (itemSkeleton.ItemComponent.ItemType == default)
-                throw new InvalidOperationException("Could not add item: cannot determine inventory type.");
+            if (itemComponent.ItemType == default)
+                throw new InvalidOperationException("Could not add lot with invalid item type.");
 
             inventoryType = inventoryType != default 
                 ? inventoryType 
-                : ((ItemType) itemSkeleton.ItemComponent.ItemType).GetInventoryType();
+                : ((ItemType) itemComponent.ItemType).GetInventoryType();
             
             // Get the proper inventory for this game object, if it has no inventory of that type yet, create it
             if (!_inventories.TryGetValue(inventoryType, out var inventory))
@@ -266,14 +266,15 @@ namespace Uchu.World
             }
 
             // Some items have no stack size, like bricks
-            var stackSize = itemSkeleton.ItemComponent.StackSize ?? 1;
+            var stackSize = itemComponent.StackSize ?? 1;
             if (stackSize == default) 
                 stackSize = int.MaxValue;
             
             var totalAdded = 0L;
+            var totalToAdd = count;
 
             // Acquire the lock for a single lot to update the lot in the inventory
-            var lotLock = GetLotLock(itemSkeleton.Lot);
+            var lotLock = GetLotLock(lot);
             await lotLock.WaitAsync();
 
             try
@@ -281,33 +282,30 @@ namespace Uchu.World
                 // Fill all old stacks
                 foreach (var item in inventory.Items.Where(i => i.Lot == lot && i.Count < stackSize))
                 {
-                    var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count, 
-                        (int) (stackSize - item.Count));
+                    var toAdd = (uint) Min(stackSize, (int) totalToAdd, (int) (stackSize - item.Count));
 
                     await item.IncrementCountAsync(toAdd);
-                    await itemSkeleton.DecrementCountAsync(toAdd, true);
-
+                    
+                    totalToAdd -= toAdd;
                     totalAdded += toAdd;
 
                     // Exit if no new stacks are required to hold the lot
-                    if (itemSkeleton.Count <= 0)
+                    if (totalToAdd <= 0)
                         return;
                 }
                 
                 // Create new stacks
-                while (itemSkeleton.Count > 0)
+                while (totalToAdd > 0)
                 {
-                    var toAdd = (uint) Min(stackSize, (int) itemSkeleton.Count);
+                    var toAdd = (uint) Min(stackSize, (int) totalToAdd);
                     
-                    // TODO: Could be optimized further by being able to clone an Item and simply setting the inventory
-                    var item = await Item.Instantiate(clientContext, itemSkeleton.Owner, itemSkeleton.Lot, inventory, 
-                        toAdd, extraInfo: itemSkeleton.Settings);
+                    var item = await Item.Instantiate(clientContext, GameObject, lot, inventory, toAdd,
+                        extraInfo: settings);
                     
                     Start(item);
-                    
                     item.MessageCreation();
-                    await itemSkeleton.DecrementCountAsync(toAdd);
 
+                    totalToAdd -= toAdd;
                     totalAdded += toAdd;
                 }
             }
@@ -396,22 +394,22 @@ namespace Uchu.World
         {
             await using var clientContext = new CdClientContext();
             
-            if (item?.Settings != null)
-            {
-                if (count != 1 || item.Count != 1)
-                {
-                    Logger.Error($"Invalid special item {item}");
-                    return;
-                }
-                
-                Destroy(item);
-                await AddLotAsync(clientContext, item.Lot, count, item.Settings, destination);
-                
-                return;
-            }
+            // if (item?.Settings != null)
+            // {
+            //     if (count != 1 || item.Count != 1)
+            //     {
+            //         Logger.Error($"Invalid special item {item}");
+            //         return;
+            //     }
+            //     
+            //     Destroy(item);
+            //     await AddLotAsync(clientContext, item.Lot, count, item.Settings, destination);
+            //     
+            //     return;
+            // }
             
             await RemoveLotAsync(item?.Lot ?? lot, count, source, silent);
-            await AddLotAsync(clientContext, item?.Lot ?? lot, count, inventoryType: destination);
+            await AddLotAsync(clientContext, item?.Lot ?? lot, count, item?.Settings, destination);
         }
         
         #endregion methods
