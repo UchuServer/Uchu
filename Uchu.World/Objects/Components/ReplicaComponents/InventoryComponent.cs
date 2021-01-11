@@ -162,9 +162,9 @@ namespace Uchu.World
                 return;
             }
             
-            await OnEquipped.InvokeAsync(item);
             await EquipAsync(item);
             GameObject.Serialize(GameObject);
+            await OnEquipped.InvokeAsync(item);
         }
         
         /// <summary>

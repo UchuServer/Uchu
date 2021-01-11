@@ -6,10 +6,11 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Objects.Components;
 
 namespace Uchu.World
 {
-    public class CharacterComponent : ReplicaComponent
+    public class CharacterComponent : ReplicaComponent, ISavableComponent
     {
         public CharacterComponent()
         {
@@ -95,6 +96,91 @@ namespace Uchu.World
             Name = character.Name;
         }
 
+        /// <summary>
+        /// Saves the contents of this component to the database
+        /// </summary>
+        /// <param name="uchuContext">The context to save to</param>
+        public async Task SaveAsync(UchuContext uchuContext)
+        {
+            var character = await uchuContext.Characters
+                .Include(c => c.Flags)
+                .Include(c => c.UnlockedEmotes)
+                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+            
+            if (character == default)
+                return;
+
+            character.Currency = Currency;
+            character.UniverseScore = UniverseScore;
+            character.Level = Level;
+            character.BaseHealth = BaseHealth;
+            character.BaseImagination = BaseImagination;
+            character.HairColor = HairColor;
+            character.HairStyle = HairStyle;
+            character.ShirtColor = ShirtColor;
+            character.PantsColor = PantsColor;
+            character.EyebrowStyle = EyebrowStyle;
+            character.EyeStyle = EyeStyle;
+            character.MouthStyle = MouthStyle;
+            character.TotalCurrencyCollected = TotalCurrencyCollected;
+            character.TotalBricksCollected = TotalBricksCollected;
+            character.TotalSmashablesSmashed = TotalSmashablesSmashed;
+            character.TotalQuickBuildsCompleted = TotalQuickBuildsCompleted;
+            character.TotalEnemiesSmashed = TotalEnemiesSmashed;
+            character.TotalRocketsUsed = TotalRocketsUsed;
+            character.TotalMissionsCompleted = TotalMissionsCompleted;
+            character.TotalPetsTamed = TotalPetsTamed;
+            character.TotalImaginationPowerUpsCollected = TotalImaginationPowerUpsCollected;
+            character.TotalLifePowerUpsCollected = TotalLifePowerUpsCollected;
+            character.TotalArmorPowerUpsCollected = TotalArmorPowerUpsCollected;
+            character.TotalDistanceTraveled = TotalDistanceTraveled;
+            character.TotalSuicides = TotalSuicides;
+            character.TotalDamageTaken = TotalDamageTaken;
+            character.TotalDamageHealed = TotalDamageHealed;
+            character.TotalArmorRepaired = TotalArmorRepaired;
+            character.TotalImaginationRestored = TotalImaginationRestored;
+            character.TotalImaginationUsed = TotalImaginationUsed;
+            character.TotalDistanceDriven = TotalDistanceDriven;
+            character.TotalTimeAirborne = TotalTimeAirborne;
+            character.TotalRacingImaginationPowerUpsCollected = TotalRacingImaginationPowerUpsCollected;
+            character.TotalRacingImaginationCratesSmashed = TotalRacingImaginationCratesSmashed;
+            character.TotalRacecarBoostsActivated = TotalRacecarBoostsActivated;
+            character.TotalRacecarWrecks = TotalRacecarWrecks;
+            character.TotalRacingSmashablesSmashed = TotalRacingSmashablesSmashed;
+            character.TotalRacesFinished = TotalRacesFinished;
+            character.TotalFirstPlaceFinishes = TotalFirstPlaceFinishes;
+            character.LastActivity = LastActivity;
+            character.FreeToPlay = FreeToPlay;
+            character.LandingByRocket = LandingByRocket;
+            character.Rocket = Rocket;
+            character.LaunchedRocketFrom = LaunchedRocketFrom;
+            character.InventorySize = InventorySize;
+            character.Lh = Lh;
+            character.Rh = Rh;
+            character.Name = Name;
+
+            // Save all newly unlocked emotes
+            foreach (var newlyUnlockedEmoteId in Emotes.Where(emoteId => 
+                character.UnlockedEmotes.All(emote => emote.EmoteId != emoteId)))
+            {
+                character.UnlockedEmotes.Add(new UnlockedEmote
+                {
+                    EmoteId = newlyUnlockedEmoteId
+                });
+            }
+            
+            // Save all newly unlocked flags
+            foreach (var newlyUnlockedFlag in Flags.Where(flagId => 
+                character.Flags.All(flag => flag.Flag != flagId)))
+            {
+                character.Flags.Add(new CharacterFlag()
+                {
+                    Flag = newlyUnlockedFlag
+                });
+            }
+
+            await uchuContext.SaveChangesAsync();
+        }
 
         public GameObject VehicleObject { get; set; }
         
@@ -336,7 +422,7 @@ namespace Uchu.World
                     player.Message(new ModifyLegoScoreMessage
                     {
                         Associate = player,
-                        Score = oldScore - UniverseScore
+                        Score = UniverseScore - oldScore
                     });
                 }
                 

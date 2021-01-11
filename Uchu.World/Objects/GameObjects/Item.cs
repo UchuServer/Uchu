@@ -58,11 +58,11 @@ namespace Uchu.World
             );
 
             var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
-                r => r.Id == lot && r.Componenttype == 11
+                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
             );
 
             if (itemTemplate == default || itemRegistryEntry == default)
-                return null;
+                throw new InvalidOperationException($"Could not find item template or item registry for lot {lot}");
 
             // If no object Id is provided (for example for a NPC), generate a random one
             objectId = objectId == default ? ObjectId.Standalone : objectId;

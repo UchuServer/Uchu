@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects.Components;
 using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
@@ -15,7 +16,7 @@ namespace Uchu.World
     /// Component responsible for missions and achievements a player has. Used for starting, updating and completing
     /// missions and achievements.
     /// </summary>
-    public class MissionInventoryComponent : Component
+    public class MissionInventoryComponent : Component, ISavableComponent
     {
         public MissionInventoryComponent()
         {

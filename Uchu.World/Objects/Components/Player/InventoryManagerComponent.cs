@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Objects.Components;
 
 namespace Uchu.World
 {
@@ -17,7 +18,7 @@ namespace Uchu.World
     /// Component that handles the actual inventories of a game object, not to be confused with <see cref="InventoryComponent"/>
     /// which represents the equipped inventory of a game object.
     /// </summary>
-    public class InventoryManagerComponent : Component
+    public class InventoryManagerComponent : Component, ISavableComponent
     {
         #region properties
         
@@ -245,7 +246,7 @@ namespace Uchu.World
                 return;
             
             var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
-                r => r.Id == lot && r.Componenttype == 11
+                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
             );
             
             var itemComponent = await clientContext.ItemComponentTable.FirstAsync(
