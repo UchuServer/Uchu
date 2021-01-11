@@ -98,6 +98,62 @@ namespace Uchu.World
         }
         #endregion constructors
         
+        #region saving
+
+        public async Task SaveAsync(UchuContext context)
+        {
+            if (!GameObject.TryGetComponent<CharacterComponent>(out var characterComponent))
+                return;
+
+            var character = await context.Characters.Where(c => c.Id == characterComponent.CharacterId)
+                .Include(c => c.Items)
+                .FirstAsync();
+
+            var itemsToSave = Items;
+            
+            // Delete old items
+            foreach (var savedItemToDelete in character.Items.Where(savedItem => 
+                itemsToSave.All(itemToSave => itemToSave.Id != savedItem.Id)))
+            {
+                character.Items.Remove(savedItemToDelete);
+            }
+            
+            // Update existing items and add new items
+            foreach (var itemToSave in itemsToSave)
+            {
+                var savedItem = character.Items.FirstOrDefault(i => i.Id == itemToSave.Id); 
+                if (savedItem == default)
+                {
+                    character.Items.Add(new InventoryItem
+                    {
+                        Id = itemToSave.Id,
+                        Lot = itemToSave.Lot,
+                        Slot = (int) itemToSave.Slot,
+                        Count = itemToSave.Count,
+                        IsBound = itemToSave.IsBound,
+                        IsEquipped = itemToSave.IsEquipped,
+                        InventoryType = (int) (itemToSave.Inventory?.InventoryType ?? InventoryType.None),
+                        ExtraInfo = itemToSave.Settings.ToString(),
+                        ParentId = itemToSave.RootItem?.Id ?? ObjectId.Invalid
+                    });
+                }
+                else
+                {
+                    savedItem.Slot = (int) itemToSave.Slot;
+                    savedItem.Count = itemToSave.Count;
+                    savedItem.IsBound = itemToSave.IsBound;
+                    savedItem.IsEquipped = itemToSave.IsEquipped;
+                    savedItem.InventoryType = (int) (itemToSave.Inventory?.InventoryType ?? InventoryType.None);
+                    savedItem.ExtraInfo = itemToSave.Settings.ToString();
+                    savedItem.ParentId = itemToSave.RootItem?.Id ?? ObjectId.Invalid;
+                }
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        #endregion saving
+        
         #region operators
         
         public Inventory this[InventoryType inventoryType] => _inventories.TryGetValue(inventoryType, out var inventory) 
@@ -248,12 +304,15 @@ namespace Uchu.World
             var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
                 r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
             );
+
+            if (itemRegistryEntry == default)
+                return;
             
             var itemComponent = await clientContext.ItemComponentTable.FirstAsync(
                 i => i.Id == itemRegistryEntry.Componentid);
             
-            if (itemComponent.ItemType == default)
-                throw new InvalidOperationException("Could not add lot with invalid item type.");
+            if (itemComponent?.ItemType == default)
+                return;
 
             inventoryType = inventoryType != default 
                 ? inventoryType 
@@ -314,18 +373,18 @@ namespace Uchu.World
             {
                 lotLock.Release();
                 
-                // Complete all the collectible tasks for this game object
-                if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                var _ = Task.Run(async () =>
                 {
-                    for (var i = 0; i < totalAdded; i++)
+                    // Complete all the collectible tasks for this game object
+                    if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                     {
-                        await missionInventory.ObtainItemAsync(lot);
+                        for (var i = 0; i < totalAdded; i++)
+                        {
+                            await missionInventory.ObtainItemAsync(lot);
+                        }
                     }
-                }
                 
-                var _ = Task.Run(() =>
-                {
-                    OnLotAdded.Invoke(lot, (uint)totalAdded);
+                    await OnLotAdded.InvokeAsync(lot, (uint)totalAdded);
                 });
             }
         }

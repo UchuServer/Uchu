@@ -61,6 +61,25 @@ namespace Uchu.World
                     destructibleComponent.OnResurrect.AddListener(() => { GetComponent<DestroyableComponent>().Imagination = 6; });
                 }
                 
+                // Save the player every minute
+                Zone.Update(this, () =>
+                {
+                    // Done in the background as this takes long
+                    Task.Run(async () =>
+                    {
+                        Logger.Debug($"Saving {this}.");
+                        var timer = new Stopwatch();
+                        timer.Start();
+                        
+                        await GetComponent<SaveComponent>().SaveAsync();
+
+                        timer.Stop();
+                        Logger.Debug($"Saved {this} in {timer.Elapsed:m\\:ss\\.fff}.");
+                    });
+                    
+                    return Task.CompletedTask;
+                }, 20 * 60);
+                
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
                 {
@@ -163,6 +182,8 @@ namespace Uchu.World
             Listen(physics.OnEnter, OnEnterCollision);
             Listen(physics.OnCollision, OnStayCollision);
             Listen(physics.OnLeave, OnLeaveCollision);
+
+            AddComponent<SaveComponent>();
             
             // Register player game object in zone
             Start(this);

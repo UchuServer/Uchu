@@ -105,7 +105,7 @@ namespace Uchu.World
             var character = await uchuContext.Characters
                 .Include(c => c.Flags)
                 .Include(c => c.UnlockedEmotes)
-                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+                .FirstOrDefaultAsync(c => c.Id == CharacterId);
             
             if (character == default)
                 return;
@@ -173,7 +173,7 @@ namespace Uchu.World
             foreach (var newlyUnlockedFlag in Flags.Where(flagId => 
                 character.Flags.All(flag => flag.Flag != flagId)))
             {
-                character.Flags.Add(new CharacterFlag()
+                character.Flags.Add(new CharacterFlag
                 {
                     Flag = newlyUnlockedFlag
                 });

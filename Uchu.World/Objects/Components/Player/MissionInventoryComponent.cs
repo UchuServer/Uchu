@@ -16,7 +16,7 @@ namespace Uchu.World
     /// Component responsible for missions and achievements a player has. Used for starting, updating and completing
     /// missions and achievements.
     /// </summary>
-    public class MissionInventoryComponent : Component, ISavableComponent
+    public class MissionInventoryComponent : Component
     {
         public MissionInventoryComponent()
         {

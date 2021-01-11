@@ -62,7 +62,7 @@ namespace Uchu.World
             );
 
             if (itemTemplate == default || itemRegistryEntry == default)
-                throw new InvalidOperationException($"Could not find item template or item registry for lot {lot}");
+                return null;
 
             // If no object Id is provided (for example for a NPC), generate a random one
             objectId = objectId == default ? ObjectId.Standalone : objectId;
