@@ -23,6 +23,8 @@ namespace Uchu.StandardScripts.AvantGardens
                 var gameObject = trigger.GameObject;
                 
                 if (!gameObject.TryGetComponent<SwitchComponent>(out var switchComponent)) continue;
+                
+                gameObject.TryGetComponent<QuickBuildComponent>(out var buttonQuickBuild);
 
                 var fanId = trigger.Trigger.Events[0].Commands[0].TargetName;
 
@@ -65,6 +67,8 @@ namespace Uchu.StandardScripts.AvantGardens
                     foreach (var player in Zone.Players)
                     {
                         if (player?.Transform == default) return Task.CompletedTask;
+                        
+                        if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return Task.CompletedTask;
                         
                         if (!(Vector3.Distance(player.Transform.Position, gameObject.Transform.Position) < 2)) continue;
 
