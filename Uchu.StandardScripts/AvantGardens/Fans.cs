@@ -100,10 +100,10 @@ namespace Uchu.StandardScripts.AvantGardens
             {
                 // Nothing is found here
                 if (!fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) continue;
-                
-                Serialize(fanObject);
                     
                 physicsComponent.IsEffectActive = false;
+                
+                Serialize(fanObject);
             }
 
             GetGroup($"{group}fx")[0].Animate("trigger", true);
