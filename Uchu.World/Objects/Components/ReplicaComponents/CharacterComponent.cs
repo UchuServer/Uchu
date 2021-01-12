@@ -27,7 +27,7 @@ namespace Uchu.World
             var character = await uchuContext.Characters
                 .Include(c => c.Flags)
                 .Include(c => c.UnlockedEmotes)
-                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+                .FirstOrDefaultAsync(c => c.Id == CharacterId);
             
             if (character == default)
                 return;
@@ -37,6 +37,7 @@ namespace Uchu.World
             Level = character.Level;
             BaseHealth = character.BaseHealth;
             BaseImagination = character.BaseImagination;
+            LastZone = character.LastZone == 0 ? 1000 : character.LastZone;
             
             // Cache all character emotes
             foreach (var unlockedEmote in character.UnlockedEmotes)
@@ -95,7 +96,7 @@ namespace Uchu.World
             Rh = character.Rh;
             Name = character.Name;
         }
-
+        
         /// <summary>
         /// Saves the contents of this component to the database
         /// </summary>
@@ -115,6 +116,7 @@ namespace Uchu.World
             character.Level = Level;
             character.BaseHealth = BaseHealth;
             character.BaseImagination = BaseImagination;
+            character.LastZone = LastZone;
             character.HairColor = HairColor;
             character.HairStyle = HairStyle;
             character.ShirtColor = ShirtColor;
@@ -180,8 +182,11 @@ namespace Uchu.World
             }
 
             await uchuContext.SaveChangesAsync();
+            
+            Logger.Debug($"Saved character for {GameObject}");
         }
-
+        
+        public int LastZone { get; set; }
         public GameObject VehicleObject { get; set; }
         
         public bool IsPvP { get; set; }

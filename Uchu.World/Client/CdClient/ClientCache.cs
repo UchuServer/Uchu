@@ -30,7 +30,7 @@ namespace Uchu.World.Client
                 .ToArray()
                 .Select(async m =>
                 {
-                    var instance = new MissionInstance(m.Id ?? 0);
+                    var instance = new MissionInstance(m.Id ?? 0, default);
                     await instance.LoadAsync(cdContext);
                     return instance;
                 }).ToList();

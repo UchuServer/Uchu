@@ -47,11 +47,11 @@ namespace Uchu.World
 
             Listen(OnStart, () =>
             {
-                Connection.Disconnected += reason =>
+                Connection.Disconnected += async reason =>
                 {
+                    await GetComponent<SaveComponent>().SaveAsync();
                     Connection = default;
                     Destroy(this);
-                    return Task.CompletedTask;
                 };
 
                 Listen(OnPositionUpdate, UpdatePhysics);
@@ -127,10 +127,6 @@ namespace Uchu.World
 
             Connection = connection;
             Name = character.Name;
-
-            LastZone = (ZoneId) character.LastZone;
-            if (LastZone == 0)
-                LastZone = 1000;
 
             // Setup layers
             Layer = StandardLayer.Player;
@@ -222,12 +218,7 @@ namespace Uchu.World
             get => ObjectName;
             set => ObjectName = value;
         }
-        
-        /// <summary>
-        /// The last zone this player has visited
-        /// </summary>
-        public ZoneId LastZone { get; private set; }
-        
+
         /// <summary>
         /// Whether this player is banned or not
         /// </summary>
@@ -411,25 +402,6 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Sends a player to a different world, updating the zone id 
-        /// </summary>
-        /// <param name="serverInformation">Information regarding the server to connect to</param>
-        /// <param name="zoneId">The zone id to travel to</param>
-        public void SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId)
-        {
-            // Don't redirect the user to a world they're already in
-            if (UchuServer.Port == serverInformation.Port)
-                return;
-            
-            LastZone = zoneId;
-            Message(new ServerRedirectionPacket
-            {
-                Port = (ushort) serverInformation.Port,
-                Address = UchuServer.Host
-            });
-        }
-        
-        /// <summary>
         /// Tries to send a player to a different zone
         /// </summary>
         /// <param name="zoneId"></param>
@@ -455,8 +427,29 @@ namespace Uchu.World
             }
             
             Logger.Debug($"Yielded {server?.Port.ToString() ?? "<void>"} for {zoneId}");
-            SendToWorldAsync(server, zoneId);
+            await SendToWorldAsync(server, zoneId);
             return true;
+        }
+        
+        /// <summary>
+        /// Sends a player to a different world, updating the zone id 
+        /// </summary>
+        /// <param name="serverInformation">Information regarding the server to connect to</param>
+        /// <param name="zoneId">The zone id to travel to</param>
+        public async Task SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId)
+        {
+            // Don't redirect the user to a world they're already in
+            if (UchuServer.Port == serverInformation.Port)
+                return;
+            
+            GetComponent<CharacterComponent>().LastZone = zoneId;
+            await GetComponent<SaveComponent>().SaveAsync();
+            
+            Message(new ServerRedirectionPacket
+            {
+                Port = (ushort) serverInformation.Port,
+                Address = UchuServer.Host
+            });
         }
 
         /// <summary>

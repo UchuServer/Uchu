@@ -150,6 +150,8 @@ namespace Uchu.World
             }
 
             await context.SaveChangesAsync();
+            
+            Logger.Debug($"Saved inventory for {GameObject}");
         }
 
         #endregion saving
@@ -454,6 +456,7 @@ namespace Uchu.World
         {
             await using var clientContext = new CdClientContext();
             
+            // TODO: Find out why this was here
             // if (item?.Settings != null)
             // {
             //     if (count != 1 || item.Count != 1)

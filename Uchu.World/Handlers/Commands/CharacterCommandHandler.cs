@@ -1060,13 +1060,7 @@ namespace Uchu.World.Handlers.Commands
                 if (args.Count > 0 && !args.Contains(mission.MissionId))
                     continue;
 
-                try
-                {
-                    await mission.CompleteAsync(context);
-                }
-                catch
-                {
-                }
+                await mission.CompleteAsync();
             }
 
             return "Completed missions";

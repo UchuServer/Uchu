@@ -29,15 +29,12 @@ namespace Uchu.World
             await _lock.WaitAsync();
             try
             {
-                var saveTasks = GameObject.GetAllComponents()
-                    .Where(c => c is ISavableComponent)
-                    .Select(sc => Task.Run(async () =>
-                    {
-                        await using var uchuContext = new UchuContext();
-                        await ((ISavableComponent) sc).SaveAsync(uchuContext);
-                    }));
-                
-                await Task.WhenAll(saveTasks);
+                await using var uchuContext = new UchuContext();
+                foreach(var savableComponent in GameObject
+                    .GetAllComponents().Where(c => c is ISavableComponent))
+                {
+                    await ((ISavableComponent) savableComponent).SaveAsync(uchuContext);
+                }
             }
             finally
             {
