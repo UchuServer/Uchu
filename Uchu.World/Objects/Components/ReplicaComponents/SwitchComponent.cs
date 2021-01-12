@@ -84,6 +84,9 @@ namespace Uchu.World
                 {
                     if (!(other.GameObject is Player player)) return;
 
+                    this.GameObject.TryGetComponent<QuickBuildComponent>(out var buttonQuickBuild);
+                    if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return;
+                    
                     await Activate(player);
                 });
             });
@@ -100,10 +103,7 @@ namespace Uchu.World
         public async Task Activate(Player player)
         {
             if (State) return;
-            
-            this.GameObject.TryGetComponent<QuickBuildComponent>(out var buttonQuickBuild);
-            if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return;
-            
+
             Activator = player;
             
             State = true;
