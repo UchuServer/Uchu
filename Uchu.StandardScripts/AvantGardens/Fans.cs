@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
-using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 using DestructibleComponent = Uchu.World.DestructibleComponent;
@@ -99,6 +98,41 @@ namespace Uchu.StandardScripts.AvantGardens
                     
                     UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
                 });
+
+                Listen(Zone.OnPlayerLoad, player =>
+                {
+                    Listen(player.OnReadyForUpdatesEvent, message =>
+                    {
+                        if (message.GameObject != fanObject) return;
+                        
+                        if (GetFanState(switchComponent,fanDestructibleComponent))
+                        {
+                            player.Message(new PlayFXEffectMessage
+                            {
+                                Associate = fanObject,
+                                EffectId = 495,
+                                EffectType = "fanOn",
+                                Name = "fanOn",
+                            });
+                            
+                            player.Message(new PlayAnimationMessage
+                            {
+                                Associate = fanObject,
+                                AnimationsId = "fan-on",
+                                PlayImmediate = true,
+                            });
+                        }
+                        else
+                        {
+                            player.Message(new PlayAnimationMessage
+                            {
+                                Associate = fanObject,
+                                AnimationsId = "fan-off",
+                                PlayImmediate = true,
+                            });
+                        }
+                    });
+                });
             }
             
             return Task.CompletedTask;
@@ -125,9 +159,14 @@ namespace Uchu.StandardScripts.AvantGardens
             return groupId == $"{fanId};" && gameObject.ToString().Contains("Fan");
         }
 
+        private bool GetFanState(SwitchComponent switchComponent, DestructibleComponent fanDestructibleComponent)
+        {
+            return !switchComponent.State && fanDestructibleComponent.Alive;
+        }
+        
         private void UpdateFanState(GameObject fanObject, SwitchComponent switchComponent, DestructibleComponent fanDestructibleComponent)
         {
-            if (switchComponent.State || !fanDestructibleComponent.Alive)
+            if (!GetFanState(switchComponent,fanDestructibleComponent))
             {
                 ActivateFx(fanObject);
             }
