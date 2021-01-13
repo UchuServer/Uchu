@@ -51,6 +51,15 @@ namespace Uchu.StandardScripts.AvantGardens
                     UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
                 });
                 
+                Listen(gameObject.OnInteract, player =>
+                {
+                    if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return;
+                    
+                    switchComponent.Activate(player);
+                    
+                    Serialize(gameObject);
+                });
+                
                 Listen(Zone.OnTick, () =>
                 {
                     if (switchComponent.State) return;
