@@ -129,10 +129,7 @@ namespace Uchu.World
         /// <param name="context">The database context to save to</param>
         public async Task SaveAsync(UchuContext context)
         {
-            if (!GameObject.TryGetComponent<CharacterComponent>(out var characterComponent))
-                return;
-
-            var character = await context.Characters.Where(c => c.Id == characterComponent.CharacterId)
+            var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
                 .ThenInclude(t => t.Values)

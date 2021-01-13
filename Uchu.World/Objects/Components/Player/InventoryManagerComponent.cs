@@ -102,18 +102,16 @@ namespace Uchu.World
 
         public async Task SaveAsync(UchuContext context)
         {
-            if (!GameObject.TryGetComponent<CharacterComponent>(out var characterComponent))
-                return;
-
-            var character = await context.Characters.Where(c => c.Id == characterComponent.CharacterId)
+            var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Items)
                 .FirstAsync();
 
             var itemsToSave = Items;
             
             // Delete old items
-            foreach (var savedItemToDelete in character.Items.Where(savedItem => 
-                itemsToSave.All(itemToSave => itemToSave.Id != savedItem.Id)))
+            var savedItemsToDelete = character.Items.Where(savedItem => itemsToSave
+                .All(itemToSave => itemToSave.Id != savedItem.Id)).ToArray();
+            foreach (var savedItemToDelete in savedItemsToDelete)
             {
                 character.Items.Remove(savedItemToDelete);
             }
@@ -457,19 +455,19 @@ namespace Uchu.World
             await using var clientContext = new CdClientContext();
             
             // TODO: Find out why this was here
-            // if (item?.Settings != null)
-            // {
-            //     if (count != 1 || item.Count != 1)
-            //     {
-            //         Logger.Error($"Invalid special item {item}");
-            //         return;
-            //     }
-            //     
-            //     Destroy(item);
-            //     await AddLotAsync(clientContext, item.Lot, count, item.Settings, destination);
-            //     
-            //     return;
-            // }
+            if (item?.Settings != null)
+            {
+                if (count != 1 || item.Count != 1)
+                {
+                    Logger.Error($"Invalid special item {item}");
+                    return;
+                }
+                
+                Destroy(item);
+                await AddLotAsync(clientContext, item.Lot, count, item.Settings, destination);
+                
+                return;
+            }
             
             await RemoveLotAsync(item?.Lot ?? lot, count, source, silent);
             await AddLotAsync(clientContext, item?.Lot ?? lot, count, item?.Settings, destination);

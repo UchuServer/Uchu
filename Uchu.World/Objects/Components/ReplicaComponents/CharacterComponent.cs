@@ -27,7 +27,7 @@ namespace Uchu.World
             var character = await uchuContext.Characters
                 .Include(c => c.Flags)
                 .Include(c => c.UnlockedEmotes)
-                .FirstOrDefaultAsync(c => c.Id == CharacterId);
+                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
             
             if (character == default)
                 return;
@@ -101,12 +101,12 @@ namespace Uchu.World
         /// Saves the contents of this component to the database
         /// </summary>
         /// <param name="uchuContext">The context to save to</param>
-        public async Task SaveAsync(UchuContext uchuContext)
+        public async Task SaveAsync(UchuContext context)
         {
-            var character = await uchuContext.Characters
+            var character = await context.Characters
                 .Include(c => c.Flags)
                 .Include(c => c.UnlockedEmotes)
-                .FirstOrDefaultAsync(c => c.Id == CharacterId);
+                .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
             
             if (character == default)
                 return;
@@ -181,7 +181,7 @@ namespace Uchu.World
                 });
             }
 
-            await uchuContext.SaveChangesAsync();
+            await context.SaveChangesAsync();
             
             Logger.Debug($"Saved character for {GameObject}");
         }
