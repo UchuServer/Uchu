@@ -17,13 +17,10 @@ namespace Uchu.Core.Handlers
             {
                 Logger.Warning($"Handshake attempted with client of Game version: {packet.GameVersion}");
             }
-            
-            // TODO: Use resource / setting
-            const int port = 21836;
 
             connection.Send(new HandshakePacket
             {
-                ConnectionType = UchuServer.Port == port ? 0x01u : 0x04u,
+                ConnectionType = UchuServer.Port == UchuServer.Config.Networking.AuthenticationPort ? 0x01u : 0x04u,
                 Address = UchuServer.Host
             });
         }

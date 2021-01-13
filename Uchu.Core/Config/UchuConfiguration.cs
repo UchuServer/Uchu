@@ -159,6 +159,11 @@ namespace Uchu.Core.Config
         [XmlElement] public string Hostname { get; set; } = "";
         
         /// <summary>
+        /// The port to run the authentication server at
+        /// </summary>
+        [XmlElement] public int AuthenticationPort { get; set; } = 21836;
+        
+        /// <summary>
         /// The port to run the character server at
         /// </summary>
         [XmlElement] public int CharacterPort { get; set; } = 2002;

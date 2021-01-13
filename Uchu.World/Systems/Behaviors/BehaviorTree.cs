@@ -320,7 +320,7 @@ namespace Uchu.World.Systems.Behaviors
             CastType = SkillCastType.Default;
             target ??= associate;
 
-            var context = new NpcExecutionContext(target, skillId, syncId, calculatingPosition);
+            var context = new NpcExecutionContext(associate, skillId, syncId, calculatingPosition);
             if (!SkillRoots.TryGetValue(skillId, out var root))
             {
                 Logger.Debug($"Failed to find skill: {skillId}");

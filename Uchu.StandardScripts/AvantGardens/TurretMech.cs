@@ -47,7 +47,14 @@ namespace Uchu.StandardScripts.AvantGardens
                 {
                     await Task.Delay(20000);
 
-                    await quickBuild.GetComponent<DestructibleComponent>().SmashAsync(quickBuild, lootOwner);
+                    Zone.BroadcastMessage(new DieMessage
+                    {
+                        Associate = quickBuild,
+                        DeathType = "",
+                        Killer = smasher,
+                        SpawnLoot = false,
+                        LootOwner = quickBuild
+                    });
 
                     Destroy(quickBuild);
                 });

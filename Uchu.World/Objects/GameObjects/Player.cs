@@ -41,6 +41,7 @@ namespace Uchu.World
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
+            OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
@@ -192,6 +193,8 @@ namespace Uchu.World
         #region properties
 
         public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+        
+        public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
 
