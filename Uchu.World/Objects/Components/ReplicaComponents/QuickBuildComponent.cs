@@ -21,12 +21,24 @@ namespace Uchu.World
         private PauseTimer _timer;
         private Timer _imaginationTimer;
         private int _taken;
+        private RebuildState _state = RebuildState.Open;
         
         private long StartTime { get; set; }
         
         private long Pause { get; set; }
 
-        public RebuildState State { get; set; } = RebuildState.Open;
+        public RebuildState State
+        {
+            get
+            {
+                return _state;
+            }
+            set
+            {
+                _state = value;
+                OnStateChange.Invoke(State);
+            }
+        }
 
         public bool Success { get; set; }
 
@@ -43,9 +55,13 @@ namespace Uchu.World
         public GameObject Activator { get; set; }
 
         public override ComponentId Id => ComponentId.QuickBuildComponent;
+        
+        public Event<RebuildState> OnStateChange { get; }
 
         protected QuickBuildComponent()
         {
+            OnStateChange = new Event<RebuildState>();
+            
             Listen(OnStart, async () =>
             {
                 if (GameObject.Settings.TryGetValue("rebuild_activators", out var rebuildActivators))
