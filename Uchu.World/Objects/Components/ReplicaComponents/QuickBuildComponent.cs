@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -368,6 +369,8 @@ namespace Uchu.World
             if (!Participants.Contains(player)) Participants.Add(player);
 
             GameObject.Serialize(GameObject);
+            
+            GameObject.PlayFX("BrickFadeUpVisCompleteEffect","create",507);
 
             // Update any mission task that required this quickbuild.
             Task.Run(async () =>
