@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 
 namespace Uchu.World
 {
@@ -87,8 +88,18 @@ namespace Uchu.World
                     if (item.Itemid == null) continue;
 
                     lootOwner.SendChatMessage("Dropping activity item!!!");
+
+                    Lot lot = item.Itemid ?? 0;
+                    if (lot == Lot.FactionTokenProxy)
+                    {
+                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Assembly)) lot = Lot.AssemblyFactionToken;
+                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Paradox)) lot = Lot.ParadoxFactionToken;
+                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Sentinel)) lot = Lot.SentinelFactionToken;
+                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Venture)) lot = Lot.VentureFactionToken;
+                        if (item.Itemid == lot) return;
+                    }
                     
-                    var drop = InstancingUtilities.InstantiateLoot(item.Itemid ?? 0, lootOwner, GameObject, Transform.Position);
+                    var drop = InstancingUtilities.InstantiateLoot(lot, lootOwner, GameObject, Transform.Position);
                     
                     Start(drop);
                 }
