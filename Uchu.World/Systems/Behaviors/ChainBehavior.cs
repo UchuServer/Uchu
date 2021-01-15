@@ -22,21 +22,21 @@ namespace Uchu.World.Systems.Behaviors
 
         private BehaviorBase[] Behaviors { get; set; }
 
-        public override async Task BuildAsync()
+        public override void Build()
         {
             var actions = GetParameters();
             var behaviors = new List<BehaviorBase>();
 
             for (var i = 0; i < actions.Length; i++)
             {
-                var behavior = await GetBehavior($"behavior {i + 1}");
+                var behavior = GetBehavior($"behavior {i + 1}");
                 if (behavior == default) continue;
                 behaviors.Add(behavior);
             }
 
             Behaviors = behaviors.ToArray();
             
-            var delay = await GetParameter("chain_delay");
+            var delay = GetParameter("chain_delay");
             if (delay.Value == null) return;
 
             Delay = (int) delay.Value;

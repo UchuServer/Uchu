@@ -29,13 +29,13 @@ namespace Uchu.World.Systems.Behaviors
         private float MaxDistance { get; set; }
         private float TrackRadius { get; set; }
 
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            ProjectileCount = await GetParameter<int>("spread_count");
-            ProjectileLot = await GetParameter<int>("LOT_ID");
-            ProjectileSpeed = await GetParameter<float>("projectile_speed");
-            MaxDistance = await GetParameter<float>("max_distance");
-            TrackRadius = await GetParameter<float>("track_radius"); // ???
+            ProjectileCount = GetParameter<int>("spread_count");
+            ProjectileLot = GetParameter<int>("LOT_ID");
+            ProjectileSpeed = GetParameter<float>("projectile_speed");
+            MaxDistance = GetParameter<float>("max_distance");
+            TrackRadius = GetParameter<float>("track_radius"); // ???
         }
 
         protected override void DeserializeStart(BitReader reader, ProjectileAttackBehaviorExecutionParameters parameters)

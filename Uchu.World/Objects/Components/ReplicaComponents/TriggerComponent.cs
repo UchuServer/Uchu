@@ -202,11 +202,11 @@ namespace Uchu.World
 
             var skillComponent = GameObject.AddComponent<SkillComponent>();
 
-            var _ = Task.Run(async () =>
+            var _ = Task.Run(() =>
             {
                 try
                 {
-                    await skillComponent.CalculateSkillAsync(skill, target);
+                    skillComponent.CalculateSkill(skill, target);
                 }
                 catch (Exception e)
                 {

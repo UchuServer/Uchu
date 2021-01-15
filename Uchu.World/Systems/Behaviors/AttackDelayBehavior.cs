@@ -27,17 +27,17 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase Action { get; set; }
         private int Intervals { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
-            Intervals = await GetParameter<int>("num_intervals");
+            Action = GetBehavior("action");
+            Intervals = GetParameter<int>("num_intervals");
 
             if (Intervals == 0)
             {
                 Intervals = 1;
             }
             
-            var delay = await GetParameter("delay");
+            var delay = GetParameter("delay");
             if (delay.Value == null) return;
 
             Delay = (int) (delay.Value * 1000);

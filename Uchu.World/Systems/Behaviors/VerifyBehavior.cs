@@ -19,9 +19,9 @@ namespace Uchu.World.Systems.Behaviors
 
         private BehaviorBase Action { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
+            Action = GetBehavior("action");
         }
 
         protected override void ExecuteStart(VerifyBehaviorExecutionParameters parameters)

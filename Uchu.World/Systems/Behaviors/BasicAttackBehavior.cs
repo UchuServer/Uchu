@@ -44,11 +44,11 @@ namespace Uchu.World.Systems.Behaviors
         /// Fills the success, min and max damage parameters
         /// </summary>
         /// <returns></returns>
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            OnSuccess = await GetBehavior("on_success");
-            MinDamage = await GetParameter<uint>("min damage");
-            MaxDamage = await GetParameter<uint>("max damage");
+            OnSuccess = GetBehavior("on_success");
+            MinDamage = GetParameter<uint>("min damage");
+            MaxDamage = GetParameter<uint>("max damage");
         }
 
         protected override void DeserializeStart(BitReader reader, BasicAttackBehaviorExecutionParameters parameters)

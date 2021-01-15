@@ -28,15 +28,15 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase JetpackBehavior { get; set; }
         private BehaviorBase MovingBehavior { get; set; }
 
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            GroundBehavior = await GetBehavior("ground_action");
-            JumpBehavior = await GetBehavior("jump_action");
-            FallingBehavior = await GetBehavior("falling_action");
-            DoubleJumpBehavior = await GetBehavior("double_jump_action");
-            AirBehavior = await GetBehavior("air_action");
-            JetpackBehavior = await GetBehavior("ground_action");
-            MovingBehavior = await GetBehavior("moving_action");
+            GroundBehavior = GetBehavior("ground_action");
+            JumpBehavior = GetBehavior("jump_action");
+            FallingBehavior = GetBehavior("falling_action");
+            DoubleJumpBehavior = GetBehavior("double_jump_action");
+            AirBehavior = GetBehavior("air_action");
+            JetpackBehavior = GetBehavior("ground_action");
+            MovingBehavior = GetBehavior("moving_action");
         }
 
         protected override void DeserializeStart(BitReader reader, MovementSwitchBehaviorExecutionParameters parameters)

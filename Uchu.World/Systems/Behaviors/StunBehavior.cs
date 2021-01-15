@@ -8,9 +8,9 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorTemplateId Id => BehaviorTemplateId.Stun;
         private int StunCaster { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            StunCaster = await GetParameter<int>("stun_caster");
+            StunCaster = GetParameter<int>("stun_caster");
         }
 
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,

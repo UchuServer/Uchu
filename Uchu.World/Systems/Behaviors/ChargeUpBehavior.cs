@@ -22,10 +22,10 @@ namespace Uchu.World.Systems.Behaviors
 
         private float MaxDuration { get; set; }
 
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
-            MaxDuration = await GetParameter<float>("max_duration");
+            Action = GetBehavior("action");
+            MaxDuration = GetParameter<float>("max_duration");
         }
 
         protected override void DeserializeStart(BitReader reader, ChargeUpBehaviorExecutionParameters parameters)

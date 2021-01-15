@@ -19,10 +19,10 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase Action { get; set; }
         private int UseTarget { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
-            UseTarget = await GetParameter<int>("use_target");
+            Action = GetBehavior("action");
+            UseTarget = GetParameter<int>("use_target");
         }
 
         protected override void DeserializeStart(BitReader reader, StartBehaviorExecutionParameters parameters)

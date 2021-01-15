@@ -35,7 +35,7 @@ namespace Uchu.World
             if (distance > RadiusCheck)
                 return;
             
-            var tree = await BehaviorTree.FromLotAsync(Lot);
+            var tree = BehaviorTree.FromLot(Lot);
             await using var stream = new MemoryStream(data);
             var reader = new BitReader(stream);
 
@@ -63,7 +63,7 @@ namespace Uchu.World
             if (distance > RadiusCheck)
                 return;
             
-            var tree = await BehaviorTree.FromLotAsync(Lot);
+            var tree = BehaviorTree.FromLot(Lot);
             await using var stream = new MemoryStream();
             var writer = new BitWriter(stream);
 

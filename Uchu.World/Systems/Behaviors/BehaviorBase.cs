@@ -197,9 +197,9 @@ namespace Uchu.World.Systems.Behaviors
         /// Builds the behavior by fetching all parameters from the database
         /// </summary>
         /// <returns></returns>
-        public virtual Task BuildAsync()
+        public virtual void Build()
         {
-            return Task.CompletedTask;
+            
         }
 
         /// <summary>
@@ -207,12 +207,12 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="name">The name of the behavior to find</param>
         /// <returns>The behavior base that corresponds to this behavior</returns>
-        protected async Task<BehaviorBase> GetBehavior(string name)
+        protected BehaviorBase GetBehavior(string name)
         {
-            var action = await GetParameter(name);
+            var action = GetParameter(name);
             if (action?.Value == null || action.Value.Value.Equals(0))
                 return new EmptyBehavior();
-            return await BuildBranch((int) action.Value);
+            return BuildBranch((int) action.Value);
         }
 
         /// <summary>
@@ -220,11 +220,11 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="id">The id of the behavior to find</param>
         /// <returns>The behavior base that corresponds to this behavior</returns>
-        protected static async Task<BehaviorBase> GetBehavior(uint id)
+        protected static BehaviorBase GetBehavior(uint id)
         {
             if (id == default)
                 return new EmptyBehavior();
-            return await BuildBranch((int) id);
+            return BuildBranch((int) id);
         }
 
         /// <summary>
@@ -232,14 +232,12 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="behaviorId">The behavior to build</param>
         /// <returns>The built behavior base for the given id</returns>
-        private static async Task<BehaviorBase> BuildBranch(int behaviorId)
+        private static BehaviorBase BuildBranch(int behaviorId)
         {
             var cachedBehavior = Cache.ToArray().FirstOrDefault(c => c.BehaviorId == behaviorId);
             if (cachedBehavior != default) return cachedBehavior;
-            
-            await using var ctx = new CdClientContext();
 
-            var behavior = await ctx.BehaviorTemplateTable.FirstOrDefaultAsync(
+            var behavior = ClientCache.BehaviorTemplateTable.FirstOrDefault(
                 t => t.BehaviorID == behaviorId
             );
             
@@ -262,7 +260,7 @@ namespace Uchu.World.Systems.Behaviors
             
             Cache.Add(instance);
 
-            await instance.BuildAsync();
+            instance.Build();
 
             return instance;
         }
@@ -272,10 +270,9 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="name">The parameter name to find</param>
         /// <returns>The behavior parameter from the database</returns>
-        protected async Task<BehaviorParameter> GetParameter(string name)
+        protected BehaviorParameter GetParameter(string name)
         {
-            await using var cdClient = new CdClientContext();
-            return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
+            return ClientCache.BehaviorParameterTable.FirstOrDefault(p =>
                 p.BehaviorID == BehaviorId && p.ParameterID == name
             );
         }
@@ -285,9 +282,9 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="name">The parameter name to find</param>
         /// <returns>The behavior parameter from the database as struct</returns>
-        protected async Task<TS> GetParameter<TS>(string name) where TS : struct
+        protected TS GetParameter<TS>(string name) where TS : struct
         {
-            var param = await GetParameter(name);
+            var param = GetParameter(name);
 
             if (param == default)
                 return default;
@@ -311,10 +308,9 @@ namespace Uchu.World.Systems.Behaviors
         /// Returns the behavior template associated with this behavior from the database
         /// </summary>
         /// <returns>The behavior template associated with this behavior</returns>
-        public async Task<BehaviorTemplate> GetTemplate()
+        public BehaviorTemplate GetTemplate()
         {
-            await using var cdClient = new CdClientContext();
-            return await cdClient.BehaviorTemplateTable.FirstOrDefaultAsync(p =>
+            return ClientCache.BehaviorTemplateTable.FirstOrDefault(p =>
                 p.BehaviorID == BehaviorId
             );
         }

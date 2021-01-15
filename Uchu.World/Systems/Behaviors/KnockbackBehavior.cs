@@ -12,10 +12,10 @@ namespace Uchu.World.Systems.Behaviors
 
         private float Time { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Strength = await GetParameter<float>("strength");
-            Time = await GetParameter<int>("time_ms");
+            Strength = GetParameter<float>("strength");
+            Time = GetParameter<int>("time_ms");
         }
 
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,

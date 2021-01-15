@@ -26,11 +26,11 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase Action { get; set; }
         private int MaxTargets { get; set; }
         private float Radius { get; set; }
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
-            MaxTargets = await GetParameter<int>("max targets");
-            Radius = await GetParameter<float>("radius");
+            Action = GetBehavior("action");
+            MaxTargets = GetParameter<int>("max targets");
+            Radius = GetParameter<float>("radius");
         }
 
         protected override void DeserializeStart(BitReader reader, AreaOfEffectExecutionParameters parameters)

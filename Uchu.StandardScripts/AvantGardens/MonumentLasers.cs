@@ -60,7 +60,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     {
                         try
                         {
-                            await skillComponent.CalculateSkillAsync(163, other.GameObject);
+                            skillComponent.CalculateSkill(163, other.GameObject);
 
                             await Task.Delay(1500);
 

@@ -57,7 +57,7 @@ namespace Uchu.World
                     })
                     .ToArray();
 
-                await SetupStandardSkills();
+                SetupStandardSkills();
                 
                 if (!(GameObject is Player))
                     return;
@@ -75,7 +75,7 @@ namespace Uchu.World
         {
         }
 
-        private async Task SetupStandardSkills()
+        private void SetupStandardSkills()
         {
             foreach (var skillEntry in DefaultSkillSet)
             {
@@ -83,13 +83,13 @@ namespace Uchu.World
                 
                 if (skillEntry.Type != SkillCastType.OnSpawn) continue;
 
-                await CalculateSkillAsync((int) skillEntry.SkillId);
+                CalculateSkill((int) skillEntry.SkillId);
 
                 if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) continue;
 
-                Listen(destructibleComponent.OnResurrect, async () =>
+                Listen(destructibleComponent.OnResurrect, () =>
                 {
-                    await CalculateSkillAsync((int) skillEntry.SkillId);
+                    CalculateSkill((int) skillEntry.SkillId);
                 });
             }
         }
@@ -131,7 +131,7 @@ namespace Uchu.World
             
             RemoveSkill(slot);
 
-            await DismountSkill(item);
+            DismountSkill(item);
         }
 
         private async Task EquipSkill(Lot item)
@@ -148,7 +148,7 @@ namespace Uchu.World
 
             var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
             
-            var infos = await BehaviorTree.GetSkillsForObject(item);
+            var infos = BehaviorTree.GetSkillsForObject(item);
 
             var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
 
@@ -164,13 +164,13 @@ namespace Uchu.World
             if (item == default)
                 return;
             
-            var infos = await BehaviorTree.GetSkillsForObject(item);
+            var infos = BehaviorTree.GetSkillsForObject(item);
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
             
             if (onEquip == default)
                 return;
             
-            var tree = await BehaviorTree.FromLotAsync(item);
+            var tree = BehaviorTree.FromLot(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
             tree.Mount();
 
@@ -180,18 +180,18 @@ namespace Uchu.World
             }
         }
 
-        private async Task DismountSkill(Lot item)
+        private void DismountSkill(Lot item)
         {
             if (item == default)
                 return;
             
-            var infos = await BehaviorTree.GetSkillsForObject(item);
+            var infos = BehaviorTree.GetSkillsForObject(item);
             var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
 
             if (onEquip == default)
                 return;
             
-            var tree = await BehaviorTree.FromLotAsync(item);
+            var tree = BehaviorTree.FromLot(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
             tree.Dismantle();
         }
@@ -202,9 +202,9 @@ namespace Uchu.World
         /// <param name="skillId">The skill Id to serialize</param>
         /// <param name="precalculate">Precalculate the skill, exits execution but adds behavior to cache</param>
         /// <returns>The skill time in milliseconds</returns>
-        public async Task<float> CalculateSkillAsync(int skillId, bool precalculate = false)
+        public float CalculateSkill(int skillId, bool precalculate = false)
         {
-            var tree = await BehaviorTree.FromSkillAsync(skillId);
+            var tree = BehaviorTree.FromSkill(skillId);
             if (precalculate)
                 return 0;
 
@@ -231,9 +231,9 @@ namespace Uchu.World
             return context.SkillTime * 1000;
         }
 
-        public async Task<float> CalculateSkillAsync(int skillId, GameObject target)
+        public float CalculateSkill(int skillId, GameObject target)
         {
-            var tree = await BehaviorTree.FromSkillAsync(skillId);
+            var tree = BehaviorTree.FromSkill(skillId);
 
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
@@ -283,7 +283,7 @@ namespace Uchu.World
             var stream = new MemoryStream(message.Content);
             using (var reader = new BitReader(stream, leaveOpen: true))
             {
-                var tree = await BehaviorTree.FromSkillAsync(message.SkillId);
+                var tree = BehaviorTree.FromSkill(message.SkillId);
                 var context = tree.Deserialize(
                     GameObject,
                     reader,

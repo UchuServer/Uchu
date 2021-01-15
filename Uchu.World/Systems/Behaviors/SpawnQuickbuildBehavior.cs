@@ -19,21 +19,21 @@ namespace Uchu.World.Systems.Behaviors
         
         public BehaviorBase SpawnFailAction { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Lot = await GetParameter<int>("LOT_ID");
-            Distance = await GetParameter<float>("distance");
-            ObjectRadius = await GetParameter<float>("objectRadius");
+            Lot = GetParameter<int>("LOT_ID");
+            Distance = GetParameter<float>("distance");
+            ObjectRadius = GetParameter<float>("objectRadius");
             
             Offset = new Vector3
             {
-                X = await GetParameter<float>("offsetX"),
-                Y = await GetParameter<float>("offsetY"),
-                Z = await GetParameter<float>("offsetZ")
+                X = GetParameter<float>("offsetX"),
+                Y = GetParameter<float>("offsetY"),
+                Z = GetParameter<float>("offsetZ")
             };
 
-            RepositionPlayer = await GetParameter<float>("repositionPlayer");
-            SpawnFailAction = await GetBehavior("spawn_fail_action");
+            RepositionPlayer = GetParameter<float>("repositionPlayer");
+            SpawnFailAction = GetBehavior("spawn_fail_action");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

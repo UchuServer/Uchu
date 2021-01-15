@@ -8,9 +8,9 @@ namespace Uchu.World.Systems.Behaviors
 
         private int Imagination { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Imagination = await GetParameter<int>("imagination");
+            Imagination = GetParameter<int>("imagination");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

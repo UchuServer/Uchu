@@ -24,13 +24,13 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase ActionFalse { get; set; }
         private BehaviorBase ActionTrue { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
-            ActionFalse = await GetBehavior("action_false");
-            ActionTrue = await GetBehavior("action_true");
-            Imagination = await GetParameter<int>("imagination");
-            IsEnemyFaction = (await GetParameter("isEnemyFaction"))?.Value > 0;
+            Action = GetBehavior("action");
+            ActionFalse = GetBehavior("action_false");
+            ActionTrue = GetBehavior("action_true");
+            Imagination = GetParameter<int>("imagination");
+            IsEnemyFaction = (GetParameter("isEnemyFaction"))?.Value > 0;
         }
 
         protected override void DeserializeStart(BitReader reader, SwitchBehaviorExecutionParameters parameters)

@@ -12,13 +12,13 @@ namespace Uchu.World.Systems.Behaviors
         private BehaviorBase SpawnActionFail { get; set; }
         private int UpdatePositionWithParent { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Lot = await GetParameter<int>("LOT_ID");
-            Distance = await GetParameter<float>("distance");
-            ObjectRadius = await GetParameter<int>("objectRadius");
-            SpawnActionFail = await GetBehavior("spawn_fail_action");
-            UpdatePositionWithParent = await GetParameter<int>("updatePositionWithParent");
+            Lot = GetParameter<int>("LOT_ID");
+            Distance = GetParameter<float>("distance");
+            ObjectRadius = GetParameter<int>("objectRadius");
+            SpawnActionFail = GetBehavior("spawn_fail_action");
+            UpdatePositionWithParent = GetParameter<int>("updatePositionWithParent");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

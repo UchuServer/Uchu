@@ -26,11 +26,11 @@ namespace Uchu.World.Systems.Behaviors
 
         private BehaviorBase HitActionFaction { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            HitAction = await GetBehavior("hit_action");
-            HitActionEnemy = await GetBehavior("hit_action_enemy");
-            HitActionFaction = await GetBehavior("hit_action_faction");
+            HitAction = GetBehavior("hit_action");
+            HitActionEnemy = GetBehavior("hit_action_enemy");
+            HitActionFaction = GetBehavior("hit_action_faction");
         }
 
         protected override void DeserializeStart(BitReader reader, ForceMovementBehaviorExecutionParameters parameters)
@@ -43,10 +43,10 @@ namespace Uchu.World.Systems.Behaviors
                 ExecuteSync);
         }
 
-        protected override async void DeserializeSync(BitReader reader, ForceMovementBehaviorExecutionParameters parameters)
+        protected override void DeserializeSync(BitReader reader, ForceMovementBehaviorExecutionParameters parameters)
         {
             var actionId = reader.Read<uint>();
-            parameters.Action = await GetBehavior(actionId);
+            parameters.Action = GetBehavior(actionId);
             
             var targetId = reader.Read<ulong>();
             parameters.Context.Associate.Zone.TryGetGameObject((long) targetId, out var target);

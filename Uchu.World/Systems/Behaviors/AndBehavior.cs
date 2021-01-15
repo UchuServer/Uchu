@@ -20,14 +20,14 @@ namespace Uchu.World.Systems.Behaviors
         
         private BehaviorBase[] Behaviors { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
             var actions = GetParameters();
 
             Behaviors = new BehaviorBase[actions.Length];
             for (var i = 0; i < actions.Length; i++)
             {
-                Behaviors[i] = await GetBehavior($"behavior {i + 1}");
+                Behaviors[i] = GetBehavior($"behavior {i + 1}");
             }
         }
 

@@ -8,9 +8,9 @@ namespace Uchu.World.Systems.Behaviors
 
         private int Health { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Health = await GetParameter<int>("health");
+            Health = GetParameter<int>("health");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

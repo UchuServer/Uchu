@@ -6,9 +6,9 @@ namespace Uchu.World.Systems.Behaviors
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.SkillCastFailed;
         private int InnerEffectId { get; set; }
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            InnerEffectId = await GetParameter<int>("effect_id");
+            InnerEffectId = GetParameter<int>("effect_id");
         }
     }
 }

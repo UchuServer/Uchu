@@ -33,17 +33,17 @@ namespace Uchu.World.Systems.Behaviors
         private int MaxTargets { get; set; }
         private bool UsePickedTarget { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            CheckEnvironment = (await GetParameter("check_env"))?.Value > 0;
-            Blocked = await GetParameter("blocked action") != default;
+            CheckEnvironment = (GetParameter("check_env"))?.Value > 0;
+            Blocked = GetParameter("blocked action") != default;
 
-            ActionBehavior = await GetBehavior("action");
-            BlockedBehavior = await GetBehavior("blocked action");
-            MissBehavior = await GetBehavior("miss action");
+            ActionBehavior = GetBehavior("action");
+            BlockedBehavior = GetBehavior("blocked action");
+            MissBehavior = GetBehavior("miss action");
 
-            MaxTargets = await GetParameter<int>("max targets");
-            UsePickedTarget = await GetParameter<int>("use_picked_target") > 0;
+            MaxTargets = GetParameter<int>("max targets");
+            UsePickedTarget = GetParameter<int>("use_picked_target") > 0;
         }
 
         protected override void DeserializeStart(BitReader reader, TacArcBehaviorExecutionParameters parameters)

@@ -18,14 +18,14 @@ namespace Uchu.World.Systems.Behaviors
 
         private float Brain { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Life = await GetParameter<int>("life");
-            Armor = await GetParameter<int>("armor");
-            Imagination = await GetParameter<int>("imag");
-            RunSpeed = await GetParameter<int>("run_speed");
-            AttackSpeed = await GetParameter<int>("attack_speed");
-            Brain = await GetParameter<int>("brain");
+            Life = GetParameter<int>("life");
+            Armor = GetParameter<int>("armor");
+            Imagination = GetParameter<int>("imag");
+            RunSpeed = GetParameter<int>("run_speed");
+            AttackSpeed = GetParameter<int>("attack_speed");
+            Brain = GetParameter<int>("brain");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters behaviorExecutionParameters)

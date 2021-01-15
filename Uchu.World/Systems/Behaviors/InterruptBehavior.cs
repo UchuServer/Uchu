@@ -13,13 +13,13 @@ namespace Uchu.World.Systems.Behaviors
         private int InteruptAttack { get; set; }
         private int InteruptCharge { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            InterruptAttack = await GetParameter<int>("interrupt_attack");
-            InterruptBlock = await GetParameter<int>("interrupt_block");
-            InterruptCharge = await GetParameter<int>("interrupt_charge");
-            InteruptAttack = await GetParameter<int>("interupt_attack");
-            InteruptCharge = await GetParameter<int>("interupt_charge");
+            InterruptAttack = GetParameter<int>("interrupt_attack");
+            InterruptBlock = GetParameter<int>("interrupt_block");
+            InterruptCharge = GetParameter<int>("interrupt_charge");
+            InteruptAttack = GetParameter<int>("interupt_attack");
+            InteruptCharge = GetParameter<int>("interupt_charge");
         }
 
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,

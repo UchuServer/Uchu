@@ -21,12 +21,12 @@ namespace Uchu.World.Systems.Behaviors
         private float MaxRange { get; set; }
         private float SkillTime { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Behavior = await GetBehavior("behavior 1");
-            MinRange = await GetParameter<float>("min range");
-            MaxRange = await GetParameter<float>("max range");
-            SkillTime = await GetParameter<float>("npc skill time");
+            Behavior = GetBehavior("behavior 1");
+            MinRange = GetParameter<float>("min range");
+            MaxRange = GetParameter<float>("max range");
+            SkillTime = GetParameter<float>("npc skill time");
         }
 
         protected override void SerializeStart(BitWriter writer, NpcCombatSkillBehaviorExecutionParameters parameters)

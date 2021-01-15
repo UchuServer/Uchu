@@ -10,10 +10,10 @@ namespace Uchu.World.Systems.Behaviors
 
         private int UseTarget { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            StartAction = await GetBehavior("action");
-            UseTarget = await GetParameter<int>("use_target");
+            StartAction = GetBehavior("action");
+            UseTarget = GetParameter<int>("use_target");
         }
     }
 }

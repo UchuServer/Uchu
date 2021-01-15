@@ -20,11 +20,11 @@ namespace Uchu.World.Systems.Behaviors
 
         private int ActionDuration { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Action = await GetBehavior("action");
+            Action = GetBehavior("action");
 
-            var duration = await GetParameter("duration");
+            var duration = GetParameter("duration");
             if (duration.Value == null) return;
 
             ActionDuration = (int) duration.Value;

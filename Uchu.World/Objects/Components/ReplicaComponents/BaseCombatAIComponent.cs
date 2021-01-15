@@ -64,7 +64,7 @@ namespace Uchu.World
                         );
 
                         // Precalculate all skills to cache them
-                        await SkillComponent.CalculateSkillAsync((int) skillEntry.SkillId, true);
+                        SkillComponent.CalculateSkill((int) skillEntry.SkillId, true);
                         SkillEntries.Add(new NpcSkillEntry
                         {
                             SkillId = skillEntry.SkillId,
@@ -75,7 +75,7 @@ namespace Uchu.World
 
                     Zone.Update(GameObject, async delta =>
                     {
-                        await CalculateCombat(delta);
+                        CalculateCombat(delta);
                     }, 1);
                 });
             });
@@ -85,7 +85,7 @@ namespace Uchu.World
         /// Calculates the combat for an AI
         /// </summary>
         /// <param name="delta">Passed time in milliseconds since last tick</param>
-        private async Task CalculateCombat(float delta)
+        private void CalculateCombat(float delta)
         {
             if (!Enabled 
                 || !DestructibleComponent.Alive 
@@ -106,7 +106,7 @@ namespace Uchu.World
                     if (entry.Cooldown > 0 || AbilityDowntime)
                         continue;
 
-                    var time = await SkillComponent.CalculateSkillAsync((int) entry.SkillId);
+                    var time = SkillComponent.CalculateSkill((int) entry.SkillId);
                     if (time == 0)
                         continue;
 

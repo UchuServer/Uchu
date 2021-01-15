@@ -23,9 +23,9 @@ namespace Uchu.World.Systems.Behaviors
 
         private BehaviorBase GroundAction { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            GroundAction = await GetBehavior("ground_action");
+            GroundAction = GetBehavior("ground_action");
         }
 
         protected override void DeserializeStart(BitReader reader, AirMovementBehaviorExecutionParameters parameters)
@@ -34,10 +34,10 @@ namespace Uchu.World.Systems.Behaviors
             parameters.RegisterHandle<AirMovementBehaviorExecutionParameters>(parameters.Handle, DeserializeSync, ExecuteSync);
         }
 
-        protected override async void DeserializeSync(BitReader reader, AirMovementBehaviorExecutionParameters parameters)
+        protected override void DeserializeSync(BitReader reader, AirMovementBehaviorExecutionParameters parameters)
         {
             var behaviorId = reader.Read<uint>();
-            parameters.Action = await GetBehavior(behaviorId);
+            parameters.Action = GetBehavior(behaviorId);
 
             var targetId = reader.Read<ulong>();
             parameters.Context.Associate.Zone.TryGetGameObject((long)targetId,

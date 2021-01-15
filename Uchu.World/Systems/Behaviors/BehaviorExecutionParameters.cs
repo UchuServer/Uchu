@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Systems.Behaviors
@@ -99,13 +101,11 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="effectId">The effect to execute</param>
         /// <param name="target">The effect target</param>
         /// <param name="time">How long to run the effect in milliseconds</param>
-        public async void PlayFX(string type, int effectId, int time = 1000, GameObject target = default)
+        public void PlayFX(string type, int effectId, int time = 1000, GameObject target = default)
         {
             target ??= BranchContext.Target;
             
-            await using var ctx = new CdClientContext();
-
-            var fx = await ctx.BehaviorEffectTable.FirstOrDefaultAsync(
+            var fx = ClientCache.BehaviorEffectTable.FirstOrDefault(
                 e => e.EffectType == type && e.EffectID == effectId
             );
             

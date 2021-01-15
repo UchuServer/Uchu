@@ -8,9 +8,9 @@ namespace Uchu.World.Systems.Behaviors
 
         private int Armor { get; set; }
         
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            Armor = await GetParameter<int>("armor");
+            Armor = GetParameter<int>("armor");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

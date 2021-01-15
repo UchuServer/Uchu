@@ -25,20 +25,20 @@ namespace Uchu.World.Systems.Behaviors
         private float DistanceToTarget { get; set; }
         private Dictionary<BehaviorBase, float> Behaviors { get; set; }
 
-        public override async Task BuildAsync()
+        public override void Build()
         {
-            ChargeTime = await GetParameter<float>("charge_up");
-            DistanceToTarget = await GetParameter<float>("distance_to_target");
+            ChargeTime = GetParameter<float>("charge_up");
+            DistanceToTarget = GetParameter<float>("distance_to_target");
             Behaviors = new Dictionary<BehaviorBase, float>();
 
             var parameters = GetParameters();
             
             for (var index = 0; index < parameters.Length; index++)
             {
-                var behavior = await GetBehavior($"behavior {index + 1}");
+                var behavior = GetBehavior($"behavior {index + 1}");
                 if (behavior == default || behavior.Id == BehaviorTemplateId.Empty)
                     continue;
-                var value = await GetParameter<float>($"value {index + 1}");
+                var value = GetParameter<float>($"value {index + 1}");
                 Behaviors[behavior] = value;
             }
         }
