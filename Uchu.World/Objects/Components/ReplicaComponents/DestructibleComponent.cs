@@ -19,7 +19,7 @@ namespace Uchu.World
         /// <summary>
         ///     Warning: Should not be used as a definitive client state. Could be unreliable.
         /// </summary>
-        public bool Alive { get; private set; } = true;
+        public bool Alive { get; set; } = true;
 
         public float ResurrectTime { get; set; }
 

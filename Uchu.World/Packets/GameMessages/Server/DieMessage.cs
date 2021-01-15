@@ -7,23 +7,23 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.Die;
 
-        public bool ClientDeath { get; set; }
+        public bool ClientDeath { get; set; } = false;
 
         public bool SpawnLoot { get; set; } = true;
 
         public string DeathType { get; set; } = "";
 
-        public float DirectionRelativeAngleXz { get; set; }
+        public float DirectionRelativeAngleXz { get; set; } = 0.0f;
 
-        public float DirectionRelativeAngleY { get; set; }
+        public float DirectionRelativeAngleY { get; set; } = 0.0f;
 
-        public float DirectionRelativeForce { get; set; }
+        public float DirectionRelativeForce { get; set; } = 0.0f;
 
-        public int KillType { get; set; }
+        public int KillType { get; set; } = 0;
 
         public GameObject Killer { get; set; }
 
-        public GameObject LootOwner { get; set; }
+        public GameObject LootOwner { get; set; } = default;
 
         public override void SerializeMessage(BitWriter writer)
         {

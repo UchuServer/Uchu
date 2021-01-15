@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
+using DestructibleComponent = Uchu.World.DestructibleComponent;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
@@ -17,54 +18,56 @@ namespace Uchu.StandardScripts.AvantGardens
                 (19, 2),
                 (20, 1)
             };
-
+            
             foreach (var trigger in GetTriggers(ids))
             {
                 var gameObject = trigger.GameObject;
                 
                 if (!gameObject.TryGetComponent<SwitchComponent>(out var switchComponent)) continue;
+                
+                gameObject.TryGetComponent<QuickBuildComponent>(out var buttonQuickBuild);
 
                 var fanId = trigger.Trigger.Events[0].Commands[0].TargetName;
-
-                GameObject fanObject = default;
-
-                foreach (var zoneGameObject in Zone.GameObjects)
-                {
-                    //if (!zoneGameObject.TryGetComponent<LuaScriptComponent>(out _)) continue;
-                    if (!zoneGameObject.Settings.TryGetValue("groupID", out var groupObj)) continue;
-
-                    var groupId = (string) groupObj;
-
-                    if (groupId != $"{fanId};") continue;
-                    
-                    fanObject = zoneGameObject;
-                    
-                    break;
-                }
+                
+                var fanObject = GetFan(fanId);
+                
+                fanObject.TryGetComponent<DestructibleComponent>(out var fanDestructibleComponent);
+                
+                if (fanDestructibleComponent == default) continue;
                 
                 Listen(switchComponent.OnActivated, player =>
                 {
-                    ActivateFx(fanObject);
-                    
-                    return Task.CompletedTask;
+                    UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
                 });
                 
                 Listen(switchComponent.OnDeactivated, () =>
                 {
-                    DeactivateFx(fanObject);
-                    
-                    return Task.CompletedTask;
+                    UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
                 });
                 
-                ActivateFx(fanObject);
+                Listen(fanDestructibleComponent.OnSmashed, (_,__) =>
+                {
+                    UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
+                });
+                
+                Listen(gameObject.OnInteract, player =>
+                {
+                    if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return;
+                    
+                    switchComponent.Activate(player);
+                    
+                    Serialize(gameObject);
+                });
                 
                 Listen(Zone.OnTick, () =>
                 {
-                    if (switchComponent.State) return Task.CompletedTask;
+                    if (switchComponent.State) return;
                     
                     foreach (var player in Zone.Players)
                     {
-                        if (player?.Transform == default) return Task.CompletedTask;
+                        if (player?.Transform == default) return;
+                        
+                        if (buttonQuickBuild != default && buttonQuickBuild.State != RebuildState.Completed) return;
                         
                         if (!(Vector3.Distance(player.Transform.Position, gameObject.Transform.Position) < 2)) continue;
 
@@ -72,18 +75,109 @@ namespace Uchu.StandardScripts.AvantGardens
 
                         Serialize(gameObject);
                     }
+                });
+                
+                DeactivateFx(fanObject);
+
+                Listen(Zone.OnObject, (newObject) =>
+                {
+                    if (!(newObject is GameObject newFanObject)) return;
+
+                    if (!IsCorrectFan(newFanObject,fanId)) return;
+
+                    fanObject = newFanObject;
                     
-                    return Task.CompletedTask;
+                    fanObject.TryGetComponent<DestructibleComponent>(out fanDestructibleComponent);
+                
+                    if (fanDestructibleComponent == default) return;
+                    
+                    Listen(fanDestructibleComponent.OnSmashed, (_,__) =>
+                    {
+                        UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
+                    });
+                    
+                    UpdateFanState(fanObject,switchComponent,fanDestructibleComponent);
+                });
+
+                Listen(Zone.OnPlayerLoad, player =>
+                {
+                    Listen(player.OnReadyForUpdatesEvent, message =>
+                    {
+                        if (message.GameObject != fanObject) return;
+                        
+                        if (GetFanState(switchComponent,fanDestructibleComponent))
+                        {
+                            player.Message(new PlayFXEffectMessage
+                            {
+                                Associate = fanObject,
+                                EffectId = 495,
+                                EffectType = "fanOn",
+                                Name = "fanOn",
+                            });
+                            
+                            player.Message(new PlayAnimationMessage
+                            {
+                                Associate = fanObject,
+                                AnimationsId = "fan-on",
+                                PlayImmediate = true,
+                            });
+                        }
+                        else
+                        {
+                            player.Message(new PlayAnimationMessage
+                            {
+                                Associate = fanObject,
+                                AnimationsId = "fan-off",
+                                PlayImmediate = true,
+                            });
+                        }
+                    });
                 });
             }
             
             return Task.CompletedTask;
         }
 
+        private GameObject GetFan(string fanId)
+        {
+            foreach (var zoneGameObject in Zone.GameObjects)
+            {
+                if (!IsCorrectFan(zoneGameObject, fanId)) continue;
+
+                return zoneGameObject;
+            }
+
+            return null;
+        }
+
+        private bool IsCorrectFan(GameObject gameObject,string fanId)
+        {
+            if (!gameObject.Settings.TryGetValue("groupID", out var groupObj)) return false;
+
+            var groupId = (string) groupObj;
+
+            return groupId == $"{fanId};" && gameObject.ToString().Contains("Fan");
+        }
+
+        private bool GetFanState(SwitchComponent switchComponent, DestructibleComponent fanDestructibleComponent)
+        {
+            return !switchComponent.State && fanDestructibleComponent.Alive;
+        }
+        
+        private void UpdateFanState(GameObject fanObject, SwitchComponent switchComponent, DestructibleComponent fanDestructibleComponent)
+        {
+            if (!GetFanState(switchComponent,fanDestructibleComponent))
+            {
+                ActivateFx(fanObject);
+            }
+            else
+            {
+                DeactivateFx(fanObject);
+            }
+        }
+
         private void ActivateFx(GameObject gameObject)
         {
-            Console.WriteLine("Active");
-            
             var group = (gameObject.Settings["groupID"] as string)?.Split(';')[0];
             
             if (group == default) return;
@@ -96,10 +190,10 @@ namespace Uchu.StandardScripts.AvantGardens
             {
                 // Nothing is found here
                 if (!fanObject.TryGetComponent<PhantomPhysicsComponent>(out var physicsComponent)) continue;
-                
-                Serialize(fanObject);
                     
                 physicsComponent.IsEffectActive = false;
+                
+                Serialize(fanObject);
             }
 
             GetGroup($"{group}fx")[0].Animate("trigger", true);
@@ -107,8 +201,6 @@ namespace Uchu.StandardScripts.AvantGardens
 
         private void DeactivateFx(GameObject gameObject)
         {
-            Console.WriteLine("Deactivated");
-            
             var group = (gameObject.Settings["groupID"] as string)?.Split(';')[0];
             
             if (group == default) return;

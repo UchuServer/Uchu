@@ -156,7 +156,7 @@ namespace Uchu.World.Scripting.Native
 
                 foreach (var (primaryId, id) in ids)
                 {
-                    if (triggerComponent.Trigger?.Id /*TODO: Primary id*/ == primaryId && triggerComponent.Trigger?.Id == id)
+                    if (triggerComponent.Trigger?.FileId == primaryId && triggerComponent.Trigger?.Id == id)
                     {
                         triggers.Add(triggerComponent);
                     }

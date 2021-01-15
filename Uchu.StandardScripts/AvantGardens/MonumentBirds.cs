@@ -49,15 +49,18 @@ namespace Uchu.StandardScripts.AvantGardens
 
             physics.SetPhysics(physicsObject);
 
-            Listen(physics.OnEnter, async other =>
+            Listen(physics.OnEnter, other =>
             {
                 if (!(other.GameObject is Player player)) return;
 
                 gameObject.Animate(Animation);
 
-                await Task.Delay(1000);
+                Task.Run(async () =>
+                {
+                    await Task.Delay(1000);
 
-                await destructible.SmashAsync(player, player);
+                    await destructible.SmashAsync(player, player);
+                });
             });
         }
     }
