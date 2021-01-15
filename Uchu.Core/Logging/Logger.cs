@@ -144,7 +144,7 @@ namespace Uchu.Core
 
                 if (consoleLogLevel <= logLevel)
                 {
-                    finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+                    finalMessage = configuration.Timestamp ? $"[{GetCurrentTime()}] {message}" : message;
                     logQueue.AddLine(finalMessage,color);
 
                     if (!outputThreadStarted)
@@ -162,10 +162,15 @@ namespace Uchu.Core
 
                 var file = configuration.File;
 
-                finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+                finalMessage = configuration.Timestamp ? $"[{GetCurrentTime()}] {message}" : message;
 
                 File.AppendAllTextAsync(file, $"{finalMessage}\n");
             }
+        }
+
+        public static string GetCurrentTime()
+        {
+            return DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff tt");
         }
 
 #if DEBUG
