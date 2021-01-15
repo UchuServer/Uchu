@@ -26,6 +26,7 @@ namespace Uchu.World
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
             OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
+            OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
             Lock = new SemaphoreSlim(1, 1);
@@ -85,6 +86,8 @@ namespace Uchu.World
         public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
+        
+        public Event<PetTamingTryBuildMessage> OnPetTamingTryBuild { get; }
 
         public Event<Lot> OnLootPickup { get; }
         
