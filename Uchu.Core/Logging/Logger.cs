@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Uchu.Core.Config;
 
@@ -11,6 +12,10 @@ namespace Uchu.Core
     public static class Logger
     {
         public static UchuConfiguration Config { get; set; }
+
+        private static LogQueue logQueue = new LogQueue();
+
+        private static bool outputThreadStarted = false;
 
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {
@@ -110,15 +115,6 @@ namespace Uchu.Core
             }
 
             {
-                if (color == ConsoleColor.White)
-                {
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.ForegroundColor = color;
-                }
-
                 var level = logLevel.ToString();
 
                 var padding = new string(Enumerable.Repeat(' ', 12 - level.Length).ToArray());
@@ -149,9 +145,13 @@ namespace Uchu.Core
                 if (consoleLogLevel <= logLevel)
                 {
                     finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+                    logQueue.AddLine(finalMessage,color);
 
-                    Console.WriteLine(finalMessage);
-                    Console.ResetColor();
+                    if (!outputThreadStarted)
+                    {
+                        outputThreadStarted = true;
+                        logQueue.StartConsoleOutput();
+                    }
                 }
 
                 configuration = Config.FileLogging;
