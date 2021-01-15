@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Services
 {
@@ -28,14 +29,14 @@ namespace Uchu.World.Services
             Or
         }
 
-        private static async Task<bool> CheckAsync(string cur, Player player)
+        private static bool Check(string cur, Player player)
         {
             if (string.IsNullOrWhiteSpace(cur)) return true;
 
-            return await CheckPreconditionAsync(int.Parse(cur), player);
+            return CheckPrecondition(int.Parse(cur), player);
         }
         
-        public static async Task<bool> CheckRequirementsAsync(string requirements, Player player)
+        public static bool CheckRequirements(string requirements, Player player)
         {
             if (string.IsNullOrWhiteSpace(requirements)) return true;
 
@@ -55,7 +56,7 @@ namespace Uchu.World.Services
                     case '&':
                     case ',':
                     {
-                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+                        res = Check(res, Check(cur.ToString(), player), mode);
 
                         cur.Clear();
 
@@ -68,7 +69,7 @@ namespace Uchu.World.Services
 
                     case '|':
                     {
-                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+                        res = Check(res, Check(cur.ToString(), player), mode);
 
                         cur.Clear();
 
@@ -77,11 +78,11 @@ namespace Uchu.World.Services
                     }
 
                     case '(':
-                        res = Check(res, await CheckRequirementsAsync(requirements.Substring(i + 1), player), mode);
+                        res = Check(res, CheckRequirements(requirements.Substring(i + 1), player), mode);
                         break;
 
                     case ')':
-                        return Check(res, await CheckAsync(cur.ToString(), player), mode);
+                        return Check(res, Check(cur.ToString(), player), mode);
 
                     case '0':
                     case '1':
@@ -99,16 +100,14 @@ namespace Uchu.World.Services
                 }
             }
 
-            res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+            res = Check(res, Check(cur.ToString(), player), mode);
 
             return res;
         }
         
-        public static async Task<bool> CheckPreconditionAsync(int id, Player player)
+        public static bool CheckPrecondition(int id, Player player)
         {
-            await using var cdClient = new CdClientContext();
-
-            var precondition = await cdClient.PreconditionsTable.FirstOrDefaultAsync(
+            var precondition = ClientCache.PreconditionsTable.FirstOrDefault(
                 p => p.Id == id
             );
 

@@ -98,7 +98,7 @@ namespace Uchu.World.Handlers
                     goto sendResponse;
                 }
                 
-                await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(
+                player.GetComponent<InventoryManagerComponent>().RemoveItem(
                     item.Lot, packet.AttachmentCount
                 );
             }

@@ -292,7 +292,7 @@ namespace Uchu.World.Systems.Missions
         /// <param name="uchuContext">The uchu database context to use when loading all the mission instances</param>
         /// <param name="player">The player to load this mission for, if not specified only the template information
         /// will be loaded</param>
-        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext, Player player)
+        public async Task LoadAsync(UchuContext uchuContext, Player player)
         {
             if (Player == default)
                 throw new InvalidOperationException("Can't instantiate mission instance without player, call" +

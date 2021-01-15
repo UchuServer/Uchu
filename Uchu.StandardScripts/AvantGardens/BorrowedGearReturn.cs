@@ -20,13 +20,13 @@ namespace Uchu.StandardScripts.AvantGardens
                     if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
 
                     // Remove mission item
-                    inventoryManager.RemoveAllAsync(14549);
+                    inventoryManager.RemoveAll(14549);
 
                     // Remove faction gear
-                    inventoryManager.RemoveAllAsync(14359);
-                    inventoryManager.RemoveAllAsync(14321);
-                    inventoryManager.RemoveAllAsync(14353);
-                    inventoryManager.RemoveAllAsync(14315);
+                    inventoryManager.RemoveAll(14359);
+                    inventoryManager.RemoveAll(14321);
+                    inventoryManager.RemoveAll(14353);
+                    inventoryManager.RemoveAll(14315);
                 });
             });
 

@@ -23,7 +23,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task SyncSkillHandler(SyncSkillMessage message, Player player)
+        public void SyncSkillHandler(SyncSkillMessage message, Player player)
         {
             try
             {

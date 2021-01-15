@@ -65,7 +65,7 @@ namespace Uchu.StandardScripts.NimbusStation
                     var celebration = (CelebrationId) celebrationId;
                     if (celebration != CelebrationId.Invalid)
                     {
-                        await player.TriggerCelebration(celebration);
+                        player.TriggerCelebration(celebration);
                     }
 
                     var missionInventory = player.GetComponent<MissionInventoryComponent>();

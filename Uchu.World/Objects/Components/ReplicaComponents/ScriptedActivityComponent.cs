@@ -7,6 +7,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -28,7 +29,7 @@ namespace Uchu.World
         {
             _random = new Random();
             
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
                 if (!GameObject.Settings.TryGetValue("activityID", out var id))
                 {
@@ -36,15 +37,14 @@ namespace Uchu.World
                 }
 
                 var activityId = (int) id;
-                await using var cdClient = new CdClientContext();
 
-                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                ActivityInfo = ClientCache.ActivitiesTable.FirstOrDefault(
                     a => a.ActivityID == activityId
                 );
 
                 if (ActivityInfo == default) return;
                 
-                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                ActivityInfo = ClientCache.ActivitiesTable.FirstOrDefault(
                     a => a.ActivityID == activityId
                 );
 
@@ -54,7 +54,7 @@ namespace Uchu.World
                     return;
                 }
 
-                Rewards = cdClient.ActivityRewardsTable.Where(
+                Rewards = ClientCache.ActivityRewardsTable.Where(
                     a => a.ObjectTemplate == activityId
                 ).ToArray();
             });

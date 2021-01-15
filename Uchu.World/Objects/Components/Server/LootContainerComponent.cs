@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -39,15 +40,15 @@ namespace Uchu.World
 
         private bool Searched { get; set; }
 
-        public async Task CollectDetailsAsync()
+        public void CollectDetails()
         {
             if (Searched) return;
 
-            await FindMatrixIndicesAsync();
+            FindMatrixIndices();
 
-            await QueryLootMatrixAsync();
+            QueryLootMatrix();
 
-            await QueryCurrencyMatrixAsync();
+            QueryCurrencyMatrix();
 
             Searched = true;
         }
@@ -132,19 +133,17 @@ namespace Uchu.World
             return yield;
         }
 
-        private async Task QueryLootMatrixAsync()
+        private void QueryLootMatrix()
         {
-            await using var ctx = new CdClientContext();
-
-            var matrices = await ctx.LootMatrixTable.Where(
+            var matrices = ClientCache.LootMatrixTable.Where(
                 m => m.LootMatrixIndex == LootIndex
-            ).ToArrayAsync();
+            ).ToArray();
 
             foreach (var matrix in matrices)
             {
-                var tables = await ctx.LootTableTable.Where(
+                var tables = ClientCache.LootTableTable.Where(
                     t => t.LootTableIndex == matrix.LootTableIndex
-                ).ToArrayAsync();
+                ).ToArray();
 
                 var items = tables.Select(t => new LootMatrixEntry
                 {
@@ -167,13 +166,11 @@ namespace Uchu.World
             }
         }
 
-        private async Task QueryCurrencyMatrixAsync()
+        private void QueryCurrencyMatrix()
         {
-            await using var ctx = new CdClientContext();
-
-            var matrices = await ctx.CurrencyTableTable.Where(
+            var matrices = ClientCache.CurrencyTableTable.Where(
                 c => c.CurrencyIndex == CurrencyIndex
-            ).ToArrayAsync();
+            ).ToArray();
 
             foreach (var matrix in matrices)
             {
@@ -188,15 +185,13 @@ namespace Uchu.World
             }
         }
 
-        private async Task FindMatrixIndicesAsync()
+        private void FindMatrixIndices()
         {
-            await using var ctx = new CdClientContext();
-
             var destructible = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
             if (destructible != default)
             {
-                var component = await ctx.DestructibleComponentTable.FirstOrDefaultAsync(
+                var component = ClientCache.DestructibleComponentTable.FirstOrDefault(
                     c => c.Id == destructible
                 );
 
@@ -213,7 +208,7 @@ namespace Uchu.World
 
             if (package != default)
             {
-                var component = await ctx.PackageComponentTable.FirstOrDefaultAsync(
+                var component = ClientCache.PackageComponentTable.FirstOrDefault(
                     c => c.Id == package
                 );
 

@@ -19,7 +19,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     
                     if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
 
-                    inventoryManager.RemoveAllAsync(14592);
+                    inventoryManager.RemoveAll(14592);
                 });
             });
 

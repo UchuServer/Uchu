@@ -66,7 +66,7 @@ namespace Uchu.World.Handlers.Commands
 
         [CommandHandler(Signature = "remove", Help = "Remove an item from yourself",
             GameMasterLevel = GameMasterLevel.Admin)]
-        public async Task<string> RemoveItem(string[] arguments, Player player)
+        public string RemoveItem(string[] arguments, Player player)
         {
             if (arguments.Length == 0 || arguments.Length > 2) return "remove <lot> <count(optional)>";
 
@@ -77,7 +77,7 @@ namespace Uchu.World.Handlers.Commands
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(lot, count);
+            player.GetComponent<InventoryManagerComponent>().RemoveItem(lot, count);
 
             return $"Successfully removed {lot} x {count} to your inventory";
         }
@@ -882,22 +882,20 @@ namespace Uchu.World.Handlers.Commands
         }
         
         [CommandHandler(Signature = "getemote", Help = "Unlock an emote", GameMasterLevel = GameMasterLevel.Admin)]
-        public async Task<string> GetEmote(string[] arguments, Player player)
+        public string GetEmote(string[] arguments, Player player)
         {
             if (arguments.Length == default)
                 return "getemote <emote>";
-
-            await using var cdClient = new CdClientContext();
 
             Emotes emote;
             
             if (int.TryParse(arguments[0], out var id))
             {
-                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.Id == id);
+                emote = ClientCache.EmotesTable.FirstOrDefault(c => c.Id == id);
             }
             else
             {
-                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.AnimationName == arguments[0].ToLower());
+                emote = ClientCache.EmotesTable.FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
             }
 
             if (emote?.Id == default)
@@ -1092,7 +1090,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "triggercelebrate", Help = "Triggers celebration", GameMasterLevel = GameMasterLevel.Admin)]
-        public async Task<string> TriggerCelebrat(string[] arguments, Player player)
+        public string TriggerCelebrat(string[] arguments, Player player)
         {
             if (arguments.Length != 1)
                 return "/triggercelebrate <CelebrationID>";
@@ -1100,7 +1098,7 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out var id))
                 return "/triggercelebrate <CelebrationID>";
 
-            await player.TriggerCelebration((CelebrationId)id);
+            player.TriggerCelebration((CelebrationId)id);
 
             return $"Triggered Celebration {arguments[0]}";
         }

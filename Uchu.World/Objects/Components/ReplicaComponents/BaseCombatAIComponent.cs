@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Systems.AI;
 
 namespace Uchu.World
@@ -48,7 +49,7 @@ namespace Uchu.World
             {
                 SkillEntries = new List<NpcSkillEntry>();
 
-                Listen(GameObject.OnStart, async () =>
+                Listen(GameObject.OnStart, () =>
                 {
                     SkillComponent = GameObject.GetComponent<SkillComponent>();
                     DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
@@ -57,9 +58,7 @@ namespace Uchu.World
 
                     foreach (var skillEntry in SkillComponent.DefaultSkillSet)
                     {
-                        await using var ctx = new CdClientContext();
-
-                        var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
+                        var skillInfo = ClientCache.SkillBehaviorTable.First(
                             s => s.SkillID == skillEntry.SkillId
                         );
 

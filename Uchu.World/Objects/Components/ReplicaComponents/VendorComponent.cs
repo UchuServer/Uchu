@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -30,9 +31,9 @@ namespace Uchu.World
             
             OnBuyback = new Event<Item, uint, Player>();
 
-            Listen(OnStart, async () =>
+            Listen(OnStart, () =>
             {
-                await SetupEntries();
+                SetupEntries();
                 
                 Listen(GameObject.OnInteract, OnInteract);
             });
@@ -67,22 +68,20 @@ namespace Uchu.World
             });
         }
 
-        private async Task SetupEntries()
+        private void SetupEntries()
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
 
-            await using var cdClient = new CdClientContext();
-
-            var vendorComponent = await cdClient.VendorComponentTable.FirstAsync(c => c.Id == componentId);
+            var vendorComponent = ClientCache.VendorComponentTable.First(c => c.Id == componentId);
 
             var matrices =
-                cdClient.LootMatrixTable.Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
+                ClientCache.LootMatrixTable.Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
 
             var shopItems = new List<ShopEntry>();
 
             foreach (var matrix in matrices)
             {
-                shopItems.AddRange(cdClient.LootTableTable.Where(
+                shopItems.AddRange(ClientCache.LootTableTable.Where(
                     l => l.LootTableIndex == matrix.LootTableIndex
                 ).ToArray().Select(lootTable =>
                 {
@@ -102,9 +101,7 @@ namespace Uchu.World
 
         public async Task Buy(Lot lot, uint count, Player player)
         {
-            await using var ctx = new CdClientContext();
-
-            var itemComponent = await ctx.ItemComponentTable.FirstAsync(
+            var itemComponent = ClientCache.ItemComponentTable.First(
                 i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)
             );
             

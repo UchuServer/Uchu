@@ -51,7 +51,7 @@ namespace Uchu.World
 
                 var container = GameObject.AddComponent<LootContainerComponent>();
 
-                await container.CollectDetailsAsync();
+                container.CollectDetails();
                 
                 GameObject.Layer = StandardLayer.Smashable;
 

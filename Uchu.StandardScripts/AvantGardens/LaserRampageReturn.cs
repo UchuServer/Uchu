@@ -20,8 +20,8 @@ namespace Uchu.StandardScripts.AvantGardens
                     if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
 
                     // Remove hamster wheels and flashlights
-                    inventoryManager.RemoveAllAsync(14555);
-                    inventoryManager.RemoveAllAsync(14556);
+                    inventoryManager.RemoveAll(14555);
+                    inventoryManager.RemoveAll(14556);
                 });
             });
 

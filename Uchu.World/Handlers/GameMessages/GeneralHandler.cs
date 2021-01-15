@@ -1,7 +1,9 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Handlers.GameMessages
 {
@@ -77,9 +79,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task PlayEmoteHandler(PlayEmoteMessage message, Player player)
         {
-            await using var ctx = new CdClientContext();
-
-            var animation = await ctx.EmotesTable.FirstOrDefaultAsync(e => e.Id == message.EmoteId);
+            var animation = ClientCache.EmotesTable.FirstOrDefault(e => e.Id == message.EmoteId);
             
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
@@ -109,13 +109,12 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task NotifyServerLevelProcessingCompleteHandler(NotifyServerLevelProcessingCompleteMessage message, Player player)
         {
             await using var ctx = new UchuContext();
-            await using var cdClient = new CdClientContext();
 
             var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
 
             var lookup_val = 0;
 
-            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+            foreach (var levelProgressionLookup in ClientCache.LevelProgressionLookupTable)
             {
                 if (levelProgressionLookup.RequiredUScore > character.UniverseScore) break;
 

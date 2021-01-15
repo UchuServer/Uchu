@@ -160,9 +160,9 @@ namespace Uchu.World
             
             var container = AddComponent<LootContainerComponent>();
 
-            await container.CollectDetailsAsync();
+            container.CollectDetails();
             
-            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
+            Inventory.ManagerComponent.RemoveItem(Lot, 1);
             
             var manager = Inventory.ManagerComponent;
             
@@ -178,7 +178,7 @@ namespace Uchu.World
             
             if (!IsConsumable) return;
             
-            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
+            Inventory.ManagerComponent.RemoveItem(Lot, 1);
         }
 
         public static Item Instantiate(long itemId, Inventory inventory)

@@ -21,7 +21,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     if (missionId != MissionID)
                         return;
                     
-                    await player.TriggerCelebration(CelebrationId.JoinNexusForce);
+                    player.TriggerCelebration(CelebrationId.JoinNexusForce);
                 });
             });
 
