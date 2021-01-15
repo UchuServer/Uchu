@@ -208,14 +208,22 @@ namespace Uchu.Core
             SsoService = new SsoService(Config.SsoConfig?.Domain ?? "");
 
             // Try to connect to Redis, otherwise fallback to DB caching
-            try
+            if (Config.CacheConfig.UseService)
             {
-                SessionCache = new RedisSessionCache(Config.CacheConfig);
-                Logger.Information($"Established Redis connection at {Config.CacheConfig.Host}:{Config.CacheConfig.Port}");
+                try
+                {
+                    SessionCache = new RedisSessionCache(Config.CacheConfig);
+                    Logger.Information($"Established Redis connection at {Config.CacheConfig.Host}:{Config.CacheConfig.Port}");
+                }
+                catch (RedisConnectionException)
+                {
+                    Logger.Error("Failed to establish Redis connection, falling back to database.");
+                    SessionCache = new DatabaseCache();
+                }
             }
-            catch (RedisConnectionException)
+            else
             {
-                Logger.Error("Failed to establish Redis connection, falling back to database.");
+                Logger.Information("Caching service is disabled, falling back to database.");
                 SessionCache = new DatabaseCache();
             }
 
