@@ -269,8 +269,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Loads the mission template from the cd client and ignores instance information
         /// </summary>
-        /// <param name="cdContext">The cd client to load the mission information from</param>
-        public async Task LoadAsync(CdClientContext cdContext)
+        public void Load()
         {
             var cachedMission = ClientCache.Missions.FirstOrDefault(m => m.MissionId == MissionId);
             if (cachedMission != default)
@@ -279,7 +278,7 @@ namespace Uchu.World.Systems.Missions
             }
             else
             {
-                await LoadTemplateFromDatabaseAsync(cdContext);
+                LoadTemplateFromDatabase();
             }
             
             _loaded = true;
@@ -300,7 +299,7 @@ namespace Uchu.World.Systems.Missions
                                                     $"{nameof(LoadAsync)} without player argument to load just the template.");
             
             Player = player;
-            await LoadAsync(cdContext);
+            Load();
             await LoadInstanceAsync(uchuContext);
         }
 
@@ -362,9 +361,9 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        private async Task LoadTemplateFromDatabaseAsync(CdClientContext context)
+        private void LoadTemplateFromDatabase()
         {
-            var mission = await context.MissionsTable.FirstAsync(
+            var mission = ClientCache.MissionsTable.First(
                 m => m.Id == MissionId
             );
 
@@ -412,9 +411,9 @@ namespace Uchu.World.Systems.Missions
             RewardItem4Repeatable = mission.Rewarditem4repeatable ?? 0;
             RewardItem4RepeatableCount = mission.Rewarditem4repeatcount ?? 1;
 
-            var tasks = await context.MissionTasksTable.Where(
+            var tasks = ClientCache.MissionTasksTable.Where(
                 t => t.Id == MissionId
-            ).ToArrayAsync();
+            ).ToArray();
 
             // Load all the tasks for this mission
             Tasks = new List<MissionTaskInstance>();

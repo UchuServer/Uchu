@@ -12,6 +12,7 @@ using System.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 using Uchu.World.Filters;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
@@ -748,9 +749,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
-            using CdClientContext ctx = new CdClientContext();
-
-            ZoneTable WorldTable = ctx.ZoneTableTable.FirstOrDefault(t => t.ZoneID == id);
+            ZoneTable WorldTable = ClientCache.ZoneTableTable.FirstOrDefault(t => t.ZoneID == id);
 
             if (WorldTable == default)
             {

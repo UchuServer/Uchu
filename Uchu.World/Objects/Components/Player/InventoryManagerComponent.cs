@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -306,10 +307,8 @@ namespace Uchu.World
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
             OnLotRemoved.Invoke(lot, count);
-
-            using var cdClient = new CdClientContext();
             
-            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var componentId = ClientCache.ComponentsRegistryTable.FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -319,7 +318,7 @@ namespace Uchu.World
                 return;
             }
 
-            var component = cdClient.ItemComponentTable.FirstOrDefault(
+            var component = ClientCache.ItemComponentTable.FirstOrDefault(
                 i => i.Id == componentId.Componentid
             );
 

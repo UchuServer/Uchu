@@ -40,33 +40,30 @@ namespace Uchu.World
         /// </summary>
         private void CollectMissions()
         {
-            using (var ctx = new CdClientContext())
+            var components = ClientCache.ComponentsRegistryTable.Where(
+                c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.MissionNPCComponent
+            ).ToArray();
+
+            var missionComponents = components.SelectMany(
+                component => ClientCache.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
+            ).ToArray();
+
+            var missions = new List<(Missions, MissionNPCComponent)>();
+            
+            foreach (var npcComponent in missionComponents)
             {
-                var components = ctx.ComponentsRegistryTable.Where(
-                    c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.MissionNPCComponent
-                ).ToArray();
+                var quest = ClientCache.MissionsTable.FirstOrDefault(m => m.Id == npcComponent.MissionID);
 
-                var missionComponents = components.SelectMany(
-                    component => ctx.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
-                ).ToArray();
-
-                var missions = new List<(Missions, MissionNPCComponent)>();
-                
-                foreach (var npcComponent in missionComponents)
+                if (quest == default)
                 {
-                    var quest = ctx.MissionsTable.FirstOrDefault(m => m.Id == npcComponent.MissionID);
-
-                    if (quest == default)
-                    {
-                        Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: \"[{GameObject.Lot}] {GameObject.Name}\" [{npcComponent.Id}] {npcComponent.MissionID}");
-                        continue;
-                    }
-                    
-                    missions.Add((quest, npcComponent));
+                    Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: \"[{GameObject.Lot}] {GameObject.Name}\" [{npcComponent.Id}] {npcComponent.MissionID}");
+                    continue;
                 }
-
-                Missions = missions.ToArray();
+                
+                missions.Add((quest, npcComponent));
             }
+
+            Missions = missions.ToArray();
 
             Logger.Information(
                 $"{GameObject} is a quest give with: {string.Join(" ", Missions.Select(s => s.Item1.Id))}"

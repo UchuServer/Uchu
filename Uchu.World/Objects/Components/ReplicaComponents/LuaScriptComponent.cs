@@ -3,6 +3,7 @@ using InfectedRose.Lvl;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -20,11 +21,9 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
-                using var ctx = new CdClientContext();
-            
                 var scriptId = GameObject.Lot.GetComponentId(ComponentId.ScriptComponent);
 
-                var script = ctx.ScriptComponentTable.FirstOrDefault(s => s.Id == scriptId);
+                var script = ClientCache.ScriptComponentTable.FirstOrDefault(s => s.Id == scriptId);
 
                 if (script == default)
                 {

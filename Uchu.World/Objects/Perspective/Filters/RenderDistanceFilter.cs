@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Filters
 {
@@ -19,9 +20,7 @@ namespace Uchu.World.Filters
         {
             Player = player;
             
-            using var cdClient = new CdClientContext();
-
-            var zone = cdClient.ZoneTableTable.FirstOrDefault(z => z.ZoneID == (int) Player.Zone.ZoneId);
+            var zone = ClientCache.ZoneTableTable.FirstOrDefault(z => z.ZoneID == (int) Player.Zone.ZoneId);
 
             Distance = zone?.Ghostdistance ?? 500;
         }

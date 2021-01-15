@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -37,12 +38,10 @@ namespace Uchu.World
             {
                 if (GameObject is Player) return;
                 
-                using var cdClient = new CdClientContext();
-                
-                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
+                var component = ClientCache.ComponentsRegistryTable.FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
 
-                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
+                var items = ClientCache.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
 
                 foreach (var item in items)
                 {
@@ -52,7 +51,7 @@ namespace Uchu.World
 
                     var componentId = lot.GetComponentId(ComponentId.ItemComponent);
 
-                    var info = cdClient.ItemComponentTable.First(i => i.Id == componentId);
+                    var info = ClientCache.ItemComponentTable.First(i => i.Id == componentId);
                     
                     var location = (EquipLocation) info.EquipLocation;
                     
