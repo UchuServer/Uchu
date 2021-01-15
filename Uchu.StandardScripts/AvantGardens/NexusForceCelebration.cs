@@ -15,7 +15,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
                 if (!player.TryGetComponent(out MissionInventoryComponent component)) { return; }
                 
-                Listen(component.OnCompleteMission, async mission =>
+                Listen(component.OnCompleteMission, mission =>
                 {
                     var missionId = mission.MissionId;
                     if (missionId != MissionID)
