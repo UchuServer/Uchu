@@ -395,6 +395,11 @@ namespace Uchu.World.Systems.Missions
             Repeatable = mission.Repeatable ?? false;
             InMissionOfTheDay = mission.InMOTD ?? false;
             CooldownTime = mission.CooldownTime ?? 0;
+            if (InMissionOfTheDay && CooldownTime == 0)
+            {
+                // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
+                CooldownTime = 1300;
+            }
             
             // Possible stat rewards
             RewardMaxHealth = mission.Rewardmaxhealth ?? 0;
