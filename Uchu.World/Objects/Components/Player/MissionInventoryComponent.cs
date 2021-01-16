@@ -196,7 +196,7 @@ namespace Uchu.World
         /// <param name="mission"></param>
         /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
         public bool CanAccept(MissionInstance mission) => 
-            (mission.Repeatable || !HasMission(mission.MissionId)) 
+            (mission.CanRepeat || !HasMission(mission.MissionId)) 
             && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
         
         /// <summary>

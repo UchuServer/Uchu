@@ -181,6 +181,16 @@ namespace Uchu.World.Systems.Missions
         public int RewardItem4RepeatableCount { get; private set; }
         #endregion template
         
+        /// <summary>
+        /// Whether the mission is part of mission of the day
+        /// </summary>
+        public bool InMissionOfTheDay { get; private set; }
+
+        /// <summary>
+        /// Cooldown time for repeating the mission.
+        /// </summary>
+        public long CooldownTime { get; private set; }
+        
         #region instance
         /// <summary>
         /// The player that started this mission
@@ -228,6 +238,13 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <returns><c>true</c> if completed, <c>false</c> otherwise</returns>
         public bool Completed => Tasks.All(t => t.Completed);
+        
+        /// <summary>
+        /// Checks if this mission is can be repeated and the cooldown time is satisfied.
+        /// </summary>
+        /// <returns><c>true</c> if can be repeated right now, <c>false</c> otherwise</returns>
+        public bool CanRepeat => IsMission && State == MissionState.Completed && (Repeatable || InMissionOfTheDay) && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
+        
         #endregion properties
         
         #region fields
@@ -316,6 +333,8 @@ namespace Uchu.World.Systems.Missions
             DefinedType = cachedMission.DefinedType;
             DefinedSubType = cachedMission.DefinedSubType;
             Repeatable = cachedMission.Repeatable;
+            InMissionOfTheDay = cachedMission.InMissionOfTheDay;
+            CooldownTime = cachedMission.CooldownTime;
             
             // Possible stat rewards
             RewardMaxHealth = cachedMission.RewardMaxHealth;
@@ -373,6 +392,13 @@ namespace Uchu.World.Systems.Missions
             IsChoiceReward = mission.IsChoiceReward ?? false;
             DefinedType = mission.Definedtype;
             DefinedSubType = mission.Definedsubtype;
+            Repeatable = mission.Repeatable ?? false;
+            InMissionOfTheDay = mission.InMOTD ?? false;
+            CooldownTime = mission.CooldownTime ?? 0;
+            if (InMissionOfTheDay && CooldownTime == 0)
+            {
+                CooldownTime = 1300; // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
+            }
             
             // Possible stat rewards
             RewardMaxHealth = mission.Rewardmaxhealth ?? 0;
