@@ -15,7 +15,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
                 Listen(missionInventory.OnCompleteMission, instance =>
                 {
-                    if (instance.MissionId != 1854 || instance.MissionId != 1873) return;
+                    if (instance.MissionId != 1854 && instance.MissionId != 1873) return;
                     
                     if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
 
