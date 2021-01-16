@@ -124,6 +124,9 @@ namespace Uchu.World
                             case MissionState.ReadyToComplete:
                             case MissionState.Unavailable:
                             case MissionState.Completed:
+                                // Allow the mission if it is repeatable and the cooldown period has passed.
+                                if (!playerMission.CanRepeat) continue;
+                                break;
                             case MissionState.CompletedReadyToComplete:
                                 // Any other missions are skipped
                                 continue;
