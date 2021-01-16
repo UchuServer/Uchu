@@ -395,10 +395,6 @@ namespace Uchu.World.Systems.Missions
             Repeatable = mission.Repeatable ?? false;
             InMissionOfTheDay = mission.InMOTD ?? false;
             CooldownTime = mission.CooldownTime ?? 0;
-            if (InMissionOfTheDay && CooldownTime == 0)
-            {
-                CooldownTime = 1300; // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
-            }
             
             // Possible stat rewards
             RewardMaxHealth = mission.Rewardmaxhealth ?? 0;
@@ -563,6 +559,51 @@ namespace Uchu.World.Systems.Missions
             await context.Missions.AddAsync(mission);
             await context.SaveChangesAsync();
             
+            await NotifyClientStartAsync();
+        }
+        
+        /// <summary>
+        /// Restarts this mission instance and notifies the client
+        /// </summary>
+        public async Task RestartAsync(UchuContext context)
+        {
+            if (!_loaded)
+                throw new InvalidOperationException("Can't start a mission that hasn't been loaded, call" +
+                                                    $"{nameof(LoadAsync)} before starting a mission!");
+
+            State = MissionState.Active;
+            foreach (var missionTask in Tasks)
+            {
+                missionTask.Restart();
+            }
+            
+            foreach (var mission in context.Missions.Where((existingMission) => (existingMission.MissionId == MissionId && existingMission.CharacterId == Player.Id)))
+            {
+                await context.Entry(mission).Collection("Tasks").LoadAsync();
+                mission.State = (int) MissionState.Active;
+                context.Entry(mission).State = EntityState.Modified;
+
+                foreach (var missionTask in mission.Tasks)
+                {
+                    await context.Entry(missionTask).Collection("Values").LoadAsync();
+                    context.Entry(missionTask).State = EntityState.Modified;
+                    foreach (var missionTaskValue in missionTask.Values)
+                    {
+                        missionTaskValue.Count = 0;
+                        context.Entry(missionTaskValue).State = EntityState.Modified;
+                    }
+                }
+            }
+            await context.SaveChangesAsync();
+
+            await NotifyClientStartAsync();
+        }
+
+        /// <summary>
+        /// Notifies the client of starting the mission
+        /// </summary>
+        private async Task NotifyClientStartAsync()
+        {
             MessageNotifyMission();
             MessageMissionTypeState(MissionLockState.New);
             
@@ -573,6 +614,8 @@ namespace Uchu.World.Systems.Missions
                 await missionInventory.OnAcceptMission.InvokeAsync(this);
             }
         }
+        
+        
 
         /// <summary>
         /// Syncs the obtain item tasks of a player with the inventory they currently have, can be used to shorttrack

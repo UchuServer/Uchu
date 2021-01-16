@@ -238,5 +238,13 @@ namespace Uchu.World.Systems.Missions
             if (Mission.Completed)
                 await Mission.SoftCompleteAsync();
         }
+        
+        /// <summary>
+        /// Restarts the task status.
+        /// </summary>
+        public void Restart()
+        {
+            this.Progress = new List<float>();
+        }
     }
 }

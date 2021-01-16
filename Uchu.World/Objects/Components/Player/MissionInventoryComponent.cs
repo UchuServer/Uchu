@@ -260,6 +260,13 @@ namespace Uchu.World
                 return;
             }
             
+            // Repeat the mission if it is repeatable, such as a daily mission.
+            if (mission.CanRepeat)
+            {
+                await mission.RestartAsync(uchuContext);
+                return;
+            }
+            
             // Player is responding to an active mission.
             if (!mission.Completed)
             {
