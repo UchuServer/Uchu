@@ -123,7 +123,7 @@ namespace Uchu.World
                 msg.petsDestPos = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
-                var interaction_distance = GameObject.Settings["interaction_distance"] ?? 0.0f;
+                var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
                 pos = new Vector3(
                     petPos.X + (float) interaction_distance * (float)Math.Cos(-deg),
                     petPos.Y,
@@ -146,25 +146,22 @@ namespace Uchu.World
 
         public async Task OnPetTamingTryBuild(PetTamingTryBuildMessage msg)
         {
-            if (PetWild)
-            {
-                int CorrectCount = 0;
+            int CorrectCount = 0;
 
-                foreach (var item in Bricks)
+            foreach (var item in Bricks)
+            {
+                foreach (Brick item2 in msg.Bricks)
                 {
-                    foreach (var item2 in msg.Bricks)
-                    {
-                        if (item.DesignID == item2.DesignID && item2.DesignPart.Material == item2.DesignPart.Material)
-                            CorrectCount += 1;
-                    }
+                    if (item.DesignID == item2.DesignID)
+                        CorrectCount += 1;
                 }
-                
-                PetTamingTryBuildResultMessage nmsg = new PetTamingTryBuildResultMessage();
-                nmsg.Associate = msg.Associate;
-                nmsg.bSuccess = !msg.Failed;
-                nmsg.iNumCorrect = CorrectCount;
-                (msg.Associate as Player).Message(nmsg);
             }
+                
+            PetTamingTryBuildResultMessage nmsg = new PetTamingTryBuildResultMessage();
+            nmsg.Associate = msg.Associate;
+            nmsg.bSuccess = !(CorrectCount == Bricks.Count);
+            nmsg.iNumCorrect = CorrectCount;
+            (msg.Associate as Player).Message(nmsg);
         }
     }
 }

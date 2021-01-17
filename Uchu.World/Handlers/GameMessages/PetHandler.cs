@@ -13,7 +13,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task ClientExitTamingMinigameHandler(ClientExitTamingMinigameMessage message, Player player)
+        public void ClientExitTamingMinigameHandler(ClientExitTamingMinigameMessage message, Player player)
         {
             NotifyPetTamingMinigame msg = new NotifyPetTamingMinigame();
             msg.notifyType = NotifyType.QUIT;
@@ -25,6 +25,12 @@ namespace Uchu.World.Handlers.GameMessages
             msg.telePos = Vector3.Zero;
             msg.Associate = player;
             player.Message(msg);
+        }
+
+        [PacketHandler]
+        public void NotifyTamingBuildSuccessMessageHandler(NotifyTamingBuildSuccessMessage message, Player player)
+        {
+            
         }
     }
 }
