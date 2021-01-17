@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Uchu.Core
 {
@@ -77,7 +78,7 @@ namespace Uchu.Core
         /// </summary>
         public void StartConsoleOutput()
         {
-            new Thread(() =>
+            Task.Factory.StartNew(async () =>
             {
                 // Run the output loop.
                 while (true)
@@ -97,7 +98,7 @@ namespace Uchu.Core
                         }
                         
                         // Write the entry.
-                        Console.WriteLine(entry.message);
+                        await Console.Out.WriteLineAsync(entry.message).ConfigureAwait(false);
                         entry = this.PopEntry();
                     }
                     
@@ -105,9 +106,9 @@ namespace Uchu.Core
                     Console.ResetColor();
                     
                     // Sleep for a bit before resuming.
-                    Thread.Sleep(50);
+                    await Task.Delay(50).ConfigureAwait(false);
                 }
-            }).Start();
+            },CancellationToken.None,TaskCreationOptions.LongRunning,TaskScheduler.Default);
         }
         
         /// <summary>
