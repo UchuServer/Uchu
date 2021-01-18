@@ -12,6 +12,7 @@ using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
 using Uchu.Physics;
+using Uchu.World.Client;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -255,7 +256,6 @@ namespace Uchu.World
         public async Task<float[]> GetCollectedAsync()
         {
             await using var ctx = new UchuContext();
-            await using var cdContext = new CdClientContext();
 
             var character = await ctx.Characters
                 .Include(c => c.Missions)
@@ -263,7 +263,7 @@ namespace Uchu.World
                 .ThenInclude(t => t.Values)
                 .SingleOrDefaultAsync(c => c.Id == Id);
             
-            var flagTaskIds = cdContext.MissionTasksTable
+            var flagTaskIds = ClientCache.GetTable<MissionTasks>()
                 .Where(t => t.TaskType == (int) MissionTaskType.Collect)
                 .Select(t => t.Uid);
 
@@ -282,8 +282,8 @@ namespace Uchu.World
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
         public async Task TriggerCelebration(CelebrationId celebrationId)
         {
-            var celebration = (await new CdClientContext().CelebrationParametersTable.
-                Where(t => t.Id == (int)celebrationId).ToArrayAsync())[0];
+            var celebrations = await ClientCache.GetTableAsync<CelebrationParameters>();
+            var celebration = (celebrations.Where(t => t.Id == (int)celebrationId).ToArray())[0];
 
             this.Message(new StartCelebrationEffectMessage
             {
@@ -612,7 +612,6 @@ namespace Uchu.World
         private async Task SetUniverseScoreAsync(long score)
         {
             await using var ctx = new UchuContext();
-            await using var cdClient = new CdClientContext();
             
             var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
@@ -630,11 +629,10 @@ namespace Uchu.World
         private async Task SetLevelAsync(long level)
         {
             await using var ctx = new UchuContext();
-            await using var cdClient = new CdClientContext();
             
             var character = await ctx.Characters.FirstAsync(c => c.Id == Id);
 
-            var lookup = await cdClient.LevelProgressionLookupTable.FirstOrDefaultAsync(l => l.Id == level);
+            var lookup = (await ClientCache.GetTableAsync<LevelProgressionLookup>()).FirstOrDefault(l => l.Id == level);
 
             if (lookup == default)
             {
