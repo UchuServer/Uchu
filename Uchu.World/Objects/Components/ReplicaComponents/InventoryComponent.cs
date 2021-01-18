@@ -91,19 +91,21 @@ namespace Uchu.World
 
                 foreach (var clientItem in clientItems)
                 {
-                    if (clientItem.Itemid != default)
-                    {
-                        var lot = (Lot) clientItem.Itemid;
-                        var itemComponent = clientContext.ItemComponentTable.First(
-                            i => i.Id == lot.GetComponentId(ComponentId.ItemComponent));
+                    if (clientItem.Itemid == default)
+                        continue;
+                    
+                    var lot = (Lot) clientItem.Itemid;
+                    var itemComponent = clientContext.ItemComponentTable.First(
+                        i => i.Id == lot.GetComponentId(ComponentId.ItemComponent));
 
-                        if (itemComponent.ItemType != default)
-                        {
-                            var item = await Item.Instantiate(clientContext, GameObject, lot, default,
-                                (uint)(clientItem.Count ?? 1));
-                            Items[(EquipLocation) itemComponent.EquipLocation] = item;
-                        }
-                    }
+                    if (itemComponent.ItemType == default)
+                        continue;
+                    
+                    var item = await Item.Instantiate(clientContext, GameObject, lot, default,
+                        (uint)(clientItem.Count ?? 1));
+                            
+                    if (item != null)
+                        Items[(EquipLocation) itemComponent.EquipLocation] = item;
                 }
             }
         }
@@ -262,7 +264,11 @@ namespace Uchu.World
                 {
                     var subItem = inventory.FindItem(subItemLot) 
                                   ?? await Item.Instantiate(clientContext, GameObject, subItemLot, item.Inventory, 1);
-                    subItems.Add(subItem);
+                    if (subItem == null)
+                        continue;
+                    
+                    Start(subItem);
+                    subItems.Add(subItem); // TODO: Message failed sub item to player
                 }
             }
 

@@ -362,6 +362,10 @@ namespace Uchu.World
                     var item = await Item.Instantiate(clientContext, GameObject, lot, inventory, toAdd,
                         extraInfo: settings);
                     
+                    // Might occur if the inventory is full or an error occured during slot claiming
+                    if (item == null)
+                        return; // TODO: Message item to player
+                    
                     Start(item);
                     item.MessageCreation();
 

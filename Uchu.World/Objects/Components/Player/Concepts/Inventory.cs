@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Exceptions;
 
 namespace Uchu.World
 {
@@ -109,10 +110,9 @@ namespace Uchu.World
             var initializeTasks = items.Select(async i =>
             {
                 var item = await Item.Instantiate(clientContext, i, ManagerComponent.GameObject, this);
-                if (item != default)
+                if (item != null)
                 {
                     Object.Start(item);
-                    AddItem(item);
                 }
             });
             
@@ -122,9 +122,12 @@ namespace Uchu.World
         /// <summary>
         /// Adds an item to the inventory
         /// </summary>
+        /// <exception cref="InventorySlotOccupiedException">If the slot of the item is already present in the inventory</exception>
         /// <param name="item">The item to add</param>
         public void AddItem(Item item)
         {
+            if (Items.Any(i => i.Slot == item.Slot))
+                throw new InventorySlotOccupiedException();
             _items.Add(item);
         }
         
@@ -135,6 +138,22 @@ namespace Uchu.World
         public void RemoveItem(Item item)
         {
             _items.Remove(item);
+        }
+
+        /// <summary>
+        /// Claims a slot to use for item insertion
+        /// </summary>
+        /// <returns>The slot to use for insertion</returns>
+        /// <exception cref="InventoryFullException">If no slot could be found</exception>
+        public uint ClaimSlot()
+        {
+            for (var i = 0; i < Size; i++)
+            {
+                if (Items.All(item => item.Slot != i))
+                    return (uint)i;
+            }
+            
+            throw new InventoryFullException();
         }
         
         #endregion methods

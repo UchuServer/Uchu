@@ -6,6 +6,7 @@ using IronPython.Modules;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Exceptions;
 
 namespace Uchu.World
 {
@@ -48,11 +49,25 @@ namespace Uchu.World
         /// <param name="rootItem">The root item this item is based on</param>
         /// <param name="isEquipped">Whether the game object has this item equipped or not</param>
         /// <param name="isBound">Whether the game object has bound this item or not</param>
-        /// <returns>The instantiated item</returns>
+        /// <remarks>Note that <c>Start</c> still needs to be called on the item to be registered properly in the world.</remarks>
+        /// <returns>The instantiated item or <c>null</c> if no slot could be acquired or if the item couldn't be added to the inventory</returns>
         public static async Task<Item> Instantiate(CdClientContext clientContext, GameObject owner, Lot lot,
             Inventory inventory, uint count, uint slot = default, LegoDataDictionary extraInfo = default,
             ObjectId objectId = default, Item rootItem = default, bool isEquipped = false, bool isBound = false)
         {
+            // Try to find the slot at which this item should be inserted if no explicit slot is provided
+            if (inventory != default && slot == default)
+            {
+                try
+                {
+                    slot = inventory.ClaimSlot();
+                }
+                catch (InventoryFullException)
+                {
+                    return null;
+                }
+            }
+            
             var itemTemplate = await clientContext.ObjectsTable.FirstOrDefaultAsync(
                 o => o.Id == lot
             );
@@ -62,22 +77,11 @@ namespace Uchu.World
             );
 
             if (itemTemplate == default || itemRegistryEntry == default)
-                return null;
+                return default;
 
-            // If no object Id is provided (for example for a NPC), generate a random one
+            // If no object Id is provided (e.g. for an NPC or at pickup) generate a random one
             objectId = objectId == default ? ObjectId.Standalone : objectId;
             var instance = Instantiate<Item>(owner.Zone, itemTemplate.Name, objectId: objectId, lot: lot);
-
-            // Try to find the slot at which this item should be inserted if no explicit slot is provided
-            if (inventory != default && slot == default)
-            {
-                for (var index = 0; index < inventory.Size; index++)
-                {
-                    if (inventory.Items.All(i => i.Slot != index))
-                        break;
-                    slot++;
-                }
-            }
 
             // Set all the standard values
             instance.Settings = extraInfo ?? new LegoDataDictionary();
@@ -100,7 +104,15 @@ namespace Uchu.World
                 s => s.CastOnType == (int) SkillCastType.OnConsumed
             );
 
-            instance.Inventory?.AddItem(instance);
+            // On odd occasions the inventory might've been filled in the meantime
+            try
+            {
+                instance.Inventory?.AddItem(instance);
+            }
+            catch (InventorySlotOccupiedException)
+            {
+                return null;
+            }
 
             return instance;
         }

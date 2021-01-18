@@ -31,14 +31,11 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task RemoveItemHandler(RemoveItemToInventoryMessage message, Player player)
         {
-            if (!message.Confirmed) return;
-
-            if (message.Item == default) return;
+            if (!message.Confirmed || message.Item == default)
+                return;
             
-            var inventoryManager = player.GetComponent<InventoryManagerComponent>();
-            
-            await inventoryManager.RemoveLotAsync(message.Item.Lot, message.Item.Count - message.TotalItems, 
-                message.InventoryType, true);
+            await player.GetComponent<InventoryManagerComponent>()
+                .RemoveLotAsync(message.Item.Lot, message.Item.Count - message.TotalItems, message.InventoryType, true);
         }
 
         [PacketHandler]
