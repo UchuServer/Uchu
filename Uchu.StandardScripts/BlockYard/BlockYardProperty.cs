@@ -10,6 +10,7 @@ using System.IO;
 using System;
 using InfectedRose.Luz;
 using System.Numerics;
+using Uchu.World.Client;
 
 namespace Uchu.StandardScripts.BlockYard
 {
@@ -189,8 +190,7 @@ namespace Uchu.StandardScripts.BlockYard
 
                 SpiderQueen.Animate("withdraw");
 
-                using var cdClient = new CdClientContext();
-                var Animation = cdClient.AnimationsTable.FirstOrDefault(
+                var Animation = ClientCache.GetTable<Animations>().FirstOrDefault(
                     a => a.Animationname == "withdraw"
                 );
 

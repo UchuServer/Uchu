@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -37,12 +38,10 @@ namespace Uchu.World
             {
                 if (GameObject is Player) return;
                 
-                using var cdClient = new CdClientContext();
-                
-                var component = cdClient.ComponentsRegistryTable.FirstOrDefault(c =>
+                var component = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
 
-                var items = cdClient.InventoryComponentTable.Where(i => i.Id == component.Componentid).ToArray();
+                var items = ClientCache.GetTable<Core.Client.InventoryComponent>().Where(i => i.Id == component.Componentid).ToArray();
 
                 foreach (var item in items)
                 {
@@ -52,7 +51,7 @@ namespace Uchu.World
 
                     var componentId = lot.GetComponentId(ComponentId.ItemComponent);
 
-                    var info = cdClient.ItemComponentTable.First(i => i.Id == componentId);
+                    var info = ClientCache.GetTable<ItemComponent>().First(i => i.Id == componentId);
                     
                     var location = (EquipLocation) info.EquipLocation;
                     
@@ -86,11 +85,9 @@ namespace Uchu.World
 
         public async Task EquipAsync(EquippedItem item)
         {
-            await using var cdClient = new CdClientContext();
-
             var componentId = item.Lot.GetComponentId(ComponentId.ItemComponent);
 
-            var info = await cdClient.ItemComponentTable.FirstAsync(i => i.Id == componentId);
+            var info = (await ClientCache.GetTableAsync<ItemComponent>()).First(i => i.Id == componentId);
             
             var location = (EquipLocation) info.EquipLocation;
 
@@ -115,7 +112,7 @@ namespace Uchu.World
                 
                 componentId = lot.GetComponentId(ComponentId.ItemComponent);
 
-                info = await cdClient.ItemComponentTable.FirstOrDefaultAsync(i => i.Id == componentId);
+                info = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(i => i.Id == componentId);
             
                 if (info == default) continue;
                 
@@ -226,9 +223,7 @@ namespace Uchu.World
 
         private static async Task<Lot[]> ParseProxyItemsAsync(Lot item)
         {
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
             );
 

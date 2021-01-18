@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
@@ -80,10 +82,8 @@ namespace Uchu.World
                 }
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
-
-                await using var cdClient = new CdClientContext();
-
-                var clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
+                
+                var clientComponent = (await ClientCache.GetTableAsync<RebuildComponent>()).FirstOrDefault(
                     r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)
                 );
 

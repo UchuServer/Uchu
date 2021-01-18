@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
@@ -41,11 +42,9 @@ namespace Uchu.World
             
             Listen(OnStart, async () =>
             {
-                await using var cdClient = new CdClientContext();
-
-                var skills = await cdClient.ObjectSkillsTable.Where(
+                var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
                     s => s.ObjectTemplate == GameObject.Lot
-                ).ToArrayAsync();
+                ).ToArray();
 
                 DefaultSkillSet = skills
                     .Where(s => s.SkillID != default)
@@ -98,9 +97,7 @@ namespace Uchu.World
         {
             if (item == default) return;
             
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
             );
             
@@ -118,10 +115,7 @@ namespace Uchu.World
         public async Task DismountItemAsync(Lot item)
         {
             if (item == default) return;
-
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
             );
             
@@ -138,9 +132,7 @@ namespace Uchu.World
         {
             if (item == default) return;
             
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
+            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
             );
             

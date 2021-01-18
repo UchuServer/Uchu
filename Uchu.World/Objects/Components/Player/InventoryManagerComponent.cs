@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -122,9 +123,7 @@ namespace Uchu.World
         
         public async Task AddItemAsync(Lot lot, uint count, LegoDataDictionary extraInfo = default)
         {
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
+            var componentId = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -134,7 +133,7 @@ namespace Uchu.World
                 return;
             }
 
-            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+            var component = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == componentId.Componentid
             );
 
@@ -181,10 +180,7 @@ namespace Uchu.World
             }
 
             // The math here cannot be executed in parallel
-            
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var componentId = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -194,7 +190,7 @@ namespace Uchu.World
                 return;
             }
 
-            var component = cdClient.ItemComponentTable.FirstOrDefault(
+            var component = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == componentId.Componentid
             );
 
@@ -273,9 +269,7 @@ namespace Uchu.World
         {
             if (count == default) return;
             
-            await using var cdClient = new CdClientContext();
-            
-            var componentId = await cdClient.ComponentsRegistryTable.FirstOrDefaultAsync(
+            var componentId = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -285,7 +279,7 @@ namespace Uchu.World
                 return;
             }
 
-            var component = await cdClient.ItemComponentTable.FirstOrDefaultAsync(
+            var component = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
                 i => i.Id == componentId.Componentid
             );
 
@@ -306,10 +300,8 @@ namespace Uchu.World
         public void RemoveItem(int lot, uint count, InventoryType inventoryType, bool silent = false)
         {
             OnLotRemoved.Invoke(lot, count);
-
-            using var cdClient = new CdClientContext();
             
-            var componentId = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var componentId = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int) ComponentId.ItemComponent
             );
 
@@ -319,7 +311,7 @@ namespace Uchu.World
                 return;
             }
 
-            var component = cdClient.ItemComponentTable.FirstOrDefault(
+            var component = ClientCache.GetTable<ItemComponent>().FirstOrDefault(
                 i => i.Id == componentId.Componentid
             );
 

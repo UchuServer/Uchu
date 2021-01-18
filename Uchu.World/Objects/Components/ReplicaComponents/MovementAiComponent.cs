@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -107,10 +108,8 @@ namespace Uchu.World
                 Listen(GameObject.OnStart, async () =>
                 {
                     if (Zone.NavMeshManager == default || !Zone.NavMeshManager.Enabled) return;
-
-                    await using var ctx = new CdClientContext();
-
-                    var info = await ctx.MovementAIComponentTable.FirstOrDefaultAsync(
+                    
+                    var info = (await ClientCache.GetTableAsync<MovementAIComponent>()).FirstOrDefault(
                         m => m.Id == GameObject.Lot.GetComponentId(ComponentId.MovementAIComponent)
                     );
 

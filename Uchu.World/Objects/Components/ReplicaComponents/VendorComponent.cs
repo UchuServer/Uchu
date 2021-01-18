@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -71,18 +72,15 @@ namespace Uchu.World
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
 
-            await using var cdClient = new CdClientContext();
+            var vendorComponent = (await ClientCache.GetTableAsync<Core.Client.VendorComponent>()).First(c => c.Id == componentId);
 
-            var vendorComponent = await cdClient.VendorComponentTable.FirstAsync(c => c.Id == componentId);
-
-            var matrices =
-                cdClient.LootMatrixTable.Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
+            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
 
             var shopItems = new List<ShopEntry>();
 
             foreach (var matrix in matrices)
             {
-                shopItems.AddRange(cdClient.LootTableTable.Where(
+                shopItems.AddRange(ClientCache.GetTable<LootTable>().Where(
                     l => l.LootTableIndex == matrix.LootTableIndex
                 ).ToArray().Select(lootTable =>
                 {
@@ -102,9 +100,7 @@ namespace Uchu.World
 
         public async Task Buy(Lot lot, uint count, Player player)
         {
-            await using var ctx = new CdClientContext();
-
-            var itemComponent = await ctx.ItemComponentTable.FirstAsync(
+            var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
                 i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)
             );
             

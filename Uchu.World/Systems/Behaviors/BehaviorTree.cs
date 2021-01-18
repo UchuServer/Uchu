@@ -222,8 +222,6 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         private async Task BuildAsync()
         {
-            await using var ctx = new CdClientContext();
-
             // Build the base behavior for each requested skill
             foreach (var skill in BehaviorIds)
             {

@@ -6,6 +6,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -55,17 +56,15 @@ namespace Uchu.World
                 
                 GameObject.Layer = StandardLayer.Smashable;
 
-                await using (var cdClient = new CdClientContext())
-                {
-                    var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
+                var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
-                    var cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(
-                        c => c.Id == entry
-                    );
+                var cdClientComponent = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
+                    c => c.Id == entry
+                );
 
-                    if (cdClientComponent == default)
-                        Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
-                }
+                if (cdClientComponent == default)
+                    Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
+                
 
                 if (GameObject.TryGetComponent(out DestroyableComponent stats))
                 {
