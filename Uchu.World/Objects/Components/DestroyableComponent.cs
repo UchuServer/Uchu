@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -213,11 +214,9 @@ namespace Uchu.World
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
-                
-                await using var cdClient = new CdClientContext();
 
                 var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-                var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
+                var destroyable = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
                     c => c.Id == componentId
                 );
                 
@@ -227,7 +226,7 @@ namespace Uchu.World
 
                 Smashable = destroyable.IsSmashable ?? false;
 
-                var faction = await cdClient.FactionsTable.FirstOrDefaultAsync(
+                var faction = (await ClientCache.GetTableAsync<Factions>()).FirstOrDefault(
                     f => f.Faction == Factions[0]
                 );
                 
@@ -380,10 +379,8 @@ namespace Uchu.World
 
         private void CollectObjectStats()
         {
-            using var cdClient = new CdClientContext();
-
             var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-            var stats = cdClient.DestructibleComponentTable.FirstOrDefault(
+            var stats = ClientCache.GetTable<Core.Client.DestructibleComponent>().FirstOrDefault(
                 o => o.Id == componentId
             );
 
