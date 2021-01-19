@@ -216,8 +216,9 @@ namespace Uchu.World
                 
                 await using var cdClient = new CdClientContext();
 
+                var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
                 var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
-                    c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+                    c => c.Id == componentId
                 );
                 
                 if (destroyable == default) return;
@@ -381,8 +382,9 @@ namespace Uchu.World
         {
             using var cdClient = new CdClientContext();
 
+            var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
             var stats = cdClient.DestructibleComponentTable.FirstOrDefault(
-                o => o.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+                o => o.Id == componentId
             );
 
             if (stats == default) return;

@@ -100,8 +100,9 @@ namespace Uchu.World
 
         public async Task Buy(Lot lot, uint count, Player player)
         {
+            var componentId = lot.GetComponentId(ComponentId.ItemComponent);
             var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
-                i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)
+                i => i.Id == componentId
             );
             
             if (count == default || itemComponent.BaseValue <= 0) return;

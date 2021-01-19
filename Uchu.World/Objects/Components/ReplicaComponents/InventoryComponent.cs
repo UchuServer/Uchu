@@ -223,8 +223,9 @@ namespace Uchu.World
 
         private static async Task<Lot[]> ParseProxyItemsAsync(Lot item)
         {
+            var componentId = item.GetComponentId(ComponentId.ItemComponent);
             var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+                i => i.Id == componentId
             );
 
             if (itemInfo == default) return new Lot[0];

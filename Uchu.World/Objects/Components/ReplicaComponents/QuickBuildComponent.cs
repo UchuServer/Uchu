@@ -82,9 +82,10 @@ namespace Uchu.World
                 }
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
-                
+
+                var componentId = GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent);
                 var clientComponent = (await ClientCache.GetTableAsync<RebuildComponent>()).FirstOrDefault(
-                    r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)
+                    r => r.Id == componentId
                 );
 
                 if (ActivityId == default)

@@ -97,8 +97,9 @@ namespace Uchu.World
         {
             if (item == default) return;
             
+            var targetId = item.GetComponentId(ComponentId.ItemComponent);
             var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+                i => i.Id == targetId
             );
             
             if (itemInfo == default) return;
@@ -115,8 +116,9 @@ namespace Uchu.World
         public async Task DismountItemAsync(Lot item)
         {
             if (item == default) return;
+            var componentId = item.GetComponentId(ComponentId.ItemComponent);
             var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+                i => i.Id == componentId
             );
             
             if (itemInfo == default) return;
@@ -132,8 +134,9 @@ namespace Uchu.World
         {
             if (item == default) return;
             
+            var componentId = item.GetComponentId(ComponentId.ItemComponent);
             var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
+                i => i.Id == componentId
             );
             
             if (itemInfo == default) return;

@@ -108,9 +108,10 @@ namespace Uchu.World
                 Listen(GameObject.OnStart, async () =>
                 {
                     if (Zone.NavMeshManager == default || !Zone.NavMeshManager.Enabled) return;
-                    
+
+                    var componentId = GameObject.Lot.GetComponentId(ComponentId.MovementAIComponent);
                     var info = (await ClientCache.GetTableAsync<MovementAIComponent>()).FirstOrDefault(
-                        m => m.Id == GameObject.Lot.GetComponentId(ComponentId.MovementAIComponent)
+                        m => m.Id == componentId
                     );
 
                     if (info == default)
