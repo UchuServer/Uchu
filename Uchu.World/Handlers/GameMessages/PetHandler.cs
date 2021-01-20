@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Uchu.Core;
 
-namespace Uchu.World.Handlers.GameMessages
+namespace Uchu.World
 {
     public class PetHandler : HandlerGroup
     {
@@ -28,9 +28,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void NotifyTamingBuildSuccessMessageHandler(NotifyTamingBuildSuccessMessage message, Player player)
+        public async Task NotifyTamingBuildSuccessMessageHandler(NotifyTamingBuildSuccessMessage message, Player player)
         {
-            
+            await player.OnNotifyTamingBuildSuccessMessage.InvokeAsync(message);
         }
     }
 }

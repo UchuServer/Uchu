@@ -27,6 +27,7 @@ namespace Uchu.World
             OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
+            OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
             Lock = new SemaphoreSlim(1, 1);
@@ -88,6 +89,7 @@ namespace Uchu.World
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
         
         public Event<PetTamingTryBuildMessage> OnPetTamingTryBuild { get; }
+        public Event<NotifyTamingBuildSuccessMessage> OnNotifyTamingBuildSuccessMessage { get; }
 
         public Event<Lot> OnLootPickup { get; }
         

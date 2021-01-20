@@ -257,7 +257,8 @@ namespace Uchu.World.Systems.Missions
                 [MissionTaskType.ObtainItem] = typeof(ObtainItemTask),
                 [MissionTaskType.Interact] = typeof(InteractTask),
                 [MissionTaskType.MissionComplete] = typeof(MissionCompleteTask),
-                [MissionTaskType.Flag] = typeof(FlagTask)
+                [MissionTaskType.Flag] = typeof(FlagTask),
+                [MissionTaskType.TamePet] = typeof(PetTameTask)
             };
         }
         
