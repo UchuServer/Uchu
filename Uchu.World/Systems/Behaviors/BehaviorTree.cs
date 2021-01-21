@@ -5,9 +5,11 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Hosting.Shell;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Systems.Behaviors
 {
@@ -129,11 +131,8 @@ namespace Uchu.World.Systems.Behaviors
         public static async Task<BehaviorTree> FromLotAsync(Lot lot)
         {
             var tree = new BehaviorTree();
-            
-            // TODO: Cache this. NPCs always use the same lot, no reason to look this up each time.
-            await using var cdClient = new CdClientContext();
 
-            var objectSkills = cdClient.ObjectSkillsTable.Where(i =>
+            var objectSkills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(i =>
                 i.ObjectTemplate == lot
             ).ToArray();
 
@@ -142,7 +141,7 @@ namespace Uchu.World.Systems.Behaviors
             for (var index = 0; index < objectSkills.Length; index++)
             {
                 var objectSkill = objectSkills[index];
-                var behavior = cdClient.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == objectSkill.SkillID);
+                var behavior = (await ClientCache.GetTableAsync<SkillBehavior>()).FirstOrDefault(b => b.SkillID == objectSkill.SkillID);
 
                 if (behavior == default)
                 {
@@ -203,8 +202,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <returns>The skill behavior if it existed, <c>default</c> otherwise</returns>
         private static async Task<SkillBehavior> BaseBehaviorForSkill(int skillId)
         {
-            await using var clientContext = new CdClientContext();
-            var skillBehavior = clientContext.SkillBehaviorTable.FirstOrDefault(b => b.SkillID == skillId);
+            var skillBehavior = (await ClientCache.GetTableAsync<SkillBehavior>()).FirstOrDefault(b => b.SkillID == skillId);
             
             if (skillBehavior == default)
             {
@@ -224,8 +222,6 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         private async Task BuildAsync()
         {
-            await using var ctx = new CdClientContext();
-
             // Build the base behavior for each requested skill
             foreach (var skill in BehaviorIds)
             {
@@ -235,7 +231,7 @@ namespace Uchu.World.Systems.Behaviors
                 // If the behavior can't be found in the cache, build it from scratch using its template
                 if (root == default)
                 {
-                    root = await BehaviorFromInfo(ctx, skill);
+                    root = await BehaviorFromInfo(skill);
                     if (root == null)
                     {
                         continue;
@@ -272,9 +268,9 @@ namespace Uchu.World.Systems.Behaviors
         /// <param name="context">Reusable context to query from</param>
         /// <param name="info">The behavior info to get the skill from</param>
         /// <returns>The instantiated behavior base if succeeded, <c>null</c> otherwise</returns>
-        private static async Task<BehaviorBase> BehaviorFromInfo(CdClientContext context, BehaviorInfo info)
+        private static async Task<BehaviorBase> BehaviorFromInfo(BehaviorInfo info)
         {
-            var behavior = await context.BehaviorTemplateTable.FirstOrDefaultAsync(
+            var behavior = (await ClientCache.GetTableAsync<BehaviorTemplate>()).FirstOrDefault(
                 t => t.BehaviorID == info.BaseBehavior
             );
 

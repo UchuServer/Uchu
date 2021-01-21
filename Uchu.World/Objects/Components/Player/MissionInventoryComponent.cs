@@ -94,7 +94,6 @@ namespace Uchu.World
         {
             if (GameObject is Player player)
             {
-                await using var cdContext = new CdClientContext();
                 await using var uchuContext = new UchuContext();
 
                 // On load, load all the missions from database and store them in memory
@@ -107,7 +106,7 @@ namespace Uchu.World
                 foreach (var mission in missions)
                 {
                     var instance = new MissionInstance(mission.MissionId);
-                    await instance.LoadAsync(cdContext, uchuContext, player);
+                    await instance.LoadAsync(uchuContext, player);
 
                     lock (Missions)
                     {
@@ -248,10 +247,8 @@ namespace Uchu.World
             // If the user doesn't have this mission yet, start it
             if (mission == default)
             {
-                await using var cdContext = new CdClientContext();
-
                 var instance = new MissionInstance(missionId);
-                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
+                await instance.LoadAsync(uchuContext, (Player)GameObject);
                 
                 lock (Missions) {
                     Missions.Add(instance);
@@ -289,10 +286,8 @@ namespace Uchu.World
             // If the player is completing a mission that hasn't started, start it first
             if (mission == default)
             {
-                await using var cdContext = new CdClientContext();
-                
                 var instance = new MissionInstance(missionId);
-                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
+                await instance.LoadAsync(uchuContext, (Player)GameObject);
                 await instance.CompleteAsync(uchuContext);
                 
                 lock (Missions)
@@ -552,11 +547,10 @@ namespace Uchu.World
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
                 // new achievement are much lower than not starting an achievement, that's why doing this in the loop
                 // allows us to open less db transactions in the long run
-                await using var cdContext = new CdClientContext();
                 await using var uchuContext = new UchuContext();
                 
                 var instance = new MissionInstance(achievement.MissionId);
-                await instance.LoadAsync(cdContext, uchuContext, (Player)GameObject);
+                await instance.LoadAsync(uchuContext, (Player)GameObject);
                 
                 lock (Missions)
                 {

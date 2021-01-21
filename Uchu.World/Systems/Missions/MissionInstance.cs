@@ -269,8 +269,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Loads the mission template from the cd client and ignores instance information
         /// </summary>
-        /// <param name="cdContext">The cd client to load the mission information from</param>
-        public async Task LoadAsync(CdClientContext cdContext)
+        public async Task LoadAsync()
         {
             var cachedMission = ClientCache.Missions.FirstOrDefault(m => m.MissionId == MissionId);
             if (cachedMission != default)
@@ -279,7 +278,7 @@ namespace Uchu.World.Systems.Missions
             }
             else
             {
-                await LoadTemplateFromDatabaseAsync(cdContext);
+                await LoadTemplateFromDatabaseAsync();
             }
             
             _loaded = true;
@@ -289,18 +288,17 @@ namespace Uchu.World.Systems.Missions
         /// Loads the mission template from the cd client and optionally the mission instance from the uchu database
         /// if it's been started before.
         /// </summary>
-        /// <param name="cdContext">The cd client context to use when loading the mission templates</param>
         /// <param name="uchuContext">The uchu database context to use when loading all the mission instances</param>
         /// <param name="player">The player to load this mission for, if not specified only the template information
         /// will be loaded</param>
-        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext, Player player)
+        public async Task LoadAsync(UchuContext uchuContext, Player player)
         {
             if (Player == default)
                 throw new InvalidOperationException("Can't instantiate mission instance without player, call" +
                                                     $"{nameof(LoadAsync)} without player argument to load just the template.");
             
             Player = player;
-            await LoadAsync(cdContext);
+            await LoadAsync();
             await LoadInstanceAsync(uchuContext);
         }
 
@@ -362,9 +360,9 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        private async Task LoadTemplateFromDatabaseAsync(CdClientContext context)
+        private async Task LoadTemplateFromDatabaseAsync()
         {
-            var mission = await context.MissionsTable.FirstAsync(
+            var mission = (await ClientCache.GetTableAsync<Core.Client.Missions>()).First(
                 m => m.Id == MissionId
             );
 
@@ -412,9 +410,9 @@ namespace Uchu.World.Systems.Missions
             RewardItem4Repeatable = mission.Rewarditem4repeatable ?? 0;
             RewardItem4RepeatableCount = mission.Rewarditem4repeatcount ?? 1;
 
-            var tasks = await context.MissionTasksTable.Where(
+            var tasks = (await ClientCache.GetTableAsync<MissionTasks>()).Where(
                 t => t.Id == MissionId
-            ).ToArrayAsync();
+            ).ToArray();
 
             // Load all the tasks for this mission
             Tasks = new List<MissionTaskInstance>();
