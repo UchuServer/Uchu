@@ -517,6 +517,24 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Progresses the taming pet tasks.
+        /// </summary>
+        /// <param name="Pet">the lot of the tamed pet</param>
+        /// <returns>¯\_(ツ)_/¯</returns>
+        public async Task TamePetAsync(Lot Pet)
+        {
+            foreach (var task in FindActiveTasksAsync<PetTameTask>())
+            {
+                await task.ReportProgress(Pet);
+            }
+            
+            await StartUnlockableAchievementsAsync<PetTameTask>(MissionTaskType.TamePet, Pet, async task =>
+            {
+                await task.ReportProgress(Pet);
+            });
+        }
+
+        /// <summary>
         /// Returns a list of achievements that a player may start for a certain task type due to meeting it's prerequisites
         /// </summary>
         /// <remarks>

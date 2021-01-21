@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -138,8 +138,22 @@ namespace Uchu.World
                 nmsg.Associate = player;
                 nmsg.Bricks = Bricks;
                 player.Message(nmsg);
+                player.Message(new NotifyPetTamingMinigame
+                {
+                    Associate = GameObject,
+                    bForceTeleport = false,
+                    notifyType = NotifyType.BEGIN,
+                    PetID = (ObjectId)(ulong)0,
+                    petsDestPos = Vector3.Zero,
+                    PlayerTamingID = player.Id,
+                    telePos = Vector3.Zero,
+                    teleRot = Quaternion.Identity
+                });
 
+                // Create all the pet listeners for other events
+                
                 Listen(player.OnPetTamingTryBuild, OnPetTamingTryBuild);
+                Listen(player.OnNotifyTamingBuildSuccessMessage, OnNotifyTamingBuildSuccessMessage);
             }
         }
 
@@ -161,6 +175,70 @@ namespace Uchu.World
             nmsg.bSuccess = !(CorrectCount == Bricks.Count);
             nmsg.iNumCorrect = CorrectCount;
             (msg.Associate as Player).Message(nmsg);
+        }
+        
+        public async Task OnNotifyTamingBuildSuccessMessage(NotifyTamingBuildSuccessMessage msg)
+        {
+            var player = (msg.Associate as Player);
+            await player.GetComponent<MissionInventoryComponent>().TamePetAsync(GameObject.Lot);
+            player.PlayFX("", "petceleb");
+            
+            // We need to create the build object
+            /*CdClientContext context = new CdClientContext(); TODO: fix
+            var model = GameObject.Instantiate(default,
+                new Lot(context.TamingBuildPuzzlesTable.Where(i => i.NPCLot.Value == GameObject.Lot).First()
+                    .PuzzleModelLot.Value), msg.BuildPosition);
+
+            Start(model);*/
+            
+            player.Message(new NotifyTamingModelLoadedOnServerMessage
+            {
+                Associate = player
+            });
+            
+            player.Message(new PetResponseMessage
+            {
+                Associate = player,
+                ObjIDPet = GameObject,
+                iPetCommandType = 0,
+                iResponse = 10, // Not entirely sure what this response ID is 
+                iTypeID = 0
+            });
+
+            var InventoryComponent = player.GetComponent<InventoryManagerComponent>();
+            
+            InventoryComponent.AddItemAsync(GameObject.Lot, 1);
+            var Pet = InventoryComponent.FindItem(GameObject.Lot);
+
+            player.Message(new AddPetToPlayerMessage
+            {
+                Associate = player,
+                iElementalType = 0, // This appears to be just unused, they are in the DB but they weren't sent correctly in the packet captures
+                name = GameObject.Name,
+                petDBID = Pet,
+                PetLOT = GameObject.Lot
+            });
+            
+            player.Message(new RegisterPetIDMessage
+            {
+                Associate = player,
+                Pet = GameObject
+            });
+            
+            player.Message(new RegisterPetDBIDMessage
+            {
+                Associate = player,
+                PetItemObject = Pet
+            });
+            
+            player.Message( new MarkInventoryItemAsActiveMessage
+            {
+                Associate = player,
+                bActive = true,
+                itemID = Pet.Id
+            });
+            
+            // TODO: Add listener for name select
         }
     }
 }

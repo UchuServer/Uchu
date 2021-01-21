@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Uchu.World
 {
-    class NotifyTamingBuildSuccessMessage : ClientGameMessage
+    public class NotifyTamingBuildSuccessMessage : ClientGameMessage
     {
         public override GameMessageId GameMessageId { get; } = GameMessageId.NotifyTamingBuildSuccess;
 
