@@ -7,6 +7,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -36,15 +37,13 @@ namespace Uchu.World
                 }
 
                 var activityId = (int) id;
-                await using var cdClient = new CdClientContext();
-
-                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
                     a => a.ActivityID == activityId
                 );
 
                 if (ActivityInfo == default) return;
                 
-                ActivityInfo = await cdClient.ActivitiesTable.FirstOrDefaultAsync(
+                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
                     a => a.ActivityID == activityId
                 );
 
@@ -54,7 +53,7 @@ namespace Uchu.World
                     return;
                 }
 
-                Rewards = cdClient.ActivityRewardsTable.Where(
+                Rewards = ClientCache.GetTable<ActivityRewards>().Where(
                     a => a.ObjectTemplate == activityId
                 ).ToArray();
             });
@@ -62,9 +61,7 @@ namespace Uchu.World
 
         public async Task DropLootAsync(Player lootOwner)
         {
-            await using var cdClient = new CdClientContext();
-            
-            var matrices = cdClient.LootMatrixTable.Where(l =>
+            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l =>
                 Rewards.Any(r => r.LootMatrixIndex == l.LootMatrixIndex)
             ).ToArray();
 
@@ -72,7 +69,7 @@ namespace Uchu.World
             {
                 var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
-                var items = cdClient.LootTableTable.Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
+                var items = ClientCache.GetTable<LootTable>().Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
                 
                 for (var i = 0; i < count; i++)
                 {
@@ -107,7 +104,7 @@ namespace Uchu.World
 
             foreach (var reward in Rewards)
             {
-                var currencies = cdClient.CurrencyTableTable.Where(c => 
+                var currencies = ClientCache.GetTable<CurrencyTable>().Where(c => 
                     c.CurrencyIndex == reward.CurrencyIndex
                 );
 

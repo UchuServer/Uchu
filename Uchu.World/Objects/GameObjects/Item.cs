@@ -5,6 +5,7 @@ using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -22,10 +23,8 @@ namespace Uchu.World
             Listen(OnStart, () =>
             {
                 IsPackage = Lot.GetComponentId(ComponentId.PackageComponent) != default;
-                
-                using var cdClient = new CdClientContext();
 
-                var skills = cdClient.ObjectSkillsTable.Where(
+                var skills = ClientCache.GetTable<ObjectSkills>().Where(
                     s => s.ObjectTemplate == Lot
                 ).ToArray();
 
@@ -41,11 +40,9 @@ namespace Uchu.World
         {
             get
             {
-                using var cdClient = new CdClientContext();
-
                 var id = Lot.GetComponentId(ComponentId.ItemComponent);
 
-                return cdClient.ItemComponentTable.FirstOrDefault(c => c.Id == id);
+                return ClientCache.GetTable<ItemComponent>().FirstOrDefault(c => c.Id == id);
             }
         }
         
@@ -186,7 +183,6 @@ namespace Uchu.World
 
         public static Item Instantiate(long itemId, Inventory inventory)
         {
-            using var cdClient = new CdClientContext();
             using var ctx = new UchuContext();
             
             var item = ctx.InventoryItems.FirstOrDefault(
@@ -199,7 +195,7 @@ namespace Uchu.World
                 return null;
             }
 
-            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+            var cdClientObject = ClientCache.GetTable<Objects>().FirstOrDefault(
                 o => o.Id == item.Lot
             );
 
@@ -241,14 +237,13 @@ namespace Uchu.World
 
         public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot, LegoDataDictionary extraInfo = default)
         {
-            using var cdClient = new CdClientContext();
             using var ctx = new UchuContext();
             
-            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
+            var cdClientObject = ClientCache.GetTable<Objects>().FirstOrDefault(
                 o => o.Id == lot
             );
 
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == 11
             );
 
@@ -265,7 +260,7 @@ namespace Uchu.World
 
             instance.Settings = extraInfo ?? new LegoDataDictionary();
 
-            var itemComponent = cdClient.ItemComponentTable.First(
+            var itemComponent = ClientCache.GetTable<ItemComponent>().First(
                 i => i.Id == itemRegistryEntry.Componentid
             );
 

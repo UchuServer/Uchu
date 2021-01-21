@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Handlers
 {
@@ -331,7 +332,6 @@ namespace Uchu.World.Handlers
         private static FlagNode[] FlagNodes(Character character)
         {
             var flags = new Dictionary<int, FlagNode>();
-            using var cdContext = new CdClientContext();
 
             /*
             // Keep a list of all tasks ids that belong to flag tasks
@@ -427,8 +427,7 @@ namespace Uchu.World.Handlers
                     var progressNodes = new List<MissionProgressNode>
                         {new MissionProgressNode {Value = task.Values.Sum(v => v.Count)}};
 
-                    using var cdClient = new CdClientContext();
-                    var cdTask = cdClient.MissionTasksTable.First(t => t.Uid == task.TaskId);
+                    var cdTask = ClientCache.GetTable<MissionTasks>().First(t => t.Uid == task.TaskId);
 
                     // If the task type is collectible, also send all collectible ids
                     if (cdTask.TaskType != null && ((MissionTaskType) cdTask.TaskType) == MissionTaskType.Collect)

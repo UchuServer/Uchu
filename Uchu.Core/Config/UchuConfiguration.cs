@@ -90,6 +90,14 @@ namespace Uchu.Core.Config
     public class CacheConfig
     {
         /// <summary>
+        /// Whether to use an external caching service, like Redis.
+        /// Setting to false reduces the initial server load times
+        /// if no service is installed and the connection will
+        /// always timeout.
+        /// </summary>
+        [XmlElement] public bool UseService { get; set; } = true;
+        
+        /// <summary>
         /// Hostname to use when connecting to the cache service
         /// </summary>
         [XmlElement]

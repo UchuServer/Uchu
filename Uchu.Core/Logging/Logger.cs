@@ -12,6 +12,10 @@ namespace Uchu.Core
     {
         public static UchuConfiguration Config { get; set; }
 
+        private static LogQueue logQueue = new LogQueue();
+
+        private static bool outputTaskStarted = false;
+
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {
             switch (logLevel)
@@ -110,15 +114,6 @@ namespace Uchu.Core
             }
 
             {
-                if (color == ConsoleColor.White)
-                {
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.ForegroundColor = color;
-                }
-
                 var level = logLevel.ToString();
 
                 var padding = new string(Enumerable.Repeat(' ', 12 - level.Length).ToArray());
@@ -148,10 +143,14 @@ namespace Uchu.Core
 
                 if (consoleLogLevel <= logLevel)
                 {
-                    finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+                    finalMessage = configuration.Timestamp ? $"[{GetCurrentTime()}] {message}" : message;
+                    logQueue.AddLine(finalMessage,color);
 
-                    Console.WriteLine(finalMessage);
-                    Console.ResetColor();
+                    if (!outputTaskStarted)
+                    {
+                        outputTaskStarted = true;
+                        logQueue.StartConsoleOutput();
+                    }
                 }
 
                 configuration = Config.FileLogging;
@@ -162,10 +161,15 @@ namespace Uchu.Core
 
                 var file = configuration.File;
 
-                finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
+                finalMessage = configuration.Timestamp ? $"[{GetCurrentTime()}] {message}" : message;
 
                 File.AppendAllTextAsync(file, $"{finalMessage}\n");
             }
+        }
+
+        public static string GetCurrentTime()
+        {
+            return DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff tt");
         }
 
 #if DEBUG

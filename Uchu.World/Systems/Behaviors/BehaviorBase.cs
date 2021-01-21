@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Systems.Behaviors
@@ -235,10 +236,8 @@ namespace Uchu.World.Systems.Behaviors
         {
             var cachedBehavior = Cache.ToArray().FirstOrDefault(c => c.BehaviorId == behaviorId);
             if (cachedBehavior != default) return cachedBehavior;
-            
-            await using var ctx = new CdClientContext();
 
-            var behavior = await ctx.BehaviorTemplateTable.FirstOrDefaultAsync(
+            var behavior = (await ClientCache.GetTableAsync<BehaviorTemplate>()).FirstOrDefault(
                 t => t.BehaviorID == behaviorId
             );
             
@@ -273,8 +272,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <returns>The behavior parameter from the database</returns>
         protected async Task<BehaviorParameter> GetParameter(string name)
         {
-            await using var cdClient = new CdClientContext();
-            return await cdClient.BehaviorParameterTable.FirstOrDefaultAsync(p =>
+            return (await ClientCache.GetTableAsync<BehaviorParameter>()).FirstOrDefault(p =>
                 p.BehaviorID == BehaviorId && p.ParameterID == name
             );
         }
@@ -301,8 +299,7 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         protected BehaviorParameter[] GetParameters()
         {
-            using var cdClient = new CdClientContext();
-            return cdClient.BehaviorParameterTable.Where(p =>
+            return ClientCache.GetTable<BehaviorParameter>().Where(p =>
                 p.BehaviorID == BehaviorId
             ).ToArray();
         }
@@ -313,8 +310,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <returns>The behavior template associated with this behavior</returns>
         public async Task<BehaviorTemplate> GetTemplate()
         {
-            await using var cdClient = new CdClientContext();
-            return await cdClient.BehaviorTemplateTable.FirstOrDefaultAsync(p =>
+            return (await ClientCache.GetTableAsync<BehaviorTemplate>()).FirstOrDefault(p =>
                 p.BehaviorID == BehaviorId
             );
         }

@@ -76,11 +76,9 @@ namespace Uchu.World
         {
             if (PetWild)
             {
-                CdClientContext context = new CdClientContext();
-                
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(Zone.UchuServer.Config.ResourcesConfiguration.GameResourceFolder, context
-                    .TamingBuildPuzzlesTable.FirstOrDefault(i => i.NPCLot == GameObject.Lot)
+                doc.Load(Path.Combine(Zone.UchuServer.Config.ResourcesConfiguration.GameResourceFolder,
+                    ClientCache.GetTable<TamingBuildPuzzles>().FirstOrDefault(i => i.NPCLot == GameObject.Lot)
                     .ValidPiecesLXF));
 
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)

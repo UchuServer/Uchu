@@ -13,6 +13,7 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
@@ -197,9 +198,7 @@ namespace Uchu.World
                 
             }
 
-            using var ctx = new Uchu.Core.Client.CdClientContext();
-
-            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+            int? ZoneControlLot = ClientCache.GetTable<ZoneTable>().FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
 
             int Lot = ZoneControlLot ??= 2365;
 
