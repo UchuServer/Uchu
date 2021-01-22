@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
