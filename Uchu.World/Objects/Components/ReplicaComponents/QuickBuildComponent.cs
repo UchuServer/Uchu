@@ -448,6 +448,14 @@ namespace Uchu.World
             GameObject.Serialize(GameObject);
 
             OpenBuild(player);
+
+            if (LinkedSpawner != default)
+            {
+                Enabled = false;
+                GameObject.Layer = StandardLayer.Hidden;
+                Activator.Layer = StandardLayer.Hidden;
+                LinkedSpawner.Spawn();
+            }
         }
 
         public void OpenBuild(Player player)
@@ -471,6 +479,32 @@ namespace Uchu.World
             State = RebuildState.Open;
 
             GameObject.Serialize(GameObject);
+        }
+        
+        public void EnableBuildFromSpawner()
+        {
+            Enabled = true;
+            GameObject.Layer = StandardLayer.Default;
+            Activator.Layer = StandardLayer.Default;
+            
+            var timer = new Timer
+            {
+                AutoReset = false,
+                Interval = _resetTime * 1000
+            };
+
+            timer.Elapsed += (sender,args) =>
+            {
+                if (State == RebuildState.Open)
+                {
+                    Enabled = false;
+                    GameObject.Layer = StandardLayer.Hidden;
+                    Activator.Layer = StandardLayer.Hidden;
+                    LinkedSpawner.Spawn();
+                }
+            };
+            
+            Task.Run(timer.Start);
         }
     }
 }

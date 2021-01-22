@@ -129,9 +129,16 @@ namespace Uchu.World
                 {
                     Destroy(obj);
 
-                    await Task.Delay(RespawnTime);
+                    if (LinkedQuickBuildComponent == default)
+                    {
+                        await Task.Delay(RespawnTime);
                     
-                    Spawn();
+                        Spawn();
+                    }
+                    else
+                    {
+                        LinkedQuickBuildComponent.EnableBuildFromSpawner();
+                    }
                 });
             }
 
