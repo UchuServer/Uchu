@@ -11,6 +11,8 @@ namespace Uchu.World
     public class SpawnerComponent : Component
     {
         private readonly Random _random;
+
+        private QuickBuildComponent LinkedQuickBuildComponent;
         
         public List<GameObject> ActiveSpawns { get; }
 
@@ -142,6 +144,11 @@ namespace Uchu.World
             {
                 Spawn();
             }
+        }
+
+        public void LinkQuickBuildComponent(QuickBuildComponent quickBuildComponent)
+        {
+            LinkedQuickBuildComponent = quickBuildComponent;
         }
     }
 }

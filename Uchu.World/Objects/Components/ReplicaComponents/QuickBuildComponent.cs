@@ -25,6 +25,7 @@ namespace Uchu.World
         private Timer _imaginationTimer;
         private int _taken;
         private RebuildState _state = RebuildState.Open;
+        private SpawnerComponent LinkedSpawner;
         
         private long StartTime { get; set; }
         
@@ -128,6 +129,23 @@ namespace Uchu.World
 
                 Start(Activator);
                 
+                if (GameObject.Settings.TryGetValue("spawnNetNameForSpawnGroupOnSmash",out var destructibleSpawnerName))
+                {
+                    if ((string) destructibleSpawnerName != "")
+                    {
+                        foreach (var otherGameObject in Zone.GameObjects)
+                        {
+                            ConnectSpawner(otherGameObject);
+                        }
+                        
+                        Listen(Zone.OnObject,(obj) =>
+                        {
+                            if (!(obj is GameObject gameObject)) return;
+                            ConnectSpawner(gameObject);
+                        });
+                    }
+                }
+                
                 GameObject.Construct(Activator);
                 GameObject.Serialize(GameObject);
 
@@ -174,6 +192,19 @@ namespace Uchu.World
 
             writer.Write(StartTime > 0 ? TimeSinceStart : StartTime);
             writer.Write(Pause > 0 ? PauseTime : Pause);
+        }
+        
+        private void ConnectSpawner(GameObject gameObject)
+        {
+            if (LinkedSpawner != default) return;
+            if (gameObject.Name != (string) GameObject.Settings["spawnNetNameForSpawnGroupOnSmash"]) return;
+            if (!gameObject.TryGetComponent<SpawnerComponent>(out var spawner)) return;
+                            
+            Enabled = false;
+            GameObject.Layer = StandardLayer.Hidden;
+            Activator.Layer = StandardLayer.Hidden;
+            LinkedSpawner = spawner;
+            spawner.LinkQuickBuildComponent(this);
         }
         
         //
