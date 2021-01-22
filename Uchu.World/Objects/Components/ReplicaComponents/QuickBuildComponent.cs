@@ -411,15 +411,13 @@ namespace Uchu.World
             });
 
             /*
-             * Reset this quickbuild after three times its completion time.
-             * TODO: Change this to something more correct.
+             * Reset this quickbuild after its smash time.
              */
             var timer = new Timer
             {
                 AutoReset = false,
-                Interval = _resetTime * 1000
+                Interval = _timeToSmash * 1000
             };
-
             timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
             Task.Run(timer.Start);
