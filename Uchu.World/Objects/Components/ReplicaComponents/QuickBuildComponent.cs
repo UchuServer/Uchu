@@ -449,10 +449,13 @@ namespace Uchu.World
 
             if (LinkedSpawner != default)
             {
-                Enabled = false;
                 GameObject.Layer = StandardLayer.Hidden;
                 Activator.Layer = StandardLayer.Hidden;
-                LinkedSpawner.Spawn();
+                if (Enabled)
+                {
+                    LinkedSpawner.Spawn();
+                }
+                Enabled = false;
             }
         }
 
@@ -493,7 +496,7 @@ namespace Uchu.World
 
             timer.Elapsed += (sender,args) =>
             {
-                if (State == RebuildState.Open)
+                if (State == RebuildState.Open && Enabled)
                 {
                     Enabled = false;
                     GameObject.Layer = StandardLayer.Hidden;
