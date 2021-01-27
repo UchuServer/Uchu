@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 using Uchu.World.Objects.Components;
 
 namespace Uchu.World
@@ -62,7 +63,6 @@ namespace Uchu.World
             Listen(OnStart, async () =>
             {
                 await using var uchuContext = new UchuContext();
-                await using var clientContext = new CdClientContext();
                 
                 var playerCharacter = uchuContext.Characters
                     .Include(c => c.Items)
@@ -79,9 +79,12 @@ namespace Uchu.World
                     Logger.Debug($"Loading {inventoryType} inventory.");
                     var inventory = new Inventory(inventoryType, this);
                     
-                    await inventory.LoadItems(clientContext, playerCharacter.Items
-                        .Where(item => item.ParentId == ObjectId.Invalid 
-                                       && (InventoryType) item.InventoryType == inventoryType));
+                    await inventory.LoadItems(
+                        playerCharacter.Items
+                            .Where(item => 
+                                item.ParentId == ObjectId.Invalid
+                                && (InventoryType) item.InventoryType == inventoryType)
+                        );
                     
                     _inventories.Add(inventoryType, inventory);
                 }
@@ -287,33 +290,25 @@ namespace Uchu.World
         /// Adds a new lot to the inventory. The lot will automatically instantiated as the required amount of items
         /// based on the provided count and the stack size of that item.
         /// </summary>
-        /// <param name="clientContext">The client context to fetch the item info from</param>
         /// <param name="lot">The lot to add to the inventory</param>
         /// <param name="count">The count of the lot we want to add to the inventory</param>
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
         /// implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="settings">Optional <c>LegoDataDictionary</c> to instantiate the item with</param>
-        public async Task AddLotAsync(CdClientContext clientContext, Lot lot, uint count, 
-            LegoDataDictionary settings = default, InventoryType inventoryType = default)
+        public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default, 
+            InventoryType inventoryType = default)
         {
             // For players, the faction token proxy needs to be replaced with an actual faction token
             // If this wasn't possible, exit
             if (!HandleFactionToken(ref lot))
                 return;
             
-            var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
-                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
-            );
-
-            if (itemRegistryEntry == default)
-                return;
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().First(
+                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent);
             
-            var itemComponent = await clientContext.ItemComponentTable.FirstAsync(
+            var itemComponent = ClientCache.GetTable<ItemComponent>().First(
                 i => i.Id == itemRegistryEntry.Componentid);
             
-            if (itemComponent?.ItemType == default)
-                return;
-
             inventoryType = inventoryType != default 
                 ? inventoryType 
                 : ((ItemType) itemComponent.ItemType).GetInventoryType();
@@ -358,9 +353,7 @@ namespace Uchu.World
                 while (totalToAdd > 0)
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
-                    
-                    var item = await Item.Instantiate(clientContext, GameObject, lot, inventory, toAdd,
-                        extraInfo: settings);
+                    var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings);
                     
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
@@ -456,8 +449,6 @@ namespace Uchu.World
         public async Task MoveItemsBetweenInventoriesAsync(Item item, Lot lot, uint count, InventoryType source,
             InventoryType destination, bool silent = false)
         {
-            await using var clientContext = new CdClientContext();
-            
             // TODO: Find out why this was here
             if (item?.Settings != null)
             {
@@ -468,13 +459,13 @@ namespace Uchu.World
                 }
                 
                 Destroy(item);
-                await AddLotAsync(clientContext, item.Lot, count, item.Settings, destination);
+                await AddLotAsync(item.Lot, count, item.Settings, destination);
                 
                 return;
             }
             
             await RemoveLotAsync(item?.Lot ?? lot, count, source, silent);
-            await AddLotAsync(clientContext, item?.Lot ?? lot, count, item?.Settings, destination);
+            await AddLotAsync(item?.Lot ?? lot, count, item?.Settings, destination);
         }
         
         #endregion methods

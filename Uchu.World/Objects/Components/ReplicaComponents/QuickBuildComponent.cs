@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
@@ -7,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -21,12 +24,24 @@ namespace Uchu.World
         private PauseTimer _timer;
         private Timer _imaginationTimer;
         private int _taken;
+        private RebuildState _state = RebuildState.Open;
         
         private long StartTime { get; set; }
         
         private long Pause { get; set; }
 
-        public RebuildState State { get; set; } = RebuildState.Open;
+        public RebuildState State
+        {
+            get
+            {
+                return _state;
+            }
+            set
+            {
+                _state = value;
+                OnStateChange.Invoke(State);
+            }
+        }
 
         public bool Success { get; set; }
 
@@ -43,9 +58,13 @@ namespace Uchu.World
         public GameObject Activator { get; set; }
 
         public override ComponentId Id => ComponentId.QuickBuildComponent;
+        
+        public Event<RebuildState> OnStateChange { get; }
 
         protected QuickBuildComponent()
         {
+            OnStateChange = new Event<RebuildState>();
+            
             Listen(OnStart, async () =>
             {
                 if (GameObject.Settings.TryGetValue("rebuild_activators", out var rebuildActivators))
@@ -64,10 +83,9 @@ namespace Uchu.World
                 
                 Logger.Information($"{GameObject} is a rebuild-able!");
 
-                await using var cdClient = new CdClientContext();
-
-                var clientComponent = await cdClient.RebuildComponentTable.FirstOrDefaultAsync(
-                    r => r.Id == GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent)
+                var componentId = GameObject.Lot.GetComponentId(ComponentId.QuickBuildComponent);
+                var clientComponent = (await ClientCache.GetTableAsync<RebuildComponent>()).FirstOrDefault(
+                    r => r.Id == componentId
                 );
 
                 if (ActivityId == default)
@@ -352,6 +370,8 @@ namespace Uchu.World
             if (!Participants.Contains(player)) Participants.Add(player);
 
             GameObject.Serialize(GameObject);
+            
+            GameObject.PlayFX("BrickFadeUpVisCompleteEffect","create",507);
 
             // Update any mission task that required this quickbuild.
             Task.Run(async () =>

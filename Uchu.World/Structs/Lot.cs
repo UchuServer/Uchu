@@ -1,5 +1,6 @@
 using System.Linq;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -46,6 +47,15 @@ namespace Uchu.World
         {
             return Id;
         }
+        
+        public Core.Client.Objects Object
+        {
+            get
+            {
+                var id = Id;
+                return ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == id);
+            }
+        }
 
         public int GetComponentId(ComponentId componentType)
         {
@@ -55,8 +65,7 @@ namespace Uchu.World
         public int GetComponentId(int componentType)
         {
             var id = Id;
-            using var cdClient = new CdClientContext();
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(
                 r => r.Id == id && r.Componenttype == componentType
             );
 
@@ -71,10 +80,7 @@ namespace Uchu.World
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-
-            using var cdClient = new CdClientContext();
-
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().Where(
                 r => r.Id == id && r.Componenttype == componentType
             );
 

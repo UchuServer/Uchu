@@ -163,9 +163,7 @@ namespace Uchu.World.Handlers
                 goto sendResponse;
             }
 
-            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(
-                clientContext, mail.AttachmentLot, mail.AttachmentCount
-            );
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(mail.AttachmentLot, mail.AttachmentCount);
 
             mail.AttachmentLot = -1;
             mail.AttachmentCount = 0;

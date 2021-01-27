@@ -38,11 +38,25 @@ namespace Uchu.StandardScripts.AvantGardens
                     
                     if ((bool) laser.Settings["timeout"]) return;
                     
-                    var skillComponent = laser.AddComponent<SkillComponent>();
+                    GameObject laserObject = default;
+                    foreach (var gameObject in Zone.GameObjects)
+                    {
+                        if (!gameObject.Settings.ContainsKey("volGroup")) continue;
+                    
+                        if (((string) gameObject.Settings["volGroup"]).Equals(laser.GetGroups()[0])) continue;
+
+                        laserObject = gameObject;
+
+                        break;
+                    }
+
+                    if (laserObject == default) return;
+                    
+                    var skillComponent = laserObject.AddComponent<SkillComponent>();
 
                     laser.Settings["timeout"] = true;
                     
-                    var _ = Task.Run(async () =>
+                    Task.Run(async () =>
                     {
                         try
                         {

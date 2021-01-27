@@ -100,8 +100,7 @@ namespace Uchu.World
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
             
-            await using var clientContext = new CdClientContext();
-            await inventory.AddLotAsync(clientContext, 6416, 1, model, InventoryType.Models);
+            await inventory.AddLotAsync(6416, 1, model, InventoryType.Models);
 
             await ConfirmFinish();
         }

@@ -117,6 +117,7 @@ namespace Uchu.World
         PetTamingTryBuildResult = 0x29c,
         NotifyTamingBuildSuccess = 0x2a1,
         NotifyTamingModelLoadedOnServer = 0x2a2,
+        NotifyPetTamingPuzzleSelected = 0x2a3,
         AddPetToPlayer = 0x2a9,
         RequestSetPetName = 0x2ab,
         SetPetName = 0x2ac,

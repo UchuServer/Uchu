@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -134,17 +135,15 @@ namespace Uchu.World
 
         private async Task QueryLootMatrixAsync()
         {
-            await using var ctx = new CdClientContext();
-
-            var matrices = await ctx.LootMatrixTable.Where(
+            var matrices = (await ClientCache.GetTableAsync<Core.Client.LootMatrix>()).Where(
                 m => m.LootMatrixIndex == LootIndex
-            ).ToArrayAsync();
+            ).ToArray();
 
             foreach (var matrix in matrices)
             {
-                var tables = await ctx.LootTableTable.Where(
+                var tables = (await ClientCache.GetTableAsync<LootTable>()).Where(
                     t => t.LootTableIndex == matrix.LootTableIndex
-                ).ToArrayAsync();
+                ).ToArray();
 
                 var items = tables.Select(t => new LootMatrixEntry
                 {
@@ -169,11 +168,9 @@ namespace Uchu.World
 
         private async Task QueryCurrencyMatrixAsync()
         {
-            await using var ctx = new CdClientContext();
-
-            var matrices = await ctx.CurrencyTableTable.Where(
+            var matrices = (await ClientCache.GetTableAsync<CurrencyTable>()).Where(
                 c => c.CurrencyIndex == CurrencyIndex
-            ).ToArrayAsync();
+            ).ToArray();
 
             foreach (var matrix in matrices)
             {
@@ -190,13 +187,11 @@ namespace Uchu.World
 
         private async Task FindMatrixIndicesAsync()
         {
-            await using var ctx = new CdClientContext();
-
             var destructible = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
             if (destructible != default)
             {
-                var component = await ctx.DestructibleComponentTable.FirstOrDefaultAsync(
+                var component = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
                     c => c.Id == destructible
                 );
 
@@ -213,7 +208,7 @@ namespace Uchu.World
 
             if (package != default)
             {
-                var component = await ctx.PackageComponentTable.FirstOrDefaultAsync(
+                var component = (await ClientCache.GetTableAsync<PackageComponent>()).FirstOrDefault(
                     c => c.Id == package
                 );
 

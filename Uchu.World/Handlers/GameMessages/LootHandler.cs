@@ -60,8 +60,7 @@ namespace Uchu.World.Handlers.GameMessages
             Logger.Debug($"{player} picking up {loot}");
             
             await player.OnLootPickup.InvokeAsync(loot);
-            await using var clientContext = new CdClientContext();
-            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(clientContext, loot, 1);
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(loot, 1);
         }
 
         [PacketHandler]

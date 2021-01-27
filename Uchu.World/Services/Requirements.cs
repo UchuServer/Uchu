@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Services
 {
@@ -106,9 +107,7 @@ namespace Uchu.World.Services
         
         public static async Task<bool> CheckPreconditionAsync(int id, Player player)
         {
-            await using var cdClient = new CdClientContext();
-
-            var precondition = await cdClient.PreconditionsTable.FirstOrDefaultAsync(
+            var precondition = (await ClientCache.GetTableAsync<Preconditions>()).FirstOrDefault(
                 p => p.Id == id
             );
 

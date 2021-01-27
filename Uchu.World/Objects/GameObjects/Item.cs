@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Exceptions;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -22,15 +23,14 @@ namespace Uchu.World
         /// <summary>
         /// Instantiates an item using saved information from the player (e.g. the count, slot and LDD)
         /// </summary>
-        /// <param name="clientContext">The client context to fetch item info from</param>
         /// <param name="itemInstance">An item as fetched from the Uchu database to base this item on</param>
         /// <param name="owner">The owner (generally player) of this item</param>
         /// <param name="inventory">The inventory to add the item to</param>
         /// <returns>The instantiated item</returns>
-        public static async Task<Item> Instantiate(CdClientContext clientContext, InventoryItem itemInstance,
+        public static async Task<Item> Instantiate(InventoryItem itemInstance,
             GameObject owner, Inventory inventory)
         {
-            return await Instantiate(clientContext, owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
+            return await Instantiate(owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
                 (uint)itemInstance.Slot, LegoDataDictionary.FromString(itemInstance.ExtraInfo),
                 itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound);
         }
@@ -38,7 +38,6 @@ namespace Uchu.World
         /// <summary>
         /// Instantiates an item using static information.
         /// </summary>
-        /// <param name="clientContext">The client context to fetch item information from</param>
         /// <param name="owner">The owner of this item</param>
         /// <param name="lot">The lot of this item</param>
         /// <param name="inventory">The inventory to add the item to, if left empty, this item will be left unmanaged</param>
@@ -51,7 +50,7 @@ namespace Uchu.World
         /// <param name="isBound">Whether the game object has bound this item or not</param>
         /// <remarks>Note that <c>Start</c> still needs to be called on the item to be registered properly in the world.</remarks>
         /// <returns>The instantiated item or <c>null</c> if no slot could be acquired or if the item couldn't be added to the inventory</returns>
-        public static async Task<Item> Instantiate(CdClientContext clientContext, GameObject owner, Lot lot,
+        public static async Task<Item> Instantiate(GameObject owner, Lot lot,
             Inventory inventory, uint count, uint slot = default, LegoDataDictionary extraInfo = default,
             ObjectId objectId = default, Item rootItem = default, bool isEquipped = false, bool isBound = false)
         {
@@ -68,11 +67,11 @@ namespace Uchu.World
                 }
             }
             
-            var itemTemplate = await clientContext.ObjectsTable.FirstOrDefaultAsync(
+            var itemTemplate = (await ClientCache.GetTableAsync<Core.Client.Objects>()).FirstOrDefault(
                 o => o.Id == lot
             );
 
-            var itemRegistryEntry = await clientContext.ComponentsRegistryTable.FirstOrDefaultAsync(
+            var itemRegistryEntry = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
                 r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
             );
 
@@ -85,7 +84,7 @@ namespace Uchu.World
 
             // Set all the standard values
             instance.Settings = extraInfo ?? new LegoDataDictionary();
-            instance.ItemComponent = await clientContext.ItemComponentTable.FirstAsync(
+            instance.ItemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
                 i => i.Id == itemRegistryEntry.Componentid);
             instance.Owner = owner;
             instance.Count = count;
@@ -96,9 +95,9 @@ namespace Uchu.World
             instance.IsPackage = instance.Lot.GetComponentId(ComponentId.PackageComponent) != default;
             instance.Inventory = inventory;
             
-            var skills = await clientContext.ObjectSkillsTable.Where(
+            var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
                 s => s.ObjectTemplate == instance.Lot
-            ).ToArrayAsync();
+            ).ToArray();
 
             instance.IsConsumable = skills.Any(
                 s => s.CastOnType == (int) SkillCastType.OnConsumed
@@ -233,11 +232,9 @@ namespace Uchu.World
             if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
                 await inventory.RemoveLotAsync(Lot, 1);
-                await using var clientContext = new CdClientContext();
-                
                 foreach (var loot in await container.GenerateLootYieldsAsync((Player)Owner))
                 {
-                    await inventory.AddLotAsync(clientContext, loot.Key, loot.Value);
+                    await inventory.AddLotAsync(loot.Key, loot.Value);
                 }
             }
         }
@@ -307,10 +304,9 @@ namespace Uchu.World
             if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
                 && Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
-                await using var clientContext = new CdClientContext();
                 foreach (var part in (LegoDataList) list)
                 {
-                    await inventory.AddLotAsync(clientContext, (int) part, 1);
+                    await inventory.AddLotAsync((int) part, 1);
                 }
             }
 

@@ -245,7 +245,8 @@ namespace Uchu.World.Systems.Missions
                 [MissionTaskType.ObtainItem] = typeof(ObtainItemTask),
                 [MissionTaskType.Interact] = typeof(InteractTask),
                 [MissionTaskType.MissionComplete] = typeof(MissionCompleteTask),
-                [MissionTaskType.Flag] = typeof(FlagTask)
+                [MissionTaskType.Flag] = typeof(FlagTask),
+                [MissionTaskType.TamePet] = typeof(PetTameTask)
             };
         }
         
@@ -261,83 +262,19 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="cdContext">The cd client context to use when loading the mission templates</param>
         /// <param name="uchuContext">Can be provided to load mission information from the database</param>
-        public async Task LoadAsync(CdClientContext cdContext, UchuContext uchuContext = default)
+        public async Task LoadAsync(UchuContext uchuContext = default)
         {
-            var cachedMission = ClientCache.Missions.FirstOrDefault(m => m.MissionId == MissionId);
-            if (cachedMission != default)
-            {
-                LoadTemplateFromCache(cachedMission);
-            }
-            else
-            {
-                await LoadTemplateFromDatabaseAsync(cdContext);
-            }
-
+            await LoadTemplateAsync();
             if (uchuContext != default)
                 await LoadInstanceAsync(uchuContext);
         }
 
         /// <summary>
-        /// Loads generic cd client information about the mission from a cached instance of that mission
-        /// </summary>
-        /// <param name="cachedMission">The cached instance to load parameters for</param>
-        private void LoadTemplateFromCache(MissionInstance cachedMission)
-        {
-            PrerequisiteMissions = cachedMission.PrerequisiteMissions;
-            IsMission = cachedMission.IsMission;
-            IsChoiceReward = cachedMission.IsChoiceReward;
-            DefinedType = cachedMission.DefinedType;
-            DefinedSubType = cachedMission.DefinedSubType;
-            Repeatable = cachedMission.Repeatable;
-            
-            // Possible stat rewards
-            RewardMaxHealth = cachedMission.RewardMaxHealth;
-            RewardMaxImagination = cachedMission.RewardMaxImagination;
-            RewardMaxInventory = cachedMission.RewardMaxInventory;
-            RewardCurrency = cachedMission.RewardCurrency;
-            RewardCurrencyRepeatable = cachedMission.RewardCurrencyRepeatable;
-            RewardScore = cachedMission.RewardScore;
-            
-            // Emotes
-            RewardEmote1 = cachedMission.RewardEmote1;
-            RewardEmote2 = cachedMission.RewardEmote2;
-            RewardEmote3 = cachedMission.RewardEmote3;
-            RewardEmote4 = cachedMission.RewardEmote4;
-            
-            // First optional reward item
-            RewardItem1 = cachedMission.RewardItem1;
-            RewardItem1Count = cachedMission.RewardItem1Count;
-            RewardItem1Repeatable = cachedMission.RewardItem1Repeatable;
-            RewardItem1RepeatableCount = cachedMission.RewardItem1RepeatableCount;
-            
-            // Second optional reward item
-            RewardItem2 = cachedMission.RewardItem2;
-            RewardItem2Count = cachedMission.RewardItem2Count;
-            RewardItem2Repeatable = cachedMission.RewardItem2Repeatable;
-            RewardItem2RepeatableCount = cachedMission.RewardItem2RepeatableCount;
-            
-            // Third optional reward item
-            RewardItem3 = cachedMission.RewardItem3;
-            RewardItem3Count = cachedMission.RewardItem3Count;
-            RewardItem3Repeatable = cachedMission.RewardItem3Repeatable;
-            RewardItem3RepeatableCount = cachedMission.RewardItem3RepeatableCount;
-            
-            // Fourth optional reward item
-            RewardItem4 = cachedMission.RewardItem4;
-            RewardItem4Count = cachedMission.RewardItem4Count;
-            RewardItem4Repeatable = cachedMission.RewardItem4Repeatable;
-            RewardItem4RepeatableCount = cachedMission.RewardItem4RepeatableCount;
-
-            Tasks = cachedMission.Tasks.Select(t => 
-                (MissionTaskInstance) Activator.CreateInstance(t.GetType(), this, t)).ToList();
-        }
-
-        /// <summary>
         /// Loads generic CdClient information about the mission.
         /// </summary>
-        private async Task LoadTemplateFromDatabaseAsync(CdClientContext context)
+        private async Task LoadTemplateAsync()
         {
-            var mission = await context.MissionsTable.FirstAsync(
+            var mission = (await ClientCache.GetTableAsync<Core.Client.Missions>()).First(
                 m => m.Id == MissionId
             );
 
@@ -385,9 +322,9 @@ namespace Uchu.World.Systems.Missions
             RewardItem4Repeatable = mission.Rewarditem4repeatable ?? 0;
             RewardItem4RepeatableCount = mission.Rewarditem4repeatcount ?? 1;
 
-            var tasks = await context.MissionTasksTable.Where(
+            var tasks = (await ClientCache.GetTableAsync<MissionTasks>()).Where(
                 t => t.Id == MissionId
-            ).ToArrayAsync();
+            ).ToArray();
 
             // Load all the tasks for this mission
             Tasks = new List<MissionTaskInstance>();
@@ -421,8 +358,7 @@ namespace Uchu.World.Systems.Missions
         }
         
         /// <summary>
-        /// Loads specific uchu context information about the mission, if the mission is not started yet, this starts
-        /// it.
+        /// Loads specific uchu context information about the mission.
         /// </summary>
         private async Task LoadInstanceAsync(UchuContext context)
         {
@@ -434,25 +370,19 @@ namespace Uchu.World.Systems.Missions
             
             // Start the mission if it hasn't been started, otherwise load the database information
             if (mission != default)
-                LoadMissionInstance(mission);
-        }
-        
-        /// <summary>
-        /// Loads specific UchuContext information about the mission.
-        /// </summary>
-        private void LoadMissionInstance(Mission mission)
-        {
-            State = (MissionState)mission.State;
-            CompletionCount = mission.CompletionCount;
-            LastCompletion = mission.LastCompletion;
-
-            foreach (var task in Tasks)
             {
-                var taskInstance = mission.Tasks.First(t => t.TaskId == task.TaskId);
-                if (taskInstance == default)
-                    continue;
+                State = (MissionState)mission.State;
+                CompletionCount = mission.CompletionCount;
+                LastCompletion = mission.LastCompletion;
+
+                foreach (var task in Tasks)
+                {
+                    var taskInstance = mission.Tasks.First(t => t.TaskId == task.TaskId);
+                    if (taskInstance == default)
+                        continue;
                 
-                task.LoadInstance(taskInstance);
+                    task.LoadInstance(taskInstance);
+                }
             }
         }
 
@@ -631,13 +561,12 @@ namespace Uchu.World.Systems.Missions
                 (Repeat ? RewardItem4Repeatable : RewardItem4, Repeat ? RewardItem4RepeatableCount : RewardItem4Count),
             };
 
-            await using var clientContext = new CdClientContext();
             if (IsChoiceReward)
             {
                 var (_, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
                 count = Math.Max(count, 1);
                 
-                await inventory.AddLotAsync(clientContext, rewardItem, (uint) count);
+                await inventory.AddLotAsync(rewardItem, (uint) count);
             }
             else
             {
@@ -651,7 +580,7 @@ namespace Uchu.World.Systems.Missions
 
                     if (IsMission)
                     {
-                        await inventory.AddLotAsync(clientContext, lot, (uint) count);
+                        await inventory.AddLotAsync(lot, (uint) count);
                     }
                 }
             }

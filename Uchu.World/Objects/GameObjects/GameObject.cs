@@ -7,6 +7,7 @@ using InfectedRose.Lvl;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -324,11 +325,8 @@ namespace Uchu.World
 
                 instance.Name = name;
 
-                using (var cdClient = new CdClientContext())
-                {
-                    var obj = cdClient.ObjectsTable.FirstOrDefault(o => o.Id == lot);
-                    instance.ClientName = obj?.Name;
-                }
+                var obj = ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == lot);
+                instance.ClientName = obj?.Name;
 
                 instance.Spawner = spawner;
 
@@ -416,8 +414,6 @@ namespace Uchu.World
 
             if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _))
                 return InstancingUtilities.Spawner(levelObject, parent);
-
-            using var ctx = new CdClientContext();
             
             var name = levelObject.LegoInfo.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
 
@@ -447,7 +443,7 @@ namespace Uchu.World
             // Collect all the components on this object
             //
 
-            var registryComponents = ctx.ComponentsRegistryTable.Where(
+            var registryComponents = ClientCache.GetTable<ComponentsRegistry>().Where(
                 r => r.Id == levelObject.Lot
             ).ToArray();
 

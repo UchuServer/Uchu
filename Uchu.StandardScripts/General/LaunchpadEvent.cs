@@ -1,8 +1,10 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
@@ -17,16 +19,10 @@ namespace Uchu.StandardScripts.General
                 {
                     if (eventName == "ZonePlayer")
                     {
-                        await using var cdClient = new CdClientContext();
-
                         var launchpad = message.Associate.GetComponent<RocketLaunchpadComponent>();
                         var id = launchpad.GameObject.Lot.GetComponentId(ComponentId.RocketLaunchComponent);
-                        var launchpadComponent = await cdClient.RocketLaunchpadControlComponentTable.FirstOrDefaultAsync(
-                            r => r.Id == id
-                        );
-
-                        if (launchpadComponent == default)
-                            return;
+                        var launchpadComponent = (await ClientCache.GetTableAsync<RocketLaunchpadControlComponent>())
+                            .First(r => r.Id == id);
 
                         if (launchpadComponent.TargetZone != null)
                         {

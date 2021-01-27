@@ -14,6 +14,7 @@ using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
 using Uchu.Physics;
+using Uchu.World.Client;
 using Uchu.World.Filters;
 using Uchu.World.Social;
 
@@ -43,6 +44,8 @@ namespace Uchu.World
             OnFireServerEvent = new Event<string, FireServerEventMessage>();
             OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
+            OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
+            OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
 
@@ -197,6 +200,9 @@ namespace Uchu.World
         public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
+        
+        public Event<PetTamingTryBuildMessage> OnPetTamingTryBuild { get; }
+        public Event<NotifyTamingBuildSuccessMessage> OnNotifyTamingBuildSuccessMessage { get; }
 
         public Event<Lot> OnLootPickup { get; }
         
@@ -251,38 +257,34 @@ namespace Uchu.World
                 });
             }
         }
-        
+
         /// <summary>
         /// Triggers a celebration for the player
         /// </summary>
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
         public async Task TriggerCelebration(CelebrationId celebrationId)
         {
-            await using var cdContext = new CdClientContext();
-            var celebration = cdContext.CelebrationParametersTable
-                .FirstOrDefault(t => t.Id == (int) celebrationId);
+            var celebrations = await ClientCache.GetTableAsync<CelebrationParameters>();
+            var celebration = (celebrations.Where(t => t.Id == (int)celebrationId).ToArray())[0];
 
-            if (celebration != default)
+            this.Message(new StartCelebrationEffectMessage
             {
-                this.Message(new StartCelebrationEffectMessage
-                {
-                    Associate = this,
-                    Animation = celebration.Animation,
-                    BackgroundObject = new Lot(celebration.BackgroundObject ?? 0),
-                    CameraPathLOT = new Lot(celebration.CameraPathLOT ?? 0),
-                    CeleLeadIn = celebration.CeleLeadIn ?? 0,
-                    CeleLeadOut = celebration.CeleLeadOut ?? 0,
-                    CelebrationID = celebration.Id ?? 0,
-                    Duration = celebration.Duration ?? 0,
-                    IconID = celebration.IconID ?? 0,
-                    MainText = celebration.MainText,
-                    MixerProgram = celebration.MixerProgram,
-                    MusicCue = celebration.MusicCue,
-                    PathNodeName = celebration.PathNodeName,
-                    SoundGUID = celebration.SoundGUID,
-                    SubText = celebration.SubText
-                });
-            }
+                Associate = this,
+                Animation = celebration.Animation,
+                BackgroundObject = new Lot(celebration.BackgroundObject.Value),
+                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
+                CeleLeadIn = celebration.CeleLeadIn.Value,
+                CeleLeadOut = celebration.CeleLeadOut.Value,
+                CelebrationID = celebration.Id.Value,
+                Duration = celebration.Duration.Value,
+                IconID = celebration.IconID.Value,
+                MainText = celebration.MainText,
+                MixerProgram = celebration.MixerProgram,
+                MusicCue = celebration.MusicCue,
+                PathNodeName = celebration.PathNodeName,
+                SoundGUID = celebration.SoundGUID,
+                SubText = celebration.SubText
+            }); // Start effect
         }
 
         /// <summary>
@@ -461,12 +463,11 @@ namespace Uchu.World
         /// <param name="name">The player name to set</param>
         public void SetName(string name)
         {
-            this.Name = name;
-
-            this.Message(new SetNameMessage
+            Name = name;
+            Message(new SetNameMessage
             {
                 Associate = this,
-                Name = name
+                Name = Name
             });
         }
 

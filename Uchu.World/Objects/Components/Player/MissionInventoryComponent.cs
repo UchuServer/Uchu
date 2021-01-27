@@ -95,7 +95,6 @@ namespace Uchu.World
         {
             if (GameObject is Player player)
             {
-                await using var cdContext = new CdClientContext();
                 await using var uchuContext = new UchuContext();
 
                 // On load, load all the missions from database and store them in memory
@@ -108,7 +107,7 @@ namespace Uchu.World
                 foreach (var mission in missions)
                 {
                     var instance = new MissionInstance(mission.MissionId, player);
-                    await instance.LoadAsync(cdContext, uchuContext);
+                    await instance.LoadAsync(uchuContext);
 
                     lock (Missions)
                     {
@@ -291,10 +290,8 @@ namespace Uchu.World
         /// <returns>The newly created mission instance</returns>
         private async Task<MissionInstance> AddMissionAsync(int missionId, GameObject gameObject)
         {
-            await using var cdContext = new CdClientContext();
-
             var mission = new MissionInstance(missionId, (Player)GameObject);
-            await mission.LoadAsync(cdContext);
+            await mission.LoadAsync();
 
             lock (Missions) {
                 Missions.Add(mission);
@@ -384,6 +381,7 @@ namespace Uchu.World
         /// <param name="missionId">The id of the mission to complete</param>
         public async Task CompleteMissionAsync(int missionId)
         {
+            // If the mission can't be found, complete it
             var mission = GetMission(missionId) ?? await AddMissionAsync(missionId, GameObject);
             await mission.CompleteAsync();
         }
@@ -604,6 +602,24 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Progresses the taming pet tasks.
+        /// </summary>
+        /// <param name="Pet">the lot of the tamed pet</param>
+        /// <returns>¯\_(ツ)_/¯</returns>
+        public async Task TamePetAsync(Lot Pet)
+        {
+            foreach (var task in FindActiveTasksAsync<PetTameTask>())
+            {
+                await task.ReportProgress(Pet);
+            }
+            
+            await StartUnlockableAchievementsAsync<PetTameTask>(MissionTaskType.TamePet, Pet, async task =>
+            {
+                await task.ReportProgress(Pet);
+            });
+        }
+
+        /// <summary>
         /// Returns a list of achievements that a player may start for a certain task type due to meeting it's prerequisites
         /// </summary>
         /// <remarks>
@@ -636,7 +652,7 @@ namespace Uchu.World
                 // allows us to open less db transactions in the long run
                 var mission = await AddMissionAsync(achievement.MissionId, GameObject);
                 await mission.StartAsync();
-
+                
                 // For achievements there's always only one task
                 if (progress != null)
                     await progress(mission.Tasks.First() as T);

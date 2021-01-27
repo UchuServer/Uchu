@@ -12,6 +12,7 @@ using System.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 using Uchu.World.Filters;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
@@ -44,22 +45,17 @@ namespace Uchu.World.Handlers.Commands
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await using var clientContext = new CdClientContext();
             if (arguments.Length != 3)
             {
-                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(clientContext, lot, count);
+                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count);
             }
             else
             {
                 if (!uint.TryParse(arguments[2], out var inventory))
                     return "Invalid <inventory(optional)>";
 
-                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(
-                    clientContext,
-                    lot,
-                    count,
-                    inventoryType: (InventoryType) inventory
-                );
+                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count, 
+                    inventoryType: (InventoryType) inventory);
             }
 
             return $"Successfully added {lot} x {count} to your inventory";
@@ -753,9 +749,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
-            using CdClientContext ctx = new CdClientContext();
-
-            ZoneTable WorldTable = ctx.ZoneTableTable.FirstOrDefault(t => t.ZoneID == id);
+            ZoneTable WorldTable = ClientCache.GetTable<ZoneTable>().FirstOrDefault(t => t.ZoneID == id);
 
             if (WorldTable == default)
             {
@@ -893,17 +887,15 @@ namespace Uchu.World.Handlers.Commands
             if (arguments.Length == default)
                 return "getemote <emote>";
 
-            await using var cdClient = new CdClientContext();
-
             Emotes emote;
             
             if (int.TryParse(arguments[0], out var id))
             {
-                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.Id == id);
+                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.Id == id);
             }
             else
             {
-                emote = await cdClient.EmotesTable.FirstOrDefaultAsync(c => c.AnimationName == arguments[0].ToLower());
+                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
             }
 
             if (emote?.Id == default)

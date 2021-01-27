@@ -105,11 +105,11 @@ namespace Uchu.World
         /// </summary>
         /// <param name="clientContext">The client context to load extra item info from</param>
         /// <param name="items">The items to initialize the inventory with </param>
-        public async Task LoadItems(CdClientContext clientContext, IEnumerable<InventoryItem> items)
+        public async Task LoadItems(IEnumerable<InventoryItem> items)
         {
             var initializeTasks = items.Select(async i =>
             {
-                var item = await Item.Instantiate(clientContext, i, ManagerComponent.GameObject, this);
+                var item = await Item.Instantiate(i, ManagerComponent.GameObject, this);
                 if (item != null)
                 {
                     Object.Start(item);

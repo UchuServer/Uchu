@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -82,11 +83,9 @@ namespace Uchu.World
             }
             else
             {
-                await using var clientContext = new CdClientContext();
-                
-                var component = clientContext.ComponentsRegistryTable.FirstOrDefault(c =>
+                var component = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-                var clientItems = clientContext.InventoryComponentTable
+                var clientItems = ClientCache.GetTable<Core.Client.InventoryComponent>()
                     .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
 
                 foreach (var clientItem in clientItems)
@@ -95,15 +94,13 @@ namespace Uchu.World
                         continue;
                     
                     var lot = (Lot) clientItem.Itemid;
-                    var itemComponent = clientContext.ItemComponentTable.First(
+                    var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
                         i => i.Id == lot.GetComponentId(ComponentId.ItemComponent));
 
                     if (itemComponent.ItemType == default)
                         continue;
                     
-                    var item = await Item.Instantiate(clientContext, GameObject, lot, default,
-                        (uint)(clientItem.Count ?? 1));
-                            
+                    var item = await Item.Instantiate(GameObject, lot, default, (uint)(clientItem.Count ?? 1));
                     if (item != null)
                         Items[(EquipLocation) itemComponent.EquipLocation] = item;
                 }
@@ -262,8 +259,7 @@ namespace Uchu.World
                 // Make sure that all sub items are available in the inventory, if not: add them.
                 foreach (var subItemLot in item.SubItemLots)
                 {
-                    var subItem = inventory.FindItem(subItemLot) 
-                                  ?? await Item.Instantiate(clientContext, GameObject, subItemLot, item.Inventory, 1);
+                    var subItem = inventory.FindItem(subItemLot) ?? await Item.Instantiate(GameObject, subItemLot, item.Inventory, 1);
                     if (subItem == null)
                         continue;
                     
