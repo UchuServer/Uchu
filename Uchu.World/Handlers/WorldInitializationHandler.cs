@@ -202,7 +202,8 @@ namespace Uchu.World.Handlers
                 ["name"] = character.Name,
                 ["objid", 9] = character.Id,
                 ["template", 1] = 1,
-                ["xmlData"] = xml
+                ["xmlData"] = xml,
+                ["legoclub", 7] = true 
             };
 
             connection.Send(new DetailedUserInfoPacket {Data = ldf});
