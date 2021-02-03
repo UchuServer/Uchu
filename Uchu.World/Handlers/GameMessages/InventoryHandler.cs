@@ -21,7 +21,6 @@ namespace Uchu.World.Handlers.GameMessages
         {
             await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
                 message.Item,
-                message.Lot,
                 message.StackCount,
                 message.SourceInventory,
                 message.DestinationInventory
@@ -35,8 +34,8 @@ namespace Uchu.World.Handlers.GameMessages
                 return;
             
             await player.GetComponent<InventoryManagerComponent>()
-                .RemoveItemAsync(message.Item, message.InventoryType, message.Item.Count - message.TotalItems, 
-                    true);
+                .RemoveItemAsync(message.Item, message.Item.Count - message.TotalItems, 
+                    message.InventoryType, true);
         }
 
         [PacketHandler]

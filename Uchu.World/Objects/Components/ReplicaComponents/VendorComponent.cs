@@ -130,22 +130,18 @@ namespace Uchu.World
         public async Task Sell(Item item, uint count, Player player)
         {
             var itemComponent = item.ItemComponent;
-            
-            if (count == default || itemComponent.BaseValue <= 0) return;
+            if (count == default || itemComponent.BaseValue <= 0)
+                return;
             
             await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
-                default,
-                item.Lot,
+                item,
                 count,
                 item.Inventory.InventoryType,
                 InventoryType.VendorBuyback
             );
 
-            var returnCurrency =
-                Math.Floor(
-                    (itemComponent.BaseValue ?? 0) *
-                    (itemComponent.SellMultiplier ?? 0.1f)
-                ) * count;
+            var returnCurrency = Math.Floor(
+                (itemComponent.BaseValue ?? 0) * (itemComponent.SellMultiplier ?? 0.1f)) * count;
 
             var character = player.GetComponent<CharacterComponent>();
             character.Currency += (uint) returnCurrency;
@@ -162,26 +158,20 @@ namespace Uchu.World
         public async Task Buyback(Item item, uint count, Player player)
         {
             var itemComponent = item.ItemComponent;
-            
-            if (count == default || itemComponent.BaseValue <= 0) return;
+            if (count == default || itemComponent.BaseValue <= 0)
+                return;
 
-            var cost =
-                (uint) Math.Floor(
-                    (itemComponent.BaseValue ?? 0) *
-                    (itemComponent.SellMultiplier ?? 0.1f)
-                ) * count;
+            var cost = (uint) Math.Floor(
+                (itemComponent.BaseValue ?? 0) * (itemComponent.SellMultiplier ?? 0.1f)) * count;
 
             var character = player.GetComponent<CharacterComponent>();
-            
             if (cost > character.Currency)
                 return;
 
             character.Currency -= cost;
             
             var manager = player.GetComponent<InventoryManagerComponent>();
-            await manager.RemoveLotAsync(item.Lot, count, InventoryType.VendorBuyback);
-            
-            await using var clientContext = new CdClientContext();
+            await manager.RemoveItemAsync(item, count, InventoryType.VendorBuyback);
             await manager.AddLotAsync(item.Lot, count);
             
             player.Message(new VendorTransactionResultMessage

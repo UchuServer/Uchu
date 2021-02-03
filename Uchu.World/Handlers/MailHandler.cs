@@ -87,9 +87,7 @@ namespace Uchu.World.Handlers
                     goto sendResponse;
                 }
                 
-                await player.GetComponent<InventoryManagerComponent>().RemoveLotAsync(
-                    item.Lot, packet.AttachmentCount
-                );
+                await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(item, packet.AttachmentCount);
             }
 
             var mail = new CharacterMail

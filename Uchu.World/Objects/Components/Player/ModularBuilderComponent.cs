@@ -137,7 +137,6 @@ namespace Uchu.World
             {
                 await inventory.MoveItemsBetweenInventoriesAsync(
                     temp,
-                    temp.Lot,
                     temp.Count,
                     InventoryType.TemporaryModels,
                     InventoryType.Models

@@ -285,6 +285,25 @@ namespace Uchu.World
             
             return true;
         }
+
+        /// <summary>
+        /// Returns the item component for a lot, default if either the item registry or item component doesn't exist for
+        /// the lot
+        /// </summary>
+        /// <param name="lot">The lot to find</param>
+        /// <returns>The item component for the lot, if available</returns>
+        private static async Task<ItemComponent> GetItemComponentForLotAysnc(Lot lot)
+        {
+            var itemRegistryEntry = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
+                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent);
+            if (itemRegistryEntry == default)
+                return default;
+
+            var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
+                i => i.Id == itemRegistryEntry.Componentid);
+
+            return itemComponent;
+        }
         
         /// <summary>
         /// Adds a new lot to the inventory. The lot will automatically instantiated as the required amount of items
@@ -302,13 +321,11 @@ namespace Uchu.World
             // If this wasn't possible, exit
             if (!HandleFactionToken(ref lot))
                 return;
-            
-            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().First(
-                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent);
-            
-            var itemComponent = ClientCache.GetTable<ItemComponent>().First(
-                i => i.Id == itemRegistryEntry.Componentid);
-            
+
+            var itemComponent = await GetItemComponentForLotAysnc(lot);
+            if (itemComponent == default)
+                return;
+
             inventoryType = inventoryType != default 
                 ? inventoryType 
                 : ((ItemType) itemComponent.ItemType).GetInventoryType();
@@ -357,7 +374,7 @@ namespace Uchu.World
                     
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
-                        return; // TODO: Message item to player
+                        return; // TODO: Message item to player with mail
                     
                     Start(item);
                     item.MessageCreation();
@@ -401,16 +418,19 @@ namespace Uchu.World
         /// a specific item
         /// </summary>
         /// <param name="item">The item to remove</param>
-        /// <param name="inventoryType">The inventory to remove the item from</param>
-        /// <param name="count">The number of items to remove</param>
+        /// <param name="count">The number of items to remove, if left empty will use the count from the item</param>
+        /// <param name="inventoryType">The inventory to remove the item from, if left empty will use the one from the item inventory</param>
         /// <param name="silent">Whether or not to notify the client</param>
-        public async Task RemoveItemAsync(Item item, InventoryType inventoryType, uint count = default, bool silent = false)
+        public async Task RemoveItemAsync(Item item, uint count = default, InventoryType inventoryType = default,
+            bool silent = false)
         {
             var lotLock = GetLotLock(item.Lot);
             await lotLock.WaitAsync();
 
             try
             {
+                if (inventoryType == default)
+                    inventoryType = item.Inventory.InventoryType;
                 if (count == default)
                     count = item.Count;
 
@@ -470,31 +490,18 @@ namespace Uchu.World
         /// Moves an item from one inventory to another inventory, generally used for vendor buy back
         /// </summary>
         /// <param name="item">The item to move</param>
-        /// <param name="lot">The lot of the item to move (if no item is provided)</param>
         /// <param name="count">The amount of items to move</param>
         /// <param name="source">The source inventory to move from</param>
         /// <param name="destination">The destination inventory to move to</param>
         /// <param name="silent">Whether to send inventory update messages or not</param>
-        public async Task MoveItemsBetweenInventoriesAsync(Item item, Lot lot, uint count, InventoryType source,
+        public async Task MoveItemsBetweenInventoriesAsync(Item item, uint count, InventoryType source,
             InventoryType destination, bool silent = false)
         {
-            // TODO: Find out why this was here
-            if (item?.Settings != null)
-            {
-                if (count != 1 || item.Count != 1)
-                {
-                    Logger.Error($"Invalid special item {item}");
-                    return;
-                }
-                
-                Destroy(item);
-                await AddLotAsync(item.Lot, count, item.Settings, destination);
-                
+            if (item == null)
                 return;
-            }
-            
-            await RemoveLotAsync(item?.Lot ?? lot, count, source, silent);
-            await AddLotAsync(item?.Lot ?? lot, count, item?.Settings, destination);
+
+            await RemoveItemAsync(item, count, source, silent);
+            await AddLotAsync(item.Lot , count, item.Settings, destination);
         }
         
         #endregion methods

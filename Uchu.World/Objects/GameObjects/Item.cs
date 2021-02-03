@@ -231,10 +231,10 @@ namespace Uchu.World
 
             if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                await inventory.RemoveLotAsync(Lot, 1);
-                foreach (var loot in await container.GenerateLootYieldsAsync((Player)Owner))
+                await inventory.RemoveItemAsync(this, 1);
+                foreach (var (key, value) in await container.GenerateLootYieldsAsync((Player)Owner))
                 {
-                    await inventory.AddLotAsync(loot.Key, loot.Value);
+                    await inventory.AddLotAsync(key, value);
                 }
             }
         }
@@ -252,7 +252,7 @@ namespace Uchu.World
             }
             
             if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
-                await inventory.RemoveLotAsync(Lot, 1);
+                await inventory.RemoveItemAsync(this, 1);
         }
 
         /// <summary>
