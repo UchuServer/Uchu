@@ -397,7 +397,36 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Removes <c>count</c> items of a certain lot from inventory of the GameObject.
+        /// Removes an item from a specific slot in the inventory, for example useful if the player wanted to delete
+        /// a specific item
+        /// </summary>
+        /// <param name="item">The item to remove</param>
+        /// <param name="inventoryType">The inventory to remove the item from</param>
+        /// <param name="count">The number of items to remove</param>
+        /// <param name="silent">Whether or not to notify the client</param>
+        public async Task RemoveItemAsync(Item item, InventoryType inventoryType, uint count = default, bool silent = false)
+        {
+            var lotLock = GetLotLock(item.Lot);
+            await lotLock.WaitAsync();
+
+            try
+            {
+                if (count == default)
+                    count = item.Count;
+
+                var itemToRemove = _inventories[inventoryType][item.Slot];
+                await itemToRemove.DecrementCountAsync(count, silent);
+                await OnLotRemoved.InvokeAsync(item.Lot, count);
+            }
+            finally
+            {
+                lotLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Removes <c>count</c> items of a certain lot from inventory of the GameObject. This will look for the items
+        /// to delete itself, if you wish to delete a specific item use <see cref="RemoveItemAsync"/>
         /// </summary>
         /// <param name="lot">The lot of the item to remove</param>
         /// <param name="count">The number of items to remove</param>

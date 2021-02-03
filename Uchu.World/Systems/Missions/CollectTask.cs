@@ -9,10 +9,6 @@ namespace Uchu.World.Systems.Missions
             : base(mission, taskId, missionTaskIndex)
         {
         }
-
-        public CollectTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
         
         public override MissionTaskType Type => MissionTaskType.Collect;
         

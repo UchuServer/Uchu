@@ -10,10 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public InteractTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.Interact;
 
         public override bool Completed => Progress.Contains(Target);

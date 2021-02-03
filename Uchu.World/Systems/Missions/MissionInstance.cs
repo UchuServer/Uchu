@@ -341,8 +341,8 @@ namespace Uchu.World.Systems.Missions
 
                 if (task.Uid != null)
                 {
-                    var instance = (MissionTaskInstance) Activator.CreateInstance(type, this, 
-                        task.Uid.Value, index);
+                    var instance = (MissionTaskInstance) Activator.CreateInstance(type, this, task.Uid.Value,
+                        index);
                     if (instance == default || task.Uid == default)
                     {
                         Logger.Error($"Invalid task: {type} [{task.Uid}]");

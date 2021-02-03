@@ -35,7 +35,8 @@ namespace Uchu.World.Handlers.GameMessages
                 return;
             
             await player.GetComponent<InventoryManagerComponent>()
-                .RemoveLotAsync(message.Item.Lot, message.Item.Count - message.TotalItems, message.InventoryType, true);
+                .RemoveItemAsync(message.Item, message.InventoryType, message.Item.Count - message.TotalItems, 
+                    true);
         }
 
         [PacketHandler]

@@ -82,7 +82,7 @@ namespace Uchu.World
                     });
                     
                     return Task.CompletedTask;
-                }, 20 * 60);
+                }, 20 * 15);
                 
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
@@ -151,7 +151,7 @@ namespace Uchu.World
             var controllablePhysics = AddComponent<ControllablePhysicsComponent>();
             AddComponent<DestructibleComponent>();
             var stats = GetComponent<DestroyableComponent>();
-            var characterComponent = AddComponent<CharacterComponent>();
+            AddComponent<CharacterComponent>();
             var inventory = AddComponent<InventoryComponent>();
             
             AddComponent<LuaScriptComponent>();
@@ -161,10 +161,12 @@ namespace Uchu.World
             
             controllablePhysics.HasPosition = true;
             stats.HasStats = true;
-
+            
             // Server Components
-            AddComponent<MissionInventoryComponent>();
             AddComponent<InventoryManagerComponent>();
+            await inventory.EquipFromInventoryManagerAsync();
+            
+            AddComponent<MissionInventoryComponent>();
             AddComponent<TeamPlayerComponent>();
             AddComponent<ModularBuilderComponent>();
             

@@ -10,11 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public ObtainItemTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
-            cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.ObtainItem;
 
         public async Task ReportProgress(int lot)

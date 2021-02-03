@@ -337,27 +337,27 @@ namespace Uchu.World
         /// </summary>
         /// <param name="factionFlagId">The flag Id to look up for the player</param>
         /// <returns>True if the player has a certain faction</returns>
-        public bool HasFaction(FactionFlags factionFlagId) => GetFlag((int) factionFlagId);
+        public bool HasFaction(FactionFlag factionFlagId) => GetFlag((int) factionFlagId);
 
         /// <summary>
         /// Whether this character belongs to the sentinel faction
         /// </summary>
-        public bool IsSentinel => HasFaction(FactionFlags.Sentinel);
+        public bool IsSentinel => HasFaction(FactionFlag.Sentinel);
         
         /// <summary>
         /// Whether this character belongs to the assembly faction
         /// </summary>
-        public bool IsAssembly => HasFaction(FactionFlags.Assembly);
+        public bool IsAssembly => HasFaction(FactionFlag.Assembly);
         
         /// <summary>
         /// Whether this player belongs to the paradox faction
         /// </summary>
-        public bool IsParadox => HasFaction(FactionFlags.Paradox);
+        public bool IsParadox => HasFaction(FactionFlag.Paradox);
         
         /// <summary>
         /// Whether this player belongs to the paradox faction
         /// </summary>
-        public bool IsVentureLeague => HasFaction(FactionFlags.Venture);
+        public bool IsVentureLeague => HasFaction(FactionFlag.Venture);
 
         #endregion flags
         

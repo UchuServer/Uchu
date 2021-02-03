@@ -23,7 +23,7 @@ namespace Uchu.World.Client
         /// <summary>
         /// All missions in the cd client
         /// </summary>
-        public static MissionInstance[] Missions { get; private set; } = { };
+        private static MissionInstance[] Missions { get; set; } = { };
 
         /// <summary>
         /// All achievements in the cd client
@@ -36,7 +36,7 @@ namespace Uchu.World.Client
         public static async Task LoadAsync()
         {
             Logger.Debug("Setting up missions cache");
-            var missionTasks = GetTable<Missions>()
+            var missionTasks = (await GetTableAsync<Missions>())
                 .ToArray()
                 .Select(async m =>
                 {

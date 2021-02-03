@@ -67,21 +67,13 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Loads the inventory for the game object, if this object has a <see cref="InventoryManagerComponent"/>, the
-        /// equipped items from that inventory will be used, otherwise the CdClient inventory will be used.
+        /// Loads the inventory for the game object, only for non-player GameObjects does this automatically equip the
+        /// items as the component cannot know when the inventory manager component will be available to load the
+        /// items from.
         /// </summary>
         private async Task LoadAsync()
         {
-            // If this is a player, load the items from the uchu database, otherwise load the pre-defined
-            // items from the cd client
-            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventoryComponent))
-            {
-                foreach (var item in inventoryComponent.Items.Where(i => i.IsEquipped))
-                {
-                    await EquipAsync(item);
-                }
-            }
-            else
+            if (!(GameObject is Player))
             {
                 var component = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
@@ -103,6 +95,20 @@ namespace Uchu.World
                     var item = await Item.Instantiate(GameObject, lot, default, (uint)(clientItem.Count ?? 1));
                     if (item != null)
                         Items[(EquipLocation) itemComponent.EquipLocation] = item;
+                }
+            }
+        }
+
+        /// <summary>
+        /// For players the inventory has to be explicitly equipped due to component ordering
+        /// </summary>
+        public async Task EquipFromInventoryManagerAsync()
+        {
+            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventoryComponent))
+            {
+                foreach (var item in inventoryComponent.Items.Where(i => i.IsEquipped))
+                {
+                    await EquipAsync(item);
                 }
             }
         }
