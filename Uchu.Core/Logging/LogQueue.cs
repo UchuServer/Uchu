@@ -12,18 +12,18 @@ namespace Uchu.Core
 {
     public class LogEntry
     {
-        public string message { get; set; }
-        public ConsoleColor color { get; set; }
-        public LogLevel logLevel { get; set; }
-        public StackTrace trace { get; set; }
-        public LogEntry nextEntry { get; set; }
+        public string Message { get; set; }
+        public ConsoleColor Color { get; set; }
+        public LogLevel LogLevel { get; set; }
+        public StackTrace Trace { get; set; }
+        public LogEntry NextEntry { get; set; }
     }
     
     public class LogQueue : IDisposable
     {
-        private readonly Mutex logMutex = new Mutex();
-        private LogEntry nextEntry = null;
-        private LogEntry lastEntry = null;
+        private readonly Mutex _logMutex = new Mutex();
+        private LogEntry _nextEntry = null;
+        private LogEntry _lastEntry = null;
         
         public static UchuConfiguration Config { get; set; }
         
@@ -37,33 +37,33 @@ namespace Uchu.Core
 #endif
         {
             // Lock the log.
-            logMutex.WaitOne();
+            _logMutex.WaitOne();
             
             // Create the new entry.
             var entry = new LogEntry()
             {
-                message = line,
-                color = color,
+                Message = line,
+                Color = color,
 #if DEBUG
-                trace = trace,
+                Trace = trace,
 #endif
-                logLevel = logLevel
+                LogLevel = logLevel
             };
             
             // Update the pointers.
-            if (this.nextEntry == null)
+            if (this._nextEntry == null)
             {
-                this.nextEntry = entry;
-                this.lastEntry = entry;
+                this._nextEntry = entry;
+                this._lastEntry = entry;
             }
             else
             {
-                this.lastEntry.nextEntry = entry;
-                this.lastEntry = entry;
+                this._lastEntry.NextEntry = entry;
+                this._lastEntry = entry;
             }
 
             // Unlock the log.
-            this.logMutex.ReleaseMutex();
+            this._logMutex.ReleaseMutex();
         }
 
         /// <summary>
@@ -73,18 +73,18 @@ namespace Uchu.Core
         public LogEntry PopEntry()
         {
             // Lock the log.
-            logMutex.WaitOne();
+            _logMutex.WaitOne();
             
             // Pop the next entry.
             LogEntry entry = null;
-            if (this.nextEntry != null)
+            if (this._nextEntry != null)
             {
-                entry = this.nextEntry;
-                this.nextEntry = entry.nextEntry;
+                entry = this._nextEntry;
+                this._nextEntry = entry.NextEntry;
             }
             
             // Unlock the log.
-            this.logMutex.ReleaseMutex();
+            this._logMutex.ReleaseMutex();
             
             // Return the entry.
             return entry;
@@ -136,9 +136,9 @@ namespace Uchu.Core
                     var entry = this.PopEntry();
                     while (entry != null)
                     {
-                        if (entry.message.Contains('\n', StringComparison.InvariantCulture))
+                        if (entry.Message.Contains('\n', StringComparison.InvariantCulture))
                         {
-                            var parts = entry.message.Split('\n');
+                            var parts = entry.Message.Split('\n');
 
                             var visual = parts.Max(p => p.Length);
 
@@ -149,7 +149,7 @@ namespace Uchu.Core
                                 var segment = $"{part}{padding}";
 
 #if DEBUG
-                                await InternalLog(segment, entry.color, entry.logLevel, entry.trace).ConfigureAwait(false);
+                                await InternalLog(segment, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
 #else
                                 await InternalLog(segment, entry.color, entry.logLevel).ConfigureAwait(false);
 #endif
@@ -158,7 +158,7 @@ namespace Uchu.Core
                             continue;
                         }
 #if DEBUG
-                        await InternalLog(entry.message, entry.color, entry.logLevel, entry.trace).ConfigureAwait(false);
+                        await InternalLog(entry.Message, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
 #else
                         await InternalLog(entry.message, entry.color, entry.logLevel).ConfigureAwait(false);
 #endif
@@ -228,7 +228,7 @@ namespace Uchu.Core
         {
             if (disposing)
             {
-                this.logMutex.Dispose();
+                this._logMutex.Dispose();
             }
         }
 
