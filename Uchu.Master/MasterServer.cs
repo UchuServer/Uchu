@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Uchu.Api;
@@ -46,16 +47,33 @@ namespace Uchu.Master
             Subsidiaries = new List<int>();
             
             Instances = new List<ServerInstance>();
+            try
+            {
+                // Throws FileNotFoundException / DirectoryNotFoundException when res folder or instance dll is specified incorrectly
+                await ConfigureAsync();
+            }
+            catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
+            {
+                Logger.Error(e.Message);
+                if (Config.ServerBehaviour.PressKeyToExit)
+                {
+                    Logger.Error("Press any key to exit...");
+                    Console.ReadKey();
+                }
+                Environment.Exit(1);
+            }
             
-            await ConfigureAsync();
-
             var databaseVerified = await CheckForDatabaseUpdatesAsync();
 
             if (!databaseVerified)
             {
-                Logger.Error($"Failed to connect to database provider \"{Config.Database.Provider}\"");
-                
-                return;
+                Logger.Error($"Failed to connect to database provider \"{Config.Database.Provider}\".");
+                if (Config.ServerBehaviour.PressKeyToExit)
+                {
+                    Logger.Error("Press any key to exit...");
+                    Console.ReadKey();
+                }
+                Environment.Exit(1);
             }
             
             Console.CancelKeyPress += ShutdownProcesses;
@@ -64,7 +82,21 @@ namespace Uchu.Master
             
             await SetupApiAsync();
             
-            await Api.StartAsync(ApiPort);
+            try
+            {
+                // Throws HttpListenerException when port is unavailable or permission is denied
+                await Api.StartAsync(ApiPort);
+            }
+            catch (HttpListenerException e)
+            {
+                Logger.Error($"Could not start API listener on port {ApiPort}: {e.Message}. Try specifying a different port in config.xml.");
+                if (Config.ServerBehaviour.PressKeyToExit)
+                {
+                    Logger.Error("Press any key to exit...");
+                    Console.ReadKey();
+                }
+                Environment.Exit(1);
+            }
         }
 
         private static async Task<bool> CheckForDatabaseUpdatesAsync()
@@ -231,6 +263,18 @@ namespace Uchu.Master
             
             DllLocation = Config.DllSource.Instance;
 
+            if (!File.Exists(DllLocation))
+            {
+                Logger.Error("Could not find file specified in DllSource -> Instance in config.xml.");
+                throw new FileNotFoundException("Could not find Instance file.");
+            }
+
+            foreach (var scriptPackPath in Config.DllSource.ScriptDllSource)
+            {
+                if (!File.Exists(scriptPackPath))
+                    Logger.Warning($"Could not find script pack at {scriptPackPath}");
+            }
+
             ApiPortIndex = Config.ApiConfig.Port;
 
             var source = Directory.GetCurrentDirectory();
@@ -244,6 +288,7 @@ namespace Uchu.Master
         private static bool EnsureUnpackedClient(string directory)
         {
             return directory.EndsWith("res") &&
+                   Directory.Exists(directory) &&
                    Directory.GetFiles(directory, "*.luz", SearchOption.AllDirectories).Any();
         }
 
