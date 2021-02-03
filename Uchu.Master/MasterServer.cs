@@ -180,11 +180,11 @@ namespace Uchu.Master
             if (File.Exists(fn))
             {
                 await using var file = File.OpenRead(fn);
-                Logger.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
+                LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
             }
             else
             {
-                Logger.Config = Config = new UchuConfiguration();
+                LogQueue.Config = Config = new UchuConfiguration();
 
                 var backup = File.CreateText("config.default.xml");
 
