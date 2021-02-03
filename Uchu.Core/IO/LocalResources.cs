@@ -91,9 +91,12 @@ namespace Uchu.Core.IO
                 throw new ArgumentNullException(nameof(path), 
                     ResourceStrings.LocalResources_GetStream_PathNullException);
             
-            path = path.Replace('\\', '/').ToLower();
-
-            return File.OpenRead(Path.Combine(RootPath, path));
+            var data = File.ReadAllBytes(Path.Combine(RootPath,path));
+            var stream = new MemoryStream(data.Length);
+            stream.Write(data);
+            stream.Flush();
+            stream.Position = 0;
+            return stream;
         }
     }
 }
