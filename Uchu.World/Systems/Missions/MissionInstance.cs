@@ -412,26 +412,21 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         private async Task SyncObtainItemTasksWithInventory()
         {
-            var obtainTasks = Tasks.OfType<ObtainItemTask>().ToList();
-
-            if (obtainTasks.Count > 0)
+            if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventoryManagerComponent))
+                return;
+            
+            var items = inventoryManagerComponent.Items;
+            
+            foreach (var task in Tasks.OfType<ObtainItemTask>())
             {
-                if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventoryManagerComponent))
-                    return;
+                var toGive = items.Where(i => task.Targets.Contains((int) i.Lot))
+                    .Sum(i => i.Count);
 
-                var items = inventoryManagerComponent.Items;
-
-                foreach (var task in obtainTasks)
+                for (var i = 0; i < toGive; i++)
                 {
-                    var toGive = items.Where(i => task.Targets.Contains((int) i.Lot))
-                        .Sum(i => i.Count);
-
-                    for (var i = 0; i < toGive; i++)
-                    {
-                        await task.ReportProgress(task.Target);
-                        if (task.Completed)
-                            break;
-                    }
+                    await task.ReportProgress(task.Target);
+                    if (task.Completed)
+                        break;
                 }
             }
         }
@@ -564,24 +559,17 @@ namespace Uchu.World.Systems.Missions
             if (IsChoiceReward)
             {
                 var (_, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
-                count = Math.Max(count, 1);
-                
-                await inventory.AddLotAsync(rewardItem, (uint) count);
+                await inventory.AddLotAsync(rewardItem, (uint) Math.Max(count, 1));
             }
             else
             {
                 foreach (var (rewardLot, rewardCount) in rewards)
                 {
-                    var lot = rewardLot;
-                    var count = Math.Max(rewardCount, 1);
-
-                    if (lot <= 0)
+                    if (rewardLot <= 0)
                         continue;
-
-                    if (IsMission)
-                    {
-                        await inventory.AddLotAsync(lot, (uint) count);
-                    }
+                    
+                    var count = Math.Max(rewardCount, 1);
+                    await inventory.AddLotAsync(rewardLot, (uint) count);
                 }
             }
         }
