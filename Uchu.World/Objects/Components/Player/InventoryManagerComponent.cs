@@ -227,7 +227,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="item">The item to find the root item for</param>
         /// <returns>The root item of this item if it is a sub item, the same item otherwise</returns>
-        public Item GetRootItem(Item item) => Items.FirstOrDefault(i => i == item.RootItem) ?? item;
+        public Item GetRootItem(Item item) => Items.FirstOrDefault(i => i.Id == item.RootItem?.Id) ?? item;
         
         #endregion finditem
         
@@ -473,16 +473,13 @@ namespace Uchu.World
                     await itemToRemove.DecrementCountAsync(amountToRemove, silent);
 
                     count -= amountToRemove;
-                    if (count != default)
-                        continue;
-
-                    return;
+                    if (count == 0)
+                        return;
                 }
-
-                await OnLotRemoved.InvokeAsync(lot, count);
             }
             finally
             {
+                await OnLotRemoved.InvokeAsync(lot, count);
                 lotLock.Release();
             }
         }

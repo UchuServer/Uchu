@@ -77,22 +77,22 @@ namespace Uchu.World
             {
                 var component = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(c =>
                     c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.InventoryComponent);
-                var clientItems = ClientCache.GetTable<Core.Client.InventoryComponent>()
+                var itemTemplates = ClientCache.GetTable<Core.Client.InventoryComponent>()
                     .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
 
-                foreach (var clientItem in clientItems)
+                foreach (var itemTemplate in itemTemplates)
                 {
-                    if (clientItem.Itemid == default)
+                    if (itemTemplate.Itemid == default)
                         continue;
                     
-                    var lot = (Lot) clientItem.Itemid;
+                    var lot = (Lot) itemTemplate.Itemid;
                     var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
                         i => i.Id == lot.GetComponentId(ComponentId.ItemComponent));
 
                     if (itemComponent.ItemType == default)
                         continue;
                     
-                    var item = await Item.Instantiate(GameObject, lot, default, (uint)(clientItem.Count ?? 1));
+                    var item = await Item.Instantiate(GameObject, lot, default, (uint)(itemTemplate.Count ?? 1));
                     if (item != null)
                         Items[(EquipLocation) itemComponent.EquipLocation] = item;
                 }
@@ -178,24 +178,25 @@ namespace Uchu.World
         /// <param name="item">The item to equip</param>
         private async Task EquipAsync(Item item)
         {
+            await EnsureItemEquipped(item);
+            foreach (var subItem in await GenerateSubItemsAsync(item))
+            {
+                await EnsureItemEquipped(subItem);
+            }
+        }
+
+        /// <summary>
+        /// Ensures that an item is equipped by setting it's equip state and mounting it in the skill component
+        /// </summary>
+        /// <param name="item">The item to equip</param>
+        private async Task EnsureItemEquipped(Item item)
+        {
             await UpdateSlotAsync(item);
             item.IsEquipped = true;
 
             // Update all the new skills the player gets from this item
-            var skills = GameObject.TryGetComponent<SkillComponent>(out var skillComponent);
-            if (skills)
+            if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.MountItem(item);
-
-            // Finally mount all the sub items for this item
-            var subItems = await GenerateSubItemsAsync(item);
-            foreach (var subItem in subItems)
-            {
-                await UpdateSlotAsync(subItem);
-                subItem.IsEquipped = true;
-                
-                if (skills)
-                    await skillComponent.MountItem(subItem);
-            }
         }
 
         /// <summary>
@@ -228,25 +229,27 @@ namespace Uchu.World
             if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory) 
                 && inventory.GetRootItem(item) is {} rootItem)
             {
-                if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                    await skillComponent.DismountItemAsync(item);
-                
-                Items.Remove(GetSlot(rootItem.Id));
-                rootItem.IsEquipped = false;
-
+                await EnsureItemUnEquipped(rootItem);
                 foreach (var subItem in GetSubItems(rootItem))
                 {
-                    var subSlot = GetSlot(subItem.Id);
-                    if (Items.TryGetValue(subSlot, out var equippedSubItem))
-                    {
-                        if (skillComponent != default)
-                            await skillComponent.DismountItemAsync(equippedSubItem);
-                        Items.Remove(subSlot);
-                    }
-                    
-                    subItem.IsEquipped = false;
+                    if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
+                        await EnsureItemUnEquipped(equippedSubItem);
+                    await inventory.RemoveItemAsync(subItem);
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes an item from the skill component and this inventory and unsets it's equip state 
+        /// </summary>
+        /// <param name="item">The item to unmanage</param>
+        private async Task EnsureItemUnEquipped(Item item)
+        {
+            if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
+                await skillComponent.DismountItemAsync(item);
+            
+            Items.Remove(GetSlot(item.Id));
+            item.IsEquipped = false;
         }
 
         /// <summary>
@@ -260,17 +263,15 @@ namespace Uchu.World
 
             if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                await using var clientContext = new CdClientContext();
-                
                 // Make sure that all sub items are available in the inventory, if not: add them.
                 foreach (var subItemLot in item.SubItemLots)
                 {
-                    var subItem = inventory.FindItem(subItemLot) ?? await Item.Instantiate(GameObject, subItemLot, item.Inventory, 1);
+                    var subItem = await Item.Instantiate(GameObject, subItemLot, item.Inventory, 1, rootItem: item);
                     if (subItem == null)
                         continue;
                     
                     Start(subItem);
-                    subItems.Add(subItem); // TODO: Message failed sub item to player
+                    subItems.Add(subItem);
                 }
             }
 
