@@ -135,7 +135,7 @@ namespace Uchu.World
             
             foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
             {
-                await inventory.MoveItemsBetweenInventoriesAsync(
+                await inventory.MoveItemBetweenInventoriesAsync(
                     temp,
                     temp.Count,
                     InventoryType.TemporaryModels,

@@ -19,12 +19,20 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task ItemMoveBetweenInventoriesHandler(MoveItemBetweenInventoryTypesMessage message, Player player)
         {
-            await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
-                message.Item,
-                message.StackCount,
-                message.SourceInventory,
-                message.DestinationInventory
-            );
+            var inventory = player.GetComponent<InventoryManagerComponent>();
+            
+            // Sometimes an explicit item is provided, if it is available we prefer to use that to mimic the move of
+            // the supplied slot, otherwise we find the first item that matches the criteria and move that
+            if (message.Item == null)
+            {
+                await inventory.MoveLotBetweenInventoriesAsync(message.Lot, message.StackCount, message.SourceInventory,
+                    message.DestinationInventory);
+            }
+            else
+            {
+                await inventory.MoveItemBetweenInventoriesAsync(message.Item, message.StackCount, message.SourceInventory,
+                    message.DestinationInventory);
+            }
         }
 
         [PacketHandler]

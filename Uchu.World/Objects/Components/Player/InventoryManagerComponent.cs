@@ -190,19 +190,20 @@ namespace Uchu.World
         {
             return _inventories[inventoryType].Items.FirstOrDefault(i => i.Lot == lot);
         }
-        
-        public bool TryFindItem(Lot lot, out Item item)
+
+        /// <summary>
+        /// Finds an item by looking for the provided lot in the given inventory type and ensuring that said item has a
+        /// count of at least minimumCount
+        /// </summary>
+        /// <param name="lot">The lot to use</param>
+        /// <param name="inventoryType">The inventory to search in</param>
+        /// <param name="minimumCount">The minimum count that the item should have</param>
+        /// <returns>The item if found, else default</returns>
+        public Item FindItem(Lot lot, InventoryType inventoryType, uint minimumCount)
         {
-            item = FindItem(lot);
-            return item != default;
+            return FindItems(lot, inventoryType).FirstOrDefault(item => item.Count >= minimumCount);
         }
 
-        public bool TryFindItem(Lot lot, InventoryType inventoryType, out Item item)
-        {
-            item = FindItem(lot, inventoryType);
-            return item != default;
-        }
-        
         /// <summary>
         /// Finds all the items of a certain lot, in all inventories
         /// </summary>
@@ -487,6 +488,23 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Searches for the first occurance of the lot in the source inventory and moves that item to the destination
+        /// inventory.
+        /// </summary>
+        /// <param name="lot">The lot to find and move</param>
+        /// <param name="count">The number of items to move</param>
+        /// <param name="source">The source inventory</param>
+        /// <param name="destination">The destination inventory</param>
+        /// <param name="silent">Whether to notify the client or not</param>
+        public async Task MoveLotBetweenInventoriesAsync(Lot lot, uint count, InventoryType source,
+            InventoryType destination,
+            bool silent = false)
+        {
+            var itemToMove = FindItem(lot, source, count);
+            await MoveItemBetweenInventoriesAsync(itemToMove, count, source, destination, silent);
+        }
+
+        /// <summary>
         /// Moves an item from one inventory to another inventory, generally used for vendor buy back
         /// </summary>
         /// <param name="item">The item to move</param>
@@ -494,7 +512,7 @@ namespace Uchu.World
         /// <param name="source">The source inventory to move from</param>
         /// <param name="destination">The destination inventory to move to</param>
         /// <param name="silent">Whether to send inventory update messages or not</param>
-        public async Task MoveItemsBetweenInventoriesAsync(Item item, uint count, InventoryType source,
+        public async Task MoveItemBetweenInventoriesAsync(Item item, uint count, InventoryType source,
             InventoryType destination, bool silent = false)
         {
             if (item == null)

@@ -133,7 +133,7 @@ namespace Uchu.World
             if (count == default || itemComponent.BaseValue <= 0)
                 return;
             
-            await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
+            await player.GetComponent<InventoryManagerComponent>().MoveItemBetweenInventoriesAsync(
                 item,
                 count,
                 item.Inventory.InventoryType,
