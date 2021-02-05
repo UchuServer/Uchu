@@ -675,7 +675,7 @@ namespace Uchu.World
             }
             catch (Exception e)
             {
-                Logger.Error($"Physics error: {e.Message}");
+                Logger.Error($"Physics error: {e}");
             }
             
             watch.Stop();
