@@ -13,7 +13,8 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(Zone.OnPlayerLoad, player =>
             {
-                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory)) return;
+                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                    return;
 
                 Listen(missionInventory.OnCompleteMission, instance =>
                 {

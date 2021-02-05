@@ -47,22 +47,15 @@ namespace Uchu.Physics
         /// <param name="deltaTime">Delta time in milliseconds since last tick</param>
         public void Step(float deltaTime)
         {
-            /*
-             * DON'T SLEEP ON THE JOB!
-             */
-            var bodies = Bodies.ToArray();
-            
-            foreach (var physicsBody in bodies)
+            foreach (var physicsBody in Bodies.ToArray())
             {
                 if (!physicsBody.Reference.Exists)
                 {
                     Objects.Remove(physicsBody);
-                    
                     continue;
                 }
                 
                 physicsBody.Reference.Activity.SleepCandidate = false;
-
                 if (!physicsBody.Reference.Awake)
                 {
                     Simulation.Awakener.AwakenBody(physicsBody.Handle);

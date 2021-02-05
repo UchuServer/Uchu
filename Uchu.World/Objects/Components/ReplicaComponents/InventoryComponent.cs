@@ -27,7 +27,7 @@ namespace Uchu.World
         /// <summary>
         /// Mapping of items and their equipped slots on the game object
         /// </summary>
-        public Dictionary<EquipLocation, Item> Items { get; }
+        private Dictionary<EquipLocation, Item> Items { get; }
         
         /// <summary>
         /// Called when a new item is equipped
@@ -111,7 +111,7 @@ namespace Uchu.World
             var equipLocation = item.ItemComponent.EquipLocation;
             if (Items.TryGetValue(equipLocation, out var previouslyEquippedItem))
             {
-                await UnEquipAsync(previouslyEquippedItem);
+                await UnEquipItemAsync(previouslyEquippedItem);
             }
 
             Items[equipLocation] = item;
