@@ -464,7 +464,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error when handling GM: {e.Message}");
+                    Logger.Error($"Error when handling GM: {e}");
                 }
             }
             else
@@ -475,7 +475,7 @@ namespace Uchu.Core
                 {
                     Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
                     return;
-                };
+                }
 
                 Logger.Debug($"Received {handler.PacketType.FullName}");
                 reader.BaseStream.Position = 8;
@@ -488,7 +488,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error when handling packet: {e.Message}");
+                    Logger.Error($"Error when handling packet: {e}");
                 }
             }
         }
