@@ -692,11 +692,12 @@ namespace Uchu.World
         {
             var watch = new Stopwatch();
             watch.Start();
-            
-            var visibleObjects = UpdatedObjects.Select(o => o.Associate)
+
+            var updatedObjects = UpdatedObjects.ToArray();
+            var visibleObjects = updatedObjects.Select(o => o.Associate)
                 .Intersect(Players.SelectMany(p => p.Perspective.LoadedObjects)).ToHashSet();
-            var objectsToUpdate = UpdatedObjects.ToArray().Where(
-                o => visibleObjects.Contains(o.Associate));
+            var objectsToUpdate = updatedObjects
+                .Where(o => visibleObjects.Contains(o.Associate));
             
             foreach (var updatedObject in objectsToUpdate)
             {
