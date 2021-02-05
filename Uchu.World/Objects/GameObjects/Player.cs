@@ -163,8 +163,8 @@ namespace Uchu.World
             stats.HasStats = true;
             
             // Server Components
-            AddComponent<InventoryManagerComponent>();
-            await inventory.EquipFromInventoryManagerAsync();
+            var inventoryManager = AddComponent<InventoryManagerComponent>();
+            await inventory.EquipItemsAsync(inventoryManager.Items.Where(i => i.IsEquipped));
             
             AddComponent<MissionInventoryComponent>();
             AddComponent<TeamPlayerComponent>();

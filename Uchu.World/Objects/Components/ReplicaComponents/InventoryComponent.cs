@@ -17,15 +17,6 @@ namespace Uchu.World
     /// replica component that was available in live while <see cref="InventoryManagerComponent"/> is a new component
     /// for efficient handling of the entire inventory of a game object.
     /// </summary>
-    /// <remarks>
-    /// In case of a player, the <see cref="InventoryManagerComponent"/> has to be loaded first, as only then this
-    /// component can equip all the items from the inventory manager.
-    /// It's possible for this component to add new items to the <see cref="InventoryManagerComponent"/> as the manager
-    /// component might contain a root item that on equip, loads new items that listen to the root item. Take for example
-    /// the trial faction kit: once the kit is equipped, it loads in all the trial gear of the kit. The inventory
-    /// manager however only contains the faction kit item initially, this component then handles the logic of adding and
-    /// removing all the sub items on equip and unequip.
-    /// </remarks>
     public class InventoryComponent : ReplicaComponent
     {
         /// <summary>
@@ -102,14 +93,11 @@ namespace Uchu.World
         /// <summary>
         /// For players the inventory has to be explicitly equipped due to component ordering
         /// </summary>
-        public async Task EquipFromInventoryManagerAsync()
+        public async Task EquipItemsAsync(IEnumerable<Item> items)
         {
-            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventoryComponent))
+            foreach (var item in items)
             {
-                foreach (var item in inventoryComponent.Items.Where(i => i.IsEquipped))
-                {
-                    await EquipAsync(item);
-                }
+                await EquipAsync(item);
             }
         }
 
@@ -221,35 +209,33 @@ namespace Uchu.World
         }
         
         /// <summary>
-        /// Unequips an item by unequipping it or its root item, if available.
+        /// Unequips an item by unequipping it or its root item, if available. Note that if this item has a root item
+        /// all sub items will also be unequipped.
         /// </summary>
-        /// <param name="item">The item to unequip or unequip the root item for</param>
+        /// <param name="item">The item to unequip or unequip the root item and its sub items for</param>
         private async Task UnEquipAsync(Item item)
         {
-            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory) 
-                && inventory.GetRootItem(item) is {} rootItem)
+            var rootItem = item.RootItem ?? item;
+            await EnsureItemUnEquipped(rootItem);
+            
+            foreach (var subItem in GetSubItems(rootItem))
             {
-                await EnsureItemUnEquipped(rootItem);
-                foreach (var subItem in GetSubItems(rootItem))
-                {
-                    if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
-                        await EnsureItemUnEquipped(equippedSubItem);
-                    await inventory.RemoveItemAsync(subItem);
-                }
+                if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
+                    await EnsureItemUnEquipped(equippedSubItem);
             }
         }
 
         /// <summary>
         /// Removes an item from the skill component and this inventory and unsets it's equip state 
         /// </summary>
-        /// <param name="item">The item to unmanage</param>
+        /// <param name="item">The item to unequip</param>
         private async Task EnsureItemUnEquipped(Item item)
         {
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.DismountItemAsync(item);
             
-            Items.Remove(GetSlot(item.Id));
             item.IsEquipped = false;
+            Items.Remove(GetSlot(item.Id));
         }
 
         /// <summary>
@@ -260,19 +246,14 @@ namespace Uchu.World
         private async Task<Item[]> GenerateSubItemsAsync(Item item)
         {
             var subItems = new List<Item>();
-
-            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
+            
+            foreach (var subItemLot in item.SubItemLots)
             {
-                // Make sure that all sub items are available in the inventory, if not: add them.
-                foreach (var subItemLot in item.SubItemLots)
-                {
-                    var subItem = await Item.Instantiate(GameObject, subItemLot, item.Inventory, 1, rootItem: item);
-                    if (subItem == null)
-                        continue;
-                    
-                    Start(subItem);
-                    subItems.Add(subItem);
-                }
+                var subItem = await Item.Instantiate(GameObject, subItemLot, default, 1, rootItem: item);
+                if (subItem == null)
+                    continue;
+                Start(subItem);
+                subItems.Add(subItem);
             }
 
             return subItems.ToArray();
@@ -285,12 +266,7 @@ namespace Uchu.World
         /// <returns>A list of all the sub items for this item</returns>
         private Item[] GetSubItems(Item item)
         {
-            if (GameObject.TryGetComponent<InventoryManagerComponent>(out var inventory))
-            {
-                return inventory.Items.Where(i => i.RootItem?.Id == item.Id).ToArray();
-            }
-
-            return new Item[] { };
+            return Items.Values.Where(i => i.RootItem?.Id == item.Id).ToArray();
         }
 
         /// <summary>
