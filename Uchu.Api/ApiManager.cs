@@ -189,7 +189,7 @@ namespace Uchu.Api
             {
                 json = await client.GetStringAsync(url);
             }
-            catch (HttpRequestException)
+            catch (Exception e) when (e is HttpRequestException || e is UriFormatException)
             {
                 return default;
             }
