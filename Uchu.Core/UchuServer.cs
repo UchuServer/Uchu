@@ -180,7 +180,7 @@ namespace Uchu.Core
             {
                 using (var xmlReader = XmlReader.Create(fs))
                 {
-                    Logger.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
+                    LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
                     UchuContextBase.Config = Config;
                 }
             }
