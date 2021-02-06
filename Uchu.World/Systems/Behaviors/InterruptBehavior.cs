@@ -25,7 +25,8 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            if (branchContext.Target != context.Associate)
+            if (branchContext.Target != null && 
+                branchContext.Target != context.Associate)
                 reader.ReadBit();
             if (InterruptBlock == 0)
                 reader.ReadBit();

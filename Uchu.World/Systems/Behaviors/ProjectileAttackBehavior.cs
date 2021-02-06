@@ -82,7 +82,7 @@ namespace Uchu.World.Systems.Behaviors
                 // Only server side projectiles have to be computed    
                 var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
                     parameters.BranchContext.Target.Transform.Position);
-                var time = (int) (distance / (double) ProjectileSpeed) * 1000;
+                var time = (int) (distance / (double) ProjectileSpeed * 1000);
 
                 parameters.Schedule(() =>
                 {
