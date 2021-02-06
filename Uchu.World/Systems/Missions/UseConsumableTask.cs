@@ -10,11 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public UseConsumableTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
-            cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.UseConsumable;
 
         public override bool Completed => Progress.Contains(Target);

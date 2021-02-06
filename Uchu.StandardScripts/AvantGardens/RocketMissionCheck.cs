@@ -11,13 +11,14 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(Zone.OnPlayerLoad, async player =>
             {
-                var character = await player.GetCharacterAsync();
-                
-                if (character.LaunchedRocketFrom != 1000) return;
+                if (player.TryGetComponent<CharacterComponent>(out var character))
+                {
+                    if (character.LaunchedRocketFrom != 1000)
+                        return;
 
-                var questInventory = player.GetComponent<MissionInventoryComponent>();
-
-                await questInventory.ScriptAsync(5652);
+                    if (player.TryGetComponent<MissionInventoryComponent>(out var missions))
+                        await missions.ScriptAsync(5652);
+                }
             });
             
             return Task.CompletedTask;

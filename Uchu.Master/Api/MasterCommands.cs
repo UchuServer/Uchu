@@ -239,6 +239,24 @@ namespace Uchu.Master.Api
             return response;
         }
 
+        [ApiCommand("master/die")]
+        public void KillMaster(string error = "Fatal error; killing server.")
+        {
+            Logger.Error(error);
+
+            foreach (ServerInstance instance in MasterServer.Instances.ToList())
+            {
+                DecommissionInstance(instance.Id.ToString());
+            }
+            
+            if (MasterServer.Config.ServerBehaviour.PressKeyToExit)
+            {
+                Logger.Error("Press any key to exit...");
+                Console.ReadKey();
+            }
+            
+            Environment.Exit(1);
+        }
 
         [ApiCommand("instance/decommission")]
         public object DecommissionInstance(string id)

@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.Core.Client;
 
 namespace Uchu.World.Handlers.GameMessages
 {
@@ -11,14 +12,17 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void PickupCurrencyHandler(PickupCurrencyMessage message, Player player)
         {
-            if (message.Currency > player.EntitledCurrency)
+            if (player.TryGetComponent<CharacterComponent>(out var character))
             {
-                Logger.Error($"{player} is trying to pick up more currency than they are entitled to.");
-                return;
-            }
+                if (message.Currency > character.EntitledCurrency)
+                {
+                    Logger.Error($"{player} is trying to pick up more currency than they are entitled to.");
+                    return;
+                }
 
-            player.EntitledCurrency -= message.Currency;
-            player.Currency += message.Currency;
+                character.EntitledCurrency -= message.Currency;
+                character.Currency += message.Currency;
+            }
         }
 
         [PacketHandler]
@@ -56,8 +60,7 @@ namespace Uchu.World.Handlers.GameMessages
             Logger.Debug($"{player} picking up {loot}");
             
             await player.OnLootPickup.InvokeAsync(loot);
-
-            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(loot, 1);
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(loot, 1);
         }
 
         [PacketHandler]

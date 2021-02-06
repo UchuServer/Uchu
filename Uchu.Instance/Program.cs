@@ -32,13 +32,11 @@ namespace Uchu.Instance
                 throw new ArgumentException($"{args[0]} is not a valid GUID");
 
             Id = id;
+            try {
+                await ConfigureAsync(args[1]).ConfigureAwait(false);
 
-            await ConfigureAsync(args[1]).ConfigureAwait(false);
-
-            Logger.Debug($"Process ID: {Process.GetCurrentProcess().Id}");
-            
-            try
-            {
+                Logger.Debug($"Process ID: {Process.GetCurrentProcess().Id}");
+                
                 switch (ServerType)
                 {
                     case ServerType.Authentication:
@@ -57,7 +55,19 @@ namespace Uchu.Instance
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                if (ServerType == ServerType.Authentication || ServerType == ServerType.Character)
+                {
+                    // Server cannot function without auth or char; exit
+                    await UchuServer.Api.RunCommandAsync<Task>(
+                        UchuServer.MasterApi,
+                        $"master/die?error=Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying another port in config.xml."
+                    ).ConfigureAwait(false);
+                }
+                else if (ServerType == ServerType.World) {
+                    Console.WriteLine($"Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying more WorldPort entries under Networking in config.xml.");
+                }
+
+                Environment.Exit(1);
             }
             
             Logger.Information("Exiting...");

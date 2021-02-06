@@ -10,10 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public GoToNpcTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.GoToNpc;
 
         public override bool Completed => Progress.Contains(Target);

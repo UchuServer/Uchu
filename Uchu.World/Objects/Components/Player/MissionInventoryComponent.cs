@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects.Components;
 using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
@@ -15,7 +16,7 @@ namespace Uchu.World
     /// Component responsible for missions and achievements a player has. Used for starting, updating and completing
     /// missions and achievements.
     /// </summary>
-    public class MissionInventoryComponent : Component
+    public class MissionInventoryComponent : Component, ISavableComponent
     {
         public MissionInventoryComponent()
         {
@@ -105,8 +106,8 @@ namespace Uchu.World
                 
                 foreach (var mission in missions)
                 {
-                    var instance = new MissionInstance(mission.MissionId);
-                    await instance.LoadAsync(uchuContext, player);
+                    var instance = new MissionInstance(mission.MissionId, player);
+                    await instance.LoadAsync(uchuContext);
 
                     lock (Missions)
                     {
@@ -121,6 +122,99 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Saves the mission inventory of the player
+        /// </summary>
+        /// <param name="context">The database context to save to</param>
+        public async Task SaveAsync(UchuContext context)
+        {
+            var character = await context.Characters.Where(c => c.Id == GameObject.Id)
+                .Include(c => c.Missions)
+                .ThenInclude(m => m.Tasks)
+                .ThenInclude(t => t.Values)
+                .FirstAsync();
+
+            foreach (var mission in AllMissions)
+            {
+                var savedMission = character.Missions
+                    .FirstOrDefault(m => m.MissionId == mission.MissionId);
+                
+                if (savedMission == default)
+                {
+                    character.Missions.Add(CreateMissionFromMissionInstance(character, mission));
+                }
+                else
+                {
+                    UpdateMissionFromMissionInstance(savedMission, mission);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            
+            Logger.Debug($"Saved mission inventory for {GameObject}");
+        }
+        
+        /// <summary>
+        /// Creates a database mission from a mission instance
+        /// </summary>
+        /// <param name="character">The character to create the mission for</param>
+        /// <param name="mission">The mission instance information to use for the mission</param>
+        /// <returns>The mission with information from the mission instance</returns>
+        private static Mission CreateMissionFromMissionInstance(Character character, MissionInstance mission) 
+            => new Mission 
+            {
+                Character = character,
+                MissionId = mission.MissionId,
+                State = (int) mission.State,
+                CompletionCount = mission.CompletionCount,
+                LastCompletion = mission.LastCompletion,
+                Tasks = mission.Tasks.Select(task => new MissionTask
+                {
+                    TaskId = task.TaskId,
+                    Values = task.Progress
+                        .GroupBy(value => value)
+                        .Select(value => new MissionTaskValue
+                        {
+                            Value = value.Key,
+                            Count = value.Count()
+                        }).ToList()
+                }).ToList()
+            };
+
+        /// <summary>
+        /// Takes a saved mission and updates its values, tasks and progress according to a mission instance
+        /// </summary>
+        /// <param name="savedMission">The saved mission to save the information to</param>
+        /// <param name="mission">The mission information to save to the saved mission</param>
+        private static void UpdateMissionFromMissionInstance(Mission savedMission, MissionInstance mission)
+        {
+            // Update an existing mission
+            savedMission.State = (int) mission.State;
+            savedMission.CompletionCount = mission.CompletionCount;
+            savedMission.LastCompletion = mission.LastCompletion;
+
+            foreach (var task in mission.Tasks)
+            {
+                var savedTask = savedMission.Tasks.FirstOrDefault(t => t.TaskId == task.TaskId);
+                if (savedTask == default)
+                    continue;
+                savedTask.Values = CreateMissionTaskValuesFromProgress(task.Progress);
+            }
+        }
+        
+        /// <summary>
+        /// Transforms a progress array into a mission task value array
+        /// </summary>
+        /// <param name="progress">The progress array to transform</param>
+        /// <returns>The array of database mission task values from the progress array</returns>
+        private static List<MissionTaskValue> CreateMissionTaskValuesFromProgress(IEnumerable<float> progress) => progress
+            .GroupBy(value => value)
+            .Select(value => new MissionTaskValue
+            {
+                Value = value.Key,
+                Count = value.Count()
+            }).ToList();
+        
         /// <summary>
         /// Whether a player has an active mission that has the provided id as mission id.
         /// </summary>
@@ -189,6 +283,24 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Creates and loads a new mission securely into the mission inventory
+        /// </summary>
+        /// <param name="missionId">The missionId to create a mission for</param>
+        /// <param name="gameObject">The game object to assign the mission to</param>
+        /// <returns>The newly created mission instance</returns>
+        private async Task<MissionInstance> AddMissionAsync(int missionId, GameObject gameObject)
+        {
+            var mission = new MissionInstance(missionId, (Player)GameObject);
+            await mission.LoadAsync();
+
+            lock (Missions) {
+                Missions.Add(mission);
+            }
+
+            return mission;
+        }
+
+        /// <summary>
         /// Checks if the player can accept a mission based on whether it's repeatable, already started and if the
         /// requirements are met.
         /// </summary>
@@ -214,7 +326,8 @@ namespace Uchu.World
         /// <param name="missionGiver">The giver of the mission</param>
         public void MessageOfferMission(int missionId, GameObject missionGiver)
         {
-            var player = (Player) GameObject;
+            if (!(GameObject is Player player))
+                return;
             
             player.Message(new OfferMissionMessage
             {
@@ -222,7 +335,7 @@ namespace Uchu.World
                 MissionId = missionId,
                 QuestGiver = missionGiver
             });
-            
+                
             player.Message(new OfferMissionMessage
             {
                 Associate = missionGiver,
@@ -240,20 +353,13 @@ namespace Uchu.World
         /// <param name="rewardItem">Whether items should be rewarded (multi-select)</param>
         private async Task RespondToMissionAsync(int missionId, GameObject missionGiver, Lot rewardItem)
         {
-            await using var uchuContext = new UchuContext();
-
-            MissionInstance mission = GetMission(missionId);
+            var mission = GetMission(missionId);
             
             // If the user doesn't have this mission yet, start it
             if (mission == default)
             {
-                var instance = new MissionInstance(missionId);
-                await instance.LoadAsync(uchuContext, (Player)GameObject);
-                
-                lock (Missions) {
-                    Missions.Add(instance);
-                }
-                
+                mission = await AddMissionAsync(missionId, GameObject);
+                await mission.StartAsync();
                 return;
             }
             
@@ -265,7 +371,7 @@ namespace Uchu.World
             }
             
             // Complete mission
-            await mission.CompleteAsync(uchuContext, rewardItem);
+            await mission.CompleteAsync(rewardItem);
             missionGiver?.GetComponent<MissionGiverComponent>().HandleInteraction((Player)GameObject);
         }
 
@@ -275,30 +381,9 @@ namespace Uchu.World
         /// <param name="missionId">The id of the mission to complete</param>
         public async Task CompleteMissionAsync(int missionId)
         {
-            MissionInstance mission;
-            lock (Missions)
-            {
-                mission = Missions.FirstOrDefault(m => m.MissionId == missionId);
-            }
-            
-            await using var uchuContext = new UchuContext();
-            
-            // If the player is completing a mission that hasn't started, start it first
-            if (mission == default)
-            {
-                var instance = new MissionInstance(missionId);
-                await instance.LoadAsync(uchuContext, (Player)GameObject);
-                await instance.CompleteAsync(uchuContext);
-                
-                lock (Missions)
-                {
-                    Missions.Add(instance);
-                }
-                
-                return;
-            }
-
-            await mission.CompleteAsync(uchuContext);
+            // If the mission can't be found, complete it
+            var mission = GetMission(missionId) ?? await AddMissionAsync(missionId, GameObject);
+            await mission.CompleteAsync();
         }
 
         /// <summary>
@@ -565,19 +650,12 @@ namespace Uchu.World
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
                 // new achievement are much lower than not starting an achievement, that's why doing this in the loop
                 // allows us to open less db transactions in the long run
-                await using var uchuContext = new UchuContext();
-                
-                var instance = new MissionInstance(achievement.MissionId);
-                await instance.LoadAsync(uchuContext, (Player)GameObject);
-                
-                lock (Missions)
-                {
-                    Missions.Add(instance);
-                }
+                var mission = await AddMissionAsync(achievement.MissionId, GameObject);
+                await mission.StartAsync();
                 
                 // For achievements there's always only one task
                 if (progress != null)
-                    await progress(instance.Tasks.First() as T);
+                    await progress(mission.Tasks.First() as T);
             }
         }
     }

@@ -10,10 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public FlagTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.Flag;
         public override bool Completed => CurrentProgress >= RequiredProgress;
         public async Task ReportProgress(int id)

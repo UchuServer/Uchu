@@ -14,22 +14,24 @@ namespace Uchu.StandardScripts.AvantGardens
             {
                 Listen(gameObject.OnInteract, async player =>
                 {
-                    await player.SetFlagAsync(74, true);
-
-                    foreach (var spider in GetGroup("cagedSpider"))
+                    if (player.TryGetComponent<CharacterComponent>(out var character))
                     {
-                        player.Message(new FireClientEventMessage
+                        await character.SetFlagAsync(74, true);
+                        foreach (var spider in GetGroup("cagedSpider"))
                         {
-                            Associate = spider,
-                            Sender = player,
-                            Arguments = "toggle",
-                            Target = player
-                        });
-                    }
+                            player.Message(new FireClientEventMessage
+                            {
+                                Associate = spider,
+                                Sender = player,
+                                Arguments = "toggle",
+                                Target = player
+                            });
+                        }
 
-                    if (player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager))
-                    {
-                        await inventoryManager.RemoveAllAsync(14553);
+                        if (player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager))
+                        {
+                            await inventoryManager.RemoveAllAsync(14553);
+                        }
                     }
                 });
             }

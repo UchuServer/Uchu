@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.PetCove
@@ -11,18 +12,15 @@ namespace Uchu.StandardScripts.PetCove
         {
             Listen(Zone.OnPlayerLoad, player =>
             {
-                Listen(player.OnFireServerEvent, async (s, message) =>
+                Listen(player.OnFireServerEvent, (s, message) =>
                 {
-                    await using var context = new UchuContext();
-                    if (message.Arguments == "unlockEmote")
+                    if (message.Arguments == "unlockEmote" && player.TryGetComponent<CharacterComponent>(out var character))
                     {
-                        await player.UnlockEmoteAsync(context, 115);
+                        character.AddEmote(115);
                     }
-                    await context.SaveChangesAsync();
                 });
             });
-            
-            
+
             return Task.CompletedTask;
         }
     }

@@ -206,17 +206,17 @@ namespace Uchu.World
                 iTypeID = 0
             });
 
-            var InventoryComponent = player.GetComponent<InventoryManagerComponent>();
+            var inventoryComponent = player.GetComponent<InventoryManagerComponent>();
+            await inventoryComponent.AddLotAsync(GameObject.Lot, 1);
             
-            InventoryComponent.AddItemAsync(GameObject.Lot, 1);
-            var Pet = InventoryComponent.FindItem(GameObject.Lot);
+            var pet = inventoryComponent.FindItem(GameObject.Lot);
 
             player.Message(new AddPetToPlayerMessage
             {
                 Associate = player,
                 iElementalType = 0, // This appears to be just unused, they are in the DB but they weren't sent correctly in the packet captures
                 name = GameObject.Name,
-                petDBID = Pet,
+                petDBID = pet,
                 PetLOT = GameObject.Lot
             });
             
@@ -229,14 +229,14 @@ namespace Uchu.World
             player.Message(new RegisterPetDBIDMessage
             {
                 Associate = player,
-                PetItemObject = Pet
+                PetItemObject = pet
             });
             
             player.Message( new MarkInventoryItemAsActiveMessage
             {
                 Associate = player,
                 bActive = true,
-                itemID = Pet.Id
+                itemID = pet.Id
             });
             
             // TODO: Add listener for name select

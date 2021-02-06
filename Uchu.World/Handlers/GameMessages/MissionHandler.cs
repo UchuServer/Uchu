@@ -28,7 +28,10 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task SetFlagHandler(SetFlagMessage message, Player player)
         {
-            await player.SetFlagAsync(message.FlagId, message.Flag);
+            if (player.TryGetComponent<CharacterComponent>(out var character))
+            {
+                await character.SetFlagAsync(message.FlagId, message.Flag);
+            }
         }
     }
 }

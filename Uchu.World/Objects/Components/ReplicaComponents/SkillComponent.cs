@@ -93,64 +93,33 @@ namespace Uchu.World
             }
         }
 
-        public async Task MountItemAsync(Lot item)
+        public async Task MountItem(Item item)
         {
-            if (item == default) return;
-            
-            var targetId = item.GetComponentId(ComponentId.ItemComponent);
-            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == targetId
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-
+            var slot = ((ItemType) (item.ItemComponent.ItemType ?? 0)).GetBehaviorSlot();
             RemoveSkill(slot);
             
-            await MountSkill(item);
-
+            await MountSkill(item.Lot);
             await EquipSkill(item);
         }
 
-        public async Task DismountItemAsync(Lot item)
+        public async Task DismountItemAsync(Item item)
         {
-            if (item == default) return;
-            var componentId = item.GetComponentId(ComponentId.ItemComponent);
-            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == componentId
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-            
+            var slot = ((ItemType) (item.ItemComponent.ItemType ?? 0)).GetBehaviorSlot();
             RemoveSkill(slot);
-
-            await DismountSkill(item);
+            
+            await DismountSkill(item.Lot);
         }
 
-        private async Task EquipSkill(Lot item)
+        private async Task EquipSkill(Item item)
         {
-            if (item == default) return;
-            
-            var componentId = item.GetComponentId(ComponentId.ItemComponent);
-            var itemInfo = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == componentId
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-            
-            var infos = await BehaviorTree.GetSkillsForObject(item);
-
+            var slot = ((ItemType) (item.ItemComponent.ItemType ?? 0)).GetBehaviorSlot();
+            var infos = await BehaviorTree.GetSkillsForObject(item.Lot);
             var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
 
-            if (onUse == default) return;
+            if (onUse == default)
+                return;
             
             RemoveSkill(slot);
-            
             SetSkill(slot, (uint) onUse.SkillId);
         }
 

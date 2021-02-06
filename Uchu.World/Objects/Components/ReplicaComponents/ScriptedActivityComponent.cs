@@ -83,16 +83,16 @@ namespace Uchu.World
                     items.Remove(item);
 
                     if (item.Itemid == null) continue;
-
-                    lootOwner.SendChatMessage("Dropping activity item!!!");
-
+                    
                     Lot lot = item.Itemid ?? 0;
+                    var character = lootOwner.GetComponent<CharacterComponent>();
+                    
                     if (lot == Lot.FactionTokenProxy)
                     {
-                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Assembly)) lot = Lot.AssemblyFactionToken;
-                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Paradox)) lot = Lot.ParadoxFactionToken;
-                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Sentinel)) lot = Lot.SentinelFactionToken;
-                        if (await lootOwner.GetFlagAsync((int) FactionFlags.Venture)) lot = Lot.VentureFactionToken;
+                        if (character.IsAssembly) lot = Lot.AssemblyFactionToken;
+                        if (character.IsParadox) lot = Lot.ParadoxFactionToken;
+                        if (character.IsSentinel) lot = Lot.SentinelFactionToken;
+                        if (character.IsVentureLeague) lot = Lot.VentureFactionToken;
                         if (item.Itemid == lot) return;
                     }
                     
