@@ -11,9 +11,6 @@ namespace Uchu.World
     public class SpawnerComponent : Component
     {
         private readonly Random _random;
-
-        private QuickBuildComponent LinkedQuickBuildComponent;
-        
         public List<GameObject> ActiveSpawns { get; }
 
         public LevelObjectTemplate LevelObject { get; set; }
@@ -27,16 +24,21 @@ namespace Uchu.World
         public Lot SpawnTemplate { get; set; }
 
         public uint SpawnNodeId { get; set; }
+        
+        /// <summary>
+        /// Event that's called after a game object is smashed and the spawner is waiting to respawn the game object,
+        /// the argument is the respawn time until the spawner will respawn the GO 
+        /// </summary>
+        public Event<int> OnRespawnInitiated { get; }
 
         public LegoDataDictionary Settings { get; set; }
 
         protected SpawnerComponent()
         {
             _random = new Random();
-            
             SpawnLocations = new List<SpawnLocation>();
-
             ActiveSpawns = new List<GameObject>();
+            OnRespawnInitiated = new Event<int>();
             
             Listen(OnStart, () =>
             {
@@ -111,11 +113,8 @@ namespace Uchu.World
         public GameObject Spawn()
         {
             var obj = GenerateSpawnObject();
-
             Start(obj);
-
             GameObject.Construct(obj);
-
             ActiveSpawns.Add(obj);
 
             Listen(obj.OnDestroyed, () =>
@@ -128,17 +127,8 @@ namespace Uchu.World
                 Listen(destructibleComponent.OnSmashed, async (smasher, lootOwner) =>
                 {
                     Destroy(obj);
-
-                    if (LinkedQuickBuildComponent == default)
-                    {
-                        await Task.Delay(RespawnTime);
-                    
-                        Spawn();
-                    }
-                    else
-                    {
-                        LinkedQuickBuildComponent.EnableBuildFromSpawner();
-                    }
+                    await Task.WhenAll(OnRespawnInitiated.InvokeAsync(RespawnTime), Task.Delay(RespawnTime));
+                    Spawn();
                 });
             }
 
@@ -151,11 +141,6 @@ namespace Uchu.World
             {
                 Spawn();
             }
-        }
-
-        public void LinkQuickBuildComponent(QuickBuildComponent quickBuildComponent)
-        {
-            LinkedQuickBuildComponent = quickBuildComponent;
         }
     }
 }

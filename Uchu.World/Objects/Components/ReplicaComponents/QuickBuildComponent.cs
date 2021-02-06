@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -129,19 +130,23 @@ namespace Uchu.World
 
                 Start(Activator);
                 
-                if (GameObject.Settings.TryGetValue("spawnNetNameForSpawnGroupOnSmash",out var destructibleSpawnerName))
+                // For quick builds that should only appear after something is smashed
+                if (GameObject.Settings.TryGetValue("spawnNetNameForSpawnGroupOnSmash", out var possibleSpawnerName))
                 {
-                    if ((string) destructibleSpawnerName != "")
+                    var spawnerName = (string) possibleSpawnerName;
+                    if (spawnerName != "")
                     {
                         foreach (var otherGameObject in Zone.GameObjects)
                         {
-                            ConnectSpawner(otherGameObject);
+                            TryConnectSpawner(otherGameObject, spawnerName);
                         }
                         
-                        Listen(Zone.OnObject,(obj) =>
+                        // Sometimes the spawners are constructed after this quick build game object
+                        Listen(Zone.OnObject, @object =>
                         {
-                            if (!(obj is GameObject gameObject)) return;
-                            ConnectSpawner(gameObject);
+                            if (!(@object is GameObject gameObject))
+                                return;
+                            TryConnectSpawner(gameObject, spawnerName);
                         });
                     }
                 }
@@ -154,7 +159,7 @@ namespace Uchu.World
             
             Listen(OnDestroyed, () => { Destroy(Activator); });
         }
-        
+
         public override void Construct(BitWriter writer)
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
@@ -193,20 +198,52 @@ namespace Uchu.World
             writer.Write(StartTime > 0 ? TimeSinceStart : StartTime);
             writer.Write(Pause > 0 ? PauseTime : Pause);
         }
-        
-        private void ConnectSpawner(GameObject gameObject)
+
+        /// <summary>
+        /// Hides the quick build
+        /// </summary>
+        private void Hide()
         {
-            if (LinkedSpawner != default) return;
-            if (gameObject.Name != (string) GameObject.Settings["spawnNetNameForSpawnGroupOnSmash"]) return;
-            if (!gameObject.TryGetComponent<SpawnerComponent>(out var spawner)) return;
-                            
             Enabled = false;
             GameObject.Layer = StandardLayer.Hidden;
             Activator.Layer = StandardLayer.Hidden;
-            LinkedSpawner = spawner;
-            spawner.LinkQuickBuildComponent(this);
+        }
+
+        /// <summary>
+        /// Shows the quick build
+        /// </summary>
+        private void Show()
+        {
+            Enabled = true;
+            GameObject.Layer = StandardLayer.Default;
+            Activator.Layer = StandardLayer.Default;
         }
         
+        /// <summary>
+        /// Tries to link this quick build to a spawner game object, making the quick build appear right
+        /// after the linked game object was smashed
+        /// </summary>
+        /// <param name="gameObject">The spawner to try to link to</param>
+        /// <param name="spawnerName">The required name of the spawner to make it linkable</param>
+        private void TryConnectSpawner(GameObject gameObject, string spawnerName)
+        {
+            if (LinkedSpawner != default 
+                || gameObject.Name != spawnerName 
+                || !gameObject.TryGetComponent<SpawnerComponent>(out var spawner))
+                return;
+
+            // Hide the quick build by default, only showing it when the spawner initiated a respawn
+            Hide();
+            spawner.RespawnTime = (int)_resetTime * 1000;
+            
+            Listen(spawner.OnRespawnInitiated, async respawnTimeInMs =>
+            {
+                Show();
+                await Task.Delay(respawnTimeInMs);
+                Hide();
+            });
+        }
+
         //
         // Rebuildables have five states.
         // 
@@ -480,32 +517,6 @@ namespace Uchu.World
             State = RebuildState.Open;
 
             GameObject.Serialize(GameObject);
-        }
-        
-        public void EnableBuildFromSpawner()
-        {
-            Enabled = true;
-            GameObject.Layer = StandardLayer.Default;
-            Activator.Layer = StandardLayer.Default;
-            
-            var timer = new Timer
-            {
-                AutoReset = false,
-                Interval = _resetTime * 1000
-            };
-
-            timer.Elapsed += (sender,args) =>
-            {
-                if (State == RebuildState.Open && Enabled)
-                {
-                    Enabled = false;
-                    GameObject.Layer = StandardLayer.Hidden;
-                    Activator.Layer = StandardLayer.Hidden;
-                    LinkedSpawner.Spawn();
-                }
-            };
-            
-            Task.Run(timer.Start);
         }
     }
 }
