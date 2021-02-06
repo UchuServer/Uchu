@@ -373,10 +373,6 @@ namespace Uchu.World
             {
                 Zone.SendConstruction(gameObject, this);
             }
-            else if (spawned && !view)
-            {
-                Zone.SendDestruction(gameObject, this);
-            }
         }
 
         /// <summary>

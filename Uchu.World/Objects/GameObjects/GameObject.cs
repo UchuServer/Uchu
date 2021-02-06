@@ -603,5 +603,7 @@ namespace Uchu.World
         }
 
         #endregion
+        
+        public static GameObject InvalidObject => new GameObject();
     }
 }

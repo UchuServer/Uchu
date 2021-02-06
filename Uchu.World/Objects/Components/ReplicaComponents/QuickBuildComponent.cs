@@ -205,6 +205,34 @@ namespace Uchu.World
         private void Hide()
         {
             Enabled = false;
+            if (State == RebuildState.Building)
+            {
+                Zone.BroadcastMessage(new RebuildNotifyStateMessage
+                {
+                    Associate = GameObject,
+                    CurrentState = State,
+                    NewState = RebuildState.Resetting,
+                    Player = (Player)Participants.ElementAt(0)
+                });
+            }
+            Zone.BroadcastMessage(new DieMessage {
+                Associate = GameObject,
+                SpawnLoot = true,
+                KillType = 0, // violent
+                Killer = GameObject.InvalidObject
+            });
+            Zone.BroadcastMessage(new DieMessage {
+                Associate = Activator,
+                SpawnLoot = true,
+                KillType = 0, // violent
+                Killer = GameObject.InvalidObject
+            });
+            Zone.BroadcastMessage(new StopFXEffectMessage
+            {
+                Associate = GameObject,
+                KillImmediate = true,
+                Name = "BrickFadeUpVisCompleteEffect"
+            });
             GameObject.Layer = StandardLayer.Hidden;
             Activator.Layer = StandardLayer.Hidden;
         }
@@ -215,6 +243,15 @@ namespace Uchu.World
         private void Show()
         {
             Enabled = true;
+            Zone.BroadcastMessage(new ResurrectMessage
+            {
+                Associate = GameObject,
+                ResurrectImminently = true
+            });
+            Zone.BroadcastMessage(new ResurrectMessage {
+                Associate = Activator,
+                ResurrectImminently = true
+            });
             GameObject.Layer = StandardLayer.Default;
             Activator.Layer = StandardLayer.Default;
         }
