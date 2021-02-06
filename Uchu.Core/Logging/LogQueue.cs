@@ -151,7 +151,7 @@ namespace Uchu.Core
 #if DEBUG
                                 await InternalLog(segment, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
 #else
-                                await InternalLog(segment, entry.color, entry.logLevel).ConfigureAwait(false);
+                                await InternalLog(segment, entry.Color, entry.LogLevel).ConfigureAwait(false);
 #endif
                             }
                             entry = this.PopEntry();
@@ -160,7 +160,7 @@ namespace Uchu.Core
 #if DEBUG
                         await InternalLog(entry.Message, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
 #else
-                        await InternalLog(entry.message, entry.color, entry.logLevel).ConfigureAwait(false);
+                        await InternalLog(entry.Message, entry.Color, entry.LogLevel).ConfigureAwait(false);
 #endif
                         entry = this.PopEntry();
                     }
