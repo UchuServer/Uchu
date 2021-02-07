@@ -12,6 +12,7 @@ namespace Uchu.World.Systems.Behaviors
         private int InterruptCharge { get; set; }
         private int InteruptAttack { get; set; }
         private int InteruptCharge { get; set; }
+        private bool Target { get; set; }
         
         public override async Task BuildAsync()
         {
@@ -20,17 +21,18 @@ namespace Uchu.World.Systems.Behaviors
             InterruptCharge = await GetParameter<int>("interrupt_charge");
             InteruptAttack = await GetParameter<int>("interupt_attack");
             InteruptCharge = await GetParameter<int>("interupt_charge");
+            Target = await GetParameter<bool>("target");
         }
 
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            if (branchContext.Target != null && 
-                branchContext.Target != context.Associate)
+            if (branchContext.Target != context.Associate)
                 reader.ReadBit();
             if (InterruptBlock == 0)
                 reader.ReadBit();
-            reader.ReadBit();
+            if (Target)
+                reader.ReadBit();
             
             return base.DeserializeStart(reader, context, branchContext);
         }

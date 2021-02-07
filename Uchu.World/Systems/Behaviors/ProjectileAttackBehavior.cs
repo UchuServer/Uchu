@@ -63,8 +63,8 @@ namespace Uchu.World.Systems.Behaviors
             projectile.Owner = parameters.Context.Associate;
             projectile.ClientObjectId = projectileId;
             projectile.Target = parameters.Target;
-            projectile.Lot = ProjectileLot;
-            projectile.Destination = parameters.Target.Transform.Position;
+            projectile.Lot = ProjectileLot; 
+            projectile.Destination = parameters.Target?.Transform.Position ?? default;
             projectile.RadiusCheck = TrackRadius;
             projectile.MaxDistance = MaxDistance;
 

@@ -432,7 +432,7 @@ namespace Uchu.World.Systems.Behaviors
             }
             catch (Exception e)
             {
-                Logger.Error($"Encountered error in tree execute: {e.Message}");
+                Logger.Error($"Encountered error in tree execute: {e}");
             }
         }
 
