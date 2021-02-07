@@ -47,13 +47,13 @@ namespace Uchu.World
         {
             return Id;
         }
-
-        public Objects Object
+        
+        public Core.Client.Objects Object
         {
             get
             {
                 var id = Id;
-                return ClientCache.GetTable<Objects>().FirstOrDefault(o => o.Id == id);
+                return ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == id);
             }
         }
 
@@ -76,7 +76,7 @@ namespace Uchu.World
         {
             return GetComponentIds((int) componentType);
         }
-
+        
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;

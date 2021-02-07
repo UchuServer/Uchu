@@ -47,18 +47,15 @@ namespace Uchu.World.Handlers.Commands
 
             if (arguments.Length != 3)
             {
-                await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
+                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count);
             }
             else
             {
                 if (!uint.TryParse(arguments[2], out var inventory))
                     return "Invalid <inventory(optional)>";
 
-                await player.GetComponent<InventoryManagerComponent>().AddItemAsync(
-                    lot,
-                    count,
-                    (InventoryType) inventory
-                );
+                await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count, 
+                    inventoryType: (InventoryType) inventory);
             }
 
             return $"Successfully added {lot} x {count} to your inventory";
@@ -77,7 +74,7 @@ namespace Uchu.World.Handlers.Commands
                 if (!uint.TryParse(arguments[1], out count))
                     return "Invalid <count(optional)>";
 
-            await player.GetComponent<InventoryManagerComponent>().RemoveItemAsync(lot, count);
+            await player.GetComponent<InventoryManagerComponent>().RemoveLotAsync(lot, count);
 
             return $"Successfully removed {lot} x {count} to your inventory";
         }
@@ -91,7 +88,8 @@ namespace Uchu.World.Handlers.Commands
             // We parse this as an int instead of long, due to the max long causing bugs. Currency maxes out at a long.
             if (!int.TryParse(arguments[0], out var delta) || delta == default) return "Invalid <delta>";
 
-            player.Currency += delta;
+            var character = player.GetComponent<CharacterComponent>();
+            character.Currency += delta;
 
             return $"Successfully {(delta > 0 ? "added" : "removed")} {delta} coins";
         }
@@ -460,7 +458,8 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var delta)) return "Invalid <delta>";
 
-            player.UniverseScore += delta;
+            var character = player.GetComponent<CharacterComponent>();
+            character.UniverseScore += delta;
 
             GameObject.Serialize(player);
 
@@ -468,13 +467,14 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "level", Help = "Set your level", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Level(string[] arguments, Player player)
+        public async Task<string> Level(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "level <level>";
 
             if (!long.TryParse(arguments[0], out var level)) return "Invalid <level>";
 
-            player.Level = level;
+            var character = player.GetComponent<CharacterComponent>();
+            await character.SetLevel(level);
 
             GameObject.Serialize(player);
 
@@ -1052,24 +1052,18 @@ namespace Uchu.World.Handlers.Commands
                 if (args.Count > 0 && !args.Contains(mission.MissionId))
                     continue;
 
-                try
-                {
-                    await mission.CompleteAsync(context);
-                }
-                catch
-                {
-                }
+                await mission.CompleteAsync();
             }
 
             return "Completed missions";
         }
 
         [CommandHandler(Signature = "clear", Help = "Clears your inventory", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Clear(string[] arguments, Player player)
+        public async Task<string> Clear(string[] arguments, Player player)
         {
             foreach (var item in player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Items)
             {
-                item.Count = 0;
+                await item.DecrementCountAsync(item.Count);
             }
 
             return "Cleared inventory";
@@ -1084,7 +1078,8 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out var flag))
                 return "/setflag <flag>";
 
-            await player.SetFlagAsync(flag, true);
+            var character = player.GetComponent<CharacterComponent>();
+            await character.SetFlagAsync(flag, true);
 
             return $"Set flag {arguments[0]}";
         }
@@ -1112,7 +1107,8 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out int flag))
                 return "/removeflag <flag>";
 
-            await player.SetFlagAsync(flag, false);
+            var character = player.GetComponent<CharacterComponent>();
+            await character.SetFlagAsync(flag, false);
 
             return $"Removed flag {arguments[0]}";
         }

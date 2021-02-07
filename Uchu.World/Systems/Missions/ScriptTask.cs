@@ -9,10 +9,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public ScriptTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.Script;
 
         public override bool Completed => CurrentProgress > 0;

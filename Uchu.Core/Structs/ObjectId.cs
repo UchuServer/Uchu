@@ -23,33 +23,6 @@ namespace Uchu.Core
             Value = value;
         }
 
-        #region Networking
-
-        [SuppressMessage("ReSharper", "CA2000")]
-        public async Task<InventoryItem> FindItemAsync()
-        {
-            await using var ctx = new UchuContext();
-
-            var id = (long) Value;
-
-            return await ctx.InventoryItems.FirstOrDefaultAsync(
-                i => i.Id == id
-            ).ConfigureAwait(false);
-        }
-
-        public InventoryItem FindItem()
-        {
-            using var ctx = new UchuContext();
-
-            var id = (long) Value;
-
-            return ctx.InventoryItems.FirstOrDefault(
-                i => i.Id == id
-            );
-        }
-
-        #endregion
-
         #region Standard
 
         public override string ToString()

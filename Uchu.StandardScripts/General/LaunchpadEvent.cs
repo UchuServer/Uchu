@@ -15,41 +15,23 @@ namespace Uchu.StandardScripts.General
         {
             Listen(Zone.OnPlayerLoad, player =>
             {
-                Listen(player.OnFireServerEvent, async (EventName, message) =>
+                Listen(player.OnFireServerEvent, async (eventName, message) =>
                 {
-                    if (EventName == "ZonePlayer")
+                    if (eventName == "ZonePlayer")
                     {
                         var launchpad = message.Associate.GetComponent<RocketLaunchpadComponent>();
-
                         var id = launchpad.GameObject.Lot.GetComponentId(ComponentId.RocketLaunchComponent);
-
-                        var launchpadComponent = (await ClientCache.GetTableAsync<RocketLaunchpadControlComponent>()).FirstOrDefault(
-                            r => r.Id == id
-                        );
-
-                        if (launchpadComponent == default)
-                        {
-                            return;
-                        }
-
-                        await using var ctx = new UchuContext();
-
-                        var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-                        character.LaunchedRocketFrom = Zone.ZoneId;
-
-                        await ctx.SaveChangesAsync();
+                        var launchpadComponent = (await ClientCache.GetTableAsync<RocketLaunchpadControlComponent>())
+                            .First(r => r.Id == id);
 
                         if (launchpadComponent.TargetZone != null)
                         {
                             var target = (ZoneId)launchpadComponent.TargetZone;
-
-                            //
+                            
                             // We don't want to lock up the server on a world server request, as it may take time.
-                            //
-
                             var _ = Task.Run(async () =>
                             {
+                                player.GetComponent<CharacterComponent>().LaunchedRocketFrom = Zone.ZoneId;
                                 var success = await player.SendToWorldAsync(target);
 
                                 if (!success)

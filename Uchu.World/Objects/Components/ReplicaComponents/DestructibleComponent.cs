@@ -165,19 +165,16 @@ namespace Uchu.World
                 var lot = ItemPair.Key;
                 Lot item = lot;
                 
-                if (lot == Lot.FactionTokenProxy)
+                if (lot == Lot.FactionTokenProxy && owner.TryGetComponent<CharacterComponent>(out var character))
                 {
-                    if (await owner.GetFlagAsync((int) FactionFlags.Assembly)) item = Lot.AssemblyFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Paradox)) item = Lot.ParadoxFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Sentinel)) item = Lot.SentinelFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Venture)) item = Lot.VentureFactionToken;
-                    if (item == lot) continue;
+                    item = character.FactionToken;
+                    if (item == lot)
+                        continue;
                 }
 
                 for (int i = 0; i < ItemPair.Value; ++i)
                 {
                     var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
-
                     Start(drop);
                 }
             }
@@ -192,15 +189,13 @@ namespace Uchu.World
 
         private void GeneratePlayerYieldsAsync(Player owner)
         {
-            var player = (Player) GameObject;
+            if (GameObject.TryGetComponent<CharacterComponent>(out var character))
+            {
+                var coinToDrop = Math.Min((long) Math.Round(character.Currency * 0.1), 10000);
+                character.Currency -= coinToDrop;
 
-            var currency = player.Currency;
-            
-            var coinToDrop = Math.Min((long) Math.Round(currency * 0.1), 10000);
-
-            player.Currency -= coinToDrop;
-
-            InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+                InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+            }
         }
 
         private void InitializeRespawn()

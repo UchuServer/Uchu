@@ -11,6 +11,8 @@ using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Systems.Missions;
+
 
 namespace Uchu.World.Handlers
 {
@@ -89,11 +91,14 @@ namespace Uchu.World.Handlers
         public async Task ClientLoadCompleteHandler(ClientLoadCompletePacket packet, IRakConnection connection)
         {
             Logger.Information($"{connection.EndPoint}'s client load completed...");
-
+            
             var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
-
-            await using var ctx = new UchuContext();
-            var character = await ctx.Characters
+            
+            // This info is required for the detailed user info packet, although this information is available in the
+            // player as well we can't instantiate the player first as that sends certain GMs that crash the client's
+            // world loading if no prior XML info is sent
+            await using var uchuContext = new UchuContext();
+            var character = await uchuContext.Characters
                 .Include(c => c.Flags)
                 .Include(c => c.Items)
                 .Include(c => c.User)
@@ -102,44 +107,49 @@ namespace Uchu.World.Handlers
                 .ThenInclude(m => m.Values)
                 .SingleAsync(c => c.Id == session.CharacterId);
 
+            // Zone Id might be 0 on first load, set it to venture explorer
             var zoneId = (ZoneId) character.LastZone;
             if (zoneId == 0)
             {
                 zoneId = 1000;
-
                 character.LastZone = zoneId;
-
-                await ctx.SaveChangesAsync();
+                await uchuContext.SaveChangesAsync();
             }
-
+            
             Logger.Information("[55%] Setting session zone.");
             UchuServer.SessionCache.SetZone(connection.EndPoint, zoneId);
-
+            
             // Zone should already be initialized at this point.
             Logger.Information("[55%] Getting zone from worldserver.");
-            var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync(zoneId);
+            var zone = await ((WorldUchuServer) UchuServer).GetZoneAsync((ZoneId)session.ZoneId);
 
             // Send the character init XML data for this world to the client
             Logger.Information("[55%] Sending XML client info.");
-            await SendCharacterXmlDataToClient(character, connection, session);
-
-            Logger.Information("[55%] Constructing player.");
-            var player = await Player.ConstructAsync(character, connection, zone);
+            await SendCharacterXmlDataToClient(connection, character);
             
+            Logger.Information("[55%] Constructing player.");
+            var player = await Player.Instantiate(connection, zone, session.CharacterId);
+
             Logger.Information("[55%] Checking rocket landing conditions.");
-            if (character.LandingByRocket)
-            {
-                Logger.Information("[55%] Player landed by rocket, saving changes.");
-                character.LandingByRocket = false;
-                await ctx.SaveChangesAsync();
-            }
+            var characterComponent = player.GetComponent<CharacterComponent>();
+            if (characterComponent.LandingByRocket)
+                characterComponent.LandingByRocket = false;
 
             Logger.Information("[55%] Player is ready to join world.");
-            player.Message(new PlayerReadyMessage {Associate = player});
-            player.Message(new PlayerReadyMessage { Associate = player.Zone.ZoneControlObject });
+            player.Message(new PlayerReadyMessage
+            {
+                Associate = player
+            });
+            player.Message(new PlayerReadyMessage
+            {
+                Associate = player.Zone.ZoneControlObject
+            });
 
             Logger.Information("[55%] Server is done loading object.");
-            player.Message(new DoneLoadingObjectsMessage {Associate = player});
+            player.Message(new DoneLoadingObjectsMessage
+            {
+                Associate = player
+            });
         }
 
         /// <summary>
@@ -164,8 +174,10 @@ namespace Uchu.World.Handlers
                 return;
             }
 
-            player.Message(
-                new RestoreToPostLoadStatsMessage {Associate = player}
+            player.Message(new RestoreToPostLoadStatsMessage
+                {
+                    Associate = player
+                }
             );
 
             await player.OnWorldLoad.InvokeAsync();
@@ -176,19 +188,15 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Sends the character initialization packet for a character to the current connection
         /// </summary>
-        /// <param name="character">The character to generate the initialization data for</param>
+        /// <param name="Character">The character to generate the initialization data for</param>
         /// <param name="connection">The connection to send the initialization data to</param>
-        /// <param name="session">The session cache for the connection</param>
-        private async Task SendCharacterXmlDataToClient(Character character, IRakConnection connection, Session session)
+        private async Task SendCharacterXmlDataToClient(IRakConnection connection, Character character)
         {
-            await using var ctx = new UchuContext();
-            var gmLevel = ctx.Users.Where(i => i.Id == character.UserId).First().GameMasterLevel;
-            
-            // Get the XML data for this character for the initial character packet
-            var xmlData = GenerateCharacterXmlData(character, gmLevel);
-
             await using var ms = new MemoryStream();
             await using var writer = new StreamWriter(ms, Encoding.UTF8);
+            
+            // Get the XML data for this character for the initial character packet
+            var xmlData = GenerateCharacterXmlData(character);
             Serializer.Serialize(writer, xmlData);
 
             var bytes = ms.ToArray();
@@ -198,15 +206,18 @@ namespace Uchu.World.Handlers
 
             var ldf = new LegoDataDictionary
             {
-                ["gmlevel", 1] = gmLevel != 1 ? gmLevel : 0,
+                ["gmlevel", 1] = character.User.GameMasterLevel != 1 ? character.User.GameMasterLevel : 0,
                 ["name"] = character.Name,
                 ["objid", 9] = character.Id,
                 ["template", 1] = 1,
                 ["xmlData"] = xml,
                 ["legoclub", 7] = true 
             };
-
-            connection.Send(new DetailedUserInfoPacket {Data = ldf});
+            
+            connection.Send(new DetailedUserInfoPacket
+            {
+                Data = ldf
+            });
         }
 
         /// <summary>
@@ -217,14 +228,13 @@ namespace Uchu.World.Handlers
         /// The generated XML data is based on https://docs.google.com/document/d/1XDh_HcXMjSdaGeniG1dND5CA7jOFXIPA_fxCnjvjaO4/edit#
         /// </remarks>
         /// <param name="character">The character to generate the XML data for</param>
-        /// <param name="gmLevel">The GM level of the user</param>
         /// <returns>XmlData conform with the LU Char Data XML Format</returns>
-        private static XmlData GenerateCharacterXmlData(Character character, int gmLevel)
+        private static XmlData GenerateCharacterXmlData(Character character)
         {
             var xmlData = new XmlData
             {
                 Inventory = InventoryNode(character),
-                Character = CharacterNode(character, gmLevel),
+                Character = CharacterNode(character),
                 Level = LevelNode(character),
                 Flags = FlagNodes(character),
                 Missions = MissionsNode(character),
@@ -268,7 +278,7 @@ namespace Uchu.World.Handlers
             return new ItemContainerNode
             {
                 Type = (int) type,
-                Items = character.Items.Where(i => i.InventoryType == (int) type).Select(i =>
+                Items = character.Items.Where(i => i.InventoryType == (int)type).Select(i =>
                 {
                     var node = new ItemNode
                     {
@@ -286,7 +296,7 @@ namespace Uchu.World.Handlers
                         return node;
 
                     node.ExtraInfo = type == InventoryType.Models ? new ExtraInfoNode {
-                            ModuleAssemblyInfo = "0:" + value
+                        ModuleAssemblyInfo = "0:" + value
                     } : null;
                     
                     return node;
@@ -298,9 +308,8 @@ namespace Uchu.World.Handlers
         /// Creates a character node, containing billing info and subscription info
         /// </summary>
         /// <param name="character">The character to create a node from</param>
-        /// <param name="gmLevel">The gamemaster level of the user</param>
         /// <returns>The character node created from the character</returns>
-        private static CharacterNode CharacterNode(Character character, int gmLevel)
+        private static CharacterNode CharacterNode(Character character)
         {
             return new CharacterNode
             {
@@ -308,7 +317,7 @@ namespace Uchu.World.Handlers
                 Currency = character.Currency,
                 FreeToPlay = character.FreeToPlay ? 1 : 0,
                 UniverseScore = character.UniverseScore,
-                GmLevel = gmLevel
+                GmLevel = character.User.GameMasterLevel
             };
         }
 
@@ -333,20 +342,6 @@ namespace Uchu.World.Handlers
         private static FlagNode[] FlagNodes(Character character)
         {
             var flags = new Dictionary<int, FlagNode>();
-
-            /*
-            // Keep a list of all tasks ids that belong to flag tasks
-            var flagTaskIds = cdContext.MissionTasksTable
-                .Where(t => t.TaskType == (int) MissionTaskType.Flag)
-                .Select(t => t.Uid);
-
-            // Get all the mission task values that correspond to flag values
-            var flagValues = character.Missions
-                .SelectMany(m => m.Tasks
-                    .Where(t => flagTaskIds.Contains(t.TaskId))
-                    .SelectMany(t => t.ValueArray()));
-            */
-
             var flagValues = character.Flags.Select(f => (float) f.Flag);
 
             // The flags are stored as one long list of bits by separating them in unsigned longs
@@ -445,8 +440,8 @@ namespace Uchu.World.Handlers
         /// <summary>
         /// Creates the minifigure node for a character, containing information about hair and mouth styles for example
         /// </summary>
-        /// <param name="character"></param>
-        /// <returns></returns>
+        /// <param name="character">The player to create the minifigure node for</param>
+        /// <returns>The mini figure node created from the player</returns>
         private static MinifigureNode MinifigureNode(Character character)
         {
             return new MinifigureNode

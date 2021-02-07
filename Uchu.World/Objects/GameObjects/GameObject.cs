@@ -26,7 +26,8 @@ namespace Uchu.World
         public Lot Lot { get; private set; }
         
         /// <summary>
-        ///     Also known as ExtraInfo
+        /// Also known as ExtraInfo
+        /// TODO: Rename?
         /// </summary>
         public LegoDataDictionary Settings { get; set; }
 
@@ -324,7 +325,7 @@ namespace Uchu.World
 
                 instance.Name = name;
 
-                var obj = ClientCache.GetTable<Objects>().FirstOrDefault(o => o.Id == lot);
+                var obj = ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == lot);
                 instance.ClientName = obj?.Name;
 
                 instance.Spawner = spawner;
