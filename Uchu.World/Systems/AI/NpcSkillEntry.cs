@@ -1,3 +1,5 @@
+using Uchu.World.Systems.Behaviors;
+
 namespace Uchu.World.Systems.AI
 {
     /// <summary>
@@ -19,5 +21,10 @@ namespace Uchu.World.Systems.AI
         /// The cooldown time in milliseconds that should be set after activating this ability
         /// </summary>
         public float AbilityCooldown { get; set; }
+        
+        /// <summary>
+        /// The behavior tree that belongs to this skill entry
+        /// </summary>
+        public BehaviorTree Tree { get; set; }
     }
 }
