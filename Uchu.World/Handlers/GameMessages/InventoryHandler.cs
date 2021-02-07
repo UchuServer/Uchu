@@ -8,10 +8,20 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void ItemMovementHandler(MoveItemInInventoryMessage message, Player player)
         {
-            if (message.DestinationInventoryType == InventoryType.Invalid)
-                message.DestinationInventoryType = message.CurrentInventoryType;
+            var inventoryManager = message.Item.Inventory.ManagerComponent;
+            if (inventoryManager.GameObject != player)
+                return;
+            
+            var destinationInventory = message.DestinationInventoryType == InventoryType.Invalid
+                ? message.CurrentInventoryType
+                : message.DestinationInventoryType;
 
-            if (message.Item.Inventory.ManagerComponent.GameObject != player) return;
+            // If the slot is occupied, switch the items
+            var itemToSwap = inventoryManager[destinationInventory][(uint)message.NewSlot];
+            if (itemToSwap != null)
+            {
+                itemToSwap.Slot = message.Item.Slot;
+            }
             
             message.Item.Slot = (uint) message.NewSlot;
         }
