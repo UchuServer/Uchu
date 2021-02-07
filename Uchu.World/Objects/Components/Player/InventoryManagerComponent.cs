@@ -105,12 +105,16 @@ namespace Uchu.World
 
         public async Task SaveAsync(UchuContext context)
         {
+            var itemsToSave = Items;
+            
+            // If the inventory is empty something went terribly wrong, do NOT save
+            if (itemsToSave.Length == 0)
+                return;
+            
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Items)
                 .FirstAsync();
 
-            var itemsToSave = Items;
-            
             // Delete old items
             var savedItemsToDelete = character.Items.Where(savedItem => itemsToSave
                 .All(itemToSave => itemToSave.Id != savedItem.Id)).ToArray();
