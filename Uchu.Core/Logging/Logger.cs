@@ -87,8 +87,7 @@ namespace Uchu.Core
 #else
             logQueue.AddLine(message, logLevel, color);
 #endif
-
-            if (!outputTaskStarted)
+            if (!outputTaskStarted && LogQueue.Config != default)
             {
                 outputTaskStarted = true;
                 logQueue.StartConsoleOutput();
