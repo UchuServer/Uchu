@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,9 +47,9 @@ namespace Uchu.World
             }
             
             // Cache all character flags
-            foreach (var flag in character.Flags.Where(flag => flag.Id != default))
+            foreach (var flag in character.Flags.Where(flag => flag.Flag != default))
             {
-                await SetFlagAsync((int)flag.Id, true, true);
+                await SetFlagAsync(flag.Flag, true, true);
             }
 
             HairColor = character.HairColor;
@@ -358,6 +359,36 @@ namespace Uchu.World
         /// Whether this player belongs to the paradox faction
         /// </summary>
         public bool IsVentureLeague => HasFaction(FactionFlag.Venture);
+
+        /// <summary>
+        /// Returns the lot of a valid faction token for this character, if this character has multiple factions it will
+        /// pick a random one between them.
+        /// </summary>
+        /// <remarks>
+        /// If the character is in no faction this will return <c>Lot.FactionTokenProxy</c>
+        /// </remarks>
+        public Lot FactionToken
+        {
+            get
+            {
+                var possibleLots = new List<Lot>();
+            
+                if (IsAssembly) possibleLots.Add(Lot.AssemblyFactionToken);
+                if (IsParadox) possibleLots.Add(Lot.ParadoxFactionToken);
+                if (IsSentinel) possibleLots.Add(Lot.SentinelFactionToken);
+                if (IsVentureLeague) possibleLots.Add(Lot.VentureFactionToken);
+
+                // If this is a character with no valid factions, don't drop anything
+                if (possibleLots.Count == 0)
+                    return Lot.FactionTokenProxy;
+            
+                // Generally this will return the same faction token
+                // but for characters with multiple factions this equally distributes the drops
+               return possibleLots.Count == 1
+                    ? possibleLots[0] 
+                    : possibleLots[new Random().Next(0, possibleLots.Count)];
+            }
+        }
 
         #endregion flags
         

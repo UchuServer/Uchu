@@ -264,25 +264,15 @@ namespace Uchu.World
         private bool HandleFactionToken(ref Lot lot)
         {
             // If this is not a faction token or the game object doesn't have a character, there's nothing to check
-            if (lot != Lot.FactionTokenProxy) return true;
-            if (!GameObject.TryGetComponent<CharacterComponent>(out var character)) return true;
+            if (lot != Lot.FactionTokenProxy)
+                return true;
+            if (!GameObject.TryGetComponent<CharacterComponent>(out var character))
+                return true;
 
-            var possibleLots = new List<Lot>();
-            
-            if (character.IsAssembly) possibleLots.Add(Lot.AssemblyFactionToken);
-            if (character.IsParadox) possibleLots.Add(Lot.ParadoxFactionToken);
-            if (character.IsSentinel) possibleLots.Add(Lot.SentinelFactionToken);
-            if (character.IsVentureLeague) possibleLots.Add(Lot.VentureFactionToken);
-
-            // If this is a character with no valid factions, don't drop anything
-            if (possibleLots.Count == 0)
+            var token = character.FactionToken;
+            if (token == Lot.FactionTokenProxy)
                 return false;
-            
-            // Generally this will return the same faction token
-            // but for characters with multiple factions this equally distributes the drops
-            lot = possibleLots.Count == 1 
-                ? possibleLots[0] 
-                : possibleLots[new Random().Next(0, possibleLots.Count)];
+            lot = token;
             
             return true;
         }

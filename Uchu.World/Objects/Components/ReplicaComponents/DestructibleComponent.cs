@@ -170,17 +170,14 @@ namespace Uchu.World
                 
                 if (lot == Lot.FactionTokenProxy && owner.TryGetComponent<CharacterComponent>(out var character))
                 {
-                    if (character.IsAssembly) item = Lot.AssemblyFactionToken;
-                    if (character.IsParadox) item = Lot.ParadoxFactionToken;
-                    if (character.IsSentinel) item = Lot.SentinelFactionToken;
-                    if (character.IsVentureLeague) item = Lot.VentureFactionToken;
-                    if (item == lot) continue;
+                    item = character.FactionToken;
+                    if (item == lot)
+                        continue;
                 }
 
                 for (int i = 0; i < ItemPair.Value; ++i)
                 {
                     var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
-
                     Start(drop);
                 }
             }

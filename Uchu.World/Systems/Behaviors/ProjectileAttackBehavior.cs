@@ -63,8 +63,8 @@ namespace Uchu.World.Systems.Behaviors
             projectile.Owner = parameters.Context.Associate;
             projectile.ClientObjectId = projectileId;
             projectile.Target = parameters.Target;
-            projectile.Lot = ProjectileLot;
-            projectile.Destination = parameters.Target.Transform.Position;
+            projectile.Lot = ProjectileLot; 
+            projectile.Destination = parameters.Target?.Transform.Position ?? default;
             projectile.RadiusCheck = TrackRadius;
             projectile.MaxDistance = MaxDistance;
 
@@ -82,7 +82,7 @@ namespace Uchu.World.Systems.Behaviors
                 // Only server side projectiles have to be computed    
                 var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
                     parameters.BranchContext.Target.Transform.Position);
-                var time = (int) (distance / (double) ProjectileSpeed) * 1000;
+                var time = (int) (distance / (double) ProjectileSpeed * 1000);
 
                 parameters.Schedule(() =>
                 {

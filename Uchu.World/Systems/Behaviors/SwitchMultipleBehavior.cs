@@ -23,43 +23,25 @@ namespace Uchu.World.Systems.Behaviors
 
         private float ChargeTime { get; set; }
         private float DistanceToTarget { get; set; }
-        private Dictionary<BehaviorBase, float> Behaviors { get; set; }
+        private BehaviorBase Behavior1 { get; set; }
+        private BehaviorBase Behavior2 { get; set; }
+        private float Value1 { get; set; }
 
         public override async Task BuildAsync()
         {
             ChargeTime = await GetParameter<float>("charge_up");
             DistanceToTarget = await GetParameter<float>("distance_to_target");
-            Behaviors = new Dictionary<BehaviorBase, float>();
-
-            var parameters = GetParameters();
-            
-            for (var index = 0; index < parameters.Length; index++)
-            {
-                var behavior = await GetBehavior($"behavior {index + 1}");
-                if (behavior == default || behavior.Id == BehaviorTemplateId.Empty)
-                    continue;
-                var value = await GetParameter<float>($"value {index + 1}");
-                Behaviors[behavior] = value;
-            }
+            Behavior1 = await GetBehavior("behavior 1");
+            Behavior2 = await GetBehavior("behavior 2");
+            Value1 = await GetParameter<float>("value 1");
         }
 
         protected override void DeserializeStart(BitReader reader, SwitchMultipleBehaviorExecutionParameters parameters)
         {
             parameters.Value = reader.Read<float>();
-
-            var defaultValue = Behaviors.ToArray()[0].Value;
-            if (parameters.Value <= defaultValue)
-                parameters.Value = defaultValue;
-            
-            foreach (var (behavior, mark) in Behaviors.ToArray().Reverse())
-            {
-                if (parameters.Value < mark)
-                    continue;
-                parameters.Behavior = behavior;
-                parameters.Parameters = parameters.Behavior.DeserializeStart(reader, parameters.Context,
-                    parameters.BranchContext);
-                break;
-            }
+            parameters.Behavior = parameters.Value <= Value1 ? Behavior1 : Behavior2;
+            parameters.Parameters =
+                parameters.Behavior.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
 
         protected override void ExecuteStart(SwitchMultipleBehaviorExecutionParameters parameters)

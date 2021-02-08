@@ -39,8 +39,7 @@ namespace Uchu.World
             await using var stream = new MemoryStream(data);
             var reader = new BitReader(stream);
 
-            tree.Deserialize(Owner, reader, target: target);
-            
+            tree.Deserialize(Owner, reader, target: target, castType: SkillCastType.OnUse);
             tree.Use();
             
             Zone.BroadcastMessage(new DoClientProjectileImpact
