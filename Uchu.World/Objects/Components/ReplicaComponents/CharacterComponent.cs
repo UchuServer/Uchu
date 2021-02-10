@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 using Uchu.World.Objects.Components;
 
 namespace Uchu.World
@@ -35,7 +37,8 @@ namespace Uchu.World
 
             Currency = character.Currency;
             UniverseScore = character.UniverseScore;
-            Level = character.Level;
+            await SetLevelAsync(character.Level, false);
+
             BaseHealth = character.BaseHealth;
             BaseImagination = character.BaseImagination;
             LastZone = character.LastZone == 0 ? 1000 : character.LastZone;
@@ -438,60 +441,74 @@ namespace Uchu.World
         #region score
 
         /// <summary>
-        /// Internal representation of a player's LU score
-        /// </summary>
-        private long _universeScore;
-        
-        /// <summary>
         /// A player's LU score
         /// </summary>
-        public long UniverseScore
-        {
-            get => _universeScore;
-            set
-            {
-                var oldScore = UniverseScore;
-                _universeScore = value;
+        public long UniverseScore { get; private set; }
+        
+        /// <summary>
+        /// The universe score required to reach the next level
+        /// </summary>
+        public long RequiredUniverseScore { get; private set; }
 
-                if (GameObject is Player player)
-                {
-                    player.Message(new ModifyLegoScoreMessage
-                    {
-                        Associate = player,
-                        Score = UniverseScore - oldScore
-                    });
-                }
-                
-            }
-        }
-        
         /// <summary>
-        /// The level a player is currently at
+        /// Sets the universe score and notifies the client about the update
         /// </summary>
-        public long Level { get; private set; }
-        
-        /// <summary>
-        /// Sets the level to the one provided, also checks if it's a valid level in the cd client
-        /// </summary>
-        /// <param name="level">The level to set</param>
-        public async Task SetLevel(long level)
+        /// <param name="scoreDelta">The score to set</param>
+        public async Task IncrementUniverseScoreAsync(long scoreDelta)
         {
-            await using var cdContext = new CdClientContext();
+            UniverseScore += scoreDelta;
             
-            // Make sure the level exists
-            var lookup = await cdContext.LevelProgressionLookupTable
-                .FirstOrDefaultAsync(l => l.Id == Level);
-            if (lookup == default)
-                return;
-
-            Level = level;
-
             if (GameObject is Player player)
             {
                 player.Message(new ModifyLegoScoreMessage
                 {
                     Associate = player,
-                    Score = lookup.RequiredUScore ?? 0 - UniverseScore
+                    Score = scoreDelta
+                });
+            }
+        }
+
+        /// <summary>
+        /// The level a player is currently at
+        /// </summary>
+        public long Level { get; private set; }
+
+        /// <summary>
+        /// Levels the player up
+        /// </summary>
+        /// <returns></returns>
+        public async Task LevelUpAsync()
+        {
+            await SetLevelAsync(Level + 1);
+        }
+
+        /// <summary>
+        /// Sets the level to the one provided, also checks if it's a valid level in the cd client
+        /// </summary>
+        /// <param name="level">The level to set</param>
+        /// <param name="notifyClient">Whether to send the updated level to the client</param>
+        public async Task SetLevelAsync(long level, bool notifyClient = true)
+        {
+            // Level 0 doesn't exist, so we have to set it to level 1
+            level = level == 0 ? 1 : level;
+            
+            // Make sure the level exists
+            var levelLookup = (await ClientCache.GetTableAsync<LevelProgressionLookup>())
+                .FirstOrDefault(l => l.Id == level);
+            if (levelLookup == default)
+                return;
+
+            Level = level;
+            RequiredUniverseScore = levelLookup.RequiredUScore ?? long.MaxValue;
+
+            if (notifyClient && GameObject is Player player)
+            {
+                player.Message(new ModifyLegoScoreMessage
+                {
+                    Associate = player,
+                    Score = RequiredUniverseScore == long.MaxValue 
+                        ? UniverseScore 
+                        : RequiredUniverseScore - UniverseScore
                 });
             }
         }
@@ -592,12 +609,8 @@ namespace Uchu.World
 
         private void WritePart2(BitWriter writer)
         {
-            var player = (Player) GameObject;
-            
             var hasLevel = Level != 0;
-
             writer.WriteBit(hasLevel);
-
             if (hasLevel) writer.Write((uint) Level);
         }
 

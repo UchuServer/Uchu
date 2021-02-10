@@ -467,7 +467,7 @@ namespace Uchu.World.Systems.Missions
         /// rewarded if it's in one of the mission rewards.</param>
         private async Task SendRewardsAsync(int rewardItem)
         {
-            RewardPlayerCurrency();
+            await RewardCurrencyAndScoreAsync();
             RewardPlayerEmotes();
             RewardPlayerStats();
             await RewardPlayerLootAsync(rewardItem);
@@ -481,7 +481,7 @@ namespace Uchu.World.Systems.Missions
         /// If this is an achievement the currency is updated silently without a notify message
         /// as the client updates the currency locally.
         /// </remarks>
-        private void RewardPlayerCurrency()
+        private async Task RewardCurrencyAndScoreAsync()
         {
 
             if (!Player.TryGetComponent<CharacterComponent>(out var character))
@@ -493,14 +493,14 @@ namespace Uchu.World.Systems.Missions
             if (IsMission)
             {
                 character.Currency += currency;
-                character.UniverseScore += score;
+                await character.IncrementUniverseScoreAsync(score);
             }
             else
             {
                 // TODO: Silent?
                 // Achievement, client adds these itself so we don't need to notify
                 character.Currency += currency;
-                character.UniverseScore += score;
+                await character.IncrementUniverseScoreAsync(score);
 
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.
