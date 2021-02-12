@@ -489,9 +489,9 @@ namespace Uchu.World
         /// <param name="notifyClient">Whether to send the updated level to the client</param>
         public async Task SetLevelAsync(long level, bool notifyClient = true)
         {
-            // Level 0 doesn't exist, so we have to set it to level 1
+            // Level 0 does not exist, set to 1 by default
             level = level == 0 ? 1 : level;
-            
+
             // Make sure the level exists
             var levelLookup = (await ClientCache.GetTableAsync<LevelProgressionLookup>())
                 .FirstOrDefault(l => l.Id == level);
