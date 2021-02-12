@@ -247,13 +247,10 @@ namespace Uchu.World
                 return;
             }
 
-            var session = SessionCache.GetSession(connection.EndPoint);
-
             Logger.Debug($"Received {(GameMessageId)messageId}");
 
             // Check if this message came from a logged in player
-            var player = Zones.Where(z => z.ZoneId == session.ZoneId).SelectMany(z => z.Players)
-                .FirstOrDefault(p => p.Connection.Equals(connection));
+            var player = Zones.SelectMany(z => z.Players).FirstOrDefault(p => p.Connection.Equals(connection));
             if (player?.Zone == default)
             {
                 Logger.Error($"{connection} is not logged in but sent a GameMessage.");
