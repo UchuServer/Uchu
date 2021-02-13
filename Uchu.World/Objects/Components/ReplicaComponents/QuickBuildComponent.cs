@@ -33,10 +33,7 @@ namespace Uchu.World
 
         public RebuildState State
         {
-            get
-            {
-                return _state;
-            }
+            get => _state;
             set
             {
                 _state = value;
@@ -104,8 +101,11 @@ namespace Uchu.World
                     return;
                 }
                 
-                _completeTime = clientComponent.Completetime ?? 0;
                 _imaginationCost = clientComponent.Takeimagination ?? 0;
+                
+                // If no completion time is provided we assume 1 second per imagination spent
+                _completeTime = clientComponent.Completetime ?? _imaginationCost;
+                
                 _timeToSmash = clientComponent.Timebeforesmash ?? 0;
                 _resetTime = clientComponent.Resettime ?? 0;
 
@@ -303,7 +303,6 @@ namespace Uchu.World
             if (_timer == default)
             {
                 _timer = new PauseTimer(_completeTime * 1000);
-
                 _timer.Elapsed += (sender, args) => {  };
             }
             else
@@ -332,7 +331,6 @@ namespace Uchu.World
                 if (_taken != _imaginationCost)
                 {
                     _taken++;
-
                     playerStats.Imagination--;
 
                     GameObject.Serialize(GameObject);
