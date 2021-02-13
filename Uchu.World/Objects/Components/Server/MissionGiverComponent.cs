@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World.Client;
+using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
 {
@@ -20,7 +22,6 @@ namespace Uchu.World
             Listen(OnStart, () =>
             {
                 CollectMissions();
-
                 Listen(GameObject.OnInteract, HandleInteraction);
             });
         }
