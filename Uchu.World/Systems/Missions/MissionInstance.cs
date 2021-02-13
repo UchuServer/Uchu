@@ -493,14 +493,14 @@ namespace Uchu.World.Systems.Missions
             if (IsMission)
             {
                 character.Currency += currency;
-                await character.IncrementUniverseScoreAsync(score);
+                character.UniverseScore += score;
             }
             else
             {
                 // TODO: Silent?
                 // Achievement, client adds these itself so we don't need to notify
                 character.Currency += currency;
-                await character.IncrementUniverseScoreAsync(score);
+                character.UniverseScore += score;
 
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.

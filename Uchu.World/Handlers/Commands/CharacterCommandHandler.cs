@@ -459,7 +459,7 @@ namespace Uchu.World.Handlers.Commands
             if (!int.TryParse(arguments[0], out var delta)) return "Invalid <delta>";
 
             var character = player.GetComponent<CharacterComponent>();
-            await character.IncrementUniverseScoreAsync(delta);
+            character.UniverseScore += delta;
 
             GameObject.Serialize(player);
 

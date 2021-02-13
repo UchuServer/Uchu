@@ -36,7 +36,7 @@ namespace Uchu.World
                 return;
 
             Currency = character.Currency;
-            UniverseScore = character.UniverseScore;
+            _universeScore = character.UniverseScore;
             await SetLevelAsync(character.Level, false);
 
             BaseHealth = character.BaseHealth;
@@ -443,30 +443,34 @@ namespace Uchu.World
         /// <summary>
         /// A player's LU score
         /// </summary>
-        public long UniverseScore { get; private set; }
+        private long _universeScore;
+
+        /// <summary>
+        /// A player's LU score
+        /// </summary>
+        public long UniverseScore
+        {
+            get => _universeScore;
+            set
+            {
+                var oldScore = UniverseScore;
+                _universeScore = value;
+            
+                if (GameObject is Player player)
+                {
+                    player.Message(new ModifyLegoScoreMessage
+                    {
+                        Associate = player,
+                        Score = UniverseScore - oldScore
+                    });
+                }
+            }
+        }
         
         /// <summary>
         /// The universe score required to reach the next level
         /// </summary>
         public long RequiredUniverseScore { get; private set; }
-
-        /// <summary>
-        /// Sets the universe score and notifies the client about the update
-        /// </summary>
-        /// <param name="scoreDelta">The score to set</param>
-        public async Task IncrementUniverseScoreAsync(long scoreDelta)
-        {
-            UniverseScore += scoreDelta;
-            
-            if (GameObject is Player player)
-            {
-                player.Message(new ModifyLegoScoreMessage
-                {
-                    Associate = player,
-                    Score = scoreDelta
-                });
-            }
-        }
 
         /// <summary>
         /// The level a player is currently at
