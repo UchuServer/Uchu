@@ -467,7 +467,7 @@ namespace Uchu.World.Systems.Missions
         /// rewarded if it's in one of the mission rewards.</param>
         private async Task SendRewardsAsync(int rewardItem)
         {
-            RewardPlayerCurrency();
+            await RewardCurrencyAndScoreAsync();
             RewardPlayerEmotes();
             RewardPlayerStats();
             await RewardPlayerLootAsync(rewardItem);
@@ -481,7 +481,7 @@ namespace Uchu.World.Systems.Missions
         /// If this is an achievement the currency is updated silently without a notify message
         /// as the client updates the currency locally.
         /// </remarks>
-        private void RewardPlayerCurrency()
+        private async Task RewardCurrencyAndScoreAsync()
         {
 
             if (!Player.TryGetComponent<CharacterComponent>(out var character))

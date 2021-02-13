@@ -108,27 +108,13 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task NotifyServerLevelProcessingCompleteHandler(NotifyServerLevelProcessingCompleteMessage message, Player player)
         {
-            await using var ctx = new UchuContext();
-
-            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-            var lookup_val = 0;
-
-            foreach (var levelProgressionLookup in (await ClientCache.GetTableAsync<LevelProgressionLookup>()))
+            var character = player.GetComponent<CharacterComponent>();
+            if (character.UniverseScore > character.RequiredUniverseScore)
             {
-                if (levelProgressionLookup.RequiredUScore > character.UniverseScore) break;
-
-                lookup_val = levelProgressionLookup.Id.Value;
-            }
-
-            Logger.Debug($"Attempting to assign level {lookup_val} to {character.Name} (They are currently level {character.Level})");
-
-            if (lookup_val > character.Level)
-            {
-                character.Level = lookup_val;
+                await character.LevelUpAsync();
                 GameObject.Serialize(player);
-                await ctx.SaveChangesAsync();
-
+                
+                // Show the levelup animation
                 player.Zone.BroadcastMessage(new PlayFXEffectMessage
                 {
                     Associate = player,
@@ -138,7 +124,6 @@ namespace Uchu.World.Handlers.GameMessages
                 });
 
                 player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");
-                Logger.Debug($"Assigned level {lookup_val} to {character.Name} (They are now currently level {character.Level})");
             }
         }
     }

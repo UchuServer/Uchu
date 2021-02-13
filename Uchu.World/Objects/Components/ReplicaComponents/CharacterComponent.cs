@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 using Uchu.World.Objects.Components;
 
 namespace Uchu.World
@@ -34,8 +36,9 @@ namespace Uchu.World
                 return;
 
             Currency = character.Currency;
-            UniverseScore = character.UniverseScore;
-            Level = character.Level;
+            _universeScore = character.UniverseScore;
+            await SetLevelAsync(character.Level, false);
+
             BaseHealth = character.BaseHealth;
             BaseImagination = character.BaseImagination;
             LastZone = character.LastZone == 0 ? 1000 : character.LastZone;
@@ -438,10 +441,10 @@ namespace Uchu.World
         #region score
 
         /// <summary>
-        /// Internal representation of a player's LU score
+        /// A player's LU score
         /// </summary>
         private long _universeScore;
-        
+
         /// <summary>
         /// A player's LU score
         /// </summary>
@@ -452,7 +455,7 @@ namespace Uchu.World
             {
                 var oldScore = UniverseScore;
                 _universeScore = value;
-
+            
                 if (GameObject is Player player)
                 {
                     player.Message(new ModifyLegoScoreMessage
@@ -461,37 +464,55 @@ namespace Uchu.World
                         Score = UniverseScore - oldScore
                     });
                 }
-                
             }
         }
         
         /// <summary>
+        /// The universe score required to reach the next level
+        /// </summary>
+        public long RequiredUniverseScore { get; private set; }
+
+        /// <summary>
         /// The level a player is currently at
         /// </summary>
         public long Level { get; private set; }
-        
+
+        /// <summary>
+        /// Levels the player up
+        /// </summary>
+        /// <returns></returns>
+        public async Task LevelUpAsync()
+        {
+            await SetLevelAsync(Level + 1);
+        }
+
         /// <summary>
         /// Sets the level to the one provided, also checks if it's a valid level in the cd client
         /// </summary>
         /// <param name="level">The level to set</param>
-        public async Task SetLevel(long level)
+        /// <param name="notifyClient">Whether to send the updated level to the client</param>
+        public async Task SetLevelAsync(long level, bool notifyClient = true)
         {
-            await using var cdContext = new CdClientContext();
-            
+            // Level 0 does not exist, set to 1 by default
+            level = level == 0 ? 1 : level;
+
             // Make sure the level exists
-            var lookup = await cdContext.LevelProgressionLookupTable
-                .FirstOrDefaultAsync(l => l.Id == Level);
-            if (lookup == default)
+            var levelLookup = (await ClientCache.GetTableAsync<LevelProgressionLookup>())
+                .FirstOrDefault(l => l.Id == level);
+            if (levelLookup == default)
                 return;
 
             Level = level;
+            RequiredUniverseScore = levelLookup.RequiredUScore ?? long.MaxValue;
 
-            if (GameObject is Player player)
+            if (notifyClient && GameObject is Player player)
             {
                 player.Message(new ModifyLegoScoreMessage
                 {
                     Associate = player,
-                    Score = lookup.RequiredUScore ?? 0 - UniverseScore
+                    Score = RequiredUniverseScore == long.MaxValue 
+                        ? UniverseScore 
+                        : RequiredUniverseScore - UniverseScore
                 });
             }
         }
@@ -592,12 +613,8 @@ namespace Uchu.World
 
         private void WritePart2(BitWriter writer)
         {
-            var player = (Player) GameObject;
-            
             var hasLevel = Level != 0;
-
             writer.WriteBit(hasLevel);
-
             if (hasLevel) writer.Write((uint) Level);
         }
 
