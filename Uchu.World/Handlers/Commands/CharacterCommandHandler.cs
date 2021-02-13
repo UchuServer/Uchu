@@ -452,7 +452,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "score", Help = "Change your U-score", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Score(string[] arguments, Player player)
+        public async Task<string> Score(string[] arguments, Player player)
         {
             if (arguments.Length != 1) return "score <delta>";
 
@@ -474,7 +474,7 @@ namespace Uchu.World.Handlers.Commands
             if (!long.TryParse(arguments[0], out var level)) return "Invalid <level>";
 
             var character = player.GetComponent<CharacterComponent>();
-            await character.SetLevel(level);
+            await character.SetLevelAsync(level);
 
             GameObject.Serialize(player);
 
