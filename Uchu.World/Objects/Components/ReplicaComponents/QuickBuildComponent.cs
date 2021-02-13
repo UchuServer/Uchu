@@ -47,6 +47,7 @@ namespace Uchu.World
         public bool Success { get; set; }
 
         public bool Enabled { get; set; } = true;
+        public bool ConnectedToSpawner { get; private set; }
 
         public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
 
@@ -199,65 +200,6 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Hides the quick build
-        /// </summary>
-        private void Hide()
-        {
-            Enabled = false;
-            
-            if (State == RebuildState.Building)
-            {
-                Zone.BroadcastMessage(new RebuildNotifyStateMessage
-                {
-                    Associate = GameObject,
-                    CurrentState = State,
-                    NewState = RebuildState.Resetting,
-                    Player = (Player)Participants.ElementAt(0)
-                });
-            }
-            
-            Zone.BroadcastMessage(new DieMessage {
-                Associate = GameObject,
-                SpawnLoot = true,
-                KillType = 0, // violent
-                Killer = GameObject.InvalidObject
-            });
-            
-            Zone.BroadcastMessage(new StopFXEffectMessage
-            {
-                Associate = GameObject,
-                KillImmediate = true,
-                Name = "BrickFadeUpVisCompleteEffect"
-            });
-            
-            Zone.SendDestruction(Activator, Zone.Players);
-            Zone.SendDestruction(GameObject, Zone.Players);
-            
-            GameObject.Layer = StandardLayer.Hidden;
-            Activator.Layer = StandardLayer.Hidden;
-        }
-
-        /// <summary>
-        /// Shows the quick build
-        /// </summary>
-        private void Show()
-        {
-            Enabled = true;
-            
-            Zone.SendConstruction(Activator, Zone.Players);
-            Zone.SendConstruction(GameObject, Zone.Players);
-            
-            GameObject.Layer = StandardLayer.Default;
-            Activator.Layer = StandardLayer.Default;
-            
-            Zone.BroadcastMessage(new ResurrectMessage
-            {
-                Associate = GameObject,
-                ResurrectImminently = true
-            });
-        }
-        
-        /// <summary>
         /// Tries to link this quick build to a spawner game object, making the quick build appear right
         /// after the linked game object was smashed
         /// </summary>
@@ -269,14 +211,41 @@ namespace Uchu.World
                 || !gameObject.TryGetComponent<SpawnerComponent>(out var spawner))
                 return;
 
+            ConnectedToSpawner = true;
+
             // Hide the quick build by default, only showing it when the spawner initiated a respawn
-            Hide();
+            // GameObject.Layer = StandardLayer.Hidden;
+            Activator.Layer = StandardLayer.Hidden;
             
             // Sync the respawn time and the reset time between the two components
-            spawner.RespawnTime = (int)_resetTime * 1000;
+            spawner.RespawnTime = (int)(_resetTime + _timeToSmash) * 1000;
             
             Listen(spawner.OnRespawnInitiated, Show);
-            Listen(spawner.OnRespawnCompleted, Hide);
+            Listen(spawner.OnRespawnTimeCompleted, Hide);
+        }
+        
+        
+        /// <summary>
+        /// Hides the quick build
+        /// </summary>
+        private void Hide(Player player)
+        {
+            ResetBuild(player);
+
+            Activator.Layer = StandardLayer.Hidden;
+            Zone.SendDestruction(Activator, Zone.Players);
+            
+            GameObject.Layer = StandardLayer.Hidden;
+            Zone.SendDestruction(GameObject, Zone.Players);
+        }
+
+        /// <summary>
+        /// Shows the quick build
+        /// </summary>
+        private void Show(Player player)
+        {
+            GameObject.Layer = StandardLayer.Default;
+            Activator.Layer = StandardLayer.Default;
         }
 
         //
@@ -476,15 +445,20 @@ namespace Uchu.World
                 await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot, ActivityId);
             });
 
-            // Reset the quick build after smash time
-            var timer = new Timer
+            // Reset the quick build after smash time, if this quick build is connected to a spawner, the spawner events
+            // will handle this
+            if (!ConnectedToSpawner)
             {
-                AutoReset = false,
-                Interval = _timeToSmash * 1000
-            };
-            timer.Elapsed += (sender, args) => { ResetBuild(player); };
+                var timer = new Timer
+                {
+                    AutoReset = false,
+                    Interval = _timeToSmash * 1000
+                };
+                timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
-            Task.Run(timer.Start);
+                Task.Run(timer.Start);
+            }
+            
             Task.Run(async () => await DropLootAsync(player));
         }
 

@@ -28,12 +28,12 @@ namespace Uchu.World
         /// <summary>
         /// Event that's called after a game object is smashed and the spawner is waiting to respawn the game object
         /// </summary>
-        public Event OnRespawnInitiated { get; }
+        public Event<Player> OnRespawnInitiated { get; }
         
         /// <summary>
         /// Event that's fired after a game object is smashed and the respawn time has passed
         /// </summary>
-        public Event OnRespawnCompleted { get; }
+        public Event<Player> OnRespawnTimeCompleted { get; }
 
         public LegoDataDictionary Settings { get; set; }
 
@@ -42,8 +42,8 @@ namespace Uchu.World
             _random = new Random();
             SpawnLocations = new List<SpawnLocation>();
             ActiveSpawns = new List<GameObject>();
-            OnRespawnInitiated = new Event();
-            OnRespawnCompleted = new Event();
+            OnRespawnInitiated = new Event<Player>();
+            OnRespawnTimeCompleted = new Event<Player>();
             
             Listen(OnStart, () =>
             {
@@ -70,7 +70,7 @@ namespace Uchu.World
             Listen(OnDestroyed, () =>
             {
                 OnRespawnInitiated.Clear();
-                OnRespawnCompleted.Clear();
+                OnRespawnTimeCompleted.Clear();
             });
         }
 
@@ -139,11 +139,11 @@ namespace Uchu.World
                 {
                     Destroy(obj);
 
-                    await OnRespawnInitiated.InvokeAsync();
+                    await OnRespawnInitiated.InvokeAsync(lootOwner);
                     await Task.Delay(RespawnTime);
+                    await OnRespawnTimeCompleted.InvokeAsync(lootOwner);
                     
                     Spawn();
-                    await OnRespawnCompleted.InvokeAsync();
                 });
             }
 
