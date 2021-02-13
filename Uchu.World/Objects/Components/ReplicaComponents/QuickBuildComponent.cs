@@ -26,8 +26,7 @@ namespace Uchu.World
         private Timer _imaginationTimer;
         private int _taken;
         private RebuildState _state = RebuildState.Open;
-        private SpawnerComponent LinkedSpawner;
-        
+
         private long StartTime { get; set; }
         
         private long Pause { get; set; }
@@ -205,6 +204,7 @@ namespace Uchu.World
         private void Hide()
         {
             Enabled = false;
+            
             if (State == RebuildState.Building)
             {
                 Zone.BroadcastMessage(new RebuildNotifyStateMessage
@@ -215,24 +215,24 @@ namespace Uchu.World
                     Player = (Player)Participants.ElementAt(0)
                 });
             }
+            
             Zone.BroadcastMessage(new DieMessage {
                 Associate = GameObject,
                 SpawnLoot = true,
                 KillType = 0, // violent
                 Killer = GameObject.InvalidObject
             });
-            Zone.BroadcastMessage(new DieMessage {
-                Associate = Activator,
-                SpawnLoot = true,
-                KillType = 0, // violent
-                Killer = GameObject.InvalidObject
-            });
+            
             Zone.BroadcastMessage(new StopFXEffectMessage
             {
                 Associate = GameObject,
                 KillImmediate = true,
                 Name = "BrickFadeUpVisCompleteEffect"
             });
+            
+            Zone.SendDestruction(Activator, Zone.Players);
+            Zone.SendDestruction(GameObject, Zone.Players);
+            
             GameObject.Layer = StandardLayer.Hidden;
             Activator.Layer = StandardLayer.Hidden;
         }
@@ -243,17 +243,18 @@ namespace Uchu.World
         private void Show()
         {
             Enabled = true;
+            
+            Zone.SendConstruction(Activator, Zone.Players);
+            Zone.SendConstruction(GameObject, Zone.Players);
+            
+            GameObject.Layer = StandardLayer.Default;
+            Activator.Layer = StandardLayer.Default;
+            
             Zone.BroadcastMessage(new ResurrectMessage
             {
                 Associate = GameObject,
                 ResurrectImminently = true
             });
-            Zone.BroadcastMessage(new ResurrectMessage {
-                Associate = Activator,
-                ResurrectImminently = true
-            });
-            GameObject.Layer = StandardLayer.Default;
-            Activator.Layer = StandardLayer.Default;
         }
         
         /// <summary>
@@ -264,21 +265,18 @@ namespace Uchu.World
         /// <param name="spawnerName">The required name of the spawner to make it linkable</param>
         private void TryConnectSpawner(GameObject gameObject, string spawnerName)
         {
-            if (LinkedSpawner != default 
-                || gameObject.Name != spawnerName 
+            if (gameObject.Name != spawnerName 
                 || !gameObject.TryGetComponent<SpawnerComponent>(out var spawner))
                 return;
 
             // Hide the quick build by default, only showing it when the spawner initiated a respawn
             Hide();
+            
+            // Sync the respawn time and the reset time between the two components
             spawner.RespawnTime = (int)_resetTime * 1000;
             
-            Listen(spawner.OnRespawnInitiated, async respawnTimeInMs =>
-            {
-                Show();
-                await Task.Delay(respawnTimeInMs);
-                Hide();
-            });
+            Listen(spawner.OnRespawnInitiated, Show);
+            Listen(spawner.OnRespawnCompleted, Hide);
         }
 
         //
@@ -438,14 +436,12 @@ namespace Uchu.World
         public void CompleteBuild(Player player)
         {
             Activator.Layer = StandardLayer.Hidden;
-
-            /*
-             * Stop The timer.
-             */
+            Zone.SendDestruction(Activator, Zone.Players);
+            
             _timer.Dispose();
             _timer = null;
 
-            // Notify the player this Quickbuild in now complete.
+            // Notify the player this quick build in now complete.
             Zone.BroadcastMessage(new RebuildNotifyStateMessage
             {
                 Associate = GameObject,
@@ -454,7 +450,7 @@ namespace Uchu.World
                 Player = player
             });
 
-            // Makes the player complete this Quickbuild.
+            // Makes the player complete this quick build
             Zone.BroadcastMessage(new EnableRebuildMessage
             {
                 Associate = GameObject,
@@ -462,10 +458,7 @@ namespace Uchu.World
                 Player = player,
                 Duration = _resetTime
             });
-
-            /*
-             * Update the object in the World.
-             */
+            
             State = RebuildState.Completed;
             Success = true;
             Enabled = true;
@@ -475,7 +468,6 @@ namespace Uchu.World
             if (!Participants.Contains(player)) Participants.Add(player);
 
             GameObject.Serialize(GameObject);
-            
             GameObject.PlayFX("BrickFadeUpVisCompleteEffect","create",507);
 
             // Update any mission task that required this quickbuild.
@@ -484,9 +476,7 @@ namespace Uchu.World
                 await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot, ActivityId);
             });
 
-            /*
-             * Reset this quickbuild after its smash time.
-             */
+            // Reset the quick build after smash time
             var timer = new Timer
             {
                 AutoReset = false,
@@ -495,7 +485,6 @@ namespace Uchu.World
             timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
             Task.Run(timer.Start);
-
             Task.Run(async () => await DropLootAsync(player));
         }
 
@@ -518,19 +507,7 @@ namespace Uchu.World
             State = RebuildState.Resetting;
 
             GameObject.Serialize(GameObject);
-
             OpenBuild(player);
-
-            if (LinkedSpawner != default)
-            {
-                GameObject.Layer = StandardLayer.Hidden;
-                Activator.Layer = StandardLayer.Hidden;
-                if (Enabled)
-                {
-                    LinkedSpawner.Spawn();
-                }
-                Enabled = false;
-            }
         }
 
         public void OpenBuild(Player player)

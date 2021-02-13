@@ -26,10 +26,14 @@ namespace Uchu.World
         public uint SpawnNodeId { get; set; }
         
         /// <summary>
-        /// Event that's called after a game object is smashed and the spawner is waiting to respawn the game object,
-        /// the argument is the respawn time until the spawner will respawn the GO 
+        /// Event that's called after a game object is smashed and the spawner is waiting to respawn the game object
         /// </summary>
-        public Event<int> OnRespawnInitiated { get; }
+        public Event OnRespawnInitiated { get; }
+        
+        /// <summary>
+        /// Event that's fired after a game object is smashed and the respawn time has passed
+        /// </summary>
+        public Event OnRespawnCompleted { get; }
 
         public LegoDataDictionary Settings { get; set; }
 
@@ -38,7 +42,8 @@ namespace Uchu.World
             _random = new Random();
             SpawnLocations = new List<SpawnLocation>();
             ActiveSpawns = new List<GameObject>();
-            OnRespawnInitiated = new Event<int>();
+            OnRespawnInitiated = new Event();
+            OnRespawnCompleted = new Event();
             
             Listen(OnStart, () =>
             {
@@ -60,6 +65,12 @@ namespace Uchu.World
                 }
 
                 GameObject.Layer = StandardLayer.Spawner;
+            });
+
+            Listen(OnDestroyed, () =>
+            {
+                OnRespawnInitiated.Clear();
+                OnRespawnCompleted.Clear();
             });
         }
 
@@ -127,8 +138,12 @@ namespace Uchu.World
                 Listen(destructibleComponent.OnSmashed, async (smasher, lootOwner) =>
                 {
                     Destroy(obj);
-                    await Task.WhenAll(OnRespawnInitiated.InvokeAsync(RespawnTime), Task.Delay(RespawnTime));
+
+                    await OnRespawnInitiated.InvokeAsync();
+                    await Task.Delay(RespawnTime);
+                    
                     Spawn();
+                    await OnRespawnCompleted.InvokeAsync();
                 });
             }
 
