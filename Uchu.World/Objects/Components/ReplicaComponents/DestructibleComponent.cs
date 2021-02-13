@@ -145,7 +145,10 @@ namespace Uchu.World
                 GameObject.Layer -= StandardLayer.Smashable;
                 GameObject.Layer += StandardLayer.Hidden;
 
-                InitializeRespawn();
+                if (GameObject.Spawner == default)
+                {
+                    InitializeRespawn();
+                }
                 
                 if (owner != null)
                 {

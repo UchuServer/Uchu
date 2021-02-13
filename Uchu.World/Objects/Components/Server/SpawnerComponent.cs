@@ -11,7 +11,6 @@ namespace Uchu.World
     public class SpawnerComponent : Component
     {
         private readonly Random _random;
-        
         public List<GameObject> ActiveSpawns { get; }
 
         public LevelObjectTemplate LevelObject { get; set; }
@@ -25,16 +24,26 @@ namespace Uchu.World
         public Lot SpawnTemplate { get; set; }
 
         public uint SpawnNodeId { get; set; }
+        
+        /// <summary>
+        /// Event that's called after a game object is smashed and the spawner is waiting to respawn the game object
+        /// </summary>
+        public Event<Player> OnRespawnInitiated { get; }
+        
+        /// <summary>
+        /// Event that's fired after a game object is smashed and the respawn time has passed
+        /// </summary>
+        public Event<Player> OnRespawnTimeCompleted { get; }
 
         public LegoDataDictionary Settings { get; set; }
 
         protected SpawnerComponent()
         {
             _random = new Random();
-            
             SpawnLocations = new List<SpawnLocation>();
-
             ActiveSpawns = new List<GameObject>();
+            OnRespawnInitiated = new Event<Player>();
+            OnRespawnTimeCompleted = new Event<Player>();
             
             Listen(OnStart, () =>
             {
@@ -56,6 +65,12 @@ namespace Uchu.World
                 }
 
                 GameObject.Layer = StandardLayer.Spawner;
+            });
+
+            Listen(OnDestroyed, () =>
+            {
+                OnRespawnInitiated.Clear();
+                OnRespawnTimeCompleted.Clear();
             });
         }
 
@@ -109,11 +124,8 @@ namespace Uchu.World
         public GameObject Spawn()
         {
             var obj = GenerateSpawnObject();
-
             Start(obj);
-
             GameObject.Construct(obj);
-
             ActiveSpawns.Add(obj);
 
             Listen(obj.OnDestroyed, () =>
@@ -127,7 +139,9 @@ namespace Uchu.World
                 {
                     Destroy(obj);
 
+                    await OnRespawnInitiated.InvokeAsync(lootOwner);
                     await Task.Delay(RespawnTime);
+                    await OnRespawnTimeCompleted.InvokeAsync(lootOwner);
                     
                     Spawn();
                 });

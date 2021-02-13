@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -25,17 +26,14 @@ namespace Uchu.World
         private Timer _imaginationTimer;
         private int _taken;
         private RebuildState _state = RebuildState.Open;
-        
+
         private long StartTime { get; set; }
         
         private long Pause { get; set; }
 
         public RebuildState State
         {
-            get
-            {
-                return _state;
-            }
+            get => _state;
             set
             {
                 _state = value;
@@ -46,6 +44,7 @@ namespace Uchu.World
         public bool Success { get; set; }
 
         public bool Enabled { get; set; } = true;
+        public bool ConnectedToSpawner { get; private set; }
 
         public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
 
@@ -102,8 +101,11 @@ namespace Uchu.World
                     return;
                 }
                 
-                _completeTime = clientComponent.Completetime ?? 0;
                 _imaginationCost = clientComponent.Takeimagination ?? 0;
+                
+                // If no completion time is provided we assume 1 second per imagination spent
+                _completeTime = clientComponent.Completetime ?? _imaginationCost;
+                
                 _timeToSmash = clientComponent.Timebeforesmash ?? 0;
                 _resetTime = clientComponent.Resettime ?? 0;
 
@@ -128,6 +130,27 @@ namespace Uchu.World
 
                 Start(Activator);
                 
+                // For quick builds that should only appear after something is smashed
+                if (GameObject.Settings.TryGetValue("spawnNetNameForSpawnGroupOnSmash", out var possibleSpawnerName))
+                {
+                    var spawnerName = (string) possibleSpawnerName;
+                    if (spawnerName != "")
+                    {
+                        foreach (var otherGameObject in Zone.GameObjects)
+                        {
+                            TryConnectSpawner(otherGameObject, spawnerName);
+                        }
+                        
+                        // Sometimes the spawners are constructed after this quick build game object
+                        Listen(Zone.OnObject, @object =>
+                        {
+                            if (!(@object is GameObject gameObject))
+                                return;
+                            TryConnectSpawner(gameObject, spawnerName);
+                        });
+                    }
+                }
+                
                 GameObject.Construct(Activator);
                 GameObject.Serialize(GameObject);
 
@@ -136,7 +159,7 @@ namespace Uchu.World
             
             Listen(OnDestroyed, () => { Destroy(Activator); });
         }
-        
+
         public override void Construct(BitWriter writer)
         {
             if (!GameObject.TryGetComponent<DestructibleComponent>(out _) &&
@@ -175,7 +198,56 @@ namespace Uchu.World
             writer.Write(StartTime > 0 ? TimeSinceStart : StartTime);
             writer.Write(Pause > 0 ? PauseTime : Pause);
         }
+
+        /// <summary>
+        /// Tries to link this quick build to a spawner game object, making the quick build appear right
+        /// after the linked game object was smashed
+        /// </summary>
+        /// <param name="gameObject">The spawner to try to link to</param>
+        /// <param name="spawnerName">The required name of the spawner to make it linkable</param>
+        private void TryConnectSpawner(GameObject gameObject, string spawnerName)
+        {
+            if (gameObject.Name != spawnerName 
+                || !gameObject.TryGetComponent<SpawnerComponent>(out var spawner))
+                return;
+
+            ConnectedToSpawner = true;
+
+            // Hide the quick build by default, only showing it when the spawner initiated a respawn
+            // GameObject.Layer = StandardLayer.Hidden;
+            Activator.Layer = StandardLayer.Hidden;
+            
+            // Sync the respawn time and the reset time between the two components
+            spawner.RespawnTime = (int)(_resetTime + _timeToSmash) * 1000;
+            
+            Listen(spawner.OnRespawnInitiated, Show);
+            Listen(spawner.OnRespawnTimeCompleted, Hide);
+        }
         
+        
+        /// <summary>
+        /// Hides the quick build
+        /// </summary>
+        private void Hide(Player player)
+        {
+            ResetBuild(player);
+
+            Activator.Layer = StandardLayer.Hidden;
+            Zone.SendDestruction(Activator, Zone.Players);
+            
+            GameObject.Layer = StandardLayer.Hidden;
+            Zone.SendDestruction(GameObject, Zone.Players);
+        }
+
+        /// <summary>
+        /// Shows the quick build
+        /// </summary>
+        private void Show(Player player)
+        {
+            GameObject.Layer = StandardLayer.Default;
+            Activator.Layer = StandardLayer.Default;
+        }
+
         //
         // Rebuildables have five states.
         // 
@@ -231,7 +303,6 @@ namespace Uchu.World
             if (_timer == default)
             {
                 _timer = new PauseTimer(_completeTime * 1000);
-
                 _timer.Elapsed += (sender, args) => {  };
             }
             else
@@ -260,7 +331,6 @@ namespace Uchu.World
                 if (_taken != _imaginationCost)
                 {
                     _taken++;
-
                     playerStats.Imagination--;
 
                     GameObject.Serialize(GameObject);
@@ -333,14 +403,12 @@ namespace Uchu.World
         public void CompleteBuild(Player player)
         {
             Activator.Layer = StandardLayer.Hidden;
-
-            /*
-             * Stop The timer.
-             */
+            Zone.SendDestruction(Activator, Zone.Players);
+            
             _timer.Dispose();
             _timer = null;
 
-            // Notify the player this Quickbuild in now complete.
+            // Notify the player this quick build in now complete.
             Zone.BroadcastMessage(new RebuildNotifyStateMessage
             {
                 Associate = GameObject,
@@ -349,7 +417,7 @@ namespace Uchu.World
                 Player = player
             });
 
-            // Makes the player complete this Quickbuild.
+            // Makes the player complete this quick build
             Zone.BroadcastMessage(new EnableRebuildMessage
             {
                 Associate = GameObject,
@@ -357,10 +425,7 @@ namespace Uchu.World
                 Player = player,
                 Duration = _resetTime
             });
-
-            /*
-             * Update the object in the World.
-             */
+            
             State = RebuildState.Completed;
             Success = true;
             Enabled = true;
@@ -370,7 +435,6 @@ namespace Uchu.World
             if (!Participants.Contains(player)) Participants.Add(player);
 
             GameObject.Serialize(GameObject);
-            
             GameObject.PlayFX("BrickFadeUpVisCompleteEffect","create",507);
 
             // Update any mission task that required this quickbuild.
@@ -379,20 +443,20 @@ namespace Uchu.World
                 await player.GetComponent<MissionInventoryComponent>().QuickBuildAsync(GameObject.Lot, ActivityId);
             });
 
-            /*
-             * Reset this quickbuild after three times its completion time.
-             * TODO: Change this to something more correct.
-             */
-            var timer = new Timer
+            // Reset the quick build after smash time, if this quick build is connected to a spawner, the spawner events
+            // will handle this
+            if (!ConnectedToSpawner)
             {
-                AutoReset = false,
-                Interval = _resetTime * 1000
-            };
+                var timer = new Timer
+                {
+                    AutoReset = false,
+                    Interval = _timeToSmash * 1000
+                };
+                timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
-            timer.Elapsed += (sender, args) => { ResetBuild(player); };
-
-            Task.Run(timer.Start);
-
+                Task.Run(timer.Start);
+            }
+            
             Task.Run(async () => await DropLootAsync(player));
         }
 
@@ -415,7 +479,6 @@ namespace Uchu.World
             State = RebuildState.Resetting;
 
             GameObject.Serialize(GameObject);
-
             OpenBuild(player);
         }
 
