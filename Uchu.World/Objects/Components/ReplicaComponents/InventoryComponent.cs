@@ -8,6 +8,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects;
 
 namespace Uchu.World
 {
@@ -28,7 +29,12 @@ namespace Uchu.World
         /// Mapping of items and their equipped slots on the game object
         /// </summary>
         private Dictionary<EquipLocation, Item> Items { get; }
-        
+
+        /// <summary>
+        /// The items currently equipped in the inventory
+        /// </summary>
+        public Item[] EquippedItems => Items.Values.ToArray();
+
         /// <summary>
         /// Called when a new item is equipped
         /// </summary>
@@ -38,12 +44,18 @@ namespace Uchu.World
         /// Called when an item is unequipped
         /// </summary>
         public Event<Item> OnUnEquipped { get; }
+        
+        /// <summary>
+        /// The item sets currently active on the player
+        /// </summary>
+        public List<ItemSet> ActiveItemSets { get; }
 
         protected InventoryComponent()
         {
             Items = new Dictionary<EquipLocation, Item>();
             OnEquipped = new Event<Item>();
             OnUnEquipped = new Event<Item>();
+            ActiveItemSets = new List<ItemSet>();
 
             Listen(OnDestroyed, () =>
             {
@@ -98,7 +110,7 @@ namespace Uchu.World
         {
             foreach (var item in items)
             {
-                await EquipAsync(item);
+                await EquipItemAsync(item);
             }
         }
 
@@ -155,6 +167,9 @@ namespace Uchu.World
             {
                 return;
             }
+
+            // Make sure that item sets are tracked for this item (if it has one)
+            await ItemSet.EnsureActiveForItem(this, item.Lot);
             
             await EquipAsync(item);
             GameObject.Serialize(GameObject);
@@ -185,7 +200,7 @@ namespace Uchu.World
 
             // Update all the new skills the player gets from this item
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                await skillComponent.MountItem(item);
+                await skillComponent.EquipItemAsync(item);
         }
 
         /// <summary>
@@ -233,7 +248,7 @@ namespace Uchu.World
         private async Task EnsureItemUnEquipped(Item item)
         {
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                await skillComponent.DismountItemAsync(item);
+                await skillComponent.UnequipItemAsync(item);
             
             item.IsEquipped = false;
             Items.Remove(GetSlot(item.Id));

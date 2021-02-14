@@ -18,6 +18,7 @@ namespace Uchu.World.Handlers.GameMessages
         /// <param name="missions">The missions inventory of a player</param>
         private static async Task HandleFactionVendorInteraction(GameObject gameObject, MissionInventoryComponent missions)
         {
+            // For some reason the targets of faction missions are different game objects than the one you interact with
             var targetLot = (int) gameObject.Lot switch
             {
                 Lot.SentinelFactionVendor => Lot.SentinelFactionVendorProxy, 
