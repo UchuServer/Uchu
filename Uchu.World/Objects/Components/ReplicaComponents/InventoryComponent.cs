@@ -169,7 +169,7 @@ namespace Uchu.World
             }
 
             // Make sure that item sets are tracked for this item (if it has one)
-            await ItemSet.EnsureActiveForItem(this, item.Lot);
+            await ItemSet.CreateIfNewSet(this, item.Lot);
             
             await EquipAsync(item);
             GameObject.Serialize(GameObject);

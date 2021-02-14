@@ -6,8 +6,20 @@ using Uchu.World.Client;
 
 namespace Uchu.World.Objects
 {
+    /// <summary>
+    /// A set of items that when worn combined execute special skills
+    /// </summary>
+    /// <remarks>
+    /// Most notable examples include the faction gear, see https://lu-explorer.web.app/objects/item-sets for a complete
+    /// list.
+    /// </remarks>
     public class ItemSet : Object
     {
+        /// <summary>
+        /// Creates an item set for the given inventory, tracking the inventory updates for it
+        /// </summary>
+        /// <param name="inventory">The inventory to track when equips and enquips happen</param>
+        /// <param name="setId">The unique Id of this set</param>
         private ItemSet(InventoryComponent inventory, int setId)
         {
             _setId = setId;
@@ -16,7 +28,7 @@ namespace Uchu.World.Objects
             _skillSetMap = new Dictionary<int, int?>();
             _itemsInSet = new HashSet<Lot>();
             _owner.ActiveItemSets.Add(this);
-
+            
             Listen(_owner.OnEquipped, async item =>
             {
                 if (_itemsInSet.Contains(item.Lot))
@@ -33,7 +45,7 @@ namespace Uchu.World.Objects
 
             Listen(_owner.OnUnEquipped, async item =>
             {
-                if (_itemsInSet.Contains(item.Lot))
+                if (_equippedItemsInSet.Contains(item.Lot))
                 {
                     if (_skillSetMap.TryGetValue(_equippedItemsInSet.Count, out var skillSetId)
                         && skillSetId.HasValue
@@ -42,24 +54,41 @@ namespace Uchu.World.Objects
                     
                     _equippedItemsInSet.Remove(item.Lot);
                 }
-                
-                if (_equippedItemsInSet.Count == 0)
-                    Destroy(this);
-            });
-
-            Listen(_owner.OnDestroyed, () =>
-            {
-                Destroy(this);
             });
         }
         
+        /// <summary>
+        /// The inventory this item set belongs to
+        /// </summary>
         private readonly InventoryComponent _owner;
+        
+        /// <summary>
+        /// The items in the inventory that are equipped and part of this item set
+        /// </summary>
         private readonly HashSet<Lot> _equippedItemsInSet;
+        
+        /// <summary>
+        /// All the possible items that can be part of this item set
+        /// </summary>
         private readonly HashSet<Lot> _itemsInSet;
+        
+        /// <summary>
+        /// Maps the number of required items to the skill that should execute
+        /// </summary>
         private readonly Dictionary<int, int?> _skillSetMap;
+        
+        /// <summary>
+        /// Unique Id of the set
+        /// </summary>
         private readonly int _setId;
         
-        public static async Task EnsureActiveForItem(InventoryComponent inventory, Lot lot)
+        /// <summary>
+        /// For an item makes sure that an item set is created if said item is part of one, if this item is not port of
+        /// an item set or the the item set this item belongs to is already created, this does nothing
+        /// </summary>
+        /// <param name="inventory">The inventory to get possible set items from</param>
+        /// <param name="lot">The lot for which we wish to check if item sets should be tracked</param>
+        public static async Task CreateIfNewSet(InventoryComponent inventory, Lot lot)
         {
             var clientItemSet = (await ClientCache.GetTableAsync<ItemSets>()).FirstOrDefault(
                 i => i.ItemIDs.Contains(lot.ToString()));
@@ -70,6 +99,8 @@ namespace Uchu.World.Objects
                 return;
             
             var itemSet = new ItemSet(inventory, clientItemSet.SetID.Value);
+            Start(itemSet);
+            
             foreach (var itemSetLot in clientItemSet.ItemIDs.Split(","))
             {
                 itemSet._itemsInSet.Add(new Lot(int.Parse(itemSetLot)));
