@@ -62,8 +62,6 @@ namespace Uchu.World
                 }
             };
 
-            RakNetServer.ClientDisconnected += HandleDisconnect;
-            
             var instance = await Api.RunCommandAsync<InstanceInfoResponse>(
                 Config.ApiConfig.Port, $"instance/target?i={Id}"
             ).ConfigureAwait(false);
@@ -91,22 +89,6 @@ namespace Uchu.World
                     await LoadZone(zone);
                 }
             });
-        }
-
-        private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
-        {
-            Logger.Information($"{point} disconnected: {reason}");
-
-            var players = Zones.Select(zone =>
-                zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point))
-            ).Where(player => player != default);
-            
-            foreach (var player in players)
-            {
-                Object.Destroy(player);
-            }
-
-            return Task.CompletedTask;
         }
 
         private async Task LoadZone(int zoneId)

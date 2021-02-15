@@ -185,8 +185,6 @@ namespace Uchu.World
                 });
             }
 
-            await context.SaveChangesAsync();
-            
             Logger.Debug($"Saved character for {GameObject}");
         }
         
