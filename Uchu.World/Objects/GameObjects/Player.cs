@@ -53,7 +53,8 @@ namespace Uchu.World
             {
                 Connection.Disconnected += async reason =>
                 {
-                    await GetComponent<SaveComponent>().SaveAsync();
+                    Logger.Information($"{this} left: {reason}.");
+                    await GetComponent<SaveComponent>().SaveAsync(false);
                     Connection = default;
                     Destroy(this);
                 };
@@ -65,7 +66,7 @@ namespace Uchu.World
                     destructibleComponent.OnResurrect.AddListener(() => { GetComponent<DestroyableComponent>().Imagination = 6; });
                 }
                 
-                // Save the player every minute
+                // Save the player every 15 seconds
                 Zone.Update(this, () =>
                 {
                     // Done in the background as this takes long
@@ -146,6 +147,9 @@ namespace Uchu.World
 
             Perspective.AddFilter<RenderDistanceFilter>();
             Perspective.AddFilter<ExcludeFilter>();
+            
+            // Add as first component so that it can be destructed first
+            var saveComponent = AddComponent<SaveComponent>();
 
             // Add serialized components
             var controllablePhysics = AddComponent<ControllablePhysicsComponent>();
@@ -185,14 +189,15 @@ namespace Uchu.World
             Listen(physics.OnCollision, OnStayCollision);
             Listen(physics.OnLeave, OnLeaveCollision);
 
-            AddComponent<SaveComponent>();
-            
             // Register player game object in zone
             Start(this);
             Construct(this);
             
             // Register player as an active in zone
             await Zone.RegisterPlayer(this);
+            
+            // Once everything is done, allow saving this player
+            saveComponent.StartSaving();
         }
         
         #region properties
@@ -450,7 +455,7 @@ namespace Uchu.World
                 return;
             
             GetComponent<CharacterComponent>().LastZone = zoneId;
-            await GetComponent<SaveComponent>().SaveAsync();
+            await GetComponent<SaveComponent>().SaveAsync(false);
             
             Message(new ServerRedirectionPacket
             {

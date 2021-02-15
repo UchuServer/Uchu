@@ -150,8 +150,6 @@ namespace Uchu.World
                 }
             }
 
-            await context.SaveChangesAsync();
-            
             Logger.Debug($"Saved mission inventory for {GameObject}");
         }
         
