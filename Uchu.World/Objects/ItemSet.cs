@@ -119,7 +119,7 @@ namespace Uchu.World.Objects
                 return;
             
             var itemSet = Instantiate(inventory, clientItemSet.SetID.Value);
-            // Start(itemSet);
+            Start(itemSet);
             
             foreach (var itemSetLot in clientItemSet.ItemIDs.Split(","))
             {

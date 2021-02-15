@@ -93,7 +93,7 @@ namespace Uchu.World.Systems.Behaviors
                     (parameters.ServerSide && parameters.SuccessState == 1 || !parameters.ServerSide))
                 {
                     if (parameters.ServerSide)
-                        parameters.PlayFX("onhit", EffectId);
+                        parameters.PlayFX(EffectId, "onhit");
 
                     // This is ran as a background task as it may trigger many async messages
                     Task.Run(() => stats.Damage(CalculateDamage(parameters.Damage), parameters.Context.Associate));
