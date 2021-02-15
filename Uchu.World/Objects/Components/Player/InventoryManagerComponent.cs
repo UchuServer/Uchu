@@ -154,8 +154,6 @@ namespace Uchu.World
                 }
             }
 
-            await context.SaveChangesAsync();
-            
             Logger.Debug($"Saved inventory for {GameObject}");
         }
 
