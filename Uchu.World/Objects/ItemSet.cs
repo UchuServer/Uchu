@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
 
@@ -18,18 +19,37 @@ namespace Uchu.World.Objects
         /// <summary>
         /// Creates an item set for the given inventory, tracking the inventory updates for it
         /// </summary>
-        /// <param name="inventory">The inventory to track when equips and enquips happen</param>
-        /// <param name="setId">The unique Id of this set</param>
-        private ItemSet(InventoryComponent inventory, int setId)
+        private ItemSet()
         {
-            _setId = setId;
-            _owner = inventory;
             _equippedItemsInSet = new HashSet<Lot>();
             _skillSetMap = new Dictionary<int, int?>();
             _itemsInSet = new HashSet<Lot>();
-            _owner.ActiveItemSets.Add(this);
+        }
+
+        /// <summary>
+        /// Creates a new item set
+        /// </summary>
+        /// <param name="inventory">The inventory this item set should track</param>
+        /// <param name="setId">The unique set id for this item set</param>
+        /// <returns>An item set for the given parameters</returns>
+        public static ItemSet Instantiate(InventoryComponent inventory, int setId)
+        {
+            var instance = Instantiate<ItemSet>(inventory.Zone);
             
-            Listen(_owner.OnEquipped, async item =>
+            instance._setId = setId;
+            instance._inventory = inventory;
+            instance._inventory.ActiveItemSets.Add(instance);
+            instance.SetupEvents();
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Sets up all the events for the item set
+        /// </summary>
+        private void SetupEvents()
+        {
+            Listen(_inventory.OnEquipped, async item =>
             {
                 if (_itemsInSet.Contains(item.Lot))
                 {
@@ -38,18 +58,18 @@ namespace Uchu.World.Objects
                     // Equip the skill set if this amount of items should equip one
                     if (_skillSetMap.TryGetValue(_equippedItemsInSet.Count, out var skillSetId)
                         && skillSetId.HasValue
-                        && _owner.GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
+                        && _inventory.GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                         await skillComponent.EquipSkillSet(skillSetId.Value);
                 }
             });
 
-            Listen(_owner.OnUnEquipped, async item =>
+            Listen(_inventory.OnUnEquipped, async item =>
             {
                 if (_equippedItemsInSet.Contains(item.Lot))
                 {
                     if (_skillSetMap.TryGetValue(_equippedItemsInSet.Count, out var skillSetId)
                         && skillSetId.HasValue
-                        && _owner.GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
+                        && _inventory.GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                         await skillComponent.UnequipSkillSetAsync(skillSetId.Value);
                     
                     _equippedItemsInSet.Remove(item.Lot);
@@ -60,7 +80,12 @@ namespace Uchu.World.Objects
         /// <summary>
         /// The inventory this item set belongs to
         /// </summary>
-        private readonly InventoryComponent _owner;
+        private InventoryComponent _inventory;
+        
+        /// <summary>
+        /// Unique Id of the set
+        /// </summary>
+        private int _setId;
         
         /// <summary>
         /// The items in the inventory that are equipped and part of this item set
@@ -76,12 +101,7 @@ namespace Uchu.World.Objects
         /// Maps the number of required items to the skill that should execute
         /// </summary>
         private readonly Dictionary<int, int?> _skillSetMap;
-        
-        /// <summary>
-        /// Unique Id of the set
-        /// </summary>
-        private readonly int _setId;
-        
+
         /// <summary>
         /// For an item makes sure that an item set is created if said item is part of one, if this item is not port of
         /// an item set or the the item set this item belongs to is already created, this does nothing
@@ -98,8 +118,8 @@ namespace Uchu.World.Objects
                 || inventory.ActiveItemSets.Any(i => i._setId == clientItemSet.SetID.Value))
                 return;
             
-            var itemSet = new ItemSet(inventory, clientItemSet.SetID.Value);
-            Start(itemSet);
+            var itemSet = Instantiate(inventory, clientItemSet.SetID.Value);
+            // Start(itemSet);
             
             foreach (var itemSetLot in clientItemSet.ItemIDs.Split(","))
             {
