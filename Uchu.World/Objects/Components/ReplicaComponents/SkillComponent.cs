@@ -131,7 +131,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="skillSetId">The skill set to load</param>
         /// <returns></returns>
-        public async Task EquipSkillSet(int skillSetId)
+        public async Task EquipSkillSetAsync(int skillSetId)
         {
             var tree = await BehaviorTree.FromSkillSetAsync(skillSetId);
             await EquipTreeAsync(tree);

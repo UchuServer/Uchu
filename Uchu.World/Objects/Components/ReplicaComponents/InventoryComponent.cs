@@ -168,25 +168,13 @@ namespace Uchu.World
                 return;
             }
 
-            // Make sure that item sets are tracked for this item (if it has one)
-            await ItemSet.CreateIfNewSet(this, item.Lot);
-            
-            await EquipAsync(item);
-            GameObject.Serialize(GameObject);
-            await OnEquipped.InvokeAsync(item);
-        }
-        
-        /// <summary>
-        /// Internal item equipping logic, also equips all sub items for this item.
-        /// </summary>
-        /// <param name="item">The item to equip</param>
-        private async Task EquipAsync(Item item)
-        {
             await EnsureItemEquipped(item);
             foreach (var subItem in await GenerateSubItemsAsync(item))
             {
-                await EnsureItemEquipped(subItem);
+                await EquipItemAsync(subItem);
             }
+            
+            GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -198,6 +186,10 @@ namespace Uchu.World
             await UpdateSlotAsync(item);
             item.IsEquipped = true;
 
+            // Make sure that item sets are tracked for this item (if it has one)
+            await ItemSet.CreateIfNewSet(this, item.Lot);
+            await OnEquipped.InvokeAsync(item);
+            
             // Update all the new skills the player gets from this item
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.EquipItemAsync(item);
@@ -211,34 +203,22 @@ namespace Uchu.World
         /// <param name="item">The item to unequip</param>
         public async Task UnEquipItemAsync(Item item)
         {
-            await OnUnEquipped.InvokeAsync(item);
-            
             if (item?.Id <= 0)
                 return;
             
             if (item != null)
             {
-                await UnEquipAsync(item);
+                var rootItem = item.RootItem ?? item;
+                await EnsureItemUnEquipped(rootItem);
+            
+                foreach (var subItem in GetSubItems(rootItem))
+                {
+                    if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
+                        await EnsureItemUnEquipped(equippedSubItem);
+                }
             }
 
             GameObject.Serialize(GameObject);
-        }
-        
-        /// <summary>
-        /// Unequips an item by unequipping it or its root item, if available. Note that if this item has a root item
-        /// all sub items will also be unequipped.
-        /// </summary>
-        /// <param name="item">The item to unequip or unequip the root item and its sub items for</param>
-        private async Task UnEquipAsync(Item item)
-        {
-            var rootItem = item.RootItem ?? item;
-            await EnsureItemUnEquipped(rootItem);
-            
-            foreach (var subItem in GetSubItems(rootItem))
-            {
-                if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
-                    await EnsureItemUnEquipped(equippedSubItem);
-            }
         }
 
         /// <summary>
@@ -249,6 +229,8 @@ namespace Uchu.World
         {
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.UnequipItemAsync(item);
+            
+            await OnUnEquipped.InvokeAsync(item);
             
             item.IsEquipped = false;
             Items.Remove(GetSlot(item.Id));

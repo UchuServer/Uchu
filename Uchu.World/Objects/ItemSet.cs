@@ -59,7 +59,7 @@ namespace Uchu.World.Objects
                     if (_skillSetMap.TryGetValue(_equippedItemsInSet.Count, out var skillSetId)
                         && skillSetId.HasValue
                         && _inventory.GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                        await skillComponent.EquipSkillSet(skillSetId.Value);
+                        await skillComponent.EquipSkillSetAsync(skillSetId.Value);
                 }
             });
 
