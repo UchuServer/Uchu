@@ -150,9 +150,14 @@ namespace Uchu.World
 
         private void MovePlatform()
         {
-            /*
-             * Update Object in world.
-             */
+            // Set the timer before the waypoint changes.
+            Timer = new Timer
+            {
+                AutoReset = false,
+                Interval = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed * 1000
+            };
+            
+            // Update Object in world.
             PathName = Path.PathName;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
@@ -161,15 +166,7 @@ namespace Uchu.World
 
             GameObject.Serialize(GameObject);
 
-            /*
-             * Start Waiting after completing path.
-             */
-            Timer = new Timer
-            {
-                AutoReset = false,
-                Interval = WayPoint.Speed * 1000
-            };
-
+            // Start Waiting after completing path.
             Timer.Elapsed += (sender, args) => { WaitPoint(); };
 
             Task.Run(() => Timer.Start());
@@ -180,9 +177,7 @@ namespace Uchu.World
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
 
-            /*
-             * Update Object in world.
-             */
+            // Update Object in world.
             PathName = null;
             State = PlatformState.Idle;
             TargetPosition = WayPoint.Position;
@@ -191,9 +186,7 @@ namespace Uchu.World
             
             GameObject.Serialize(GameObject);
 
-            /*
-             * Start Waiting after waiting.
-             */
+            // Start Waiting after waiting.
             Timer = new Timer
             {
                 AutoReset = false,
