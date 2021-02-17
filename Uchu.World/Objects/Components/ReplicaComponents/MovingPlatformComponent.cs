@@ -34,7 +34,18 @@ namespace Uchu.World
 
         public uint NextWaypointIndex { get; set; }
 
-        public float IdleTimeElapsed { get; set; }
+        /// <summary>
+        ///     Time spent idle
+        /// </summary>
+        public float IdleTimeElapsed =>
+            State == PlatformState.Idle
+                ? (float) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds - _wayPointStartTime)
+                : 0;
+
+        /// <summary>
+        ///     Percent of the platform's moving progress between the current waypoints
+        /// </summary>
+        public float PercentBetweenPoints => State != PlatformState.Idle ? (float) (_currentDuration / _wayPointStartTime) : 0;
 
         public override ComponentId Id => ComponentId.MovingPlatformComponent;
 
@@ -52,6 +63,10 @@ namespace Uchu.World
         ///     Next WayPoint
         /// </summary>
         public LuzMovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as LuzMovingPlatformWaypoint;
+
+        private double _wayPointStartTime;
+
+        private double _currentDuration;
 
         protected MovingPlatformComponent()
         {
@@ -150,14 +165,9 @@ namespace Uchu.World
 
         private void MovePlatform()
         {
-            // Set the timer before the waypoint changes.
-            Timer = new Timer
-            {
-                AutoReset = false,
-                Interval = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed * 1000
-            };
-            
             // Update Object in world.
+            _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
             PathName = Path.PathName;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
@@ -167,6 +177,11 @@ namespace Uchu.World
             GameObject.Serialize(GameObject);
 
             // Start Waiting after completing path.
+            Timer = new Timer
+            {
+                AutoReset = false,
+                Interval = _currentDuration * 1000
+            };
             Timer.Elapsed += (sender, args) => { WaitPoint(); };
 
             Task.Run(() => Timer.Start());
@@ -176,7 +191,9 @@ namespace Uchu.World
         {
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
-
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
+            _currentDuration = WayPoint.Wait;
+            
             // Update Object in world.
             PathName = null;
             State = PlatformState.Idle;
