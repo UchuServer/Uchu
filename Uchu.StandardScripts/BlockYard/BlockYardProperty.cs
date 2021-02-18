@@ -8,26 +8,40 @@ using Uchu.World.Scripting.Native;
 using Uchu.StandardScripts;
 using System.IO;
 using System;
+using System.Collections.Generic;
 using InfectedRose.Luz;
 using System.Numerics;
 using Uchu.World.Client;
+using DestructibleComponent = Uchu.World.DestructibleComponent;
 
 namespace Uchu.StandardScripts.BlockYard
 {
     [ZoneSpecific(1150)]
     public class BlockYardProperty : NativeScript
     {
-        static private string GUIDMaelstrom { get; } = "{7881e0a1-ef6d-420c-8040-f59994aa3357}"; // ambient sounds for when the Maelstrom is on
-        static private string GUIDPeaceful { get; } = "{c5725665-58d0-465f-9e11-aeb1d21842ba}"; // happy ambient sounds when no Maelstrom is present
-        static bool HasOwner { get; set; } = true;
-        static private string[] GlobalObjects { get; } = // Objects you always spawn
-        {
+        /// <summary>
+        /// Ambient sound when maelstrom battle is active
+        /// </summary>
+        private static readonly Guid GuidMaelstrom = new Guid("{7881e0a1-ef6d-420c-8040-f59994aa3357}");
+        
+        /// <summary>
+        /// Ambient sound when maelstrom battle is over
+        /// </summary>
+        private static readonly Guid GuidPeaceful = new Guid("{c5725665-58d0-465f-9e11-aeb1d21842ba}");
+
+        /// <summary>
+        /// Objects that are always present
+        /// </summary>
+        private static readonly string[] GlobalObjects = {
             "Mailbox",
             "PropertyGuard",
             "Launcher"
         };
-        static private string[] MaelstromObjects { get; } = // Objects needed for Maelstrom battle
-        {
+        
+        /// <summary>
+        /// Objects needed for maelstrom battle
+        /// </summary>
+        private static readonly string[] MaelstromObjects = {
             "DestroyMaelstrom",
             "SpiderBoss",
             "SpiderEggs",
@@ -40,272 +54,219 @@ namespace Uchu.StandardScripts.BlockYard
             "ROF_Targets_03",
             "ROF_Targets_04"
         };
-        static private string[] PeacefulObjects { get; } = // Objects needed for the property
-        {
+        
+        /// <summary>
+        /// Objects needed once Maelstrom battle is over
+        /// </summary>
+        private static readonly string[] PeacefulObjects = {
             "SunBeam",
             "BankObj",
             "AGSmallProperty"
         };
-        private GameObject[] SpiderEggs { get; set; } = { };
-        private GameObject SpiderQueen { get; set; }
-        private Player Player { get; set; }
 
         public override Task LoadAsync()
         {
-            Listen(Zone.OnPlayerLoad, (LocalPlayer) =>
+            Listen(Zone.OnPlayerLoad, player =>
             {
-                Player = LocalPlayer;
-                if (HasOwner) // If the world is peaceful
-                {
-                    Peaceful(Player);
-                }
-                else
-                {
-                    Maelstrom(Player);
-                }
+                var spiderQueenFight = new SpiderQueenFight(this, player);
+                spiderQueenFight.StartFight();
             });
 
             return Task.CompletedTask;
         }
-
-        private void Peaceful(Player player)
+        
+        /// <summary>
+        /// Represents one spider queen boss fight
+        /// </summary>
+        private class SpiderQueenFight
         {
-            Player.Message(new PlayNDAudioEmitterMessage
+            public SpiderQueenFight(BlockYardProperty blockYard, Player player)
             {
-                Associate = player,
-                NDAudioEventGUID = GUIDPeaceful
-            }); // Play peaceful sounds
-
-            SpawnPaths(false);
-
-            foreach (var item in Zone.GameObjects.Where(i => i.Lot == 9938))
-            {
-                Player.Message(new StopFXEffectMessage
-                {
-                    Name = "beam",
-                    Associate = item,
-                    KillImmediate = false
-                });
-
-                Player.Message(new DieMessage
-                {
-                    Associate = item,
-                    ClientDeath = true,
-                    SpawnLoot = true,
-                    DeathType = "",
-                    DirectionRelativeAngleXz = 0.00f,
-                    DirectionRelativeAngleY = 0.00f,
-                    DirectionRelativeForce = 0.00f,
-                    KillType = 1,
-                    Killer = default,
-                    LootOwner = default
-                });
-            }
-        }
-
-        private void Maelstrom(Player player)
-        {
-            Player.Message(new PlayNDAudioEmitterMessage
-            {
-                Associate = player,
-                NDAudioEventGUID = GUIDMaelstrom
-            }); // Play eerie sounds
-
-            SpawnPaths(true);
-
-            foreach (var item in Zone.GameObjects)
-            {
-                if (item.Lot.Id == 14375)
-                {
-                    SpiderEggs.Append(item); // Spider Queen Eggs
-                }
-
-                if (item.Lot.Id == 9524) Destroy(item); // Build Border (We don't need it atm)
-
-                if (item.Lot.Id == 14381) // Spider Queen
-                {
-                    item.RemoveComponent<BaseCombatAiComponent>(); // Once the Combat AI is fixed we can remove this
-                    SpiderQueen = item;
-                }
-
-                if (item.Lot.Id == 9938) // FX Object
-                {
-                    // Start all the FX
-
-                    Player.Message(new PlayFXEffectMessage
-                    {
-                        Name = "TornadoDebris",
-                        EffectType = "debrisOn",
-                        Associate = item
-                    });
-                    Player.Message(new PlayFXEffectMessage
-                    {
-                        Name = "TornadoVortex",
-                        EffectType = "VortexOn",
-                        Associate = item
-                    });
-                    Player.Message(new PlayFXEffectMessage
-                    {
-                        Name = "silhouette",
-                        EffectType = "onSilhouette",
-                        Associate = item
-                    });
-                }
+                _blockYard = blockYard;
+                _player = player;
+                _maelstromObjects = new List<GameObject>();
+                _fightCompleted = false;
             }
 
-            Listen(Player.OnFireServerEvent, (name, message) =>
+            /// <summary>
+            /// Whether the player has completed the fight
+            /// </summary>
+            private bool _fightCompleted;
+
+            /// <summary>
+            /// The parent script
+            /// </summary>
+            private readonly BlockYardProperty _blockYard;
+
+            /// <summary>
+            /// The participant in this spider queen fight
+            /// </summary>
+            private readonly Player _player;
+
+            /// <summary>
+            /// The spider eggs currently active for the participants in the fight
+            /// </summary>
+            private readonly List<GameObject> _maelstromObjects;
+            
+            /// <summary>
+            /// The spider queen currently active for the participants in the fight
+            /// </summary>
+            private GameObject SpiderQueen { get; set; }
+            
+            #region state
+            /// <summary>
+            /// Starts the spider queen fight with the participants
+            /// </summary>
+            public void StartFight()
             {
-                if (message.Arguments == "CleanupSpiders")
+                _player.Message(new PlayNDAudioEmitterMessage
                 {
-                    CleanupSpiders();
-                }
-            });
-        }
-
-        private void CleanupSpiders()
-        {
-            foreach (var item in Zone.GameObjects.Where(i => i.Lot == 16197))
-            {
-                Destroy(item);
-            } // Deletes any spiders in the scene
-        }
-
-        private void WithdrawSpider(Player Player, bool Withdraw) // This removes the spider boss from the arena
-        {
-            if (Withdraw)
-            {
-                Player.Message(new SetStunnedMessage
-                {
-                    Associate = SpiderQueen,
-                    CantMove = true,
-                    CantJump = true,
-                    CantAttack = true,
-                    CantTurn = true,
-                    CantUseItem = true,
-                    CantEquip = true,
-                    CantInteract = true
-                }); // The animation handles movement
-
-                SpiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f }); // Orientation for the animation to make sense
-
-                SpiderQueen.Animate("withdraw");
-
-                var Animation = ClientCache.GetTable<Animations>().FirstOrDefault(
-                    a => a.Animationname == "withdraw"
-                );
-
-                float LengthMs = ((Animation.Animationlength ??= 2.5f) - 0.25f) * 1000;
-
-                Player.Message(new SetStatusImmunityMessage
-                {
-                    Associate = SpiderQueen,
-                    state = ImmunityState.Push,
-                    bImmuneToSpeed = true,
-                    bImmuneToBasicAttack = true,
-                    bImmuneToDOT = true
+                    Associate = _player,
+                    NDAudioEventGUID = GuidMaelstrom.ToString()
                 });
-            }
-        }
 
-        private void SpawnPaths(bool IsMaelstrom)
-        {
-            foreach (var path in Zone.ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
-            {
-                try
+                // Spawn all the spawners
+                _maelstromObjects.AddRange(SpawnPaths(true));
+
+                foreach (var gameObject in _blockYard.Zone.GameObjects)
                 {
-                    if (IsMaelstrom ? MaelstromObjects.Contains(path.PathName) : PeacefulObjects.Contains(path.PathName) || GlobalObjects.Contains(path.PathName))
+                    switch (gameObject.Lot)
                     {
-
-                        var obj = InstancingUtilities.Spawner(path, Zone);
-
-                        if (obj == null) return;
-
-                        obj.Layer = StandardLayer.Hidden;
-
-                        var spawner = obj.GetComponent<SpawnerComponent>();
-
-                        spawner.SpawnsToMaintain = (int)path.NumberToMaintain;
-
-                        spawner.SpawnLocations = path.Waypoints.Select(w => new SpawnLocation
-                        {
-                            Position = w.Position,
-                            Rotation = Quaternion.Identity
-                        }).ToList();
-
-                        Start(obj);
-
-                        spawner.SpawnCluster();
+                        case Lot.SpiderQueenEgg:
+                            _maelstromObjects.Add(gameObject);
+                            break;
+                        case Lot.BuildBorder:
+                            Destroy(gameObject);
+                            break;
+                        case Lot.SpiderQueen:
+                            gameObject.RemoveComponent<BaseCombatAiComponent>();
+                            SpiderQueen = gameObject;
+                            _maelstromObjects.Add(SpiderQueen);
+                            break;
+                        case Lot.Spawner:
+                            if (gameObject.TryGetComponent<SpawnerComponent>(out var spawner) && spawner.SpawnTemplate == Lot.SpiderQueen)
+                                _maelstromObjects.Add(gameObject);
+                            break;
+                        case Lot.TornadoBgFx:
+                            _player.Message(new PlayFXEffectMessage
+                            {
+                                Name = "TornadoDebris",
+                                EffectType = "debrisOn",
+                                Associate = gameObject
+                            });
+                    
+                            _player.Message(new PlayFXEffectMessage
+                            {
+                                Name = "TornadoVortex",
+                                EffectType = "VortexOn",
+                                Associate = gameObject
+                            });
+                    
+                            _player.Message(new PlayFXEffectMessage
+                            {
+                                Name = "silhouette",
+                                EffectType = "onSilhouette",
+                                Associate = gameObject
+                            });
+                            break;
                     }
                 }
-                catch (Exception e)
-                {
-                    Logger.Warning(e);
-                }
-            }
-        }
 
-        private void DestroyMaelstrom()
-        {
-            foreach (var path in Zone.ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
-            {
-                try
+                // Stop the fight if the spider queen was killed
+                _blockYard.Listen(SpiderQueen.GetComponent<DestructibleComponent>().OnSmashed, 
+                    (spiderQueen, player) =>
                 {
-                    if (MaelstromObjects.Contains(path.PathName))
+                    EndFight();
+                });
+
+                _blockYard.Listen(_player.OnFireServerEvent, (name, message) =>
+                {
+                    if (message.Arguments == "CleanupSpiders")
+                        CleanupSpiders();
+                });
+            }
+
+            /// <summary>
+            /// Ends the fight
+            /// </summary>
+            private void EndFight()
+            {
+                var zone = _blockYard.Zone;
+
+                foreach (var gameObject in _maelstromObjects)
+                    Destroy(gameObject);
+
+                foreach (var gameObject in zone.GameObjects.Where(i => i.Lot == Lot.TornadoBgFx))
+                    KillEffects(gameObject);
+                
+                // Play peaceful sounds
+                _player.Message(new PlayNDAudioEmitterMessage
+                {
+                    Associate = _player,
+                    NDAudioEventGUID = GuidPeaceful.ToString()
+                });
+
+                // Spawns all the peaceful objects
+                SpawnPaths(false);
+
+                foreach (var item in zone.GameObjects.Where(i => i.Lot == Lot.TornadoBgFx))
+                {
+                    _player.Message(new StopFXEffectMessage
                     {
+                        Name = "beam",
+                        Associate = item,
+                        KillImmediate = false
+                    });
 
-                        var obj = InstancingUtilities.Spawner(path, Zone);
-
-                        if (obj == null) return;
-
-                        obj.Layer = StandardLayer.Hidden;
-
-                        var spawner = obj.GetComponent<SpawnerComponent>();
-
-                        spawner.SpawnsToMaintain = (int)path.NumberToMaintain;
-
-                        spawner.SpawnLocations = path.Waypoints.Select(w => new SpawnLocation
-                        {
-                            Position = w.Position,
-                            Rotation = Quaternion.Identity
-                        }).ToList();
-
-                        Start(obj);
-
-                        spawner.SpawnCluster();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.Warning(e);
+                    _player.Message(new DieMessage
+                    {
+                        Associate = item,
+                        ClientDeath = true,
+                        SpawnLoot = true,
+                        DeathType = "",
+                        DirectionRelativeAngleXz = 0.00f,
+                        DirectionRelativeAngleY = 0.00f,
+                        DirectionRelativeForce = 0.00f,
+                        KillType = 1,
+                        Killer = default,
+                        LootOwner = default
+                    });
                 }
             }
 
-            foreach (var item in Zone.GameObjects.Where(i => i.Lot == 9938))
+            #endregion state
+
+            #region utilities
+                        /// <summary>
+            /// Removes all the special effects from the scene
+            /// </summary>
+            /// <param name="gameObject">The effect game object</param>
+            private void KillEffects(GameObject gameObject)
             {
-                Player.Message(new StopFXEffectMessage
+                _player.Message(new StopFXEffectMessage
                 {
                     Name = "TornadoVortex",
-                    Associate = item,
+                    Associate = gameObject,
                     KillImmediate = true
                 });
 
-                Player.Message(new StopFXEffectMessage
+                _player.Message(new StopFXEffectMessage
                 {
                     Name = "TornadoDebris",
-                    Associate = item,
+                    Associate = gameObject,
                     KillImmediate = true
                 });
 
-                Player.Message(new StopFXEffectMessage
+                _player.Message(new StopFXEffectMessage
                 {
                     Name = "silhouette",
-                    Associate = item,
+                    Associate = gameObject,
                     KillImmediate = true
                 });
 
-                Player.Message(new DieMessage
+                _player.Message(new DieMessage
                 {
-                    Associate = item,
+                    Associate = gameObject,
                     ClientDeath = true,
                     SpawnLoot = true,
                     DeathType = "",
@@ -317,6 +278,96 @@ namespace Uchu.StandardScripts.BlockYard
                     LootOwner = default
                 });
             }
+            
+            private List<GameObject> SpawnPaths(bool isMaelstrom)
+            {
+                var spawnedObjects = new List<GameObject>();
+                
+                foreach (var path in _blockYard.Zone.ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
+                {
+                    try
+                    {
+                        if (isMaelstrom ? MaelstromObjects.Contains(path.PathName) : PeacefulObjects.Contains(path.PathName)
+                            || GlobalObjects.Contains(path.PathName))
+                        {
+
+                            var obj = InstancingUtilities.Spawner(path, _blockYard.Zone);
+                            if (obj == null)
+                                continue;
+                            
+                            obj.Layer = StandardLayer.Hidden;
+
+                            var spawner = obj.GetComponent<SpawnerComponent>();
+                            spawner.SpawnsToMaintain = (int)path.NumberToMaintain;
+                            spawner.SpawnLocations = path.Waypoints.Select(w => new SpawnLocation
+                            {
+                                Position = w.Position,
+                                Rotation = Quaternion.Identity
+                            }).ToList();
+
+                            Start(obj);
+                            spawner.SpawnCluster();
+                            spawnedObjects.Add(obj);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Warning(e);
+                    }
+                }
+
+                return spawnedObjects;
+            }
+            #endregion utilities
+
+            #region ai
+            /// <summary>
+            /// Removes all the spiders from the scene
+            /// </summary>
+            private void CleanupSpiders()
+            {
+                foreach (var gameObject in _blockYard.Zone.GameObjects.Where(i => i.Lot == 16197))
+                    Destroy(gameObject);
+            }
+            
+            private async Task WithdrawSpider(bool withdraw)
+            {
+                if (withdraw)
+                {
+                    // The animation handles movement
+                    _player.Message(new SetStunnedMessage
+                    {
+                        Associate = SpiderQueen,
+                        CantMove = true,
+                        CantJump = true,
+                        CantAttack = true,
+                        CantTurn = true,
+                        CantUseItem = true,
+                        CantEquip = true,
+                        CantInteract = true
+                    });
+
+                    // Orientation for the animation to make sense
+                    SpiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f });
+                    SpiderQueen.Animate("withdraw");
+
+                    var animation = (await ClientCache.GetTableAsync<Animations>()).FirstOrDefault(
+                        a => a.Animationname == "withdraw"
+                    );
+
+                    var lengthMs = ((animation.Animationlength ??= 2.5f) - 0.25f) * 1000;
+
+                    _player.Message(new SetStatusImmunityMessage
+                    {
+                        Associate = SpiderQueen,
+                        state = ImmunityState.Push,
+                        bImmuneToSpeed = true,
+                        bImmuneToBasicAttack = true,
+                        bImmuneToDOT = true
+                    });
+                }
+            }
+            #endregion ai
         }
     }
 }
