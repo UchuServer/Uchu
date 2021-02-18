@@ -194,7 +194,7 @@ namespace Uchu.World
             State = PlatformState.Idle;
         }
 
-        public void MoveTo(uint position)
+        public void MoveTo(uint position,Action moveCompleteCallback = default)
         {
             // Update Object in world.
             CurrentWaypointIndex = position;
@@ -227,6 +227,10 @@ namespace Uchu.World
             
                 GameObject.Serialize(GameObject);
             };
+            if (moveCompleteCallback != default)
+            {
+                Timer.Elapsed += (sender, args) => moveCompleteCallback();
+            }
 
             Task.Run(() => Timer.Start());
         }

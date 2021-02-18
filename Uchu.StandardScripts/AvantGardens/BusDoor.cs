@@ -43,7 +43,10 @@ namespace Uchu.StandardScripts.AvantGardens
                         }
                         else
                         {
-                            movingPlatformComponent.MoveTo(0);
+                            movingPlatformComponent.MoveTo(0, () =>
+                            {
+                                gameObject.PlayFX("busDust", "create", 642);
+                            });
                         }
                     }
                 });
