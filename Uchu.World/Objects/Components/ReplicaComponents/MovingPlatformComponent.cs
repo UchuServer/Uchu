@@ -232,7 +232,7 @@ namespace Uchu.World
                 Timer.Elapsed += (sender, args) => moveCompleteCallback();
             }
 
-            Task.Run(() => Timer.Start());
+            Timer.Start();
         }
 
         private void MovePlatform()
@@ -255,7 +255,7 @@ namespace Uchu.World
             };
             Timer.Elapsed += (sender, args) => { WaitPoint(); };
 
-            Task.Run(() => Timer.Start());
+            Timer.Start();
         }
 
         private void WaitPoint(int extraWaitTime = 0)
@@ -282,7 +282,7 @@ namespace Uchu.World
 
             Timer.Elapsed += (sender, args) => { MovePlatform(); };
 
-            Task.Run(() => Timer.Start());
+            Timer.Start();
         }
     }
 }
