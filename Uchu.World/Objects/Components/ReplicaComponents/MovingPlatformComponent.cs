@@ -91,7 +91,7 @@ namespace Uchu.World
 
                 State = PlatformState.Idle;
                 
-                Task.Run(WaitPoint);
+                Task.Run(() => WaitPoint());
 
                 if (!GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)) return;
                 Listen(quickBuildComponent.OnStateChange,(state) =>
@@ -101,14 +101,10 @@ namespace Uchu.World
                     // The waypoint must be set to the previous from the start since WaitPoint increments it.
                     this.Stop();
                     CurrentWaypointIndex = PathStart == 0 ? (uint) (Path.Waypoints.Length - 1) : PathStart - 1;
-                    Task.Run(async () =>
+                    Task.Run(() =>
                     {
                         // A wait is required at the beginning, otherwise the platform moves right as the player is unfrozen from the building complete animation.
-                        if (GameObject.Settings.TryGetValue("compTime", out var compTime))
-                        {
-                            await Task.Delay((int) ((float) compTime * 1000));
-                        }
-                        WaitPoint();
+                        WaitPoint(GameObject.Settings.TryGetValue("compTime", out var compTime) ? (int) ((float) compTime * 1000) : 0);
                     });
                 });
             });
@@ -250,7 +246,7 @@ namespace Uchu.World
             Task.Run(() => Timer.Start());
         }
 
-        private void WaitPoint()
+        private void WaitPoint(int extraWaitTime = 0)
         {
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
@@ -270,7 +266,7 @@ namespace Uchu.World
             Timer = new Timer
             {
                 AutoReset = false,
-                Interval = WayPoint.Wait * 1000
+                Interval = (WayPoint.Wait * 1000) + extraWaitTime
             };
 
             Timer.Elapsed += (sender, args) => { MovePlatform(); };
