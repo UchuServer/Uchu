@@ -93,6 +93,11 @@ namespace Uchu.World
                 
                 Task.Run(() => WaitPoint());
 
+                if (GameObject.TryGetComponent<SimplePhysicsComponent>(out var simplePhysicsComponent))
+                {
+                    simplePhysicsComponent.HasPosition = false;
+                }
+
                 if (!GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)) return;
                 Listen(quickBuildComponent.OnStateChange,(state) =>
                 {
@@ -110,16 +115,21 @@ namespace Uchu.World
             });
         }
 
-        public override void Construct(BitWriter writer)
+        public override void Construct(BitWriter writer) 
         {
-            Serialize(writer);
+            Serialize(writer,true);
         }
 
         public override void Serialize(BitWriter writer)
         {
+            Serialize(writer,false);
+        }
+        
+        public void Serialize(BitWriter writer,bool includePath)
+        {
             writer.WriteBit(true);
 
-            var hasPath = PathName != null;
+            var hasPath = includePath && PathName != null;
 
             writer.WriteBit(hasPath);
 
@@ -191,7 +201,6 @@ namespace Uchu.World
             NextWaypointIndex = NextIndex;
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
             _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
-            PathName = Path.PathName;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -227,7 +236,6 @@ namespace Uchu.World
             // Update Object in world.
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
             _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
-            PathName = Path.PathName;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -254,7 +262,6 @@ namespace Uchu.World
             _currentDuration = WayPoint.Wait;
             
             // Update Object in world.
-            PathName = null;
             State = PlatformState.Idle;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
