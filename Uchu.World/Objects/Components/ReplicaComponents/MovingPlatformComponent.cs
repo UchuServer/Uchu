@@ -80,7 +80,7 @@ namespace Uchu.World
                 Path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(p =>
                     p is LuzMovingPlatformPath && p.PathName == PathName) as LuzMovingPlatformPath;
 
-                Type = GameObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
+                Type = !GameObject.Settings.TryGetValue("platformIsMover", out var isMover) || (bool) isMover
                     ? PlatformType.Mover
                     : GameObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
                       (bool) isSimpleMover
