@@ -88,6 +88,9 @@ namespace Uchu.World
                     
                     _inventories.Add(inventoryType, inventory);
                 }
+                
+                // Finally load all the proxy items into the hidden inventory
+                await 
             });
 
             Listen(OnDestroyed, () =>

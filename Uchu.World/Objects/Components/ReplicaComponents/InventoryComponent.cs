@@ -169,10 +169,7 @@ namespace Uchu.World
             }
 
             await EnsureItemEquipped(item);
-            foreach (var subItem in await GenerateSubItemsAsync(item))
-            {
-                await EquipItemAsync(subItem);
-            }
+            await EquipPossibleSubItemsAsync(item);
             
             GameObject.Serialize(GameObject);
         }
@@ -241,20 +238,21 @@ namespace Uchu.World
         /// </summary>
         /// <param name="item">The item to get the sub items for</param>
         /// <returns>The list of sub items of this item</returns>
-        private async Task<Item[]> GenerateSubItemsAsync(Item item)
+        private async Task EquipPossibleSubItemsAsync(Item item)
         {
-            var subItems = new List<Item>();
-            
             foreach (var subItemLot in item.SubItemLots)
             {
+                if (item.Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
+                    && inventory.FindItem())
+                {
+                    
+                }
+                
                 var subItem = await Item.Instantiate(GameObject, subItemLot, default, 1, rootItem: item);
                 if (subItem == null)
                     continue;
                 Start(subItem);
-                subItems.Add(subItem);
             }
-
-            return subItems.ToArray();
         }
 
         /// <summary>
