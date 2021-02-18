@@ -99,7 +99,7 @@ namespace Uchu.World
                 }
 
                 if (!GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)) return;
-                Listen(quickBuildComponent.OnStateChange,(state) =>
+                Listen(quickBuildComponent.OnStateChange, (state) =>
                 {
                     if (state != RebuildState.Completed) return;
                     
@@ -117,12 +117,12 @@ namespace Uchu.World
 
         public override void Construct(BitWriter writer) 
         {
-            Serialize(writer,true);
+            Serialize(writer, true);
         }
 
         public override void Serialize(BitWriter writer)
         {
-            Serialize(writer,false);
+            Serialize(writer, false);
         }
         
         public void Serialize(BitWriter writer,bool includePath)
@@ -200,7 +200,7 @@ namespace Uchu.World
             CurrentWaypointIndex = position;
             NextWaypointIndex = NextIndex;
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -239,7 +239,7 @@ namespace Uchu.World
         {
             // Update Object in world.
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -262,7 +262,7 @@ namespace Uchu.World
         {
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
             _currentDuration = WayPoint.Wait;
             
             // Update Object in world.
