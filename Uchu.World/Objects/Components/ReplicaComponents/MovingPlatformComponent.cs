@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -15,6 +16,11 @@ namespace Uchu.World
         ///     Current timer.
         /// </summary>
         private Timer Timer { get; set; }
+
+        /// <summary>
+        ///     Current stopwatch for delta times.
+        /// </summary>
+        private Stopwatch Stopwatch { get; set; } = new Stopwatch();
 
         public LuzMovingPlatformPath Path { get; set; }
 
@@ -39,13 +45,15 @@ namespace Uchu.World
         /// </summary>
         public float IdleTimeElapsed =>
             State == PlatformState.Idle
-                ? (float) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds - _wayPointStartTime)
+                ? (float) (Stopwatch.ElapsedMilliseconds / 1000.0)
                 : 0;
 
         /// <summary>
         ///     Percent of the platform's moving progress between the current waypoints
         /// </summary>
-        public float PercentBetweenPoints => State != PlatformState.Idle ? (float) (_currentDuration / _wayPointStartTime) : 0;
+        public float PercentBetweenPoints => State != PlatformState.Idle
+            ? (float) ((Stopwatch.ElapsedMilliseconds / 1000.0) / _currentDuration)
+            : 0;
 
         public override ComponentId Id => ComponentId.MovingPlatformComponent;
 
@@ -63,8 +71,6 @@ namespace Uchu.World
         ///     Next WayPoint
         /// </summary>
         public LuzMovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as LuzMovingPlatformWaypoint;
-
-        private double _wayPointStartTime;
 
         private double _currentDuration;
 
@@ -200,7 +206,7 @@ namespace Uchu.World
             CurrentWaypointIndex = position;
             NextWaypointIndex = NextIndex;
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
+            Stopwatch.Restart();
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -239,7 +245,7 @@ namespace Uchu.World
         {
             // Update Object in world.
             _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
+            Stopwatch.Restart();
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -262,7 +268,7 @@ namespace Uchu.World
         {
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
-            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds;
+            Stopwatch.Restart();
             _currentDuration = WayPoint.Wait;
             
             // Update Object in world.
