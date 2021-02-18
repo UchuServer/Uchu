@@ -108,8 +108,8 @@ namespace Uchu.World
                     CurrentWaypointIndex = PathStart == 0 ? (uint) (Path.Waypoints.Length - 1) : PathStart - 1;
                     Task.Run(() =>
                     {
-                        // A wait is required at the beginning, otherwise the platform moves right as the player is unfrozen from the building complete animation.
-                        WaitPoint(GameObject.Settings.TryGetValue("compTime", out var compTime) ? (int) ((float) compTime * 1000) : 0);
+                        // TODO: A wait is required at the beginning, otherwise the platform moves right as the player is unfrozen from the building complete animation.
+                        WaitPoint(1);
                     });
                 });
             });
