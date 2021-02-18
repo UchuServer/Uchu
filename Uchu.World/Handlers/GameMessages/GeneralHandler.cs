@@ -74,7 +74,7 @@ namespace Uchu.World.Handlers.GameMessages
         {
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
-            Zone.SendSerialization(message.GameObject,new []{ player });
+            Zone.SendSerialization(message.GameObject, new []{ player });
         }
 
         [PacketHandler]
