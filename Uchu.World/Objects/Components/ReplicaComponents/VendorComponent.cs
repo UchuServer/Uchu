@@ -156,7 +156,7 @@ namespace Uchu.World
             );
             
             var sellMultiplier = item.ItemComponent.SellMultiplier ?? 0.1f;
-            var returnCurrency = Math.Floor(item.ItemComponent.BaseValue ?? 0 * sellMultiplier) * count;
+            var returnCurrency = Math.Floor((item.ItemComponent.BaseValue ?? 0) * sellMultiplier) * count;
 
             character.Currency += (uint) returnCurrency;
 
@@ -164,8 +164,7 @@ namespace Uchu.World
             if (item.ItemComponent.CurrencyLOT != null)
             {
                 var alternativeCurrencyLot = (Lot) item.ItemComponent.CurrencyLOT;
-                var alternativeCurrencyCost = item.ItemComponent.AltCurrencyCost ?? 0;
-                var returnAlternativeCurrency = (uint) Math.Floor(alternativeCurrencyCost * sellMultiplier) * count;
+                var returnAlternativeCurrency = (uint) Math.Floor((item.ItemComponent.AltCurrencyCost ?? 0) * sellMultiplier) * count;
                 await inventory.AddLotAsync(alternativeCurrencyLot, returnAlternativeCurrency);
             }
             
@@ -188,7 +187,7 @@ namespace Uchu.World
             var inventory = player.GetComponent<InventoryManagerComponent>();
             
             var sellMultiplier = itemComponent.SellMultiplier ?? 0.1f;
-            var cost = (uint) Math.Floor(itemComponent.BaseValue ?? 0 * sellMultiplier) * count;
+            var cost = (uint) Math.Floor((itemComponent.BaseValue ?? 0) * sellMultiplier) * count;
             if (cost > character.Currency)
                 return;
             
@@ -196,7 +195,7 @@ namespace Uchu.World
             if (itemComponent.CurrencyLOT != null)
             {
                 var alternativeCurrencyLot = (Lot) itemComponent.CurrencyLOT;
-                var alternativeCurrencyCost = (uint) Math.Floor(itemComponent.AltCurrencyCost ?? 0 * sellMultiplier) * count;
+                var alternativeCurrencyCost = (uint) Math.Floor((item.ItemComponent.AltCurrencyCost ?? 0) * sellMultiplier) * count;
                 
                 if (alternativeCurrencyCost > inventory.FindItems(alternativeCurrencyLot)
                     .Select(i => (int) i.Count).Sum())
