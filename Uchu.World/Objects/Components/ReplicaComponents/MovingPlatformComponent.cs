@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using System.Timers;
 using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
+using Timer = System.Timers.Timer;
 
 namespace Uchu.World
 {
@@ -161,6 +161,50 @@ namespace Uchu.World
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        public void Stop()
+        {
+            Timer.Stop();
+            State = PlatformState.Idle;
+        }
+
+        public void MoveTo(uint position)
+        {
+            // Update Object in world.
+            CurrentWaypointIndex = position;
+            NextWaypointIndex = NextIndex;
+            _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
+            _wayPointStartTime = (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
+            PathName = Path.PathName;
+            State = PlatformState.Move;
+            TargetPosition = WayPoint.Position;
+            TargetRotation = WayPoint.Rotation;
+
+            GameObject.Serialize(GameObject);
+
+            // Start Waiting after completing path.
+            Timer = new Timer
+            {
+                AutoReset = false,
+                Interval = _currentDuration * 1000
+            };
+            Timer.Elapsed += (sender, args) =>
+            {
+                Timer.Stop();
+                
+                // Update Object in world.
+                CurrentWaypointIndex = NextIndex;
+                PathName = null;
+                State = PlatformState.Idle;
+                TargetPosition = WayPoint.Position;
+                TargetRotation = WayPoint.Rotation;
+                NextWaypointIndex = NextIndex;
+            
+                GameObject.Serialize(GameObject);
+            };
+
+            Task.Run(() => Timer.Start());
         }
 
         private void MovePlatform()
