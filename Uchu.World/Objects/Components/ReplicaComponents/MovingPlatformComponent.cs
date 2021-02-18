@@ -92,6 +92,25 @@ namespace Uchu.World
                 State = PlatformState.Idle;
                 
                 Task.Run(WaitPoint);
+
+                if (!GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)) return;
+                Listen(quickBuildComponent.OnStateChange,(state) =>
+                {
+                    if (state != RebuildState.Completed) return;
+                    
+                    // The waypoint must be set to the previous from the start since WaitPoint increments it.
+                    this.Stop();
+                    CurrentWaypointIndex = PathStart == 0 ? (uint) (Path.Waypoints.Length - 1) : PathStart - 1;
+                    Task.Run(async () =>
+                    {
+                        // A wait is required at the beginning, otherwise the platform moves right as the player is unfrozen from the building complete animation.
+                        if (GameObject.Settings.TryGetValue("compTime", out var compTime))
+                        {
+                            await Task.Delay((int) ((float) compTime * 1000));
+                        }
+                        WaitPoint();
+                    });
+                });
             });
         }
 
