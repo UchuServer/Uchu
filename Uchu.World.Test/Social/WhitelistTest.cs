@@ -63,6 +63,8 @@ namespace Uchu.World.Test.Social
             _whitelist.AddWord("Space Test");
             _whitelist.AddWord("Test1 Test3");
             _whitelist.AddWord("Test1 Test4");
+            _whitelist.AddWord("Test1 Test4 Test5");
+            _whitelist.AddWord("some.test");
         }
 
         /// <summary>
@@ -82,9 +84,14 @@ namespace Uchu.World.Test.Social
             // Test words with characters.
             Assert.AreEqual(_whitelist.CheckPhrase("Testn't"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("non-test"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("some.test"), new (byte, byte)[0]);
             
             // Test words with spaces.
-            // TODO: Unimplemented; test would fail.
+            Assert.AreEqual(_whitelist.CheckPhrase("Space Test"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test3"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test4"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test4 Test5"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Space Test6"), new (byte, byte)[2] { (0, 5), (6, 5) });
         }
 
         /// <summary>
@@ -104,9 +111,16 @@ namespace Uchu.World.Test.Social
             Assert.AreEqual(_whitelist.CheckPhrase("Test1 Testn't"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("non-Test Testn't"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("Test4 Testn't"), new (byte, byte)[1] { (0, 5)});
+            Assert.AreEqual(_whitelist.CheckPhrase("some.test test2"), new (byte, byte)[0]);
             
             // Test words with spaces.
-            // TODO: Unimplemented; test would fail.
+            Assert.AreEqual(_whitelist.CheckPhrase("Space Test Test1"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Space Test"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test4 Test5 Test1"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test4 Test6"), new (byte, byte)[1] { (12, 5) });
+            Assert.AreEqual(_whitelist.CheckPhrase("Test1 Test4 Test6 Test7"), new (byte, byte)[2] { (12, 5), (18, 5) });
+            Assert.AreEqual(_whitelist.CheckPhrase("Space Test6 Test1"), new (byte, byte)[2] { (0, 5), (6, 5) });
+            Assert.AreEqual(_whitelist.CheckPhrase("Space  Test Test1"), new (byte, byte)[2] { (0, 5), (7, 4) });
         }
 
         /// <summary>
@@ -120,8 +134,10 @@ namespace Uchu.World.Test.Social
             Assert.AreEqual(_whitelist.CheckPhrase("Test1?!"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("Test1?Test2"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("(Test1 Test2)"), new (byte, byte)[0]);
+            Assert.AreEqual(_whitelist.CheckPhrase("Space Test?"), new (byte, byte)[0]);
             Assert.AreEqual(_whitelist.CheckPhrase("Test1-?"), new (byte, byte)[1] { (0, 6) });
             Assert.AreEqual(_whitelist.CheckPhrase("Test4?"), new (byte, byte)[1] { (0, 5) });
+            Assert.AreEqual(_whitelist.CheckPhrase("Space?Test"), new (byte, byte)[2] { (0, 5), (6, 4) });
         }
     }
 }

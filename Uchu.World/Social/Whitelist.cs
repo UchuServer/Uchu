@@ -8,10 +8,14 @@ namespace Uchu.World.Social
 {
     public class Whitelist
     {
+        private readonly Regex _wordPattern = new Regex(@"([\w\-']+)");
+        
         private readonly IFileResources _resources;
         
         private List<string> AcceptedWords { get; }
-        
+
+        private Dictionary<string, List<string>> AcceptedWordsWithMultipleSections { get;  }
+
         /// <summary>
         /// Creates the whitelist.
         /// </summary>
@@ -19,6 +23,7 @@ namespace Uchu.World.Social
         {
             _resources = resources;
             AcceptedWords = new List<string>();
+            AcceptedWordsWithMultipleSections = new Dictionary<string, List<string>>();
         }
 
         /// <summary>
@@ -53,15 +58,19 @@ namespace Uchu.World.Social
         public void AddWord(string word)
         {
             // Add the word.
-            word = word.ToLower();
+            word = word.ToLower().Trim();
             if (AcceptedWords.Contains(word)) return;
             AcceptedWords.Add(word.ToLower());
             
             // Set up the word if it has a space.
-            if (word.Contains(" "))
+            var wordSections = _wordPattern.Matches(word);
+            if (wordSections.Count == 1) return;
+            var initialWord = word.Substring(0, wordSections[0].Length);
+            if (!AcceptedWordsWithMultipleSections.ContainsKey(initialWord))
             {
-                // TODO: Implement
+                AcceptedWordsWithMultipleSections[initialWord] = new List<string>();
             }
+            AcceptedWordsWithMultipleSections[initialWord].Add(word);
         }
 
         /// <summary>
@@ -73,16 +82,40 @@ namespace Uchu.World.Social
         {
             phrase = phrase.ToLower();
             
+            // Iterate over the phrase.
             var redact = new List<(byte, byte)>();
-            foreach (Match match in new Regex(@"([\w\-']+)").Matches(phrase))
+            var words = _wordPattern.Matches(phrase);
+            for (var matchId = 0; matchId < words.Count; matchId++)
             {
+                var match = words[matchId];
                 var word = match.Value;
-                var allowed = AcceptedWords.Contains(word);
+                
+                // Match the longest word with spaces if possible, then skip that many words.
+                if (AcceptedWordsWithMultipleSections.ContainsKey(word))
+                {
+                    var remainingString = phrase.Substring(match.Index);
+                    string longestMatch = default;
+                    foreach (var possibleWord in AcceptedWordsWithMultipleSections[word])
+                    {
+                        if (!remainingString.StartsWith(possibleWord)) continue;
+                        if (remainingString.Length != possibleWord.Length && _wordPattern.Matches(remainingString.Substring(possibleWord.Length, 1)).Count != 0) continue;
+                        if (longestMatch != default && longestMatch.Length > possibleWord.Length) continue;
+                        longestMatch = possibleWord;
+                    }
 
+                    if (longestMatch != default)
+                    {
+                        matchId += _wordPattern.Matches(longestMatch).Count - 1;
+                        continue;
+                    }
+                }
+
+                // Continue to the next word if the word is allowed.
+                var allowed = AcceptedWords.Contains(word);
                 if (allowed) continue;
 
+                // Add the bad word's position and length.
                 var position = (byte) phrase.IndexOf(word, StringComparison.Ordinal);
-                    
                 redact.Add((position, (byte) word.Length));
             }
 
