@@ -39,7 +39,7 @@ namespace Uchu.Core.Handlers.Commands
             }
 
             using var ctx = new UchuContext();
-            if (ctx.Users.Where(u => !u.Sso).Any(u => u.Username == name))
+            if (ctx.Users.Where(u => !u.Sso).Any(u => string.Equals(u.Username, name, StringComparison.CurrentCultureIgnoreCase)))
             {
                 return "A user with that username already exists";
             }
@@ -79,7 +79,7 @@ namespace Uchu.Core.Handlers.Commands
             var name = arguments[0];
 
             using var ctx = new UchuContext();
-            var user = ctx.Users.FirstOrDefault(u => u.Username == name);
+            var user = ctx.Users.FirstOrDefault(u => string.Equals(u.Username, name, StringComparison.CurrentCultureIgnoreCase));
 
             if (user == null)
             {
@@ -112,7 +112,7 @@ namespace Uchu.Core.Handlers.Commands
             var reason = arguments[1];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name)
+            var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, name, StringComparison.CurrentCultureIgnoreCase))
                 .ConfigureAwait(false);
 
             if (user == null)
@@ -144,7 +144,7 @@ namespace Uchu.Core.Handlers.Commands
             var name = arguments[0];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == name)
+            var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, name, StringComparison.CurrentCultureIgnoreCase))
                 .ConfigureAwait(false);
 
             if (user == null)
@@ -278,7 +278,7 @@ namespace Uchu.Core.Handlers.Commands
             var username = arguments[0];
 
             await using var ctx = new UchuContext();
-            var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == username)
+            var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, username, StringComparison.CurrentCultureIgnoreCase))
                 .ConfigureAwait(false);
 
             if (user == default)
