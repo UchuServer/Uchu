@@ -136,9 +136,9 @@ namespace Uchu.World
             });
 
             // Determine whether this was a player or a regular game object
-            if (GameObject is Player)
+            if (GameObject is Player player)
             {
-                GeneratePlayerYieldsAsync(owner);
+                GeneratePlayerYieldsAsync(player);
             }
             else
             {
