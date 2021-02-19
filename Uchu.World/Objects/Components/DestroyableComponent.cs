@@ -239,6 +239,74 @@ namespace Uchu.World
                     .Split(',')
                     .Select(int.Parse)
                     .ToArray();
+                
+                if (!(GameObject is Player)) return;
+
+                Listen(OnHealthChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.CurrentHealth = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
+
+                Listen(OnArmorChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.CurrentArmor = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
+
+                Listen(OnImaginationChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.CurrentImagination = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
+
+                Listen(OnMaxHealthChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.MaximumHealth = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
+
+                Listen(OnMaxArmorChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.MaximumArmor = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
+
+                Listen(OnMaxImaginationChanged, async (total, delta) =>
+                {
+                    await using var ctx = new UchuContext();
+
+                    var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
+
+                    character.MaximumImagination = (int) total;
+
+                    await ctx.SaveChangesAsync();
+                });
             });
 
             Listen(OnDestroyed, () =>
@@ -251,74 +319,6 @@ namespace Uchu.World
                 OnMaxImaginationChanged.Clear();
 
                 OnDeath.Clear();
-            });
-
-            if (!(GameObject is Player)) return;
-
-            Listen(OnHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
             });
         }
 
