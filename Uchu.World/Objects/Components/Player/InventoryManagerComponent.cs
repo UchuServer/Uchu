@@ -90,7 +90,10 @@ namespace Uchu.World
                 }
                 
                 // Finally load all the proxy items into the hidden inventory
-                await 
+                var hiddenInventory = this[InventoryType.Hidden] ?? new Inventory(InventoryType.Hidden, this);
+                await hiddenInventory.LoadItems(playerCharacter.Items.Where(i => i.ParentId != ObjectId.Invalid 
+                                && (InventoryType) i.InventoryType == InventoryType.Hidden));
+
             });
 
             Listen(OnDestroyed, () =>
@@ -197,6 +200,19 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Finds and returns the first item of a certain lot in a certain inventory given that the provided argument
+        /// item is its parent
+        /// </summary>
+        /// <param name="lot">The lot of the item to look for</param>
+        /// <param name="inventoryType">The inventory type to look in for the item</param>
+        /// <param name="rootItem">The root item that this item needs to belong to</param>
+        /// <returns>The item retrieved from the given inventory</returns>
+        public Item FindItem(Lot lot, InventoryType inventoryType, Item rootItem)
+        {
+            return _inventories[inventoryType].Items.FirstOrDefault(i => i.Lot == lot && i.RootItem?.Id == rootItem.Id);
+        }
+
+        /// <summary>
         /// Finds an item by looking for the provided lot in the given inventory type and ensuring that said item has a
         /// count of at least minimumCount
         /// </summary>
@@ -226,14 +242,7 @@ namespace Uchu.World
         /// <returns>List of all found items</returns>
         public Item[] FindItems(Lot lot, InventoryType inventoryType) =>
             _inventories[inventoryType].Items.Where(i => i.Lot == lot).ToArray();
-        
-        /// <summary>
-        /// If this is a sub item, it returns the root item of this item. If this item is a root item, it returns itself.
-        /// </summary>
-        /// <param name="item">The item to find the root item for</param>
-        /// <returns>The root item of this item if it is a sub item, the same item otherwise</returns>
-        public Item GetRootItem(Item item) => Items.FirstOrDefault(i => i.Id == item.RootItem?.Id) ?? item;
-        
+
         #endregion finditem
         
         /// <summary>
@@ -300,27 +309,34 @@ namespace Uchu.World
 
             return itemComponent;
         }
-        
+
         /// <summary>
         /// Adds a new lot to the inventory. The lot will automatically instantiated as the required amount of items
         /// based on the provided count and the stack size of that item.
         /// </summary>
+        /// <remarks>
+        /// The returning list may be empty if it was possible to distribute over already existing stacks
+        /// </remarks>
         /// <param name="lot">The lot to add to the inventory</param>
         /// <param name="count">The count of the lot we want to add to the inventory</param>
+        /// <param name="settings">Optional <c>LegoDataDictionary</c> to instantiate the item with</param>
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
         /// implicitly retrieved from the item lot, generally used for vendor buy back</param>
-        /// <param name="settings">Optional <c>LegoDataDictionary</c> to instantiate the item with</param>
-        public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default, 
-            InventoryType inventoryType = default)
+        /// <param name="rootItem">An optional parent item</param>
+        /// <returns>The list of items that were created while adding the lot</returns>
+        public async Task<List<Item>> AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default, 
+            InventoryType inventoryType = default, Item rootItem = default)
         {
+            var createdItems = new List<Item>();
+            
             // For players, the faction token proxy needs to be replaced with an actual faction token
             // If this wasn't possible, exit
             if (!HandleFactionToken(ref lot))
-                return;
+                return createdItems;
 
             var itemComponent = await GetItemComponentForLotAysnc(lot);
             if (itemComponent == default)
-                return;
+                return createdItems;
 
             inventoryType = inventoryType != default 
                 ? inventoryType 
@@ -359,21 +375,22 @@ namespace Uchu.World
 
                     // Exit if no new stacks are required to hold the lot
                     if (totalToAdd <= 0)
-                        return;
+                        return createdItems;
                 }
                 
                 // Create new stacks
                 while (totalToAdd > 0)
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
-                    var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings);
+                    var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem);
                     
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
-                        return; // TODO: Message item to player with mail
+                        return createdItems; // TODO: Message item to player with mail
                     
                     Start(item);
                     item.MessageCreation();
+                    createdItems.Add(item);
 
                     totalToAdd -= toAdd;
                     totalAdded += toAdd;
@@ -396,7 +413,10 @@ namespace Uchu.World
                 
                     await OnLotAdded.InvokeAsync(lot, (uint)totalAdded);
                 });
+
             }
+            
+            return createdItems;
         }
 
         /// <summary>

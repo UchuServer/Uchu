@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
@@ -17,7 +18,18 @@ namespace Uchu.World
         public Item()
         {
             OnConsumed = new Event();
-            Listen(OnDestroyed, () => Inventory?.RemoveItem(this));
+            SubItems = new List<Item>();
+            
+            Listen(OnDestroyed, async () =>
+            {
+                if (Inventory != default)
+                {
+                    foreach (var subItem in SubItems)
+                        await Inventory.ManagerComponent.RemoveItemAsync(subItem,
+                            inventoryType: subItem.Inventory.InventoryType);
+                    Inventory.RemoveItem(this);
+                }
+            });
         }
 
         /// <summary>
@@ -32,7 +44,8 @@ namespace Uchu.World
         {
             return await Instantiate(owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
                 (uint)itemInstance.Slot, LegoDataDictionary.FromString(itemInstance.ExtraInfo),
-                itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound);
+                itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound,
+                rootItem: inventory.ManagerComponent.Items.FirstOrDefault(i => i.Id == itemInstance.ParentId));
         }
 
         /// <summary>
@@ -90,6 +103,7 @@ namespace Uchu.World
             instance.Count = count;
             instance.Slot = slot;
             instance.RootItem = rootItem;
+            instance.RootItem?.SubItems.Add(instance);
             instance.IsBound = isBound;
             instance.IsEquipped = isEquipped;
             instance.IsPackage = instance.Lot.GetComponentId(ComponentId.PackageComponent) != default;
@@ -161,6 +175,11 @@ namespace Uchu.World
         /// faction gear item would belong to
         /// </summary>
         public Item RootItem { get; private set; }
+        
+        /// <summary>
+        /// Optional sub items of this item
+        /// </summary>
+        public List<Item> SubItems { get; private set; }
         
         /// <summary>
         /// The inventory this item belongs to, can be null, signifying that this is a skeleton item that other

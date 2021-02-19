@@ -234,24 +234,25 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Generates all the item objects for the sub item lot list provided by the given item.
+        /// If this item has any sub items (e.g. double wielded weapons or faction gear trial sets)
+        /// this will create and equip those sub items in the hidden inventory of the owners' inventory
         /// </summary>
-        /// <param name="item">The item to get the sub items for</param>
-        /// <returns>The list of sub items of this item</returns>
+        /// <remarks>
+        /// Requires the owner to have a <see cref="InventoryManagerComponent"/> to store the sub items in.
+        /// </remarks>
+        /// <param name="item">The item to create the sub items for</param>
         private async Task EquipPossibleSubItemsAsync(Item item)
         {
-            foreach (var subItemLot in item.SubItemLots)
+            if (item.Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                if (item.Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
-                    && inventory.FindItem())
+                foreach (var subItemLot in item.SubItemLots)
                 {
-                    
+                    var subItem = inventory.FindItem(subItemLot, InventoryType.Hidden, item) ?? (await inventory
+                        .AddLotAsync(subItemLot, 1, inventoryType: InventoryType.Hidden, rootItem: item))
+                        .FirstOrDefault();
+                    if (subItem != default)
+                        await EquipItemAsync(subItem);
                 }
-                
-                var subItem = await Item.Instantiate(GameObject, subItemLot, default, 1, rootItem: item);
-                if (subItem == null)
-                    continue;
-                Start(subItem);
             }
         }
 
