@@ -23,12 +23,13 @@ namespace Uchu.StandardScripts.AvantGardens
                 movingPlatformComponent.Stop();
                 
                 var physics = gameObject.AddComponent<PhysicsComponent>();
-                var physicsObject = BoxBody.Create(
+
+                var physicsObject = CylinderBody.Create(
                     gameObject.Zone.Simulation,
                     gameObject.Transform.Position,
-                    gameObject.Transform.Rotation, 
-                    new Vector3(190,190,190)
-                );
+                    gameObject.Transform.Rotation,
+                    new Vector2(85, 190));
+                
                 physics.SetPhysics(physicsObject);
 
                 // Set up players entering and leaving.
