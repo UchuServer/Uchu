@@ -133,7 +133,7 @@ namespace Uchu.World
                     
                     if (!MissionParser.CheckPrerequiredMissions(
                         mission.PrereqMissionID,
-                        missionInventory.CompletedMissions))
+                        missionInventory.AllMissions))
                         continue;
 
                     // If this is a mission the player doesn't have yet or hasn't started yet, offer it
