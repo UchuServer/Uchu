@@ -112,6 +112,9 @@ namespace Uchu.World
                                 // Allow them to start it
                                 break;
                             case MissionState.Active:
+                                // Display the in-progress mission instead of possibly continuing and offering a new mission.
+                                missionInventory.MessageOfferMission(playerMission.MissionId, GameObject);
+                                return;
                             case MissionState.CompletedActive:
                                 // If this is an active mission show the offer popup again for information
                                 player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
