@@ -82,6 +82,7 @@ namespace Uchu.World
 
             try
             {
+                int questIdToOffer = default;
                 foreach (var (mission, component) in Missions)
                 {
                     // Get the quest id.
@@ -136,10 +137,14 @@ namespace Uchu.World
                         missionInventory.AllMissions))
                         continue;
 
-                    // If this is a mission the player doesn't have yet or hasn't started yet, offer it
-                    missionInventory.MessageOfferMission(questId, GameObject);
-                    return;
+                    // Set the mission as the mission to offer.
+                    // The mission is not offered directly in cases where an Available mission comes up before a ReadyToComplete mission.
+                    questIdToOffer = questId;
                 }
+                
+                // Offer the mission. This happens if there are no completed missions to complete.
+                if (questIdToOffer == default) return;
+                missionInventory.MessageOfferMission(questIdToOffer, GameObject);
             }
             catch (Exception e)
             {
