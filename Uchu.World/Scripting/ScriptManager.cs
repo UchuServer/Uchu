@@ -38,6 +38,8 @@ namespace Uchu.World.Scripting
             Logger.Information($"Loading native scripts...");
             
             var scriptPacks = new List<ScriptPack>();
+
+            Zone.UchuServer.Config.DllSource.ScriptDllSource.RemoveAt(0);
             
             foreach (var scriptPackPath in Zone.UchuServer.Config.DllSource.ScriptDllSource)
             {

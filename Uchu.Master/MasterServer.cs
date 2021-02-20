@@ -269,6 +269,8 @@ namespace Uchu.Master
                 throw new FileNotFoundException("Could not find Instance file.");
             }
 
+            Config.DllSource.ScriptDllSource.RemoveAt(0);
+            
             if (Config.DllSource.ScriptDllSource.Count == 0)
             {
                 Logger.Warning("No ScriptDllSource specified under DllSource in config.xml.\n" +
