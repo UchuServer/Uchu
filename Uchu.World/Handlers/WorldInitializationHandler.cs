@@ -259,7 +259,8 @@ namespace Uchu.World.Handlers
                     ItemContainerNode(character, InventoryType.Items),
                     ItemContainerNode(character, InventoryType.Bricks),
                     ItemContainerNode(character, InventoryType.Models),
-                    ItemContainerNode(character, InventoryType.Behaviors)
+                    ItemContainerNode(character, InventoryType.Behaviors),
+                    ItemContainerNode(character, InventoryType.Hidden)
                 }
             };
         }

@@ -97,19 +97,21 @@ namespace Uchu.World.Systems.Behaviors
         /// Schedules a task in the game loop to stop the Fx from playing.
         /// Needs to look up the effect in the behavior effect table.
         /// </remarks>
-        /// <param name="type">The effect type</param>
         /// <param name="effectId">The effect to execute</param>
-        /// <param name="target">The effect target</param>
+        /// <param name="type">The effect type</param>
         /// <param name="time">How long to run the effect in milliseconds</param>
-        public async void PlayFX(string type, int effectId, int time = 1000, GameObject target = default)
+        /// <param name="target">The effect target</param>
+        public async void PlayFX(int effectId, string type = default, int time = 1000, GameObject target = default)
         {
             target ??= BranchContext.Target;
-
-            var fx = (await ClientCache.GetTableAsync<BehaviorEffect>()).FirstOrDefault(
-                e => e.EffectType == type && e.EffectID == effectId
-            );
             
-            if (fx == default)
+            var fx = type != default
+                ? (await ClientCache.GetTableAsync<BehaviorEffect>()).FirstOrDefault(e =>
+                    e.EffectType == type && e.EffectID == effectId)
+                : (await ClientCache.GetTableAsync<BehaviorEffect>()).FirstOrDefault(e =>
+                    e.EffectID == effectId);
+            
+            if (fx?.EffectName == null || fx.EffectType == null || target == null)
                 return;
 
             // Play the effect and schedule it's completion

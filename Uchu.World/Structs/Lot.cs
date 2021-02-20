@@ -113,12 +113,21 @@ namespace Uchu.World
         public static readonly Lot RocketBuildCockpit = 6910;
         public static readonly Lot RocketBuildTail = 6915;
 
-        public const int FactionTokenProxy = 13763;
+        public const int q
+        FactionTokenProxy = 13763;
         public const int AssemblyFactionToken = 8318;
         public const int SentinelFactionToken = 8319;
         public const int ParadoxFactionToken = 8320;
         public const int VentureFactionToken = 8321;
 
+        public const int SentinelFactionVendor = 6631;
+        public const int ParadoxFactionVendor = 6632;
+        public const int AssemblyFactionVendor = 6633;
+        public const int VentureFactionVendor = 6634;
+        public const int SentinelFactionVendorProxy = 7094;
+        public const int ParadoxFactionVendorProxy = 7097;
+        public const int AssemblyFactionVendorProxy = 7096;
+        public const int VentureFactionVendorProxy = 7095;
 
         #endregion
     }

@@ -128,6 +128,40 @@ namespace Uchu.World.Systems.Behaviors
             }
         }
 
+        /// <summary>
+        /// Builds a behavior tree from a skill set by finding and initializing all the skills
+        /// that belong to that skill set
+        /// </summary>
+        /// <param name="skillSetId">The ID of the skill set</param>
+        /// <returns>The behavior tree</returns>
+        public static async Task<BehaviorTree> FromSkillSetAsync(int skillSetId)
+        {
+            var skillSetSkills = (await ClientCache.GetTableAsync<ItemSetSkills>())
+                .Where(i => i.SkillSetID == skillSetId);
+
+            // Create the behavior tree from all the skills in the skill set
+            var tree = new BehaviorTree
+            {
+                BehaviorIds = await Task.WhenAll(skillSetSkills.Select(async skillSetSkill =>
+                {
+                    var behavior = (await ClientCache.GetTableAsync<SkillBehavior>())
+                        .FirstOrDefault(b => b.SkillID == skillSetSkill.SkillID);
+
+                    return new BehaviorInfo
+                    {
+                        BaseBehavior = behavior?.BehaviorID ?? 0,
+                        CastType = skillSetSkill.SkillCastType.HasValue
+                            ? (SkillCastType) skillSetSkill.SkillCastType
+                            : SkillCastType.OnEquip,
+                        SkillId = skillSetSkill.SkillID ?? 0
+                    };
+                }))
+            };
+
+            await tree.BuildAsync();
+            return tree;
+        }
+
         public static async Task<BehaviorTree> FromLotAsync(Lot lot)
         {
             var tree = new BehaviorTree();
@@ -161,7 +195,6 @@ namespace Uchu.World.Systems.Behaviors
             }
             
             await tree.BuildAsync();
-
             return tree;
         }
 
@@ -509,12 +542,6 @@ namespace Uchu.World.Systems.Behaviors
             {
                 Logger.Error($"Encountered error during tree dismantle: {e.Message}");
             }
-        }
-
-        public static async Task<BehaviorInfo[]> GetSkillsForObject(Lot lot)
-        {
-            var tree = await FromLotAsync(lot);
-            return tree.BehaviorIds;
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World.Client;
 using Uchu.World.Objects.Components;
 using Uchu.World.Systems.Missions;
@@ -265,6 +266,17 @@ namespace Uchu.World
             {
                 return Missions.Any(m => m.MissionId == id);
             }
+        }
+
+        
+        /// <summary>
+        /// Returns the mission with a given id from the mission inventory.
+        /// </summary>
+        /// <param name="missionId">The id of the mission to get from the inventory</param>
+        /// <returns>A mission instance if the player has this mission, <c>default</c> otherwise.</returns>
+        public MissionInstance GetMission(MissionId missionId)
+        {
+            return GetMission((int) missionId);
         }
 
         /// <summary>
@@ -630,7 +642,8 @@ namespace Uchu.World
         /// <returns>A list of all the achievements a player can unlock, given the task type and the lot</returns>
         private MissionInstance[] UnlockableAchievements<T>(MissionTaskType type, Lot lot)
             where T : MissionTaskInstance => ClientCache.Achievements.Where(m =>
-                m.Tasks.OfType<T>().Any(t => t.Type == type && t.Targets.Contains((int) lot))
+                m.Tasks.OfType<T>().Any(t => t.Type == type 
+                                             && (t.Targets.Contains((int) lot) || t.Parameters.Contains((int) lot)))
                 && CanAccept(m)).ToArray();
 
         /// <summary>
@@ -643,6 +656,7 @@ namespace Uchu.World
         private async Task StartUnlockableAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null)
             where T : MissionTaskInstance
         {
+            var testMission = ClientCache.Achievements.Where(m => m.MissionId == 568);
             foreach (var achievement in UnlockableAchievements<T>(type, lot))
             {
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a

@@ -3,29 +3,51 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World.Client;
 
 namespace Uchu.World.Handlers.GameMessages
 {
     public class GeneralHandler : HandlerGroup
     {
+        
+        /// <summary>
+        /// For the faction initial missions this sets their state from started to ready to complete on an interaction
+        /// </summary>
+        /// <param name="gameObject">The game object to interact with</param>
+        /// <param name="missions">The missions inventory of a player</param>
+        private static async Task HandleFactionVendorInteraction(GameObject gameObject, MissionInventoryComponent missions)
+        {
+            // For some reason the targets of faction missions are different game objects than the one you interact with
+            var targetLot = (int) gameObject.Lot switch
+            {
+                Lot.SentinelFactionVendor => Lot.SentinelFactionVendorProxy, 
+                Lot.ParadoxFactionVendor => Lot.ParadoxFactionVendorProxy, 
+                Lot.AssemblyFactionVendor => Lot.AssemblyFactionVendorProxy, 
+                Lot.VentureFactionVendor => Lot.VentureFactionVendorProxy, 
+                _ => default
+            };
+
+            if (targetLot != default)
+                await missions.GoToNpcAsync(targetLot);
+        }
+        
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)
         {
             Logger.Information($"{player} interacted with {message.TargetObject}");
 
             var inventory = player.GetComponent<MissionInventoryComponent>();
-            
             await inventory.GoToNpcAsync(
                 message.TargetObject.Lot
             );
+            
+            // Handle interactions with the faction vendors
+            await HandleFactionVendorInteraction(message.TargetObject, inventory);
 
             if (message.IsMultiInteract)
             {
-                //
                 // Multi-interact is mission
-                //
-
                 if (message.MultiInteractType == 0) // Mission Component
                 {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
@@ -36,14 +58,12 @@ namespace Uchu.World.Handlers.GameMessages
                 else if (message.MultiInteractType == 1) // Any other case
                 {
                     await message.TargetObject.OnInteract.InvokeAsync(player);
-
                     await inventory.InteractAsync(message.TargetObject.Lot);
                 }
             }
             else if (message.TargetObject != default)
             {
                 await message.TargetObject.OnInteract.InvokeAsync(player);
-                
                 await inventory.InteractAsync(message.TargetObject.Lot);
             }
         }
