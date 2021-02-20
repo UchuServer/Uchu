@@ -8,6 +8,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects;
 
 namespace Uchu.World
 {
@@ -28,7 +29,12 @@ namespace Uchu.World
         /// Mapping of items and their equipped slots on the game object
         /// </summary>
         private Dictionary<EquipLocation, Item> Items { get; }
-        
+
+        /// <summary>
+        /// The items currently equipped in the inventory
+        /// </summary>
+        public Item[] EquippedItems => Items.Values.ToArray();
+
         /// <summary>
         /// Called when a new item is equipped
         /// </summary>
@@ -38,12 +44,18 @@ namespace Uchu.World
         /// Called when an item is unequipped
         /// </summary>
         public Event<Item> OnUnEquipped { get; }
+        
+        /// <summary>
+        /// The item sets currently active on the player
+        /// </summary>
+        public List<ItemSet> ActiveItemSets { get; }
 
         protected InventoryComponent()
         {
             Items = new Dictionary<EquipLocation, Item>();
             OnEquipped = new Event<Item>();
             OnUnEquipped = new Event<Item>();
+            ActiveItemSets = new List<ItemSet>();
 
             Listen(OnDestroyed, () =>
             {
@@ -98,14 +110,13 @@ namespace Uchu.World
         {
             foreach (var item in items)
             {
-                await EquipAsync(item);
+                await EquipItemAsync(item);
             }
         }
 
         /// <summary>
         /// Updates a slot in the inventory, swapping a previous item for a new one
         /// </summary>
-        /// <param name="slot">The slot to equip an item to</param>
         /// <param name="item">The item to place in the slot</param>
         private async Task UpdateSlotAsync(Item item)
         {
@@ -155,23 +166,12 @@ namespace Uchu.World
             {
                 return;
             }
-            
-            await EquipAsync(item);
-            GameObject.Serialize(GameObject);
-            await OnEquipped.InvokeAsync(item);
-        }
-        
-        /// <summary>
-        /// Internal item equipping logic, also equips all sub items for this item.
-        /// </summary>
-        /// <param name="item">The item to equip</param>
-        private async Task EquipAsync(Item item)
-        {
+
             await EnsureItemEquipped(item);
-            foreach (var subItem in await GenerateSubItemsAsync(item))
-            {
-                await EnsureItemEquipped(subItem);
-            }
+            foreach (var subItem in item.SubItems)
+                await EquipItemAsync(subItem);
+            
+            GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -180,12 +180,20 @@ namespace Uchu.World
         /// <param name="item">The item to equip</param>
         private async Task EnsureItemEquipped(Item item)
         {
+            // If this item is already equipped, ignore
+            if (Items.ContainsValue(item))
+                return;
+            
             await UpdateSlotAsync(item);
             item.IsEquipped = true;
 
+            // Make sure that item sets are tracked for this item (if it has one)
+            await ItemSet.CreateIfNewSet(this, item.Lot);
+            await OnEquipped.InvokeAsync(item);
+            
             // Update all the new skills the player gets from this item
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                await skillComponent.MountItem(item);
+                await skillComponent.EquipItemAsync(item);
         }
 
         /// <summary>
@@ -196,34 +204,22 @@ namespace Uchu.World
         /// <param name="item">The item to unequip</param>
         public async Task UnEquipItemAsync(Item item)
         {
-            await OnUnEquipped.InvokeAsync(item);
-            
             if (item?.Id <= 0)
                 return;
             
             if (item != null)
             {
-                await UnEquipAsync(item);
+                var rootItem = item.RootItem ?? item;
+                await EnsureItemUnEquipped(rootItem);
+            
+                foreach (var subItem in rootItem.SubItems)
+                {
+                    if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
+                        await EnsureItemUnEquipped(equippedSubItem);
+                }
             }
 
             GameObject.Serialize(GameObject);
-        }
-        
-        /// <summary>
-        /// Unequips an item by unequipping it or its root item, if available. Note that if this item has a root item
-        /// all sub items will also be unequipped.
-        /// </summary>
-        /// <param name="item">The item to unequip or unequip the root item and its sub items for</param>
-        private async Task UnEquipAsync(Item item)
-        {
-            var rootItem = item.RootItem ?? item;
-            await EnsureItemUnEquipped(rootItem);
-            
-            foreach (var subItem in GetSubItems(rootItem))
-            {
-                if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
-                    await EnsureItemUnEquipped(equippedSubItem);
-            }
         }
 
         /// <summary>
@@ -233,41 +229,12 @@ namespace Uchu.World
         private async Task EnsureItemUnEquipped(Item item)
         {
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
-                await skillComponent.DismountItemAsync(item);
+                await skillComponent.UnequipItemAsync(item);
+            
+            await OnUnEquipped.InvokeAsync(item);
             
             item.IsEquipped = false;
             Items.Remove(GetSlot(item.Id));
-        }
-
-        /// <summary>
-        /// Generates all the item objects for the sub item lot list provided by the given item.
-        /// </summary>
-        /// <param name="item">The item to get the sub items for</param>
-        /// <returns>The list of sub items of this item</returns>
-        private async Task<Item[]> GenerateSubItemsAsync(Item item)
-        {
-            var subItems = new List<Item>();
-            
-            foreach (var subItemLot in item.SubItemLots)
-            {
-                var subItem = await Item.Instantiate(GameObject, subItemLot, default, 1, rootItem: item);
-                if (subItem == null)
-                    continue;
-                Start(subItem);
-                subItems.Add(subItem);
-            }
-
-            return subItems.ToArray();
-        }
-
-        /// <summary>
-        /// Gets all the sub items of an item by fetching them from the game object inventory
-        /// </summary>
-        /// <param name="item">The object to get the sub items for</param>
-        /// <returns>A list of all the sub items for this item</returns>
-        private Item[] GetSubItems(Item item)
-        {
-            return Items.Values.Where(i => i.RootItem?.Id == item.Id).ToArray();
         }
 
         /// <summary>

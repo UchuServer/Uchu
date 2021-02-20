@@ -6,10 +6,11 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects.Components;
 
 namespace Uchu.World
 {
-    public class DestroyableComponent : Component
+    public class DestroyableComponent : Component, ISavableComponent
     {
         private uint _health;
 
@@ -252,74 +253,6 @@ namespace Uchu.World
 
                 OnDeath.Clear();
             });
-
-            if (!(GameObject is Player)) return;
-
-            Listen(OnHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
         }
 
         /// <summary>
@@ -391,6 +324,7 @@ namespace Uchu.World
             );
 
             if (stats == default) return;
+            HasStats = true;
 
             var rawHealth = stats.Life ?? 0;
             var rawArmor = (int) (stats.Armor ?? 0);
@@ -408,6 +342,7 @@ namespace Uchu.World
         private void CollectPlayerStats()
         {
             if (!(GameObject is Player)) return;
+            HasStats = true;
             
             using var ctx = new UchuContext();
 
@@ -486,6 +421,25 @@ namespace Uchu.World
             foreach (var faction in Factions) writer.Write(faction);
 
             writer.WriteBit(Smashable);
+        }
+        
+        /// <summary>
+        /// Saves the character stats of the player
+        /// </summary>
+        /// <param name="context">The database context to save to</param>
+        public async Task SaveAsync(UchuContext context)
+        {
+            var character = await context.Characters.Where(c => c.Id == GameObject.Id)
+                .FirstAsync();
+
+            character.CurrentHealth = (int) Health;
+            character.CurrentArmor = (int) Armor;
+            character.CurrentImagination = (int) Imagination;
+            character.MaximumHealth = (int) MaxHealth;
+            character.MaximumArmor = (int) MaxArmor;
+            character.MaximumImagination = (int) MaxImagination;
+
+            Logger.Debug($"Saved character stats for {GameObject}");
         }
     }
 }

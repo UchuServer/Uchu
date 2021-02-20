@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Navigation", "Uchu.Nav
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.Physics", "Uchu.Physics\Uchu.Physics.csproj", "{A1404445-0D3D-4935-8868-6678A266A183}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Uchu.World.Test", "Uchu.World.Test\Uchu.World.Test.csproj", "{5420D277-4B09-4B1F-ACBD-2348D64F955E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,10 @@ Global
 		{A1404445-0D3D-4935-8868-6678A266A183}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1404445-0D3D-4935-8868-6678A266A183}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1404445-0D3D-4935-8868-6678A266A183}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5420D277-4B09-4B1F-ACBD-2348D64F955E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5420D277-4B09-4B1F-ACBD-2348D64F955E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5420D277-4B09-4B1F-ACBD-2348D64F955E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5420D277-4B09-4B1F-ACBD-2348D64F955E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

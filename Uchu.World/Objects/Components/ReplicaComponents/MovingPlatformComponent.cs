@@ -1,11 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using System.Timers;
 using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
+using Timer = System.Timers.Timer;
 
 namespace Uchu.World
 {
@@ -15,6 +16,11 @@ namespace Uchu.World
         ///     Current timer.
         /// </summary>
         private Timer Timer { get; set; }
+
+        /// <summary>
+        ///     Current stopwatch for delta times.
+        /// </summary>
+        private Stopwatch Stopwatch { get; set; } = new Stopwatch();
 
         public LuzMovingPlatformPath Path { get; set; }
 
@@ -34,7 +40,20 @@ namespace Uchu.World
 
         public uint NextWaypointIndex { get; set; }
 
-        public float IdleTimeElapsed { get; set; }
+        /// <summary>
+        ///     Time spent idle
+        /// </summary>
+        public float IdleTimeElapsed =>
+            State == PlatformState.Idle
+                ? (float) (Stopwatch.ElapsedMilliseconds / 1000.0)
+                : 0;
+
+        /// <summary>
+        ///     Percent of the platform's moving progress between the current waypoints
+        /// </summary>
+        public float PercentBetweenPoints => State != PlatformState.Idle
+            ? (float) ((Stopwatch.ElapsedMilliseconds / 1000.0) / _currentDuration)
+            : 0;
 
         public override ComponentId Id => ComponentId.MovingPlatformComponent;
 
@@ -53,6 +72,8 @@ namespace Uchu.World
         /// </summary>
         public LuzMovingPlatformWaypoint NextWayPoint => Path.Waypoints[NextIndex] as LuzMovingPlatformWaypoint;
 
+        private double _currentDuration;
+
         protected MovingPlatformComponent()
         {
             Listen(OnStart, () =>
@@ -65,7 +86,7 @@ namespace Uchu.World
                 Path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(p =>
                     p is LuzMovingPlatformPath && p.PathName == PathName) as LuzMovingPlatformPath;
 
-                Type = GameObject.Settings.TryGetValue("platformIsMover", out var isMover) && (bool) isMover
+                Type = !GameObject.Settings.TryGetValue("platformIsMover", out var isMover) || (bool) isMover
                     ? PlatformType.Mover
                     : GameObject.Settings.TryGetValue("platformIsSimpleMover", out var isSimpleMover) &&
                       (bool) isSimpleMover
@@ -76,20 +97,45 @@ namespace Uchu.World
 
                 State = PlatformState.Idle;
                 
-                Task.Run(WaitPoint);
+                Task.Run(() => WaitPoint());
+
+                if (GameObject.TryGetComponent<SimplePhysicsComponent>(out var simplePhysicsComponent))
+                {
+                    simplePhysicsComponent.HasPosition = false;
+                }
+
+                if (!GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)) return;
+                Listen(quickBuildComponent.OnStateChange, (state) =>
+                {
+                    if (state != RebuildState.Completed) return;
+                    
+                    // The waypoint must be set to the previous from the start since WaitPoint increments it.
+                    this.Stop();
+                    CurrentWaypointIndex = PathStart == 0 ? (uint) (Path.Waypoints.Length - 1) : PathStart - 1;
+                    Task.Run(() =>
+                    {
+                        // TODO: A wait is required at the beginning, otherwise the platform moves right as the player is unfrozen from the building complete animation.
+                        WaitPoint(1);
+                    });
+                });
             });
         }
 
-        public override void Construct(BitWriter writer)
+        public override void Construct(BitWriter writer) 
         {
-            Serialize(writer);
+            Serialize(writer, true);
         }
 
         public override void Serialize(BitWriter writer)
         {
+            Serialize(writer, false);
+        }
+        
+        public void Serialize(BitWriter writer,bool includePath)
+        {
             writer.WriteBit(true);
 
-            var hasPath = PathName != null;
+            var hasPath = includePath && PathName != null;
 
             writer.WriteBit(hasPath);
 
@@ -148,12 +194,58 @@ namespace Uchu.World
             }
         }
 
+        public void Stop()
+        {
+            Timer.Stop();
+            State = PlatformState.Idle;
+        }
+
+        public void MoveTo(uint position,Action moveCompleteCallback = default)
+        {
+            // Update Object in world.
+            CurrentWaypointIndex = position;
+            NextWaypointIndex = NextIndex;
+            _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
+            Stopwatch.Restart();
+            State = PlatformState.Move;
+            TargetPosition = WayPoint.Position;
+            TargetRotation = WayPoint.Rotation;
+
+            GameObject.Serialize(GameObject);
+
+            // Start Waiting after completing path.
+            Timer = new Timer
+            {
+                AutoReset = false,
+                Interval = _currentDuration * 1000
+            };
+            Timer.Elapsed += (sender, args) =>
+            {
+                Timer.Stop();
+                
+                // Update Object in world.
+                CurrentWaypointIndex = NextIndex;
+                PathName = null;
+                State = PlatformState.Idle;
+                TargetPosition = WayPoint.Position;
+                TargetRotation = WayPoint.Rotation;
+                NextWaypointIndex = NextIndex;
+            
+                GameObject.Serialize(GameObject);
+            };
+            if (moveCompleteCallback != default)
+            {
+                Timer.Elapsed += (sender, args) => moveCompleteCallback();
+            }
+
+            Timer.Start();
+        }
+
         private void MovePlatform()
         {
-            /*
-             * Update Object in world.
-             */
-            PathName = Path.PathName;
+            // Update Object in world.
+            _currentDuration = (WayPoint.Position - NextWayPoint.Position).Length() / WayPoint.Speed;
+            Stopwatch.Restart();
             State = PlatformState.Move;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -161,29 +253,25 @@ namespace Uchu.World
 
             GameObject.Serialize(GameObject);
 
-            /*
-             * Start Waiting after completing path.
-             */
+            // Start Waiting after completing path.
             Timer = new Timer
             {
                 AutoReset = false,
-                Interval = WayPoint.Speed * 1000
+                Interval = _currentDuration * 1000
             };
-
             Timer.Elapsed += (sender, args) => { WaitPoint(); };
 
-            Task.Run(() => Timer.Start());
+            Timer.Start();
         }
 
-        private void WaitPoint()
+        private void WaitPoint(int extraWaitTime = 0)
         {
             // Move to next path index.
             CurrentWaypointIndex = NextIndex;
-
-            /*
-             * Update Object in world.
-             */
-            PathName = null;
+            Stopwatch.Restart();
+            _currentDuration = WayPoint.Wait;
+            
+            // Update Object in world.
             State = PlatformState.Idle;
             TargetPosition = WayPoint.Position;
             TargetRotation = WayPoint.Rotation;
@@ -191,18 +279,16 @@ namespace Uchu.World
             
             GameObject.Serialize(GameObject);
 
-            /*
-             * Start Waiting after waiting.
-             */
+            // Start Waiting after waiting.
             Timer = new Timer
             {
                 AutoReset = false,
-                Interval = WayPoint.Wait * 1000
+                Interval = (WayPoint.Wait * 1000) + extraWaitTime
             };
 
             Timer.Elapsed += (sender, args) => { MovePlatform(); };
 
-            Task.Run(() => Timer.Start());
+            Timer.Start();
         }
     }
 }

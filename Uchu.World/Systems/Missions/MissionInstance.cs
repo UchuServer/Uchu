@@ -599,7 +599,7 @@ namespace Uchu.World.Systems.Missions
         /// </remarks>
         /// <param name="state">The new state to set this mission to</param>
         /// <param name="sendingRewards">Whether or not this state will result in rewards</param>
-        private void UpdateMissionState(MissionState state, bool sendingRewards = false)
+        public void UpdateMissionState(MissionState state, bool sendingRewards = false)
         {
             State = state;
             MessageNotifyMission(sendingRewards);

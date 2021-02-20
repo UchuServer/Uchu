@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
@@ -40,7 +41,7 @@ namespace Uchu.Auth.Handlers
             {
                 info.CharacterInstancePort = (ushort) characterSpecification.Info.Port;
 
-                if (!await ctx.Users.AnyAsync(u => u.Username == packet.Username && !u.Sso))
+                if (!await ctx.Users.AnyAsync(u => string.Equals(u.Username, packet.Username, StringComparison.CurrentCultureIgnoreCase) && !u.Sso))
                 {
                     info.LoginCode = LoginCode.InsufficientPermissions;
                     info.Error = new ErrorMessage
@@ -50,7 +51,7 @@ namespace Uchu.Auth.Handlers
                 }
                 else
                 {
-                    var user = await ctx.Users.SingleAsync(u => u.Username == packet.Username && !u.Sso);
+                    var user = await ctx.Users.SingleAsync(u => string.Equals(u.Username, packet.Username, StringComparison.CurrentCultureIgnoreCase) && !u.Sso);
 
                     if (user != null && BCrypt.Net.BCrypt.EnhancedVerify(packet.Password, user.Password))
                     {

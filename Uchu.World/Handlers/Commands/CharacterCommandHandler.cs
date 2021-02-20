@@ -1061,9 +1061,10 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "clear", Help = "Clears your inventory", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> Clear(string[] arguments, Player player)
         {
-            foreach (var item in player.GetComponent<InventoryManagerComponent>()[InventoryType.Items].Items)
+            var inventory = player.GetComponent<InventoryManagerComponent>();
+            foreach (var item in inventory[InventoryType.Items].Items)
             {
-                await item.DecrementCountAsync(item.Count);
+                await inventory.RemoveItemAsync(item);
             }
 
             return "Cleared inventory";
