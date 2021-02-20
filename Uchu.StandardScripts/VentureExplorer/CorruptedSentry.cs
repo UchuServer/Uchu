@@ -25,7 +25,7 @@ namespace Uchu.StandardScripts.VentureExplorer
         /// Initializes the faction and enemies of the
         /// corrupted sentry.
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">Corrupted sentry game object to initialize.</param>
         private void InitializeCorruptedSentry(Object obj)
         {
             if (!(obj is GameObject gameObject)) return;
