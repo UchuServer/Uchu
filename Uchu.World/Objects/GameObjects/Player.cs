@@ -164,7 +164,6 @@ namespace Uchu.World
             AddComponent<PossessableOccupantComponent>();
             
             controllablePhysics.HasPosition = true;
-            stats.HasStats = true;
             
             // Server Components
             var inventoryManager = AddComponent<InventoryManagerComponent>();
