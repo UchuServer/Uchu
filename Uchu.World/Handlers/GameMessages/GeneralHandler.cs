@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -145,6 +146,24 @@ namespace Uchu.World.Handlers.GameMessages
                 });
 
                 player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");
+            }
+        }
+
+        [PacketHandler]
+        public void RequestPlatformResyncHandler(RequestPlatformResyncMessage message, Player player)
+        {
+            if (message.Associate.TryGetComponent<MovingPlatformComponent>(out var movingPlatformComponent))
+            {
+                player.Message(new PlatformResyncMessage()
+                {
+                    State = movingPlatformComponent.State,
+                    IdleTimeElapsed = movingPlatformComponent.IdleTimeElapsed,
+                    PercentBetweenPoints = movingPlatformComponent.PercentBetweenPoints,
+                    Index = (int) movingPlatformComponent.CurrentWaypointIndex,
+                    NextIndex = (int) movingPlatformComponent.NextWaypointIndex,
+                    UnexpectedLocation = movingPlatformComponent.TargetPosition,
+                    UnexpectedRotation = movingPlatformComponent.TargetRotation,
+                });
             }
         }
     }
