@@ -144,13 +144,16 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "Uchu.Instance.dll";
+        [XmlElement] public string Instance { get; set; } = "Enter path to Uchu.Instance.dll";
         
         /// <summary>
         /// The path to the script source DLLs
         /// </summary>
         [XmlElement]
-        public List<string> ScriptDllSource { get; } = new List<string>();
+        public List<string> ScriptDllSource { get; } = new List<string>
+        {
+            "Enter path to Uchu.StandardScripts.dll"
+        };
     }
 
     /// <summary>
