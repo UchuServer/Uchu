@@ -113,6 +113,7 @@ namespace Uchu.World
                 if (item != null)
                 {
                     Object.Start(item);
+                    item.Layer = StandardLayer.Hidden;
                 }
             });
             
@@ -129,6 +130,7 @@ namespace Uchu.World
             if (Items.Any(i => i.Slot == item.Slot))
                 throw new InventorySlotOccupiedException();
             _items.Add(item);
+            item.Layer = StandardLayer.Hidden;
         }
         
         /// <summary>
