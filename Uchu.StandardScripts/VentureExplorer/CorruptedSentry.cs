@@ -16,7 +16,7 @@ namespace Uchu.StandardScripts.VentureExplorer
             {
                 InitializeCorruptedSentry(obj);
             }
-            Listen(Zone.OnObject,InitializeCorruptedSentry);
+            Listen(Zone.OnObject, InitializeCorruptedSentry);
             
             return Task.CompletedTask;
         }
