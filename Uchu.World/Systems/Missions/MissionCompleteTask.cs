@@ -10,11 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public MissionCompleteTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
-            cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.MissionComplete;
 
         public override bool Completed => Targets.All(target => Progress.Contains(target));

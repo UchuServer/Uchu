@@ -16,25 +16,25 @@ namespace Uchu.StandardScripts.General
         {
             foreach (var gameObject in HasLuaScript(ScriptName, true))
             {
-                if (!gameObject.Settings.TryGetValue("number", out var number)) continue;
+                if (!gameObject.Settings.TryGetValue("number", out var number))
+                    continue;
 
                 var worldId = ((int) Zone.ZoneId).ToString().Substring(0, 2);
-
                 var flag = int.Parse($"{worldId}{number}");
                 
                 Listen(gameObject.OnInteract, async player =>
                 {
-                    Logger.Debug($"Got flag {flag}");
-                    
-                    await player.SetFlagAsync(flag, true);
-                    
-                    player.Message(new FireClientEventMessage
+                    if (player.TryGetComponent<CharacterComponent>(out var character))
                     {
-                        Associate = gameObject,
-                        Arguments = "achieve",
-                        Target = gameObject,
-                        Sender = player
-                    });
+                        await character.SetFlagAsync(flag, true);
+                        player.Message(new FireClientEventMessage
+                        {
+                            Associate = gameObject,
+                            Arguments = "achieve",
+                            Target = gameObject,
+                            Sender = player
+                        });
+                    }
                 });
             }
 

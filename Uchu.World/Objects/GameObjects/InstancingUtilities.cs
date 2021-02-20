@@ -147,7 +147,8 @@ namespace Uchu.World
                     FinalPosition = finalPosition
                 });
 
-                owner.EntitledCurrency += currency;
+                var character = owner.GetComponent<CharacterComponent>();
+                character.EntitledCurrency += currency;
             }
             catch (Exception e)
             {

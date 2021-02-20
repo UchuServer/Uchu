@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
@@ -14,9 +15,8 @@ namespace Uchu.World
     public class SkillComponent : ReplicaComponent
     {
         private Dictionary<BehaviorSlot, uint> ActiveBehaviors { get; }
-        
         private Dictionary<uint, ExecutionContext> HandledSkills { get; }
-        
+
         // This number is taken from testing and is not concrete.
         public const float TargetRange = 11.6f;
 
@@ -41,11 +41,9 @@ namespace Uchu.World
             
             Listen(OnStart, async () =>
             {
-                await using var cdClient = new CdClientContext();
-
-                var skills = await cdClient.ObjectSkillsTable.Where(
+                var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
                     s => s.ObjectTemplate == GameObject.Lot
-                ).ToArrayAsync();
+                ).ToArray();
 
                 DefaultSkillSet = skills
                     .Where(s => s.SkillID != default)
@@ -94,120 +92,103 @@ namespace Uchu.World
             }
         }
 
-        public async Task MountItemAsync(Lot item)
+        /// <summary>
+        /// Equips a tree by mounting all its on equip behaviors
+        /// </summary>
+        /// <param name="tree">The tree to equip</param>
+        /// <returns></returns>
+        private async Task EquipTreeAsync(BehaviorTree tree)
         {
-            if (item == default) return;
-            
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-
-            RemoveSkill(slot);
-            
-            await MountSkill(item);
-
-            await EquipSkill(item);
-        }
-
-        public async Task DismountItemAsync(Lot item)
-        {
-            if (item == default) return;
-
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-            
-            RemoveSkill(slot);
-
-            await DismountSkill(item);
-        }
-
-        private async Task EquipSkill(Lot item)
-        {
-            if (item == default) return;
-            
-            await using var ctx = new CdClientContext();
-
-            var itemInfo = await ctx.ItemComponentTable.FirstOrDefaultAsync(
-                i => i.Id == item.GetComponentId(ComponentId.ItemComponent)
-            );
-            
-            if (itemInfo == default) return;
-
-            var slot = ((ItemType) (itemInfo.ItemType ?? 0)).GetBehaviorSlot();
-            
-            var infos = await BehaviorTree.GetSkillsForObject(item);
-
-            var onUse = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
-
-            if (onUse == default) return;
-            
-            RemoveSkill(slot);
-            
-            SetSkill(slot, (uint) onUse.SkillId);
-        }
-
-        private async Task MountSkill(Lot item)
-        {
-            if (item == default)
-                return;
-            
-            var infos = await BehaviorTree.GetSkillsForObject(item);
-            var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
-            
-            if (onEquip == default)
-                return;
-            
-            var tree = await BehaviorTree.FromLotAsync(item);
-            tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
-            tree.Mount();
-
-            if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+            // Skills that are cast when the item is equipped
+            if (tree.BehaviorIds.Any(i => i.CastType == SkillCastType.OnEquip))
             {
-                await missionInventory.UseSkillAsync(onEquip.SkillId);
+                tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
+                tree.Mount();
+
+                if (GameObject.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                {
+                    foreach (var onEquip in tree.BehaviorIds.Where(i => i.CastType == SkillCastType.OnEquip))
+                        await missionInventory.UseSkillAsync(onEquip.SkillId);
+                }
             }
         }
 
-        private async Task DismountSkill(Lot item)
+        /// <summary>
+        /// Unequips the tree, dismantling it if there are any on equip skills equipped
+        /// </summary>
+        /// <param name="tree">The tree to unequip</param>
+        private void UnequipTree(BehaviorTree tree)
         {
-            if (item == default)
+            if (tree.BehaviorIds.All(i => i.CastType != SkillCastType.OnEquip))
                 return;
             
-            var infos = await BehaviorTree.GetSkillsForObject(item);
-            var onEquip = infos.FirstOrDefault(i => i.CastType == SkillCastType.OnEquip);
-
-            if (onEquip == default)
-                return;
-            
-            var tree = await BehaviorTree.FromLotAsync(item);
             tree.Deserialize(GameObject, new BitReader(new MemoryStream()));
             tree.Dismantle();
         }
 
         /// <summary>
-        /// Calculates a skill by serializing it
+        /// Equips a skill set on the player by loading all its child skills
         /// </summary>
-        /// <param name="skillId">The skill Id to serialize</param>
-        /// <param name="precalculate">Precalculate the skill, exits execution but adds behavior to cache</param>
-        /// <returns>The skill time in milliseconds</returns>
-        public async Task<float> CalculateSkillAsync(int skillId, bool precalculate = false)
+        /// <param name="skillSetId">The skill set to load</param>
+        /// <returns></returns>
+        public async Task EquipSkillSetAsync(int skillSetId)
         {
-            var tree = await BehaviorTree.FromSkillAsync(skillId);
-            if (precalculate)
-                return 0;
+            var tree = await BehaviorTree.FromSkillSetAsync(skillSetId);
+            await EquipTreeAsync(tree);
+        }
 
+        /// <summary>
+        /// Unequips a skill set by unloading all its child skills
+        /// </summary>
+        /// <param name="skillSetId">The skill set to unload</param>
+        public async Task UnequipSkillSetAsync(int skillSetId)
+        {
+            var tree = await BehaviorTree.FromSkillSetAsync(skillSetId);
+            UnequipTree(tree);
+        }
+
+        /// <summary>
+        /// Equips an item in the skill component by building its behavior tree and mounting it in the item behavior slot 
+        /// </summary>
+        /// <param name="item">The item to equip</param>
+        public async Task EquipItemAsync(Item item)
+        {
+            var slot = ((ItemType) (item.ItemComponent.ItemType ?? 0)).GetBehaviorSlot();
+            RemoveSkill(slot);
+            
+            var tree = await BehaviorTree.FromLotAsync(item.Lot);
+            await EquipTreeAsync(tree);
+            
+            // Skills that are cast when the item is used
+            var onUse = tree.BehaviorIds.FirstOrDefault(i => i.CastType == SkillCastType.OnUse);
+            if (onUse != default)
+            {
+                RemoveSkill(slot);
+                SetSkill(slot, (uint) onUse.SkillId);
+            }
+        }
+
+        /// <summary>
+        /// Unequip an item from the skill component, clearing its behavior slot and dismantling the behavior tree
+        /// </summary>
+        /// <param name="item">The item to unequip</param>
+        public async Task UnequipItemAsync(Item item)
+        {
+            var slot = ((ItemType) (item.ItemComponent.ItemType ?? 0)).GetBehaviorSlot();
+            RemoveSkill(slot);
+            
+            var tree = await BehaviorTree.FromLotAsync(item.Lot);
+            UnequipTree(tree);
+        }
+
+        /// <summary>
+        /// Calculates the skill by serializing the given tree and executing it
+        /// </summary>
+        /// <param name="tree"></param>
+        /// <param name="skillId"></param>
+        /// <returns></returns>
+        public float CalculateSkill(BehaviorTree tree, int skillId)
+        {
             var stream = new MemoryStream();
             using var writer = new BitWriter(stream, leaveOpen: true);
             var syncId = ClaimSyncId();
@@ -229,6 +210,17 @@ namespace Uchu.World
 
             tree.Execute();
             return context.SkillTime * 1000;
+        }
+
+        /// <summary>
+        /// Calculates a skill by serializing it
+        /// </summary>
+        /// <param name="skillId">The skill Id to serialize</param>
+        /// <returns>The skill time in milliseconds</returns>
+        public async Task<float> CalculateSkillAsync(int skillId)
+        {
+            var tree = await BehaviorTree.FromSkillAsync(skillId);
+            return CalculateSkill(tree, skillId);
         }
 
         public async Task<float> CalculateSkillAsync(int skillId, GameObject target)

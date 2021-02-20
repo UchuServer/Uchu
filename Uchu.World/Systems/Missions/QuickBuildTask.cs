@@ -10,11 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public QuickBuildTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission,
-            cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.QuickBuild;
 
         public async Task ReportProgress(int lot, int activity)

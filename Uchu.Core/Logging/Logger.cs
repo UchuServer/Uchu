@@ -1,8 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Uchu.Core.Config;
 
@@ -10,7 +7,9 @@ namespace Uchu.Core
 {
     public static class Logger
     {
-        public static UchuConfiguration Config { get; set; }
+        private static LogQueue logQueue = new LogQueue();
+
+        private static bool outputTaskStarted = false;
 
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {
@@ -37,174 +36,63 @@ namespace Uchu.Core
 
         public static void Debug(object content)
         {
+            if (content is null) throw new ArgumentNullException(nameof(content));
 #if DEBUG
             var trace = new StackTrace();
-
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Debug, ConsoleColor.Green, trace); });
-#else
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Debug, ConsoleColor.Green); });
+            AddToQueue(content.ToString(), LogLevel.Debug, ConsoleColor.Green, trace);
 #endif
         }
 
         public static void Information(object content)
         {
+            if (content is null) throw new ArgumentNullException(nameof(content));
 #if DEBUG
             var trace = new StackTrace();
-
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Information, ConsoleColor.White, trace); });
+            AddToQueue(content.ToString(), LogLevel.Information, ConsoleColor.White, trace); 
 #else
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Information, ConsoleColor.White); });
+            AddToQueue(content.ToString(), LogLevel.Information, ConsoleColor.White);
 #endif
         }
 
         public static void Warning(object content)
         {
+            if (content is null) throw new ArgumentNullException(nameof(content));
 #if DEBUG
             var trace = new StackTrace();
-
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow, trace); });
+            AddToQueue(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow, trace);
 #else
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow); });
+            AddToQueue(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow);
 #endif
         }
 
         public static void Error(object content)
         {
+            if (content is null) throw new ArgumentNullException(nameof(content));
 #if DEBUG
             var trace = new StackTrace();
-
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Error, ConsoleColor.Red, trace); });
+            AddToQueue(content.ToString(), LogLevel.Error, ConsoleColor.Red, trace); 
 #else
-            Task.Run(() => { InternalLog(content.ToString(), LogLevel.Error, ConsoleColor.Red); });
+            AddToQueue(content.ToString(), LogLevel.Error, ConsoleColor.Red);
 #endif
         }
 
 #if DEBUG
-        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color, StackTrace trace)
+        private static void AddToQueue(string message, LogLevel logLevel, ConsoleColor color, StackTrace trace)
 #else
-        private static void InternalLog(string message, LogLevel logLevel, ConsoleColor color)
+        private static void AddToQueue(string message, LogLevel logLevel, ConsoleColor color)
 #endif
         {
-            if (message.Contains('\n', StringComparison.InvariantCulture))
-            {
-                var parts = message.Split('\n');
-
-                var visual = parts.Max(p => p.Length);
-
-                foreach (var part in parts)
-                {
-                    var padding = new string(Enumerable.Repeat(' ', visual - part.Length).ToArray());
-
-                    var segment = $"{part}{padding}";
-
 #if DEBUG
-                    InternalLog(segment, logLevel, color, trace);
-
-                    trace = default;
+            logQueue.AddLine(message, logLevel, color, trace);
 #else
-                    InternalLog(segment, logLevel, color);
+            logQueue.AddLine(message, logLevel, color);
 #endif
-                }
-
-                return;
-            }
-
+            if (!outputTaskStarted && LogQueue.Config != default)
             {
-                if (color == ConsoleColor.White)
-                {
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.ForegroundColor = color;
-                }
-
-                var level = logLevel.ToString();
-
-                var padding = new string(Enumerable.Repeat(' ', 12 - level.Length).ToArray());
-
-                message = $"[{level}]{padding} {message}";
-
-#if DEBUG
-                var amount = 140 - message.Length;
-                padding = new string(Enumerable.Repeat(' ', amount > 0 ? amount : 1).ToArray());
-
-                message = $"{message}{padding}|";
-
-                if (trace != default)
-                {
-                    var invoker = TraceInvoker(trace);
-
-                    if (invoker?.DeclaringType != default)
-                        message = $"{message} {invoker.DeclaringType.Name}.{invoker.Name}";
-                }
-#endif
-
-                var configuration = Config.ConsoleLogging;
-
-                var consoleLogLevel = Enum.Parse<LogLevel>(configuration.Level);
-
-                string finalMessage;
-
-                if (consoleLogLevel <= logLevel)
-                {
-                    finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
-
-                    Console.WriteLine(finalMessage);
-                    Console.ResetColor();
-                }
-
-                configuration = Config.FileLogging;
-
-                var fileLogLevel = Enum.Parse<LogLevel>(configuration.Level);
-
-                if (fileLogLevel == LogLevel.None || fileLogLevel > logLevel) return;
-
-                var file = configuration.File;
-
-                finalMessage = configuration.Timestamp ? $"[{DateTime.Now}] {message}" : message;
-
-                File.AppendAllTextAsync(file, $"{finalMessage}\n");
+                outputTaskStarted = true;
+                logQueue.StartConsoleOutput();
             }
+            
         }
-
-#if DEBUG
-        private static MethodBase TraceInvoker(StackTrace trace)
-        {
-            var frames = trace.GetFrames();
-
-            var avoid = new[]
-            {
-                typeof(Logger)
-            };
-
-            foreach (var frame in frames)
-            {
-                if (frame == default) continue;
-
-                var method = frame.GetMethod();
-
-                var type = method.DeclaringType;
-
-                if (type?.Namespace == default) continue;
-                
-                var attribute = type.GetCustomAttribute<LoggerIgnoreAttribute>();
-
-                if (avoid.Contains(type) || attribute != null) continue;
-
-                if (type.Namespace != null && !type.Namespace.StartsWith(
-                    "Uchu", StringComparison.InvariantCulture)
-                ) continue;
-
-                if (type.Name.Contains('<', StringComparison.InvariantCulture)) continue;
-
-                if (method.Name.Contains('<', StringComparison.InvariantCulture)) continue;
-
-                return method;
-            }
-
-            return default;
-        }
-#endif
     }
 }

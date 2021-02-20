@@ -10,10 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public UseEmoteTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.UseEmote;
 
         public override bool Completed => Progress.Contains(Parameters.FirstOrDefault());

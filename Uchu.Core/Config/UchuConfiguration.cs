@@ -82,6 +82,11 @@ namespace Uchu.Core.Config
         /// Optional Redis cache configuration
         /// </summary>
         [XmlElement("Cache")] public CacheConfig CacheConfig { get; set; } = new CacheConfig();
+        
+        /// <summary>
+        /// General behaviour of the program
+        /// </summary>
+        [XmlElement("ServerBehaviour")] public ServerBehaviour ServerBehaviour { get; set; } = new ServerBehaviour();
     }
 
     /// <summary>
@@ -89,6 +94,14 @@ namespace Uchu.Core.Config
     /// </summary>
     public class CacheConfig
     {
+        /// <summary>
+        /// Whether to use an external caching service, like Redis.
+        /// Setting to false reduces the initial server load times
+        /// if no service is installed and the connection will
+        /// always timeout.
+        /// </summary>
+        [XmlElement] public bool UseService { get; set; } = true;
+        
         /// <summary>
         /// Hostname to use when connecting to the cache service
         /// </summary>
@@ -137,10 +150,7 @@ namespace Uchu.Core.Config
         /// The path to the script source DLLs
         /// </summary>
         [XmlElement]
-        public List<string> ScriptDllSource { get; } = new List<string>
-        {
-            "Uchu.StandardScripts"
-        };
+        public List<string> ScriptDllSource { get; } = new List<string>();
     }
 
     /// <summary>
@@ -298,5 +308,16 @@ namespace Uchu.Core.Config
         /// Whether or not AI wanders around
         /// </summary>
         [XmlElement] public bool AiWander { get; set; }
+    }
+
+    /// <summary>
+    /// Behaviour of the program
+    /// </summary>
+    public class ServerBehaviour
+    {
+        /// <summary>
+        /// Whether the server should display a "Press any key to exit" prompt before exiting due to a fatal error
+        /// </summary>
+        [XmlElement] public bool PressKeyToExit { get; set; } = true;
     }
 }

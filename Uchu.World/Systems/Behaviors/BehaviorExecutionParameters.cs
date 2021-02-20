@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Systems.Behaviors
@@ -95,21 +97,21 @@ namespace Uchu.World.Systems.Behaviors
         /// Schedules a task in the game loop to stop the Fx from playing.
         /// Needs to look up the effect in the behavior effect table.
         /// </remarks>
-        /// <param name="type">The effect type</param>
         /// <param name="effectId">The effect to execute</param>
-        /// <param name="target">The effect target</param>
+        /// <param name="type">The effect type</param>
         /// <param name="time">How long to run the effect in milliseconds</param>
-        public async void PlayFX(string type, int effectId, int time = 1000, GameObject target = default)
+        /// <param name="target">The effect target</param>
+        public async void PlayFX(int effectId, string type = default, int time = 1000, GameObject target = default)
         {
             target ??= BranchContext.Target;
             
-            await using var ctx = new CdClientContext();
-
-            var fx = await ctx.BehaviorEffectTable.FirstOrDefaultAsync(
-                e => e.EffectType == type && e.EffectID == effectId
-            );
+            var fx = type != default
+                ? (await ClientCache.GetTableAsync<BehaviorEffect>()).FirstOrDefault(e =>
+                    e.EffectType == type && e.EffectID == effectId)
+                : (await ClientCache.GetTableAsync<BehaviorEffect>()).FirstOrDefault(e =>
+                    e.EffectID == effectId);
             
-            if (fx == default)
+            if (fx?.EffectName == null || fx.EffectType == null || target == null)
                 return;
 
             // Play the effect and schedule it's completion

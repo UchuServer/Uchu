@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -75,11 +77,9 @@ namespace Uchu.World
         {
             if (PetWild)
             {
-                CdClientContext context = new CdClientContext();
-                
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(Zone.UchuServer.Config.ResourcesConfiguration.GameResourceFolder, context
-                    .TamingBuildPuzzlesTable.FirstOrDefault(i => i.NPCLot == GameObject.Lot)
+                doc.Load(Path.Combine(Zone.UchuServer.Config.ResourcesConfiguration.GameResourceFolder,
+                    ClientCache.GetTable<TamingBuildPuzzles>().FirstOrDefault(i => i.NPCLot == GameObject.Lot)
                     .ValidPiecesLXF));
 
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
@@ -123,7 +123,7 @@ namespace Uchu.World
                 msg.petsDestPos = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
-                var interaction_distance = GameObject.Settings["interaction_distance"] ?? 0.0f;
+                var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
                 pos = new Vector3(
                     petPos.X + (float) interaction_distance * (float)Math.Cos(-deg),
                     petPos.Y,
@@ -139,32 +139,107 @@ namespace Uchu.World
                 nmsg.Associate = player;
                 nmsg.Bricks = Bricks;
                 player.Message(nmsg);
+                player.Message(new NotifyPetTamingMinigame
+                {
+                    Associate = GameObject,
+                    bForceTeleport = false,
+                    notifyType = NotifyType.BEGIN,
+                    PetID = (ObjectId)(ulong)0,
+                    petsDestPos = Vector3.Zero,
+                    PlayerTamingID = player.Id,
+                    telePos = Vector3.Zero,
+                    teleRot = Quaternion.Identity
+                });
 
+                // Create all the pet listeners for other events
+                
                 Listen(player.OnPetTamingTryBuild, OnPetTamingTryBuild);
+                Listen(player.OnNotifyTamingBuildSuccessMessage, OnNotifyTamingBuildSuccessMessage);
             }
         }
 
         public async Task OnPetTamingTryBuild(PetTamingTryBuildMessage msg)
         {
-            if (PetWild)
-            {
-                int CorrectCount = 0;
+            int CorrectCount = 0;
 
-                foreach (var item in Bricks)
+            foreach (var item in Bricks)
+            {
+                foreach (Brick item2 in msg.Bricks)
                 {
-                    foreach (var item2 in msg.Bricks)
-                    {
-                        if (item.DesignID == item2.DesignID && item2.DesignPart.Material == item2.DesignPart.Material)
-                            CorrectCount += 1;
-                    }
+                    if (item.DesignID == item2.DesignID)
+                        CorrectCount += 1;
                 }
-                
-                PetTamingTryBuildResultMessage nmsg = new PetTamingTryBuildResultMessage();
-                nmsg.Associate = msg.Associate;
-                nmsg.bSuccess = !msg.Failed;
-                nmsg.iNumCorrect = CorrectCount;
-                (msg.Associate as Player).Message(nmsg);
             }
+                
+            PetTamingTryBuildResultMessage nmsg = new PetTamingTryBuildResultMessage();
+            nmsg.Associate = msg.Associate;
+            nmsg.bSuccess = !(CorrectCount == Bricks.Count);
+            nmsg.iNumCorrect = CorrectCount;
+            (msg.Associate as Player).Message(nmsg);
+        }
+        
+        public async Task OnNotifyTamingBuildSuccessMessage(NotifyTamingBuildSuccessMessage msg)
+        {
+            var player = (msg.Associate as Player);
+            await player.GetComponent<MissionInventoryComponent>().TamePetAsync(GameObject.Lot);
+            player.PlayFX("", "petceleb");
+            
+            // We need to create the build object
+            /*CdClientContext context = new CdClientContext(); TODO: fix
+            var model = GameObject.Instantiate(default,
+                new Lot(context.TamingBuildPuzzlesTable.Where(i => i.NPCLot.Value == GameObject.Lot).First()
+                    .PuzzleModelLot.Value), msg.BuildPosition);
+
+            Start(model);*/
+            
+            player.Message(new NotifyTamingModelLoadedOnServerMessage
+            {
+                Associate = player
+            });
+            
+            player.Message(new PetResponseMessage
+            {
+                Associate = player,
+                ObjIDPet = GameObject,
+                iPetCommandType = 0,
+                iResponse = 10, // Not entirely sure what this response ID is 
+                iTypeID = 0
+            });
+
+            var inventoryComponent = player.GetComponent<InventoryManagerComponent>();
+            await inventoryComponent.AddLotAsync(GameObject.Lot, 1);
+            
+            var pet = inventoryComponent.FindItem(GameObject.Lot);
+
+            player.Message(new AddPetToPlayerMessage
+            {
+                Associate = player,
+                iElementalType = 0, // This appears to be just unused, they are in the DB but they weren't sent correctly in the packet captures
+                name = GameObject.Name,
+                petDBID = pet,
+                PetLOT = GameObject.Lot
+            });
+            
+            player.Message(new RegisterPetIDMessage
+            {
+                Associate = player,
+                Pet = GameObject
+            });
+            
+            player.Message(new RegisterPetDBIDMessage
+            {
+                Associate = player,
+                PetItemObject = pet
+            });
+            
+            player.Message( new MarkInventoryItemAsActiveMessage
+            {
+                Associate = player,
+                bActive = true,
+                itemID = pet.Id
+            });
+            
+            // TODO: Add listener for name select
         }
     }
 }

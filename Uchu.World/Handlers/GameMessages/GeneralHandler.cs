@@ -1,29 +1,54 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World.Handlers.GameMessages
 {
     public class GeneralHandler : HandlerGroup
     {
+        
+        /// <summary>
+        /// For the faction initial missions this sets their state from started to ready to complete on an interaction
+        /// </summary>
+        /// <param name="gameObject">The game object to interact with</param>
+        /// <param name="missions">The missions inventory of a player</param>
+        private static async Task HandleFactionVendorInteraction(GameObject gameObject, MissionInventoryComponent missions)
+        {
+            // For some reason the targets of faction missions are different game objects than the one you interact with
+            var targetLot = (int) gameObject.Lot switch
+            {
+                Lot.SentinelFactionVendor => Lot.SentinelFactionVendorProxy, 
+                Lot.ParadoxFactionVendor => Lot.ParadoxFactionVendorProxy, 
+                Lot.AssemblyFactionVendor => Lot.AssemblyFactionVendorProxy, 
+                Lot.VentureFactionVendor => Lot.VentureFactionVendorProxy, 
+                _ => default
+            };
+
+            if (targetLot != default)
+                await missions.GoToNpcAsync(targetLot);
+        }
+        
         [PacketHandler]
         public async Task RequestUseHandler(RequestUseMessage message, Player player)
         {
             Logger.Information($"{player} interacted with {message.TargetObject}");
 
             var inventory = player.GetComponent<MissionInventoryComponent>();
-            
             await inventory.GoToNpcAsync(
                 message.TargetObject.Lot
             );
+            
+            // Handle interactions with the faction vendors
+            await HandleFactionVendorInteraction(message.TargetObject, inventory);
 
             if (message.IsMultiInteract)
             {
-                //
                 // Multi-interact is mission
-                //
-
                 if (message.MultiInteractType == 0) // Mission Component
                 {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
@@ -34,14 +59,12 @@ namespace Uchu.World.Handlers.GameMessages
                 else if (message.MultiInteractType == 1) // Any other case
                 {
                     await message.TargetObject.OnInteract.InvokeAsync(player);
-
                     await inventory.InteractAsync(message.TargetObject.Lot);
                 }
             }
             else if (message.TargetObject != default)
             {
                 await message.TargetObject.OnInteract.InvokeAsync(player);
-                
                 await inventory.InteractAsync(message.TargetObject.Lot);
             }
         }
@@ -72,14 +95,13 @@ namespace Uchu.World.Handlers.GameMessages
         {
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
+            Zone.SendSerialization(message.GameObject, new []{ player });
         }
 
         [PacketHandler]
         public async Task PlayEmoteHandler(PlayEmoteMessage message, Player player)
         {
-            await using var ctx = new CdClientContext();
-
-            var animation = await ctx.EmotesTable.FirstOrDefaultAsync(e => e.Id == message.EmoteId);
+            var animation = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(e => e.Id == message.EmoteId);
             
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
@@ -108,28 +130,13 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task NotifyServerLevelProcessingCompleteHandler(NotifyServerLevelProcessingCompleteMessage message, Player player)
         {
-            await using var ctx = new UchuContext();
-            await using var cdClient = new CdClientContext();
-
-            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-            var lookup_val = 0;
-
-            foreach (var levelProgressionLookup in cdClient.LevelProgressionLookupTable)
+            var character = player.GetComponent<CharacterComponent>();
+            if (character.UniverseScore > character.RequiredUniverseScore)
             {
-                if (levelProgressionLookup.RequiredUScore > character.UniverseScore) break;
-
-                lookup_val = levelProgressionLookup.Id.Value;
-            }
-
-            Logger.Debug($"Attempting to assign level {lookup_val} to {character.Name} (They are currently level {character.Level})");
-
-            if (lookup_val > character.Level)
-            {
-                character.Level = lookup_val;
+                await character.LevelUpAsync();
                 GameObject.Serialize(player);
-                await ctx.SaveChangesAsync();
-
+                
+                // Show the levelup animation
                 player.Zone.BroadcastMessage(new PlayFXEffectMessage
                 {
                     Associate = player,
@@ -139,7 +146,24 @@ namespace Uchu.World.Handlers.GameMessages
                 });
 
                 player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");
-                Logger.Debug($"Assigned level {lookup_val} to {character.Name} (They are now currently level {character.Level})");
+            }
+        }
+
+        [PacketHandler]
+        public void RequestPlatformResyncHandler(RequestPlatformResyncMessage message, Player player)
+        {
+            if (message.Associate.TryGetComponent<MovingPlatformComponent>(out var movingPlatformComponent))
+            {
+                player.Message(new PlatformResyncMessage()
+                {
+                    State = movingPlatformComponent.State,
+                    IdleTimeElapsed = movingPlatformComponent.IdleTimeElapsed,
+                    PercentBetweenPoints = movingPlatformComponent.PercentBetweenPoints,
+                    Index = (int) movingPlatformComponent.CurrentWaypointIndex,
+                    NextIndex = (int) movingPlatformComponent.NextWaypointIndex,
+                    UnexpectedLocation = movingPlatformComponent.TargetPosition,
+                    UnexpectedRotation = movingPlatformComponent.TargetRotation,
+                });
             }
         }
     }

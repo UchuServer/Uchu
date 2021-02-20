@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
+using Uchu.World.Objects.Components;
 
 namespace Uchu.World
 {
-    public class DestroyableComponent : Component
+    public class DestroyableComponent : Component, ISavableComponent
     {
         private uint _health;
 
@@ -213,11 +215,10 @@ namespace Uchu.World
             {
                 if (GameObject is Player) CollectPlayerStats();
                 else CollectObjectStats();
-                
-                await using var cdClient = new CdClientContext();
 
-                var destroyable = cdClient.DestructibleComponentTable.FirstOrDefault(
-                    c => c.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+                var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
+                var destroyable = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
+                    c => c.Id == componentId
                 );
                 
                 if (destroyable == default) return;
@@ -226,7 +227,7 @@ namespace Uchu.World
 
                 Smashable = destroyable.IsSmashable ?? false;
 
-                var faction = await cdClient.FactionsTable.FirstOrDefaultAsync(
+                var faction = (await ClientCache.GetTableAsync<Factions>()).FirstOrDefault(
                     f => f.Faction == Factions[0]
                 );
                 
@@ -251,74 +252,6 @@ namespace Uchu.World
                 OnMaxImaginationChanged.Clear();
 
                 OnDeath.Clear();
-            });
-
-            if (!(GameObject is Player)) return;
-
-            Listen(OnHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.CurrentImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxHealthChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumHealth = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxArmorChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumArmor = (int) total;
-
-                await ctx.SaveChangesAsync();
-            });
-
-            Listen(OnMaxImaginationChanged, async (total, delta) =>
-            {
-                await using var ctx = new UchuContext();
-
-                var character = await ctx.Characters.FirstAsync(c => c.Id == GameObject.Id);
-
-                character.MaximumImagination = (int) total;
-
-                await ctx.SaveChangesAsync();
             });
         }
 
@@ -355,37 +288,43 @@ namespace Uchu.World
             Health += Math.Min(value, MaxHealth - Health);
         }
 
-        public void BoostBaseHealth(UchuContext context, uint delta)
+        /// <summary>
+        /// Boosts the base health of the game object, in case of a character also updates the base health there
+        /// </summary>
+        /// <param name="delta">The increase of the base health</param>
+        public void BoostBaseHealth(uint delta)
         {
-            if (!(GameObject is Player))
-                return;
-            
-            var character = context.Characters.First(c => c.Id == GameObject.Id);
-            character.BaseHealth += (int) delta;
             MaxHealth += delta;
             Health += delta;
+            
+            if (!(GameObject is Player player && player.TryGetComponent<CharacterComponent>(out var character)))
+                return;
+            character.BaseHealth += (int) delta;
         }
 
-        public void BoostBaseImagination(UchuContext context, uint delta)
+        /// <summary>
+        /// Boosts the base imagination of the game object, in case of a character also updates the base imagination there
+        /// </summary>
+        /// <param name="delta">The increase of the base imagination</param>
+        public void BoostBaseImagination(uint delta)
         {
-            if (!(GameObject is Player))
-                return;
-            
-            var character = context.Characters.First(c => c.Id == GameObject.Id);
-            character.BaseImagination += (int) delta;
             MaxImagination += delta;
             Imagination += delta;
+            
+            if (!(GameObject is Player player && player.TryGetComponent<CharacterComponent>(out var character)))
+                return;
+            character.BaseImagination += (int) delta;
         }
 
         private void CollectObjectStats()
         {
-            using var cdClient = new CdClientContext();
-
-            var stats = cdClient.DestructibleComponentTable.FirstOrDefault(
-                o => o.Id == GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent)
+            var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
+            var stats = ClientCache.GetTable<Core.Client.DestructibleComponent>().FirstOrDefault(
+                o => o.Id == componentId
             );
 
             if (stats == default) return;
+            HasStats = true;
 
             var rawHealth = stats.Life ?? 0;
             var rawArmor = (int) (stats.Armor ?? 0);
@@ -403,6 +342,7 @@ namespace Uchu.World
         private void CollectPlayerStats()
         {
             if (!(GameObject is Player)) return;
+            HasStats = true;
             
             using var ctx = new UchuContext();
 
@@ -481,6 +421,25 @@ namespace Uchu.World
             foreach (var faction in Factions) writer.Write(faction);
 
             writer.WriteBit(Smashable);
+        }
+        
+        /// <summary>
+        /// Saves the character stats of the player
+        /// </summary>
+        /// <param name="context">The database context to save to</param>
+        public async Task SaveAsync(UchuContext context)
+        {
+            var character = await context.Characters.Where(c => c.Id == GameObject.Id)
+                .FirstAsync();
+
+            character.CurrentHealth = (int) Health;
+            character.CurrentArmor = (int) Armor;
+            character.CurrentImagination = (int) Imagination;
+            character.MaximumHealth = (int) MaxHealth;
+            character.MaximumArmor = (int) MaxArmor;
+            character.MaximumImagination = (int) MaxImagination;
+
+            Logger.Debug($"Saved character stats for {GameObject}");
         }
     }
 }

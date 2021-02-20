@@ -180,7 +180,7 @@ namespace Uchu.Core
             {
                 using (var xmlReader = XmlReader.Create(fs))
                 {
-                    Logger.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
+                    LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
                     UchuContextBase.Config = Config;
                 }
             }
@@ -208,14 +208,22 @@ namespace Uchu.Core
             SsoService = new SsoService(Config.SsoConfig?.Domain ?? "");
 
             // Try to connect to Redis, otherwise fallback to DB caching
-            try
+            if (Config.CacheConfig.UseService)
             {
-                SessionCache = new RedisSessionCache(Config.CacheConfig);
-                Logger.Information($"Established Redis connection at {Config.CacheConfig.Host}:{Config.CacheConfig.Port}");
+                try
+                {
+                    SessionCache = new RedisSessionCache(Config.CacheConfig);
+                    Logger.Information($"Established Redis connection at {Config.CacheConfig.Host}:{Config.CacheConfig.Port}");
+                }
+                catch (RedisConnectionException)
+                {
+                    Logger.Error("Failed to establish Redis connection, falling back to database.");
+                    SessionCache = new DatabaseCache();
+                }
             }
-            catch (RedisConnectionException)
+            else
             {
-                Logger.Error("Failed to establish Redis connection, falling back to database.");
+                Logger.Information("Caching service is disabled, falling back to database.");
                 SessionCache = new DatabaseCache();
             }
 
@@ -456,7 +464,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error when handling GM: {e.Message}");
+                    Logger.Error($"Error when handling GM: {e}");
                 }
             }
             else
@@ -467,7 +475,7 @@ namespace Uchu.Core
                 {
                     Logger.Warning($"No handler registered for Packet ({header.RemoteConnectionType}:0x{header.PacketId:x})!");
                     return;
-                };
+                }
 
                 Logger.Debug($"Received {handler.PacketType.FullName}");
                 reader.BaseStream.Position = 8;
@@ -480,7 +488,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error when handling packet: {e.Message}");
+                    Logger.Error($"Error when handling packet: {e}");
                 }
             }
         }

@@ -62,8 +62,6 @@ namespace Uchu.World
                 }
             };
 
-            RakNetServer.ClientDisconnected += HandleDisconnect;
-            
             var instance = await Api.RunCommandAsync<InstanceInfoResponse>(
                 Config.ApiConfig.Port, $"instance/target?i={Id}"
             ).ConfigureAwait(false);
@@ -91,22 +89,6 @@ namespace Uchu.World
                     await LoadZone(zone);
                 }
             });
-        }
-
-        private Task HandleDisconnect(IPEndPoint point, CloseReason reason)
-        {
-            Logger.Information($"{point} disconnected: {reason}");
-
-            var players = Zones.Select(zone =>
-                zone.Players.FirstOrDefault(p => p.Connection.EndPoint.Equals(point))
-            ).Where(player => player != default);
-            
-            foreach (var player in players)
-            {
-                Object.Destroy(player);
-            }
-
-            return Task.CompletedTask;
         }
 
         private async Task LoadZone(int zoneId)
@@ -247,13 +229,10 @@ namespace Uchu.World
                 return;
             }
 
-            var session = SessionCache.GetSession(connection.EndPoint);
-
             Logger.Debug($"Received {(GameMessageId)messageId}");
 
             // Check if this message came from a logged in player
-            var player = Zones.Where(z => z.ZoneId == session.ZoneId).SelectMany(z => z.Players)
-                .FirstOrDefault(p => p.Connection.Equals(connection));
+            var player = Zones.SelectMany(z => z.Players).FirstOrDefault(p => p.Connection.Equals(connection));
             if (player?.Zone == default)
             {
                 Logger.Error($"{connection} is not logged in but sent a GameMessage.");

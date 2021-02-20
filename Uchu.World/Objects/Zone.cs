@@ -13,6 +13,7 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
@@ -197,9 +198,7 @@ namespace Uchu.World
                 
             }
 
-            using var ctx = new Uchu.Core.Client.CdClientContext();
-
-            int? ZoneControlLot = ctx.ZoneTableTable.FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
+            int? ZoneControlLot = ClientCache.GetTable<ZoneTable>().FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
 
             int Lot = ZoneControlLot ??= 2365;
 
@@ -676,7 +675,7 @@ namespace Uchu.World
             }
             catch (Exception e)
             {
-                Logger.Error($"Physics error: {e.Message}");
+                Logger.Error($"Physics error: {e}");
             }
             
             watch.Stop();
@@ -693,11 +692,12 @@ namespace Uchu.World
         {
             var watch = new Stopwatch();
             watch.Start();
-            
-            var visibleObjects = UpdatedObjects.Select(o => o.Associate)
+
+            var updatedObjects = UpdatedObjects.ToArray();
+            var visibleObjects = updatedObjects.Select(o => o.Associate)
                 .Intersect(Players.SelectMany(p => p.Perspective.LoadedObjects)).ToHashSet();
-            var objectsToUpdate = UpdatedObjects.ToArray().Where(
-                o => visibleObjects.Contains(o.Associate));
+            var objectsToUpdate = updatedObjects
+                .Where(o => visibleObjects.Contains(o.Associate));
             
             foreach (var updatedObject in objectsToUpdate)
             {

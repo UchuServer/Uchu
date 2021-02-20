@@ -1,4 +1,6 @@
 using System.Threading.Tasks;
+using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -11,13 +13,16 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(Zone.OnPlayerLoad, player =>
             {
-                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory)) return;
+                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                    return;
 
                 Listen(missionInventory.OnCompleteMission, instance =>
                 {
-                    if (instance.MissionId != 313) return;
+                    if (instance.MissionId != (int)MissionId.SpiderFighter) 
+                        return;
                     
-                    if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
+                    if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager))
+                        return;
 
                     // Remove mission item
                     inventoryManager.RemoveAllAsync(14549);

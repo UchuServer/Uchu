@@ -35,9 +35,7 @@ namespace Uchu.World.Client
 
             Logger.Information("Parsing zone info...");
             
-            await using var ctx = new CdClientContext();
-            
-            var zone = ctx.ZoneTableTable.FirstOrDefault(zone => zone.ZoneID == seek);
+            var zone = (await ClientCache.GetTableAsync<ZoneTable>()).FirstOrDefault(zone => zone.ZoneID == seek);
                 
             if (zone == default)
             {

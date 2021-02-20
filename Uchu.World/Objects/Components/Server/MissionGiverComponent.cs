@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Resources;
 using Uchu.World.Client;
+using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
 {
@@ -20,7 +22,6 @@ namespace Uchu.World
             Listen(OnStart, () =>
             {
                 CollectMissions();
-
                 Listen(GameObject.OnInteract, HandleInteraction);
             });
         }
@@ -40,33 +41,30 @@ namespace Uchu.World
         /// </summary>
         private void CollectMissions()
         {
-            using (var ctx = new CdClientContext())
+            var components = ClientCache.GetTable<ComponentsRegistry>().Where(
+                c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.MissionNPCComponent
+            ).ToArray();
+
+            var missionComponents = components.SelectMany(
+                component => ClientCache.GetTable<MissionNPCComponent>().Where(m => m.Id == component.Componentid)
+            ).ToArray();
+
+            var missions = new List<(Missions, MissionNPCComponent)>();
+            
+            foreach (var npcComponent in missionComponents)
             {
-                var components = ctx.ComponentsRegistryTable.Where(
-                    c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.MissionNPCComponent
-                ).ToArray();
+                var quest = ClientCache.GetTable<Missions>().FirstOrDefault(m => m.Id == npcComponent.MissionID);
 
-                var missionComponents = components.SelectMany(
-                    component => ctx.MissionNPCComponentTable.Where(m => m.Id == component.Componentid)
-                ).ToArray();
-
-                var missions = new List<(Missions, MissionNPCComponent)>();
-                
-                foreach (var npcComponent in missionComponents)
+                if (quest == default)
                 {
-                    var quest = ctx.MissionsTable.FirstOrDefault(m => m.Id == npcComponent.MissionID);
-
-                    if (quest == default)
-                    {
-                        Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: \"[{GameObject.Lot}] {GameObject.Name}\" [{npcComponent.Id}] {npcComponent.MissionID}");
-                        continue;
-                    }
-                    
-                    missions.Add((quest, npcComponent));
+                    Logger.Warning($"{GameObject} has a Mission NPC Component with no corresponding quest: \"[{GameObject.Lot}] {GameObject.Name}\" [{npcComponent.Id}] {npcComponent.MissionID}");
+                    continue;
                 }
-
-                Missions = missions.ToArray();
+                
+                missions.Add((quest, npcComponent));
             }
+
+            Missions = missions.ToArray();
 
             Logger.Information(
                 $"{GameObject} is a quest give with: {string.Join(" ", Missions.Select(s => s.Item1.Id))}"
@@ -85,6 +83,7 @@ namespace Uchu.World
 
             try
             {
+                int questIdToOffer = default;
                 foreach (var (mission, component) in Missions)
                 {
                     // Get the quest id.
@@ -114,6 +113,9 @@ namespace Uchu.World
                                 // Allow them to start it
                                 break;
                             case MissionState.Active:
+                                // Display the in-progress mission instead of possibly continuing and offering a new mission.
+                                missionInventory.MessageOfferMission(playerMission.MissionId, GameObject);
+                                return;
                             case MissionState.CompletedActive:
                                 // If this is an active mission show the offer popup again for information
                                 player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
@@ -139,13 +141,17 @@ namespace Uchu.World
                     
                     if (!MissionParser.CheckPrerequiredMissions(
                         mission.PrereqMissionID,
-                        missionInventory.CompletedMissions))
+                        missionInventory.AllMissions))
                         continue;
 
-                    // If this is a mission the player doesn't have yet or hasn't started yet, offer it
-                    missionInventory.MessageOfferMission(questId, GameObject);
-                    return;
+                    // Set the mission as the mission to offer.
+                    // The mission is not offered directly in cases where an Available mission comes up before a ReadyToComplete mission.
+                    questIdToOffer = questId;
                 }
+                
+                // Offer the mission. This happens if there are no completed missions to complete.
+                if (questIdToOffer == default) return;
+                missionInventory.MessageOfferMission(questIdToOffer, GameObject);
             }
             catch (Exception e)
             {

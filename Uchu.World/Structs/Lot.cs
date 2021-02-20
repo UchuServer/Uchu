@@ -1,5 +1,6 @@
 using System.Linq;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -46,14 +47,13 @@ namespace Uchu.World
         {
             return Id;
         }
-
-        public Objects Object
+        
+        public Core.Client.Objects Object
         {
             get
             {
-                using var cdClient = new CdClientContext();
                 var id = Id;
-                return cdClient.ObjectsTable.FirstOrDefault(o => o.Id == id);
+                return ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == id);
             }
         }
 
@@ -65,8 +65,7 @@ namespace Uchu.World
         public int GetComponentId(int componentType)
         {
             var id = Id;
-            using var cdClient = new CdClientContext();
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(
                 r => r.Id == id && r.Componenttype == componentType
             );
 
@@ -77,14 +76,11 @@ namespace Uchu.World
         {
             return GetComponentIds((int) componentType);
         }
-
+        
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-
-            using var cdClient = new CdClientContext();
-
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.Where(
+            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().Where(
                 r => r.Id == id && r.Componenttype == componentType
             );
 
@@ -123,6 +119,14 @@ namespace Uchu.World
         public const int ParadoxFactionToken = 8320;
         public const int VentureFactionToken = 8321;
 
+        public const int SentinelFactionVendor = 6631;
+        public const int ParadoxFactionVendor = 6632;
+        public const int AssemblyFactionVendor = 6633;
+        public const int VentureFactionVendor = 6634;
+        public const int SentinelFactionVendorProxy = 7094;
+        public const int ParadoxFactionVendorProxy = 7097;
+        public const int AssemblyFactionVendorProxy = 7096;
+        public const int VentureFactionVendorProxy = 7095;
 
         #endregion
     }

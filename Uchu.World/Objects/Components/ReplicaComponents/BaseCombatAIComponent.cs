@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 using Uchu.World.Systems.AI;
+using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
 {
@@ -57,26 +59,20 @@ namespace Uchu.World
 
                     foreach (var skillEntry in SkillComponent.DefaultSkillSet)
                     {
-                        await using var ctx = new CdClientContext();
-
-                        var skillInfo = await ctx.SkillBehaviorTable.FirstAsync(
+                        var skillInfo = (await ClientCache.GetTableAsync<SkillBehavior>()).First(
                             s => s.SkillID == skillEntry.SkillId
                         );
-
-                        // Precalculate all skills to cache them
-                        await SkillComponent.CalculateSkillAsync((int) skillEntry.SkillId, true);
+                        
                         SkillEntries.Add(new NpcSkillEntry
                         {
                             SkillId = skillEntry.SkillId,
                             Cooldown = 0,
-                            AbilityCooldown = (skillInfo.Cooldown ?? 1) * 1000
+                            AbilityCooldown = (skillInfo.Cooldown ?? 1) * 1000,
+                            Tree = await BehaviorTree.FromSkillAsync((int)skillEntry.SkillId)
                         });
                     }
 
-                    Zone.Update(GameObject, async delta =>
-                    {
-                        await CalculateCombat(delta);
-                    }, 1);
+                    Zone.Update(GameObject, delta => CalculateCombat(delta), 1);
                 });
             });
         }
@@ -85,12 +81,12 @@ namespace Uchu.World
         /// Calculates the combat for an AI
         /// </summary>
         /// <param name="delta">Passed time in milliseconds since last tick</param>
-        private async Task CalculateCombat(float delta)
+        private Task CalculateCombat(float delta)
         {
             if (!Enabled 
                 || !DestructibleComponent.Alive 
                 || QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed)
-                return;
+                return Task.CompletedTask;
 
             if (Cooldown <= 0)
             {
@@ -106,7 +102,7 @@ namespace Uchu.World
                     if (entry.Cooldown > 0 || AbilityDowntime)
                         continue;
 
-                    var time = await SkillComponent.CalculateSkillAsync((int) entry.SkillId);
+                    var time = SkillComponent.CalculateSkill(entry.Tree, (int) entry.SkillId);
                     if (time == 0)
                         continue;
 
@@ -119,6 +115,8 @@ namespace Uchu.World
             }
 
             Cooldown -= delta;
+
+            return Task.CompletedTask;
         }
 
         public override void Construct(BitWriter writer)

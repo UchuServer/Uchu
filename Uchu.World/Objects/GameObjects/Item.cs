@@ -1,454 +1,405 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
+using IronPython.Modules;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Exceptions;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
     [Unconstructed]
     public class Item : GameObject
     {
-        public bool IsPackage { get; private set; }
-        
-        public bool IsConsumable { get; private set; }
-        
-        protected Item()
+        public Item()
         {
             OnConsumed = new Event();
-
-            Listen(OnStart, () =>
-            {
-                IsPackage = Lot.GetComponentId(ComponentId.PackageComponent) != default;
-                
-                using var cdClient = new CdClientContext();
-
-                var skills = cdClient.ObjectSkillsTable.Where(
-                    s => s.ObjectTemplate == Lot
-                ).ToArray();
-
-                IsConsumable = skills.Any(
-                    s => s.CastOnType == (int) SkillCastType.OnConsumed
-                );
-            });
+            SubItems = new List<Item>();
             
-            Listen(OnDestroyed, () => Inventory.UnManageItem(this));
+            Listen(OnDestroyed, () => Inventory?.RemoveItem(this));
         }
 
-        public ItemComponent ItemComponent
+        /// <summary>
+        /// Instantiates an item using saved information from the player (e.g. the count, slot and LDD)
+        /// </summary>
+        /// <param name="itemInstance">An item as fetched from the Uchu database to base this item on</param>
+        /// <param name="owner">The owner (generally player) of this item</param>
+        /// <param name="inventory">The inventory to add the item to</param>
+        /// <returns>The instantiated item</returns>
+        public static async Task<Item> Instantiate(InventoryItem itemInstance,
+            GameObject owner, Inventory inventory)
         {
-            get
-            {
-                using var cdClient = new CdClientContext();
-
-                var id = Lot.GetComponentId(ComponentId.ItemComponent);
-
-                return cdClient.ItemComponentTable.FirstOrDefault(c => c.Id == id);
-            }
+            return await Instantiate(owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
+                (uint)itemInstance.Slot, LegoDataDictionary.FromString(itemInstance.ExtraInfo),
+                itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound,
+                rootItem: inventory.ManagerComponent.Items.FirstOrDefault(i => i.Id == itemInstance.ParentId));
         }
-        
-        public Event OnConsumed { get; }
 
+        /// <summary>
+        /// Instantiates an item using static information.
+        /// </summary>
+        /// <param name="owner">The owner of this item</param>
+        /// <param name="lot">The lot of this item</param>
+        /// <param name="inventory">The inventory to add the item to, if left empty, this item will be left unmanaged</param>
+        /// <param name="count">The count of the item to add</param>
+        /// <param name="slot">The slot to add the item to</param>
+        /// <param name="extraInfo">Optional LDD to set on the item</param>
+        /// <param name="objectId">Explicit object Id for this item, generally only used for player instance items</param>
+        /// <param name="rootItem">The root item this item is based on</param>
+        /// <param name="isEquipped">Whether the game object has this item equipped or not</param>
+        /// <param name="isBound">Whether the game object has bound this item or not</param>
+        /// <remarks>Note that <c>Start</c> still needs to be called on the item to be registered properly in the world.</remarks>
+        /// <returns>The instantiated item or <c>null</c> if no slot could be acquired or if the item couldn't be added to the inventory</returns>
+        public static async Task<Item> Instantiate(GameObject owner, Lot lot,
+            Inventory inventory, uint count, uint slot = default, LegoDataDictionary extraInfo = default,
+            ObjectId objectId = default, Item rootItem = default, bool isEquipped = false, bool isBound = false)
+        {
+            // Try to find the slot at which this item should be inserted if no explicit slot is provided
+            if (inventory != default && slot == default)
+            {
+                try
+                {
+                    slot = inventory.ClaimSlot();
+                }
+                catch (InventoryFullException)
+                {
+                    return null;
+                }
+            }
+            
+            var itemTemplate = (await ClientCache.GetTableAsync<Core.Client.Objects>()).FirstOrDefault(
+                o => o.Id == lot
+            );
+
+            var itemRegistryEntry = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
+                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
+            );
+
+            if (itemTemplate == default || itemRegistryEntry == default)
+                return default;
+
+            // If no object Id is provided (e.g. for an NPC or at pickup) generate a random one
+            objectId = objectId == default ? ObjectId.Standalone : objectId;
+            var instance = Instantiate<Item>(owner.Zone, itemTemplate.Name, objectId: objectId, lot: lot);
+
+            // Set all the standard values
+            instance.Settings = extraInfo ?? new LegoDataDictionary();
+            instance.ItemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
+                i => i.Id == itemRegistryEntry.Componentid);
+            instance.Owner = owner;
+            instance.Count = count;
+            instance.Slot = slot;
+            instance.RootItem = rootItem;
+            instance.RootItem?.SubItems.Add(instance);
+            instance.IsBound = isBound;
+            instance.IsEquipped = isEquipped;
+            instance.IsPackage = instance.Lot.GetComponentId(ComponentId.PackageComponent) != default;
+            instance.Inventory = inventory;
+            
+            var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
+                s => s.ObjectTemplate == instance.Lot
+            ).ToArray();
+
+            instance.IsConsumable = skills.Any(
+                s => s.CastOnType == (int) SkillCastType.OnConsumed
+            );
+
+            // On odd occasions the inventory might've been filled in the meantime
+            try
+            {
+                instance.Inventory?.AddItem(instance);
+            }
+            catch (InventorySlotOccupiedException)
+            {
+                return null;
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// The CdClient item component that contains extra meta information about this item
+        /// </summary>
+        public ItemComponent ItemComponent { get; private set; }
+        
+        /// <summary>
+        /// Event calls if the player consumes the item, 
+        /// </summary>
+        public Event OnConsumed { get; }
+        
+        /// <summary>
+        /// GameObject that owns this item
+        /// </summary>
+        public GameObject Owner { get; private set; }
+        
+        /// <summary>
+        /// The amount this item carries
+        /// </summary>
+        public uint Count { get; private set; }
+        
+        /// <summary>
+        /// If this item is equipped
+        /// </summary>
+        public bool IsEquipped { get; set; }
+        
+        /// <summary>
+        /// If this item is bound, e.g. it cannot be directly traded or sold, determined by the CdClient
+        /// </summary>
+        public bool IsBound { get; private set; }
+        
+        /// <summary>
+        /// If this item is a package, for example a brick bag
+        /// </summary>
+        public bool IsPackage { get; private set; }
+        
+        /// <summary>
+        /// If this item can be consumed
+        /// </summary>
+        public bool IsConsumable { get; private set; }
+        
+        /// <summary>
+        /// An optional parent item this item is bound to, for example the trial faction gear proxy item that a trial
+        /// faction gear item would belong to
+        /// </summary>
+        public Item RootItem { get; private set; }
+        
+        /// <summary>
+        /// Optional sub items of this item
+        /// </summary>
+        public List<Item> SubItems { get; private set; }
+        
+        /// <summary>
+        /// The inventory this item belongs to, can be null, signifying that this is a skeleton item that other
+        /// items may be based on
+        /// </summary>
         public Inventory Inventory { get; private set; }
 
-        public Player Player { get; private set; }
+        /// <summary>
+        /// Returns the lots of the sub items of this item
+        /// </summary>
+        public Lot[] SubItemLots => !string.IsNullOrWhiteSpace(ItemComponent.SubItems)
+            ? ItemComponent.SubItems.Replace(" ", "").Split(',')
+                .Select(i => (Lot) int.Parse(i)).ToArray()
+            : new Lot[] { };
 
-        public uint Count
+        /// <summary>
+        /// The slot this item inhabits.
+        /// </summary>
+        /// <remarks>
+        /// Should only be set as a response to a client request.
+        /// </remarks>
+        public uint Slot { get; set; }
+
+        /// <summary>
+        /// The type of this item
+        /// </summary>
+        public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
+
+        /// <summary>
+        /// Equips the item in the owners inventory
+        /// </summary>
+        /// <param name="skipAllChecks">Pass skill all checks to the inventory component</param>
+        public async Task EquipAsync(bool skipAllChecks = false)
         {
-            get
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
+            if (ItemComponent.IsBOE ?? false)
+                IsBound = true;
 
-                return (uint) info.Count;
-            }
-            set
+            if (Owner.TryGetComponent<InventoryComponent>(out var inventory))
             {
-                UpdateCountAsync(value).Wait();
-                
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.FirstOrDefault(i => i.Id == Id);
-
-                if (info == default) return;
-                
-                info.Count = value;
-                
-                ctx.SaveChanges();
+                await inventory.EquipItemAsync(this, skipAllChecks);
             }
         }
 
         /// <summary>
-        ///     The slot this item inhabits.
+        /// Unequips the item from the owners inventory
         /// </summary>
-        /// <remarks>
-        ///     Should only be set as a response to a client request.
-        /// </remarks>
-        public uint Slot
-        {
-            get
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
-
-                return (uint) info.Slot;
-            }
-            set
-            {
-                using var ctx = new UchuContext();
-                
-                var info = ctx.InventoryItems.First(i => i.Id == Id);
-
-                info.Slot = (int) value;
-                
-                ctx.SaveChanges();
-            }
-        }
-
-        public ItemType ItemType => (ItemType) (ItemComponent.ItemType ?? (int) ItemType.Invalid);
-
-        public async Task EquipAsync(bool skipAllChecks = false)
-        {
-            if (ItemComponent.IsBOE ?? false)
-            {
-                await BindAsync();
-            }
-
-            var inventory = Player.GetComponent<InventoryComponent>();
-
-            await inventory.EquipItemAsync(this, skipAllChecks);
-        }
-
         public async Task UnEquipAsync()
         {
-            var inventory = Player.GetComponent<InventoryComponent>();
-
-            await inventory.UnEquipItemAsync(this);
+            if (Owner.TryGetComponent<InventoryComponent>(out var inventory))
+            {
+                await inventory.UnEquipItemAsync(this);
+            }
         }
 
-        public async Task<bool> IsEquippedAsync()
-        {
-            var item = await Id.FindItemAsync();
-
-            return item.IsEquipped;
-        }
-
-        public async Task<bool> IsBoundAsync()
-        {
-            var item = await Id.FindItemAsync();
-
-            return item.IsBound;
-        }
-
-        public async Task BindAsync()
-        {
-            await using var ctx = new UchuContext();
-
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-
-            item.IsBound = true;
-
-            await ctx.SaveChangesAsync();
-        }
-
+        /// <summary>
+        /// Uses a package item, like a brick bag, removing that item from inventory and adding the yield produced by
+        /// that item to the inventory
+        /// </summary>
         public async Task UseNonEquipmentItem()
         {
-            if (!IsPackage) return;
+            if (!IsPackage)
+                return;
             
             await OnConsumed.InvokeAsync();
             
             var container = AddComponent<LootContainerComponent>();
-
             await container.CollectDetailsAsync();
-            
-            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
-            
-            var manager = Inventory.ManagerComponent;
-            
-            foreach (var item in await container.GenerateLootYieldsAsync(Player))
+
+            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
             {
-                await manager.AddItemAsync(item.Key, item.Value);
-            }
-        }
-        
-        public async Task ConsumeAsync()
-        {
-            await Player.GetComponent<MissionInventoryComponent>().UseConsumableAsync(Lot);
-            
-            if (!IsConsumable) return;
-            
-            await Inventory.ManagerComponent.RemoveItemAsync(Lot, 1);
-        }
-
-        public static Item Instantiate(long itemId, Inventory inventory)
-        {
-            using var cdClient = new CdClientContext();
-            using var ctx = new UchuContext();
-            
-            var item = ctx.InventoryItems.FirstOrDefault(
-                i => i.Id == itemId && i.Character.Id == inventory.ManagerComponent.GameObject.Id
-            );
-
-            if (item == default)
-            {
-                Logger.Error($"{itemId} is not an item on {inventory.ManagerComponent.GameObject}");
-                return null;
-            }
-
-            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                o => o.Id == item.Lot
-            );
-
-            var itemRegistryEntry = ((Lot) item.Lot).GetComponentId(ComponentId.ItemComponent);
-
-            if (cdClientObject == default || itemRegistryEntry == default)
-            {
-                Logger.Error($"{itemId} [{item.Lot}] is not a valid item");
-                return null;
-            }
-
-            var instance = Instantiate<Item>
-            (
-                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: itemId, lot: item.Lot
-            );
-
-            if (!string.IsNullOrWhiteSpace(item.ExtraInfo)) 
-                instance.Settings = LegoDataDictionary.FromString(item.ExtraInfo);
-
-            instance.Inventory = inventory;
-            instance.Player = inventory.ManagerComponent.GameObject as Player;
-
-            return instance;
-        }
-
-        public static Item Instantiate(Lot lot, Inventory inventory, uint count, LegoDataDictionary extraInfo = default)
-        {
-            uint slot = default;
-
-            for (var index = 0; index < inventory.Size; index++)
-            {
-                if (inventory.Items.All(i => i.Slot != index)) break;
-
-                slot++;
-            }
-
-            return Instantiate(lot, inventory, count, slot, extraInfo);
-        }
-
-        public static Item Instantiate(Lot lot, Inventory inventory, uint count, uint slot, LegoDataDictionary extraInfo = default)
-        {
-            using var cdClient = new CdClientContext();
-            using var ctx = new UchuContext();
-            
-            var cdClientObject = cdClient.ObjectsTable.FirstOrDefault(
-                o => o.Id == lot
-            );
-
-            var itemRegistryEntry = cdClient.ComponentsRegistryTable.FirstOrDefault(
-                r => r.Id == lot && r.Componenttype == 11
-            );
-
-            if (cdClientObject == default || itemRegistryEntry == default)
-            {
-                Logger.Error($"<new item> [{lot}] is not a valid item");
-                return null;
-            }
-
-            var instance = Instantiate<Item>
-            (
-                inventory.ManagerComponent.Zone, cdClientObject.Name, objectId: ObjectId.Standalone, lot: lot
-            );
-
-            instance.Settings = extraInfo ?? new LegoDataDictionary();
-
-            var itemComponent = cdClient.ItemComponentTable.First(
-                i => i.Id == itemRegistryEntry.Componentid
-            );
-
-            instance.Inventory = inventory;
-            instance.Player = inventory.ManagerComponent.GameObject as Player;
-
-            var playerCharacter = ctx.Characters.Include(c => c.Items).First(
-                c => c.Id == inventory.ManagerComponent.GameObject.Id
-            );
-
-            var inventoryItem = new InventoryItem
-            {
-                Count = count,
-                InventoryType = (int) inventory.InventoryType,
-                Id = instance.Id,
-                IsBound = itemComponent.IsBOP ?? false,
-                Slot = (int) slot,
-                Lot = lot,
-                ExtraInfo = extraInfo?.ToString()
-            };
-
-            playerCharacter.Items.Add(inventoryItem);
-
-            ctx.SaveChanges();
-
-            var message = new AddItemToInventoryMessage
-            {
-                Associate = inventory.ManagerComponent.GameObject,
-                InventoryType = (int) inventory.InventoryType,
-                Delta = count,
-                TotalItems = count,
-                Slot = (int) slot,
-                ItemLot = lot,
-                IsBoundOnEquip = itemComponent.IsBOE ?? false,
-                IsBoundOnPickup = itemComponent.IsBOP ?? false,
-                IsBound = inventoryItem.IsBound,
-                Item = instance,
-                ExtraInfo = extraInfo
-            };
-
-            (inventory.ManagerComponent.GameObject as Player)?.Message(message);
-
-            inventory.ManageItem(instance);
-
-            return instance;
-        }
-
-        public async Task SetCountSilentAsync(uint count)
-        {
-            await using var ctx = new UchuContext();
-            
-            if (count > ItemComponent.StackSize && ItemComponent.StackSize > 0)
-            {
-                Logger.Error(
-                    $"Trying to set {Lot} count to {Count}, this is beyond the item's stack-size; Setting it to stack-size"
-                );
-
-                count = (uint) ItemComponent.StackSize;
-            }
-
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-            
-            item.Count = count;
-            
-            Logger.Debug($"Setting {this}'s stack size to {item.Count}");
-
-            if (count <= 0)
-            {
-                if (await IsEquippedAsync())
-                    await UnEquipAsync();
-                
-                ctx.InventoryItems.Remove(item);
-                
-                Destroy(this);
-
-                // Disassemble item.
-                if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+                await inventory.RemoveItemAsync(this, 1);
+                foreach (var (key, value) in await container.GenerateLootYieldsAsync((Player)Owner))
                 {
-                    foreach (var part in (LegoDataList) list)
-                    {
-                        await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
-                    }
+                    await inventory.AddLotAsync(key, value);
                 }
             }
-                
-            await ctx.SaveChangesAsync();
         }
         
-        private async Task UpdateCountAsync(uint count)
+        /// <summary>
+        /// Consumes this item, removes it from the bound inventory.
+        /// </summary>
+        public async Task ConsumeAsync()
         {
-            if (count >= Count)
+            if (Owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
-                AddCount(count);
+                await missionInventory.UseConsumableAsync(Lot);
+                if (!IsConsumable)
+                    return;
             }
-            else
-            {
-                RemoveCount(count);
-            }
-
-            if (count > 0) return;
             
-            await using var ctx = new UchuContext();
+            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
+                await inventory.RemoveItemAsync(this, 1);
+        }
 
-            var item = await ctx.InventoryItems.FirstOrDefaultAsync(
-                i => i.Id == Id
-            );
+        /// <summary>
+        /// Increments the count of this item, if not silent also notifies the player
+        /// </summary>
+        /// <param name="amount">the amount to increment the count with</param>
+        /// <param name="silent">whether to not notify the player</param>
+        public async Task IncrementCountAsync(uint amount, bool silent = false)
+        {
+            await SetCountAsync(Count + amount, silent);
+        }
 
-            if (item == default) return;
+        /// <summary>
+        /// Decrements the count of this item, if not silent also notifies the player
+        /// </summary>
+        /// <param name="amount">the amount to decrement the count with</param>
+        /// <param name="silent">whether to not notify the player</param>
+        public async Task DecrementCountAsync(uint amount, bool silent = false)
+        {
+            await SetCountAsync(Count - amount, silent);
+        }
 
-            if (await IsEquippedAsync())
+        /// <summary>
+        /// Sets the count of this item, preferred over updating <see cref="Count"/> directly as this also handles
+        /// unequipping, player messaging and destroying of the item
+        /// </summary>
+        /// <param name="count">the count to set <see cref="Count"/> to</param>
+        /// <param name="silent">whether to not notify the player</param>
+        private async Task SetCountAsync(uint count, bool silent = false)
+        {
+            if (!silent && count >= Count)
+            {
+                MessageAddItem(count);
+            }
+            else if (!silent)
+            {
+                MessageRemoveItem(count);
+            }
+
+            Count = count;
+
+            if (count > 0)
+                return;
+
+            if (IsEquipped)
                 await UnEquipAsync();
 
-            ctx.InventoryItems.Remove(item);
-            
-            await ctx.SaveChangesAsync();
-
-            // Disassemble item.
-            if (LegoDataDictionary.FromString(item.ExtraInfo).TryGetValue("assemblyPartLOTs", out var list))
+            // Disassemble item
+            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
+                && Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
                 foreach (var part in (LegoDataList) list)
                 {
-                    await Inventory.ManagerComponent.AddItemAsync((int) part, 1);
+                    await inventory.AddLotAsync((int) part, 1);
                 }
             }
+
+            foreach (var subItem in SubItems)
+                await inventory.RemoveItemAsync(subItem);
 
             Destroy(this);
         }
 
-        private void AddCount(uint count)
+        /// <summary>
+        /// Messages the player of the creation of this item, should only be sent once
+        /// </summary>
+        /// <remarks>
+        /// If an item is already created, you can update its count with <see cref="IncrementCountAsync"/> or
+        /// <see cref="DecrementCountAsync"/>.
+        /// </remarks>
+        public void MessageCreation()
         {
-            using var ctx = new UchuContext();
-            
-            var item = ctx.InventoryItems.First(i => i.Id == Id);
-
-            var message = new AddItemToInventoryMessage
+            if (Owner is Player player && Inventory != null)
             {
-                Associate = Player,
-                Item = this,
-                ItemLot = Lot,
-                Delta = (uint) (count - item.Count),
-                Slot = (int) Slot,
-                InventoryType = (int) Inventory.InventoryType,
-                ShowFlyingLoot = count != default,
-                TotalItems = count,
-                ExtraInfo = null // TODO
-            };
+                player.Message(new AddItemToInventoryMessage
+                {
+                    Associate = player,
+                    Item = this,
+                    ItemLot = Lot,
+                    Delta = Count,
+                    Slot = (int) Slot,
+                    InventoryType = (int) Inventory.InventoryType,
+                    ShowFlyingLoot = true,
+                    TotalItems = Count,
+                    ExtraInfo = Settings
+                });
+            }
+        }
+
+        /// <summary>
+        /// Messages the player that <c>count</c> items of this lot have been added
+        /// </summary>
+        /// <param name="count">The amount of items that have been added</param>
+        private void MessageAddItem(uint count)
+        {
+            if (Owner is Player player && Inventory != null)
+            {
+                player.Message(new AddItemToInventoryMessage
+                {
+                    Associate = player,
+                    Item = this,
+                    ItemLot = Lot,
+                    Delta = count - Count,
+                    TotalItems = count,
+                    InventoryType = (int) Inventory.InventoryType,
+                    ExtraInfo = Settings,
+                    Slot = (int) Slot,
+                    ShowFlyingLoot = count != default
+                });
+            }
+        }
+
+        /// <summary>
+        /// Messages the player that <c>count</c> items of this lot have been removed
+        /// </summary>
+        /// <param name="count">The amount of items that have been removed</param>
+        private void MessageRemoveItem(uint count)
+        {
+            if (Owner is Player player && Inventory != null)
+            {
+                var message = new RemoveItemToInventoryMessage
+                {
+                    Associate = player,
+                    Item = this,
+                    Delta = (uint) Math.Abs((int) count - Count),
+                    TotalItems = count,
+                    InventoryType = Inventory.InventoryType,
+                    ExtraInfo = null,
+                    ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
+                    Confirmed = true,
+                    DeleteItem = true,
+                    OutSuccess = false,
+                    ForceDeletion = true
+                };
                 
-            Player.Message(message);
-        }
-
-        private void RemoveCount(uint count)
-        {
-            using var ctx = new UchuContext();
-            
-            var item = ctx.InventoryItems.First(i => i.Id == Id);
-
-            var message = new RemoveItemToInventoryMessage
-            {
-                Associate = Player,
-                Confirmed = true,
-                DeleteItem = true,
-                OutSuccess = false,
-                ItemType = (ItemType) (ItemComponent.ItemType ?? -1),
-                InventoryType = Inventory.InventoryType,
-                ExtraInfo = null, // TODO
-                ForceDeletion = true,
-                Item = this,
-                Delta = (uint) Math.Abs(count - item.Count),
-                TotalItems = count
-            };
-
-            Player.Message(message);
-        }
-
-        private async Task RemoveFromInventoryAsync()
-        {
-            await using var ctx = new UchuContext();
-            
-            var item = await ctx.InventoryItems.FirstAsync(i => i.Id == Id);
-
-            item.Character.Items.Remove(item);
-
-            await ctx.SaveChangesAsync();
+                player.Message(message);
+            }
         }
     }
 }

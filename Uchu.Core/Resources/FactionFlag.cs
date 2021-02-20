@@ -1,6 +1,6 @@
 ﻿namespace Uchu.Core.Resources
 {
-    public enum FactionFlags
+    public enum FactionFlag
     {
         Venture = 46,
         Assembly = 47,

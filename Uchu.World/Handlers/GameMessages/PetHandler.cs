@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Uchu.Core;
 
-namespace Uchu.World.Handlers.GameMessages
+namespace Uchu.World
 {
     public class PetHandler : HandlerGroup
     {
@@ -13,7 +13,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task ClientExitTamingMinigameHandler(ClientExitTamingMinigameMessage message, Player player)
+        public void ClientExitTamingMinigameHandler(ClientExitTamingMinigameMessage message, Player player)
         {
             NotifyPetTamingMinigame msg = new NotifyPetTamingMinigame();
             msg.notifyType = NotifyType.QUIT;
@@ -25,6 +25,12 @@ namespace Uchu.World.Handlers.GameMessages
             msg.telePos = Vector3.Zero;
             msg.Associate = player;
             player.Message(msg);
+        }
+
+        [PacketHandler]
+        public async Task NotifyTamingBuildSuccessMessageHandler(NotifyTamingBuildSuccessMessage message, Player player)
+        {
+            await player.OnNotifyTamingBuildSuccessMessage.InvokeAsync(message);
         }
     }
 }

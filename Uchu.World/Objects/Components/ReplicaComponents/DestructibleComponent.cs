@@ -6,6 +6,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Resources;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -55,17 +56,15 @@ namespace Uchu.World
                 
                 GameObject.Layer = StandardLayer.Smashable;
 
-                await using (var cdClient = new CdClientContext())
-                {
-                    var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
+                var entry = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
 
-                    var cdClientComponent = cdClient.DestructibleComponentTable.FirstOrDefault(
-                        c => c.Id == entry
-                    );
+                var cdClientComponent = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
+                    c => c.Id == entry
+                );
 
-                    if (cdClientComponent == default)
-                        Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
-                }
+                if (cdClientComponent == default)
+                    Logger.Error($"{GameObject} has a corrupt Destructible Component of id: {entry}");
+                
 
                 if (GameObject.TryGetComponent(out DestroyableComponent stats))
                 {
@@ -137,16 +136,19 @@ namespace Uchu.World
             });
 
             // Determine whether this was a player or a regular game object
-            if (GameObject is Player)
+            if (GameObject is Player player)
             {
-                GeneratePlayerYieldsAsync(owner);
+                GeneratePlayerYieldsAsync(player);
             }
             else
             {
                 GameObject.Layer -= StandardLayer.Smashable;
                 GameObject.Layer += StandardLayer.Hidden;
 
-                InitializeRespawn();
+                if (GameObject.Spawner == default)
+                {
+                    InitializeRespawn();
+                }
                 
                 if (owner != null)
                 {
@@ -166,19 +168,16 @@ namespace Uchu.World
                 var lot = ItemPair.Key;
                 Lot item = lot;
                 
-                if (lot == Lot.FactionTokenProxy)
+                if (lot == Lot.FactionTokenProxy && owner.TryGetComponent<CharacterComponent>(out var character))
                 {
-                    if (await owner.GetFlagAsync((int) FactionFlags.Assembly)) item = Lot.AssemblyFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Paradox)) item = Lot.ParadoxFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Sentinel)) item = Lot.SentinelFactionToken;
-                    if (await owner.GetFlagAsync((int) FactionFlags.Venture)) item = Lot.VentureFactionToken;
-                    if (item == lot) continue;
+                    item = character.FactionToken;
+                    if (item == lot)
+                        continue;
                 }
 
                 for (int i = 0; i < ItemPair.Value; ++i)
                 {
                     var drop = InstancingUtilities.InstantiateLoot(item, owner, GameObject, Transform.Position);
-
                     Start(drop);
                 }
             }
@@ -193,15 +192,13 @@ namespace Uchu.World
 
         private void GeneratePlayerYieldsAsync(Player owner)
         {
-            var player = (Player) GameObject;
+            if (GameObject.TryGetComponent<CharacterComponent>(out var character))
+            {
+                var coinToDrop = Math.Min((long) Math.Round(character.Currency * 0.1), 10000);
+                character.Currency -= coinToDrop;
 
-            var currency = player.Currency;
-            
-            var coinToDrop = Math.Min((long) Math.Round(currency * 0.1), 10000);
-
-            player.Currency -= coinToDrop;
-
-            InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+                InstancingUtilities.InstantiateCurrency((int) coinToDrop, owner, owner, Transform.Position);
+            }
         }
 
         private void InitializeRespawn()

@@ -10,10 +10,6 @@ namespace Uchu.World.Systems.Missions
         {
         }
 
-        public UseSkillTask(MissionInstance mission, MissionTaskInstance cachedInstance) : base(mission, cachedInstance)
-        {
-        }
-        
         public override MissionTaskType Type => MissionTaskType.UseSkill;
 
         public override bool Completed => Parameters.Any(t => Progress.Contains(t));

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -71,18 +72,15 @@ namespace Uchu.World
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
 
-            await using var cdClient = new CdClientContext();
+            var vendorComponent = (await ClientCache.GetTableAsync<Core.Client.VendorComponent>()).First(c => c.Id == componentId);
 
-            var vendorComponent = await cdClient.VendorComponentTable.FirstAsync(c => c.Id == componentId);
-
-            var matrices =
-                cdClient.LootMatrixTable.Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
+            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
 
             var shopItems = new List<ShopEntry>();
 
             foreach (var matrix in matrices)
             {
-                shopItems.AddRange(cdClient.LootTableTable.Where(
+                shopItems.AddRange(ClientCache.GetTable<LootTable>().Where(
                     l => l.LootTableIndex == matrix.LootTableIndex
                 ).ToArray().Select(lootTable =>
                 {
@@ -102,21 +100,36 @@ namespace Uchu.World
 
         public async Task Buy(Lot lot, uint count, Player player)
         {
-            await using var ctx = new CdClientContext();
-
-            var itemComponent = await ctx.ItemComponentTable.FirstAsync(
-                i => i.Id == lot.GetComponentId(ComponentId.ItemComponent)
+            var componentId = lot.GetComponentId(ComponentId.ItemComponent);
+            var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
+                i => i.Id == componentId
             );
             
             if (count == default || itemComponent.BaseValue <= 0) return;
 
+            var character = player.GetComponent<CharacterComponent>();
             var cost = (uint) ((itemComponent.BaseValue ?? 0) * count);
-            
-            if (cost > player.Currency) return;
 
-            player.Currency -= cost;
+            if (cost > character.Currency)
+                return;
             
-            await player.GetComponent<InventoryManagerComponent>().AddItemAsync(lot, count);
+            // If we have to buy this with an alternative currency
+            if (itemComponent.CurrencyLOT != null)
+            {
+                var alternativeCurrencyLot = (Lot) itemComponent.CurrencyLOT;
+                var alternativeCurrencyCost = itemComponent.AltCurrencyCost ?? 0;
+                var inventory = player.GetComponent<InventoryManagerComponent>();
+                
+                if (alternativeCurrencyCost > inventory.FindItems(alternativeCurrencyLot)
+                    .Select(i => (int) i.Count).Sum())
+                    return;
+
+                await inventory.RemoveLotAsync(alternativeCurrencyLot, (uint) alternativeCurrencyCost);
+            }
+            
+            character.Currency -= cost;
+            
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -129,25 +142,31 @@ namespace Uchu.World
 
         public async Task Sell(Item item, uint count, Player player)
         {
-            var itemComponent = item.ItemComponent;
+            if (count == default || item.ItemComponent.BaseValue <= 0)
+                return;
             
-            if (count == default || itemComponent.BaseValue <= 0) return;
+            var inventory = player.GetComponent<InventoryManagerComponent>();
+            var character = player.GetComponent<CharacterComponent>();
             
-            await player.GetComponent<InventoryManagerComponent>().MoveItemsBetweenInventoriesAsync(
-                default,
-                item.Lot,
+            await inventory.MoveItemBetweenInventoriesAsync(
+                item,
                 count,
                 item.Inventory.InventoryType,
                 InventoryType.VendorBuyback
             );
+            
+            var sellMultiplier = item.ItemComponent.SellMultiplier ?? 0.1f;
+            var returnCurrency = Math.Floor((item.ItemComponent.BaseValue ?? 0) * sellMultiplier) * count;
 
-            var returnCurrency =
-                Math.Floor(
-                    (itemComponent.BaseValue ?? 0) *
-                    (itemComponent.SellMultiplier ?? 0.1f)
-                ) * count;
+            character.Currency += (uint) returnCurrency;
 
-            player.Currency += (uint) returnCurrency;
+            // If this was bought with alt currency, give that back too
+            if (item.ItemComponent.CurrencyLOT != null)
+            {
+                var alternativeCurrencyLot = (Lot) item.ItemComponent.CurrencyLOT;
+                var returnAlternativeCurrency = (uint) Math.Floor((item.ItemComponent.AltCurrencyCost ?? 0) * sellMultiplier) * count;
+                await inventory.AddLotAsync(alternativeCurrencyLot, returnAlternativeCurrency);
+            }
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -161,24 +180,34 @@ namespace Uchu.World
         public async Task Buyback(Item item, uint count, Player player)
         {
             var itemComponent = item.ItemComponent;
-            
-            if (count == default || itemComponent.BaseValue <= 0) return;
+            if (count == default || itemComponent.BaseValue <= 0)
+                return;
 
-            var cost =
-                (uint) Math.Floor(
-                    (itemComponent.BaseValue ?? 0) *
-                    (itemComponent.SellMultiplier ?? 0.1f)
-                ) * count;
+            var character = player.GetComponent<CharacterComponent>();
+            var inventory = player.GetComponent<InventoryManagerComponent>();
+            
+            var sellMultiplier = itemComponent.SellMultiplier ?? 0.1f;
+            var cost = (uint) Math.Floor((itemComponent.BaseValue ?? 0) * sellMultiplier) * count;
+            if (cost > character.Currency)
+                return;
+            
+            // If we have to buy this with an alternative currency
+            if (itemComponent.CurrencyLOT != null)
+            {
+                var alternativeCurrencyLot = (Lot) itemComponent.CurrencyLOT;
+                var alternativeCurrencyCost = (uint) Math.Floor((item.ItemComponent.AltCurrencyCost ?? 0) * sellMultiplier) * count;
+                
+                if (alternativeCurrencyCost > inventory.FindItems(alternativeCurrencyLot)
+                    .Select(i => (int) i.Count).Sum())
+                    return;
 
-            if (cost > player.Currency) return;
+                await inventory.RemoveLotAsync(alternativeCurrencyLot, alternativeCurrencyCost);
+            }
 
-            player.Currency -= cost;
+            character.Currency -= cost;
             
-            var manager = player.GetComponent<InventoryManagerComponent>();
-            
-            manager.RemoveItem(item.Lot, count, InventoryType.VendorBuyback);
-            
-            await manager.AddItemAsync(item.Lot, count);
+            await inventory.RemoveItemAsync(item, count, InventoryType.VendorBuyback);
+            await inventory.AddLotAsync(item.Lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {

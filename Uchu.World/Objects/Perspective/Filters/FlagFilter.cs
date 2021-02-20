@@ -16,7 +16,11 @@ namespace Uchu.World.Filters
 
         public async Task Tick()
         {
-            Collected = await Player.GetCollectedAsync();
+            // TODO: Check if this is still necessary
+            // if (Player.TryGetComponent<CharacterComponent>(out var character))
+            // {
+            //     Collected = character.Fl
+            // }
         }
 
         public bool View(GameObject gameObject)
