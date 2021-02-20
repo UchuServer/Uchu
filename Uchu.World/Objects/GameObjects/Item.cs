@@ -20,16 +20,7 @@ namespace Uchu.World
             OnConsumed = new Event();
             SubItems = new List<Item>();
             
-            Listen(OnDestroyed, async () =>
-            {
-                if (Inventory != default)
-                {
-                    foreach (var subItem in SubItems)
-                        await Inventory.ManagerComponent.RemoveItemAsync(subItem,
-                            inventoryType: subItem.Inventory.InventoryType);
-                    Inventory.RemoveItem(this);
-                }
-            });
+            Listen(OnDestroyed, () => Inventory?.RemoveItem(this));
         }
 
         /// <summary>
@@ -328,6 +319,9 @@ namespace Uchu.World
                     await inventory.AddLotAsync((int) part, 1);
                 }
             }
+
+            foreach (var subItem in SubItems)
+                await inventory.RemoveItemAsync(subItem);
 
             Destroy(this);
         }

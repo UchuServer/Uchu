@@ -117,7 +117,6 @@ namespace Uchu.World
         /// <summary>
         /// Updates a slot in the inventory, swapping a previous item for a new one
         /// </summary>
-        /// <param name="slot">The slot to equip an item to</param>
         /// <param name="item">The item to place in the slot</param>
         private async Task UpdateSlotAsync(Item item)
         {
@@ -169,7 +168,8 @@ namespace Uchu.World
             }
 
             await EnsureItemEquipped(item);
-            await EquipPossibleSubItemsAsync(item);
+            foreach (var subItem in item.SubItems)
+                await EquipItemAsync(subItem);
             
             GameObject.Serialize(GameObject);
         }
@@ -180,6 +180,10 @@ namespace Uchu.World
         /// <param name="item">The item to equip</param>
         private async Task EnsureItemEquipped(Item item)
         {
+            // If this item is already equipped, ignore
+            if (Items.ContainsValue(item))
+                return;
+            
             await UpdateSlotAsync(item);
             item.IsEquipped = true;
 
@@ -208,7 +212,7 @@ namespace Uchu.World
                 var rootItem = item.RootItem ?? item;
                 await EnsureItemUnEquipped(rootItem);
             
-                foreach (var subItem in GetSubItems(rootItem))
+                foreach (var subItem in rootItem.SubItems)
                 {
                     if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
                         await EnsureItemUnEquipped(equippedSubItem);
@@ -231,39 +235,6 @@ namespace Uchu.World
             
             item.IsEquipped = false;
             Items.Remove(GetSlot(item.Id));
-        }
-
-        /// <summary>
-        /// If this item has any sub items (e.g. double wielded weapons or faction gear trial sets)
-        /// this will create and equip those sub items in the hidden inventory of the owners' inventory
-        /// </summary>
-        /// <remarks>
-        /// Requires the owner to have a <see cref="InventoryManagerComponent"/> to store the sub items in.
-        /// </remarks>
-        /// <param name="item">The item to create the sub items for</param>
-        private async Task EquipPossibleSubItemsAsync(Item item)
-        {
-            if (item.Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
-            {
-                foreach (var subItemLot in item.SubItemLots)
-                {
-                    var subItem = inventory.FindItem(subItemLot, InventoryType.Hidden, item) ?? (await inventory
-                        .AddLotAsync(subItemLot, 1, inventoryType: InventoryType.Hidden, rootItem: item))
-                        .FirstOrDefault();
-                    if (subItem != default)
-                        await EquipItemAsync(subItem);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets all the sub items of an item by fetching them from the game object inventory
-        /// </summary>
-        /// <param name="item">The object to get the sub items for</param>
-        /// <returns>A list of all the sub items for this item</returns>
-        private Item[] GetSubItems(Item item)
-        {
-            return Items.Values.Where(i => i.RootItem?.Id == item.Id).ToArray();
         }
 
         /// <summary>

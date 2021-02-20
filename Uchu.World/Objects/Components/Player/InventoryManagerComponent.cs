@@ -88,12 +88,11 @@ namespace Uchu.World
                     
                     _inventories.Add(inventoryType, inventory);
                 }
-                
-                // Finally load all the proxy items into the hidden inventory
-                var hiddenInventory = this[InventoryType.Hidden] ?? new Inventory(InventoryType.Hidden, this);
-                await hiddenInventory.LoadItems(playerCharacter.Items.Where(i => i.ParentId != ObjectId.Invalid 
-                                && (InventoryType) i.InventoryType == InventoryType.Hidden));
 
+                // Finally load all the sub items
+                if (this[InventoryType.Hidden] is {} hiddenInventory)
+                    await hiddenInventory.LoadItems(playerCharacter.Items.Where(i => i.ParentId != ObjectId.Invalid 
+                        && (InventoryType) i.InventoryType == InventoryType.Hidden));
             });
 
             Listen(OnDestroyed, () =>
@@ -112,11 +111,7 @@ namespace Uchu.World
         public async Task SaveAsync(UchuContext context)
         {
             var itemsToSave = Items;
-            
-            // If the inventory is empty something went terribly wrong, do NOT save
-            if (itemsToSave.Length == 0)
-                return;
-            
+
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Items)
                 .FirstAsync();
@@ -321,10 +316,10 @@ namespace Uchu.World
         /// <param name="count">The count of the lot we want to add to the inventory</param>
         /// <param name="settings">Optional <c>LegoDataDictionary</c> to instantiate the item with</param>
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
-        /// implicitly retrieved from the item lot, generally used for vendor buy back</param>
+        ///     implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="rootItem">An optional parent item</param>
         /// <returns>The list of items that were created while adding the lot</returns>
-        public async Task<List<Item>> AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default, 
+        public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
             InventoryType inventoryType = default, Item rootItem = default)
         {
             var createdItems = new List<Item>();
@@ -332,11 +327,11 @@ namespace Uchu.World
             // For players, the faction token proxy needs to be replaced with an actual faction token
             // If this wasn't possible, exit
             if (!HandleFactionToken(ref lot))
-                return createdItems;
+                return;
 
             var itemComponent = await GetItemComponentForLotAysnc(lot);
             if (itemComponent == default)
-                return createdItems;
+                return;
 
             inventoryType = inventoryType != default 
                 ? inventoryType 
@@ -375,7 +370,7 @@ namespace Uchu.World
 
                     // Exit if no new stacks are required to hold the lot
                     if (totalToAdd <= 0)
-                        return createdItems;
+                        return;
                 }
                 
                 // Create new stacks
@@ -386,7 +381,7 @@ namespace Uchu.World
                     
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
-                        return createdItems; // TODO: Message item to player with mail
+                        return; // TODO: Message item to player with mail
                     
                     Start(item);
                     item.MessageCreation();
@@ -413,10 +408,13 @@ namespace Uchu.World
                 
                     await OnLotAdded.InvokeAsync(lot, (uint)totalAdded);
                 });
-
             }
             
-            return createdItems;
+            // Create sub items if this was a root item
+            if (rootItem == null)
+                foreach (var createdItem in createdItems)
+                foreach (var subItemLot in createdItem.SubItemLots)
+                    await AddLotAsync(subItemLot, 1, default, InventoryType.Hidden, createdItem);
         }
 
         /// <summary>
@@ -486,7 +484,7 @@ namespace Uchu.World
                 {
                     var amountToRemove = (uint) Min((int) count, (int) itemToRemove.Count);
                     await itemToRemove.DecrementCountAsync(amountToRemove, silent);
-
+   
                     count -= amountToRemove;
                     if (count == 0)
                         return;
