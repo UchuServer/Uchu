@@ -12,6 +12,7 @@ using InfectedRose.Lvl;
 using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
+using Sentry;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
@@ -713,6 +714,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
             
@@ -750,7 +752,8 @@ namespace Uchu.World
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
                 finally
                 {

@@ -16,6 +16,7 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.6" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
+      <PackageReference Include="Sentry" Version="3.0.6" />
       <PackageReference Include="StackExchange.Redis" Version="2.1.0-preview.23" />
     </ItemGroup>
 
