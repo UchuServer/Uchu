@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.Core.Resources;
 using Uchu.World.Client;
-using Uchu.World.Systems.Missions;
 
 namespace Uchu.World
 {
@@ -94,7 +92,7 @@ namespace Uchu.World
                     var playerMission = missionInventory.GetMission(questId);
                     
                     // If the player is ready to hand this mission in, allow them to complete the mission
-                    if (playerMission != default && (component.AcceptsMission ?? false) && playerMission.State == MissionState.ReadyToComplete)
+                    if (playerMission != default && (component.AcceptsMission ?? false) && (playerMission.State == MissionState.ReadyToComplete || playerMission.State == MissionState.CompletedReadyToComplete))
                     {
                             missionInventory.MessageOfferMission(questId, GameObject);
                             return;
@@ -118,20 +116,15 @@ namespace Uchu.World
                                 return;
                             case MissionState.CompletedActive:
                                 // If this is an active mission show the offer popup again for information
-                                player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
-                                    playerMission.MissionId,
-                                    GameObject
-                                );
-                                continue;
+                                missionInventory.MessageOfferMission(playerMission.MissionId, GameObject);
+                                return;
                             case MissionState.ReadyToComplete:
+                            case MissionState.CompletedReadyToComplete:
                             case MissionState.Unavailable:
                             case MissionState.Completed:
                                 // Allow the mission if it is repeatable and the cooldown period has passed.
                                 if (!playerMission.CanRepeat) continue;
                                 break;
-                            case MissionState.CompletedReadyToComplete:
-                                // Any other missions are skipped
-                                continue;
                             default:
                                 throw new ArgumentOutOfRangeException(
                                     nameof(playerMission.State), $"{playerMission.State} is not a valid {nameof(MissionState)}"
@@ -146,6 +139,7 @@ namespace Uchu.World
 
                     // Set the mission as the mission to offer.
                     // The mission is not offered directly in cases where an Available mission comes up before a ReadyToComplete mission.
+                    if (questIdToOffer != default) continue;
                     questIdToOffer = questId;
                 }
                 
