@@ -150,10 +150,7 @@ namespace Uchu.Core.Config
         /// The path to the script source DLLs
         /// </summary>
         [XmlElement]
-        public List<string> ScriptDllSource { get; } = new List<string>
-        {
-            "Enter path to Uchu.StandardScripts.dll"
-        };
+        public List<string> ScriptDllSource { get; } = new List<string>();
     }
 
     /// <summary>

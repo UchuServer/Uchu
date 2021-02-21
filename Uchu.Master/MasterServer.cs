@@ -218,6 +218,8 @@ namespace Uchu.Master
             {
                 LogQueue.Config = Config = new UchuConfiguration();
 
+                Config.DllSource.ScriptDllSource.Add("Enter path to Uchu.StandardScripts.dll");
+
                 var backup = File.CreateText("config.default.xml");
 
                 serializer.Serialize(backup, Config);
@@ -268,8 +270,6 @@ namespace Uchu.Master
                 Logger.Error("Could not find file specified in DllSource -> Instance in config.xml.");
                 throw new FileNotFoundException("Could not find Instance file.");
             }
-
-            Config.DllSource.ScriptDllSource.RemoveAt(0);
             
             if (Config.DllSource.ScriptDllSource.Count == 0)
             {
