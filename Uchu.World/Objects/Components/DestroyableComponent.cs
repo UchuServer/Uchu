@@ -324,6 +324,7 @@ namespace Uchu.World
             );
 
             if (stats == default) return;
+            HasStats = true;
 
             var rawHealth = stats.Life ?? 0;
             var rawArmor = (int) (stats.Armor ?? 0);
@@ -341,6 +342,7 @@ namespace Uchu.World
         private void CollectPlayerStats()
         {
             if (!(GameObject is Player)) return;
+            HasStats = true;
             
             using var ctx = new UchuContext();
 

@@ -3,7 +3,7 @@ using Uchu.Core;
 
 namespace Uchu.World.Scripting.Native
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class ZoneSpecificAttribute : Attribute
     {
         public readonly ZoneId ZoneId;
