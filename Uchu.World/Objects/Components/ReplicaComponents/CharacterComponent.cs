@@ -211,7 +211,7 @@ namespace Uchu.World
         public int InventorySize { get; set; }
         public int BaseImagination { get; set; }
         public int BaseHealth { get; set; }
-        public string Rocket { get; private set; }
+        public string Rocket { get; set; }
         public int LaunchedRocketFrom { get; set; }
         public long LastActivity { get; private set; }
         public bool FreeToPlay { get; private set; }
@@ -294,14 +294,7 @@ namespace Uchu.World
         /// List of all the flags this user has unlocked
         /// </summary>
         public IEnumerable<int> FlagsList => Flags.ToList();
-        
-        /// <summary>
-        /// Returns the flag value for a flag id
-        /// </summary>
-        /// <param name="flagId">The flag to find for the player</param>
-        /// <returns><c>true</c> or <c>false</c> based on whether the player has the flag or not</returns>
-        public bool GetFlag(int flagId) => Flags.Contains(flagId);
-        
+
         /// <summary>
         /// Adds or removes a flag from the player based on the <c>state</c>
         /// </summary>
@@ -335,31 +328,49 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Adds or removes a flag from the player based on the <c>state</c>
+        /// </summary>
+        /// <param name="flagId">The id of the flag to change</param>
+        /// <param name="state"><c>true</c> if the flag should be added, <c>false</c> if the flag should be removed</param>
+        /// <param name="silent">Whether mission progress and user flag updates are sent</param>
+        public async Task SetFlagAsync(FlagId flagId, bool state, bool silent = false)
+        {
+            await SetFlagAsync((int) flagId, state, silent);
+        }
+        
+        /// <summary>
+        /// Returns the flag value for a flag id
+        /// </summary>
+        /// <param name="flagId">The flag to find for the player</param>
+        /// <returns><c>true</c> or <c>false</c> based on whether the player has the flag or not</returns>
+        public bool GetFlag(int flagId) => Flags.Contains(flagId);
+
+        /// <summary>
         /// Whether a player has a certain faction or not
         /// </summary>
-        /// <param name="factionFlagId">The flag Id to look up for the player</param>
+        /// <param name="flagIdId">The flag Id to look up for the player</param>
         /// <returns>True if the player has a certain faction</returns>
-        public bool HasFaction(FactionFlag factionFlagId) => GetFlag((int) factionFlagId);
+        public bool GetFlag(FlagId flagIdId) => GetFlag((int) flagIdId);
 
         /// <summary>
         /// Whether this character belongs to the sentinel faction
         /// </summary>
-        public bool IsSentinel => HasFaction(FactionFlag.Sentinel);
+        public bool IsSentinel => GetFlag(FlagId.Sentinel);
         
         /// <summary>
         /// Whether this character belongs to the assembly faction
         /// </summary>
-        public bool IsAssembly => HasFaction(FactionFlag.Assembly);
+        public bool IsAssembly => GetFlag(FlagId.Assembly);
         
         /// <summary>
         /// Whether this player belongs to the paradox faction
         /// </summary>
-        public bool IsParadox => HasFaction(FactionFlag.Paradox);
+        public bool IsParadox => GetFlag(FlagId.Paradox);
         
         /// <summary>
         /// Whether this player belongs to the paradox faction
         /// </summary>
-        public bool IsVentureLeague => HasFaction(FactionFlag.Venture);
+        public bool IsVentureLeague => GetFlag(FlagId.Venture);
 
         /// <summary>
         /// Returns the lot of a valid faction token for this character, if this character has multiple factions it will

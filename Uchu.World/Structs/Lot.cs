@@ -112,11 +112,13 @@ namespace Uchu.World
         public static readonly Lot RocketBuildCockpit = 6910;
         public static readonly Lot RocketBuildTail = 6915;
 
-        public const int SpiderQueenEgg = 14375;
         public const int BuildBorder = 9524;
         public const int SpiderQueen = 14381;
+        public const int SpiderQueenEgg = 14375;
         public const int SpiderQueenROFTarget = 14466;
+        public const int SpiderQueenRockSmashable = 16284;
         public const int TornadoBgFx = 9938;
+        public const int PropertyPlagueVendor = 9628;
         
         public const int FactionTokenProxy = 13763;
         public const int AssemblyFactionToken = 8318;

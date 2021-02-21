@@ -12,13 +12,14 @@ using System.Collections.Generic;
 using InfectedRose.Luz;
 using System.Numerics;
 using IronPython.Modules;
+using Uchu.Core.Resources;
 using Uchu.World.Client;
 using DestructibleComponent = Uchu.World.DestructibleComponent;
 
 namespace Uchu.StandardScripts.BlockYard
 {
     [ZoneSpecific(1150)]
-    public class BlockYardProperty : NativeScript
+    public class BlockYardSpiderQueenFight : NativeScript
     {
         /// <summary>
         /// Ambient sound when maelstrom battle is active
@@ -68,7 +69,7 @@ namespace Uchu.StandardScripts.BlockYard
         /// <summary>
         /// Whether the player has started the fight yet
         /// </summary>
-        private bool _fightStarted;
+        private bool _maelstromSpawned;
 
         /// <summary>
         /// Whether the player has completed the fight yet
@@ -86,6 +87,8 @@ namespace Uchu.StandardScripts.BlockYard
         {
             Listen(Zone.OnPlayerLoad, player =>
             {
+                _fightCompleted = player.GetComponent<CharacterComponent>().GetFlag(FlagId.BeatSpiderQueen);
+                
                 if (!_globalSpawned)
                 {
                     SpawnGlobal();
@@ -97,16 +100,17 @@ namespace Uchu.StandardScripts.BlockYard
                     SpawnPeaceful();
                     _peacefulSpawned = true;
                 }
-                else if (!_fightCompleted && !_fightStarted)
+                else if (!_fightCompleted && !_maelstromSpawned)
                 {
                     SpawnMaelstrom();
 
                     var spiderQueenFight = new SpiderQueenFight(this, player);
                     spiderQueenFight.StartFight();
-                    _fightStarted = true;
+                    _maelstromSpawned = true;
                     
                     Listen(spiderQueenFight.OnFightCompleted, () =>
                     {
+                        player.GetComponent<CharacterComponent>().SetFlagAsync(FlagId.BeatSpiderQueen, true);
                         _fightCompleted = true;
                         _peacefulSpawned = true;
                         SpawnPeaceful();
@@ -169,7 +173,7 @@ namespace Uchu.StandardScripts.BlockYard
         /// </summary>
         private class SpiderQueenFight
         {
-            public SpiderQueenFight(BlockYardProperty blockYard, Player player)
+            public SpiderQueenFight(BlockYardSpiderQueenFight blockYard, Player player)
             {
                 _blockYard = blockYard;
                 _player = player;
@@ -191,7 +195,7 @@ namespace Uchu.StandardScripts.BlockYard
             /// <summary>
             /// The parent script
             /// </summary>
-            private readonly BlockYardProperty _blockYard;
+            private readonly BlockYardSpiderQueenFight _blockYard;
 
             /// <summary>
             /// The participant in this spider queen fight
@@ -222,10 +226,11 @@ namespace Uchu.StandardScripts.BlockYard
 
                 foreach (var gameObject in _blockYard.Zone.GameObjects)
                 {
-                    // TODO: Hide spider queen ROF target
                     switch (gameObject.Lot)
                     {
                         case Lot.SpiderQueenEgg:
+                        case Lot.SpiderQueenROFTarget:
+                        case Lot.SpiderQueenRockSmashable:
                             _maelstromObjects.Add(gameObject);
                             break;
                         case Lot.Spawner:

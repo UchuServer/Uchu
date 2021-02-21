@@ -24,20 +24,21 @@ namespace Uchu.StandardScripts.General
                         var launchpadComponent = (await ClientCache.GetTableAsync<RocketLaunchpadControlComponent>())
                             .First(r => r.Id == id);
 
-                        if (launchpadComponent.TargetZone != null)
+                        // For some properties we need the default zone instead of the target zone
+                        var targetZone = (ZoneId) (launchpadComponent.DefaultZoneID != 0
+                            ? launchpadComponent.DefaultZoneID
+                            : launchpadComponent.TargetZone ?? 0);
+
+                        if (targetZone != 0)
                         {
-                            var target = (ZoneId)launchpadComponent.TargetZone;
-                            
                             // We don't want to lock up the server on a world server request, as it may take time.
                             var _ = Task.Run(async () =>
                             {
                                 player.GetComponent<CharacterComponent>().LaunchedRocketFrom = Zone.ZoneId;
-                                var success = await player.SendToWorldAsync(target);
+                                var success = await player.SendToWorldAsync(targetZone);
 
                                 if (!success)
-                                {
-                                    player.SendChatMessage($"Failed to transfer to {target}, please try later.");
-                                }
+                                    player.SendChatMessage($"Failed to transfer to {targetZone}, please try later.");
                             });
                         }
                     }

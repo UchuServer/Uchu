@@ -45,13 +45,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task SetLastCustomBuildHandler(SetLastCustomBuildMessage message, Player player)
         {
-            await using var ctx = new UchuContext();
-
-            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-            character.Rocket = message.Tokens;
-
-            await ctx.SaveChangesAsync();
+            player.GetComponent<CharacterComponent>().Rocket = message.Tokens;
         }
 
         [PacketHandler]

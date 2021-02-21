@@ -25,12 +25,8 @@ namespace Uchu.World
                 item => item.Lot == Lot.ModularRocket
             );
 
-            if (rocket == default)
-            {
-                Logger.Error($"Could not find a valid rocket for {player}");
-                
+            if (rocket == null)
                 return;
-            }
 
             rocket.WorldState = ObjectWorldState.Attached;
             
@@ -42,13 +38,7 @@ namespace Uchu.World
                 Sender = player
             });
 
-            await using var ctx = new UchuContext();
-
-            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-            character.LandingByRocket = true;
-            
-            await ctx.SaveChangesAsync();
+            player.GetComponent<CharacterComponent>().LandingByRocket = true;
         }
     }
 }
