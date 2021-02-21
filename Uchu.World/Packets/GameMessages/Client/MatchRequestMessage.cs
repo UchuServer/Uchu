@@ -18,15 +18,15 @@ namespace Uchu.World
         
         public override void Deserialize(BitReader reader)
         {
-            Type = reader.Read<int>();
-
-            Value = reader.Read<int>();
-
             Activator = reader.ReadGameObject(Associate.Zone);
 
             var ldl = reader.ReadString((int) reader.Read<uint>(), true);
 
             Settings = LegoDataDictionary.FromString(ldl);
+            
+            Type = reader.Read<int>();
+
+            Value = reader.Read<int>();
         }
     }
 }
