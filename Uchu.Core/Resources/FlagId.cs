@@ -11,9 +11,9 @@
         PlaceModel2 = 102,
         PlaceModel3 = 103,
         PlaceModel4 = 104,
+        ClaimBlockyardProperty = 108,
         PickUpModel = 109,
         RotateModel = 110,
         PutAwayModel = 111,
-        ClaimBlockyardProperty = 108
     }
 }
