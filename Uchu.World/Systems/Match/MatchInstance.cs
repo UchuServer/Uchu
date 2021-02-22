@@ -78,7 +78,7 @@ namespace Uchu.World.Systems.Match
             _maxPlayers = (matchData.MaxTeams ?? 1) * (matchData.MaxTeamSize ?? 1);
             
             // Connect the timer ending.
-            _countdown.Elapsed += (sender, args) =>
+            _countdown.Elapsed += async (sender, args) =>
             {
                 // Remove the round from the provisioner.
                 TimeEnded.Invoke();
@@ -86,7 +86,11 @@ namespace Uchu.World.Systems.Match
                 // Take the optional currency from the players.
                 if (matchCurrencyLot.HasValue && matchCurrencyCount.HasValue)
                 {
-                    // TODO
+                    foreach (var player in _players)
+                    {
+                        if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) continue;
+                        await inventoryManager.RemoveLotAsync(matchCurrencyLot.Value,(uint) matchCurrencyCount.Value);
+                    }
                 }
                 
                 // Start the match.
