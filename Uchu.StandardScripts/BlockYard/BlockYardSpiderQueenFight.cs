@@ -1,19 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Uchu.Core.Client;
 using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
-using Uchu.StandardScripts;
-using System.IO;
 using System;
 using System.Collections.Generic;
 using InfectedRose.Luz;
 using System.Numerics;
-using System.Timers;
 using InfectedRose.Lvl;
-using IronPython.Modules;
 using Uchu.Core.Resources;
 using Uchu.World.Client;
 using DestructibleComponent = Uchu.World.DestructibleComponent;
@@ -53,11 +48,22 @@ namespace Uchu.StandardScripts.BlockYard
             "Rocks",
             "DesMaelstromInstance",
             "Spider_Scream",
+            "Land_Target",
             "ROF_Targets_00",
             "ROF_Targets_01",
             "ROF_Targets_02",
             "ROF_Targets_03",
-            "ROF_Targets_04"
+            "ROF_Targets_04",
+            "Zone1Vol", 
+            "Zone2Vol", 
+            "Zone3Vol", 
+            "Zone4Vol", 
+            "Zone5Vol", 
+            "Zone6Vol", 
+            "Zone7Vol",
+            "Zone8Vol",
+            "AggroVol",
+            "TeleVol"
         };
         
         /// <summary>
@@ -146,7 +152,7 @@ namespace Uchu.StandardScripts.BlockYard
         private void SpawnMaelstrom()
         {
             StartFightEffects();
-            
+
             // Destroy all maelstrom spawners
             foreach (var gameObject in Zone.GameObjects.Where(go => PeacefulObjects.Contains(go.Name)).ToArray())
             {
@@ -389,8 +395,8 @@ namespace Uchu.StandardScripts.BlockYard
                         _spawnedSpiderlings.Add(spiderling);
                         spiderling.GetComponent<DestroyableComponent>().Factions = new int[] {4};
                         
-                        Listen(spiderling.GetComponent<DestroyableComponent>().OnDeath, 
-                            () => HandleSpiderlingDeath(spiderling));
+                        Listen(spiderling.GetComponent<DestructibleComponent>().OnSmashed, 
+                            (killer, lootOwner) => HandleSpiderlingDeath(spiderling));
                     }
                 });
 
@@ -407,7 +413,7 @@ namespace Uchu.StandardScripts.BlockYard
             #endregion state
 
             #region ai
-
+            #region withdrawal
             private void AdvanceSpiderQueen()
             {
                 if (!_withdrawn)
@@ -421,18 +427,7 @@ namespace Uchu.StandardScripts.BlockYard
 
                 _withdrawn = false;
             }
-
-            private void HandleSpiderlingDeath(GameObject spiderling)
-            {
-                Logger.Information($"{spiderling} was smashed!");
-                
-                _killedSpiders++;
-                _spawnedSpiderlings.Remove(spiderling);
-
-                if (_killedSpiders >= _currentSpiderlingWavecount)
-                    AdvanceSpiderQueen();
-            }
-
+            
             private void AdvanceAttack()
             {
                 Logger.Information("Spider queen advance attack!");
@@ -534,6 +529,7 @@ namespace Uchu.StandardScripts.BlockYard
                 _spiderEggsToPrep = _currentSpiderlingWavecount;
                 SpawnSpiders();
             }
+            #endregion withdrawal
             
             #region spiderwave
                         
@@ -592,37 +588,43 @@ namespace Uchu.StandardScripts.BlockYard
                 else
                 {
                     Logger.Information("Successfully spawned spiders!");
-                    
                     foreach (var eggToHatch in _preppedSpiderEggs)
-                    {
-                        Logger.Information($"Hatching {eggToHatch}");
-
-                        var transform = eggToHatch.GetComponent<Transform>();
-                        
-                        var position = transform.Position;
-                        position.Y += 5;
-                        
-                        var rotation = transform.Rotation;
-                        
-                        eggToHatch.GetComponent<DestructibleComponent>().SmashAsync(_spiderQueen);
-                        
-                        var spiderling = GameObject.Instantiate(new LevelObjectTemplate
-                        {
-                            ObjectId = ObjectId.Standalone,
-                            Lot = Lot.SpiderQueenSpiderling,
-                            Position = position,
-                            Rotation = rotation,
-                            Scale = 1,
-                            LegoInfo = new LegoDataDictionary()
-                        }, _spiderQueen);
-                        
-                        Start(spiderling);
-                        
-
-                        // InstancingUtilities.Spawner();
-                    }
+                        SpawnSpiderling(eggToHatch);
                     _preppedSpiderEggs = new List<GameObject>();
                 }
+            }
+
+            private void SpawnSpiderling(GameObject egg)
+            {
+                var transform = egg.GetComponent<Transform>();
+                egg.GetComponent<DestructibleComponent>().SmashAsync(_spiderQueen);
+                        
+                var spiderling = GameObject.Instantiate(new LevelObjectTemplate
+                {
+                    ObjectId = ObjectId.Standalone,
+                    Lot = Lot.SpiderQueenSpiderling,
+                    Position = transform.Position,
+                    Rotation = transform.Rotation,
+                    Scale = 1,
+                    LegoInfo = new LegoDataDictionary()
+                }, _spiderQueen);
+                        
+                Start(spiderling);
+                GameObject.Construct(spiderling);
+                GameObject.Serialize(spiderling);
+                _spawnedSpiderlings.Add(spiderling);
+            }
+            
+            private void HandleSpiderlingDeath(GameObject spiderling)
+            {
+                Logger.Information($"{spiderling} was smashed!");
+                
+                _killedSpiders++;
+                _spawnedSpiderlings.Remove(spiderling);
+                Destroy(spiderling);
+
+                if (_killedSpiders >= _currentSpiderlingWavecount)
+                    AdvanceSpiderQueen();
             }
             #endregion spiderwave
             #endregion ai

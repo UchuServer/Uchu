@@ -307,7 +307,7 @@ namespace Uchu.World
         /// <param name="other"></param>
         private void OnEnterCollision(PhysicsComponent other)
         {
-            Logger.Debug($"Collided with {other}");
+            Logger.Information($"Collided with {other}");
         }
         
         /// <summary>
