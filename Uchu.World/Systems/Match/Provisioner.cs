@@ -100,6 +100,10 @@ namespace Uchu.World.Systems.Match
             if (match == default)
             {
                 match = new MatchInstance(_type);
+                match.TimeEnded.AddListener(() =>
+                {
+                    _matches.Remove(match);
+                });
                 _matches.Add(match);
             }
             

@@ -1,13 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Timers;
 
 namespace Uchu.World.Systems.Match
 {
     public class MatchInstance
     {
+        /// <summary>
+        /// Event for the match time expiring.
+        /// </summary>
+        public Event TimeEnded { get; } = new Event();
+        
         /// <summary>
         /// Players that are required to start the match.
         /// </summary>
@@ -56,6 +59,16 @@ namespace Uchu.World.Systems.Match
         {
             _requiredPlayers = 1; // TODO: Figure out from type and database.
             _maxPlayers = 4; // TODO: Figure out from type and database.
+            
+            // Connect the timer ending.
+            _countdown.Elapsed += (sender, args) =>
+            {
+                // Remove the round from the provisioner.
+                TimeEnded.Invoke();
+                
+                // Start the match.
+                // TODO
+            };
         }
 
         /// <summary>
