@@ -17,10 +17,10 @@ Check out the [release page](https://github.com/UchuServer/Uchu/releases) for st
 ## Prerequisites
 This project will be built and run using a CLI. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
 Users should also understand that Uchu is not a game in and of itself, but a server which tells a program on your computer - the client - what to do.
-Uchu is built with .NET Core 3.1 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
+Uchu is built with .NET 5.0 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
 
-### .NET Core 5.0
-Install .NET Core 5.0 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/5.0).
+### .NET 5.0
+Install .NET 5.0 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet/5.0).
 
 ### Database
 Uchu uses SQLite as its database provider by default. This can be changed in the config file to either MySQL or PostgreSQL.
