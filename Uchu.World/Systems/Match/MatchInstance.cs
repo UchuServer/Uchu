@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Timers;
+using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Systems.Match
 {
@@ -10,6 +13,16 @@ namespace Uchu.World.Systems.Match
         /// Event for the match time expiring.
         /// </summary>
         public Event TimeEnded { get; } = new Event();
+
+        /// <summary>
+        /// Time to wait before starting if not all players press "Play!".
+        /// </summary>
+        private int _waitTime;
+
+        /// <summary>
+        /// Time to set before starting if all players press "Play!".
+        /// </summary>
+        private int _playWaitTime;
         
         /// <summary>
         /// Players that are required to start the match.
@@ -41,10 +54,7 @@ namespace Uchu.World.Systems.Match
         /// <summary>
         /// Timer for starting the round.
         /// </summary>
-        private Timer _countdown = new Timer()
-        {
-            Interval = 60000,
-        };
+        private Timer _countdown = new Timer();
 
         /// <summary>
         /// Stopwatch for the elapsed time.
@@ -57,14 +67,27 @@ namespace Uchu.World.Systems.Match
         /// <param name="type">Activity id of the match.</param>
         public MatchInstance(int type)
         {
-            _requiredPlayers = 1; // TODO: Figure out from type and database.
-            _maxPlayers = 4; // TODO: Figure out from type and database.
+            // Load the match data.
+            var matchData = ClientCache.GetTable<Activities>().First(activity => activity.ActivityID == type);
+            var matchZoneId =  matchData.InstanceMapID ?? 0;
+            var matchCurrencyLot = matchData.OptionalCostLOT;
+            var matchCurrencyCount = matchData.OptionalCostCount;
+            _waitTime = matchData.WaitTime ?? 60000;
+            _playWaitTime = matchData.StartDelay ?? 5000;
+            _requiredPlayers = (matchData.MinTeams ?? 1) * (matchData.MinTeamSize ?? 1);
+            _maxPlayers = (matchData.MaxTeams ?? 1) * (matchData.MaxTeamSize ?? 1);
             
             // Connect the timer ending.
             _countdown.Elapsed += (sender, args) =>
             {
                 // Remove the round from the provisioner.
                 TimeEnded.Invoke();
+                
+                // Take the optional currency from the players.
+                if (matchCurrencyLot.HasValue && matchCurrencyCount.HasValue)
+                {
+                    // TODO
+                }
                 
                 // Start the match.
                 // TODO
@@ -84,16 +107,16 @@ namespace Uchu.World.Systems.Match
                 {
                     // Send the initial time.
                     remainingTimeChanged = true;
-                    _countdown.Interval = 60000;
+                    _countdown.Interval = _waitTime;
                     _countdown.Start();
                     _countdownStopwatch.Start();
-                } else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > 5000)
+                } else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > _playWaitTime)
                 {
                     // Set the time to 5 seconds to prepare the round.
                     remainingTimeChanged = true;
                     _countdown.Stop();
                     _countdownStopwatch.Reset();
-                    _countdown.Interval = 5000;
+                    _countdown.Interval = _playWaitTime;
                     _countdown.Start();
                     _countdownStopwatch.Start();
                 }
