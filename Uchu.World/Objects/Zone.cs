@@ -750,7 +750,7 @@ namespace Uchu.World
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e.Message);
+                    Logger.Error(e);
                 }
                 finally
                 {

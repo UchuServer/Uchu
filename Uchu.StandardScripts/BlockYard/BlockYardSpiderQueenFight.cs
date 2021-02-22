@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using InfectedRose.Luz;
 using System.Numerics;
+using System.Timers;
 using IronPython.Modules;
 using Uchu.Core.Resources;
 using Uchu.World.Client;
@@ -87,7 +88,7 @@ namespace Uchu.StandardScripts.BlockYard
 
         public override Task LoadAsync()
         {
-            Listen(Zone.OnPlayerLoad, player =>
+            Listen(Zone.OnPlayerLoad, async player =>
             {
                 _fightCompleted = player.GetComponent<CharacterComponent>().GetFlag(FlagId.BeatSpiderQueen);
                 
@@ -107,7 +108,10 @@ namespace Uchu.StandardScripts.BlockYard
                     SpawnMaelstrom(player);
 
                     var spiderQueen = Zone.GameObjects.First(go => go.Lot == Lot.SpiderQueen);
-                    var spiderQueenFight = SpiderQueenFight.Instantiate(Zone, spiderQueen, player);
+                    var spiderEggSpawner = Zone.GameObjects.First(go => go.Name == "SpiderEggs");
+                    
+                    var spiderQueenFight = await SpiderQueenFight.Instantiate(Zone, spiderQueen, spiderEggSpawner, 
+                        new List<Player> { player });
                     spiderQueenFight.StartFight();
                     _fightStarted = true;
                     
@@ -274,14 +278,45 @@ namespace Uchu.StandardScripts.BlockYard
         /// </summary>
         public class SpiderQueenFight : Object
         {
-            public static SpiderQueenFight Instantiate(Zone zone, GameObject spiderQueen, Player player)
+            public static async Task<SpiderQueenFight> Instantiate(Zone zone, GameObject spiderQueen, GameObject spiderEggSpawner,
+                List<Player> players)
             {
                 var instance = Instantiate<SpiderQueenFight>(zone);
-                instance._player = player;
+                instance._players = players;
+                instance._spiderEggSpawner = spiderEggSpawner;
+
+                instance._spiderQueenFactions = spiderQueen.GetComponent<DestroyableComponent>().Factions.ToArray();
+                instance._stage2Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3 * 2;
+                instance._stage3Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3;
                 instance._spiderQueen = spiderQueen;
+                
+                instance._stage2SpiderlingCount = 2;
+                instance._stage3SpiderlingCount = 3;
+                instance._spawnedSpiderlings = new List<GameObject>();
+                instance._preppedSpiderEggs = new List<GameObject>();
+
+                // Cache all the animation times for animations executed by the spider queen
+                instance._tauntAnimationTime = await GetAnimationTimeAsync("taunt");
+                instance._rainOfFireAnimationTime = await GetAnimationTimeAsync("attack-fire");
+                instance._withdrawalTime = await GetAnimationTimeAsync("withdraw");
+                instance._advanceAnimationTime = await GetAnimationTimeAsync("advance");
+                instance._withdrawnIdleAnimationTime = await GetAnimationTimeAsync("idle-withdrawn");
+                instance._shootLeftAnimationTime = await GetAnimationTimeAsync("attack-shoot-left");
+                instance._shootRightAnimationTime = await GetAnimationTimeAsync("attack-shoot-right");
+                instance._shootAnimationTime = await GetAnimationTimeAsync("attack-fire-single");
+                
                 return instance;
             }
-            
+
+            private static async Task<float> GetAnimationTimeAsync(string animationName)
+            {
+                var animationTable = await ClientCache.GetTableAsync<Animations>();
+                var advanceAnimationLength = animationTable.First(
+                    a => a.Animationtype == animationName && a.AnimationGroupID == 541
+                    ).Animationlength;
+                return (advanceAnimationLength ?? 0) * 1000;
+            }
+
             private SpiderQueenFight()
             {
                 OnFightCompleted = new Event();
@@ -295,12 +330,39 @@ namespace Uchu.StandardScripts.BlockYard
             /// <summary>
             /// The participant in this spider queen fight
             /// </summary>
-            private Player _player;
+            private List<Player> _players;
 
             /// <summary>
             /// The spider queen currently active for the participants in the fight
             /// </summary>
             private GameObject _spiderQueen;
+
+            private int[] _spiderQueenFactions;
+
+            private GameObject _spiderEggSpawner;
+
+            private List<GameObject> _spawnedSpiderlings;
+            private List<GameObject> _preppedSpiderEggs;
+            private int _spiderEggsToPrep;
+
+            private uint _stage = 1;
+            private bool _withdrawn;
+            private uint _stage2Threshold;
+            private uint _stage3Threshold;
+            private int _stage2SpiderlingCount;
+            private int _stage3SpiderlingCount;
+            private int _killedSpiders;
+            private float _withdrawalTime;
+            private float _advanceAnimationTime;
+            private GameObject _advanceAttackTarget;
+            private float _tauntAnimationTime;
+            private float _rainOfFireAnimationTime;
+            private float _withdrawnIdleAnimationTime;
+            private float _shootLeftAnimationTime;
+            private float _shootRightAnimationTime;
+            private float _shootAnimationTime;
+            private int _currentSpiderlingWavecount;
+
 
             #region state
             /// <summary>
@@ -308,70 +370,254 @@ namespace Uchu.StandardScripts.BlockYard
             /// </summary>
             public void StartFight()
             {
+                Logger.Information("Starting spider queen fight!");
+                
                 // Stop the fight if the spider queen was killed
                 Listen(_spiderQueen.GetComponent<DestroyableComponent>().OnHealthChanged, async 
                     (newHealth, delta) =>
                 {
+                    var impliedStage = newHealth < _stage3Threshold ? 3 
+                        : newHealth < _stage2Threshold ? 2 : 1;
+                    if (impliedStage > _stage)
+                        WithdrawSpiderQueen();
+
                     if (newHealth <= 0)
                         await OnFightCompleted.InvokeAsync();
                 });
 
-                Listen(_player.OnFireServerEvent, (name, message) =>
+                // Listen to smashed spiderlings to update the spiderling wave
+                Listen(Zone.OnObject, o =>
                 {
-                    if (message.Arguments == "CleanupSpiders")
-                        CleanupSpiders();
+                    if (o is GameObject spiderling && spiderling.Lot == Lot.SpiderQueenSpiderling)
+                    {
+                        _spawnedSpiderlings.Add(spiderling);
+                        Listen(spiderling.GetComponent<DestroyableComponent>().OnDeath, 
+                            () => HandleSpiderlingDeath(spiderling));
+                    }
                 });
+
+                foreach (var player in _players)
+                {
+                    Listen(player.OnFireServerEvent, (name, message) =>
+                    {
+                        if (message.Arguments == "CleanupSpiders")
+                            CleanupSpiders();
+                    });
+                }
             }
 
             #endregion state
 
             #region ai
+
+            private void AdvanceSpiderQueen()
+            {
+                if (!_withdrawn)
+                    return;
+                
+                Logger.Information("Advancing spider queen!");
+                
+                _spiderQueen.Animate("advance");
+                Zone.Schedule(AdvanceAttack, _advanceAnimationTime - 400);
+                Zone.Schedule(AdvanceComplete, _advanceAnimationTime);
+
+                _withdrawn = false;
+            }
+
+            private void HandleSpiderlingDeath(GameObject spiderling)
+            {
+                Logger.Information($"{spiderling} was smashed!");
+                
+                _killedSpiders++;
+                _spawnedSpiderlings.Remove(spiderling);
+                
+                if (_killedSpiders >= _currentSpiderlingWavecount)
+                    AdvanceSpiderQueen();
+            }
+
+            private void AdvanceAttack()
+            {
+                Logger.Information("Spider queen advance attack!");
+                
+                if (_advanceAttackTarget != null)
+                {
+                    // TODO
+                }
+            }
+
+            private void AdvanceComplete()
+            {
+                Logger.Information("Spider queen completed advance!");
+                
+                _spiderQueen.GetComponent<DestroyableComponent>().Factions = _spiderQueenFactions;
+                _stage += 1;
+                _killedSpiders = 0;
+                _currentSpiderlingWavecount = 0;
+                _spiderQueen.Animate("taunt");
+                Zone.Schedule(AdvanceTauntComplete, _advanceAnimationTime);
+            }
+
+            private void AdvanceTauntComplete()
+            {
+                // TODO: Special skills delay
+                Logger.Information("Spider queen advance taunt has completed!");
+                
+                // Reset immunity
+                Zone.BroadcastMessage(new SetStatusImmunityMessage
+                {
+                    Associate = _spiderQueen,
+                    ImmunityState = ImmunityState.Pop,
+                    ImmuneToSpeed = true,
+                    ImmuneToBasicAttack = true,
+                    ImmuneToDOT = true
+                });
+                
+                Zone.BroadcastMessage(new SetStunnedMessage
+                {
+                    Associate = _spiderQueen,
+                    StunState = StunState.Pop,
+                    CantMove = true,
+                    CantJump = true,
+                    CantAttack = true,
+                    CantTurn = true,
+                    CantUseItem = true,
+                    CantEquip = true,
+                    CantInteract = true,
+                    IgnoreImmunity = true
+                });
+            }
+            
+            private void WithdrawSpiderQueen()
+            {
+                if (_withdrawn)
+                    return;
+                
+                Logger.Information("Withdrawing spider queen!");
+
+                // Spider queen is immune to any attacks during the withdrawn phase
+                Zone.BroadcastMessage(new SetStunnedMessage
+                {
+                    Associate = _spiderQueen,
+                    StunState = StunState.Push,
+                    CantMove = true,
+                    CantJump = true,
+                    CantAttack = true,
+                    CantTurn = true,
+                    CantUseItem = true,
+                    CantEquip = true,
+                    CantInteract = true,
+                    IgnoreImmunity = true
+                });
+
+                // Orientation for the animation to make sense
+                _spiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f });
+                _spiderQueen.Animate("withdraw");
+                _spiderQueen.GetComponent<DestroyableComponent>().Factions = new int[] {};
+                
+                Zone.BroadcastMessage(new SetStatusImmunityMessage
+                {
+                    Associate = _spiderQueen,
+                    ImmunityState = ImmunityState.Push,
+                    ImmuneToSpeed = true,
+                    ImmuneToBasicAttack = true,
+                    ImmuneToDOT = true
+                });
+
+                Zone.Schedule(WithdrawalComplete, _withdrawalTime - 250);
+                _withdrawn = true;
+            }
+
+            private void WithdrawalComplete()
+            {
+                Logger.Information("Spider queen is withdrawn!");
+                
+                _spiderQueen.Animate("idle-withdrawn");
+                _currentSpiderlingWavecount = _stage == 1 ? _stage2SpiderlingCount : _stage3SpiderlingCount;
+                _spiderEggsToPrep = _currentSpiderlingWavecount;
+                SpawnSpiders();
+            }
+            
+            #region spiderwave
+                        
             /// <summary>
             /// Removes all the spiders from the scene
             /// </summary>
             private void CleanupSpiders()
             {
-                foreach (var gameObject in Zone.GameObjects.Where(i => i.Lot == 16197))
-                    Destroy(gameObject);
-            }
-            
-            private async Task WithdrawSpider(bool withdraw)
-            {
-                if (withdraw)
+                foreach (var spiderling in _spawnedSpiderlings)
                 {
-                    // The animation handles movement
-                    _player.Message(new SetStunnedMessage
+                    Zone.BroadcastMessage(new DieMessage
                     {
-                        Associate = _spiderQueen,
-                        CantMove = true,
-                        CantJump = true,
-                        CantAttack = true,
-                        CantTurn = true,
-                        CantUseItem = true,
-                        CantEquip = true,
-                        CantInteract = true
-                    });
-
-                    // Orientation for the animation to make sense
-                    _spiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f });
-                    _spiderQueen.Animate("withdraw");
-
-                    var animation = (await ClientCache.GetTableAsync<Animations>()).FirstOrDefault(
-                        a => a.Animationname == "withdraw"
-                    );
-
-                    var lengthMs = ((animation.Animationlength ??= 2.5f) - 0.25f) * 1000;
-
-                    _player.Message(new SetStatusImmunityMessage
-                    {
-                        Associate = _spiderQueen,
-                        state = ImmunityState.Push,
-                        bImmuneToSpeed = true,
-                        bImmuneToBasicAttack = true,
-                        bImmuneToDOT = true
+                        Associate = spiderling,
+                        Killer = _spiderQueen,
+                        KillType = 1
                     });
                 }
+                
+                _spawnedSpiderlings = new List<GameObject>();
             }
+
+            private void SpawnSpiders()
+            {
+                Logger.Information("Spawning spiders!");
+                
+                var spiderEggs = _spiderEggSpawner.GetComponent<SpawnerComponent>().ActiveSpawns
+                    .Except(_preppedSpiderEggs).ToList();
+                
+                // If no spider eggs are available, try again in a second
+                if (spiderEggs.Count <= 0)
+                {
+                    Zone.Schedule(SpawnSpiders, 1000);
+                    return;
+                }
+                
+                var rng = new Random();
+                var newlyPreppedEggs = 0;
+                
+                for (var i = 0; i < _spiderEggsToPrep; i++)
+                {
+                    var eggToPrep = spiderEggs[rng.Next(0, spiderEggs.Count)];
+                    spiderEggs.Remove(eggToPrep);
+                    _preppedSpiderEggs.Add(eggToPrep);
+                    
+                    Logger.Information($"Prepping {eggToPrep}");
+                    
+                    Zone.BroadcastMessage(new FireClientEventMessage
+                    {
+                        Arguments = "prepEgg",
+                        Target = eggToPrep,
+                        Sender = _spiderQueen
+                    });
+                    
+                    newlyPreppedEggs++;
+                }
+                
+                _spiderEggsToPrep -= newlyPreppedEggs;
+                
+                // There weren't enough spider eggs to hatch, try again in a second
+                if (_spiderEggsToPrep > 0)
+                {
+                    Zone.Schedule(SpawnSpiders, 1000);
+                }
+                else
+                {
+                    Logger.Information("Successfully spawned spiders!");
+                    
+                    foreach (var eggToHatch in _preppedSpiderEggs)
+                    {
+                        Logger.Information($"Hatching {eggToHatch}");
+                        
+                        Zone.BroadcastMessage(new FireClientEventMessage
+                        {
+                            Arguments = "hatchEgg",
+                            Target = eggToHatch,
+                            Sender = _spiderQueen
+                        });
+                    }
+                    _preppedSpiderEggs = new List<GameObject>();
+                }
+            }
+            #endregion spiderwave
             #endregion ai
         }
     }

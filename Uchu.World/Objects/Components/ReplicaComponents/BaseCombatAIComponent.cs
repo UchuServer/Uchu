@@ -138,7 +138,7 @@ namespace Uchu.World
         {
             // TODO: Optimize
 
-            if (Stats.Factions.Length == default)
+            if (Stats.Factions.Length == 0)
                 return new GameObject[0];
 
             var entries = Zone.Objects.OfType<DestroyableComponent>();

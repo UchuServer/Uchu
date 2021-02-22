@@ -119,6 +119,7 @@ namespace Uchu.World
         public const int SpiderQueenRockSmashable = 16284;
         public const int TornadoBgFx = 9938;
         public const int PropertyPlagueVendor = 9628;
+        public const int SpiderQueenSpiderling = 16197;
         
         public const int FactionTokenProxy = 13763;
         public const int AssemblyFactionToken = 8318;
