@@ -64,7 +64,7 @@ namespace Uchu.Core
             return objectId.Value;
         }
 
-        public static implicit operator ObjectId(ulong id)
+        public static explicit operator ObjectId(ulong id)
         {
             return new ObjectId(id);
         }
@@ -74,7 +74,7 @@ namespace Uchu.Core
             return (long) objectId.Value;
         }
         
-        public static implicit operator ObjectId(long id)
+        public static explicit operator ObjectId(long id)
         {
             return new ObjectId((ulong) id);
         }
@@ -85,12 +85,12 @@ namespace Uchu.Core
             
             id |= (long) flags;
 
-            return id;
+            return (ObjectId) id;
         }
 
-        public static ObjectId Standalone => RandomLong(1000000000000000000, 1999999999999999999);
+        public static ObjectId Standalone => (ObjectId) RandomLong(1000000000000000000, 1999999999999999999);
 
-        public static ObjectId Invalid => 0L;
+        public static ObjectId Invalid => (ObjectId) 0L;
         
         private static long RandomLong(long min, long max)
         {

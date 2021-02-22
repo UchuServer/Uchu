@@ -205,7 +205,7 @@ namespace Uchu.World.Handlers
                     IsBestFriend = characterFriend.BestFriend,
                     IsFreeToPlay = friend.FreeToPlay,
                     IsOnline = player != default,
-                    PlayerId = player?.Id ?? -1,
+                    PlayerId = player?.Id ?? (ObjectId) (-1),
                     PlayerName = friend.Name,
                     ZoneId = (ZoneId) friend.LastZone,
                     WorldClone = (uint) friend.LastClone,
