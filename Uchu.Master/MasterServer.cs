@@ -218,6 +218,8 @@ namespace Uchu.Master
             {
                 LogQueue.Config = Config = new UchuConfiguration();
 
+                Config.DllSource.ScriptDllSource.Add("Enter path to Uchu.StandardScripts.dll");
+
                 var backup = File.CreateText("config.default.xml");
 
                 serializer.Serialize(backup, Config);
@@ -265,10 +267,24 @@ namespace Uchu.Master
 
             if (!File.Exists(DllLocation))
             {
-                Logger.Error("Could not find file specified in DllSource -> Instance in config.xml.");
-                throw new FileNotFoundException("Could not find Instance file.");
+                throw new FileNotFoundException("Could not find file specified in <Instance> under <DllSource> in config.xml.");
             }
 
+            var validScriptPackExists = Config.DllSource.ScriptDllSource.Exists(scriptPackPath =>
+            {
+                if (File.Exists(scriptPackPath))
+                    return true;
+
+                Logger.Warning($"Could not find script pack at {scriptPackPath}");
+                return false;
+            });
+
+            if (!validScriptPackExists)
+            {
+                throw new FileNotFoundException("No valid <ScriptDllSource> specified under <DllSource> in config.xml.\n"
+                                                + "Without Uchu.StandardScripts.dll, Uchu cannot function correctly.");
+            }
+            
             foreach (var scriptPackPath in Config.DllSource.ScriptDllSource)
             {
                 if (!File.Exists(scriptPackPath))
