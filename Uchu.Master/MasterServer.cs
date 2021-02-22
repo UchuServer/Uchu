@@ -267,14 +267,22 @@ namespace Uchu.Master
 
             if (!File.Exists(DllLocation))
             {
-                Logger.Error("Could not find file specified in DllSource -> Instance in config.xml.");
-                throw new FileNotFoundException("Could not find Instance file.");
+                throw new FileNotFoundException("Could not find file specified in <Instance> under <DllSource> in config.xml.");
             }
-            
-            if (Config.DllSource.ScriptDllSource.Count == 0)
+
+            var validScriptPackExists = Config.DllSource.ScriptDllSource.Exists(scriptPackPath =>
             {
-                Logger.Warning("No ScriptDllSource specified under DllSource in config.xml.\n" +
-                               "Without Uchu.StandardScripts.dll, Uchu will not function correctly.");
+                if (File.Exists(scriptPackPath))
+                    return true;
+
+                Logger.Warning($"Could not find script pack at {scriptPackPath}");
+                return false;
+            });
+
+            if (!validScriptPackExists)
+            {
+                throw new FileNotFoundException("No valid <ScriptDllSource> specified under <DllSource> in config.xml.\n"
+                                                + "Without Uchu.StandardScripts.dll, Uchu cannot function correctly.");
             }
             
             foreach (var scriptPackPath in Config.DllSource.ScriptDllSource)
