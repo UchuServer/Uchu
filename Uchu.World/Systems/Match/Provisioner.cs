@@ -59,6 +59,18 @@ namespace Uchu.World.Systems.Match
         }
 
         /// <summary>
+        /// Invoked when a player leaves a match.
+        /// </summary>
+        /// <param name="player">Player that left.</param>
+        public static void PlayerLeft(Player player)
+        {
+            foreach (var provisioner in _staticProvisioners.Values)
+            {
+                provisioner.RemovePlayer(player);
+            }
+        }
+
+        /// <summary>
         /// Marks a player as not ready in their current match.
         /// </summary>
         /// <param name="player">Player to mark as ready.</param>
@@ -93,6 +105,20 @@ namespace Uchu.World.Systems.Match
             
             // Add the player.
             match.AddPlayer(player);
+        }
+        
+        /// <summary>
+        /// Removes a player from their current match.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemovePlayer(Player player)
+        {
+            foreach (var match in _matches)
+            {
+                if (!match.HasPlayer(player)) continue;
+                match.RemovePlayer(player);
+                return;
+            }
         }
         
         /// <summary>

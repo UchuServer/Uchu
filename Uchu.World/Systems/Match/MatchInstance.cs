@@ -71,6 +71,7 @@ namespace Uchu.World.Systems.Match
                 {
                     // Send the initial time.
                     remainingTimeChanged = true;
+                    _countdown.Interval = 60000;
                     _countdown.Start();
                     _countdownStopwatch.Start();
                 } else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > 5000)
@@ -78,7 +79,7 @@ namespace Uchu.World.Systems.Match
                     // Set the time to 5 seconds to prepare the round.
                     remainingTimeChanged = true;
                     _countdown.Stop();
-                    _countdownStopwatch.Stop();
+                    _countdownStopwatch.Reset();
                     _countdown.Interval = 5000;
                     _countdown.Start();
                     _countdownStopwatch.Start();
@@ -112,7 +113,7 @@ namespace Uchu.World.Systems.Match
             {
                 // Stop the time.
                 _countdown.Stop();
-                _countdownStopwatch.Stop();
+                _countdownStopwatch.Reset();
                 // TODO: What is used to disable the time?
             }
         }
@@ -171,6 +172,30 @@ namespace Uchu.World.Systems.Match
             }
             
             // Update the timer.
+            UpdateTimer();
+        }
+        
+        /// <summary>
+        /// Removes a player from the match.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemovePlayer(Player player)
+        {
+            // Remove the player.
+            foreach (var otherPlayer in _players)
+            {
+                otherPlayer.Message(new MatchUpdate()
+                {
+                    Associate = otherPlayer,
+                    Data = "player=9:" + player.Id,
+                    Type = MatchUpdateType.PlayerRemoved,
+                });
+            }
+            _players.Remove(player);
+            _readyPlayers.Remove(player);
+            _playersSentTime.Remove(player);
+            
+            // Update the time.
             UpdateTimer();
         }
 

@@ -10,8 +10,15 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (message.Type == MatchRequestType.Join)
             {
-                // Add the player to a match.
-                Provisioner.GetProvisioner(message.Value).AddPlayer(player);
+                // Add the player to a match or remove them.
+                if (message.Value == 0)
+                {
+                    Provisioner.PlayerLeft(player);
+                }
+                else
+                {
+                    Provisioner.GetProvisioner(message.Value).AddPlayer(player);
+                }
             }
             else if (message.Type == MatchRequestType.SetReady)
             {
