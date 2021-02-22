@@ -22,22 +22,8 @@ Uchu is built with .NET Core 3.1 (see below for installation details) which is c
 ### .NET Core 5.0
 Install .NET Core 5.0 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/5.0).
 
-### PostgreSQL
-Uchu uses PostgreSQL as its database provider by default. This can be changed in the config file to either MySQL or SQLite.
-
-If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
-
-#### Linux (Debian/Ubuntu)
-```
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-```
-
-#### Windows
-https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
-
-#### MacOS
-Refer to [brew](https://brew.sh) instructions [here](https://wiki.postgresql.org/wiki/Homebrew).
+### Database
+Uchu uses SQLite as its database provider by default. This can be changed in the config file to either MySQL or PostgreSQL.
 
 ### Redis (optional)
 Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux and MacOS so setting it up on Windows requires some workarounds.
