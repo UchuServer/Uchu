@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Timers;
+using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
 
@@ -94,7 +95,10 @@ namespace Uchu.World.Systems.Match
                 }
                 
                 // Start the match.
-                // TODO
+                foreach (var player in _players)
+                {
+                    await player.SendToWorldAsync((ZoneId) matchZoneId);
+                }
             };
         }
 
