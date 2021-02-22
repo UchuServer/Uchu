@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using InfectedRose.Luz;
 using System.Numerics;
 using System.Timers;
+using InfectedRose.Lvl;
 using IronPython.Modules;
 using Uchu.Core.Resources;
 using Uchu.World.Client;
@@ -100,27 +101,30 @@ namespace Uchu.StandardScripts.BlockYard
                 
                 if (_fightCompleted && !_peacefulSpawned)
                 {
-                    SpawnPeaceful(player);
+                    SpawnPeaceful();
                     _peacefulSpawned = true;
                 }
                 else if (!_fightCompleted && !_fightStarted)
                 {
-                    SpawnMaelstrom(player);
+                    SpawnMaelstrom();
 
                     var spiderQueen = Zone.GameObjects.First(go => go.Lot == Lot.SpiderQueen);
                     var spiderEggSpawner = Zone.GameObjects.First(go => go.Name == "SpiderEggs");
                     
-                    var spiderQueenFight = await SpiderQueenFight.Instantiate(Zone, spiderQueen, spiderEggSpawner, 
-                        new List<Player> { player });
+                    var spiderQueenFight = await SpiderQueenFight.Instantiate(Zone, spiderQueen, spiderEggSpawner);
                     spiderQueenFight.StartFight();
                     _fightStarted = true;
                     
                     Listen(spiderQueenFight.OnFightCompleted, () =>
                     {
-                        player.GetComponent<CharacterComponent>().SetFlagAsync(FlagId.BeatSpiderQueen, true);
+                        foreach (var zonePlayer in Zone.Players)
+                        {
+                            zonePlayer.GetComponent<CharacterComponent>().SetFlagAsync(FlagId.BeatSpiderQueen, true);
+                        }
+                        
                         _fightCompleted = true;
                         _peacefulSpawned = true;
-                        SpawnPeaceful(player);
+                        SpawnPeaceful();
                     });
                 }
             });
@@ -139,9 +143,9 @@ namespace Uchu.StandardScripts.BlockYard
             Logger.Debug("Spawned global");
         }
             
-        private void SpawnMaelstrom(Player player)
+        private void SpawnMaelstrom()
         {
-            StartFightEffects(player);
+            StartFightEffects();
             
             // Destroy all maelstrom spawners
             foreach (var gameObject in Zone.GameObjects.Where(go => PeacefulObjects.Contains(go.Name)).ToArray())
@@ -162,9 +166,9 @@ namespace Uchu.StandardScripts.BlockYard
             Logger.Debug("Spawned maelstrom");
         }
 
-        private void SpawnPeaceful(Player player)
+        private void SpawnPeaceful()
         {
-            StopFightEffects(player);
+            StopFightEffects();
             
             // Destroy all maelstrom spawners
             foreach (var gameObject in Zone.GameObjects.Where(go => MaelstromObjects.Contains(go.Name)).ToArray())
@@ -206,32 +210,31 @@ namespace Uchu.StandardScripts.BlockYard
             spawner.SpawnCluster();
         }
         
-        private void StartFightEffects(Player player)
+        private void StartFightEffects()
         {
             var maelStromFxObject = Zone.GameObjects.First(go => go.Lot == Lot.TornadoBgFx);
             
-            player.Message(new PlayNDAudioEmitterMessage
+            Zone.BroadcastMessage(new PlayNDAudioEmitterMessage
             {
-                Associate = player,
                 NDAudioEventGUID = GuidMaelstrom.ToString()
             });
 
             
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "TornadoDebris",
                 EffectType = "debrisOn",
                 Associate = maelStromFxObject
             });
                     
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "TornadoVortex",
                 EffectType = "VortexOn",
                 Associate = maelStromFxObject
             });
                     
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "silhouette",
                 EffectType = "onSilhouette",
@@ -239,31 +242,30 @@ namespace Uchu.StandardScripts.BlockYard
             });
         }
 
-        private void StopFightEffects(Player player)
+        private void StopFightEffects()
         {
             var maelStromFxObject = Zone.GameObjects.First(go => go.Lot == Lot.TornadoBgFx);
             
-            player.Message(new PlayNDAudioEmitterMessage
+            Zone.BroadcastMessage(new PlayNDAudioEmitterMessage
             {
-                Associate = player,
                 NDAudioEventGUID = GuidPeaceful.ToString()
             });
             
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "TornadoDebris",
                 EffectType = "debrisOff",
                 Associate = maelStromFxObject
             });
                     
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "TornadoVortex",
                 EffectType = "VortexOff",
                 Associate = maelStromFxObject
             });
                     
-            player.Message(new PlayFXEffectMessage
+            Zone.BroadcastMessage(new PlayFXEffectMessage
             {
                 Name = "silhouette",
                 EffectType = "offSilhouette",
@@ -278,11 +280,9 @@ namespace Uchu.StandardScripts.BlockYard
         /// </summary>
         public class SpiderQueenFight : Object
         {
-            public static async Task<SpiderQueenFight> Instantiate(Zone zone, GameObject spiderQueen, GameObject spiderEggSpawner,
-                List<Player> players)
+            public static async Task<SpiderQueenFight> Instantiate(Zone zone, GameObject spiderQueen, GameObject spiderEggSpawner)
             {
                 var instance = Instantiate<SpiderQueenFight>(zone);
-                instance._players = players;
                 instance._spiderEggSpawner = spiderEggSpawner;
 
                 instance._spiderQueenFactions = spiderQueen.GetComponent<DestroyableComponent>().Factions.ToArray();
@@ -326,11 +326,6 @@ namespace Uchu.StandardScripts.BlockYard
             /// Event called when the player completes the fight
             /// </summary>
             public Event OnFightCompleted { get; set; }
-
-            /// <summary>
-            /// The participant in this spider queen fight
-            /// </summary>
-            private List<Player> _players;
 
             /// <summary>
             /// The spider queen currently active for the participants in the fight
@@ -390,13 +385,16 @@ namespace Uchu.StandardScripts.BlockYard
                 {
                     if (o is GameObject spiderling && spiderling.Lot == Lot.SpiderQueenSpiderling)
                     {
+                        Logger.Information($"Detected new spiderling {spiderling}, subscribing!");
                         _spawnedSpiderlings.Add(spiderling);
+                        spiderling.GetComponent<DestroyableComponent>().Factions = new int[] {4};
+                        
                         Listen(spiderling.GetComponent<DestroyableComponent>().OnDeath, 
                             () => HandleSpiderlingDeath(spiderling));
                     }
                 });
 
-                foreach (var player in _players)
+                foreach (var player in Zone.Players)
                 {
                     Listen(player.OnFireServerEvent, (name, message) =>
                     {
@@ -430,7 +428,7 @@ namespace Uchu.StandardScripts.BlockYard
                 
                 _killedSpiders++;
                 _spawnedSpiderlings.Remove(spiderling);
-                
+
                 if (_killedSpiders >= _currentSpiderlingWavecount)
                     AdvanceSpiderQueen();
             }
@@ -545,15 +543,7 @@ namespace Uchu.StandardScripts.BlockYard
             private void CleanupSpiders()
             {
                 foreach (var spiderling in _spawnedSpiderlings)
-                {
-                    Zone.BroadcastMessage(new DieMessage
-                    {
-                        Associate = spiderling,
-                        Killer = _spiderQueen,
-                        KillType = 1
-                    });
-                }
-                
+                    Destroy(spiderling);
                 _spawnedSpiderlings = new List<GameObject>();
             }
 
@@ -606,13 +596,30 @@ namespace Uchu.StandardScripts.BlockYard
                     foreach (var eggToHatch in _preppedSpiderEggs)
                     {
                         Logger.Information($"Hatching {eggToHatch}");
+
+                        var transform = eggToHatch.GetComponent<Transform>();
                         
-                        Zone.BroadcastMessage(new FireClientEventMessage
+                        var position = transform.Position;
+                        position.Y += 5;
+                        
+                        var rotation = transform.Rotation;
+                        
+                        eggToHatch.GetComponent<DestructibleComponent>().SmashAsync(_spiderQueen);
+                        
+                        var spiderling = GameObject.Instantiate(new LevelObjectTemplate
                         {
-                            Arguments = "hatchEgg",
-                            Target = eggToHatch,
-                            Sender = _spiderQueen
-                        });
+                            ObjectId = ObjectId.Standalone,
+                            Lot = Lot.SpiderQueenSpiderling,
+                            Position = position,
+                            Rotation = rotation,
+                            Scale = 1,
+                            LegoInfo = new LegoDataDictionary()
+                        }, _spiderQueen);
+                        
+                        Start(spiderling);
+                        
+
+                        // InstancingUtilities.Spawner();
                     }
                     _preppedSpiderEggs = new List<GameObject>();
                 }
