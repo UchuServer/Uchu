@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace Uchu.World.Systems.Match
@@ -21,6 +22,11 @@ namespace Uchu.World.Systems.Match
         /// Players currently in the match.
         /// </summary>
         private List<Player> _players = new List<Player>();
+        
+        /// <summary>
+        /// Players currently ready for the match.
+        /// </summary>
+        private List<Player> _readyPlayers = new List<Player>();
         
         /// <summary>
         /// Players that were sent the time.
@@ -60,34 +66,53 @@ namespace Uchu.World.Systems.Match
             // Update the countdown.
             if (_players.Count >= _requiredPlayers)
             {
+                var remainingTimeChanged = false;
                 if (!_countdown.Enabled)
                 {
+                    // Send the initial time.
+                    remainingTimeChanged = true;
+                    _countdown.Start();
+                    _countdownStopwatch.Start();
+                } else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > 5000)
+                {
+                    // Set the time to 5 seconds to prepare the round.
+                    remainingTimeChanged = true;
+                    _countdown.Stop();
+                    _countdownStopwatch.Stop();
+                    _countdown.Interval = 5000;
                     _countdown.Start();
                     _countdownStopwatch.Start();
                 }
-            }
-            else
-            {
-                _countdown.Stop();
-            }
-            
-            // Send the players the updated time.
-            if (_countdown.Enabled)
-            {
+                
+                // Send the clients the updated time.
                 foreach (var player in _players)
                 {
-                    if (_playersSentTime.Contains(player)) continue;
-                    _playersSentTime.Add(player);
-                    player.Message(new MatchUpdate()
+                    if (!_playersSentTime.Contains(player))
                     {
-                        Associate = player,
-                        Data = "time=3:" + ((_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0),
-                        Type = 3,
-                    });
+                        _playersSentTime.Add(player);
+                        player.Message(new MatchUpdate()
+                        {
+                            Associate = player,
+                            Data = "time=3:" + ((_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0),
+                            Type = MatchUpdateType.SetInitialTime,
+                        });
+                    }
+                    else if (remainingTimeChanged)
+                    {
+                        player.Message(new MatchUpdate()
+                        {
+                            Associate = player,
+                            Data = "time=3:" + ((_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0),
+                            Type = MatchUpdateType.SetTime,
+                        });
+                    }
                 }
             }
             else
             {
+                // Stop the time.
+                _countdown.Stop();
+                _countdownStopwatch.Stop();
                 // TODO: What is used to disable the time?
             }
         }
@@ -101,6 +126,17 @@ namespace Uchu.World.Systems.Match
         {
             return _players.Count < _maxPlayers;
         }
+        
+        /// <summary>
+        /// Returns a player is in the match.
+        /// </summary>
+        /// <param name="player">Player to check.</param>
+        /// <returns>If the player is in the round.</returns>
+        public bool HasPlayer(Player player)
+        {
+            return _players.Contains(player);
+        }
+
 
         /// <summary>
         /// Adds a player to the match.
@@ -124,18 +160,69 @@ namespace Uchu.World.Systems.Match
                 {
                     Associate = player,
                     Data = "player=9:" + otherPlayer.Id + "\nplayerName=0:" + otherPlayer.Name,
-                    Type = 0,
+                    Type = MatchUpdateType.PlayerAdded,
                 });
                 otherPlayer.Message(new MatchUpdate()
                 {
                     Associate = otherPlayer,
                     Data = "player=9:" + player.Id + "\nplayerName=0:" + player.Name,
-                    Type = 0,
+                    Type = MatchUpdateType.PlayerAdded,
                 });
             }
             
             // Update the timer.
             UpdateTimer();
+        }
+
+        /// <summary>
+        /// Set a player as ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public void SetPlayerReady(Player player)
+        {
+            // Send to all players that the player is ready.
+            _readyPlayers.Add(player);
+            player.Message(new MatchResponse()
+            {
+                Associate = player,
+                Response = 0,
+            });
+            foreach (var otherPlayer in _players)
+            {
+                otherPlayer.Message(new MatchUpdate()
+                {
+                    Associate = otherPlayer,
+                    Data = "player=9:" + player.Id,
+                    Type = MatchUpdateType.PlayerReady,
+                });
+            }
+            
+            // Update the time.
+            UpdateTimer();
+        }
+
+        /// <summary>
+        /// Set a player as not ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public void SetPlayerNotReady(Player player)
+        {
+            // Send to all players that the player is no longer ready.
+            _readyPlayers.Remove(player);
+            player.Message(new MatchResponse()
+            {
+                Associate = player,
+                Response = 0,
+            });
+            foreach (var otherPlayer in _players)
+            {
+                otherPlayer.Message(new MatchUpdate()
+                {
+                    Associate = otherPlayer,
+                    Data = "player=9:" + player.Id,
+                    Type = MatchUpdateType.PlayerNotReady,
+                });
+            }
         }
     }
 }

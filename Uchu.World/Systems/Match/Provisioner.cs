@@ -26,6 +26,8 @@ namespace Uchu.World.Systems.Match
         private Provisioner(int type)
         {
             _type = type;
+            
+            // TODO: Connect players leaving zone.
         }
         
         /// <summary>
@@ -45,10 +47,33 @@ namespace Uchu.World.Systems.Match
         }
 
         /// <summary>
+        /// Marks a player as ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public static void PlayerReady(Player player)
+        {
+            foreach (var provisioner in _staticProvisioners.Values)
+            {
+                provisioner.SetPlayerReady(player);
+            } 
+        }
+
+        /// <summary>
+        /// Marks a player as not ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public static void PlayerNotReady(Player player)
+        {
+            foreach (var provisioner in _staticProvisioners.Values)
+            {
+                provisioner.SetPlayerNotReady(player);
+            } 
+        }
+
+        /// <summary>
         /// Adds a player to a match.
         /// </summary>
         /// <param name="player">Player to add.</param>
-        private List<Player> _players = new List<Player>();
         public void AddPlayer(Player player)
         {
             // Get the round to use.
@@ -68,6 +93,34 @@ namespace Uchu.World.Systems.Match
             
             // Add the player.
             match.AddPlayer(player);
+        }
+        
+        /// <summary>
+        /// Set a player as ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public void SetPlayerReady(Player player)
+        {
+            foreach (var match in _matches)
+            {
+                if (!match.HasPlayer(player)) continue;
+                match.SetPlayerReady(player);
+                return;
+            } 
+        }
+        
+        /// <summary>
+        /// Set a player as not ready in their current match.
+        /// </summary>
+        /// <param name="player">Player to mark as ready.</param>
+        public void SetPlayerNotReady(Player player)
+        {
+            foreach (var match in _matches)
+            {
+                if (!match.HasPlayer(player)) continue;
+                match.SetPlayerNotReady(player);
+                return;
+            } 
         }
     }
 }

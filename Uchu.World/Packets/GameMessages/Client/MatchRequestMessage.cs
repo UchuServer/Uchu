@@ -8,7 +8,7 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.MatchRequest;
 
-        public int Type { get; set; }
+        public MatchRequestType Type { get; set; }
         
         public int Value { get; set; }
         
@@ -24,7 +24,7 @@ namespace Uchu.World
 
             Settings = LegoDataDictionary.FromString(ldl);
             
-            Type = reader.Read<int>();
+            Type = (MatchRequestType) reader.Read<int>();
 
             Value = reader.Read<int>();
         }

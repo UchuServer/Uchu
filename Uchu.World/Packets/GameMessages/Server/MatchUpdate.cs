@@ -1,5 +1,3 @@
-using System;
-using InfectedRose.Lvl;
 using RakDotNet.IO;
 using Uchu.Core;
 
@@ -11,19 +9,20 @@ namespace Uchu.World
         
         public string Data { get; set; }
         
-        public int Type { get; set; } // TODO: Convert to enum
+        public MatchUpdateType Type { get; set; }
         
         public override void SerializeMessage(BitWriter writer)
         {
-            var ldf = Data.ToString();
-            writer.Write((uint) ldf.Length);
+            writer.Write((uint) Data.Length);
 
-            if (ldf.Length > 0)
+            if (Data.Length > 0)
             {
-                writer.WriteString(ldf, ldf.Length, true);
+                writer.WriteString(Data, Data.Length, true);
+                writer.Write((byte) 0);
+                writer.Write((byte) 0);
             }
 
-            writer.Write(Type);
+            writer.Write((int) Type);
         }
     }
 }
