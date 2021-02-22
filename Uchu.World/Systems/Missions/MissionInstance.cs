@@ -181,6 +181,16 @@ namespace Uchu.World.Systems.Missions
         public int RewardItem4RepeatableCount { get; private set; }
         #endregion template
         
+        /// <summary>
+        /// Whether the mission is part of mission of the day
+        /// </summary>
+        public bool InMissionOfTheDay { get; private set; }
+
+        /// <summary>
+        /// Cooldown time for repeating the mission.
+        /// </summary>
+        public long CooldownTime { get; private set; }
+        
         #region instance
         /// <summary>
         /// The player that started this mission
@@ -228,6 +238,12 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <returns><c>true</c> if completed, <c>false</c> otherwise</returns>
         public bool Completed => Tasks.All(t => t.Completed);
+        
+        /// <summary>
+        /// Checks if this mission is can be repeated and the cooldown time is satisfied.
+        /// </summary>
+        /// <returns><c>true</c> if can be repeated right now, <c>false</c> otherwise</returns>
+        public bool CanRepeat => IsMission && State == MissionState.Completed && (Repeatable || InMissionOfTheDay) && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
         
         #endregion properties
         static MissionInstance()
@@ -291,6 +307,14 @@ namespace Uchu.World.Systems.Missions
             RewardCurrency = mission.Rewardcurrency ?? 0;
             RewardCurrencyRepeatable = mission.Rewardcurrencyrepeatable ?? 0;
             RewardScore = mission.LegoScore ?? 0;
+            Repeatable = mission.Repeatable ?? false;
+            InMissionOfTheDay = mission.InMOTD ?? false;
+            CooldownTime = mission.CooldownTime ?? 0;
+            if (InMissionOfTheDay && CooldownTime == 0)
+            {
+                // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
+                CooldownTime = 1300;
+            }
             
             // Emotes
             RewardEmote1 = mission.Rewardemote ?? -1;
@@ -396,6 +420,28 @@ namespace Uchu.World.Systems.Missions
             
             State = MissionState.Active;
 
+            await NotifyClientStartAsync();
+        }
+        
+        /// <summary>
+        /// Restarts this mission instance and notifies the client
+        /// </summary>
+        public async Task RestartAsync()
+        {
+            State = MissionState.CompletedActive;
+            foreach (var missionTask in Tasks)
+            {
+                missionTask.Restart();
+            }
+
+            await NotifyClientStartAsync();
+        }
+
+        /// <summary>
+        /// Notifies the client of starting the mission
+        /// </summary>
+        private async Task NotifyClientStartAsync()
+        {
             MessageNotifyMission();
             MessageMissionTypeState(MissionLockState.New);
             
@@ -582,7 +628,9 @@ namespace Uchu.World.Systems.Missions
         {
             if (IsMission)
             {
-                UpdateMissionState(MissionState.ReadyToComplete);
+                UpdateMissionState(State == MissionState.CompletedActive
+                    ? MissionState.CompletedReadyToComplete
+                    : MissionState.ReadyToComplete);
                 return;
             }
 
