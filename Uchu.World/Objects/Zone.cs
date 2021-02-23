@@ -202,7 +202,7 @@ namespace Uchu.World
 
             int Lot = ZoneControlLot ??= 2365;
 
-            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: 70368744177662);
+            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: (ObjectId) 70368744177662);
 
             Start(ZoneObject);
 

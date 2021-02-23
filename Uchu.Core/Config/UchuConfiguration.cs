@@ -15,11 +15,11 @@ namespace Uchu.Core.Config
         [XmlElement]
         public DatabaseConfiguration Database { get; set; } = new DatabaseConfiguration
         {
-            Provider = "postgres",
+            Provider = "sqlite",
             Database = "uchu",
             Host = "localhost",
-            Username = "postgres",
-            Password = "postgres"
+            Username = "username",
+            Password = "password"
         };
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "Uchu.Instance.dll";
+        [XmlElement] public string Instance { get; set; } = "Enter path to Uchu.Instance.dll";
         
         /// <summary>
         /// The path to the script source DLLs
