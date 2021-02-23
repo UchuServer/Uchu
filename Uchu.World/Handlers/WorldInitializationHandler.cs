@@ -105,6 +105,7 @@ namespace Uchu.World.Handlers
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
                 .ThenInclude(m => m.Values)
+                .AsSplitQuery()
                 .SingleAsync(c => c.Id == session.CharacterId);
 
             // Zone Id might be 0 on first load, set it to venture explorer
