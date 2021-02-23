@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 using Uchu.Api.Models;
 using Uchu.Core;
@@ -196,7 +197,6 @@ namespace Uchu.World.Systems.Match
             return _players.Contains(player);
         }
 
-
         /// <summary>
         /// Adds a player to the match.
         /// </summary>
@@ -211,7 +211,6 @@ namespace Uchu.World.Systems.Match
             });
             
             // Store the player and send the player.
-            // TODO: The existing players see the new player, but the new player does not see the existing player.
             _players.Add(player);
             foreach (var otherPlayer in _players)
             {
@@ -231,6 +230,22 @@ namespace Uchu.World.Systems.Match
             
             // Update the timer.
             UpdateTimer();
+            
+            // Send the current state of the players.
+            // TODO: For some reason, a delay is required. Otherwise, the client won't display the existing players.
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                foreach (var otherPlayer in _players)
+                {
+                    player.Message(new MatchUpdate()
+                    {
+                        Associate = player,
+                        Data = "player=9:" + otherPlayer.Id,
+                        Type = (_readyPlayers.Contains(otherPlayer) ? MatchUpdateType.PlayerReady : MatchUpdateType.PlayerNotReady),
+                    });
+                }
+            });
         }
         
         /// <summary>
