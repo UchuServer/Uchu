@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
@@ -8,7 +9,7 @@ namespace Uchu.Core
     [SuppressMessage("ReSharper", "CA2227")]
     public class Character
     {
-        [JsonIgnore]
+        [JsonIgnore, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public long Id { get; set; }
 
         [MaxLength(33), Required]

@@ -128,7 +128,7 @@ namespace Uchu.World.Handlers
             await SendCharacterXmlDataToClient(connection, character);
             
             Logger.Information("[55%] Constructing player.");
-            var player = await Player.Instantiate(connection, zone, session.CharacterId);
+            var player = await Player.Instantiate(connection, zone, (ObjectId) session.CharacterId);
 
             Logger.Information("[55%] Checking rocket landing conditions.");
             var characterComponent = player.GetComponent<CharacterComponent>();

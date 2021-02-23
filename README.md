@@ -9,35 +9,21 @@ LEGO Universe server written in C#
 Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
 
 ## Python scripting
-Uchu supports [Python scripting](https://github.com/yuwui/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
+Uchu supports [Python scripting](https://github.com/UchuServer/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
 
 ## Releases
-Check out the [release page](https://github.com/yuwui/Uchu/releases) for standalone binary releases of Uchu.
+Check out the [release page](https://github.com/UchuServer/Uchu/releases) for standalone binary releases of Uchu.
 
 ## Prerequisites
 This project will be built and run using a CLI. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
 Users should also understand that Uchu is not a game in and of itself, but a server which tells a program on your computer - the client - what to do.
-Uchu is built with .NET Core 3.1 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
+Uchu is built with .NET 5.0 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
 
-### .NET Core 3.1
-Install .NET Core 3.1 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet-core/3.1).
+### .NET 5.0
+Install .NET 5.0 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet/5.0).
 
-### PostgreSQL
-Uchu uses PostgreSQL as its database provider by default. This can be changed in the config file to either MySQL or SQLite.
-
-If and when prompted to choose a password for the "postgres" user, choose "postgres" for ease of setup later on.
-
-#### Linux (Debian/Ubuntu)
-```
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-```
-
-#### Windows
-https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows
-
-#### MacOS
-Refer to [brew](https://brew.sh) instructions [here](https://wiki.postgresql.org/wiki/Homebrew).
+### Database
+Uchu uses SQLite as its database provider by default. This can be changed in the config file to either MySQL or PostgreSQL.
 
 ### Redis (optional)
 Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux and MacOS so setting it up on Windows requires some workarounds.
@@ -92,7 +78,7 @@ You can download git from [the official website](https://git-scm.com/).
 You can append `--depth 1` to the following command if you don't care about commit history and/or have slow internet.
 
 ```
-git clone https://github.com/yuwui/Uchu --recursive -b master
+git clone https://github.com/UchuServer/Uchu --recursive -b master
 ```
 
 #### Building
@@ -105,7 +91,7 @@ dotnet build
 
 #### Config file
 Before we can configure the server, it needs to generate a config file.
-1. Navigate to where you built the Uchu.Master project. This is commonly `bin/Debug/netcoreapp3.1/`, relative to the Uchu.Master path, but may differ.
+1. Navigate to where you built the Uchu.Master project. This is commonly `bin/Debug/net5.0/`, relative to the Uchu.Master path, but may differ.
 2. Run `dotnet Uchu.Master.dll`. This will throw errors.
 3. Close the process when it says it has generated a default config file.
 
@@ -127,8 +113,8 @@ You have to tell Uchu where it can find the different libraries it will utilize 
 
 1. Open the config file and find the `<DllSource></DllSource>` section.
 2. If `dotnet` is not accessible as a global command, copy the path to `dotnet(.exe)` in between the `<DotNetPath></DotNetPath>` tags.
-3. Copy the path to Uchu.Instance.dll in between the `<Instance></Instance>` tags. This is commonly `/bin/Debug/netcoreapp3.1`, relative to the Uchu.Instance path, but may differ.
-4. Copy the path to Uchu.StandardScripts.dll in between the `<ScriptDllSource></ScriptDllSource>` tags. This is commonly `/bin/Debug/netcoreapp3.1`, relative to the Uchu.StandardScripts path, but may differ.
+3. Copy the path to Uchu.Instance.dll in between the `<Instance></Instance>` tags. This is commonly `/bin/Debug/net5.0`, relative to the Uchu.Instance path, but may differ.
+4. Copy the path to Uchu.StandardScripts.dll in between the `<ScriptDllSource></ScriptDllSource>` tags. This is commonly `/bin/Debug/net5.0`, relative to the Uchu.StandardScripts path, but may differ.
 
 No quotation marks (`""`) should be used.
 

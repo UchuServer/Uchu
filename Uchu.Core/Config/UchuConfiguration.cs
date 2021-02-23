@@ -15,11 +15,11 @@ namespace Uchu.Core.Config
         [XmlElement]
         public DatabaseConfiguration Database { get; set; } = new DatabaseConfiguration
         {
-            Provider = "postgres",
+            Provider = "sqlite",
             Database = "uchu",
             Host = "localhost",
-            Username = "postgres",
-            Password = "postgres"
+            Username = "username",
+            Password = "password"
         };
 
         /// <summary>

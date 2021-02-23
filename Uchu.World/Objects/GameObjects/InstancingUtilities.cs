@@ -28,7 +28,7 @@ namespace Uchu.World
                 position: levelObject.Position,
                 rotation: levelObject.Rotation,
                 scale: -1,
-                objectId: (long) levelObject.ObjectId,
+                objectId: (ObjectId) levelObject.ObjectId,
                 lot: levelObject.Lot
             );
 
@@ -60,7 +60,7 @@ namespace Uchu.World
                 wayPoint.Position,
                 wayPoint.Rotation,
                 -1,
-                spawnerPath.SpawnerObjectId,
+                (ObjectId) spawnerPath.SpawnerObjectId,
                 Lot.Spawner
             );
 
