@@ -133,15 +133,17 @@ namespace Uchu.World
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             
-            foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
-            {
-                await inventory.MoveItemBetweenInventoriesAsync(
-                    temp,
-                    temp.Count,
-                    InventoryType.TemporaryModels,
-                    InventoryType.Models
-                );
-            }
+                foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
+                if (temp.Count < 0) ; // Make sure we account for builds where no parts were used
+                else
+                {
+                    await inventory.MoveItemBetweenInventoriesAsync(
+                        temp,
+                        temp.Count,
+                        InventoryType.TemporaryModels,
+                        InventoryType.Models
+                    );
+                }
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
             await thinkingHat.UnEquipAsync();
