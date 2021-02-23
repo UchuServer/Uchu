@@ -99,7 +99,7 @@ namespace Uchu.World.Systems.Match
             }
             if (match == default)
             {
-                match = new MatchInstance(_type);
+                match = new MatchInstance(_type, player.Zone);
                 match.TimeEnded.AddListener(() =>
                 {
                     _matches.Remove(match);

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Timers;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
@@ -55,7 +56,10 @@ namespace Uchu.World.Systems.Match
         /// <summary>
         /// Timer for starting the round.
         /// </summary>
-        private Timer _countdown = new Timer();
+        private Timer _countdown = new Timer()
+        {
+            AutoReset = false,
+        };
 
         /// <summary>
         /// Stopwatch for the elapsed time.
@@ -66,7 +70,7 @@ namespace Uchu.World.Systems.Match
         /// Creates an instance of a match.
         /// </summary>
         /// <param name="type">Activity id of the match.</param>
-        public MatchInstance(int type)
+        public MatchInstance(int type, Zone zone)
         {
             // Load the match data.
             var matchData = ClientCache.GetTable<Activities>().First(activity => activity.ActivityID == type);
@@ -94,10 +98,20 @@ namespace Uchu.World.Systems.Match
                     }
                 }
                 
+                // Allocate the new zone.
+                var uchuServer = zone.UchuServer;
+                var allocatedServer = await uchuServer.Api.RunCommandAsync<SeekWorldResponse>(
+                    uchuServer.MasterApi, $"master/allocate?z={matchZoneId}"
+                ).ConfigureAwait(false);
+                
+                var allocatedInstance = await uchuServer.Api.RunCommandAsync<InstanceInfoResponse>(
+                    uchuServer.MasterApi, $"instance/target?i={allocatedServer.Id}"
+                ).ConfigureAwait(false);
+
                 // Start the match.
                 foreach (var player in _players)
                 {
-                    await player.SendToWorldAsync((ZoneId) matchZoneId);
+                    await player.SendToWorldAsync(allocatedInstance.Info, (ZoneId) matchZoneId);
                 }
             };
         }
