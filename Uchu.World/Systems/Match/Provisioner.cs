@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using InfectedRose.Lvl;
 
 namespace Uchu.World.Systems.Match
 {
@@ -19,6 +18,11 @@ namespace Uchu.World.Systems.Match
         /// List of active round instances.
         /// </summary>
         private List<MatchInstance> _matches = new List<MatchInstance>();
+        
+        /// <summary>
+        /// Zones that have been connected for events.
+        /// </summary>
+        private static readonly List<Zone> _connectedZones = new List<Zone>();
 
         /// <summary>
         /// Creates a provisioner.
@@ -26,8 +30,6 @@ namespace Uchu.World.Systems.Match
         private Provisioner(int type)
         {
             _type = type;
-            
-            // TODO: Connect players leaving zone.
         }
         
         /// <summary>
@@ -109,6 +111,11 @@ namespace Uchu.World.Systems.Match
             
             // Add the player.
             match.AddPlayer(player);
+            
+            // Connect players leaving the zone.
+            if (_connectedZones.Contains(player.Zone)) return;
+            player.Zone.OnPlayerLeave.AddListener(RemovePlayer);
+            _connectedZones.Add(player.Zone);
         }
         
         /// <summary>

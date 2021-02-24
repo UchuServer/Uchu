@@ -255,6 +255,9 @@ namespace Uchu.World.Systems.Match
         public void RemovePlayer(Player player)
         {
             // Remove the player.
+            _players.Remove(player);
+            _readyPlayers.Remove(player);
+            _playersSentTime.Remove(player);
             foreach (var otherPlayer in _players)
             {
                 otherPlayer.Message(new MatchUpdate()
@@ -264,9 +267,6 @@ namespace Uchu.World.Systems.Match
                     Type = MatchUpdateType.PlayerRemoved,
                 });
             }
-            _players.Remove(player);
-            _readyPlayers.Remove(player);
-            _playersSentTime.Remove(player);
             
             // Update the time.
             UpdateTimer();
