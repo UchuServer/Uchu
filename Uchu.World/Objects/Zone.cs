@@ -83,6 +83,7 @@ namespace Uchu.World
         
         // Events
         public Event<Player> OnPlayerLoad { get; }
+        public Event<Player> OnPlayerLeave { get; }
         public Event<Object> OnObject { get; }
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
@@ -98,6 +99,7 @@ namespace Uchu.World
             EarlyPhysics = new Event();
             LatePhysics = new Event();
             OnPlayerLoad = new Event<Player>();
+            OnPlayerLeave = new Event<Player>();
             OnObject = new Event<Object>();
             OnTick = new Event();
             OnChatMessage = new Event<Player, string>();
@@ -400,6 +402,12 @@ namespace Uchu.World
                 if (!ManagedObjects.Contains(obj)) return;
                 
                 ManagedObjects.Remove(obj);
+
+                // Invoke the player left event if the object is an event.
+                if (obj is Player player)
+                {
+                    OnPlayerLeave.Invoke(player);
+                }
 
                 if (obj is GameObject gameObject)
                 {
