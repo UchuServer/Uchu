@@ -53,10 +53,7 @@ namespace Uchu.World
             {
                 Connection.Disconnected += async reason =>
                 {
-                    Logger.Information($"{this} left: {reason}.");
-                    await GetComponent<SaveComponent>().SaveAsync(false);
-                    Connection = default;
-                    Destroy(this);
+                    await DestroyAsync();
                 };
 
                 Listen(OnPositionUpdate, UpdatePhysics);
@@ -115,6 +112,17 @@ namespace Uchu.World
                 OnWorldLoad.Clear();
                 OnPositionUpdate.Clear();
             });
+        }
+
+        /// <summary>
+        /// Destroys the player.
+        /// </summary>
+        public async Task DestroyAsync(CloseReason? reason = CloseReason.ClientDisconnect)
+        {
+            Logger.Information($"{this} left: {reason}.");
+            await GetComponent<SaveComponent>().SaveAsync(false);
+            Connection = default;
+            Destroy(this);
         }
 
         /// <summary>

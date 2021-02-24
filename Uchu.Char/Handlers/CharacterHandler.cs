@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World;
 
 namespace Uchu.Char.Handlers
 {
@@ -69,7 +70,17 @@ namespace Uchu.Char.Handlers
         [PacketHandler]
         public async Task CharacterList(CharacterListRequest packet, IRakConnection connection)
         {
+            // Remove the player from the zone.
             var session = UchuServer.SessionCache.GetSession(connection.EndPoint);
+            if (UchuServer is WorldUchuServer worldUchuServer) {
+                var player = worldUchuServer.FindPlayer(connection);
+                if (player != null)
+                {
+                    await player.DestroyAsync();
+                }
+            }
+            
+            // Send the character list.
             await SendCharacterList(connection, session.UserId);
         }
 
