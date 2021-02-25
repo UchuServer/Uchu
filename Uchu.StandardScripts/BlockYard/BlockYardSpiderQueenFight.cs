@@ -10,9 +10,11 @@ using InfectedRose.Luz;
 using System.Numerics;
 using InfectedRose.Lvl;
 using Uchu.Core.Resources;
+using Uchu.Physics;
 using Uchu.World.Client;
 using DestructibleComponent = Uchu.World.DestructibleComponent;
 using Object = Uchu.World.Object;
+using PhysicsComponent = Uchu.World.PhysicsComponent;
 
 namespace Uchu.StandardScripts.BlockYard
 {
@@ -48,8 +50,8 @@ namespace Uchu.StandardScripts.BlockYard
             // "Zone6Vol", 
             // "Zone7Vol",
             // "Zone8Vol",
-            // "AggroVol",
-            // "TeleVol"
+            "AggroVol",
+            "TeleVol"
         };
         
         /// <summary>
@@ -120,8 +122,10 @@ namespace Uchu.StandardScripts.BlockYard
 
                     var spiderQueen = Zone.GameObjects.First(go => go.Lot == Lot.SpiderQueen);
                     var spiderEggSpawner = Zone.GameObjects.First(go => go.Name == "SpiderEggs");
+                    var aggroVolume = Zone.GameObjects.First(go => go.Name == "AggroVol")
+                        .GetComponent<SpawnerComponent>().ActiveSpawns.First().GetComponent<PhysicsComponent>();
                     
-                    var spiderQueenFight = await SpiderQueenFight.Instantiate(Zone, spiderQueen, spiderEggSpawner);
+                    var spiderQueenFight = await SpiderQueenFight.Instantiate(Zone, spiderQueen, spiderEggSpawner, aggroVolume);
                     spiderQueenFight.StartFight();
                     _fightStarted = true;
                     
@@ -149,8 +153,6 @@ namespace Uchu.StandardScripts.BlockYard
             {
                 Spawn(path);
             }
-            
-            Logger.Debug("Spawned global");
         }
             
         private void SpawnMaelstrom()
@@ -179,14 +181,21 @@ namespace Uchu.StandardScripts.BlockYard
             {
                 foreach (var volume in volumeSpawner.GetComponent<SpawnerComponent>().ActiveSpawns)
                 {
-                    volume.Layer = StandardLayer.Hidden;
-                    volume.GetComponent<PhantomPhysicsComponent>().IsEffectActive = true;
-                    volume.RemoveComponent<RendererComponent>();
-                    Serialize(volume);
+                    var physics = volume.AddComponent<PhysicsComponent>();
+                    var cylinder = CylinderBody.Create(
+                        Zone.Simulation,
+                        volumeSpawner.Transform.Position,
+                        volumeSpawner.Transform.Rotation,
+                        new Vector2(45, 100)
+                    );
+                    physics.SetPhysics(cylinder);
+
+                    var position = volume.Transform.Position;
+                    position.Y -= 10;
+                    volume.Transform.Position = position;
+                    GameObject.Serialize(volume);
                 }
             }
-            
-            Logger.Debug("Spawned maelstrom");
         }
 
         private void SpawnPeaceful()
@@ -209,8 +218,6 @@ namespace Uchu.StandardScripts.BlockYard
             {
                 Spawn(path);
             }
-            
-            Logger.Debug("Spawned peaceful");
         }
 
         private void Spawn(LuzSpawnerPath path)
@@ -303,15 +310,18 @@ namespace Uchu.StandardScripts.BlockYard
         /// </summary>
         public class SpiderQueenFight : Object
         {
-            public static async Task<SpiderQueenFight> Instantiate(Zone zone, GameObject spiderQueen, GameObject spiderEggSpawner)
+            public static async Task<SpiderQueenFight> Instantiate(Zone zone, GameObject spiderQueen, GameObject spiderEggSpawner,
+                PhysicsComponent aggroVolume)
             {
                 var instance = Instantiate<SpiderQueenFight>(zone);
-                instance._spiderEggSpawner = spiderEggSpawner;
-
+                instance._spiderQueen = spiderQueen;
+                instance._spiderEggSpawner = spiderEggSpawner; 
                 instance._spiderQueenFactions = spiderQueen.GetComponent<DestroyableComponent>().Factions.ToArray();
+                instance.Enabled = false;
+                
                 instance._stage2Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3 * 2;
                 instance._stage3Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3;
-                instance._spiderQueen = spiderQueen;
+                instance._safePlayers = new HashSet<Player>();
                 
                 instance._stage2SpiderlingCount = 2;
                 instance._stage3SpiderlingCount = 3;
@@ -327,8 +337,28 @@ namespace Uchu.StandardScripts.BlockYard
                 instance._shootLeftAnimationTime = await GetAnimationTimeAsync("attack-shoot-left");
                 instance._shootRightAnimationTime = await GetAnimationTimeAsync("attack-shoot-right");
                 instance._shootAnimationTime = await GetAnimationTimeAsync("attack-fire-single");
-                
+                instance.HandleAggroPhysics(aggroVolume);
+
                 return instance;
+            }
+
+            private void HandleAggroPhysics(PhysicsComponent aggroVolume)
+            {
+                Listen(aggroVolume.OnEnter, other =>
+                {
+                    if (other.GameObject is Player player)
+                        _safePlayers.Add(player);
+                    if (Enabled && _safePlayers.Count == Zone.Players.Length)
+                        Enabled = false;
+                });
+
+                Listen(aggroVolume.OnLeave, other =>
+                {
+                    if (other.GameObject is Player player)
+                        _safePlayers.Remove(player);
+                    if (!Enabled && _safePlayers.Count != Zone.Players.Length)
+                        Enabled = true;
+                });
             }
 
             private static async Task<float> GetAnimationTimeAsync(string animationName)
@@ -380,6 +410,71 @@ namespace Uchu.StandardScripts.BlockYard
             private float _shootRightAnimationTime;
             private float _shootAnimationTime;
             private int _currentSpiderlingWavecount;
+            private bool _enabled;
+            private HashSet<Player> _safePlayers;
+
+            private bool Enabled
+            {
+                get => _enabled;
+                set
+                {
+                    _enabled = value;
+                    if (Enabled)
+                    {
+                        Zone.BroadcastMessage(new SetStatusImmunityMessage
+                        {
+                            Associate = _spiderQueen,
+                            ImmunityState = ImmunityState.Pop,
+                            ImmuneToSpeed = true,
+                            ImmuneToBasicAttack = true,
+                            ImmuneToDOT = true
+                        });
+                
+                        Zone.BroadcastMessage(new SetStunnedMessage
+                        {
+                            Associate = _spiderQueen,
+                            StunState = StunState.Pop,
+                            CantMove = true,
+                            CantJump = true,
+                            CantAttack = true,
+                            CantTurn = true,
+                            CantUseItem = true,
+                            CantEquip = true,
+                            CantInteract = true,
+                            IgnoreImmunity = true
+                        });
+                        
+                        _spiderQueen.GetComponent<DestroyableComponent>().Factions = _spiderQueenFactions;
+                    }
+                    else
+                    {
+                        _spiderQueen.GetComponent<DestroyableComponent>().Factions = new int[] {};
+                        
+                        Zone.BroadcastMessage(new SetStunnedMessage
+                        {
+                            Associate = _spiderQueen,
+                            StunState = StunState.Push,
+                            CantMove = true,
+                            CantJump = true,
+                            CantAttack = true,
+                            CantTurn = true,
+                            CantUseItem = true,
+                            CantEquip = true,
+                            CantInteract = true,
+                            IgnoreImmunity = true
+                        });
+
+                        Zone.BroadcastMessage(new SetStatusImmunityMessage
+                        {
+                            Associate = _spiderQueen,
+                            ImmunityState = ImmunityState.Push,
+                            ImmuneToSpeed = true,
+                            ImmuneToBasicAttack = true,
+                            ImmuneToDOT = true
+                        });
+                    }
+                }
+            }
 
 
             #region state
@@ -388,8 +483,6 @@ namespace Uchu.StandardScripts.BlockYard
             /// </summary>
             public void StartFight()
             {
-                Logger.Information("Starting spider queen fight!");
-                
                 // Stop the fight if the spider queen was killed
                 Listen(_spiderQueen.GetComponent<DestroyableComponent>().OnHealthChanged, async 
                     (newHealth, delta) =>
@@ -408,7 +501,6 @@ namespace Uchu.StandardScripts.BlockYard
                 {
                     if (o is GameObject spiderling && spiderling.Lot == Lot.SpiderQueenSpiderling)
                     {
-                        Logger.Information($"Detected new spiderling {spiderling}, subscribing!");
                         _spawnedSpiderlings.Add(spiderling);
                         spiderling.GetComponent<DestroyableComponent>().Factions = new int[] {4};
                         
@@ -435,9 +527,7 @@ namespace Uchu.StandardScripts.BlockYard
             {
                 if (!_withdrawn)
                     return;
-                
-                Logger.Information("Advancing spider queen!");
-                
+
                 _spiderQueen.Animate("advance");
                 Zone.Schedule(AdvanceAttack, _advanceAnimationTime - 400);
                 Zone.Schedule(AdvanceComplete, _advanceAnimationTime);
@@ -447,8 +537,6 @@ namespace Uchu.StandardScripts.BlockYard
             
             private void AdvanceAttack()
             {
-                Logger.Information("Spider queen advance attack!");
-                
                 if (_advanceAttackTarget != null)
                 {
                     // TODO
@@ -457,9 +545,6 @@ namespace Uchu.StandardScripts.BlockYard
 
             private void AdvanceComplete()
             {
-                Logger.Information("Spider queen completed advance!");
-                
-                _spiderQueen.GetComponent<DestroyableComponent>().Factions = _spiderQueenFactions;
                 _stage += 1;
                 _killedSpiders = 0;
                 _currentSpiderlingWavecount = 0;
@@ -469,69 +554,18 @@ namespace Uchu.StandardScripts.BlockYard
 
             private void AdvanceTauntComplete()
             {
-                // TODO: Special skills delay
-                Logger.Information("Spider queen advance taunt has completed!");
-                
-                // Reset immunity
-                Zone.BroadcastMessage(new SetStatusImmunityMessage
-                {
-                    Associate = _spiderQueen,
-                    ImmunityState = ImmunityState.Pop,
-                    ImmuneToSpeed = true,
-                    ImmuneToBasicAttack = true,
-                    ImmuneToDOT = true
-                });
-                
-                Zone.BroadcastMessage(new SetStunnedMessage
-                {
-                    Associate = _spiderQueen,
-                    StunState = StunState.Pop,
-                    CantMove = true,
-                    CantJump = true,
-                    CantAttack = true,
-                    CantTurn = true,
-                    CantUseItem = true,
-                    CantEquip = true,
-                    CantInteract = true,
-                    IgnoreImmunity = true
-                });
+                Enabled = true;
             }
             
             private void WithdrawSpiderQueen()
             {
                 if (_withdrawn)
                     return;
-                
-                Logger.Information("Withdrawing spider queen!");
-
-                // Spider queen is immune to any attacks during the withdrawn phase
-                Zone.BroadcastMessage(new SetStunnedMessage
-                {
-                    Associate = _spiderQueen,
-                    StunState = StunState.Push,
-                    CantMove = true,
-                    CantJump = true,
-                    CantAttack = true,
-                    CantTurn = true,
-                    CantUseItem = true,
-                    CantEquip = true,
-                    CantInteract = true,
-                    IgnoreImmunity = true
-                });
 
                 // Orientation for the animation to make sense
                 _spiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f });
                 _spiderQueen.Animate("withdraw");
-                _spiderQueen.GetComponent<DestroyableComponent>().Factions = new int[] {};
-                
-                Zone.BroadcastMessage(new SetStatusImmunityMessage
-                {
-                    Associate = _spiderQueen,
-                    ImmunityState = ImmunityState.Push,
-                    ImmuneToSpeed = true,
-                    ImmuneToBasicAttack = true,
-                    ImmuneToDOT = true
-                });
+                Enabled = false;
 
                 Zone.Schedule(WithdrawalComplete, _withdrawalTime - 250);
                 _withdrawn = true;
@@ -539,8 +573,6 @@ namespace Uchu.StandardScripts.BlockYard
 
             private void WithdrawalComplete()
             {
-                Logger.Information("Spider queen is withdrawn!");
-                
                 _spiderQueen.Animate("idle-withdrawn");
                 _currentSpiderlingWavecount = _stage == 1 ? _stage2SpiderlingCount : _stage3SpiderlingCount;
                 _spiderEggsToPrep = _currentSpiderlingWavecount;
@@ -562,8 +594,6 @@ namespace Uchu.StandardScripts.BlockYard
 
             private void SpawnSpiders()
             {
-                Logger.Information("Spawning spiders!");
-                
                 var spiderEggs = _spiderEggSpawner.GetComponent<SpawnerComponent>().ActiveSpawns
                     .Except(_preppedSpiderEggs).ToList();
                 
@@ -644,8 +674,6 @@ namespace Uchu.StandardScripts.BlockYard
             
             private void HandleSpiderlingDeath(GameObject spiderling)
             {
-                Logger.Information($"{spiderling} was smashed!");
-                
                 _killedSpiders++;
                 _spawnedSpiderlings.Remove(spiderling);
                 Destroy(spiderling);
