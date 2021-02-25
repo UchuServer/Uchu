@@ -42,7 +42,7 @@ namespace Uchu.StandardScripts.BlockYard
         
         private static readonly HashSet<string> Volumes = new HashSet<string>
         {
-            // "Zone1Vol", 
+            "Zone1Vol", 
             // "Zone2Vol", 
             // "Zone3Vol", 
             // "Zone4Vol", 
@@ -322,7 +322,8 @@ namespace Uchu.StandardScripts.BlockYard
                 instance._stage2Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3 * 2;
                 instance._stage3Threshold = spiderQueen.GetComponent<DestroyableComponent>().MaxHealth / 3;
                 instance._safePlayers = new HashSet<Player>();
-                
+
+                instance._sensingRadius = 36;
                 instance._stage2SpiderlingCount = 2;
                 instance._stage3SpiderlingCount = 3;
                 instance._spawnedSpiderlings = new List<GameObject>();
@@ -359,6 +360,29 @@ namespace Uchu.StandardScripts.BlockYard
                     if (!Enabled && _safePlayers.Count != Zone.Players.Length)
                         Enabled = true;
                 });
+            }
+
+            private void SetupVolumePhysics()
+            {
+                var center = _spiderQueen.Transform.Position;
+                foreach (var volume in Zone.GameObjects)
+                {
+                    var vector1 = Vector3.Zero;
+                    var vector2 = Vector3.Zero;
+
+                    switch (volume.Name)
+                    {
+                        case "Zone1Vol":
+                            vector1 = new Vector3((float) (center.X + 0.5 * _sensingRadius), center.Y, center.Z);
+                            vector2 = new Vector3(center.X + _sensingRadius, center.Y, (float) (center.Z + 0.5 * _sensingRadius));
+                            break;
+                    }
+
+                    if (vector1 != Vector3.Zero && vector2 != Vector3.Zero)
+                    {
+                        // TODO
+                    }
+                }
             }
 
             private static async Task<float> GetAnimationTimeAsync(string animationName)
@@ -412,6 +436,7 @@ namespace Uchu.StandardScripts.BlockYard
             private int _currentSpiderlingWavecount;
             private bool _enabled;
             private HashSet<Player> _safePlayers;
+            private int _sensingRadius;
 
             private bool Enabled
             {
