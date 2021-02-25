@@ -317,8 +317,8 @@ namespace Uchu.World
         /// <param name="mission"></param>
         /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
         public bool CanAccept(MissionInstance mission) => 
-            (mission.Repeatable || !HasMission(mission.MissionId)) 
-            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
+            (mission.CanRepeat || !HasMission(mission.MissionId)) 
+            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, AllMissions);
         
         /// <summary>
         /// Checks if the player has a mission available that hasn't been started yet because of incorrect prerequisites.
@@ -327,7 +327,7 @@ namespace Uchu.World
         /// <param name="id">The mission id of the mission to check if the player has it available</param>
         /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
         public bool HasAvailable(int id) => GetMission(id) is { } mission 
-                                            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, CompletedMissions);
+                                            && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, AllMissions);
 
         /// <summary>
         /// Messages the client about a mission offer
@@ -370,6 +370,13 @@ namespace Uchu.World
             {
                 mission = await AddMissionAsync(missionId, GameObject);
                 await mission.StartAsync();
+                return;
+            }
+            
+            // Repeat the mission if it is repeatable, such as a daily mission.
+            if (mission.CanRepeat)
+            {
+                await mission.RestartAsync();
                 return;
             }
             

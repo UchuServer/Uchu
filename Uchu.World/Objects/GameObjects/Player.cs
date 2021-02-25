@@ -53,10 +53,7 @@ namespace Uchu.World
             {
                 Connection.Disconnected += async reason =>
                 {
-                    Logger.Information($"{this} left: {reason}.");
-                    await GetComponent<SaveComponent>().SaveAsync(false);
-                    Connection = default;
-                    Destroy(this);
+                    await DestroyAsync();
                 };
 
                 Listen(OnPositionUpdate, UpdatePhysics);
@@ -118,6 +115,17 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Destroys the player.
+        /// </summary>
+        public async Task DestroyAsync(CloseReason? reason = CloseReason.ClientDisconnect)
+        {
+            Logger.Information($"{this} left: {reason}.");
+            await GetComponent<SaveComponent>().SaveAsync(false);
+            Connection = default;
+            Destroy(this);
+        }
+
+        /// <summary>
         /// Constructs the player, settings spawn parameters and masks
         /// </summary>
         /// <param name="character">The character that should be spawned</param>
@@ -164,7 +172,6 @@ namespace Uchu.World
             AddComponent<PossessableOccupantComponent>();
             
             controllablePhysics.HasPosition = true;
-            stats.HasStats = true;
             
             // Server Components
             var inventoryManager = AddComponent<InventoryManagerComponent>();

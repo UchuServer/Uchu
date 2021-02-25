@@ -35,7 +35,7 @@ namespace Uchu.World
         {
             return await Instantiate(owner, itemInstance.Lot, inventory, (uint)itemInstance.Count,
                 (uint)itemInstance.Slot, LegoDataDictionary.FromString(itemInstance.ExtraInfo),
-                itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound,
+                (ObjectId) itemInstance.Id, isEquipped: itemInstance.IsEquipped, isBound: itemInstance.IsBound,
                 rootItem: inventory.ManagerComponent.Items.FirstOrDefault(i => i.Id == itemInstance.ParentId));
         }
 

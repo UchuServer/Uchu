@@ -22,7 +22,7 @@ namespace Uchu.World.Client
             };
         }
 
-        private static bool IsCompleted(string str, MissionInstance[] completed)
+        private static bool IsCompleted(string str, MissionInstance[] playerMissions)
         {
             if (string.IsNullOrWhiteSpace(str))
                 return true;
@@ -34,7 +34,7 @@ namespace Uchu.World.Client
                 var missionId = int.Parse(str.Substring(0, colonIndex));
                 var requiredState = int.Parse(str.Substring(colonIndex + 1));
 
-                var mission = completed.FirstOrDefault(m => m.MissionId == missionId);
+                var mission = playerMissions.FirstOrDefault(m => m.MissionId == missionId);
                 if (mission == default)
                     return false;
                 
@@ -42,10 +42,10 @@ namespace Uchu.World.Client
             }
             
             var id = int.Parse(str);
-            return completed.Any(c => c.MissionId == id);
+            return playerMissions.Any(c => c.MissionId == id);
         }
 
-        public static bool CheckPrerequiredMissions(string missions, MissionInstance[] completed)
+        public static bool CheckPrerequiredMissions(string missions, MissionInstance[] playerMissions)
         {
             if (string.IsNullOrWhiteSpace(missions))
                 return true;
@@ -70,7 +70,7 @@ namespace Uchu.World.Client
                     case '&':
                     case ',':
                     {
-                        res = Check(res, IsCompleted(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompleted(cur.ToString(), playerMissions), mode);
 
                         cur.Clear();
 
@@ -83,7 +83,7 @@ namespace Uchu.World.Client
 
                     case '|':
                     {
-                        res = Check(res, IsCompleted(cur.ToString(), completed), mode);
+                        res = Check(res, IsCompleted(cur.ToString(), playerMissions), mode);
 
                         cur.Clear();
 
@@ -92,11 +92,11 @@ namespace Uchu.World.Client
                     }
 
                     case '(':
-                        res = Check(res, CheckPrerequiredMissions(missions.Substring(i + 1), completed), mode);
+                        res = Check(res, CheckPrerequiredMissions(missions.Substring(i + 1), playerMissions), mode);
                         break;
 
                     case ')':
-                        return Check(res, IsCompleted(cur.ToString(), completed), mode);
+                        return Check(res, IsCompleted(cur.ToString(), playerMissions), mode);
 
                     case '0':
                     case '1':
@@ -114,7 +114,7 @@ namespace Uchu.World.Client
                 }
             }
 
-            res = Check(res, IsCompleted(cur.ToString(), completed), mode);
+            res = Check(res, IsCompleted(cur.ToString(), playerMissions), mode);
 
             return res;
         }

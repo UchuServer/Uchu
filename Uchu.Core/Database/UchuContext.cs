@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Uchu.Core.Providers;
 
 namespace Uchu.Core
@@ -58,6 +59,11 @@ namespace Uchu.Core
                     Logger.Error($"{config.Database.Provider} is a invalid or unsupported database provider");
                     throw new Exception($"Invalid database provider: \"{config.Database.Provider}\"");
             }
+        }
+        
+        public EntityEntry Entry(object entry)
+        {
+            return ContextBase.Entry(entry);
         }
         
         public async Task EnsureUpdatedAsync()

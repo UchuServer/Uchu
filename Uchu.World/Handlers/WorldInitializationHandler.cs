@@ -105,6 +105,7 @@ namespace Uchu.World.Handlers
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
                 .ThenInclude(m => m.Values)
+                .AsSplitQuery()
                 .SingleAsync(c => c.Id == session.CharacterId);
 
             // Zone Id might be 0 on first load, set it to venture explorer
@@ -128,7 +129,7 @@ namespace Uchu.World.Handlers
             await SendCharacterXmlDataToClient(connection, character);
             
             Logger.Information("[55%] Constructing player.");
-            var player = await Player.Instantiate(connection, zone, session.CharacterId);
+            var player = await Player.Instantiate(connection, zone, (ObjectId) session.CharacterId);
 
             Logger.Information("[55%] Checking rocket landing conditions.");
             var characterComponent = player.GetComponent<CharacterComponent>();
