@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -100,19 +101,26 @@ namespace Uchu.World.Systems.Match
                 }
                 
                 // Allocate the new zone.
-                var uchuServer = zone.UchuServer;
-                var allocatedServer = await uchuServer.Api.RunCommandAsync<SeekWorldResponse>(
-                    uchuServer.MasterApi, $"master/allocate?z={matchZoneId}"
-                ).ConfigureAwait(false);
-                
-                var allocatedInstance = await uchuServer.Api.RunCommandAsync<InstanceInfoResponse>(
-                    uchuServer.MasterApi, $"instance/target?i={allocatedServer.Id}"
-                ).ConfigureAwait(false);
+                InstanceInfo allocatedInstance;
+                try
+                {
+                    allocatedInstance = await ServerHelper.RequestNewWorldServerAsync(zone.UchuServer, (ZoneId) matchZoneId);
+                    if (allocatedInstance == default)
+                    {
+                        Logger.Debug($"Could not find server for: {matchZoneId}");
+                        return;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                    return;
+                }
 
                 // Start the match.
                 foreach (var player in _players)
                 {
-                    await player.SendToWorldAsync(allocatedInstance.Info, (ZoneId) matchZoneId);
+                    await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
                 }
             };
         }
@@ -133,7 +141,8 @@ namespace Uchu.World.Systems.Match
                     _countdown.Interval = _waitTime;
                     _countdown.Start();
                     _countdownStopwatch.Start();
-                } else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > _playWaitTime)
+                }
+                else if (_players.Count == _readyPlayers.Count && _countdown.Interval - _countdownStopwatch.ElapsedMilliseconds > _playWaitTime)
                 {
                     // Set the time to 5 seconds to prepare the round.
                     remainingTimeChanged = true;
@@ -153,7 +162,7 @@ namespace Uchu.World.Systems.Match
                         player.Message(new MatchUpdate()
                         {
                             Associate = player,
-                            Data = "time=3:" + ((_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0),
+                            Data = $"time=3:{(_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0}",
                             Type = MatchUpdateType.SetInitialTime,
                         });
                     }
@@ -162,7 +171,7 @@ namespace Uchu.World.Systems.Match
                         player.Message(new MatchUpdate()
                         {
                             Associate = player,
-                            Data = "time=3:" + ((_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0),
+                            Data = $"time=3:{(_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0}",
                             Type = MatchUpdateType.SetTime,
                         });
                     }
@@ -217,13 +226,13 @@ namespace Uchu.World.Systems.Match
                 player.Message(new MatchUpdate()
                 {
                     Associate = player,
-                    Data = "player=9:" + otherPlayer.Id + "\nplayerName=0:" + otherPlayer.Name,
+                    Data = $"player=9:{otherPlayer.Id}\nplayerName=0:{otherPlayer.Name}",
                     Type = MatchUpdateType.PlayerAdded,
                 });
                 otherPlayer.Message(new MatchUpdate()
                 {
                     Associate = otherPlayer,
-                    Data = "player=9:" + player.Id + "\nplayerName=0:" + player.Name,
+                    Data = $"player=9:{player.Id}\nplayerName=0:{player.Name}",
                     Type = MatchUpdateType.PlayerAdded,
                 });
             }
@@ -241,7 +250,7 @@ namespace Uchu.World.Systems.Match
                     player.Message(new MatchUpdate()
                     {
                         Associate = player,
-                        Data = "player=9:" + otherPlayer.Id,
+                        Data = $"player=9:{otherPlayer.Id}",
                         Type = (_readyPlayers.Contains(otherPlayer) ? MatchUpdateType.PlayerReady : MatchUpdateType.PlayerNotReady),
                     });
                 }
@@ -263,7 +272,7 @@ namespace Uchu.World.Systems.Match
                 otherPlayer.Message(new MatchUpdate()
                 {
                     Associate = otherPlayer,
-                    Data = "player=9:" + player.Id,
+                    Data = $"player=9:{player.Id}",
                     Type = MatchUpdateType.PlayerRemoved,
                 });
             }
@@ -290,7 +299,7 @@ namespace Uchu.World.Systems.Match
                 otherPlayer.Message(new MatchUpdate()
                 {
                     Associate = otherPlayer,
-                    Data = "player=9:" + player.Id,
+                    Data = $"player=9:{player.Id}",
                     Type = MatchUpdateType.PlayerReady,
                 });
             }
@@ -317,7 +326,7 @@ namespace Uchu.World.Systems.Match
                 otherPlayer.Message(new MatchUpdate()
                 {
                     Associate = otherPlayer,
-                    Data = "player=9:" + player.Id,
+                    Data = $"player=9:{player.Id}",
                     Type = MatchUpdateType.PlayerNotReady,
                 });
             }
