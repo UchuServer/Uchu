@@ -38,6 +38,20 @@ namespace Uchu.StandardScripts.BlockYard
             "Launcher"
         };
         
+        private static readonly HashSet<string> Volumes = new HashSet<string>
+        {
+            // "Zone1Vol", 
+            // "Zone2Vol", 
+            // "Zone3Vol", 
+            // "Zone4Vol", 
+            // "Zone5Vol", 
+            // "Zone6Vol", 
+            // "Zone7Vol",
+            // "Zone8Vol",
+            // "AggroVol",
+            // "TeleVol"
+        };
+        
         /// <summary>
         /// Objects needed for maelstrom battle
         /// </summary>
@@ -53,19 +67,9 @@ namespace Uchu.StandardScripts.BlockYard
             "ROF_Targets_01",
             "ROF_Targets_02",
             "ROF_Targets_03",
-            "ROF_Targets_04",
-            "Zone1Vol", 
-            "Zone2Vol", 
-            "Zone3Vol", 
-            "Zone4Vol", 
-            "Zone5Vol", 
-            "Zone6Vol", 
-            "Zone7Vol",
-            "Zone8Vol",
-            "AggroVol",
-            "TeleVol"
-        };
-        
+            "ROF_Targets_04"
+        }.Union(Volumes.ToArray()).ToHashSet();
+
         /// <summary>
         /// Objects needed once Maelstrom battle is over
         /// </summary>
@@ -163,10 +167,23 @@ namespace Uchu.StandardScripts.BlockYard
                 Destroy(gameObject);
             }
             
+            // Spawn all the maelstrom objects
             foreach (var path in Zone.ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>()
                 .Where(p => MaelstromObjects.Contains(p.PathName)))
             {
                 Spawn(path);
+            }
+
+            // Hide the physics colliders
+            foreach (var volumeSpawner in Zone.GameObjects.Where(go => Volumes.Contains(go.Name)))
+            {
+                foreach (var volume in volumeSpawner.GetComponent<SpawnerComponent>().ActiveSpawns)
+                {
+                    volume.Layer = StandardLayer.Hidden;
+                    volume.GetComponent<PhantomPhysicsComponent>().IsEffectActive = true;
+                    volume.RemoveComponent<RendererComponent>();
+                    Serialize(volume);
+                }
             }
             
             Logger.Debug("Spawned maelstrom");
@@ -566,15 +583,22 @@ namespace Uchu.StandardScripts.BlockYard
                     spiderEggs.Remove(eggToPrep);
                     _preppedSpiderEggs.Add(eggToPrep);
                     
-                    Logger.Information($"Prepping {eggToPrep}");
-                    
-                    Zone.BroadcastMessage(new FireClientEventMessage
+                    Zone.BroadcastMessage(new PlayFXEffectMessage
                     {
-                        Arguments = "prepEgg",
-                        Target = eggToPrep,
-                        Sender = _spiderQueen
+                        Associate = eggToPrep,
+                        EffectId = 2856,
+                        EffectType = "maelstrom",
+                        Name = "test"
                     });
                     
+                    Zone.BroadcastMessage(new PlayFXEffectMessage
+                    {
+                        Associate = eggToPrep,
+                        EffectId = 2260,
+                        EffectType = "rebuild_medium",
+                        Name = "dropdustmedium"
+                    });
+
                     newlyPreppedEggs++;
                 }
                 
@@ -587,10 +611,13 @@ namespace Uchu.StandardScripts.BlockYard
                 }
                 else
                 {
-                    Logger.Information("Successfully spawned spiders!");
-                    foreach (var eggToHatch in _preppedSpiderEggs)
-                        SpawnSpiderling(eggToHatch);
-                    _preppedSpiderEggs = new List<GameObject>();
+                    // Wait a bit to show the animation
+                    Zone.Schedule(() =>
+                    {
+                        foreach (var eggToHatch in _preppedSpiderEggs)
+                            SpawnSpiderling(eggToHatch);
+                        _preppedSpiderEggs = new List<GameObject>();
+                    }, 1500);
                 }
             }
 
