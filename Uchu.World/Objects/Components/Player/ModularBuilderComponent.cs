@@ -134,7 +134,7 @@ namespace Uchu.World
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             if (inventory[InventoryType.TemporaryModels] != null)
             {
-		foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
+                foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
                 {
                     await inventory.MoveItemBetweenInventoriesAsync(
                         temp,
