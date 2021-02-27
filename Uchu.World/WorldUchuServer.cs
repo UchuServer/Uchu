@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
+using Sentry;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Python;
@@ -44,15 +45,13 @@ namespace Uchu.World
         public override async Task ConfigureAsync(string configFile)
         {
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
-
             await base.ConfigureAsync(configFile);
-            
+
             ZoneParser = new ZoneParser(Resources);
-            
             Whitelist = new Whitelist(Resources);
-            
+
             await Whitelist.LoadDefaultWhitelist();
-            
+
             GameMessageReceived += HandleGameMessageAsync;
             ServerStopped += () =>
             {
@@ -67,11 +66,11 @@ namespace Uchu.World
             ).ConfigureAwait(false);
 
             ZoneId = (ZoneId) instance.Info.Zones.First();
-            
+
             var info = await Api.RunCommandAsync<InstanceInfoResponse>(MasterApi, $"instance/target?i={Id}");
 
             Api.RegisterCommandCollection<WorldCommands>(this);
-            
+
             ManagedScriptEngine.AdditionalPaths = Config.ManagedScriptSources.Paths.ToArray();
 
             _ = Task.Run(async () =>
@@ -79,7 +78,7 @@ namespace Uchu.World
                 Logger.Information("Loading CDClient cache");
                 await ClientCache.LoadAsync();
             });
-            
+
             _ = Task.Run(async () =>
             {
                 Logger.Information($"Setting up zones for world server {Id}");

@@ -1,5 +1,5 @@
-using System.Threading.Tasks;
 using Uchu.Core;
+using Uchu.World.Systems.Match;
 
 namespace Uchu.World.Handlers.GameMessages
 {
@@ -8,10 +8,29 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void MatchRequestHandler(MatchRequestMessage message, Player player)
         {
-            player.SendChatMessage(
-                $"Match Request:\nType: {message.Type}\nValue: {message.Value}\n{message.Activator}\n{message.Settings}",
-                PlayerChatChannel.Normal
-            );
+            if (message.Type == MatchRequestType.Join)
+            {
+                // Add the player to a match or remove them.
+                if (message.Value == 0)
+                {
+                    Provisioner.PlayerLeft(player);
+                }
+                else
+                {
+                    Provisioner.GetProvisioner(message.Value).AddPlayer(player);
+                }
+            }
+            else if (message.Type == MatchRequestType.SetReady)
+            {
+                // Set the player as ready or not.
+                if (message.Value == 1)
+                {
+                    Provisioner.PlayerReady(player);
+                } else if (message.Value == 0)
+                {
+                    Provisioner.PlayerNotReady(player);
+                }
+            }
         }
     }
 }

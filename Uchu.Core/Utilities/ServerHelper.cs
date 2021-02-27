@@ -30,5 +30,32 @@ namespace Uchu.Core
 
             return info.Info;
         }
+
+        /// <summary>
+        /// Allocates a new server with the new zone id,
+        /// such as for a minigame.
+        /// </summary>
+        /// <param name="uchuServer">Base server to use for master server communication.</param>
+        /// <param name="zoneId">Zone id to allocate a new server of.</param>
+        /// <returns>The information about the new server.</returns>
+        /// <exception cref="ArgumentNullException">Argument is missing or null.</exception>
+        public static async Task<InstanceInfo> RequestNewWorldServerAsync(UchuServer uchuServer, ZoneId zoneId)
+        {
+            if (uchuServer == default)
+            {
+                throw new ArgumentNullException(nameof(uchuServer));
+            }
+            
+            // Allocate the new zone and get the instance information.
+            var allocatedServer = await uchuServer.Api.RunCommandAsync<SeekWorldResponse>(
+                uchuServer.MasterApi, $"master/allocate?z={zoneId}"
+            ).ConfigureAwait(false);
+            var allocatedInstance = await uchuServer.Api.RunCommandAsync<InstanceInfoResponse>(
+                uchuServer.MasterApi, $"instance/target?i={allocatedServer.Id}"
+            ).ConfigureAwait(false);
+            
+            // Return the zone information.
+            return allocatedInstance.Info;
+        }
     }
 }

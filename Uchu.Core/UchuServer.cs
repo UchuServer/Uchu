@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
+using Sentry;
 using StackExchange.Redis;
 using Uchu.Api;
 using Uchu.Api.Models;
@@ -262,28 +263,31 @@ namespace Uchu.Core
         /// <param name="acceptConsoleCommands">Whether to handle console commands or not</param>
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
-            RegisterDefaultAssemblies(assembly);
-            if (acceptConsoleCommands)
+            using (SentrySdk.Init(Config.SentryDsn))
             {
-                StartConsole();
+                RegisterDefaultAssemblies(assembly);
+                if (acceptConsoleCommands)
+                {
+                    StartConsole();
+                }
+                
+                Running = true;
+
+                var server = RakNetServer.RunAsync();
+                var api = Api.StartAsync(ApiPort);
+
+                var tasks = new[]
+                {
+                    server,
+                    api
+                };
+
+                await Task.WhenAny(tasks).ConfigureAwait(false);
+                
+                Console.WriteLine($"EXIT: {server.Status} | {api.Status}");
+
+                await StopAsync().ConfigureAwait(false);
             }
-            
-            Running = true;
-
-            var server = RakNetServer.RunAsync();
-            var api = Api.StartAsync(ApiPort);
-
-            var tasks = new[]
-            {
-                server,
-                api
-            };
-
-            await Task.WhenAny(tasks).ConfigureAwait(false);
-            
-            Console.WriteLine($"EXIT: {server.Status} | {api.Status}");
-
-            await StopAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -464,6 +468,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error($"Error when handling GM: {e}");
                 }
             }
@@ -488,6 +493,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error($"Error when handling packet: {e}");
                 }
             }

@@ -15,12 +15,18 @@ namespace Uchu.Core.Config
         [XmlElement]
         public DatabaseConfiguration Database { get; set; } = new DatabaseConfiguration
         {
-            Provider = "postgres",
+            Provider = "sqlite",
             Database = "uchu",
             Host = "localhost",
-            Username = "postgres",
-            Password = "postgres"
+            Username = "username",
+            Password = "password"
         };
+
+        /// <summary>
+        /// Optional sentry DSN to use for tracking errors and exceptions
+        /// </summary>
+        [XmlElement]
+        public string SentryDsn { get; set; } = "";
 
         /// <summary>
         /// The level of console logging (debug or production)
@@ -144,7 +150,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "Uchu.Instance.dll";
+        [XmlElement] public string Instance { get; set; } = "Enter path to Uchu.Instance.dll";
         
         /// <summary>
         /// The path to the script source DLLs

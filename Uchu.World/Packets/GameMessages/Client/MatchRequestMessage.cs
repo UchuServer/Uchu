@@ -8,7 +8,7 @@ namespace Uchu.World
     {
         public override GameMessageId GameMessageId => GameMessageId.MatchRequest;
 
-        public int Type { get; set; }
+        public MatchRequestType Type { get; set; }
         
         public int Value { get; set; }
         
@@ -18,15 +18,15 @@ namespace Uchu.World
         
         public override void Deserialize(BitReader reader)
         {
-            Type = reader.Read<int>();
-
-            Value = reader.Read<int>();
-
             Activator = reader.ReadGameObject(Associate.Zone);
 
             var ldl = reader.ReadString((int) reader.Read<uint>(), true);
 
             Settings = LegoDataDictionary.FromString(ldl);
+            
+            Type = (MatchRequestType) reader.Read<int>();
+
+            Value = reader.Read<int>();
         }
     }
 }

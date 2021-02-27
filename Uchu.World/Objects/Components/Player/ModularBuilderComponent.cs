@@ -132,15 +132,17 @@ namespace Uchu.World
                 return;
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-            
-            foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
+            if (inventory[InventoryType.TemporaryModels] != null)
             {
-                await inventory.MoveItemBetweenInventoriesAsync(
-                    temp,
-                    temp.Count,
-                    InventoryType.TemporaryModels,
-                    InventoryType.Models
-                );
+                foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
+                {
+                    await inventory.MoveItemBetweenInventoriesAsync(
+                        temp,
+                        temp.Count,
+                        InventoryType.TemporaryModels,
+                        InventoryType.Models
+                    );
+                }
             }
             
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);

@@ -317,7 +317,7 @@ namespace Uchu.World
         /// <param name="mission"></param>
         /// <returns><c>true</c> if the player can accept this mission, <c>false</c> otherwise</returns>
         public bool CanAccept(MissionInstance mission) => 
-            (mission.Repeatable || !HasMission(mission.MissionId)) 
+            (mission.CanRepeat || !HasMission(mission.MissionId)) 
             && MissionParser.CheckPrerequiredMissions(mission.PrerequisiteMissions, AllMissions);
         
         /// <summary>
@@ -370,6 +370,13 @@ namespace Uchu.World
             {
                 mission = await AddMissionAsync(missionId, GameObject);
                 await mission.StartAsync();
+                return;
+            }
+            
+            // Repeat the mission if it is repeatable, such as a daily mission.
+            if (mission.CanRepeat)
+            {
+                await mission.RestartAsync();
                 return;
             }
             
