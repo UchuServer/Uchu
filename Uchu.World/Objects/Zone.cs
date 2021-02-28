@@ -623,7 +623,7 @@ namespace Uchu.World
             _passedTickTime += passedMs;
 
             DeltaTime = Math.Max(TimePerTickLimit, passedMs);
-            
+
             CalculatingTick = false;
         }
 

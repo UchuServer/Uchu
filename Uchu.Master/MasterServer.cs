@@ -416,12 +416,12 @@ namespace Uchu.Master
                     subsidiary, "instance/list"
                 );
                 
-                if (result == default) continue;
+                if (result == null)
+                    continue;
 
                 if (!result.Success)
                 {
                     Logger.Error(result.FailedReason);
-                    
                     continue;
                 }
 

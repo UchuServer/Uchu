@@ -296,7 +296,6 @@ namespace Uchu.Master.Api
             if (!int.TryParse(zone, out var zoneId))
             {
                 response.FailedReason = "invalid zone";
-
                 return response;
             }
 
@@ -306,21 +305,26 @@ namespace Uchu.Master.Api
             {
                 var playerInfo = await MasterServer.Api.RunCommandAsync<ZonePlayersResponse>(
                     instance.ApiPort, $"world/players?z={zoneId}"
-                ).ConfigureAwait(false);
+                );
+                
+                // The world server crashed, decommission it
+                if (playerInfo == null)
+                {
+                    DecommissionInstance(instance.Id.ToString());
+                    continue;
+                }
 
                 if (!playerInfo.Success)
                 {
                     Logger.Error(playerInfo.FailedReason);
-
                     throw new Exception(playerInfo.FailedReason);
                 }
 
-                if (playerInfo.Characters.Count >= playerInfo.MaxPlayers) continue;
+                if (playerInfo.Characters.Count >= playerInfo.MaxPlayers)
+                    continue;
                 
                 response.Success = true;
-                        
                 response.ApiPort = instance.ApiPort;
-
                 response.Id = instance.Id;
 
                 return response;
