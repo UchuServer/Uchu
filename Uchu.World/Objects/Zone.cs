@@ -13,6 +13,7 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Sentry;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
@@ -38,9 +39,7 @@ namespace Uchu.World
         public uint CloneId { get; }
         public ushort InstanceId { get; }
         public ZoneInfo ZoneInfo { get; }
-        
-        public new UchuServer UchuServer { get; }
-        
+        public WorldUchuServer Server { get; }
         public uint Checksum { get; private set; }
         public bool Loaded { get; private set; }
         public NavMeshManager NavMeshManager { get; private set; }
@@ -68,6 +67,7 @@ namespace Uchu.World
         private long _physicsTime;
         private long _objectUpdateTime;
         private long _scheduleUpdateTime;
+        private long _timeSinceLastHeartBeat;
         
         public bool CalculatingTick { get; set; }
         public float DeltaTime { get; private set; }
@@ -89,11 +89,11 @@ namespace Uchu.World
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
         
-        public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
+        public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
-            UchuServer = uchuServer;
+            Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
             
@@ -223,7 +223,7 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadNavMeshes()
         {
-            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
             if (NavMeshManager.Enabled)
             {
                 Logger.Information("Generating navigation way points.");
@@ -641,6 +641,7 @@ namespace Uchu.World
             Listen(OnTick, ExecuteSchedule);
             Listen(OnTick, UpdateObjects);
             Listen(OnTick, PhysicsStep);
+            Listen(OnTick, SendHeartbeat);
 
             _running = true;
 
@@ -728,8 +729,21 @@ namespace Uchu.World
             
             watch.Stop();
             _objectUpdateTime += watch.ElapsedMilliseconds;
-        }    
+        }
 
+        /// <summary>
+        /// Sends a heart beat to the master server indicating that this server is still healthy
+        /// </summary>
+        private async Task SendHeartbeat()
+        {
+            _timeSinceLastHeartBeat += (long)DeltaTime;
+            if (_timeSinceLastHeartBeat >= Server.HeartBeatInterval)
+            {
+                await Server.SendHeartBeat();
+                _timeSinceLastHeartBeat = 0;
+            }
+        }
+        
         /// <summary>
         /// Decrements the delay of all scheduled tasks and executes them if the timeout has been reached
         /// </summary>

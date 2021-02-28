@@ -67,13 +67,11 @@ namespace Uchu.Master.Api
             }
             
             var instances = await MasterServer.GetAllInstancesAsync();
-
             var instance = instances.FirstOrDefault(i => i.Id == guid);
 
             if (instance == default)
             {
                 response.FailedReason = "not found";
-
                 return response;
             }
 
@@ -81,6 +79,26 @@ namespace Uchu.Master.Api
             response.Hosting = instance.MasterApi == MasterServer.ApiPort;
             response.Info = instance;
             
+            return response;
+        }
+
+        [ApiCommand("instance/heartbeat")]
+        public async Task<object> Heartbeat(string id)
+        {
+            var response = new BaseResponse();
+            
+            if ((await MasterServer.GetAllInstancesAsync()).FirstOrDefault() is {} instance
+                && MasterServer.InstanceHeartBeats.ContainsKey(id))
+            {
+                MasterServer.InstanceHeartBeats[id]++;
+                response.Success = true;
+            }
+            else
+            {
+                response.Success = false;
+                response.FailedReason = "Instance does not exist.";
+            }
+
             return response;
         }
 
@@ -163,7 +181,6 @@ namespace Uchu.Master.Api
             if (!int.TryParse(zoneId, out var zone))
             {
                 response.FailedReason = "invalid type";
-
                 return response;
             }
 
@@ -172,26 +189,19 @@ namespace Uchu.Master.Api
             try
             {
                 var port = await MasterServer.ClaimWorldPortAsync();
-
                 id = await MasterServer.StartInstanceAsync(ServerType.World, port);
             }
             catch (Exception e)
             {
                 Logger.Error(e);
-
                 response.FailedReason = "error";
-                
                 return response;
             }
 
             var instance = MasterServer.Instances.First(i => i.Id == id);
-            
             instance.Zones.Add((ZoneId) zone);
-
             response.Success = true;
-
             response.Id = id;
-
             response.ApiPort = instance.ApiPort;
 
             var timeout = 1000;
@@ -207,11 +217,9 @@ namespace Uchu.Master.Api
                     try
                     {
                         if (verify == null) throw new Exception("ReadyCallbackResponse was null");
-
                         if (!verify.Success)
                         {
                             Logger.Error(verify.FailedReason);
-
                             throw new Exception(verify.FailedReason);
                         }
                     } catch (Exception e) {
@@ -220,7 +228,6 @@ namespace Uchu.Master.Api
 
 
                     instance.Ready = true;
-                    
                     break;
                 }
                 catch
@@ -231,7 +238,6 @@ namespace Uchu.Master.Api
                     }
                     
                     await Task.Delay(50);
-
                     timeout--;
                 }
             }
@@ -373,9 +379,7 @@ namespace Uchu.Master.Api
                 ).ConfigureAwait(false);
 
                 response.Success = true;
-                
                 response.ApiPort = details.ApiPort;
-
                 response.Id = details.Id;
 
                 return response;

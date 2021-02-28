@@ -9,7 +9,7 @@ namespace Uchu.World
 
         public Zone Zone { get; protected set; }
 
-        public UchuServer UchuServer => Zone.UchuServer;
+        public UchuServer UchuServer => Zone.Server;
 
         public Event OnStart { get; }
 

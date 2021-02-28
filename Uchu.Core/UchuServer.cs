@@ -121,6 +121,12 @@ namespace Uchu.Core
         /// Optional certificate for SSL
         /// </summary>
         protected X509Certificate Certificate { get; set; }
+        
+        /// <summary>
+        /// The amount of heart beats the world server should send to the master server to retain its healthy status. If
+        /// the world server can't keep up with this amount it risks being killed by the master server
+        /// </summary>
+        public int HeartBeatsPerMinute { get; set; }
 
         /// <summary>
         /// The host on which the server is running, used for example for API callbacks
@@ -227,6 +233,8 @@ namespace Uchu.Core
                 Logger.Information("Caching service is disabled, falling back to database.");
                 SessionCache = new DatabaseCache();
             }
+
+            HeartBeatsPerMinute = Config.Networking.WorldServerHeartbeatsPerMinute;
 
             Logger.Information($"Server {Id} configured on port: {Port}");
         }

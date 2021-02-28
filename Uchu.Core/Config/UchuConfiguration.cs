@@ -198,6 +198,12 @@ namespace Uchu.Core.Config
         /// The maximum amount of world servers that may be generated
         /// </summary>
         [XmlElement] public int MaxWorldServers { get; set; } = 100;
+
+        /// <summary>
+        /// The amount of heart beats the server should send per minute for it to retain it's healthy status for the
+        /// master server
+        /// </summary>
+        [XmlElement] public int WorldServerHeartbeatsPerMinute { get; set; } = 4;
         
         /// <summary>
         /// The ports to run the world servers at

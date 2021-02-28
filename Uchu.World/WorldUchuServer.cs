@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Timers;
 using RakDotNet;
 using RakDotNet.IO;
 using Sentry;
@@ -33,6 +34,24 @@ namespace Uchu.World
         
         public Whitelist Whitelist { get; private set; }
 
+        /// <summary>
+        /// The interval at which heart beats should be sent
+        /// </summary>
+        /// <remarks>
+        /// Returns essentially one heart beat more than absolutely necessary for a healthy status to ensure that small
+        /// hick ups and lag do not interfere with overall server health 
+        /// </remarks>
+        public float HeartBeatInterval => 60 / (HeartBeatsPerMinute + 1) * 1000;
+
+        /// <summary>
+        /// Sends a heart beat to the master server, indicating the health of the server
+        /// </summary>
+        public async Task SendHeartBeat()
+        {
+            await Api.RunCommandAsync<BaseResponse>(MasterApi, $"instance/heartbeat?instance={Id.ToString()}")
+                .ConfigureAwait(false);
+        }
+
         public WorldUchuServer(Guid id) : base(id)
         {
             Zones = new List<Zone>();
@@ -46,6 +65,15 @@ namespace Uchu.World
         {
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
             await base.ConfigureAsync(configFile);
+            
+            // Timer to ensure the server doesn't get shut down during loading
+            var loadingHeartBeatTimer = new Timer(HeartBeatInterval);
+            loadingHeartBeatTimer.Elapsed += async (sender, args) =>
+            {
+                await SendHeartBeat();
+            };
+            loadingHeartBeatTimer.Enabled = true;
+            loadingHeartBeatTimer.AutoReset = true;
 
             ZoneParser = new ZoneParser(Resources);
             Whitelist = new Whitelist(Resources);
@@ -86,6 +114,10 @@ namespace Uchu.World
                 {
                     await ZoneParser.LoadZoneDataAsync(zone);
                     await LoadZone(zone);
+                    
+                    // If we're done loading, the zones send heart beats
+                    if (Zones.Count >= info.Info.Zones.Count)
+                        loadingHeartBeatTimer.Stop();
                 }
             });
         }
