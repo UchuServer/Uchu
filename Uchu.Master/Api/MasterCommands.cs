@@ -87,6 +87,8 @@ namespace Uchu.Master.Api
         {
             var response = new BaseResponse();
             
+            Logger.Information("Received heart beat");
+            
             if ((await MasterServer.GetAllInstancesAsync()).FirstOrDefault() is {} instance
                 && MasterServer.InstanceHeartBeats.ContainsKey(id))
             {

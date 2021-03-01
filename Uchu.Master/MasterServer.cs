@@ -44,7 +44,8 @@ namespace Uchu.Master
         
         public static ApiManager Api { get; set; }
         
-        public static int WorldServerHeartBeatsPerMinute { get; set; }
+        public static int WorldServerHeartBeatsIntervalInMinutes { get; set; }
+        public static int WorldServerHeartBeatsPerInterval { get; set; }
 
         public static int MasterPort => Config.ApiConfig.Port;
         
@@ -89,7 +90,7 @@ namespace Uchu.Master
             await SetupApiAsync();
             
             // Setup health checks and automatic server closing
-            InstanceHeartBeatCheck = new Timer(60000);
+            InstanceHeartBeatCheck = new Timer(WorldServerHeartBeatsIntervalInMinutes * 60000);
             InstanceHeartBeatCheck.Elapsed += async (sender, eventArgs) =>
             {
                 foreach (var instance in Instances.Where(i => i.ServerType == ServerType.World).ToList())
@@ -98,7 +99,7 @@ namespace Uchu.Master
                     if (InstanceHealth.ContainsKey(id) && InstanceHeartBeats.ContainsKey(id))
                     {
                         InstanceHealth[id] = (InstanceHeartBeats[id] != 0 
-                                ? (float) InstanceHeartBeats[id] / WorldServerHeartBeatsPerMinute : 0) switch
+                                ? (float) InstanceHeartBeats[id] / WorldServerHeartBeatsPerInterval : 0) switch
                         {
                             var health when health >= 1 => ServerHealth.Healthy,
                             var health when health >= 0.75 => ServerHealth.Lagging,
@@ -345,7 +346,8 @@ namespace Uchu.Master
             }
 
             ApiPortIndex = Config.ApiConfig.Port;
-            WorldServerHeartBeatsPerMinute = Config.Networking.WorldServerHeartbeatsPerMinute;
+            WorldServerHeartBeatsPerInterval = Config.Networking.WorldServerHeartBeatsPerInterval;
+            WorldServerHeartBeatsIntervalInMinutes = Config.Networking.WorldServerHeartBeatIntervalInMinutes;
 
             var source = Directory.GetCurrentDirectory();
             
