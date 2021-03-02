@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Sentry;
 using Uchu.Core;
 
 namespace Uchu.World
@@ -72,6 +73,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -84,6 +86,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -100,6 +103,7 @@ namespace Uchu.World
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error(e);
                 }
             }
@@ -112,6 +116,7 @@ namespace Uchu.World
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error(e);
                 }
             }
@@ -134,6 +139,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -146,6 +152,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -163,6 +170,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -175,6 +183,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -196,6 +205,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -208,6 +218,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -225,6 +236,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -237,6 +249,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -258,6 +271,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -270,6 +284,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }
@@ -287,6 +302,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
 
@@ -299,6 +315,7 @@ namespace Uchu.World
                 catch (Exception e)
                 {
                     Logger.Error(e);
+                    SentrySdk.CaptureException(e);
                 }
             }
         }

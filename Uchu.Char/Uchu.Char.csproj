@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
+      <ProjectReference Include="..\Uchu.World\Uchu.World.csproj" />
     </ItemGroup>
 
 </Project>

@@ -23,6 +23,12 @@ namespace Uchu.Core.Config
         };
 
         /// <summary>
+        /// Optional sentry DSN to use for tracking errors and exceptions
+        /// </summary>
+        [XmlElement]
+        public string SentryDsn { get; set; } = "";
+
+        /// <summary>
         /// The level of console logging (debug or production)
         /// </summary>
         [XmlElement]
