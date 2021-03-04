@@ -31,7 +31,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var duplicate = await ctx.Users.Where(u => !u.Sso).AnyAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var duplicate = await ctx.Users.Where(u => !u.Sso).AnyAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (duplicate)
                 {
@@ -53,7 +53,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => u.Username == accountName);
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default) return response;
 
@@ -80,7 +80,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default)
                 {
@@ -121,7 +121,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default)
                 {
@@ -171,7 +171,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default)
                 {
@@ -208,7 +208,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default)
                 {
@@ -243,7 +243,7 @@ namespace Uchu.Master.Api
 
             await using (var ctx = new UchuContext())
             {
-                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username, accountName, StringComparison.CurrentCultureIgnoreCase));
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
 
                 if (user == default)
                 {
