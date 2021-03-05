@@ -18,6 +18,7 @@ using Uchu.Core.Client;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
+using Uchu.World.Objects.ReplicaManager;
 using Uchu.World.Scripting;
 using Uchu.World.Systems.AI;
 
@@ -440,22 +441,14 @@ namespace Uchu.World
             foreach (var recipient in recipients)
             {
                 if (!recipient.Perspective.View(gameObject)) continue;
-
                 if (!recipient.Perspective.Reveal(gameObject, out var id)) continue;
-
                 if (id == 0) return;
 
-                using var stream = new MemoryStream();
-                using var writer = new BitWriter(stream);
-
-                writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
-
-                writer.WriteBit(true);
-                writer.Write(id);
-
-                gameObject.WriteConstruct(writer);
-
-                recipient.Connection.Send(stream);
+                recipient.Connection.Send(new ConstructionPacket()
+                {
+                    Id = id,
+                    GameObject = gameObject,
+                });
             }
         }
 
@@ -465,16 +458,11 @@ namespace Uchu.World
             {
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                using var stream = new MemoryStream();
-                using var writer = new BitWriter(stream);
-
-                writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
-
-                writer.Write(id);
-
-                gameObject.WriteSerialize(writer);
-
-                recipient.Connection.Send(stream);
+                recipient.Connection.Send(new SerializePacket()
+                {
+                    Id = id,
+                    GameObject = gameObject,
+                });
             }
         }
 
@@ -488,19 +476,12 @@ namespace Uchu.World
             foreach (var recipient in recipients)
             {
                 if (recipient.Perspective.View(gameObject)) continue;
-
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                using (var stream = new MemoryStream())
+                recipient.Connection.Send(new DestructionPacket()
                 {
-                    using var writer = new BitWriter(stream);
-
-                    writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
-
-                    writer.Write(id);
-
-                    recipient.Connection.Send(stream);
-                }
+                    Id = id,
+                });
 
                 recipient.Perspective.Drop(gameObject);
             }
