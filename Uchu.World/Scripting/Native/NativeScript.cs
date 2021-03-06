@@ -10,7 +10,7 @@ namespace Uchu.World.Scripting.Native
     {
         protected Zone Zone { get; private set; }
 
-        protected UchuServer UchuServer => Zone.UchuServer;
+        protected UchuServer UchuServer => Zone.Server;
 
         protected static void Start(Object obj) => Object.Start(obj);
         

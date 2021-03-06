@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml.Serialization;
 using Uchu.Api;
 using Uchu.Api.Models;
@@ -21,7 +22,10 @@ namespace Uchu.Master
         public static UchuConfiguration Config { get; set; }
 
         public static List<ServerInstance> Instances { get; set; }
-        
+
+        public static Dictionary<string, int> InstanceHeartBeats { get; set; }
+        public static Dictionary<string, ServerHealth> InstanceHealth { get; set; }
+        public static Timer InstanceHeartBeatCheck { get; set; }  
         public static string ConfigPath { get; set; }
         
         public static string CdClientPath { get; set; }
@@ -39,17 +43,21 @@ namespace Uchu.Master
         public static List<int> Subsidiaries { get; set; }
         
         public static ApiManager Api { get; set; }
+        
+        public static int WorldServerHeartBeatsIntervalInMinutes { get; set; }
+        public static int WorldServerHeartBeatsPerInterval { get; set; }
 
         public static int MasterPort => Config.ApiConfig.Port;
         
         private static async Task Main(string[] args)
         {
             Subsidiaries = new List<int>();
-            
             Instances = new List<ServerInstance>();
+            InstanceHeartBeats = new Dictionary<string, int>();
+            InstanceHealth = new Dictionary<string, ServerHealth>();
+            
             try
             {
-                // Throws FileNotFoundException / DirectoryNotFoundException when res folder or instance dll is specified incorrectly
                 await ConfigureAsync();
             }
             catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
@@ -64,7 +72,6 @@ namespace Uchu.Master
             }
             
             var databaseVerified = await CheckForDatabaseUpdatesAsync();
-
             if (!databaseVerified)
             {
                 Logger.Error($"Failed to connect to database provider \"{Config.Database.Provider}\".");
@@ -81,6 +88,53 @@ namespace Uchu.Master
             AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
             
             await SetupApiAsync();
+            
+            // Setup health checks and automatic server closing
+            InstanceHeartBeatCheck = new Timer(WorldServerHeartBeatsIntervalInMinutes * 60000);
+            InstanceHeartBeatCheck.Elapsed += async (sender, eventArgs) =>
+            {
+                foreach (var instance in Instances.Where(i => i.ServerType == ServerType.World).ToList())
+                {
+                    var id = instance.Id.ToString();
+                    if (InstanceHealth.ContainsKey(id) && InstanceHeartBeats.ContainsKey(id))
+                    {
+                        InstanceHealth[id] = (InstanceHeartBeats[id] != 0 
+                                ? (float) InstanceHeartBeats[id] / WorldServerHeartBeatsPerInterval : 0) switch
+                        {
+                            var health when health >= 1 => ServerHealth.Healthy,
+                            var health when health >= 0.75 => ServerHealth.Lagging,
+                            var health when health >= 0.5 => ServerHealth.SeverelyLagging,
+                            var health when health >= 0.25 => ServerHealth.Unhealthy,
+                            
+                            // If hardly any heartbeats were received, gradually downgrade the health until closing
+                            _ => (ServerHealth) (int) InstanceHealth[id] - 1
+                        };
+                    }
+                    else
+                    {
+                        InstanceHealth.Add(id, ServerHealth.Dead);
+                    }
+
+                    Logger.Information($"{id} is {InstanceHealth[id]}");
+                    InstanceHeartBeats[id] = 0;
+                }
+                
+                // Kill all unhealthy instances
+                foreach (var unhealthyInstance in Instances.Where(i => i.ServerType == ServerType.World
+                                                                       && InstanceHealth.TryGetValue(i.Id.ToString(),
+                                                                           out var health)
+                                                                       && health == ServerHealth.Dead).ToList())
+                {
+                    Logger.Information($"Closing {unhealthyInstance.Id.ToString()} " +
+                                       $"({InstanceHealth[unhealthyInstance.Id.ToString()]}) due to health status.");
+                    
+                    await Api.RunCommandAsync<BaseResponse>(ApiPort, 
+                        $"instance/decommission?instance={unhealthyInstance.Id.ToString()}");
+                }
+            };
+            
+            InstanceHeartBeatCheck.Enabled = true;
+            InstanceHeartBeatCheck.AutoReset = true;
             
             try
             {
@@ -292,6 +346,8 @@ namespace Uchu.Master
             }
 
             ApiPortIndex = Config.ApiConfig.Port;
+            WorldServerHeartBeatsPerInterval = Config.Networking.WorldServerHeartBeatsPerInterval;
+            WorldServerHeartBeatsIntervalInMinutes = Config.Networking.WorldServerHeartBeatIntervalInMinutes;
 
             var source = Directory.GetCurrentDirectory();
             
@@ -322,6 +378,12 @@ namespace Uchu.Master
             instance.Start(DllLocation, Config.DllSource.DotNetPath);
             
             Instances.Add(instance);
+
+            if (type == ServerType.World)
+            {
+                InstanceHeartBeats.Add(id.ToString(), 0);
+                InstanceHealth.Add(id.ToString(), ServerHealth.Healthy);
+            }
 
             return id;
         }
@@ -416,12 +478,12 @@ namespace Uchu.Master
                     subsidiary, "instance/list"
                 );
                 
-                if (result == default) continue;
+                if (result == null)
+                    continue;
 
                 if (!result.Success)
                 {
                     Logger.Error(result.FailedReason);
-                    
                     continue;
                 }
 

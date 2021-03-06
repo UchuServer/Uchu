@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using RakDotNet;
 using RakDotNet.IO;
-using Sentry;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Python;
@@ -32,6 +30,15 @@ namespace Uchu.World
         public ZoneParser ZoneParser { get; private set; }
         
         public Whitelist Whitelist { get; private set; }
+
+        /// <summary>
+        /// Sends a heart beat to the master server, indicating the health of the server
+        /// </summary>
+        public async Task SendHeartBeat()
+        {
+            await Api.RunCommandAsync<BaseResponse>(MasterApi, $"instance/heartbeat?instance={Id.ToString()}")
+                .ConfigureAwait(false);
+        }
 
         public WorldUchuServer(Guid id) : base(id)
         {

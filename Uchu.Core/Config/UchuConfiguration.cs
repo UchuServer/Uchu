@@ -198,6 +198,22 @@ namespace Uchu.Core.Config
         /// The maximum amount of world servers that may be generated
         /// </summary>
         [XmlElement] public int MaxWorldServers { get; set; } = 100;
+
+        /// <summary>
+        /// The amount of heart beats the server should send per heart beat interval for it to retain it's healthy
+        /// status for the master server
+        /// </summary>
+        [XmlElement] public int WorldServerHeartBeatsPerInterval { get; set; } = 10;
+
+        /// <summary>
+        /// The interval over which heart beats should be received in minutes
+        /// </summary>
+        /// <remarks>
+        /// Note that this also corresponds to the max loading time for a world before the master server shuts it down.
+        /// As a world server is started in the healthy phase with no heart beats it takes 5 times this amount for the
+        /// world server to be shut down.
+        /// </remarks>
+        [XmlElement] public int WorldServerHeartBeatIntervalInMinutes { get; set; } = 5;
         
         /// <summary>
         /// The ports to run the world servers at
