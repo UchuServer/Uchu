@@ -13,7 +13,6 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Sentry;
-using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
