@@ -261,11 +261,11 @@ namespace Uchu.Master
         private static async Task ConfigureAsync()
         {
             var serializer = new XmlSerializer(typeof(UchuConfiguration));
-            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+            var configFilename = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
-            if (File.Exists(fn))
+            if (File.Exists(configFilename))
             {
-                await using var file = File.OpenRead(fn);
+                await using var file = File.OpenRead(configFilename);
                 LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
             }
             else
@@ -293,30 +293,30 @@ namespace Uchu.Master
 
             UchuContextBase.Config = Config;
 
-            var configPath = Config.ResourcesConfiguration?.GameResourceFolder;
-            
-            if (!string.IsNullOrWhiteSpace(configPath))
+            var resourceFolder = Config.ResourcesConfiguration?.GameResourceFolder;
+
+            if (!string.IsNullOrWhiteSpace(resourceFolder))
             {
-                if (EnsureUnpackedClient(configPath))
+                if (EnsureUnpackedClient(resourceFolder))
                 {
-                    Logger.Information($"Using local resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
+                    Logger.Information($"Using game resources: {Config.ResourcesConfiguration.GameResourceFolder}");
                 }
                 else
                 {
                     Logger.Error($"Invalid local resources (Invalid path or no .luz files found). Please ensure you are using an unpacked client.");
-                    
+
                     throw new FileNotFoundException("No luz files found.");
                 }
             }
             else
             {
                 Logger.Error("No input location of local resources. Please input in config file.");
-                
+
                 throw new DirectoryNotFoundException("No local resource path.");
             }
 
             UseAuthentication = Config.Networking.HostAuthentication;
-            
+
             DllLocation = Config.DllSource.Instance;
 
             if (!File.Exists(DllLocation))
@@ -324,13 +324,18 @@ namespace Uchu.Master
                 throw new FileNotFoundException("Could not find file specified in <Instance> under <DllSource> in config.xml.");
             }
 
-            var validScriptPackExists = Config.DllSource.ScriptDllSource.Exists(scriptPackPath =>
+            var validScriptPackExists = false;
+
+            Config.DllSource.ScriptDllSource.ForEach(scriptPackPath =>
             {
                 if (File.Exists(scriptPackPath))
-                    return true;
+                {
+                    Logger.Information($"Using script pack: {scriptPackPath}");
+                    validScriptPackExists = true;
+                    return;
+                }
 
                 Logger.Warning($"Could not find script pack at {scriptPackPath}");
-                return false;
             });
 
             if (!validScriptPackExists)
@@ -338,23 +343,17 @@ namespace Uchu.Master
                 throw new FileNotFoundException("No valid <ScriptDllSource> specified under <DllSource> in config.xml.\n"
                                                 + "Without Uchu.StandardScripts.dll, Uchu cannot function correctly.");
             }
-            
-            foreach (var scriptPackPath in Config.DllSource.ScriptDllSource)
-            {
-                if (!File.Exists(scriptPackPath))
-                    Logger.Warning($"Could not find script pack at {scriptPackPath}");
-            }
 
             ApiPortIndex = Config.ApiConfig.Port;
             WorldServerHeartBeatsPerInterval = Config.Networking.WorldServerHeartBeatsPerInterval;
             WorldServerHeartBeatsIntervalInMinutes = Config.Networking.WorldServerHeartBeatIntervalInMinutes;
 
             var source = Directory.GetCurrentDirectory();
-            
-            ConfigPath = Path.Combine(source, $"{fn}");
+
+            ConfigPath = Path.Combine(source, $"{configFilename}");
             CdClientPath = Path.Combine(source, "CDClient.db");
             
-            Logger.Information($"{source}\n{ConfigPath}\n{CdClientPath}");
+            Logger.Information($"Using configuration: {ConfigPath}\nUsing CDClient: {CdClientPath}");
         }
 
         private static bool EnsureUnpackedClient(string directory)
