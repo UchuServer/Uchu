@@ -15,7 +15,7 @@ namespace Uchu.Physics
         /// <summary>
         /// BepuPhysics simulation.
         /// </summary>
-        internal Simulation Simulation { get; }
+        private Simulation Simulation { get; }
         
         /// <summary>
         /// Buffer for BepuPhysics.
@@ -162,6 +162,74 @@ namespace Uchu.Physics
 
             // Throw an exception if nothing was found.
             throw new Exception($"Failed to find physics object: Got {staticHandle}/{bodyHandle}");
+        }
+
+        /// <summary>
+        /// Registers a shape.
+        /// </summary>
+        /// <param name="shape">Shape to register.</param>
+        /// <returns>Index of the shape.</returns>
+        public TypedIndex RegisterShape<TShape>(TShape shape) where TShape : unmanaged, IShape
+        {
+            return Simulation.Shapes.Add(shape);
+        }
+
+        /// <summary>
+        /// Returns the static reference for a static handle.
+        /// </summary>
+        /// <param name="handle">Handle to use.</param>
+        /// <returns>Static reference for the given static handle.</returns>
+        public StaticReference GetStaticReference(StaticHandle handle)
+        {
+            return Simulation.Statics.GetStaticReference(handle);
+        }
+        
+        /// <summary>
+        /// Creates a static handle.
+        /// </summary>
+        /// <param name="description">Description of handle.</param>
+        /// <returns>The created static handle.</returns>
+        public StaticHandle CreateStaticHandle(StaticDescription description)
+        {
+            return Simulation.Statics.Add(description);
+        }
+
+        /// <summary>
+        /// Removes a static handle.
+        /// </summary>
+        /// <param name="handle">Handle to remove.</param>
+        public void RemoveStaticHandle(StaticHandle handle)
+        {
+            Simulation.Statics.Remove(handle);
+        }
+
+        /// <summary>
+        /// Returns the body reference for a body handle.
+        /// </summary>
+        /// <param name="handle">Handle to use.</param>
+        /// <returns>Body reference for the given body handle.</returns>
+        public BodyReference GetBodyReference(BodyHandle handle)
+        {
+            return Simulation.Bodies.GetBodyReference(handle);
+        }
+
+        /// <summary>
+        /// Creates a body handle.
+        /// </summary>
+        /// <param name="description">Description of handle.</param>
+        /// <returns>The created body handle.</returns>
+        public BodyHandle CreateBodyHandle(BodyDescription description)
+        {
+            return Simulation.Bodies.Add(description);
+        }
+        
+        /// <summary>
+        /// Removes a body handle.
+        /// </summary>
+        /// <param name="handle">Handle to remove.</param>
+        public void RemoveBodyHandle(BodyHandle handle)
+        {
+            Simulation.Bodies.Remove(handle);
         }
         
         /// <summary>

@@ -23,7 +23,7 @@ namespace Uchu.Physics
         protected PhysicsBody(PhysicsSimulation simulation, BodyHandle handle) : base(simulation)
         {
             Handle = handle;
-            Reference = simulation.Simulation.Bodies.GetBodyReference(handle);
+            Reference = simulation.GetBodyReference(handle);
         }
 
         /// <summary>
@@ -89,10 +89,8 @@ namespace Uchu.Physics
         public override void Dispose()
         {
             Simulation.Release(this);
-            
             if (!Reference.Exists) return;
-            
-            Simulation.Simulation.Bodies.Remove(Handle);
+            Simulation.RemoveBodyHandle(Handle);
         }
     }
 }

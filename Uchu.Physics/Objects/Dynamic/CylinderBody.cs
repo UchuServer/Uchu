@@ -27,12 +27,12 @@ namespace Uchu.Physics
         {
             var shape = new Cylinder(size.X, size.Y);
             shape.ComputeInertia(1, out var inertia);
-            var index = simulation.Simulation.Shapes.Add(shape);
+            var index = simulation.RegisterShape(shape);
             var collidable = new CollidableDescription(index, 0.1f);
             var activity = new BodyActivityDescription(0);
             var pose = new RigidPose(position, rotation);
             var descriptor = BodyDescription.CreateDynamic(pose, inertia, collidable, activity);
-            var handle = simulation.Simulation.Bodies.Add(descriptor);
+            var handle = simulation.CreateBodyHandle(descriptor);
             var obj = new CylinderBody(simulation, handle);
             simulation.Register(obj);
 

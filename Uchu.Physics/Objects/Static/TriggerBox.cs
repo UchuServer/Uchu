@@ -26,10 +26,10 @@ namespace Uchu.Physics
         public static TriggerBox Create(PhysicsSimulation simulation, Vector3 position, Quaternion rotation, Vector3 size)
         {
             var shape = new Box(size.X, size.Y, size.Z);
-            var index = simulation.Simulation.Shapes.Add(shape);
+            var index = simulation.RegisterShape(shape);
             var collidable = new CollidableDescription(index, 0.01f);
             var descriptor = new StaticDescription(position, rotation, collidable);
-            var handle = simulation.Simulation.Statics.Add(descriptor);
+            var handle = simulation.CreateStaticHandle(descriptor);
             var obj = new TriggerBox(simulation, handle);
             simulation.Register(obj);
 

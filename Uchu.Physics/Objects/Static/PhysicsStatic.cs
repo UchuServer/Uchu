@@ -23,7 +23,7 @@ namespace Uchu.Physics
         public PhysicsStatic(PhysicsSimulation simulation, StaticHandle handle) : base(simulation)
         {
             Handle = handle;
-            Reference = simulation.Simulation.Statics.GetStaticReference(handle);
+            Reference = simulation.GetStaticReference(handle);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Uchu.Physics
         {
             Simulation.Release(this);
             if (!Reference.Exists) return;
-            Simulation.Simulation.Statics.Remove(Handle);
+            Simulation.RemoveStaticHandle(Handle);
         }
     }
 }
