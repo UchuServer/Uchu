@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuUtilities.Memory;
@@ -33,6 +34,11 @@ namespace Uchu.Physics
         private PoseIntegratorCallbacks PoseIntegratorCallbacks { get; }
         
         /// <summary>
+        /// Semaphore for manipulating the simulation.
+        /// </summary>
+        private SemaphoreSlim SimulationSemaphore { get; }
+        
+        /// <summary>
         /// Objects in the simulation.
         /// </summary>
         private List<PhysicsObject> Objects { get; }
@@ -52,6 +58,7 @@ namespace Uchu.Physics
         /// </summary>
         public PhysicsSimulation()
         {
+            SimulationSemaphore = new SemaphoreSlim(1, 1);
             Objects = new List<PhysicsObject>();
             Buffer = new BufferPool();
             NarrowPhaseCallbacks = new NarrowPhaseCallbacks
@@ -68,6 +75,7 @@ namespace Uchu.Physics
         /// <param name="deltaTime">Delta time in milliseconds since last tick</param>
         public void Step(float deltaTime)
         {
+            SimulationSemaphore.Wait();
             foreach (var physicsBody in Bodies.ToArray())
             {
                 if (!physicsBody.Reference.Exists)
@@ -84,6 +92,7 @@ namespace Uchu.Physics
             }
 
             Simulation.Timestep(deltaTime / 1000);
+            SimulationSemaphore.Release();
         }
 
         /// <summary>
@@ -92,7 +101,9 @@ namespace Uchu.Physics
         /// <param name="obj">Physics object to register.</param>
         internal void Register(PhysicsObject obj)
         {
+            SimulationSemaphore.Wait();
             Objects.Add(obj);
+            SimulationSemaphore.Release();
         }
 
         /// <summary>
@@ -101,7 +112,9 @@ namespace Uchu.Physics
         /// <param name="obj">Physics object to remove.</param>
         internal void Release(PhysicsObject obj)
         {
+            SimulationSemaphore.Wait();
             Objects.Remove(obj);
+            SimulationSemaphore.Release();
         }
         
         /// <summary>
@@ -171,7 +184,10 @@ namespace Uchu.Physics
         /// <returns>Index of the shape.</returns>
         public TypedIndex RegisterShape<TShape>(TShape shape) where TShape : unmanaged, IShape
         {
-            return Simulation.Shapes.Add(shape);
+            SimulationSemaphore.Wait();
+            var index = Simulation.Shapes.Add(shape);
+            SimulationSemaphore.Release();
+            return index;
         }
 
         /// <summary>
@@ -181,7 +197,10 @@ namespace Uchu.Physics
         /// <returns>Static reference for the given static handle.</returns>
         public StaticReference GetStaticReference(StaticHandle handle)
         {
-            return Simulation.Statics.GetStaticReference(handle);
+            SimulationSemaphore.Wait();
+            var reference = Simulation.Statics.GetStaticReference(handle);
+            SimulationSemaphore.Release();
+            return reference;
         }
         
         /// <summary>
@@ -191,7 +210,10 @@ namespace Uchu.Physics
         /// <returns>The created static handle.</returns>
         public StaticHandle CreateStaticHandle(StaticDescription description)
         {
-            return Simulation.Statics.Add(description);
+            SimulationSemaphore.Wait();
+            var handle = Simulation.Statics.Add(description);
+            SimulationSemaphore.Release();
+            return handle;
         }
 
         /// <summary>
@@ -200,7 +222,9 @@ namespace Uchu.Physics
         /// <param name="handle">Handle to remove.</param>
         public void RemoveStaticHandle(StaticHandle handle)
         {
+            SimulationSemaphore.Wait();
             Simulation.Statics.Remove(handle);
+            SimulationSemaphore.Release();
         }
 
         /// <summary>
@@ -210,7 +234,10 @@ namespace Uchu.Physics
         /// <returns>Body reference for the given body handle.</returns>
         public BodyReference GetBodyReference(BodyHandle handle)
         {
-            return Simulation.Bodies.GetBodyReference(handle);
+            SimulationSemaphore.Wait();
+            var reference = Simulation.Bodies.GetBodyReference(handle);
+            SimulationSemaphore.Release();
+            return reference;
         }
 
         /// <summary>
@@ -220,7 +247,10 @@ namespace Uchu.Physics
         /// <returns>The created body handle.</returns>
         public BodyHandle CreateBodyHandle(BodyDescription description)
         {
-            return Simulation.Bodies.Add(description);
+            SimulationSemaphore.Wait();
+            var handle = Simulation.Bodies.Add(description);
+            SimulationSemaphore.Release();
+            return handle;
         }
         
         /// <summary>
@@ -229,7 +259,9 @@ namespace Uchu.Physics
         /// <param name="handle">Handle to remove.</param>
         public void RemoveBodyHandle(BodyHandle handle)
         {
+            SimulationSemaphore.Wait();
             Simulation.Bodies.Remove(handle);
+            SimulationSemaphore.Release();
         }
         
         /// <summary>
