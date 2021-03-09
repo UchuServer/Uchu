@@ -4,6 +4,7 @@ using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Constraints;
+using Uchu.Core;
 
 namespace Uchu.Physics.Callbacks
 {
@@ -89,7 +90,7 @@ namespace Uchu.Physics.Callbacks
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Error(e);
             }
 
             return false;
