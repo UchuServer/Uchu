@@ -318,10 +318,10 @@ namespace Uchu.World
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
         ///     implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="rootItem">An optional parent item</param>
-        /// <param name="lotAddReason">The reason this lot is given to the player</param>
+        /// <param name="lootType">The reason this lot is given to the player</param>
         /// <returns>The list of items that were created while adding the lot</returns>
         public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
-            InventoryType inventoryType = default, Item rootItem = default, LotAddReason lotAddReason = default)
+            InventoryType inventoryType = default, Item rootItem = default, LootType lootType = default)
         {
             var createdItems = new List<Item>();
             
@@ -398,22 +398,21 @@ namespace Uchu.World
                             ExpirationTime = DateTime.Now
                         };
 
-                        switch (lotAddReason)
+                        switch (lootType)
                         {
-                            // TODO: localization? These messages are in locale.xml, maybe we can/should get the client to load it from there?
                             // Achievements
-                            case LotAddReason.AchievementReward:
+                            case LootType.Achievement:
                             {
-                                mail.Subject = "Achievement Reward";
-                                mail.Body = "You completed an Achievement and didn't have room for this reward.";
+                                mail.Subject = "%[MAIL_ACHIEVEMENT_OVERFLOW_HEADER]";
+                                mail.Body = "%[MAIL_ACHIEVEMENT_OVERFLOW_BODY]";
                                 break;
                             }
                             // Missions
                             // Actually this text might be meant for things like footraces?
-                            case LotAddReason.ActivityReward:
+                            case LootType.Mission:
                             {
-                                mail.Subject = "Activity Reward";
-                                mail.Body = "You completed an activity and didn't have room for this reward.";
+                                mail.Subject = "%[MAIL_ACTIVITY_OVERFLOW_HEADER]";
+                                mail.Body = "%[MAIL_ACTIVITY_OVERFLOW_BODY]";
                                 break;
                             }
                             // /gmadditem, item sets, possibly some other things
@@ -579,7 +578,7 @@ namespace Uchu.World
                 return;
 
             await RemoveItemAsync(item, count, source, silent);
-            await AddLotAsync(item.Lot , count, item.Settings, destination);
+            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory); // TODO find out if this is correct (what's LootType.Relocate?)
         }
         
         #endregion methods

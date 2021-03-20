@@ -15,7 +15,7 @@ namespace Uchu.World
 
         public bool IsBoundOnPickup { get; set; }
 
-        public int Source { get; set; } = -1;
+        public LootType Source { get; set; } = LootType.None;
 
         public LegoDataDictionary ExtraInfo { get; set; } = null;
 

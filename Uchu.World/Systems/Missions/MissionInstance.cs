@@ -606,7 +606,7 @@ namespace Uchu.World.Systems.Missions
             {
                 var (_, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
                 await inventory.AddLotAsync(rewardItem, (uint) Math.Max(count, 1),
-                    lotAddReason: IsMission ? LotAddReason.ActivityReward : LotAddReason.AchievementReward);
+                    lootType: IsMission ? LootType.Mission: LootType.Achievement);
             }
             else
             {
@@ -617,7 +617,7 @@ namespace Uchu.World.Systems.Missions
                     
                     var count = Math.Max(rewardCount, 1);
                     await inventory.AddLotAsync(rewardLot, (uint) count,
-                        lotAddReason: IsMission ? LotAddReason.ActivityReward : LotAddReason.AchievementReward);
+                        lootType: IsMission ? LootType.Mission: LootType.Achievement);
                 }
             }
         }
