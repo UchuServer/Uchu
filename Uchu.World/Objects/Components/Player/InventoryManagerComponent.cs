@@ -318,9 +318,10 @@ namespace Uchu.World
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
         ///     implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="rootItem">An optional parent item</param>
+        /// <param name="lotAddReason">The reason this lot is given to the player</param>
         /// <returns>The list of items that were created while adding the lot</returns>
         public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
-            InventoryType inventoryType = default, Item rootItem = default)
+            InventoryType inventoryType = default, Item rootItem = default, LotAddReason lotAddReason = default)
         {
             var createdItems = new List<Item>();
             
@@ -381,11 +382,60 @@ namespace Uchu.World
                     
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
-                        return; // TODO: Message item to player with mail
-                    
-                    Start(item);
-                    item.MessageCreation();
-                    createdItems.Add(item);
+                    {
+                        await using var uchuContext = new UchuContext();
+
+                        var playerCharacter = uchuContext.Characters
+                            .First(c => c.Id == GameObject.Id);
+
+                        var mail = new CharacterMail
+                        {
+                            RecipientId = playerCharacter.Id,
+                            AuthorId = 0,
+                            AttachmentLot = lot,
+                            AttachmentCount = (ushort) toAdd,
+                            SentTime = DateTime.Now,
+                            ExpirationTime = DateTime.Now
+                        };
+
+                        switch (lotAddReason)
+                        {
+                            // TODO: localization? These messages are in locale.xml, maybe we can/should get the client to load it from there?
+                            // Achievements
+                            case LotAddReason.AchievementReward:
+                            {
+                                mail.Subject = "Achievement Reward";
+                                mail.Body = "You completed an Achievement and didn't have room for this reward.";
+                                break;
+                            }
+                            // Missions
+                            // Actually this text might be meant for things like footraces?
+                            case LotAddReason.ActivityReward:
+                            {
+                                mail.Subject = "Activity Reward";
+                                mail.Body = "You completed an activity and didn't have room for this reward.";
+                                break;
+                            }
+                            // /gmadditem, item sets, possibly some other things
+                            default:
+                            {
+                                mail.Subject = "Lost Item";
+                                mail.Body = "You received this item, but didn't have room for it in your backpack.";
+                                break;
+                            }
+                        }
+
+                        await uchuContext.Mails.AddAsync(mail);
+                        await uchuContext.SaveChangesAsync();
+
+                        return;
+                    }
+                    else
+                    {
+                        Start(item);
+                        item.MessageCreation();
+                        createdItems.Add(item);
+                    }
 
                     totalToAdd -= toAdd;
                     totalAdded += toAdd;
