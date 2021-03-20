@@ -532,10 +532,10 @@ namespace Uchu.World.Systems.Missions
 
             if (!Player.TryGetComponent<CharacterComponent>(out var character))
                 return;
-            
-            var currency = !Repeat ? RewardCurrencyRepeatable : RewardCurrency;
-            var score = Repeat ? 0 : RewardScore;
-            
+
+            var currency = Repeat ? RewardCurrencyRepeatable : RewardCurrency;
+            var score = RewardScore;
+
             if (IsMission)
             {
                 character.Currency += currency;
