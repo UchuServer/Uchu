@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
@@ -383,6 +384,15 @@ namespace Uchu.World
                     // Might occur if the inventory is full or an error occured during slot claiming
                     if (item == null)
                     {
+                        // Display item-bouncing-off-backpack animation
+                        ((Player) GameObject).Message(new NotifyRewardMailed
+                        {
+                            ObjectId = ObjectId.Standalone,
+                            StartPoint = new Vector3(0, 0, 0),
+                            TemplateId = lot,
+                            Associate = GameObject,
+                        });
+
                         await using var uchuContext = new UchuContext();
 
                         var playerCharacter = uchuContext.Characters
@@ -407,15 +417,16 @@ namespace Uchu.World
                                 mail.Body = "%[MAIL_ACHIEVEMENT_OVERFLOW_BODY]";
                                 break;
                             }
-                            // Missions
-                            // Actually this text might be meant for things like footraces?
+                            // Activities - not entirely sure when this will be used
+                            // The text also works well enough for missions, though those should not add items to full inventories anyway
                             case LootType.Mission:
+                            case LootType.Activity:
                             {
                                 mail.Subject = "%[MAIL_ACTIVITY_OVERFLOW_HEADER]";
                                 mail.Body = "%[MAIL_ACTIVITY_OVERFLOW_BODY]";
                                 break;
                             }
-                            // /gmadditem, item sets, possibly some other things
+                            // /gmadditem, item sets, sometimes happens when picking up items, and for any other reason listed in the LootType enum
                             default:
                             {
                                 mail.Subject = "Lost Item";

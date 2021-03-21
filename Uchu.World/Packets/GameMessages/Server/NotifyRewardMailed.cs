@@ -12,7 +12,7 @@ namespace Uchu.World
 
         public Vector3 StartPoint;
 
-        public ObjectId Subkey;
+        public ObjectId Subkey = (ObjectId) (-1);
 
         public Lot TemplateId;
 
