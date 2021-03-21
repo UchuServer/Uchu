@@ -104,7 +104,7 @@ namespace Uchu.World.Systems.Match
                 InstanceInfo allocatedInstance;
                 try
                 {
-                    allocatedInstance = await ServerHelper.RequestNewWorldServerAsync(zone.UchuServer, (ZoneId) matchZoneId);
+                    allocatedInstance = await ServerHelper.RequestNewWorldServerAsync(zone.Server, (ZoneId) matchZoneId);
                     if (allocatedInstance == default)
                     {
                         Logger.Debug($"Could not find server for: {matchZoneId}");

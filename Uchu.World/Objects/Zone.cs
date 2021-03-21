@@ -13,11 +13,13 @@ using InfectedRose.Utilities;
 using RakDotNet;
 using RakDotNet.IO;
 using Sentry;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
+using Uchu.World.Objects.ReplicaManager;
 using Uchu.World.Scripting;
 using Uchu.World.Systems.AI;
 
@@ -38,9 +40,7 @@ namespace Uchu.World
         public uint CloneId { get; }
         public ushort InstanceId { get; }
         public ZoneInfo ZoneInfo { get; }
-        
-        public new UchuServer UchuServer { get; }
-        
+        public WorldUchuServer Server { get; }
         public uint Checksum { get; private set; }
         public bool Loaded { get; private set; }
         public NavMeshManager NavMeshManager { get; private set; }
@@ -68,6 +68,7 @@ namespace Uchu.World
         private long _physicsTime;
         private long _objectUpdateTime;
         private long _scheduleUpdateTime;
+        private long _timeSinceLastHeartBeat;
         
         public bool CalculatingTick { get; set; }
         public float DeltaTime { get; private set; }
@@ -89,11 +90,11 @@ namespace Uchu.World
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
         
-        public Zone(ZoneInfo zoneInfo, UchuServer uchuServer, ushort instanceId = default, uint cloneId = default)
+        public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)
         {
             Zone = this;
             ZoneInfo = zoneInfo;
-            UchuServer = uchuServer;
+            Server = server;
             InstanceId = instanceId;
             CloneId = cloneId;
             
@@ -223,7 +224,7 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadNavMeshes()
         {
-            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
             if (NavMeshManager.Enabled)
             {
                 Logger.Information("Generating navigation way points.");
@@ -440,22 +441,14 @@ namespace Uchu.World
             foreach (var recipient in recipients)
             {
                 if (!recipient.Perspective.View(gameObject)) continue;
-
                 if (!recipient.Perspective.Reveal(gameObject, out var id)) continue;
-
                 if (id == 0) return;
 
-                using var stream = new MemoryStream();
-                using var writer = new BitWriter(stream);
-
-                writer.Write((byte) MessageIdentifier.ReplicaManagerConstruction);
-
-                writer.WriteBit(true);
-                writer.Write(id);
-
-                gameObject.WriteConstruct(writer);
-
-                recipient.Connection.Send(stream);
+                recipient.Connection.Send(new ConstructionPacket()
+                {
+                    Id = id,
+                    GameObject = gameObject,
+                });
             }
         }
 
@@ -465,16 +458,11 @@ namespace Uchu.World
             {
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                using var stream = new MemoryStream();
-                using var writer = new BitWriter(stream);
-
-                writer.Write((byte) MessageIdentifier.ReplicaManagerSerialize);
-
-                writer.Write(id);
-
-                gameObject.WriteSerialize(writer);
-
-                recipient.Connection.Send(stream);
+                recipient.Connection.Send(new SerializePacket()
+                {
+                    Id = id,
+                    GameObject = gameObject,
+                });
             }
         }
 
@@ -488,19 +476,12 @@ namespace Uchu.World
             foreach (var recipient in recipients)
             {
                 if (recipient.Perspective.View(gameObject)) continue;
-
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
-                using (var stream = new MemoryStream())
+                recipient.Connection.Send(new DestructionPacket()
                 {
-                    using var writer = new BitWriter(stream);
-
-                    writer.Write((byte) MessageIdentifier.ReplicaManagerDestruction);
-
-                    writer.Write(id);
-
-                    recipient.Connection.Send(stream);
-                }
+                    Id = id,
+                });
 
                 recipient.Perspective.Drop(gameObject);
             }
@@ -623,7 +604,7 @@ namespace Uchu.World
             _passedTickTime += passedMs;
 
             DeltaTime = Math.Max(TimePerTickLimit, passedMs);
-            
+
             CalculatingTick = false;
         }
 
@@ -641,6 +622,7 @@ namespace Uchu.World
             Listen(OnTick, ExecuteSchedule);
             Listen(OnTick, UpdateObjects);
             Listen(OnTick, PhysicsStep);
+            Listen(OnTick, SendHeartbeat);
 
             _running = true;
 
@@ -728,8 +710,21 @@ namespace Uchu.World
             
             watch.Stop();
             _objectUpdateTime += watch.ElapsedMilliseconds;
-        }    
+        }
 
+        /// <summary>
+        /// Sends a heart beat to the master server indicating that this server is still healthy
+        /// </summary>
+        private async Task SendHeartbeat()
+        {
+            _timeSinceLastHeartBeat += (long)DeltaTime;
+            if (_timeSinceLastHeartBeat >= Server.HeartBeatInterval)
+            {
+                await Server.SendHeartBeat();
+                _timeSinceLastHeartBeat = 0;
+            }
+        }
+        
         /// <summary>
         /// Decrements the delay of all scheduled tasks and executes them if the timeout has been reached
         /// </summary>

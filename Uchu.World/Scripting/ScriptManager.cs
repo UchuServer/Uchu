@@ -39,7 +39,7 @@ namespace Uchu.World.Scripting
             
             var scriptPacks = new List<ScriptPack>();
             
-            foreach (var scriptPackPath in Zone.UchuServer.Config.DllSource.ScriptDllSource)
+            foreach (var scriptPackPath in Zone.Server.Config.DllSource.ScriptDllSource)
             {
                 try
                 {
@@ -68,13 +68,13 @@ namespace Uchu.World.Scripting
             
             ManagedScriptEngine.Init();
 
-            foreach (var script in Zone.UchuServer.Config.ManagedScriptSources?.Scripts ?? new List<string>())
+            foreach (var script in Zone.Server.Config.ManagedScriptSources?.Scripts ?? new List<string>())
             {
                 Logger.Information($"Loading {script} managed script pack");
                 
                 string source = default;
 
-                var location = Path.Combine(Zone.UchuServer.MasterPath, script);
+                var location = Path.Combine(Zone.Server.MasterPath, script);
                 
                 if (File.Exists(location))
                 {
@@ -104,7 +104,7 @@ namespace Uchu.World.Scripting
 
             ScriptPacks = list;
 
-            location = Path.Combine(Zone.UchuServer.MasterPath, location);
+            location = Path.Combine(Zone.Server.MasterPath, location);
 
             if (File.Exists(location))
             {

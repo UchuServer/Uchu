@@ -89,36 +89,44 @@ namespace Uchu.Core
             // Return the entry.
             return entry;
         }
-        
+
+        /// <summary>
+        /// Generates the actual string write to console, including the log level,
+        /// timestamps, trace (optionally) and padding.
+        /// </summary>
 #if DEBUG
-        public static string GenerateMessage(string message, LogLevel logLevel, StackTrace trace)
+        public static string GenerateMessage(string message, LogLevel logLevel, StackTrace trace, bool includeTimestamp, int maxLength)
 #else
-        public static string GenerateMessage(string message, LogLevel logLevel)
+        public static string GenerateMessage(string message, LogLevel logLevel, bool includeTimestamp, int maxLength)
 #endif
         {
-            
-            var level = logLevel.ToString();
-
-            var padding = new string(Enumerable.Repeat(' ', 12 - level.Length).ToArray());
-
-            message = $"[{level}]{padding} {message}";
-
+            // The invoker will be shown on the right of the screen in Debug builds, and won't be shown in Release builds
+            var traceText = "";
 #if DEBUG
-            var amount = 140 - message.Length;
-            padding = new string(Enumerable.Repeat(' ', amount > 0 ? amount : 1).ToArray());
-
-            message = $"{message}{padding}|";
-
             if (trace != default)
             {
                 var invoker = TraceInvoker(trace);
 
                 if (invoker?.DeclaringType != default)
-                    message = $"{message} {invoker.DeclaringType.Name}.{invoker.Name}";
+                    traceText = $"[{invoker.DeclaringType.Name}.{invoker.Name}]";
             }
 #endif
 
-            return message;
+            // Add [Loglevel] and add spacing to fill a total of 12 characters
+            var level = logLevel.ToString();
+            var maxLevelLength = 12;
+            var paddingAfterLevel = new string(Enumerable.Repeat(' ', maxLevelLength - level.Length).ToArray());
+
+            // Mutliline messages need to get the log level and timestamp on each line
+            var lines = message.Split("\n").ToList();
+            lines = lines.Select(part => (includeTimestamp ? $"[{GetCurrentTime()}] " : "") + $"[{level}]{paddingAfterLevel} {part}").ToList();
+
+            // Add trace text to the first line.
+            // If it doesn't fit on the same line, this will add spacing to make it appear on the next.
+            var paddingBeforeTrace = new string(Enumerable.Repeat(' ', maxLength - (lines[0].Length + traceText.Length) % maxLength).ToArray());;
+            lines[0] += paddingBeforeTrace + traceText;
+
+            return string.Join("\n", lines);
         }
 
         /// <summary>
@@ -136,27 +144,6 @@ namespace Uchu.Core
                     var entry = this.PopEntry();
                     while (entry != null)
                     {
-                        if (entry.Message.Contains('\n', StringComparison.InvariantCulture))
-                        {
-                            var parts = entry.Message.Split('\n');
-
-                            var visual = parts.Max(p => p.Length);
-
-                            foreach (var part in parts)
-                            {
-                                var padding = new string(Enumerable.Repeat(' ', visual - part.Length).ToArray());
-
-                                var segment = $"{part}{padding}";
-
-#if DEBUG
-                                await InternalLog(segment, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
-#else
-                                await InternalLog(segment, entry.Color, entry.LogLevel).ConfigureAwait(false);
-#endif
-                            }
-                            entry = this.PopEntry();
-                            continue;
-                        }
 #if DEBUG
                         await InternalLog(entry.Message, entry.Color, entry.LogLevel, entry.Trace).ConfigureAwait(false);
 #else
@@ -173,27 +160,28 @@ namespace Uchu.Core
                 }
             },CancellationToken.None,TaskCreationOptions.LongRunning,TaskScheduler.Default);
         }
-        
+
+        /// <summary>
+        /// Log a message to a file and/or the console, as configured.
+        /// </summary>
 #if DEBUG
         private static async Task InternalLog(string message, ConsoleColor color, LogLevel logLevel, StackTrace trace)
 #else
         private static async Task InternalLog(string message, ConsoleColor color, LogLevel logLevel)
 #endif
         {
-#if DEBUG
-            string finalMessage = GenerateMessage(message, logLevel, trace);
-#else
-            string finalMessage = GenerateMessage(message, logLevel);
-#endif
-
             var fileLoggingConfiguration = Config.FileLogging;
             var fileLogLevel = Enum.Parse<LogLevel>(fileLoggingConfiguration.Level);
             if (fileLogLevel != LogLevel.None && fileLogLevel <= logLevel)
             {
                 var file = fileLoggingConfiguration.File;
-
-                var fileMessage = fileLoggingConfiguration.Timestamp ? $"[{GetCurrentTime()}] {finalMessage}" : finalMessage;
-
+#if DEBUG
+                var fileMessage = GenerateMessage(message, logLevel, trace,
+                    includeTimestamp: fileLoggingConfiguration.Timestamp, maxLength: 140);
+#else
+                var fileMessage = GenerateMessage(message, logLevel,
+                    includeTimestamp: fileLoggingConfiguration.Timestamp, maxLength: 140);
+#endif
                 await File.AppendAllTextAsync(file, $"{fileMessage}\n").ConfigureAwait(false);
             }
 
@@ -201,8 +189,14 @@ namespace Uchu.Core
             var consoleLogLevel = Enum.Parse<LogLevel>(consoleLoggingConfiguration.Level);                
             if (consoleLogLevel<= logLevel)
             {
-                var consoleMessage = consoleLoggingConfiguration.Timestamp ? $"[{GetCurrentTime()}] {finalMessage}" : finalMessage;
-                
+#if DEBUG
+                var consoleMessage = GenerateMessage(message, logLevel, trace,
+                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: Console.WindowWidth);
+#else
+                var consoleMessage = GenerateMessage(message, logLevel,
+                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: Console.WindowWidth);
+#endif
+
                 // Set the color to output.
                 if (color == ConsoleColor.White)
                 {
@@ -216,8 +210,6 @@ namespace Uchu.Core
                 // Write the entry.
                 await Console.Out.WriteLineAsync(consoleMessage).ConfigureAwait(false);
             }
-            
-            
         }
         
         /// <summary>
@@ -244,7 +236,7 @@ namespace Uchu.Core
 
         private static string GetCurrentTime()
         {
-            return DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff tt", CultureInfo.InvariantCulture);
+            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
         }
 
 #if DEBUG
