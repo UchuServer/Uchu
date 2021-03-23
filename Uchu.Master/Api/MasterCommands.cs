@@ -206,8 +206,8 @@ namespace Uchu.Master.Api
             response.Id = id;
             response.ApiPort = instance.ApiPort;
 
-            var timeout = 5000; // time after which to give up on instance commission
-            var delay = 50; // time in between server/verify API calls
+            var timeout = 30000; // time (ms) after which to give up on instance commission
+            var delay = 300; // time (ms) in between server/verify API calls
 
             while (true)
             {
