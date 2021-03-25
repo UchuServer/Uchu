@@ -341,5 +341,10 @@ namespace Uchu.Core.Config
         /// Whether the server should display a "Press any key to exit" prompt before exiting due to a fatal error
         /// </summary>
         [XmlElement] public bool PressKeyToExit { get; set; } = true;
+
+        /// <summary>
+        /// How long the server should wait for newly created instances to get ready before throwing a timeout exception
+        /// </summary>
+        [XmlElement] public int InstanceCommissionTimeout { get; set; } = 30000;
     }
 }

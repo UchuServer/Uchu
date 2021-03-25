@@ -206,42 +206,29 @@ namespace Uchu.Master.Api
             response.Id = id;
             response.ApiPort = instance.ApiPort;
 
-            var timeout = 1000;
+            var timeout = MasterServer.Config.ServerBehaviour.InstanceCommissionTimeout;
+            var delay = 500; // time (ms) in between server/verify API calls
 
             while (true)
             {
-                try
+                var verify = await MasterServer.Api.RunCommandAsync<ReadyCallbackResponse>(
+                    instance.ApiPort, "server/verify"
+                ).ConfigureAwait(false);
+
+                if (!(verify is {Success: true}))
                 {
-                    var verify = await MasterServer.Api.RunCommandAsync<ReadyCallbackResponse>(
-                        instance.ApiPort, "server/verify"
-                    ).ConfigureAwait(false);
+                    timeout -= delay;
 
-                    try
-                    {
-                        if (verify == null) throw new Exception("ReadyCallbackResponse was null");
-                        if (!verify.Success)
-                        {
-                            Logger.Error(verify.FailedReason);
-                            throw new Exception(verify.FailedReason);
-                        }
-                    } catch (Exception e) {
-                        Logger.Log(e.Message, LogLevel.Error);
-                    }
-
-
-                    instance.Ready = true;
-                    break;
-                }
-                catch
-                {
                     if (timeout <= 0)
                     {
-                        throw new TimeoutException("commission timed out");
+                        throw new TimeoutException("Commission timed out");
                     }
-                    
-                    await Task.Delay(50);
-                    timeout--;
+                    await Task.Delay(delay);
+                    continue;
                 }
+
+                instance.Ready = true;
+                break;
             }
 
             return response;

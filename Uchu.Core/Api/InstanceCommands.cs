@@ -25,6 +25,13 @@ namespace Uchu.Core.Api
                 return response;
             }
 
+            if (!UchuServer.RakNetServer.TcpStarted)
+            {
+                response.FailedReason = "not ready";
+
+                return response;
+            }
+
             response.Success = true;
             
             return response;
