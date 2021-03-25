@@ -380,9 +380,19 @@ namespace Uchu.World
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
                     var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem);
-                    
+
+                    totalToAdd -= toAdd;
+                    totalAdded += toAdd;
+
+                    // Item was successfully instantiated
+                    if (item != null)
+                    {
+                        Start(item);
+                        item.MessageCreation();
+                        createdItems.Add(item);
+                    }
                     // Might occur if the inventory is full or an error occured during slot claiming
-                    if (item == null)
+                    else
                     {
                         // Display item-bouncing-off-backpack animation
                         ((Player) GameObject).Message(new NotifyRewardMailed
@@ -426,7 +436,19 @@ namespace Uchu.World
                                 mail.Body = "%[MAIL_ACTIVITY_OVERFLOW_BODY]";
                                 break;
                             }
-                            // /gmadditem, item sets, sometimes happens when picking up items, and for any other reason listed in the LootType enum
+                            // Sometimes happens when picking up items.
+                            case LootType.Pickup:
+                            {
+                                // To avoid spamming people's mailboxes, don't send the item if the player has 20+ mails.
+                                var mailCount = uchuContext.Mails.Count(m => m.RecipientId == playerCharacter.Id);
+                                if (mailCount >= 20)
+                                    continue;
+
+                                mail.Subject = "Lost Item";
+                                mail.Body = "You picked up this item, but didn't have room for it in your backpack.";
+                                break;
+                            }
+                            // /gmadditem, item sets, and for any other reason listed in the LootType enum
                             default:
                             {
                                 mail.Subject = "Lost Item";
@@ -437,18 +459,7 @@ namespace Uchu.World
 
                         await uchuContext.Mails.AddAsync(mail);
                         await uchuContext.SaveChangesAsync();
-
-                        return;
                     }
-                    else
-                    {
-                        Start(item);
-                        item.MessageCreation();
-                        createdItems.Add(item);
-                    }
-
-                    totalToAdd -= toAdd;
-                    totalAdded += toAdd;
                 }
             }
             finally
