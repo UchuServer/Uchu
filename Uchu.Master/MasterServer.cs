@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml.Serialization;
 using Uchu.Api;
 using Uchu.Api.Models;
@@ -21,7 +22,10 @@ namespace Uchu.Master
         public static UchuConfiguration Config { get; set; }
 
         public static List<ServerInstance> Instances { get; set; }
-        
+
+        public static Dictionary<string, int> InstanceHeartBeats { get; set; }
+        public static Dictionary<string, ServerHealth> InstanceHealth { get; set; }
+        public static Timer InstanceHeartBeatCheck { get; set; }  
         public static string ConfigPath { get; set; }
         
         public static string CdClientPath { get; set; }
@@ -39,17 +43,21 @@ namespace Uchu.Master
         public static List<int> Subsidiaries { get; set; }
         
         public static ApiManager Api { get; set; }
+        
+        public static int WorldServerHeartBeatsIntervalInMinutes { get; set; }
+        public static int WorldServerHeartBeatsPerInterval { get; set; }
 
         public static int MasterPort => Config.ApiConfig.Port;
         
         private static async Task Main(string[] args)
         {
             Subsidiaries = new List<int>();
-            
             Instances = new List<ServerInstance>();
+            InstanceHeartBeats = new Dictionary<string, int>();
+            InstanceHealth = new Dictionary<string, ServerHealth>();
+            
             try
             {
-                // Throws FileNotFoundException / DirectoryNotFoundException when res folder or instance dll is specified incorrectly
                 await ConfigureAsync();
             }
             catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
@@ -64,7 +72,6 @@ namespace Uchu.Master
             }
             
             var databaseVerified = await CheckForDatabaseUpdatesAsync();
-
             if (!databaseVerified)
             {
                 Logger.Error($"Failed to connect to database provider \"{Config.Database.Provider}\".");
@@ -81,6 +88,53 @@ namespace Uchu.Master
             AppDomain.CurrentDomain.ProcessExit += ShutdownProcesses;
             
             await SetupApiAsync();
+            
+            // Setup health checks and automatic server closing
+            InstanceHeartBeatCheck = new Timer(WorldServerHeartBeatsIntervalInMinutes * 60000);
+            InstanceHeartBeatCheck.Elapsed += async (sender, eventArgs) =>
+            {
+                foreach (var instance in Instances.Where(i => i.ServerType == ServerType.World).ToList())
+                {
+                    var id = instance.Id.ToString();
+                    if (InstanceHealth.ContainsKey(id) && InstanceHeartBeats.ContainsKey(id))
+                    {
+                        InstanceHealth[id] = (InstanceHeartBeats[id] != 0 
+                                ? (float) InstanceHeartBeats[id] / WorldServerHeartBeatsPerInterval : 0) switch
+                        {
+                            var health when health >= 1 => ServerHealth.Healthy,
+                            var health when health >= 0.75 => ServerHealth.Lagging,
+                            var health when health >= 0.5 => ServerHealth.SeverelyLagging,
+                            var health when health >= 0.25 => ServerHealth.Unhealthy,
+                            
+                            // If hardly any heartbeats were received, gradually downgrade the health until closing
+                            _ => (ServerHealth) (int) InstanceHealth[id] - 1
+                        };
+                    }
+                    else
+                    {
+                        InstanceHealth.Add(id, ServerHealth.Dead);
+                    }
+
+                    Logger.Information($"{id} is {InstanceHealth[id]}");
+                    InstanceHeartBeats[id] = 0;
+                }
+                
+                // Kill all unhealthy instances
+                foreach (var unhealthyInstance in Instances.Where(i => i.ServerType == ServerType.World
+                                                                       && InstanceHealth.TryGetValue(i.Id.ToString(),
+                                                                           out var health)
+                                                                       && health == ServerHealth.Dead).ToList())
+                {
+                    Logger.Information($"Closing {unhealthyInstance.Id.ToString()} " +
+                                       $"({InstanceHealth[unhealthyInstance.Id.ToString()]}) due to health status.");
+                    
+                    await Api.RunCommandAsync<BaseResponse>(ApiPort, 
+                        $"instance/decommission?instance={unhealthyInstance.Id.ToString()}");
+                }
+            };
+            
+            InstanceHeartBeatCheck.Enabled = true;
+            InstanceHeartBeatCheck.AutoReset = true;
             
             try
             {
@@ -207,11 +261,11 @@ namespace Uchu.Master
         private static async Task ConfigureAsync()
         {
             var serializer = new XmlSerializer(typeof(UchuConfiguration));
-            var fn = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+            var configFilename = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
 
-            if (File.Exists(fn))
+            if (File.Exists(configFilename))
             {
-                await using var file = File.OpenRead(fn);
+                await using var file = File.OpenRead(configFilename);
                 LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
             }
             else
@@ -239,30 +293,30 @@ namespace Uchu.Master
 
             UchuContextBase.Config = Config;
 
-            var configPath = Config.ResourcesConfiguration?.GameResourceFolder;
-            
-            if (!string.IsNullOrWhiteSpace(configPath))
+            var resourceFolder = Config.ResourcesConfiguration?.GameResourceFolder;
+
+            if (!string.IsNullOrWhiteSpace(resourceFolder))
             {
-                if (EnsureUnpackedClient(configPath))
+                if (EnsureUnpackedClient(resourceFolder))
                 {
-                    Logger.Information($"Using local resources at `{Config.ResourcesConfiguration.GameResourceFolder}`");
+                    Logger.Information($"Using game resources: {Config.ResourcesConfiguration.GameResourceFolder}");
                 }
                 else
                 {
                     Logger.Error($"Invalid local resources (Invalid path or no .luz files found). Please ensure you are using an unpacked client.");
-                    
+
                     throw new FileNotFoundException("No luz files found.");
                 }
             }
             else
             {
                 Logger.Error("No input location of local resources. Please input in config file.");
-                
+
                 throw new DirectoryNotFoundException("No local resource path.");
             }
 
             UseAuthentication = Config.Networking.HostAuthentication;
-            
+
             DllLocation = Config.DllSource.Instance;
 
             if (!File.Exists(DllLocation))
@@ -270,13 +324,18 @@ namespace Uchu.Master
                 throw new FileNotFoundException("Could not find file specified in <Instance> under <DllSource> in config.xml.");
             }
 
-            var validScriptPackExists = Config.DllSource.ScriptDllSource.Exists(scriptPackPath =>
+            var validScriptPackExists = false;
+
+            Config.DllSource.ScriptDllSource.ForEach(scriptPackPath =>
             {
                 if (File.Exists(scriptPackPath))
-                    return true;
+                {
+                    Logger.Information($"Using script pack: {scriptPackPath}");
+                    validScriptPackExists = true;
+                    return;
+                }
 
                 Logger.Warning($"Could not find script pack at {scriptPackPath}");
-                return false;
             });
 
             if (!validScriptPackExists)
@@ -284,21 +343,17 @@ namespace Uchu.Master
                 throw new FileNotFoundException("No valid <ScriptDllSource> specified under <DllSource> in config.xml.\n"
                                                 + "Without Uchu.StandardScripts.dll, Uchu cannot function correctly.");
             }
-            
-            foreach (var scriptPackPath in Config.DllSource.ScriptDllSource)
-            {
-                if (!File.Exists(scriptPackPath))
-                    Logger.Warning($"Could not find script pack at {scriptPackPath}");
-            }
 
             ApiPortIndex = Config.ApiConfig.Port;
+            WorldServerHeartBeatsPerInterval = Config.Networking.WorldServerHeartBeatsPerInterval;
+            WorldServerHeartBeatsIntervalInMinutes = Config.Networking.WorldServerHeartBeatIntervalInMinutes;
 
             var source = Directory.GetCurrentDirectory();
-            
-            ConfigPath = Path.Combine(source, $"{fn}");
+
+            ConfigPath = Path.Combine(source, $"{configFilename}");
             CdClientPath = Path.Combine(source, "CDClient.db");
             
-            Logger.Information($"{source}\n{ConfigPath}\n{CdClientPath}");
+            Logger.Information($"Using configuration: {ConfigPath}\nUsing CDClient: {CdClientPath}");
         }
 
         private static bool EnsureUnpackedClient(string directory)
@@ -322,6 +377,12 @@ namespace Uchu.Master
             instance.Start(DllLocation, Config.DllSource.DotNetPath);
             
             Instances.Add(instance);
+
+            if (type == ServerType.World)
+            {
+                InstanceHeartBeats.Add(id.ToString(), 0);
+                InstanceHealth.Add(id.ToString(), ServerHealth.Healthy);
+            }
 
             return id;
         }
@@ -416,12 +477,12 @@ namespace Uchu.Master
                     subsidiary, "instance/list"
                 );
                 
-                if (result == default) continue;
+                if (result == null)
+                    continue;
 
                 if (!result.Success)
                 {
                     Logger.Error(result.FailedReason);
-                    
                     continue;
                 }
 

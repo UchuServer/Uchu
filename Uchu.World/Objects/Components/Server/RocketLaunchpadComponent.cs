@@ -12,14 +12,11 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
-                Listen(GameObject.OnInteract, async player =>
-                {
-                    await OnInteract(player);
-                });
+                Listen(GameObject.OnInteract, OnInteract);
             });
         }
 
-        public async Task OnInteract(Player player)
+        public void OnInteract(Player player)
         {
             var rocket = player.GetComponent<InventoryManagerComponent>()[InventoryType.Models].Items.FirstOrDefault(
                 item => item.Lot == Lot.ModularRocket
@@ -28,7 +25,6 @@ namespace Uchu.World
             if (rocket == default)
             {
                 Logger.Error($"Could not find a valid rocket for {player}");
-                
                 return;
             }
 
@@ -42,13 +38,8 @@ namespace Uchu.World
                 Sender = player
             });
 
-            await using var ctx = new UchuContext();
-
-            var character = await ctx.Characters.FirstAsync(c => c.Id == player.Id);
-
-            character.LandingByRocket = true;
-            
-            await ctx.SaveChangesAsync();
+            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent));
+            characterComponent.LandingByRocket = true;
         }
     }
 }

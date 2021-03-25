@@ -23,6 +23,12 @@ namespace Uchu.Core.Config
         };
 
         /// <summary>
+        /// Optional sentry DSN to use for tracking errors and exceptions
+        /// </summary>
+        [XmlElement]
+        public string SentryDsn { get; set; } = "";
+
+        /// <summary>
         /// The level of console logging (debug or production)
         /// </summary>
         [XmlElement]
@@ -192,6 +198,22 @@ namespace Uchu.Core.Config
         /// The maximum amount of world servers that may be generated
         /// </summary>
         [XmlElement] public int MaxWorldServers { get; set; } = 100;
+
+        /// <summary>
+        /// The amount of heart beats the server should send per heart beat interval for it to retain it's healthy
+        /// status for the master server
+        /// </summary>
+        [XmlElement] public int WorldServerHeartBeatsPerInterval { get; set; } = 10;
+
+        /// <summary>
+        /// The interval over which heart beats should be received in minutes
+        /// </summary>
+        /// <remarks>
+        /// Note that this also corresponds to the max loading time for a world before the master server shuts it down.
+        /// As a world server is started in the healthy phase with no heart beats it takes 5 times this amount for the
+        /// world server to be shut down.
+        /// </remarks>
+        [XmlElement] public int WorldServerHeartBeatIntervalInMinutes { get; set; } = 5;
         
         /// <summary>
         /// The ports to run the world servers at
@@ -319,5 +341,10 @@ namespace Uchu.Core.Config
         /// Whether the server should display a "Press any key to exit" prompt before exiting due to a fatal error
         /// </summary>
         [XmlElement] public bool PressKeyToExit { get; set; } = true;
+
+        /// <summary>
+        /// How long the server should wait for newly created instances to get ready before throwing a timeout exception
+        /// </summary>
+        [XmlElement] public int InstanceCommissionTimeout { get; set; } = 30000;
     }
 }

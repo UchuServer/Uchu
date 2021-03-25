@@ -12,27 +12,13 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task SkillStartHandler(StartSkillMessage message, Player player)
         {
-            try
-            {
-                await player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
+            await player.GetComponent<SkillComponent>().StartUserSkillAsync(message);
         }
 
         [PacketHandler]
         public async Task SyncSkillHandler(SyncSkillMessage message, Player player)
         {
-            try
-            {
                 player.GetComponent<SkillComponent>().SyncUserSkillAsync(message);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e);
-            }
         }
 
         [PacketHandler]

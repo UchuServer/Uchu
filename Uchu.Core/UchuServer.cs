@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
 using RakDotNet.TcpUdp;
+using Sentry;
 using StackExchange.Redis;
 using Uchu.Api;
 using Uchu.Api.Models;
@@ -120,6 +121,27 @@ namespace Uchu.Core
         /// Optional certificate for SSL
         /// </summary>
         protected X509Certificate Certificate { get; set; }
+        
+        /// <summary>
+        /// The amount of heart beats the world server should send to the master server to retain its healthy status. If
+        /// the world server can't keep up with this amount it risks being killed by the master server
+        /// </summary>
+        public int HeartBeatsPerInterval { get; set; }
+        
+        /// <summary>
+        /// The total time in which <see cref="HeartBeatsPerInterval"/> heart beats should have been sent to retain the
+        /// healthy status
+        /// </summary>
+        public int HeartBeatIntervalInMinutes { get; set; }
+        
+        /// <summary>
+        /// The interval in milliseconds at which heart beats should be sent
+        /// </summary>
+        /// <remarks>
+        /// Returns essentially one heart beat more than absolutely necessary for a healthy status to ensure that small
+        /// hick ups and lag do not interfere with overall server health 
+        /// </remarks>
+        public float HeartBeatInterval => (float) HeartBeatIntervalInMinutes * 60000 / (HeartBeatsPerInterval + 1);
 
         /// <summary>
         /// The host on which the server is running, used for example for API callbacks
@@ -227,6 +249,9 @@ namespace Uchu.Core
                 SessionCache = new DatabaseCache();
             }
 
+            HeartBeatsPerInterval = Config.Networking.WorldServerHeartBeatsPerInterval;
+            HeartBeatIntervalInMinutes = Config.Networking.WorldServerHeartBeatIntervalInMinutes;
+
             Logger.Information($"Server {Id} configured on port: {Port}");
         }
 
@@ -262,28 +287,31 @@ namespace Uchu.Core
         /// <param name="acceptConsoleCommands">Whether to handle console commands or not</param>
         public async Task StartAsync(Assembly assembly, bool acceptConsoleCommands = false)
         {
-            RegisterDefaultAssemblies(assembly);
-            if (acceptConsoleCommands)
+            using (SentrySdk.Init(Config.SentryDsn))
             {
-                StartConsole();
+                RegisterDefaultAssemblies(assembly);
+                if (acceptConsoleCommands)
+                {
+                    StartConsole();
+                }
+                
+                Running = true;
+
+                var server = RakNetServer.RunAsync();
+                var api = Api.StartAsync(ApiPort);
+
+                var tasks = new[]
+                {
+                    server,
+                    api
+                };
+
+                await Task.WhenAny(tasks).ConfigureAwait(false);
+                
+                Console.WriteLine($"EXIT: {server.Status} | {api.Status}");
+
+                await StopAsync().ConfigureAwait(false);
             }
-            
-            Running = true;
-
-            var server = RakNetServer.RunAsync();
-            var api = Api.StartAsync(ApiPort);
-
-            var tasks = new[]
-            {
-                server,
-                api
-            };
-
-            await Task.WhenAny(tasks).ConfigureAwait(false);
-            
-            Console.WriteLine($"EXIT: {server.Status} | {api.Status}");
-
-            await StopAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -464,6 +492,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error($"Error when handling GM: {e}");
                 }
             }
@@ -488,6 +517,7 @@ namespace Uchu.Core
                 }
                 catch (Exception e)
                 {
+                    SentrySdk.CaptureException(e);
                     Logger.Error($"Error when handling packet: {e}");
                 }
             }

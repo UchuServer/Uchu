@@ -365,19 +365,10 @@ namespace Uchu.World.Handlers
         }
 
         [PacketHandler]
-        public void TeamInviteResponseHandler(TeamInviteResponse packet, IPEndPoint endPoint)
+        public void TeamInviteResponseHandler(TeamInviteResponse packet, IRakConnection connection)
         {
-            var session = UchuServer.SessionCache.GetSession(endPoint);
-            var zone = ((WorldUchuServer) UchuServer).Zones.FirstOrDefault(z => (int) z.ZoneId == session.ZoneId);
-
-            if (zone == default)
-            {
-                Logger.Error($"Invalid ZoneId for {endPoint}");
-                return;
-            }
-
-            var player = zone.Players.First(p => p.Connection.EndPoint.Equals(endPoint));
-            var author = zone.Players.First(p => p.Id == packet.InviterObjectId);
+            var player = UchuServer.FindPlayer(connection);
+            var author = player.Zone.Players.First(p => p.Id == packet.InviterObjectId);
 
             Logger.Information($"{player} responded to {author}'s team invite with Declined: {packet.IsDeclined}");
 

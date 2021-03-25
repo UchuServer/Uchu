@@ -8,4 +8,8 @@
       <PackageReference Include="BepuPhysics" Version="2.2.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
+    </ItemGroup>
+
 </Project>

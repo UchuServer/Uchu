@@ -456,17 +456,10 @@ namespace Uchu.World.Systems.Behaviors
             if (!(Serialized || Deserialized))
                 throw new InvalidOperationException("Can't execute tree: it's neither serialized nor deserialized.");
 
-            try
-            {
-                ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
-                
-                if (CastType != SkillCastType.Default)
-                    ExecuteRootBehaviorsForSkillType(CastType);
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Encountered error in tree execute: {e}");
-            }
+            ExecuteRootBehaviorsForSkillType(SkillCastType.Default);
+            
+            if (CastType != SkillCastType.Default)
+                ExecuteRootBehaviorsForSkillType(CastType);
         }
 
         /// <summary>
@@ -479,17 +472,10 @@ namespace Uchu.World.Systems.Behaviors
                 throw new InvalidOperationException("Can't use behavior: tree is not deserialized.");
             if (!RootBehaviors.TryGetValue(SkillCastType.OnUse, out var list))
                 return;
-
-            try
+         
+            foreach (var behaviorExecution in list)
             {
-                foreach (var behaviorExecution in list)
-                {
-                    behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Encountered error during tree use: {e.Message}");
+                behaviorExecution.BehaviorBase.ExecuteStart(behaviorExecution.BehaviorExecutionParameters);
             }
         }
 
@@ -504,18 +490,11 @@ namespace Uchu.World.Systems.Behaviors
                 throw new InvalidOperationException("Can't mount tree: tree is not deserialized.");
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list))
                 return;
-
-            try
+            
+            foreach (var executionPreparation in list)
             {
-                foreach (var executionPreparation in list)
-                {
-                    executionPreparation.BehaviorBase.ExecuteStart(executionPreparation
-                        .BehaviorExecutionParameters);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Encountered error during tree mount: {e.Message}");
+                executionPreparation.BehaviorBase.ExecuteStart(executionPreparation
+                    .BehaviorExecutionParameters);
             }
         }
 
@@ -530,17 +509,10 @@ namespace Uchu.World.Systems.Behaviors
             if (!RootBehaviors.TryGetValue(SkillCastType.OnEquip, out var list)) 
                 return;
 
-            try
+            foreach (var executionPreparation in list)
             {
-                foreach (var executionPreparation in list)
-                {
-                    executionPreparation.BehaviorBase.Dismantle(executionPreparation
-                        .BehaviorExecutionParameters);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Encountered error during tree dismantle: {e.Message}");
+                executionPreparation.BehaviorBase.Dismantle(executionPreparation
+                    .BehaviorExecutionParameters);
             }
         }
     }

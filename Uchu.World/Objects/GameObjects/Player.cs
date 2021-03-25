@@ -24,6 +24,15 @@ namespace Uchu.World
     {
         public static async Task<Player> Instantiate(IRakConnection connection, Zone zone, ObjectId id)
         {
+            // Set up a cancellation token for the connection disconnecting.
+            // This may happen before the object starts.
+            var cancellationToken = new CancellationTokenSource();
+            connection.Disconnected += (disconnectionReason) =>
+            {
+                cancellationToken.Cancel();
+                return Task.CompletedTask;
+            };
+            
             // Create base game object
             var instance = Instantiate<Player>(
                 zone,
@@ -34,7 +43,7 @@ namespace Uchu.World
                 lot: 1
             );
 
-            await instance.LoadAsync(connection);
+            await instance.LoadAsync(connection, cancellationToken.Token);
             return instance;
         }
         
@@ -51,12 +60,16 @@ namespace Uchu.World
 
             Listen(OnStart, () =>
             {
+                // Destroy the player on disconnect.
+                // Also check if the player disconnected during loading.
+                if (_loadCancellationToken != default && _loadCancellationToken.IsCancellationRequested)
+                {
+                    DestroyAsync().Wait();
+                    return;
+                }
                 Connection.Disconnected += async reason =>
                 {
-                    Logger.Information($"{this} left: {reason}.");
-                    await GetComponent<SaveComponent>().SaveAsync(false);
-                    Connection = default;
-                    Destroy(this);
+                    await DestroyAsync();
                 };
 
                 Listen(OnPositionUpdate, UpdatePhysics);
@@ -118,13 +131,24 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Destroys the player.
+        /// </summary>
+        public async Task DestroyAsync(CloseReason? reason = CloseReason.ClientDisconnect)
+        {
+            Logger.Information($"{this} left: {reason}.");
+            await GetComponent<SaveComponent>().SaveAsync(false);
+            Connection = default;
+            Destroy(this);
+        }
+
+        /// <summary>
         /// Constructs the player, settings spawn parameters and masks
         /// </summary>
         /// <param name="character">The character that should be spawned</param>
         /// <param name="connection">User endpoint for this character</param>
         /// <param name="zone">The zone to spawn in</param>
         /// <returns>The constructed player</returns>
-        public async Task LoadAsync(IRakConnection connection)
+        public async Task LoadAsync(IRakConnection connection, CancellationToken cancellationToken)
         {
             await using var uchuContext = new UchuContext();
             var character = await uchuContext.Characters
@@ -132,6 +156,7 @@ namespace Uchu.World
 
             Connection = connection;
             Name = character.Name;
+            _loadCancellationToken = cancellationToken;
 
             // Setup layers
             Layer = StandardLayer.Player;
@@ -245,6 +270,12 @@ namespace Uchu.World
         /// Internal gravity scale of the player
         /// </summary>
         private float _gravityScale = 1;
+
+        /// <summary>
+        /// Cancellation token for loading the player, such
+        /// as if the player disconnects.
+        /// </summary>
+        private CancellationToken _loadCancellationToken;
         
         /// <summary>
         /// Gravity scale of the player
