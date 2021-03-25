@@ -206,8 +206,8 @@ namespace Uchu.Master.Api
             response.Id = id;
             response.ApiPort = instance.ApiPort;
 
-            var timeout = 30000; // time (ms) after which to give up on instance commission
-            var delay = 300; // time (ms) in between server/verify API calls
+            var timeout = MasterServer.Config.ServerBehaviour.InstanceCommissionTimeout;
+            var delay = 500; // time (ms) in between server/verify API calls
 
             while (true)
             {
