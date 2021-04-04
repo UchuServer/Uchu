@@ -11,12 +11,35 @@ namespace Uchu.Core.Handlers.Commands
 {
     public class ServerStatusCommandHandler : HandlerGroup
     {
+        // TODO: Don't think this actually does anything, /shutdown can probably replace this
         [CommandHandler(Signature = "stop", Help = "Stops the server")]
         public async Task StopServer()
         {
             await UchuServer.Api.RunCommandAsync<BaseResponse>(
                 UchuServer.MasterApi, $"master/decommission?i={UchuServer.Id}"
             ).ConfigureAwait(false);
+        }
+
+        [CommandHandler(Signature = "shutdown", Help = "Shuts down the entire server")]
+        public void ShutdownServer(string[] arguments)
+        {
+            int delayMinutes = 0;
+            if (arguments.Length != 0 && int.TryParse(arguments[0], out var arg))
+            {
+                delayMinutes = arg;
+                Logger.Warning($"Shutting down in {delayMinutes} minute(s).");
+            }
+
+            Task.Run(async () =>
+            {
+                string[] args = {"Server shutting down", $"The server will be shutting down in {delayMinutes} minute(s)."};
+                await Broadcast(args).ConfigureAwait(false);
+                await Task.Delay(delayMinutes * 60 * 1000).ConfigureAwait(false);
+                // TODO: Send players DisconnectNotifyPacket before killing game servers
+                await UchuServer.Api.RunCommandAsync<BaseResponse>(
+                    UchuServer.MasterApi, $"master/die?message=Shut down server."
+                ).ConfigureAwait(false);
+            });
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
@@ -298,6 +321,33 @@ namespace Uchu.Core.Handlers.Commands
 
             return$"Successfully set {user.Username}'s Game Master " +
                   $"level to {(GameMasterLevel) user.GameMasterLevel}";
+        }
+        [CommandHandler(Signature = "broadcast", Help = "Send an announcement to all players in all worlds",
+            GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Broadcast(string[] arguments)
+        {
+            if (arguments.Length < 2) return "/broadcast <title> <message>";
+
+            var args = arguments.ToList();
+
+            var title = args[0];
+
+            args.RemoveAt(0);
+
+            var message = string.Join(" ", args);
+
+            var instanceListResponse = await UchuServer.Api.RunCommandAsync<InstanceListResponse>(
+                UchuServer.MasterApi, $"instance/list"
+            ).ConfigureAwait(false);
+
+            foreach (var instance in instanceListResponse.Instances.Where(i => i.Type == (int) ServerType.World))
+            {
+                await UchuServer.Api.RunCommandAsync<BaseResponse>(instance.ApiPort,
+                    $"world/announce?title={title}&message={message}"
+                    ).ConfigureAwait(false);
+            }
+
+            return $"Sent announcement with title \"{title}\" and message \"{message}\"";
         }
 
         private static string GetPassword()

@@ -263,7 +263,11 @@ namespace Uchu.World
         /// Whether this player is banned or not
         /// </summary>
         public bool Banned { get; private set; }
-        
+
+        public bool Flying { get; set; } = false;
+
+        public float JetPackAirSpeed { get; set; } = 10;
+
         #endregion properties
 
         /// <summary>

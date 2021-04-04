@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.World.Social;
 
 namespace Uchu.World.Api
 {
@@ -43,6 +44,18 @@ namespace Uchu.World.Api
             response.Characters = zoneInstance.Players.Select(p => (long) p.Id).ToList();
 
             return response;
+        }
+
+        [ApiCommand("world/announce")]
+        public async Task Announce(string title, string message)
+        {
+            foreach (var zone in UchuServer.Zones)
+            {
+                foreach (var zonePlayer in zone.Players)
+                {
+                    await UiHelper.AnnouncementAsync(zonePlayer, title, message);
+                }
+            }
         }
     }
 }

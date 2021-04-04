@@ -235,9 +235,9 @@ namespace Uchu.Master.Api
         }
 
         [ApiCommand("master/die")]
-        public void KillMaster(string error = "Fatal error; killing server.")
+        public void KillMaster(string message = "Fatal error; killing server.")
         {
-            Logger.Error(error);
+            Logger.Error(message);
 
             foreach (ServerInstance instance in MasterServer.Instances.ToList())
             {
