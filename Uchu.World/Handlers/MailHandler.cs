@@ -40,6 +40,7 @@ namespace Uchu.World.Handlers
                     await ReadHandler(packet.MailStruct as MailRead, player);
                     break;
                 case ClientMailPacketId.NotificationRequest:
+                    await NotificationRequestHandler(player);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -236,6 +237,24 @@ namespace Uchu.World.Handlers
                 {
                     MailId = packet.MailId
                 }
+            });
+        }
+
+        public static async Task NotificationRequestHandler(Player player)
+        {
+            await using var ctx = new UchuContext();
+
+            var response = new Notification();
+
+            var author = player.GetComponent<CharacterComponent>();
+            var unreadCount = ctx.Mails.Count(m => m.RecipientId == author.CharacterId && m.Read == false);
+
+            response.MailCountDelta = (uint) unreadCount;
+
+            player.Message(new ServerMailPacket
+            {
+                Id = ServerMailPacketId.Notification,
+                MailStruct = response
             });
         }
     }
