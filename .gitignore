@@ -570,3 +570,7 @@ fabric.properties
 .DS_Store
 
 *.bat
+
+# Jetts Debug tools Git Ignore
+Uchu.Web/
+UchuWithWeb.sln

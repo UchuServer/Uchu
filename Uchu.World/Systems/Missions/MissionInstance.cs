@@ -499,9 +499,21 @@ namespace Uchu.World.Systems.Missions
             
             MessageNotifyMission();
             
+            foreach (var item in this.Tasks)
+            {
+                if (item.Type != MissionTaskType.ObtainItem) continue;
+                if (item.Parameters.Length == 0 || (item.Parameters[0] & 1) == 0)
+                {
+                    if (Player.TryGetComponent<InventoryManagerComponent>(out var result))
+                    {
+                         if (item.Target != 0) await result.RemoveAllAsync(item.Target, false);
+                    }
+                }
+            }
+
             if (!Player.TryGetComponent<MissionInventoryComponent>(out var missionInventory)) 
                 return;
-            
+
             await missionInventory.MissionCompleteAsync(MissionId); 
             await missionInventory.OnCompleteMission.InvokeAsync(this);
         }
