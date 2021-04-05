@@ -298,7 +298,7 @@ namespace Uchu.World
         /// <param name="missionId">The missionId to create a mission for</param>
         /// <param name="gameObject">The game object to assign the mission to</param>
         /// <returns>The newly created mission instance</returns>
-        private async Task<MissionInstance> AddMissionAsync(int missionId, GameObject gameObject)
+        public async Task<MissionInstance> AddMissionAsync(int missionId, GameObject gameObject)
         {
             var mission = new MissionInstance(missionId, (Player)GameObject);
             await mission.LoadAsync();

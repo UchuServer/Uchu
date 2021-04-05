@@ -1,6 +1,10 @@
+using System.Linq;
 using System.Numerics;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -20,6 +24,29 @@ namespace Uchu.World
             var physicsComponent = GameObject.AddComponent<PhysicsComponent>();
 
             physicsComponent.SetPhysics(physics);
+            
+            if (GameObject.Settings.TryGetValue("POI", out var group))
+            {
+                var task = ClientCache.GetTable<MissionTasks>().Where(i => i.TargetGroup == (string)group).FirstOrDefault();
+                if (task == default) return;
+                var missionID = task.Id.Value;
+                Listen(physicsComponent.OnCollision, async component =>
+                {
+                    if (!(component.GameObject is Player)) return;
+                    Player player = (Player) component.GameObject;
+                    var missionComponent = player.GetComponent<MissionInventoryComponent>();
+                    if (missionComponent.HasMission(missionID))
+                    {
+                        await missionComponent.GetMission(missionID).CompleteAsync();
+                    }
+                    else
+                    {
+                        var poiAchievement = await missionComponent.AddMissionAsync(missionID, player);
+                        await poiAchievement.StartAsync();
+                        await poiAchievement.CompleteAsync();
+                    }
+                });
+            }
         }
 
         // TODO: Support more than cuboids
