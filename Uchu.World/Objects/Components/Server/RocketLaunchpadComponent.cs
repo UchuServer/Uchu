@@ -38,7 +38,8 @@ namespace Uchu.World
                 Sender = player
             });
 
-            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent));
+            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                return;
             characterComponent.LandingByRocket = true;
         }
     }
