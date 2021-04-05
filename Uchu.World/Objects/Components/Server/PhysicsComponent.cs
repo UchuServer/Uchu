@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
+using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -55,6 +59,29 @@ namespace Uchu.World
             physics.OnCollision = HandleCollision;
             
             Physics = physics;
+
+            if (GameObject.Settings.TryGetValue("POI", out var group))
+            {
+                Logger.Information($"Registered POI location {group}");
+                var task = ClientCache.GetTable<MissionTasks>().Where(i => i.TargetGroup == (string)group).FirstOrDefault();
+                if (task == default) return;
+                var missionID = task.Id.Value;
+                Listen(GameObject.GetComponent<World.PhysicsComponent>().OnEnter, async component =>
+                {
+                    if (!(component.GameObject is Player)) return;
+                    Player player = (Player)component.GameObject;
+                    var missionComponent = player.GetComponent<MissionInventoryComponent>();
+                    if (missionComponent.HasCompleted(missionID)) return;
+                    Logger.Information($"{player.Name} entered and discovered {(string)group}");
+                    if (missionComponent.HasMission(missionID)) await missionComponent.GetMission(missionID).CompleteAsync();
+                    else
+                    {
+                        var poiAchievement = await missionComponent.AddMissionAsync(missionID, player);
+                        await poiAchievement.StartAsync();
+                        await poiAchievement.CompleteAsync();
+                    }
+                });
+            }
         }
 
         private void Early()
