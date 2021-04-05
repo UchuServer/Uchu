@@ -28,15 +28,14 @@ namespace Uchu.World
 
         protected PhantomPhysicsComponent()
         {
-            var physicsComponentTable = ClientCache.GetTable<Uchu.Core.Client.PhysicsComponent>().Where(i => i.Id == (int)this.Id).FirstOrDefault();
-            if (physicsComponentTable == default) return;
-
-            if (physicsComponentTable.Physicsasset == default || physicsComponentTable.Physicsasset == null)
+            Listen(OnStart, () =>
             {
-                var physicsComponent = GameObject.AddComponent<PhysicsComponent>();
-                var physics = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(2, 2, 2) * GameObject.Transform.Scale);
-                physicsComponent.SetPhysics(physics);
-            }
+                if (GameObject.Settings.ContainsKey("POI"))
+                {
+                    var physicsComponent = GameObject.AddComponent<PhysicsComponent>();
+                    physicsComponent.SetPhysics(BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(2, 2, 2) * GameObject.Transform.Scale));
+                }
+            });
         }
 
         public override void Construct(BitWriter writer)
