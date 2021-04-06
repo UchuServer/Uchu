@@ -189,12 +189,13 @@ namespace Uchu.Core
             var consoleLogLevel = Enum.Parse<LogLevel>(consoleLoggingConfiguration.Level);                
             if (consoleLogLevel<= logLevel)
             {
+                var width = Console.WindowWidth > 0 ? Console.WindowWidth : 120;
 #if DEBUG
                 var consoleMessage = GenerateMessage(message, logLevel, trace,
-                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: Console.WindowWidth);
+                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: width);
 #else
                 var consoleMessage = GenerateMessage(message, logLevel,
-                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: Console.WindowWidth);
+                    includeTimestamp: consoleLoggingConfiguration.Timestamp, maxLength: width);
 #endif
 
                 // Set the color to output.
