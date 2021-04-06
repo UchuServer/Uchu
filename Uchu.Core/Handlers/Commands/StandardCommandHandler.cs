@@ -11,16 +11,7 @@ namespace Uchu.Core.Handlers.Commands
 {
     public class ServerStatusCommandHandler : HandlerGroup
     {
-        // TODO: Don't think this actually does anything, /shutdown can probably replace this
-        [CommandHandler(Signature = "stop", Help = "Stops the server")]
-        public async Task StopServer()
-        {
-            await UchuServer.Api.RunCommandAsync<BaseResponse>(
-                UchuServer.MasterApi, $"master/decommission?i={UchuServer.Id}"
-            ).ConfigureAwait(false);
-        }
-
-        [CommandHandler(Signature = "shutdown", Help = "Shuts down the entire server")]
+        [CommandHandler(Signature = "shutdown", Help = "Shuts down the server")]
         public void ShutdownServer(string[] arguments)
         {
             int delayMinutes = 0;
