@@ -111,13 +111,25 @@ namespace Uchu.World
 
                 foreach (var mail in Mails)
                 {
-                    var author = ctx.Characters.First(c => c.Id == mail.AuthorId);
                     
                     writer.Write(mail.Id);
 
                     writer.WriteString(mail.Subject, 50, true);
                     writer.WriteString(mail.Body, 400, true);
-                    writer.WriteString(author.Name, 32, true);
+
+                    string authorName;
+
+                    if (mail.AuthorId == 0)
+                    {
+                        authorName = "LEGO Universe";
+                    }
+                    else
+                    {
+                        var author = ctx.Characters.FirstOrDefault(c => c.Id == mail.AuthorId);
+                        authorName = author?.Name ?? "Deleted Character";
+                    }
+
+                    writer.WriteString(authorName ?? "LEGO Universe", 32, true);
 
                     writer.Write<uint>(0);
 
@@ -139,7 +151,7 @@ namespace Uchu.World
                     }
 
                     writer.Write((ulong) ((DateTimeOffset) mail.ExpirationTime).ToUnixTimeSeconds());
-                    
+
                     writer.Write((ulong) ((DateTimeOffset) mail.SentTime).ToUnixTimeSeconds());
 
                     writer.Write((byte) (mail.Read ? 1 : 0));

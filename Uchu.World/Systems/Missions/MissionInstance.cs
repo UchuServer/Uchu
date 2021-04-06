@@ -483,7 +483,7 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">If this mission had a reward choice, this item will be chosen as reward</param>
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
-        public async Task CompleteAsync(int rewardItem = default)
+        public async Task CompleteAsync(Lot rewardItem = default)
         {
             if (State == default)
                 await StartAsync();
@@ -524,7 +524,7 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private async Task SendRewardsAsync(int rewardItem)
+        private async Task SendRewardsAsync(Lot rewardItem)
         {
             await RewardCurrencyAndScoreAsync();
             RewardPlayerEmotes();
@@ -545,10 +545,10 @@ namespace Uchu.World.Systems.Missions
 
             if (!Player.TryGetComponent<CharacterComponent>(out var character))
                 return;
-            
-            var currency = !Repeat ? RewardCurrencyRepeatable : RewardCurrency;
-            var score = Repeat ? 0 : RewardScore;
-            
+
+            var currency = Repeat ? RewardCurrencyRepeatable : RewardCurrency;
+            var score = RewardScore;
+
             if (IsMission)
             {
                 character.Currency += currency;
@@ -600,7 +600,7 @@ namespace Uchu.World.Systems.Missions
         /// </summary>
         /// <param name="rewardItem">A specific item that should be rewarded, only
         /// rewarded if it's in one of the mission rewards.</param>
-        private async Task RewardPlayerLootAsync(int rewardItem)
+        private async Task RewardPlayerLootAsync(Lot rewardItem)
         {
             if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventory))
                 return;
@@ -618,7 +618,8 @@ namespace Uchu.World.Systems.Missions
             if (IsChoiceReward)
             {
                 var (_, count) = rewards.FirstOrDefault(l => l.Item1 == rewardItem);
-                await inventory.AddLotAsync(rewardItem, (uint) Math.Max(count, 1));
+                await inventory.AddLotAsync(rewardItem, (uint) Math.Max(count, 1),
+                    lootType: IsMission ? LootType.Mission: LootType.Achievement);
             }
             else
             {
@@ -628,7 +629,8 @@ namespace Uchu.World.Systems.Missions
                         continue;
                     
                     var count = Math.Max(rewardCount, 1);
-                    await inventory.AddLotAsync(rewardLot, (uint) count);
+                    await inventory.AddLotAsync(rewardLot, (uint) count,
+                        lootType: IsMission ? LootType.Mission: LootType.Achievement);
                 }
             }
         }
