@@ -35,9 +35,8 @@ namespace Uchu.Core.Handlers.Commands
                 string[] args = {"Server shutting down", $"The server will be shutting down in {delayMinutes} minute(s)."};
                 await Broadcast(args).ConfigureAwait(false);
                 await Task.Delay(delayMinutes * 60 * 1000).ConfigureAwait(false);
-                // TODO: Send players DisconnectNotifyPacket before killing game servers
                 await UchuServer.Api.RunCommandAsync<BaseResponse>(
-                    UchuServer.MasterApi, $"master/die?message=Shut down server."
+                    UchuServer.MasterApi, $"master/decommission?message=Shut down server."
                 ).ConfigureAwait(false);
             });
         }

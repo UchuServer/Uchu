@@ -46,6 +46,23 @@ namespace Uchu.World.Api
             return response;
         }
 
+        [ApiCommand("world/saveAndKick")]
+        public async Task<object> SaveAndKick()
+        {
+            var response = new BaseResponse();
+            foreach (var zonePlayer in UchuServer.Zones.SelectMany(zoneInstance => zoneInstance.Players))
+            {
+                await zonePlayer.GetComponent<SaveComponent>().SaveAsync();
+                zonePlayer.Message(new DisconnectNotifyPacket
+                {
+                    DisconnectId = DisconnectId.ServerShutdown
+                });
+            }
+
+            response.Success = true;
+            return response;
+        }
+
         [ApiCommand("world/announce")]
         public async Task Announce(string title, string message)
         {
