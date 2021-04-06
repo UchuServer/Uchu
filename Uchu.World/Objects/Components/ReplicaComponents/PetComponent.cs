@@ -78,9 +78,17 @@ namespace Uchu.World
             if (PetWild)
             {
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(Zone.Server.Config.ResourcesConfiguration.GameResourceFolder,
-                    ClientCache.GetTable<TamingBuildPuzzles>().FirstOrDefault(i => i.NPCLot == GameObject.Lot)
-                    .ValidPiecesLXF));
+                var currentPath = Zone.Server.Config.ResourcesConfiguration.GameResourceFolder;
+                var partsToFind = ClientCache.GetTable<TamingBuildPuzzles>().FirstOrDefault(i => i.NPCLot == GameObject.Lot)
+                    .ValidPiecesLXF.ToLower().Split('\\');
+                foreach (var part in partsToFind)
+                {
+                    var allFound = Directory.GetFileSystemEntries(currentPath);
+                    var matching = allFound.FirstOrDefault(path => String.Equals(path, Path.Combine(currentPath, part), StringComparison.CurrentCultureIgnoreCase));
+                    currentPath = matching ?? throw new FileNotFoundException("Could not find " + currentPath);
+                }
+
+                doc.Load(currentPath);
 
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
                 {
