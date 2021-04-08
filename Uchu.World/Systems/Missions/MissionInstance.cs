@@ -500,14 +500,14 @@ namespace Uchu.World.Systems.Missions
             
             MessageNotifyMission();
             
-            foreach (var item in this.Tasks)
+            foreach (var taskInstance in this.Tasks)
             {
-                if (item.Type != MissionTaskType.ObtainItem) continue;
-                if (item.Parameters.Length == 0 || (item.Parameters[0] & 1) == 0)
+                if (taskInstance.Type != MissionTaskType.ObtainItem) continue;
+                if (taskInstance.Parameters.Length == 0 || (taskInstance.Parameters[0] & 1) == 0)
                 {
                     if (Player.TryGetComponent<InventoryManagerComponent>(out var result))
                     {
-                         if (item.Target != 0) await result.RemoveLotAsync(item.Target, (uint) item.RequiredProgress);
+                         if (taskInstance.Target != 0) await result.RemoveLotAsync(taskInstance.Target, (uint) taskInstance.RequiredProgress);
                     }
                 }
             }
