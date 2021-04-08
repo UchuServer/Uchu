@@ -507,7 +507,7 @@ namespace Uchu.World.Systems.Missions
                 {
                     if (Player.TryGetComponent<InventoryManagerComponent>(out var result))
                     {
-                         if (item.Target != 0) await result.RemoveAllAsync(item.Target, false);
+                         if (item.Target != 0) await result.RemoveLotAsync(item.Target, (uint) item.RequiredProgress);
                     }
                 }
             }
