@@ -551,6 +551,24 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Progresses discover tasks using POI name
+        /// </summary>
+        /// <param name="poiGroup">The entered POI</param>
+        public async Task DiscoverAsync(string poiGroup)
+        {
+            foreach (var task in FindActiveTasksAsync<DiscoverTask>())
+            {
+                await task.ReportProgress(poiGroup);
+            }
+
+            // TODO: find out if this is necessary. Currently does not work because 2nd argument has to be a Lot
+            // await StartUnlockableAchievementsAsync<DiscoverTask>(MissionTaskType.Discover, poiGroup, async task =>
+            // {
+            //     await task.ReportProgress(poiGroup);
+            // });
+        }
+
+        /// <summary>
         /// Progresses all use skill tasks using the given skill id
         /// </summary>
         /// <param name="skillId">The skill id to progress the tasks with</param>
