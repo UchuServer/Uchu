@@ -429,6 +429,12 @@ namespace Uchu.World
             }
         }
 
+        public long CurrencySilent
+        {
+            get => _currency;
+            set => _currency = value;
+        }
+
         /// <summary>
         /// The amount of currency a player can pickup
         /// </summary>
@@ -463,6 +469,12 @@ namespace Uchu.World
                     });
                 }
             }
+        }
+
+        public long UniverseScoreSilent
+        {
+            get => _universeScore;
+            set => _universeScore = value;
         }
         
         /// <summary>

@@ -491,7 +491,7 @@ namespace Uchu.World.Systems.Missions
             if (State == MissionState.Completed) 
                return;
             
-            UpdateMissionState(MissionState.Unavailable, true); 
+            UpdateMissionState(MissionState.Unavailable, true);
             await SendRewardsAsync(rewardItem);
             
             LastCompletion = DateTimeOffset.Now.ToUnixTimeSeconds(); 
@@ -534,8 +534,10 @@ namespace Uchu.World.Systems.Missions
             if (!Player.TryGetComponent<CharacterComponent>(out var character))
                 return;
             
-            var currency = !Repeat ? RewardCurrencyRepeatable : RewardCurrency;
-            var score = Repeat ? 0 : RewardScore;
+            var currency = Repeat ? RewardCurrencyRepeatable : RewardCurrency;
+            var score = RewardScore;
+
+            if (currency == 0 && score == 0) return;
             
             if (IsMission)
             {
@@ -544,11 +546,11 @@ namespace Uchu.World.Systems.Missions
             }
             else
             {
-                // TODO: Silent?
                 // Achievement, client adds these itself so we don't need to notify
-                character.Currency += currency;
-                character.UniverseScore += score;
+                character.CurrencySilent += currency;
+                character.UniverseScoreSilent += score;
 
+                // TODO: look into this, is it still necessary with the silent increment?
                 // The client adds currency rewards as an offset, in my testing. Therefore we
                 // have to account for this offset.
                 character.HiddenCurrency += currency;
