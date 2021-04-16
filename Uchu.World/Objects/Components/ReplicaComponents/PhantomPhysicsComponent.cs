@@ -1,6 +1,9 @@
+using System.Linq;
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -31,7 +34,12 @@ namespace Uchu.World
                 if (GameObject.Settings.ContainsKey("POI"))
                 {
                     var physicsComponent = GameObject.AddComponent<PhysicsComponent>();
-                    physicsComponent.SetPhysics(BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(2, 2, 2) * GameObject.Transform.Scale));
+                    var phantomPhysicsComponentId = GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+                    var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                        .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                    var assetPath = cdcComponent?.Physicsasset;
+                    Logger.Warning($"## Set {phantomPhysicsComponentId} path to {assetPath}");
+                    physicsComponent.SetPhysicsByPath(assetPath);
                 }
             });
         }

@@ -29,7 +29,7 @@ namespace Uchu.StandardScripts.VentureExplorer
                         && responder.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                     {
                         responder.GetComponent<DestroyableComponent>().Imagination = 6;
-                        await missionInventory.ScriptAsync(4009);
+                        await missionInventory.ScriptAsync(980, 4009);
                     }
                 });
             }

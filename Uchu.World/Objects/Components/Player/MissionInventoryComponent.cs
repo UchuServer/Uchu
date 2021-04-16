@@ -448,18 +448,19 @@ namespace Uchu.World
         /// <summary>
         /// Progresses all script tasks using the given scripted id
         /// </summary>
-        /// <param name="id">The id to progress the script tasks with</param>
+        /// <param name="taskId">The relevant script task ID</param>
+        /// <param name="target">The target linked to this script task</param>
         /// <returns></returns>
-        public async Task ScriptAsync(int id)
+        public async Task ScriptAsync(int taskId, Lot target)
         {
             foreach (var task in FindActiveTasksAsync<ScriptTask>())
             {
-                await task.ReportProgress(id);
+                await task.ReportProgress(taskId, target);
             }
 
-            await StartUnlockableAchievementsAsync<ScriptTask>(MissionTaskType.Script, id, async task =>
+            await StartUnlockableAchievementsAsync<ScriptTask>(MissionTaskType.Script, target, async task =>
             {
-                await task.ReportProgress(id);
+                await task.ReportProgress(taskId, target);
             });
         }
 

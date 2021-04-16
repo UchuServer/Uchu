@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using Uchu.Core;
 
@@ -25,17 +24,6 @@ namespace Uchu.World.Systems.Missions
 
             if (Completed)
                 await CheckMissionCompletedAsync();
-            /*
-            // Need to check TargetGroup here but it won't contain the POI group bc it is not an int
-            if (Target != poiGroup)
-                return;
-
-            // Progress is a list of ints, POI group is a string, this does not work
-            AddProgress(poiGroup);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
-            */
         }
     }
 }

@@ -1,9 +1,13 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -81,14 +85,30 @@ namespace Uchu.World
                         break;
                     case "OnEnter":
                         physics = GameObject.AddComponent<PhysicsComponent>();
-                            
+
+                        var phantomPhysicsComponentId = GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+
+                        if (GameObject.TryGetComponent<PhantomPhysicsComponent>(out var phantom))
+                        {
+                            var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                                .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                            var assetPath = cdcComponent?.Physicsasset;
+                            physics.SetPhysicsByPath(assetPath);
+                        }
+                        else
+                        {
+                            var box = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation,
+                                Vector3.One * 4.0f * GameObject.Transform.Scale);
+                            physics.SetPhysics(box);
+                        }
+
                         Listen(physics.OnEnter, other =>
                         {
                             Logger.Information($"Enter: {other.GameObject}");
 
                             ExecuteEvent(@event, other.GameObject);
                         });
-                        break;;
+                        break;
                     case "OnExit":
                         physics = GameObject.AddComponent<PhysicsComponent>();
                             
@@ -132,9 +152,29 @@ namespace Uchu.World
                 case "repelObject":
                     RepealObject(command, arguments);
                     break;
+                case "updateMission":
+                    UpdateMission(command, arguments);
+                    break;
             }
 
             GameObject.Serialize(GameObject);
+        }
+
+        private void UpdateMission(TriggerCommand command, params object[] arguments)
+        {
+            if (!(arguments[0] is Player target)) return;
+            if (!target.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
+
+            var commandArgs = command.Arguments.Split(',');
+            if (commandArgs.Length == 0) return;
+
+            switch (commandArgs.First())
+            {
+                // ReSharper disable once StringLiteralTypo
+                case "exploretask":
+                    _ = missionInventoryComponent.DiscoverAsync(commandArgs.Last());
+                    break;
+            }
         }
 
         private void PushObject(TriggerCommand command, params object[] arguments)

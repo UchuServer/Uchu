@@ -62,40 +62,16 @@ namespace Uchu.World
             {
                 Logger.Information($"Registered POI location {poiGroup}");
 
-                Listen(GameObject.GetComponent<World.PhysicsComponent>().OnEnter, async component =>
+                Listen(GameObject.GetComponent<PhysicsComponent>().OnEnter, async component =>
                 {
                     if (!(component.GameObject is Player player)) return;
 
-                    Logger.Information($"{player.Name} entered and {(string) poiGroup}");
+                    Logger.Information($"{player.Name} entered {(string) poiGroup}");
 
                     var inventory = player.GetComponent<MissionInventoryComponent>();
                     await inventory.DiscoverAsync((string) poiGroup);
                 });
             }
-
-            // Jett's stuff
-            // if (GameObject.Settings.TryGetValue("POI", out var group))
-            // {
-            //     Logger.Information($"Registered POI location {group}");
-            //     var task = ClientCache.GetTable<MissionTasks>().Where(i => i.TargetGroup == (string)group).FirstOrDefault();
-            //     if (task == default) return;
-            //     var missionID = task.Id.Value;
-            //     Listen(GameObject.GetComponent<World.PhysicsComponent>().OnEnter, async component =>
-            //     {
-            //         if (!(component.GameObject is Player)) return;
-            //         Player player = (Player)component.GameObject;
-            //         var missionComponent = player.GetComponent<MissionInventoryComponent>();
-            //         if (missionComponent.HasCompleted(missionID)) return;
-            //         Logger.Information($"{player.Name} entered and discovered {(string)group}");
-            //         if (missionComponent.HasMission(missionID)) await missionComponent.GetMission(missionID).CompleteAsync();
-            //         else
-            //         {
-            //             var poiAchievement = await missionComponent.AddMissionAsync(missionID, player);
-            //             await poiAchievement.StartAsync();
-            //             await poiAchievement.CompleteAsync();
-            //         }
-            //     });
-            // }
         }
 
         public void SetPhysicsByPath(string path) // We can't read HKX so this is basically just a bodge
@@ -122,7 +98,7 @@ namespace Uchu.World
             }
             else
             {
-                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(2, 2, 2) * GameObject.Transform.Scale);
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, Vector3.One * 4 * GameObject.Transform.Scale);
             }
 
             SetPhysics(finalObject);

@@ -17,7 +17,7 @@ namespace Uchu.StandardScripts.AvantGardens
                         return;
 
                     if (player.TryGetComponent<MissionInventoryComponent>(out var missions))
-                        await missions.ScriptAsync(5652);
+                        await missions.ScriptAsync(2479, 5652);
                 }
             });
             
