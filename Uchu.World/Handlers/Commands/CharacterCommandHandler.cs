@@ -242,9 +242,11 @@ namespace Uchu.World.Handlers.Commands
         {
             var doHover = arguments.Contains("hover");
 
+            player.TryGetComponent<ControllablePhysicsComponent>(out var controllablePhysicsComponent);
+
             if (arguments.Length == 0 || (arguments.Length == 1 && doHover))
             {
-                player.Flying = !player.Flying;
+                controllablePhysicsComponent.Flying = !controllablePhysicsComponent.Flying;
             }
             else if (arguments.Length >= 1)
             {
@@ -252,11 +254,11 @@ namespace Uchu.World.Handlers.Commands
                 {
                     case "true":
                     case "on":
-                        player.Flying = true;
+                        controllablePhysicsComponent.Flying = true;
                         break;
                     case "false":
                     case "off":
-                        player.Flying = false;
+                        controllablePhysicsComponent.Flying = false;
                         break;
                     default:
                         return "Invalid <state(on/off)>";
@@ -267,24 +269,24 @@ namespace Uchu.World.Handlers.Commands
             {
                 if (float.TryParse(arguments[1], out float speed))
                 {
-                    player.JetPackAirSpeed = speed;
+                    controllablePhysicsComponent.JetPackAirSpeed = speed;
                 }
             }
 
-            float jetPackMaxAirSpeed = player.JetPackAirSpeed + 5;
+            float jetPackMaxAirSpeed = controllablePhysicsComponent.JetPackAirSpeed + 5;
 
             player.Message(new SetJetPackModeMessage
             {
                 Associate = player,
                 BypassChecks = true,
-                Use = player.Flying,
+                Use = controllablePhysicsComponent.Flying,
                 DoHover = doHover,
                 EffectId = 36,
-                AirSpeed = player.JetPackAirSpeed,
+                AirSpeed = controllablePhysicsComponent.JetPackAirSpeed,
                 MaxAirSpeed = jetPackMaxAirSpeed
             });
 
-            return $"Toggled jetpack state: {player.Flying}";
+            return $"Toggled jetpack state: {controllablePhysicsComponent.Flying}";
         }
 
         [CommandHandler(Signature = "hover", Help = "Change hover state", GameMasterLevel = GameMasterLevel.Mythran)]

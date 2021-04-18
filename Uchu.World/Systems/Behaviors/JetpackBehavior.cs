@@ -38,6 +38,7 @@ namespace Uchu.World.Systems.Behaviors
                 out var controllablePhysicsComponent)) return;
 
             controllablePhysicsComponent.JetpackEffectId = (uint) EffectId;
+            controllablePhysicsComponent.Flying = true;
 
             player.Zone.BroadcastMessage(new SetJetPackModeMessage
             {
@@ -55,6 +56,11 @@ namespace Uchu.World.Systems.Behaviors
         public override void Dismantle(BehaviorExecutionParameters parameters)
         {
             if (!(parameters.Context.Associate is Player player)) return;
+
+            if (!player.TryGetComponent<ControllablePhysicsComponent>(
+                out var controllablePhysicsComponent)) return;
+
+            controllablePhysicsComponent.Flying = false;
 
             player.Zone.BroadcastMessage(new SetJetPackModeMessage
             {

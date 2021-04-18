@@ -264,10 +264,6 @@ namespace Uchu.World
         /// </summary>
         public bool Banned { get; private set; }
 
-        public bool Flying { get; set; } = false;
-
-        public float JetPackAirSpeed { get; set; } = 10;
-
         #endregion properties
 
         /// <summary>
