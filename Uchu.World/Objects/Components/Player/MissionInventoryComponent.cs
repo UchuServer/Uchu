@@ -236,9 +236,8 @@ namespace Uchu.World
         {
             lock (Missions)
             {
-                return ActiveMissions
-                    .SelectMany(m => m.Tasks)
-                    .Any(t => t.Type == MissionTaskType.ObtainItem && t.Targets.Contains((int)lot));
+                return FindActiveTasksAsync<ObtainItemTask>().Any(task => task.Targets.Contains(lot))
+                       || UnlockableAchievements<ObtainItemTask>(MissionTaskType.ObtainItem, lot).Any();
             }
         }
 
