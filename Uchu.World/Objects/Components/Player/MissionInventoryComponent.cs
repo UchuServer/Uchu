@@ -704,10 +704,16 @@ namespace Uchu.World
                 // allows us to open less db transactions in the long run
                 var mission = await AddMissionAsync(achievement.MissionId, GameObject);
                 await mission.StartAsync();
-                
-                // For achievements there's always only one task
-                if (progress != null)
-                    await progress(mission.Tasks.First() as T);
+
+                if (progress == null) continue;
+
+                foreach (var task in mission.Tasks.Where(t => t.TargetString == targetGroup))
+                {
+                    await progress(task as T);
+                }
+                // // For achievements there's always only one task
+                // if (progress != null)
+                //     await progress(mission.Tasks.First() as T);
             }
         }
 
@@ -729,9 +735,13 @@ namespace Uchu.World
                 var mission = await AddMissionAsync(achievement.MissionId, GameObject);
                 await mission.StartAsync();
 
-                // For achievements there's always only one task
-                if (progress != null)
-                    await progress(mission.Tasks.First() as T);
+                if (progress == null) continue;
+
+                foreach (var task in mission.Tasks.Where(t => t.Targets.Contains(lot)))
+                {
+                    Logger.Information($"## task {task}");
+                    await progress(task as T);
+                }
             }
         }
     }
