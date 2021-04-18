@@ -275,7 +275,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully rejected \"{selectedCharacter.CustomName}\"!";
         }
 
-        [CommandHandler(Signature = "gamemaster", Help = "Set Game Master level for user")]
+        [CommandHandler(Signature = "gamemaster", Help = "Set Game Master level for user", GameMasterLevel = GameMasterLevel.Admin)]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> SetGameMasterLevel(string[] arguments)
         {
