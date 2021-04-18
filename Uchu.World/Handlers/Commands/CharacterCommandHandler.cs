@@ -237,6 +237,12 @@ namespace Uchu.World.Handlers.Commands
             return "Toggled freecam.";
         }
 
+        [CommandHandler(Signature = "dab", Help = "dab", GameMasterLevel = GameMasterLevel.Player)]
+        public void Dab(string[] arguments, Player player)
+        {
+            player.Animate("cute-spin-exit");
+        }
+
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Fly(string[] arguments, Player player)
         {
