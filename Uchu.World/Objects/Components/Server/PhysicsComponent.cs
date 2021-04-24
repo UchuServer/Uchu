@@ -58,6 +58,9 @@ namespace Uchu.World
 
             Physics = physics;
 
+            // This is for POIs with a POI key in the settings, used for example everywhere in AG except for
+            // Monument Orange Path (AG_Mon_3).
+            // Not all POIs are handled this way, for example those in GF are done using triggers.
             if (GameObject.Settings.TryGetValue("POI", out var poiGroup))
             {
                 Logger.Information($"Registered POI location {poiGroup}");
@@ -66,7 +69,7 @@ namespace Uchu.World
                 {
                     if (!(component.GameObject is Player player)) return;
 
-                    Logger.Information($"{player.Name} entered {(string) poiGroup}");
+                    Logger.Debug($"{player.Name} entered {(string) poiGroup}");
 
                     var inventory = player.GetComponent<MissionInventoryComponent>();
                     await inventory.DiscoverAsync((string) poiGroup);

@@ -84,41 +84,37 @@ namespace Uchu.World
                         });
                         break;
                     case "OnEnter":
+                    {
+                        // Find physics asset path from cdclient
+                        var phantomPhysicsComponentId =
+                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                        var assetPath = cdcComponent?.Physicsasset;
+
+                        // Give physics object correct dimensions
                         physics = GameObject.AddComponent<PhysicsComponent>();
+                        physics.SetPhysicsByPath(assetPath);
 
-                        var phantomPhysicsComponentId = GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-
-                        if (GameObject.TryGetComponent<PhantomPhysicsComponent>(out var phantom))
-                        {
-                            var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
-                                .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
-                            var assetPath = cdcComponent?.Physicsasset;
-                            physics.SetPhysicsByPath(assetPath);
-                        }
-                        else
-                        {
-                            var box = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation,
-                                Vector3.One * 4.0f * GameObject.Transform.Scale);
-                            physics.SetPhysics(box);
-                        }
-
-                        Listen(physics.OnEnter, other =>
-                        {
-                            Logger.Information($"Enter: {other.GameObject}");
-
-                            ExecuteEvent(@event, other.GameObject);
-                        });
+                        Listen(physics.OnEnter, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
+                    }
                     case "OnExit":
+                    {
+                        // Find physics asset path from cdclient
+                        var phantomPhysicsComponentId =
+                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                        var assetPath = cdcComponent?.Physicsasset;
+
+                        // Give physics object correct dimensions
                         physics = GameObject.AddComponent<PhysicsComponent>();
-                            
-                        Listen(physics.OnLeave, other =>
-                        {
-                            Logger.Information($"Left: {other.GameObject}");
-                                
-                            ExecuteEvent(@event, other.GameObject);
-                        });
+                        physics.SetPhysicsByPath(assetPath);
+
+                        Listen(physics.OnLeave, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
+                    }
                     default:
                         Logger.Error($"Unsupported event type: {@event.Id}!");
                         break;
