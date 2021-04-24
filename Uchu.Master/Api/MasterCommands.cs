@@ -223,7 +223,6 @@ namespace Uchu.Master.Api
                     {
                         throw new TimeoutException("Commission timed out");
                     }
-
                     await Task.Delay(delay);
                     continue;
                 }

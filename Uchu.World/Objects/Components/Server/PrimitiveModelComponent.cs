@@ -1,10 +1,6 @@
-using System.Linq;
 using System.Numerics;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Uchu.Core;
-using Uchu.Core.Client;
 using Uchu.Physics;
-using Uchu.World.Client;
 
 namespace Uchu.World
 {

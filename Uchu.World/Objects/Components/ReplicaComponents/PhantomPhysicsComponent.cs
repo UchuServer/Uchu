@@ -1,8 +1,5 @@
 using System.Numerics;
 using RakDotNet.IO;
-using Uchu.Physics;
-using Uchu.World.Client;
-using System.Linq;
 
 namespace Uchu.World
 {
@@ -25,19 +22,7 @@ namespace Uchu.World
         public float MaxDistance { get; set; }
         
         public Vector3 EffectDirection { get; set; }
-
-        protected PhantomPhysicsComponent()
-        {
-            Listen(OnStart, () =>
-            {
-                if (GameObject.Settings.ContainsKey("POI"))
-                {
-                    var physicsComponent = GameObject.AddComponent<PhysicsComponent>();
-                    physicsComponent.SetPhysics(BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(2, 2, 2) * GameObject.Transform.Scale));
-                }
-            });
-        }
-
+        
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);

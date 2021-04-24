@@ -129,7 +129,7 @@ namespace Uchu.World
             
             character.Currency -= cost;
             
-            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count, lootType: LootType.Vendor);
+            await player.GetComponent<InventoryManagerComponent>().AddLotAsync(lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {
@@ -165,7 +165,7 @@ namespace Uchu.World
             {
                 var alternativeCurrencyLot = (Lot) item.ItemComponent.CurrencyLOT;
                 var returnAlternativeCurrency = (uint) Math.Floor((item.ItemComponent.AltCurrencyCost ?? 0) * sellMultiplier) * count;
-                await inventory.AddLotAsync(alternativeCurrencyLot, returnAlternativeCurrency, lootType: LootType.Vendor);
+                await inventory.AddLotAsync(alternativeCurrencyLot, returnAlternativeCurrency);
             }
             
             player.Message(new VendorTransactionResultMessage
@@ -207,7 +207,7 @@ namespace Uchu.World
             character.Currency -= cost;
             
             await inventory.RemoveItemAsync(item, count, InventoryType.VendorBuyback);
-            await inventory.AddLotAsync(item.Lot, count, lootType: LootType.Vendor);
+            await inventory.AddLotAsync(item.Lot, count);
             
             player.Message(new VendorTransactionResultMessage
             {
