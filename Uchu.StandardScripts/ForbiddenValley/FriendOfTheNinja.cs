@@ -6,6 +6,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.ForbiddenValley
 {
+    [ZoneSpecific(1400)]
     public class FriendOfTheNinja : NativeScript
     {
         public override Task LoadAsync()
