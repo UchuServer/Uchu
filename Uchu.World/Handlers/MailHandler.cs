@@ -129,7 +129,7 @@ namespace Uchu.World.Handlers
             {
                 Mails = mails
             };
-            
+
             player.Message(new ServerMailPacket
             {
                 Id = ServerMailPacketId.Data,

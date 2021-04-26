@@ -121,7 +121,7 @@ namespace Uchu.World
 
                     if (mail.AuthorId == 0)
                     {
-                        authorName = "LEGO Universe";
+                        authorName = UchuServer.Config.ServerName;
                     }
                     else
                     {
@@ -129,7 +129,7 @@ namespace Uchu.World
                         authorName = author?.Name ?? "Deleted Character";
                     }
 
-                    writer.WriteString(authorName ?? "LEGO Universe", 32, true);
+                    writer.WriteString(authorName, 32, true);
 
                     writer.Write<uint>(0);
 
