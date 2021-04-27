@@ -429,10 +429,9 @@ namespace Uchu.World
             }
         }
 
-        public long CurrencySilent
+        public void AddCurrencySilently(long delta)
         {
-            get => _currency;
-            set => _currency = value;
+            _currency += delta;
         }
 
         /// <summary>
@@ -471,12 +470,11 @@ namespace Uchu.World
             }
         }
 
-        public long UniverseScoreSilent
+        public void AddUniverseScoreSilently(long delta)
         {
-            get => _universeScore;
-            set => _universeScore = value;
+            _universeScore += delta;
         }
-        
+
         /// <summary>
         /// The universe score required to reach the next level
         /// </summary>

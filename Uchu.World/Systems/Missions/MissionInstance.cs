@@ -547,8 +547,8 @@ namespace Uchu.World.Systems.Missions
             else
             {
                 // Achievement, client adds these itself so we don't need to notify
-                character.CurrencySilent += currency;
-                character.UniverseScoreSilent += score;
+                character.AddCurrencySilently(currency);
+                character.AddUniverseScoreSilently(score);
 
                 // TODO: look into this, is it still necessary with the silent increment?
                 // The client adds currency rewards as an offset, in my testing. Therefore we
