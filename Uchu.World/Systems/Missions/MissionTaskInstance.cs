@@ -48,6 +48,8 @@ namespace Uchu.World.Systems.Missions
         private int[] TargetGroup { get; set; }
 
         private int[] _targets;
+
+        public string TargetString { get; set; }
         
         /// <summary>
         /// All targets for this task, target + target group
@@ -127,6 +129,10 @@ namespace Uchu.World.Systems.Missions
                         targets.Add(lot);
                     }
                 }
+
+                // Used for mission task type Discover and MinigameAchievement
+                if (targets.Count == 0 && targetGroup.Count == 1 && targetGroup.First().Length > 0)
+                    TargetString = targetGroup.First();
 
                 TargetGroup = targets.ToArray();
             }

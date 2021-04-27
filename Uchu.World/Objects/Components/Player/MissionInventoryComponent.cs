@@ -236,9 +236,8 @@ namespace Uchu.World
         {
             lock (Missions)
             {
-                return ActiveMissions
-                    .SelectMany(m => m.Tasks)
-                    .Any(t => t.Type == MissionTaskType.ObtainItem && t.Targets.Contains((int)lot));
+                return FindActiveTasksAsync<ObtainItemTask>().Any(task => task.Targets.Contains(lot))
+                       || UnlockableAchievements<ObtainItemTask>(MissionTaskType.ObtainItem, lot).Any();
             }
         }
 
@@ -448,18 +447,19 @@ namespace Uchu.World
         /// <summary>
         /// Progresses all script tasks using the given scripted id
         /// </summary>
-        /// <param name="id">The id to progress the script tasks with</param>
+        /// <param name="taskId">The relevant script task ID</param>
+        /// <param name="target">The target linked to this script task</param>
         /// <returns></returns>
-        public async Task ScriptAsync(int id)
+        public async Task ScriptAsync(int taskId, Lot target)
         {
             foreach (var task in FindActiveTasksAsync<ScriptTask>())
             {
-                await task.ReportProgress(id);
+                await task.ReportProgress(taskId, target);
             }
 
-            await StartUnlockableAchievementsAsync<ScriptTask>(MissionTaskType.Script, id, async task =>
+            await StartUnlockableAchievementsAsync<ScriptTask>(MissionTaskType.Script, target, async task =>
             {
-                await task.ReportProgress(id);
+                await task.ReportProgress(taskId, target);
             });
         }
 
@@ -547,6 +547,24 @@ namespace Uchu.World
             await StartUnlockableAchievementsAsync<UseConsumableTask>(MissionTaskType.UseConsumable, lot, async task =>
             {
                 await task.ReportProgress(lot);
+            });
+        }
+
+        /// <summary>
+        /// Progresses discover tasks using POI name
+        /// </summary>
+        /// <param name="poiGroup">The entered POI</param>
+        public async Task DiscoverAsync(string poiGroup)
+        {
+            Logger.Information($"discoverAsync {poiGroup}");
+            foreach (var task in FindActiveTasksAsync<DiscoverTask>())
+            {
+                await task.ReportProgress(poiGroup);
+            }
+
+            await StartUnlockableAchievementsAsync<DiscoverTask>(MissionTaskType.Discover, poiGroup, async task =>
+            {
+                await task.ReportProgress(poiGroup);
             });
         }
 
@@ -649,9 +667,54 @@ namespace Uchu.World
         /// <returns>A list of all the achievements a player can unlock, given the task type and the lot</returns>
         private MissionInstance[] UnlockableAchievements<T>(MissionTaskType type, Lot lot)
             where T : MissionTaskInstance => ClientCache.Achievements.Where(m =>
-                m.Tasks.OfType<T>().Any(t => t.Type == type 
-                                             && (t.Targets.Contains((int) lot) || t.Parameters.Contains((int) lot)))
-                && CanAccept(m)).ToArray();
+            m.Tasks.OfType<T>().Any(t => t.Type == type && (t.Targets.Contains((int) lot) || t.Parameters.Contains((int) lot)))
+            && CanAccept(m)).ToArray();
+
+        /// <summary>
+        /// Returns a list of achievements that a player may start for a certain task type due to meeting it's prerequisites
+        /// </summary>
+        /// <remarks>
+        /// A player may start an achievement if the achievement is of the requested type,
+        ///  a player hasn't started it yet and the player has the proper prerequisites
+        /// </remarks>
+        /// <param name="type">The <see cref="MissionTaskType"/> of the achievement we seek</param>
+        /// <param name="targetGroup">The string to search targetGroups of achievements for</param>
+        /// <typeparam name="T">The mission task instance type we want to look for, linked to <c>type</c> param</typeparam>
+        /// <returns>A list of all the achievements a player can unlock, given the task type and the lot</returns>
+        private MissionInstance[] UnlockableAchievements<T>(MissionTaskType type, string targetGroup = null)
+            where T : MissionTaskInstance => ClientCache.Achievements.Where(m =>
+            m.Tasks.OfType<T>().Any(t => t.Type == type && t.TargetString == targetGroup)
+            && CanAccept(m)).ToArray();
+
+        /// <summary>
+        /// Looks for possibly unlockable achievements given a mission task type and a lot and starts them
+        /// </summary>
+        /// <param name="type">The type of tasks we wish to look for achievements for</param>
+        /// <param name="targetGroup">The targetGroup an achievement task might have</param>
+        /// <param name="progress">Progress callback function to call if an unlockable achievement is found</param>
+        /// <typeparam name="T">The type of mission task type we wish to search for, linked to <c>type</c> param.</typeparam>
+        private async Task StartUnlockableAchievementsAsync<T>(MissionTaskType type, string targetGroup, Func<T, Task> progress = null)
+            where T : MissionTaskInstance
+        {
+            foreach (var achievement in UnlockableAchievements<T>(type, targetGroup))
+            {
+                // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
+                // new achievement are much lower than not starting an achievement, that's why doing this in the loop
+                // allows us to open less db transactions in the long run
+                var mission = await AddMissionAsync(achievement.MissionId, GameObject);
+                await mission.StartAsync();
+
+                if (progress == null) continue;
+
+                foreach (var task in mission.Tasks.Where(t => t.TargetString == targetGroup))
+                {
+                    await progress(task as T);
+                }
+                // // For achievements there's always only one task
+                // if (progress != null)
+                //     await progress(mission.Tasks.First() as T);
+            }
+        }
 
         /// <summary>
         /// Looks for possibly unlockable achievements given a mission task type and a lot and starts them
@@ -663,7 +726,6 @@ namespace Uchu.World
         private async Task StartUnlockableAchievementsAsync<T>(MissionTaskType type, Lot lot, Func<T, Task> progress = null)
             where T : MissionTaskInstance
         {
-            var testMission = ClientCache.Achievements.Where(m => m.MissionId == 568);
             foreach (var achievement in UnlockableAchievements<T>(type, lot))
             {
                 // Loading these here instead of out of the loop might seem odd but heuristically the chances of starting a
@@ -671,10 +733,14 @@ namespace Uchu.World
                 // allows us to open less db transactions in the long run
                 var mission = await AddMissionAsync(achievement.MissionId, GameObject);
                 await mission.StartAsync();
-                
-                // For achievements there's always only one task
-                if (progress != null)
-                    await progress(mission.Tasks.First() as T);
+
+                if (progress == null) continue;
+
+                foreach (var task in mission.Tasks.Where(t => t.Targets.Contains(lot)))
+                {
+                    Logger.Information($"## task {task}");
+                    await progress(task as T);
+                }
             }
         }
     }

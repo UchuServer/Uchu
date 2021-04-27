@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using InfectedRose.Lvl;
@@ -318,9 +319,10 @@ namespace Uchu.World
         /// <param name="inventoryType">Optional explicit inventory type to add this lot to, if not provided this will be
         ///     implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="rootItem">An optional parent item</param>
+        /// <param name="lootType">The reason this lot is given to the player</param>
         /// <returns>The list of items that were created while adding the lot</returns>
         public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
-            InventoryType inventoryType = default, Item rootItem = default)
+            InventoryType inventoryType = default, Item rootItem = default, LootType lootType = default)
         {
             var createdItems = new List<Item>();
             
@@ -378,17 +380,86 @@ namespace Uchu.World
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
                     var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem);
-                    
-                    // Might occur if the inventory is full or an error occured during slot claiming
-                    if (item == null)
-                        return; // TODO: Message item to player with mail
-                    
-                    Start(item);
-                    item.MessageCreation();
-                    createdItems.Add(item);
 
                     totalToAdd -= toAdd;
                     totalAdded += toAdd;
+
+                    // Item was successfully instantiated
+                    if (item != null)
+                    {
+                        Start(item);
+                        item.MessageCreation();
+                        createdItems.Add(item);
+                    }
+                    // Might occur if the inventory is full or an error occured during slot claiming
+                    else
+                    {
+                        // Display item-bouncing-off-backpack animation
+                        ((Player) GameObject).Message(new NotifyRewardMailed
+                        {
+                            ObjectId = ObjectId.Standalone,
+                            StartPoint = new Vector3(0, 0, 0),
+                            TemplateId = lot,
+                            Associate = GameObject,
+                        });
+
+                        await using var uchuContext = new UchuContext();
+
+                        var playerCharacter = uchuContext.Characters
+                            .First(c => c.Id == GameObject.Id);
+
+                        var mail = new CharacterMail
+                        {
+                            RecipientId = playerCharacter.Id,
+                            AuthorId = 0,
+                            AttachmentLot = lot,
+                            AttachmentCount = (ushort) toAdd,
+                            SentTime = DateTime.Now,
+                            ExpirationTime = DateTime.Now
+                        };
+
+                        switch (lootType)
+                        {
+                            // Achievements
+                            case LootType.Achievement:
+                            {
+                                mail.Subject = "%[MAIL_ACHIEVEMENT_OVERFLOW_HEADER]";
+                                mail.Body = "%[MAIL_ACHIEVEMENT_OVERFLOW_BODY]";
+                                break;
+                            }
+                            // Activities - not entirely sure when this will be used
+                            // The text also works well enough for missions, though those should not add items to full inventories anyway
+                            case LootType.Mission:
+                            case LootType.Activity:
+                            {
+                                mail.Subject = "%[MAIL_ACTIVITY_OVERFLOW_HEADER]";
+                                mail.Body = "%[MAIL_ACTIVITY_OVERFLOW_BODY]";
+                                break;
+                            }
+                            // Sometimes happens when picking up items.
+                            case LootType.Pickup:
+                            {
+                                // To avoid spamming people's mailboxes, don't send the item if the player has 20+ mails.
+                                var mailCount = uchuContext.Mails.Count(m => m.RecipientId == playerCharacter.Id);
+                                if (mailCount >= 20)
+                                    continue;
+
+                                mail.Subject = "Lost Item";
+                                mail.Body = "You picked up this item, but didn't have room for it in your backpack.";
+                                break;
+                            }
+                            // /gmadditem, item sets, and for any other reason listed in the LootType enum
+                            default:
+                            {
+                                mail.Subject = "Lost Item";
+                                mail.Body = "You received this item, but didn't have room for it in your backpack.";
+                                break;
+                            }
+                        }
+
+                        await uchuContext.Mails.AddAsync(mail);
+                        await uchuContext.SaveChangesAsync();
+                    }
                 }
             }
             finally
@@ -529,7 +600,7 @@ namespace Uchu.World
                 return;
 
             await RemoveItemAsync(item, count, source, silent);
-            await AddLotAsync(item.Lot , count, item.Settings, destination);
+            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory); // TODO find out if this is correct (what's LootType.Relocate?)
         }
         
         #endregion methods

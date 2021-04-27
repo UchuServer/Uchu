@@ -429,6 +429,11 @@ namespace Uchu.World
             }
         }
 
+        public void AddCurrencySilently(long delta)
+        {
+            _currency += delta;
+        }
+
         /// <summary>
         /// The amount of currency a player can pickup
         /// </summary>
@@ -464,7 +469,12 @@ namespace Uchu.World
                 }
             }
         }
-        
+
+        public void AddUniverseScoreSilently(long delta)
+        {
+            _universeScore += delta;
+        }
+
         /// <summary>
         /// The universe score required to reach the next level
         /// </summary>

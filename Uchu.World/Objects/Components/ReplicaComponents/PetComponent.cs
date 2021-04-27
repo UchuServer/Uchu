@@ -78,7 +78,7 @@ namespace Uchu.World
             if (PetWild)
             {
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(Zone.Server.Config.ResourcesConfiguration.GameResourceFolder,
+                doc.Load(Path.Combine(UchuServer.Config.ResourcesConfiguration.GameResourceFolder,
                     ClientCache.GetTable<TamingBuildPuzzles>().FirstOrDefault(i => i.NPCLot == GameObject.Lot)
                     .ValidPiecesLXF));
 

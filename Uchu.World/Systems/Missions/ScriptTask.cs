@@ -11,11 +11,11 @@ namespace Uchu.World.Systems.Missions
 
         public override MissionTaskType Type => MissionTaskType.Script;
 
-        public override bool Completed => CurrentProgress > 0;
-
-        public async Task ReportProgress(int id)
+        public async Task ReportProgress(int id, Lot target)
         {
-            AddProgress(id);
+            if (TaskId != id) return;
+
+            AddProgress(target);
             
             if (Completed)
                 await CheckMissionCompletedAsync();

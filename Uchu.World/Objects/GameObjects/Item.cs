@@ -52,11 +52,12 @@ namespace Uchu.World
         /// <param name="rootItem">The root item this item is based on</param>
         /// <param name="isEquipped">Whether the game object has this item equipped or not</param>
         /// <param name="isBound">Whether the game object has bound this item or not</param>
+        /// <param name="lootType">Where this item came from</param>
         /// <remarks>Note that <c>Start</c> still needs to be called on the item to be registered properly in the world.</remarks>
         /// <returns>The instantiated item or <c>null</c> if no slot could be acquired or if the item couldn't be added to the inventory</returns>
         public static async Task<Item> Instantiate(GameObject owner, Lot lot,
             Inventory inventory, uint count, uint slot = default, LegoDataDictionary extraInfo = default,
-            ObjectId objectId = default, Item rootItem = default, bool isEquipped = false, bool isBound = false)
+            ObjectId objectId = default, Item rootItem = default, bool isEquipped = false, bool isBound = false, LootType lootType = LootType.None)
         {
             // Try to find the slot at which this item should be inserted if no explicit slot is provided
             if (inventory != default && slot == default)
@@ -99,6 +100,7 @@ namespace Uchu.World
             instance.IsEquipped = isEquipped;
             instance.IsPackage = instance.Lot.GetComponentId(ComponentId.PackageComponent) != default;
             instance.Inventory = inventory;
+            instance.LootType = lootType;
             
             var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
                 s => s.ObjectTemplate == instance.Lot
@@ -120,6 +122,11 @@ namespace Uchu.World
 
             return instance;
         }
+
+        /// <summary>
+        /// The source of this item
+        /// </summary>
+        public LootType LootType { get; set; }
 
         /// <summary>
         /// The CdClient item component that contains extra meta information about this item
@@ -347,7 +354,8 @@ namespace Uchu.World
                     InventoryType = (int) Inventory.InventoryType,
                     ShowFlyingLoot = true,
                     TotalItems = Count,
-                    ExtraInfo = Settings
+                    ExtraInfo = Settings,
+                    Source = LootType,
                 });
             }
         }
@@ -370,7 +378,8 @@ namespace Uchu.World
                     InventoryType = (int) Inventory.InventoryType,
                     ExtraInfo = Settings,
                     Slot = (int) Slot,
-                    ShowFlyingLoot = count != default
+                    ShowFlyingLoot = count != default,
+                    Source = LootType,
                 });
             }
         }

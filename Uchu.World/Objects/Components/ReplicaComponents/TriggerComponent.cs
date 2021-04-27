@@ -1,9 +1,13 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using InfectedRose.Lvl;
 using InfectedRose.Triggers;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -80,25 +84,37 @@ namespace Uchu.World
                         });
                         break;
                     case "OnEnter":
-                        physics = GameObject.AddComponent<PhysicsComponent>();
-                            
-                        Listen(physics.OnEnter, other =>
-                        {
-                            Logger.Information($"Enter: {other.GameObject}");
+                    {
+                        // Find physics asset path from cdclient
+                        var phantomPhysicsComponentId =
+                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                        var assetPath = cdcComponent?.Physicsasset;
 
-                            ExecuteEvent(@event, other.GameObject);
-                        });
-                        break;;
-                    case "OnExit":
+                        // Give physics object correct dimensions
                         physics = GameObject.AddComponent<PhysicsComponent>();
-                            
-                        Listen(physics.OnLeave, other =>
-                        {
-                            Logger.Information($"Left: {other.GameObject}");
-                                
-                            ExecuteEvent(@event, other.GameObject);
-                        });
+                        physics.SetPhysicsByPath(assetPath);
+
+                        Listen(physics.OnEnter, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
+                    }
+                    case "OnExit":
+                    {
+                        // Find physics asset path from cdclient
+                        var phantomPhysicsComponentId =
+                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
+                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+                        var assetPath = cdcComponent?.Physicsasset;
+
+                        // Give physics object correct dimensions
+                        physics = GameObject.AddComponent<PhysicsComponent>();
+                        physics.SetPhysicsByPath(assetPath);
+
+                        Listen(physics.OnLeave, other => { ExecuteEvent(@event, other.GameObject); });
+                        break;
+                    }
                     default:
                         Logger.Error($"Unsupported event type: {@event.Id}!");
                         break;
@@ -132,9 +148,29 @@ namespace Uchu.World
                 case "repelObject":
                     RepealObject(command, arguments);
                     break;
+                case "updateMission":
+                    UpdateMission(command, arguments);
+                    break;
             }
 
             GameObject.Serialize(GameObject);
+        }
+
+        private void UpdateMission(TriggerCommand command, params object[] arguments)
+        {
+            if (!(arguments[0] is Player target)) return;
+            if (!target.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
+
+            var commandArgs = command.Arguments.Split(',');
+            if (commandArgs.Length == 0) return;
+
+            switch (commandArgs.First())
+            {
+                // ReSharper disable once StringLiteralTypo
+                case "exploretask":
+                    _ = missionInventoryComponent.DiscoverAsync(commandArgs.Last());
+                    break;
+            }
         }
 
         private void PushObject(TriggerCommand command, params object[] arguments)

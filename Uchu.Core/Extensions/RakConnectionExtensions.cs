@@ -16,8 +16,7 @@ namespace Uchu.Core
             if (serializable == null)
                 throw new ArgumentNullException(nameof(serializable), 
                     ResourceStrings.RakConnectionExtensions_Send_StreamNullException);
-            
-            Logger.Information($"Sending {serializable}");
+            Logger.Debug($"Sending {serializable}");
             
             using var stream = new MemoryStream();
             using var writer = new BitWriter(stream);
