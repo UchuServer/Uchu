@@ -9,7 +9,7 @@ namespace Uchu.World
 
         public bool Flying { get; set; }
 
-        public float JetPackAirSpeed { get; set; }
+        public float JetPackAirSpeed { get; set; } = 10;
 
         public bool HasPosition { get; set; } = true;
 
