@@ -15,16 +15,24 @@ namespace Uchu.Core.Handlers.Commands
         public void ShutdownServer(string[] arguments)
         {
             int delayMinutes = 0;
+
             if (arguments.Length != 0 && int.TryParse(arguments[0], out var arg))
             {
                 delayMinutes = arg;
                 Logger.Warning($"Shutting down in {delayMinutes} minute(s).");
             }
 
+            string[] broadcastText = {"Server shutting down", $"The server will be shutting down in {delayMinutes} minute(s)."};
+
+            if (arguments.Length == 3)
+            {
+                broadcastText[0] = arguments[1];
+                broadcastText[1] = arguments[2];
+            }
+
             Task.Run(async () =>
             {
-                string[] args = {"Server shutting down", $"The server will be shutting down in {delayMinutes} minute(s)."};
-                await Broadcast(args).ConfigureAwait(false);
+                await Broadcast(broadcastText).ConfigureAwait(false);
                 await Task.Delay(delayMinutes * 60 * 1000).ConfigureAwait(false);
                 await UchuServer.Api.RunCommandAsync<BaseResponse>(
                     UchuServer.MasterApi, $"master/decommission?message=Shut down server."
