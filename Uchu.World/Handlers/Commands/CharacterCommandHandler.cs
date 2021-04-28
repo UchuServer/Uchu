@@ -1025,7 +1025,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set mailbox state to: {state}";
         }
 
-        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> Announce(string[] arguments, Player player)
         {
             if (arguments.Length < 2) return "/annouce <title> <message>";
