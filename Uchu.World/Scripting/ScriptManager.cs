@@ -39,7 +39,7 @@ namespace Uchu.World.Scripting
             
             var scriptPacks = new List<ScriptPack>();
             
-            foreach (var scriptPackPath in Zone.Server.Config.DllSource.ScriptDllSource)
+            foreach (var scriptPackPath in UchuServer.Config.DllSource.ScriptDllSource)
             {
                 try
                 {
@@ -68,7 +68,7 @@ namespace Uchu.World.Scripting
             
             ManagedScriptEngine.Init();
 
-            foreach (var script in Zone.Server.Config.ManagedScriptSources?.Scripts ?? new List<string>())
+            foreach (var script in UchuServer.Config.ManagedScriptSources?.Scripts ?? new List<string>())
             {
                 Logger.Information($"Loading {script} managed script pack");
                 

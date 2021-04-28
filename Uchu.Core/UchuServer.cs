@@ -65,7 +65,7 @@ namespace Uchu.Core
         /// <summary>
         /// Configuration file used to setup the server
         /// </summary>
-        public UchuConfiguration Config { get; private set; }
+        public static UchuConfiguration Config { get; private set; }
         
         /// <summary>
         /// The service used for Single Sign On (SSO)

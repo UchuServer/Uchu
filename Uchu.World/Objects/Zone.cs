@@ -224,7 +224,7 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadNavMeshes()
         {
-            NavMeshManager = new NavMeshManager(this, Server.Config.GamePlay.PathFinding);
+            NavMeshManager = new NavMeshManager(this, UchuServer.Config.GamePlay.PathFinding);
             if (NavMeshManager.Enabled)
             {
                 Logger.Information("Generating navigation way points.");

@@ -10,6 +10,11 @@ namespace Uchu.Core.Config
     public class UchuConfiguration
     {
         /// <summary>
+        /// Name of the server. Used as author name for achievement reward mails.
+        /// </summary>
+        [XmlElement] public string ServerName { get; set; } = "LEGO Universe";
+
+        /// <summary>
         /// Database configuration like provider, host and credentials
         /// </summary>
         [XmlElement]

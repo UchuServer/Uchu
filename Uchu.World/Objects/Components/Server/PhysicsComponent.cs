@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Numerics;
+using Uchu.Core;
 using Uchu.Physics;
 
 namespace Uchu.World
@@ -53,8 +55,58 @@ namespace Uchu.World
             physics.Associate = this;
 
             physics.OnCollision = HandleCollision;
-            
+
             Physics = physics;
+
+            // This is for POIs with a POI key in the settings, used for example everywhere in AG except for
+            // Monument Orange Path (AG_Mon_3).
+            // Not all POIs are handled this way, for example those in GF are done using triggers.
+            if (GameObject.Settings.TryGetValue("POI", out var poiGroup))
+            {
+                Logger.Information($"Registered POI location {poiGroup}");
+
+                Listen(GameObject.GetComponent<PhysicsComponent>().OnEnter, async component =>
+                {
+                    if (!(component.GameObject is Player player)) return;
+
+                    Logger.Debug($"{player.Name} entered {(string) poiGroup}");
+
+                    var inventory = player.GetComponent<MissionInventoryComponent>();
+                    await inventory.DiscoverAsync((string) poiGroup);
+                });
+            }
+        }
+
+        public void SetPhysicsByPath(string path) // We can't read HKX so this is basically just a bodge
+        {
+            path ??= "";
+
+            path = path.ToLower();
+            PhysicsObject finalObject = null;
+
+            if (path.Contains("misc_phys_10x1x5"))
+            {
+                // 10 x 5 x 1, the file name is messed up this is correct
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(10, 5, 1) * GameObject.Transform.Scale);
+            }
+            else if (path.Contains("misc_phys_640x640"))
+            {
+                // 640 x 1 x 640
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(640, 640, 12.5f) * GameObject.Transform.Scale);
+            }
+            else if (path.Contains("trigger_wall_tall"))
+            {
+                // 20 x 50 x 1
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(20, 50, 1) * GameObject.Transform.Scale);
+            }
+            else
+            {
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, Vector3.One * 4 * GameObject.Transform.Scale);
+            }
+
+            SetPhysics(finalObject);
+
+            Logger.Information($"Loaded physics object {path}");
         }
 
         private void Early()

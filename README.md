@@ -78,7 +78,7 @@ You can download git from [the official website](https://git-scm.com/).
 You can append `--depth 1` to the following command if you don't care about commit history and/or have slow internet.
 
 ```
-git clone https://github.com/UchuServer/Uchu --recursive -b master
+git clone https://github.com/UchuServer/Uchu --recursive -b dev
 ```
 
 #### Building
