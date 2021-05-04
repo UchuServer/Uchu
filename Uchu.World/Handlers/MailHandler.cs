@@ -40,6 +40,7 @@ namespace Uchu.World.Handlers
                     await ReadHandler(packet.MailStruct as MailRead, player);
                     break;
                 case ClientMailPacketId.NotificationRequest:
+                    await NotificationRequestHandler(player);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
