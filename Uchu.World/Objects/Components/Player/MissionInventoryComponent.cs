@@ -706,7 +706,7 @@ namespace Uchu.World
 
                 if (progress == null) continue;
 
-                foreach (var task in mission.Tasks.Where(t => t.TargetString == targetGroup))
+                foreach (var task in mission.Tasks)
                 {
                     await progress(task as T);
                 }
@@ -733,7 +733,7 @@ namespace Uchu.World
 
                 if (progress == null) continue;
 
-                foreach (var task in mission.Tasks.Where(t => t.Targets.Contains(lot)))
+                foreach (var task in mission.Tasks)
                 {
                     await progress(task as T);
                 }
