@@ -710,9 +710,6 @@ namespace Uchu.World
                 {
                     await progress(task as T);
                 }
-                // // For achievements there's always only one task
-                // if (progress != null)
-                //     await progress(mission.Tasks.First() as T);
             }
         }
 
@@ -738,7 +735,6 @@ namespace Uchu.World
 
                 foreach (var task in mission.Tasks.Where(t => t.Targets.Contains(lot)))
                 {
-                    Logger.Information($"## task {task}");
                     await progress(task as T);
                 }
             }

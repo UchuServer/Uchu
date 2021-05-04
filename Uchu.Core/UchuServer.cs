@@ -163,7 +163,6 @@ namespace Uchu.Core
 
             foreach (var handlerInfo in group.Values.Where(handlerInfo => level >= handlerInfo.GameMasterLevel))
             {
-                // if (!handlerInfo.ConsoleCommand) continue;
                 help.AppendLine($"{prefix}{handlerInfo.Signature} \n" +
                                 $"      {handlerInfo.Help}");
             }
