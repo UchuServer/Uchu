@@ -11,12 +11,33 @@ namespace Uchu.Core.Handlers.Commands
 {
     public class ServerStatusCommandHandler : HandlerGroup
     {
-        [CommandHandler(Signature = "stop", Help = "Stops the server")]
-        public async Task StopServer()
+        [CommandHandler(Signature = "shutdown", Help = "Shuts down the server")]
+        public void ShutdownServer(string[] arguments)
         {
-            await UchuServer.Api.RunCommandAsync<BaseResponse>(
-                UchuServer.MasterApi, $"master/decommission?i={UchuServer.Id}"
-            ).ConfigureAwait(false);
+            int delayMinutes = 0;
+
+            if (arguments.Length != 0 && int.TryParse(arguments[0], out var arg))
+            {
+                delayMinutes = arg;
+                Logger.Warning($"Shutting down in {delayMinutes} minute(s).");
+            }
+
+            string[] broadcastText = {"Server shutting down", $"The server will be shutting down in {delayMinutes} minute(s)."};
+
+            if (arguments.Length == 3)
+            {
+                broadcastText[0] = arguments[1];
+                broadcastText[1] = arguments[2];
+            }
+
+            Task.Run(async () =>
+            {
+                await Broadcast(broadcastText).ConfigureAwait(false);
+                await Task.Delay(delayMinutes * 60 * 1000).ConfigureAwait(false);
+                await UchuServer.Api.RunCommandAsync<BaseResponse>(
+                    UchuServer.MasterApi, $"master/decommission?message=Shut down server."
+                ).ConfigureAwait(false);
+            });
         }
 
         [CommandHandler(Signature = "adduser", Help = "Add a user")]
@@ -262,7 +283,7 @@ namespace Uchu.Core.Handlers.Commands
             return $"Successfully rejected \"{selectedCharacter.CustomName}\"!";
         }
 
-        [CommandHandler(Signature = "gamemaster", Help = "Set Game Master level for user")]
+        [CommandHandler(Signature = "gamemaster", Help = "Set Game Master level for user", GameMasterLevel = GameMasterLevel.Admin)]
         [SuppressMessage("ReSharper", "CA2000")]
         public static async Task<string> SetGameMasterLevel(string[] arguments)
         {
@@ -298,6 +319,34 @@ namespace Uchu.Core.Handlers.Commands
 
             return$"Successfully set {user.Username}'s Game Master " +
                   $"level to {(GameMasterLevel) user.GameMasterLevel}";
+        }
+
+        [CommandHandler(Signature = "broadcast", Help = "Send an announcement to all players in all worlds",
+            GameMasterLevel = GameMasterLevel.Admin)]
+        public async Task<string> Broadcast(string[] arguments)
+        {
+            if (arguments.Length < 2) return "/broadcast <title> <message>";
+
+            var args = arguments.ToList();
+
+            var title = args[0];
+
+            args.RemoveAt(0);
+
+            var message = string.Join(" ", args);
+
+            var instanceListResponse = await UchuServer.Api.RunCommandAsync<InstanceListResponse>(
+                UchuServer.MasterApi, $"instance/list"
+            ).ConfigureAwait(false);
+
+            foreach (var instance in instanceListResponse.Instances.Where(i => i.Type == (int) ServerType.World))
+            {
+                await UchuServer.Api.RunCommandAsync<BaseResponse>(instance.ApiPort,
+                    $"world/announce?title={title}&message={message}"
+                    ).ConfigureAwait(false);
+            }
+
+            return $"Sent announcement with title \"{title}\" and message \"{message}\"";
         }
 
         private static string GetPassword()

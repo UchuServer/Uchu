@@ -62,7 +62,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "remove", Help = "Remove an item from yourself",
-            GameMasterLevel = GameMasterLevel.Admin)]
+            GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> RemoveItem(string[] arguments, Player player)
         {
             if (arguments.Length == 0 || arguments.Length > 2) return "remove <lot> <count(optional)>";
@@ -205,6 +205,9 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "freecam", Help = "Fly around in a free camera. Initial positon is at 0, 0, 0.", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
         {
+            if (arguments.Length == 0)
+                return "Usage: /freecam <on/off>";
+
             switch (arguments[0].ToLower())
             {
                 case "true":
@@ -228,56 +231,75 @@ namespace Uchu.World.Handlers.Commands
                     });
                     break;
                 default:
-                    return "Invalid <state(on/off)>";
+                    return "Usage: /freecam <on/off>";
             }
 
             return "Toggled freecam.";
         }
 
+        [CommandHandler(Signature = "dab", Help = "dab", GameMasterLevel = GameMasterLevel.Player)]
+        public void Dab(string[] arguments, Player player)
+        {
+            player.Animate("cute-spin-exit");
+        }
+
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Fly(string[] arguments, Player player)
         {
-            if (arguments.Length != 1 && arguments.Length != 2) return "fly <state(on/off)>";
+            var doHover = arguments.Contains("hover");
 
-            float JetPackAirSpeed = 10;
-            float JetPackMaxAirSpeed = 15;
+            player.TryGetComponent<ControllablePhysicsComponent>(out var controllablePhysicsComponent);
 
-            bool state;
-            switch (arguments[0].ToLower())
+            if (arguments.Length == 0 || (arguments.Length == 1 && doHover))
             {
-                case "true":
-                case "on":
-                    state = true;
-                    break;
-                case "false":
-                case "off":
-                    state = false;
-                    break;
-                default:
-                    return "Invalid <state(on/off)>";
+                controllablePhysicsComponent.Flying = !controllablePhysicsComponent.Flying;
             }
-
-            if (arguments.Length == 2)
+            else if (arguments.Length >= 1)
             {
-                if (float.TryParse(arguments[1], out float Speed))
+                switch (arguments[0].ToLower())
                 {
-                    JetPackAirSpeed = Speed;
-                    JetPackMaxAirSpeed = Speed + 5;
+                    case "true":
+                    case "on":
+                        controllablePhysicsComponent.Flying = true;
+                        break;
+                    case "false":
+                    case "off":
+                        controllablePhysicsComponent.Flying = false;
+                        break;
+                    default:
+                        return "Invalid <state(on/off)>";
                 }
             }
 
+            if (arguments.Length == 2 || (arguments.Length == 3 && doHover))
+            {
+                if (float.TryParse(arguments[1], out float speed))
+                {
+                    controllablePhysicsComponent.JetPackAirSpeed = speed;
+                }
+            }
+
+            float jetPackMaxAirSpeed = controllablePhysicsComponent.JetPackAirSpeed + 5;
 
             player.Message(new SetJetPackModeMessage
             {
                 Associate = player,
                 BypassChecks = true,
-                Use = state,
+                Use = controllablePhysicsComponent.Flying,
+                DoHover = doHover,
                 EffectId = 36,
-                AirSpeed = JetPackAirSpeed,
-                MaxAirSpeed = JetPackMaxAirSpeed
+                AirSpeed = controllablePhysicsComponent.JetPackAirSpeed,
+                MaxAirSpeed = jetPackMaxAirSpeed
             });
 
-            return $"Toggled jetpack state: {state}";
+            return $"Toggled jetpack state: {controllablePhysicsComponent.Flying}";
+        }
+
+        [CommandHandler(Signature = "hover", Help = "Change hover state", GameMasterLevel = GameMasterLevel.Mythran)]
+        public string Hover(string[] arguments, Player player)
+        {
+            string[] hover = {"hover"};
+            return Fly(arguments.Concat(hover).ToArray(), player);
         }
 
         [CommandHandler(Signature = "group", Help = "Search for objects with group", GameMasterLevel = GameMasterLevel.Admin)]
@@ -682,7 +704,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Going to {position}";
         }
 
-        [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "animate", Help = "Perform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Animate(string[] arguments, Player player)
         {
             if (arguments.Length == default)
@@ -1003,7 +1025,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Set mailbox state to: {state}";
         }
 
-        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "announce", Help = "Send an announcement", GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> Announce(string[] arguments, Player player)
         {
             if (arguments.Length < 2) return "/annouce <title> <message>";

@@ -235,15 +235,12 @@ namespace Uchu.Master.Api
             return response;
         }
 
-        [ApiCommand("master/die")]
-        public void KillMaster(string error = "Fatal error; killing server.")
+        [ApiCommand("master/decommission")]
+        public async void KillMaster(string message = "Stopping server.")
         {
-            Logger.Error(error);
+            Logger.Error(message);
 
-            foreach (ServerInstance instance in MasterServer.Instances.ToList())
-            {
-                DecommissionInstance(instance.Id.ToString());
-            }
+            await Task.WhenAll(MasterServer.Instances.ToList().Select(instance => DecommissionInstance(instance.Id.ToString())));
             
             if (MasterServer.Config.ServerBehaviour.PressKeyToExit)
             {
@@ -255,7 +252,7 @@ namespace Uchu.Master.Api
         }
 
         [ApiCommand("instance/decommission")]
-        public object DecommissionInstance(string id)
+        public async Task<object> DecommissionInstance(string id)
         {
             var response = new BaseResponse();
             
@@ -276,7 +273,14 @@ namespace Uchu.Master.Api
 
                 return response;
             }
-            
+
+            if (instance.ServerType == ServerType.World)
+            {
+                await MasterServer.Api.RunCommandAsync<BaseResponse>(
+                    instance.ApiPort, "world/saveAndKick"
+                );
+            }
+
             instance.Process.Kill();
 
             instances.Remove(instance);
@@ -306,7 +310,7 @@ namespace Uchu.Master.Api
                 // The world server crashed, decommission it
                 if (playerInfo == null)
                 {
-                    DecommissionInstance(instance.Id.ToString());
+                    await DecommissionInstance(instance.Id.ToString());
                     continue;
                 }
 

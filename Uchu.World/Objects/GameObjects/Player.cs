@@ -263,7 +263,7 @@ namespace Uchu.World
         /// Whether this player is banned or not
         /// </summary>
         public bool Banned { get; private set; }
-        
+
         #endregion properties
 
         /// <summary>

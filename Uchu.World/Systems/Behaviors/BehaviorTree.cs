@@ -318,18 +318,7 @@ namespace Uchu.World.Systems.Behaviors
                 return null;
             }
 
-            var instance = (BehaviorBase) Activator.CreateInstance(behaviorType);
-            if (instance == default)
-            {
-                Logger.Error($"Could not create behaviour of type {behaviorType}.");
-                return null;
-            }
-            
-            instance.BehaviorId = info.BaseBehavior;
-            BehaviorBase.Cache.Add(instance);
-            
-            await instance.BuildAsync();
-            return instance;
+            return await BehaviorBase.BuildBranch(info.BaseBehavior);
         }
 
         /// <summary>

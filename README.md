@@ -12,7 +12,7 @@ Contributions are always welcome! Feel free to open pull requests or issues to h
 Uchu supports [Python scripting](https://github.com/UchuServer/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
 
 ## Releases
-Check out the [release page](https://github.com/UchuServer/Uchu/releases) for standalone binary releases of Uchu.
+Check out the [release page](https://github.com/UchuServer/Uchu/releases) for standalone binary releases of Uchu. **These currently are very outdated; many things in the game will not work. It is recommended to install from source from the time being.** (Read on for instructions)
 
 ## Prerequisites
 This project will be built and run using a CLI. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
