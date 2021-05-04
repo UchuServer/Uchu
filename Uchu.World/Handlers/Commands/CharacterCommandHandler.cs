@@ -704,7 +704,7 @@ namespace Uchu.World.Handlers.Commands
             return $"Going to {position}";
         }
 
-        [CommandHandler(Signature = "animate", Help = "Preform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
+        [CommandHandler(Signature = "animate", Help = "Perform an animation", GameMasterLevel = GameMasterLevel.Mythran)]
         public string Animate(string[] arguments, Player player)
         {
             if (arguments.Length == default)

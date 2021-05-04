@@ -320,6 +320,7 @@ namespace Uchu.Core.Handlers.Commands
             return$"Successfully set {user.Username}'s Game Master " +
                   $"level to {(GameMasterLevel) user.GameMasterLevel}";
         }
+
         [CommandHandler(Signature = "broadcast", Help = "Send an announcement to all players in all worlds",
             GameMasterLevel = GameMasterLevel.Admin)]
         public async Task<string> Broadcast(string[] arguments)

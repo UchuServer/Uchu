@@ -34,7 +34,7 @@ def load(): # called once when the script is loaded.
 
 def tick(): # called every server tick cycle. The server aims for this to be 20 times per second.
 
-    # Preform operations which should happen regularly here.
+    # Perform operations which should happen regularly here.
 
     pass
 

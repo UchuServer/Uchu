@@ -159,12 +159,13 @@ namespace Uchu.Core
             GameMasterLevel level)
         {
             var help = new StringBuilder();
+            help.AppendLine("Available commands:");
+
             foreach (var handlerInfo in group.Values.Where(handlerInfo => level >= handlerInfo.GameMasterLevel))
             {
-                if (!handlerInfo.ConsoleCommand) continue;
-                help.AppendLine($"{prefix}{handlerInfo.Signature}" +
-                                $"{(string.Concat(Enumerable.Repeat(" ", 20 - handlerInfo.Signature.Length)))}" +
-                                $"{handlerInfo.Help}");
+                // if (!handlerInfo.ConsoleCommand) continue;
+                help.AppendLine($"{prefix}{handlerInfo.Signature} \n" +
+                                $"      {handlerInfo.Help}");
             }
 
             return help.ToString();
@@ -551,10 +552,15 @@ namespace Uchu.Core
             // If the command can't be found, display help message
             if (!group.TryGetValue(arguments[0].ToLower(CultureInfo.CurrentCulture), out var handler))
             {
-                return GenerateCommandHelpMessage(prefix, group, gameMasterLevel);
+                if (arguments[0].ToLower(CultureInfo.CurrentCulture) == "help")
+                    return GenerateCommandHelpMessage(prefix, group, gameMasterLevel);
+
+                return "Unknown command. Type /help for a list of commands.";
             }
 
-            if (gameMasterLevel < handler.GameMasterLevel) return "You don't have permission to run this command";
+            if (gameMasterLevel < handler.GameMasterLevel)
+                return "You don't have permission to run this command";
+
             arguments.RemoveAt(0);
 
             // Determine how to call the task handler based on the amount of arguments
