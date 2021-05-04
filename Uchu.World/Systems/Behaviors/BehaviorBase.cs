@@ -232,7 +232,7 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         /// <param name="behaviorId">The behavior to build</param>
         /// <returns>The built behavior base for the given id</returns>
-        private static async Task<BehaviorBase> BuildBranch(int behaviorId)
+        public static async Task<BehaviorBase> BuildBranch(int behaviorId)
         {
             var cachedBehavior = Cache.ToArray().FirstOrDefault(c => c.BehaviorId == behaviorId);
             if (cachedBehavior != default) return cachedBehavior;

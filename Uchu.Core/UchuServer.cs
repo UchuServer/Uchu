@@ -155,16 +155,16 @@ namespace Uchu.Core
         /// <param name="group">The group to get commands from</param>
         /// <param name="level">The gamemaster level to determine which commands to show</param>
         /// <returns>A string that represents the help message</returns>
-        private static string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group, 
+        private static string GenerateCommandHelpMessage(char prefix, Dictionary<string, CommandHandler> group,
             GameMasterLevel level)
         {
             var help = new StringBuilder();
+            help.AppendLine("Available commands:");
+
             foreach (var handlerInfo in group.Values.Where(handlerInfo => level >= handlerInfo.GameMasterLevel))
             {
-                if (!handlerInfo.ConsoleCommand) continue;
-                help.AppendLine($"{prefix}{handlerInfo.Signature}" +
-                                $"{(string.Concat(Enumerable.Repeat(" ", 20 - handlerInfo.Signature.Length)))}" +
-                                $"{handlerInfo.Help}");
+                help.AppendLine($"{prefix}{handlerInfo.Signature} \n" +
+                                $"      {handlerInfo.Help}");
             }
 
             return help.ToString();
@@ -540,15 +540,26 @@ namespace Uchu.Core
             command = command.Remove(0, 1);
             Logger.Information($"EXEC: {command}");
             
-            var arguments = command.Split(' ').ToList();
-            
-            // If the command can't be found, display helpmessage
+            // Split arguments at spaces, preserving "groups enclosed in quotes" as a single argument.
+            var arguments = command.Split('"')
+                .Select((element, index) => index % 2 == 0 // If number of " seen is even, it's not between quotes
+                    ? element.Split(' ', StringSplitOptions.RemoveEmptyEntries) // Split item at spaces
+                    : new string[] {element}) // Keep the entire item
+                .SelectMany(args => args)
+                .ToList();
+
+            // If the command can't be found, display help message
             if (!group.TryGetValue(arguments[0].ToLower(CultureInfo.CurrentCulture), out var handler))
             {
-                return author != null ? GenerateCommandHelpMessage(prefix, group, gameMasterLevel) : string.Empty;
+                if (arguments[0].ToLower(CultureInfo.CurrentCulture) == "help")
+                    return GenerateCommandHelpMessage(prefix, group, gameMasterLevel);
+
+                return "Unknown command. Type /help for a list of commands.";
             }
 
-            if (gameMasterLevel < handler.GameMasterLevel) return "You don't have permission to run this command";
+            if (gameMasterLevel < handler.GameMasterLevel)
+                return "You don't have permission to run this command";
+
             arguments.RemoveAt(0);
 
             // Determine how to call the task handler based on the amount of arguments

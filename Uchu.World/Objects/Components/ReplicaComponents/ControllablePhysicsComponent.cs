@@ -7,6 +7,10 @@ namespace Uchu.World
     {
         public uint JetpackEffectId { get; set; }
 
+        public bool Flying { get; set; }
+
+        public float JetPackAirSpeed { get; set; } = 10;
+
         public bool HasPosition { get; set; } = true;
 
         public bool IsOnGround { get; set; } = true;
@@ -40,7 +44,7 @@ namespace Uchu.World
             if (hasJetpackEffect)
             {
                 writer.Write(JetpackEffectId);
-                writer.WriteBit(false); // Is flying?
+                writer.WriteBit(Flying);
                 writer.WriteBit(false); // Bypass Checks?
             }
 
