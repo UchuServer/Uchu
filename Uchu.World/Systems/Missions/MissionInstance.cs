@@ -499,6 +499,16 @@ namespace Uchu.World.Systems.Missions
             CompletionCount++; 
             
             MessageNotifyMission();
+
+            foreach (var item in Tasks)
+            {
+                if (item.Type != MissionTaskType.ObtainItem) continue;
+                if (item.Parameters.Length == 0 || (item.Parameters[0] & 1) == 0)
+                {
+                    if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventory)) continue;
+                    await inventory.RemoveLotAsync(item.Target, (uint) item.RequiredProgress);
+                }
+            }
             
             if (!Player.TryGetComponent<MissionInventoryComponent>(out var missionInventory)) 
                 return;
