@@ -62,7 +62,7 @@ namespace Uchu.World.Handlers.Commands
         }
 
         [CommandHandler(Signature = "remove", Help = "Remove an item from yourself",
-            GameMasterLevel = GameMasterLevel.Admin)]
+            GameMasterLevel = GameMasterLevel.Mythran)]
         public async Task<string> RemoveItem(string[] arguments, Player player)
         {
             if (arguments.Length == 0 || arguments.Length > 2) return "remove <lot> <count(optional)>";
