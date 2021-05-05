@@ -110,6 +110,9 @@ namespace Uchu.World
                 throw new Exception($"Failed to find info for {(ZoneId) zoneId}");
             }
 
+            // Ensure the correct Zone ID is used later on, this differs from the value in the .luz for eg. Moonbase and Deep Freeze
+            info.LuzFile.WorldId = (ZoneId) zoneId;
+
             // TODO instance / clone
             var zone = new Zone(info, this, 0, 0);
             Zones.Add(zone);
