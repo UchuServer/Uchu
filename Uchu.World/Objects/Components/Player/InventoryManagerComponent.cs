@@ -320,9 +320,11 @@ namespace Uchu.World
         ///     implicitly retrieved from the item lot, generally used for vendor buy back</param>
         /// <param name="rootItem">An optional parent item</param>
         /// <param name="lootType">The reason this lot is given to the player</param>
+        /// <param name="showFlyingLoot">Whether to show flying loot animation</param>
         /// <returns>The list of items that were created while adding the lot</returns>
         public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
-            InventoryType inventoryType = default, Item rootItem = default, LootType lootType = default)
+            InventoryType inventoryType = default, Item rootItem = default, LootType lootType = default,
+            bool showFlyingLoot = true)
         {
             var createdItems = new List<Item>();
             
@@ -388,7 +390,7 @@ namespace Uchu.World
                     if (item != null)
                     {
                         Start(item);
-                        item.MessageCreation();
+                        item.MessageCreation(showFlyingLoot);
                         createdItems.Add(item);
                     }
                     // Might occur if the inventory is full or an error occured during slot claiming
@@ -593,14 +595,15 @@ namespace Uchu.World
         /// <param name="source">The source inventory to move from</param>
         /// <param name="destination">The destination inventory to move to</param>
         /// <param name="silent">Whether to send inventory update messages or not</param>
+        /// <param name="showFlyingLoot">Whether to show flying loot animation</param>
         public async Task MoveItemBetweenInventoriesAsync(Item item, uint count, InventoryType source,
-            InventoryType destination, bool silent = false)
+            InventoryType destination, bool silent = false, bool showFlyingLoot = false)
         {
             if (item == null)
                 return;
 
             await RemoveItemAsync(item, count, source, silent);
-            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory); // TODO find out if this is correct (what's LootType.Relocate?)
+            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory, showFlyingLoot: showFlyingLoot); // TODO: find out if lootType is correct (what's LootType.Relocate?)
         }
         
         #endregion methods

@@ -6,6 +6,19 @@ namespace Uchu.World.Handlers.GameMessages
     public class InventoryHandler : HandlerGroup
     {
         [PacketHandler]
+        public async void RequestMoveBetweenInventoriesHandler(RequestMoveItemBetweenInventoryTypesMessage message, Player player)
+        {
+            var inventoryManager = message.Item.Inventory.ManagerComponent;
+            if (inventoryManager.GameObject != player)
+                return;
+
+            await inventoryManager.MoveItemBetweenInventoriesAsync(message.Item, message.Count, message.Source,
+                message.Destination, showFlyingLoot: message.ShowFlyingLoot);
+
+            // TODO: show animation dropping item out of the vault (https://youtu.be/hJl8WvLz6rM?t=660)
+        }
+
+        [PacketHandler]
         public void ItemMovementHandler(MoveItemInInventoryMessage message, Player player)
         {
             var inventoryManager = message.Item.Inventory.ManagerComponent;

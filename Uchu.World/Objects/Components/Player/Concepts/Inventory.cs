@@ -31,7 +31,20 @@ namespace Uchu.World
 
             if (managerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character))
             {
-                Size = inventoryType != InventoryType.Items ? 1000 : character.InventorySize;
+                switch (inventoryType)
+                {
+                    case InventoryType.Items:
+                        Size = character.InventorySize;
+                        break;
+                    case InventoryType.VaultItems:
+                    case InventoryType.VaultModels:
+                        // TODO: have this be in the character component as well to enable changing & saving it
+                        Size = 40;
+                        break;
+                    default:
+                        Size = 1000;
+                        break;
+                }
             }
         }
         #endregion constructors
@@ -71,6 +84,7 @@ namespace Uchu.World
                 if (InventoryType == InventoryType.Items
                     && ManagerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character))
                     character.InventorySize = value;
+                // TODO: also store size for VaultItems/VaultModels
                 
                 _size = value;
 
