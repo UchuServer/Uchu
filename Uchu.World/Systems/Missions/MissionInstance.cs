@@ -602,10 +602,13 @@ namespace Uchu.World.Systems.Missions
             stats.BoostBaseHealth((uint) RewardMaxHealth);
             stats.BoostBaseImagination((uint) RewardMaxImagination);
 
+            // Increase Vault inventory size if vault exists. TODO: use only one variable for this
             if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventory))
                 return;
-
-            inventory[InventoryType.VaultItems].Size += RewardBankInventory;
+            if (inventory[InventoryType.VaultItems] != default)
+                inventory[InventoryType.VaultItems].Size += RewardBankInventory;
+            if (inventory[InventoryType.VaultModels] != default)
+                inventory[InventoryType.VaultModels].Size += RewardBankInventory;
         }
 
         /// <summary>
