@@ -71,6 +71,9 @@ namespace Uchu.World
 
                 var inventoryTypesToCreate = playerCharacter.Items
                     .Select(i => (InventoryType) i.InventoryType)
+                    .Append(InventoryType.Items)       //
+                    .Append(InventoryType.VaultItems)  // These 3 need to be available to be able to increase their Size
+                    .Append(InventoryType.VaultModels) //
                     .Distinct();
                 
                 // Load all the already owned items of the player

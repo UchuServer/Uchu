@@ -96,6 +96,7 @@ namespace Uchu.World
             LaunchedRocketFrom = character.LaunchedRocketFrom;
             CharacterId = character.Id;
             InventorySize = character.InventorySize;
+            VaultInventorySize = character.VaultInventorySize;
             Lh = character.Lh;
             Rh = character.Rh;
             Name = character.Name;
@@ -161,6 +162,7 @@ namespace Uchu.World
             character.Rocket = Rocket;
             character.LaunchedRocketFrom = LaunchedRocketFrom;
             character.InventorySize = InventorySize;
+            character.VaultInventorySize = VaultInventorySize;
             character.Lh = Lh;
             character.Rh = Rh;
             character.Name = Name;
@@ -209,6 +211,7 @@ namespace Uchu.World
         public string Name { get; private set; }
         public long CharacterId { get; private set; }
         public int InventorySize { get; set; }
+        public int VaultInventorySize { get; set; }
         public int BaseImagination { get; set; }
         public int BaseHealth { get; set; }
         public string Rocket { get; set; }
