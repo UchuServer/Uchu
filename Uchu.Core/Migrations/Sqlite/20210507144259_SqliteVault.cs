@@ -38,7 +38,7 @@ namespace Uchu.Core.Migrations.Sqlite
                 table: "Characters",
                 type: "INTEGER",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 40);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

@@ -7,33 +7,6 @@ namespace Uchu.Core.Migrations.MySql
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "InventoryItems",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .OldAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-            //
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "Guilds",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .OldAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-            //
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "Characters",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .OldAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-
             migrationBuilder.AddColumn<int>(
                 name: "VaultInventorySize",
                 table: "Characters",
@@ -47,33 +20,6 @@ namespace Uchu.Core.Migrations.MySql
             migrationBuilder.DropColumn(
                 name: "VaultInventorySize",
                 table: "Characters");
-
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "InventoryItems",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-            //
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "Guilds",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-            //
-            // migrationBuilder.AlterColumn<long>(
-            //     name: "Id",
-            //     table: "Characters",
-            //     type: "bigint",
-            //     nullable: false,
-            //     oldClrType: typeof(long),
-            //     oldType: "bigint")
-            //     .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
         }
     }
 }
