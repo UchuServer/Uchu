@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using RakDotNet.IO;
@@ -159,8 +160,11 @@ namespace Uchu.World
 
             });
 
-            // TODO: wait for ClientRailMovementReady
+            // Wait for ClientRailMovementReady
+            Delegate clientReady = null;
+            clientReady = Listen(player.OnRailMovementReady, () =>
             {
+                ReleaseListener(clientReady);
                 // Start: "Loop" animation
                 player.Message(new PlayAnimationMessage
                 {
@@ -191,13 +195,13 @@ namespace Uchu.World
                     RailActivator = GameObject,
                     RailActivatorComponent = RailActivatorComponentId,
                 });
-            }
+            });
 
-            // TODO: should wait for CancelRailMovement here, this delay is a temp workaround
-            Task.Run(async () =>
+            // Wait for CancelRailMovement
+            Delegate clientFinished = null;
+            clientFinished = Listen(player.OnCancelRailMovement, () =>
             {
-                await Task.Delay(5000);
-
+                ReleaseListener(clientFinished);
                 // Stop: "During" effect
                 player.Message(new StopFXEffectMessage
                 {
