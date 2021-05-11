@@ -18,21 +18,29 @@ namespace Uchu.StandardScripts.NinjagoMonastery
 
                 Listen(missionInventory.OnCompleteMission, instance =>
                 {
-                    if (instance.MissionId == 1796) // Cole mission (Earth)
-                        characterComponent.SetFlagAsync(2030, true);
-                    // source: https://lu.lcdruniverse.org/explorer/missions/2053
-
-                    if (instance.MissionId == 1952) // Jay mission (Lightning)
-                        characterComponent.SetFlagAsync(2031, true);
-                    // source: https://lu.lcdruniverse.org/explorer/missions/2054
-
-                    if (instance.MissionId == 1959) // Zane mission (Ice)
-                        characterComponent.SetFlagAsync(2032, true);
-                    // source: https://lu.lcdruniverse.org/explorer/missions/2055
-
-                    if (instance.MissionId == 1962) // Kai mission (Fire)
-                        characterComponent.SetFlagAsync(2033, true);
-                    // source: https://lu.lcdruniverse.org/explorer/missions/2056
+                    switch (instance.MissionId)
+                    {
+                        // Cole mission (Earth)
+                        case 1796:
+                            characterComponent.SetFlagAsync(2030, true);
+                            // source: https://lu.lcdruniverse.org/explorer/missions/2053
+                            break;
+                        // Jay mission (Lightning)
+                        case 1952:
+                            characterComponent.SetFlagAsync(2031, true);
+                            // source: https://lu.lcdruniverse.org/explorer/missions/2054
+                            break;
+                        // Zane mission (Ice)
+                        case 1959:
+                            characterComponent.SetFlagAsync(2032, true);
+                            // source: https://lu.lcdruniverse.org/explorer/missions/2055
+                            break;
+                        // Kai mission (Fire)
+                        case 1962:
+                            characterComponent.SetFlagAsync(2033, true);
+                            // source: https://lu.lcdruniverse.org/explorer/missions/2056
+                            break;
+                    }
                 });
             });
 
