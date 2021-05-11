@@ -118,7 +118,7 @@ namespace Uchu.World.Objects
                 // Make sure that the item set is valid and that the inventory doesn't already track an item set with this ID
                 if (clientItemSet.SetID == null
                     || inventory.ActiveItemSets.Any(i => i._setId == clientItemSet.SetID.Value))
-                    return;
+                    continue;
 
                 var itemSet = Instantiate(inventory, clientItemSet.SetID.Value);
                 Start(itemSet);
