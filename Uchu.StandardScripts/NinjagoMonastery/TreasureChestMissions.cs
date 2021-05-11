@@ -29,23 +29,23 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                         await inventory.AddLotAsync(14552, 1); // Earth Ninja kit
                     }
                     // Lightning
-                    if (missionInventory.HasActiveForItem(16496))
+                    else if (missionInventory.HasActiveForItem(16496))
                     {
                         await inventory.RemoveLotAsync(14489, 1); // Lightning Key
                         await inventory.AddLotAsync(16496, 1); // Lightning Ninja kit
                     }
                     // Ice
-                    if (missionInventory.HasActiveForItem(16498))
+                    else if (missionInventory.HasActiveForItem(16498))
                     {
                         await inventory.RemoveLotAsync(14488, 1); // Ice Key
                         await inventory.AddLotAsync(16498, 1); // Ice Ninja kit
-
+                    }
                     // Fire
-                    if (missionInventory.HasActiveForItem(16497))
+                    else if (missionInventory.HasActiveForItem(16497))
                     {
                         await inventory.RemoveLotAsync(14487, 1); // Fire Key
                         await inventory.AddLotAsync(16497, 1); // Fire Ninja kit
-                    }}
+                    }
                 });
             }
 
