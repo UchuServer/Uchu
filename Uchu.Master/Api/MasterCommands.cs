@@ -274,13 +274,6 @@ namespace Uchu.Master.Api
                 return response;
             }
 
-            if (instance.ServerType == ServerType.World)
-            {
-                await MasterServer.Api.RunCommandAsync<BaseResponse>(
-                    instance.ApiPort, "world/saveAndKick"
-                );
-            }
-
             instance.Process.Kill();
 
             instances.Remove(instance);
