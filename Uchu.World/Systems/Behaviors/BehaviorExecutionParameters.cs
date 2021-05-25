@@ -118,10 +118,10 @@ namespace Uchu.World.Systems.Behaviors
                 return;
 
             // Play the effect and schedule it's completion
-            target.PlayFX(fx.EffectName, fx.EffectType, effectId, excludeTarget ? (Player) target : null);
+            target.PlayFX(fx.EffectName, fx.EffectType, effectId, excludeTarget ? target as Player : null);
             Schedule(() =>
             {
-                target.StopFX(fx.EffectName, excluded: excludeTarget ? (Player) target : null);
+                target.StopFX(fx.EffectName, excluded: excludeTarget ? target as Player : null);
             }, time);
         }
     }
