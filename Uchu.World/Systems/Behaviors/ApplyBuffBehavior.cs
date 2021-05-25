@@ -12,7 +12,6 @@ namespace Uchu.World.Systems.Behaviors
 
         public override async Task BuildAsync()
         {
-            Logger.Debug($"Building Buff id {_buffInfo.BuffId}");
             _targetCaster = await GetParameter<bool>("target_caster");
             // Although there is a parameter called add_immunity,
             // no behavior has this set to anything other than 0
@@ -30,6 +29,7 @@ namespace Uchu.World.Systems.Behaviors
                 DurationSecs = await GetParameter<uint>("duration_secs"),
             };
             // TODO: apply on teammates
+            Logger.Debug($"Building Buff id {_buffInfo.BuffId}");
         }
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
