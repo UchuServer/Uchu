@@ -116,6 +116,9 @@ namespace Uchu.World
         private void OnInteract(Player player)
         {
             Logger.Information($"Path: {Path}, Start: {PathStart}, Direction: {PathDirection}");
+            if (GameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent)
+                && quickBuildComponent.State != RebuildState.Completed)
+                return;
 
             // Start: "Begin" effect
             if (StartEffectId != null)
