@@ -295,7 +295,7 @@ namespace Uchu.World
                 spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
                 {
                     Position = w.Position,
-                    Rotation = Quaternion.Identity
+                    Rotation = ((LuzSpawnerWaypoint) w).Rotation,
                 }).ToList();
 
                 Start(obj);
