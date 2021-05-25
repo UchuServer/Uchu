@@ -98,6 +98,8 @@ namespace Uchu.World
 
         public Event<int, Player> OnEmoteReceived { get; }
 
+        public Event<GameObject> OnSkillEvent { get; }
+
         #endregion
         
         #region Macro
@@ -121,9 +123,11 @@ namespace Uchu.World
             OnLayerChanged = new Event<Mask>();
             
             OnInteract = new Event<Player>();
-            
+
             OnEmoteReceived = new Event<int, Player>();
-            
+
+            OnSkillEvent = new Event<GameObject>();
+
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);
