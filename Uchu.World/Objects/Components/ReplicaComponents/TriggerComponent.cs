@@ -151,9 +151,25 @@ namespace Uchu.World
                 case "updateMission":
                     UpdateMission(command, arguments);
                     break;
+                case "DestroySpawnerNetworkObjects":
+                    DestroySpawnerNetworkObjects(command, arguments);
+                    break;
             }
 
             GameObject.Serialize(GameObject);
+        }
+
+        private void DestroySpawnerNetworkObjects(TriggerCommand command, params object[] arguments)
+        {
+            var name = command.Arguments;
+            var networks = Zone.GameObjects.Where(o => o.Name == name);
+            foreach (var networkObject in networks.ToArray())
+            {
+                foreach (var spawn in networkObject.GetComponent<SpawnerComponent>().ActiveSpawns.ToArray())
+                    Destroy(spawn);
+
+                Destroy(networkObject);
+            }
         }
 
         private void UpdateMission(TriggerCommand command, params object[] arguments)
