@@ -1,4 +1,5 @@
 using System.Numerics;
+using InfectedRose.Lvl;
 
 namespace Uchu.World
 {
@@ -9,5 +10,7 @@ namespace Uchu.World
         public Quaternion Rotation { get; set; }
             
         public bool InUse { get; set; }
+
+        public LegoDataDictionary Config { get; set; }
     }
 }

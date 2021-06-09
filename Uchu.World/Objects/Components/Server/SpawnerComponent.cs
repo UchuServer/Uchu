@@ -64,6 +64,11 @@ namespace Uchu.World
                     });
                 }
 
+                Listen(OnRespawnTimeCompleted, player =>
+                {
+                    Spawn();
+                });
+
                 GameObject.Layer = StandardLayer.Spawner;
             });
 
@@ -86,7 +91,7 @@ namespace Uchu.World
                 Position = location.Position,
                 Rotation = location.Rotation,
                 Scale = LevelObject.Scale,
-                LegoInfo = Settings,
+                LegoInfo = location.Config ?? Settings,
                 ObjectId = ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
             };
             
@@ -142,8 +147,6 @@ namespace Uchu.World
                     await OnRespawnInitiated.InvokeAsync(lootOwner);
                     await Task.Delay(RespawnTime);
                     await OnRespawnTimeCompleted.InvokeAsync(lootOwner);
-                    
-                    Spawn();
                 });
             }
 

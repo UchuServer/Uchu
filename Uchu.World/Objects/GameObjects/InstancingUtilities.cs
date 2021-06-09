@@ -43,6 +43,9 @@ namespace Uchu.World
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
             spawnerComponent.LevelObject = levelObject;
 
+            if (levelObject.LegoInfo.TryGetValue("respawn", out var respawnTime))
+                spawnerComponent.RespawnTime = Convert.ToInt32((float) respawnTime * 1000);
+
             levelObject.LegoInfo.Remove("spawntemplate");
 
             return instance;
