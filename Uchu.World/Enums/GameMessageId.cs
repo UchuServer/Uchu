@@ -285,6 +285,7 @@ namespace Uchu.World
         ServerDoneLoadingAllObjects = 0x66a,
         AddBuff = 0x66f,
         RemoveBuff = 0x670,
+        RequestMoveItemBetweenInventoryTypes = 0x682,
         PlayerSetCameraCyclingMode = 0x68c,
         SetMountInventoryID = 0x6be,
         NotifyServerLevelProcessingComplete = 0x6c6,

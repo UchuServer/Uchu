@@ -179,6 +179,12 @@ namespace Uchu.World.Systems.Missions
         /// The amount of fourth item that's rewarded once the mission is completed more than once
         /// </summary>
         public int RewardItem4RepeatableCount { get; private set; }
+
+        /// <summary>
+        /// Additional space in the vault
+        /// </summary>
+        public int RewardBankInventory { get; private set; }
+
         #endregion template
         
         /// <summary>
@@ -346,6 +352,9 @@ namespace Uchu.World.Systems.Missions
             RewardItem4Count = mission.Rewarditem4count ?? 1;
             RewardItem4Repeatable = mission.Rewarditem4repeatable ?? 0;
             RewardItem4RepeatableCount = mission.Rewarditem4repeatcount ?? 1;
+
+            // Optional increment for vault inventory size
+            RewardBankInventory = mission.Rewardbankinventory ?? 0;
 
             var tasks = (await ClientCache.GetTableAsync<MissionTasks>()).Where(
                 t => t.Id == MissionId
@@ -606,6 +615,8 @@ namespace Uchu.World.Systems.Missions
                 return;
             
             inventory[InventoryType.Items].Size += Repeat ? 0 : RewardMaxInventory;
+            // This increases the space for both VaultItems and VaultModels
+            inventory[InventoryType.VaultItems].Size += RewardBankInventory;
             
             var rewards = new (Lot, int)[]
             {

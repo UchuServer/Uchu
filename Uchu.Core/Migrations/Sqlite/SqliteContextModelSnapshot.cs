@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Uchu.Core.Providers;
 
 namespace Uchu.Core.Migrations.Sqlite
@@ -13,141 +14,206 @@ namespace Uchu.Core.Migrations.Sqlite
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "5.0.5");
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("BaseHealth");
+                    b.Property<int>("BaseHealth")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("BaseImagination");
+                    b.Property<int>("BaseImagination")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Currency");
+                    b.Property<long>("Currency")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("CurrentArmor");
+                    b.Property<int>("CurrentArmor")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("CurrentHealth");
+                    b.Property<int>("CurrentHealth")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("CurrentImagination");
+                    b.Property<int>("CurrentImagination")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CustomName")
                         .IsRequired()
-                        .HasMaxLength(33);
+                        .HasMaxLength(33)
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("EyeStyle");
+                    b.Property<long>("EyeStyle")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("EyebrowStyle");
+                    b.Property<long>("EyebrowStyle")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("FreeToPlay");
+                    b.Property<bool>("FreeToPlay")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("GuildId");
+                    b.Property<long>("GuildId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("HairColor");
+                    b.Property<long>("HairColor")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("HairStyle");
+                    b.Property<long>("HairStyle")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("InventorySize");
+                    b.Property<int>("InventorySize")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("LandingByRocket");
+                    b.Property<bool>("LandingByRocket")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("LastActivity");
+                    b.Property<long>("LastActivity")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("LastClone");
+                    b.Property<long>("LastClone")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("LastInstance");
+                    b.Property<int>("LastInstance")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("LastZone");
+                    b.Property<int>("LastZone")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("LaunchedRocketFrom");
+                    b.Property<int>("LaunchedRocketFrom")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Level");
+                    b.Property<long>("Level")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Lh");
+                    b.Property<long>("Lh")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MaximumArmor");
+                    b.Property<int>("MaximumArmor")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MaximumHealth");
+                    b.Property<int>("MaximumHealth")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MaximumImagination");
+                    b.Property<int>("MaximumImagination")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("MouthStyle");
+                    b.Property<long>("MouthStyle")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(33);
+                        .HasMaxLength(33)
+                        .HasColumnType("TEXT");
 
-                    b.Property<bool>("NameRejected");
+                    b.Property<bool>("NameRejected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("PantsColor");
+                    b.Property<long>("PantsColor")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Rh");
+                    b.Property<long>("Rh")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Rocket")
-                        .HasMaxLength(30);
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("ShirtColor");
+                    b.Property<long>("ShirtColor")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("ShirtStyle");
+                    b.Property<long>("ShirtStyle")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalArmorPowerUpsCollected");
+                    b.Property<long>("TotalArmorPowerUpsCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalArmorRepaired");
+                    b.Property<long>("TotalArmorRepaired")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalBricksCollected");
+                    b.Property<long>("TotalBricksCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalCurrencyCollected");
+                    b.Property<long>("TotalCurrencyCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalDamageHealed");
+                    b.Property<long>("TotalDamageHealed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalDamageTaken");
+                    b.Property<long>("TotalDamageTaken")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalDistanceDriven");
+                    b.Property<long>("TotalDistanceDriven")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalDistanceTraveled");
+                    b.Property<long>("TotalDistanceTraveled")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalEnemiesSmashed");
+                    b.Property<long>("TotalEnemiesSmashed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalFirstPlaceFinishes");
+                    b.Property<long>("TotalFirstPlaceFinishes")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalImaginationPowerUpsCollected");
+                    b.Property<long>("TotalImaginationPowerUpsCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalImaginationRestored");
+                    b.Property<long>("TotalImaginationRestored")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalImaginationUsed");
+                    b.Property<long>("TotalImaginationUsed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalLifePowerUpsCollected");
+                    b.Property<long>("TotalLifePowerUpsCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalMissionsCompleted");
+                    b.Property<long>("TotalMissionsCompleted")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalPetsTamed");
+                    b.Property<long>("TotalPetsTamed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalQuickBuildsCompleted");
+                    b.Property<long>("TotalQuickBuildsCompleted")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacecarBoostsActivated");
+                    b.Property<long>("TotalRacecarBoostsActivated")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacecarWrecks");
+                    b.Property<long>("TotalRacecarWrecks")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacesFinished");
+                    b.Property<long>("TotalRacesFinished")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacingImaginationCratesSmashed");
+                    b.Property<long>("TotalRacingImaginationCratesSmashed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacingImaginationPowerUpsCollected");
+                    b.Property<long>("TotalRacingImaginationPowerUpsCollected")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRacingSmashablesSmashed");
+                    b.Property<long>("TotalRacingSmashablesSmashed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalRocketsUsed");
+                    b.Property<long>("TotalRocketsUsed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalSmashablesSmashed");
+                    b.Property<long>("TotalSmashablesSmashed")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalSuicides");
+                    b.Property<long>("TotalSuicides")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalTimeAirborne");
+                    b.Property<long>("TotalTimeAirborne")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("UniverseScore");
+                    b.Property<long>("UniverseScore")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("UserId");
+                    b.Property<long>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VaultInventorySize")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -159,11 +225,14 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.CharacterFlag", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CharacterId");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("Flag");
+                    b.Property<int>("Flag")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -175,27 +244,38 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.CharacterMail", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<ushort>("AttachmentCount");
+                    b.Property<ushort>("AttachmentCount")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("AttachmentCurrency");
+                    b.Property<ulong>("AttachmentCurrency")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("AttachmentLot");
+                    b.Property<int>("AttachmentLot")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("AuthorId");
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Body");
+                    b.Property<string>("Body")
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("ExpirationTime");
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("TEXT");
 
-                    b.Property<bool>("Read");
+                    b.Property<bool>("Read")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("RecipientId");
+                    b.Property<long>("RecipientId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("SentTime");
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("Subject");
+                    b.Property<string>("Subject")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -205,15 +285,20 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.CharacterTrade", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CurrencyA");
+                    b.Property<long>("CurrencyA")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CurrencyB");
+                    b.Property<long>("CurrencyB")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("PartyA");
+                    b.Property<long>("PartyA")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("PartyB");
+                    b.Property<long>("PartyB")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -223,15 +308,20 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.ChatTranscript", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Author");
+                    b.Property<long>("Author")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Message");
+                    b.Property<string>("Message")
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("Receiver");
+                    b.Property<long>("Receiver")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("SentTime");
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -241,13 +331,17 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.Friend", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("BestFriend");
+                    b.Property<bool>("BestFriend")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("FriendA");
+                    b.Property<long>("FriendA")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("FriendB");
+                    b.Property<long>("FriendB")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -257,15 +351,20 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.FriendRequest", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("BestFriend");
+                    b.Property<bool>("BestFriend")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Receiver");
+                    b.Property<long>("Receiver")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Sender");
+                    b.Property<long>("Sender")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("Sent");
+                    b.Property<bool>("Sent")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -275,11 +374,13 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.Guild", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CreatorId");
+                    b.Property<long>("CreatorId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -289,13 +390,17 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.GuildInvite", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("GuildId");
+                    b.Property<long>("GuildId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("RecipientId");
+                    b.Property<long>("RecipientId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("SenderId");
+                    b.Property<long>("SenderId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -307,25 +412,34 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CharacterId");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Count");
+                    b.Property<long>("Count")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ExtraInfo");
+                    b.Property<string>("ExtraInfo")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("InventoryType");
+                    b.Property<int>("InventoryType")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsBound");
+                    b.Property<bool>("IsBound")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsEquipped");
+                    b.Property<bool>("IsEquipped")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("Lot");
+                    b.Property<int>("Lot")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("ParentId");
+                    b.Property<long>("ParentId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("Slot");
+                    b.Property<int>("Slot")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -337,17 +451,23 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.Mission", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CharacterId");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("CompletionCount");
+                    b.Property<int>("CompletionCount")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("LastCompletion");
+                    b.Property<long>("LastCompletion")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MissionId");
+                    b.Property<int>("MissionId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("State");
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -359,11 +479,14 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.MissionTask", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MissionId");
+                    b.Property<int>("MissionId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("TaskId");
+                    b.Property<int>("TaskId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -375,13 +498,17 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.MissionTaskValue", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("Count");
+                    b.Property<int>("Count")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("MissionTaskId");
+                    b.Property<int>("MissionTaskId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<float>("Value");
+                    b.Property<float>("Value")
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
@@ -393,15 +520,20 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.SessionCache", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("CharacterId");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Key");
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("UserId");
+                    b.Property<long>("UserId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("ZoneId");
+                    b.Property<int>("ZoneId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -411,13 +543,17 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.TradeTransactionItem", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("ItemId");
+                    b.Property<long>("ItemId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("Party");
+                    b.Property<long>("Party")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("TradeId");
+                    b.Property<long>("TradeId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -429,11 +565,14 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<long>("CharacterId");
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("EmoteId");
+                    b.Property<int>("EmoteId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -445,30 +584,41 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder.Entity("Uchu.Core.User", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("Banned");
+                    b.Property<bool>("Banned")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("BannedReason");
+                    b.Property<string>("BannedReason")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("CharacterIndex");
+                    b.Property<int>("CharacterIndex")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("CustomLockout");
+                    b.Property<string>("CustomLockout")
+                        .HasColumnType("TEXT");
 
-                    b.Property<bool>("FirstTimeOnSubscription");
+                    b.Property<bool>("FirstTimeOnSubscription")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<bool>("FreeToPlay");
+                    b.Property<bool>("FreeToPlay")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("GameMasterLevel");
+                    b.Property<int>("GameMasterLevel")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Password")
-                        .HasMaxLength(60);
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
 
-                    b.Property<bool>("Sso");
+                    b.Property<bool>("Sso")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasMaxLength(33);
+                        .HasMaxLength(33)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -480,7 +630,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.User", "User")
                         .WithMany("Characters")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Uchu.Core.CharacterFlag", b =>
@@ -488,7 +641,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Character", "Character")
                         .WithMany("Flags")
                         .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("Uchu.Core.GuildInvite", b =>
@@ -496,7 +652,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Guild", "Guild")
                         .WithMany("Invites")
                         .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("Uchu.Core.InventoryItem", b =>
@@ -504,7 +663,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Character", "Character")
                         .WithMany("Items")
                         .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("Uchu.Core.Mission", b =>
@@ -512,7 +674,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Character", "Character")
                         .WithMany("Missions")
                         .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("Uchu.Core.MissionTask", b =>
@@ -520,7 +685,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Mission", "Mission")
                         .WithMany("Tasks")
                         .HasForeignKey("MissionId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Mission");
                 });
 
             modelBuilder.Entity("Uchu.Core.MissionTaskValue", b =>
@@ -528,7 +696,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.MissionTask", "MissionTask")
                         .WithMany("Values")
                         .HasForeignKey("MissionTaskId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MissionTask");
                 });
 
             modelBuilder.Entity("Uchu.Core.TradeTransactionItem", b =>
@@ -536,7 +707,10 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.CharacterTrade", "Trade")
                         .WithMany("TransactionItems")
                         .HasForeignKey("TradeId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trade");
                 });
 
             modelBuilder.Entity("Uchu.Core.UnlockedEmote", b =>
@@ -544,7 +718,46 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.HasOne("Uchu.Core.Character", "Character")
                         .WithMany("UnlockedEmotes")
                         .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Uchu.Core.Character", b =>
+                {
+                    b.Navigation("Flags");
+
+                    b.Navigation("Items");
+
+                    b.Navigation("Missions");
+
+                    b.Navigation("UnlockedEmotes");
+                });
+
+            modelBuilder.Entity("Uchu.Core.CharacterTrade", b =>
+                {
+                    b.Navigation("TransactionItems");
+                });
+
+            modelBuilder.Entity("Uchu.Core.Guild", b =>
+                {
+                    b.Navigation("Invites");
+                });
+
+            modelBuilder.Entity("Uchu.Core.Mission", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Uchu.Core.MissionTask", b =>
+                {
+                    b.Navigation("Values");
+                });
+
+            modelBuilder.Entity("Uchu.Core.User", b =>
+                {
+                    b.Navigation("Characters");
                 });
 #pragma warning restore 612, 618
         }

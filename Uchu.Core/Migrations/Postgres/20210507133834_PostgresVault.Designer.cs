@@ -2,20 +2,24 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations.MySql
+namespace Uchu.Core.Migrations
 {
-    [DbContext(typeof(MySqlContext))]
-    partial class MySqlContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PostgresContext))]
+    [Migration("20210507133834_PostgresVault")]
+    partial class PostgresVault
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.5");
+                .UseIdentityByDefaultColumns()
+                .HasAnnotation("Relational:MaxIdentifierLength", 63)
+                .HasAnnotation("ProductVersion", "5.0.2");
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -23,27 +27,27 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<int>("BaseHealth")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("BaseImagination")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("Currency")
                         .HasColumnType("bigint");
 
                     b.Property<int>("CurrentArmor")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("CurrentHealth")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("CurrentImagination")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("CustomName")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("varchar(33)");
+                        .HasColumnType("character varying(33)");
 
                     b.Property<long>("EyeStyle")
                         .HasColumnType("bigint");
@@ -52,7 +56,7 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<bool>("FreeToPlay")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint");
@@ -64,10 +68,10 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<int>("InventorySize")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("LandingByRocket")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("LastActivity")
                         .HasColumnType("bigint");
@@ -76,13 +80,13 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<int>("LastInstance")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("LastZone")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("LaunchedRocketFrom")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("Level")
                         .HasColumnType("bigint");
@@ -91,13 +95,13 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<int>("MaximumArmor")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("MaximumHealth")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("MaximumImagination")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("MouthStyle")
                         .HasColumnType("bigint");
@@ -105,10 +109,10 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("varchar(33)");
+                        .HasColumnType("character varying(33)");
 
                     b.Property<bool>("NameRejected")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("PantsColor")
                         .HasColumnType("bigint");
@@ -118,7 +122,7 @@ namespace Uchu.Core.Migrations.MySql
 
                     b.Property<string>("Rocket")
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.Property<long>("ShirtColor")
                         .HasColumnType("bigint");
@@ -214,7 +218,7 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<int>("VaultInventorySize")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -227,13 +231,14 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Flag")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -246,37 +251,38 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
-                    b.Property<ushort>("AttachmentCount")
-                        .HasColumnType("smallint unsigned");
+                    b.Property<int>("AttachmentCount")
+                        .HasColumnType("integer");
 
-                    b.Property<ulong>("AttachmentCurrency")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("AttachmentCurrency")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<int>("AttachmentLot")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Body")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("ExpirationTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("Read")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("RecipientId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Subject")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -287,7 +293,8 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("CurrencyA")
                         .HasColumnType("bigint");
@@ -310,19 +317,20 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("Author")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Message")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<long>("Receiver")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -333,10 +341,11 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<bool>("BestFriend")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("FriendA")
                         .HasColumnType("bigint");
@@ -353,10 +362,11 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<bool>("BestFriend")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<long>("Receiver")
                         .HasColumnType("bigint");
@@ -365,7 +375,7 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<bool>("Sent")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -381,7 +391,7 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -392,7 +402,8 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint");
@@ -422,25 +433,25 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("bigint");
 
                     b.Property<string>("ExtraInfo")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<int>("InventoryType")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsBound")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsEquipped")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Lot")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("ParentId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Slot")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -453,22 +464,23 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("CompletionCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<long>("LastCompletion")
                         .HasColumnType("bigint");
 
                     b.Property<int>("MissionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("State")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -481,13 +493,14 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<int>("MissionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TaskId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -500,16 +513,17 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<int>("Count")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("MissionTaskId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<float>("Value")
-                        .HasColumnType("float");
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
@@ -522,19 +536,19 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("uuid");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Key")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("ZoneId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -545,7 +559,8 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("ItemId")
                         .HasColumnType("bigint");
@@ -567,13 +582,14 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("EmoteId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -586,40 +602,41 @@ namespace Uchu.Core.Migrations.MySql
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .UseIdentityByDefaultColumn();
 
                     b.Property<bool>("Banned")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("BannedReason")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<int>("CharacterIndex")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("CustomLockout")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<bool>("FirstTimeOnSubscription")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("FreeToPlay")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("GameMasterLevel")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Password")
                         .HasMaxLength(60)
-                        .HasColumnType("varchar(60)");
+                        .HasColumnType("character varying(60)");
 
                     b.Property<bool>("Sso")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("varchar(33)");
+                        .HasColumnType("character varying(33)");
 
                     b.HasKey("Id");
 
