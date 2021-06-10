@@ -31,7 +31,19 @@ namespace Uchu.World
 
             if (managerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character))
             {
-                Size = inventoryType != InventoryType.Items ? 1000 : character.InventorySize;
+                switch (inventoryType)
+                {
+                    case InventoryType.Items:
+                        Size = character.InventorySize;
+                        break;
+                    case InventoryType.VaultItems:
+                    case InventoryType.VaultModels:
+                        Size = character.VaultInventorySize;
+                        break;
+                    default:
+                        Size = 1000;
+                        break;
+                }
             }
         }
         #endregion constructors
@@ -63,14 +75,37 @@ namespace Uchu.World
         /// </summary>
         public int Size
         {
-            get => InventoryType == InventoryType.Items 
-                   && ManagerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character) 
-                ? character.InventorySize : _size;
+            get
+            {
+                if (!ManagerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character)) return _size;
+
+                switch (InventoryType)
+                {
+                    case InventoryType.Items:
+                        return character.InventorySize;
+
+                    case InventoryType.VaultItems:
+                    case InventoryType.VaultModels:
+                        return character.VaultInventorySize;
+
+                    default:
+                        return _size;
+                }
+            }
             set
             {
-                if (InventoryType == InventoryType.Items
-                    && ManagerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character))
-                    character.InventorySize = value;
+                // Store inventory size in character
+                if (ManagerComponent.GameObject.TryGetComponent<CharacterComponent>(out var character))
+                    switch (InventoryType)
+                    {
+                        case InventoryType.Items:
+                            character.InventorySize = value;
+                            break;
+                        case InventoryType.VaultItems:
+                        case InventoryType.VaultModels:
+                            character.VaultInventorySize = value;
+                            break;
+                    }
                 
                 _size = value;
 

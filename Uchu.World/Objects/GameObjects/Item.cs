@@ -336,11 +336,12 @@ namespace Uchu.World
         /// <summary>
         /// Messages the player of the creation of this item, should only be sent once
         /// </summary>
+        /// <param name="showFlyingLoot"></param>
         /// <remarks>
         /// If an item is already created, you can update its count with <see cref="IncrementCountAsync"/> or
         /// <see cref="DecrementCountAsync"/>.
         /// </remarks>
-        public void MessageCreation()
+        public void MessageCreation(bool showFlyingLoot = true)
         {
             if (Owner is Player player && Inventory != null)
             {
@@ -352,7 +353,7 @@ namespace Uchu.World
                     Delta = Count,
                     Slot = (int) Slot,
                     InventoryType = (int) Inventory.InventoryType,
-                    ShowFlyingLoot = true,
+                    ShowFlyingLoot = showFlyingLoot,
                     TotalItems = Count,
                     ExtraInfo = Settings,
                     Source = LootType,

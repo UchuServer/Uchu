@@ -164,6 +164,7 @@ namespace Uchu.Char.Handlers
                     LastInstance = 0,
                     LastClone = 0,
                     InventorySize = 20,
+                    VaultInventorySize = 40,
                     LastActivity = DateTimeOffset.Now.ToUnixTimeSeconds(),
                     Items = new List<InventoryItem>
                     {
