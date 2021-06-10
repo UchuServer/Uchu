@@ -1211,5 +1211,21 @@ namespace Uchu.World.Handlers.Commands
 
             return $"Successfully set gravity scale to: {player.GravityScale}";
         }
+
+        [CommandHandler(Signature = "fixcolemission", Help = "Completes Cole's 'Student of Earth' mission",
+            GameMasterLevel = GameMasterLevel.Player)]
+        public async Task<string> FixColeMission(string[] arguments, Player player)
+        {
+            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                return "Could not get character component";
+            if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
+                return "Could not get mission inventory component";
+            if (!missionInventoryComponent.HasCompleted(1796))
+                return "You haven't completed the required missions yet!";
+
+            await characterComponent.SetFlagAsync(2030, true);
+
+            return "Done!";
+        }
     }
 }
