@@ -14,6 +14,36 @@ namespace Uchu.Core
         /// Property that is read from or read to.
         /// </summary>
         public PropertyInfo Property { get; }
+
+        /// <summary>
+        /// Special cases for written property types.
+        /// </summary>
+        public static Dictionary<Type, Action<BitWriter, object>> CustomWriters = new Dictionary<Type, Action<BitWriter, object>>()
+            {
+                {
+                    typeof(Quaternion), (writer, o) =>
+                    {
+                        // Special case for Quaternions where LU works with W,X,Y,Z while
+                        // the convention is X,Y,Z,W.
+                        writer.WriteNiQuaternion((Quaternion) o);
+                    }
+                }
+            };
+        
+        /// <summary>
+        /// Special cases for read property types.
+        /// </summary>
+        public static Dictionary<Type, Func<BitReader, object>> CustomReaders = new Dictionary<Type, Func<BitReader, object>>()
+        {
+            {
+                typeof(Quaternion), (reader) =>
+                {
+                    // Special case for Quaternions where LU works with W,X,Y,Z while
+                    // the convention is X,Y,Z,W.
+                    return reader.ReadNiQuaternion();
+                }
+            }
+        };
         
         /// <summary>
         /// Type of the property that is written.
@@ -58,10 +88,9 @@ namespace Uchu.Core
         {
             // Write the property.
             var value = this.Property.GetValue(objectToWrite);
-            if (value is Quaternion quaternion) {
-                // Special case for Quaternions where LU works with W,X,Y,Z while
-                // the convention is X,Y,Z,W.
-                writer.WriteNiQuaternion(quaternion);
+            if (CustomWriters.ContainsKey(this._propertyType))
+            {
+                CustomWriters[this._propertyType](writer, value);
             } else {
                 _bitWriterWriteMethod.MakeGenericMethod(this._propertyType)
                     .Invoke(writer, new object[] { value });
@@ -84,11 +113,9 @@ namespace Uchu.Core
         {
             // Read the property.
             object value = null;
-            if (this._propertyType == typeof(Quaternion))
+            if (CustomReaders.ContainsKey(this._propertyType))
             {
-                // Special case for Quaternions where LU works with W,X,Y,Z while
-                // the convention is X,Y,Z,W.
-                value = reader.ReadNiQuaternion();
+                value = CustomReaders[this._propertyType](reader);
             } else
             {
                 value = _bitReaderReadMethod.MakeGenericMethod(this._propertyType).Invoke(reader, null);
