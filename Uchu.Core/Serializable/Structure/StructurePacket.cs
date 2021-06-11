@@ -220,7 +220,11 @@ namespace Uchu.Core
         /// <param name="writer">Writer to serialize the data to.</param>
         public virtual void SerializePacket(BitWriter writer)
         {
-            throw new NotImplementedException();
+            var writtenProperties = new Dictionary<string, object>();
+            foreach (var property in GetPacketProperties(this.GetType()))
+            {
+                property.Write(this, writer, writtenProperties);
+            }
         }
 
         /// <summary>
@@ -229,7 +233,11 @@ namespace Uchu.Core
         /// <param name="reader">Reader to deserialize the data from.</param>
         public virtual void Deserialize(BitReader reader)
         {
-            throw new NotImplementedException();
+            var readProperties = new Dictionary<string, object>();
+            foreach (var property in GetPacketProperties(this.GetType()))
+            {
+                property.Read(this, reader, readProperties);
+            }
         }
     }
 }

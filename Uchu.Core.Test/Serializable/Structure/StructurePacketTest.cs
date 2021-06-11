@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Reflection;
 using NUnit.Framework;
+using RakDotNet.IO;
 
 namespace Uchu.Core.Test.Serializable.Structure
 {
@@ -225,6 +227,64 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(hasFlagPropertyPacket[3].Property, typeof(HasFlagPacket).GetProperty("TestProperty4"));
             Assert.IsTrue(hasFlagPropertyPacket[4] is PacketProperty);
             Assert.AreEqual(hasFlagPropertyPacket[4].Property, typeof(HasFlagPacket).GetProperty("TestProperty5"));
+        }
+
+        /// <summary>
+        /// Tests SerializePacket.
+        /// </summary>
+        [Test]
+        public void TestSerializePacket()
+        {
+            // Create the test packet.
+            var packet = new HasFlagPacket()
+            {
+                TestProperty1 = Vector3.One,
+                TestProperty2 = Vector3.Zero,
+                TestProperty3 = 4,
+                TestProperty4 = 4,
+                TestProperty5 = 4,
+            };
+            
+            // Test writing the packet.
+            var stream = new MemoryStream();
+            var writer = new BitWriter(stream);
+            packet.SerializePacket(writer);
+            var reader = new BitReader(stream);
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<Vector3>(), Vector3.One);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 4);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 4);
+        }
+        
+        /// <summary>
+        /// Tests SerializePacket.
+        /// </summary>
+        [Test]
+        public void Deserialize()
+        {
+            // Create the test data.
+            var stream = new MemoryStream();
+            var writer = new BitWriter(stream);
+            writer.WriteBit(true);
+            writer.Write<Vector3>(Vector3.One);
+            writer.WriteBit(false);
+            writer.WriteBit(true);
+            writer.Write<int>(4);
+            writer.WriteBit(false);;
+            writer.Write<int>(4);
+            
+            // Test reading the packet.
+            var packet = new HasFlagPacket();
+            var reader = new BitReader(stream);
+            packet.Deserialize(reader);
+            Assert.AreEqual(packet.TestProperty1, Vector3.One);
+            Assert.AreEqual(packet.TestProperty2, Vector3.Zero);
+            Assert.AreEqual(packet.TestProperty3, 4);
+            Assert.AreEqual(packet.TestProperty4, 0);
+            Assert.AreEqual(packet.TestProperty5, 4);
         }
     }
 }
