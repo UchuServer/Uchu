@@ -26,17 +26,17 @@ namespace Uchu.Core.Test.Serializable.Structure
         }
         
         /// <summary>
-        /// Packet with HasFlag.
+        /// Packet with Default.
         /// </summary>
-        public struct HasFlagPacket
+        public struct DefaultPacket
         {
-            [HasFlag]
+            [Default]
             public Vector3 TestProperty1 { get; set; }
-            [HasFlag("<0, 0, 0>")]
+            [Default("<0, 0, 0>")]
             public Vector3 TestProperty2 { get; set; }
-            [HasFlag]
+            [Default]
             public int TestProperty3 { get; set; }
-            [HasFlag(4)]
+            [Default(4)]
             public int TestProperty4 { get; set; }
             public int TestProperty5 { get; set; }
         }
@@ -67,23 +67,23 @@ namespace Uchu.Core.Test.Serializable.Structure
         }
         
         /// <summary>
-        /// Tests GetPacketProperties with flags.
+        /// Tests GetPacketProperties with defaults.
         /// </summary>
         [Test]
-        public void TestGetPacketPropertiesFlags()
+        public void TestGetPacketPropertiesDefaults()
         {
-            var hasFlagPropertyPacket = StructPacketParser.GetPacketProperties(typeof(HasFlagPacket));
+            var hasFlagPropertyPacket = StructPacketParser.GetPacketProperties(typeof(DefaultPacket));
             Assert.AreEqual(hasFlagPropertyPacket.Count, 5);
             Assert.IsTrue(hasFlagPropertyPacket[0] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[0].Property, typeof(HasFlagPacket).GetProperty("TestProperty1"));
+            Assert.AreEqual(hasFlagPropertyPacket[0].Property, typeof(DefaultPacket).GetProperty("TestProperty1"));
             Assert.IsTrue(hasFlagPropertyPacket[1] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[1].Property, typeof(HasFlagPacket).GetProperty("TestProperty2"));
+            Assert.AreEqual(hasFlagPropertyPacket[1].Property, typeof(DefaultPacket).GetProperty("TestProperty2"));
             Assert.IsTrue(hasFlagPropertyPacket[2] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[2].Property, typeof(HasFlagPacket).GetProperty("TestProperty3"));
+            Assert.AreEqual(hasFlagPropertyPacket[2].Property, typeof(DefaultPacket).GetProperty("TestProperty3"));
             Assert.IsTrue(hasFlagPropertyPacket[3] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[3].Property, typeof(HasFlagPacket).GetProperty("TestProperty4"));
+            Assert.AreEqual(hasFlagPropertyPacket[3].Property, typeof(DefaultPacket).GetProperty("TestProperty4"));
             Assert.IsTrue(hasFlagPropertyPacket[4] is PacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[4].Property, typeof(HasFlagPacket).GetProperty("TestProperty5"));
+            Assert.AreEqual(hasFlagPropertyPacket[4].Property, typeof(DefaultPacket).GetProperty("TestProperty5"));
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Uchu.Core.Test.Serializable.Structure
         public void TestSerializePacket()
         {
             // Create the test packet.
-            var packet = new HasFlagPacket()
+            var packet = new DefaultPacket()
             {
                 TestProperty1 = Vector3.One,
                 TestProperty2 = Vector3.Zero,

@@ -42,9 +42,9 @@ namespace Uchu.Core
                 {
                     // Create the base packet property.
                     IPacketProperty packetProperty = new PacketProperty(property);
-                    if ((property.GetCustomAttribute(typeof(HasFlag)) is HasFlag hasFlagAttribute))
+                    if ((property.GetCustomAttribute(typeof(Default)) is Default defaultAttribute))
                     {
-                        packetProperty = new FlagPacketProperty(packetProperty, hasFlagAttribute.ValueToIgnore);
+                        packetProperty = new FlagPacketProperty(packetProperty, defaultAttribute.ValueToIgnore);
                     }
                     packetProperties.Add(packetProperty);
                 }
