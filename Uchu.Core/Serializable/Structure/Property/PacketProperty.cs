@@ -21,13 +21,19 @@ namespace Uchu.Core
         public static Dictionary<Type, Action<BitWriter, object>> CustomWriters = new Dictionary<Type, Action<BitWriter, object>>()
             {
                 {
+                    typeof(bool), (writer, o) =>
+                    {
+                        writer.WriteBit((bool) o);
+                    }
+                },
+                {
                     typeof(Quaternion), (writer, o) =>
                     {
                         // Special case for Quaternions where LU works with W,X,Y,Z while
                         // the convention is X,Y,Z,W.
                         writer.WriteNiQuaternion((Quaternion) o);
                     }
-                }
+                },
             };
         
         /// <summary>
@@ -36,20 +42,21 @@ namespace Uchu.Core
         public static Dictionary<Type, Func<BitReader, object>> CustomReaders = new Dictionary<Type, Func<BitReader, object>>()
         {
             {
+                typeof(bool), (reader) =>
+                {
+                    return reader.ReadBit();
+                }
+            },
+            {
                 typeof(Quaternion), (reader) =>
                 {
                     // Special case for Quaternions where LU works with W,X,Y,Z while
                     // the convention is X,Y,Z,W.
                     return reader.ReadNiQuaternion();
                 }
-            }
+            },
         };
         
-        /// <summary>
-        /// Type of the property that is written.
-        /// </summary>
-        private Type _propertyType;
-
         /// <summary>
         /// Reflection information for the Write<>(object) method in BitWriter.
         /// </summary>
@@ -59,6 +66,21 @@ namespace Uchu.Core
         /// Reflection information for the Read<>(object) method in BitReader.
         /// </summary>
         private static MethodInfo _bitReaderReadMethod = typeof(BitReader).GetMethods().FirstOrDefault(newMethod => newMethod.Name == "Read" && newMethod.GetParameters().Length == 0);
+        
+        /// <summary>
+        /// Type of the property that is written.
+        /// </summary>
+        private Type _propertyType;
+
+        /// <summary>
+        /// Custom property writer for the type.
+        /// </summary>
+        private Action<BitWriter, object> _customWriter;
+
+        /// <summary>
+        /// Custom property reader for the type.
+        /// </summary>
+        private Func<BitReader, object> _customReader;
         
         /// <summary>
         /// Creates the packet property.
@@ -76,6 +98,22 @@ namespace Uchu.Core
             {
                 this._propertyType = Enum.GetUnderlyingType(this._propertyType);
             }
+            
+            // Get the custom writer and reader.
+            foreach (var (customWriterType, customWriter) in CustomWriters)
+            {
+                if (customWriterType == this._propertyType || this._propertyType.IsSubclassOf(customWriterType))
+                {
+                    this._customWriter = customWriter;
+                }
+            }
+            foreach (var (customReaderType, customReader) in CustomReaders)
+            {
+                if (customReaderType == this._propertyType || this._propertyType.IsSubclassOf(customReaderType))
+                {
+                    this._customReader = customReader;
+                }
+            }
         }
 
         /// <summary>
@@ -88,9 +126,9 @@ namespace Uchu.Core
         {
             // Write the property.
             var value = this.Property.GetValue(objectToWrite);
-            if (CustomWriters.ContainsKey(this._propertyType))
+            if (this._customWriter != null)
             {
-                CustomWriters[this._propertyType](writer, value);
+                this._customWriter(writer, value);
             } else {
                 _bitWriterWriteMethod.MakeGenericMethod(this._propertyType)
                     .Invoke(writer, new object[] { value });
@@ -113,9 +151,9 @@ namespace Uchu.Core
         {
             // Read the property.
             object value = null;
-            if (CustomReaders.ContainsKey(this._propertyType))
+            if (this._customReader != null)
             {
-                value = CustomReaders[this._propertyType](reader);
+                value = this._customReader(reader);
             } else
             {
                 value = _bitReaderReadMethod.MakeGenericMethod(this._propertyType).Invoke(reader, null);
