@@ -100,16 +100,21 @@ namespace Uchu.Core
             }
             
             // Get the custom writer and reader.
+            var readerWriterType = this._propertyType;
+            if (readerWriterType.IsArray)
+            {
+                readerWriterType = readerWriterType.GetElementType();
+            }
             foreach (var (customWriterType, customWriter) in CustomWriters)
             {
-                if (customWriterType == this._propertyType || this._propertyType.IsSubclassOf(customWriterType))
+                if (customWriterType ==readerWriterType || readerWriterType.IsSubclassOf(customWriterType))
                 {
                     this._customWriter = customWriter;
                 }
             }
             foreach (var (customReaderType, customReader) in CustomReaders)
             {
-                if (customReaderType == this._propertyType || this._propertyType.IsSubclassOf(customReaderType))
+                if (customReaderType == readerWriterType || readerWriterType.IsSubclassOf(customReaderType))
                 {
                     this._customReader = customReader;
                 }
@@ -126,13 +131,32 @@ namespace Uchu.Core
         {
             // Write the property.
             var value = this.Property.GetValue(objectToWrite);
-            if (this._customWriter != null)
+            if (this._propertyType.IsArray)
             {
-                this._customWriter(writer, value);
-            } else {
-                _bitWriterWriteMethod.MakeGenericMethod(this._propertyType)
-                    .Invoke(writer, new object[] { value });
+                var valueArray = (Array) value;
+                writer.Write<uint>((uint) valueArray.Length);
+                foreach (var subValue in valueArray)
+                {
+                    if (this._customWriter != null)
+                    {
+                        this._customWriter(writer, subValue);
+                    } else {
+                        _bitWriterWriteMethod.MakeGenericMethod(this._propertyType.GetElementType())
+                            .Invoke(writer, new object[] { subValue });
+                    }
+                }
             }
+            else
+            {
+                if (this._customWriter != null)
+                {
+                    this._customWriter(writer, value);
+                } else {
+                    _bitWriterWriteMethod.MakeGenericMethod(this._propertyType)
+                        .Invoke(writer, new object[] { value });
+                }
+            }
+            
 
             // Store the written property.
             if (writtenProperties != null)

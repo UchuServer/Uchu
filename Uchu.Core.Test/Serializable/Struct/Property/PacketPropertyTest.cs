@@ -29,6 +29,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
         public Quaternion TestProperty5 { get; set; }
         public TestEnum1 TestProperty6 { get; set; }
         public TestEnum2 TestProperty7 { get; set; }
+        public int[] TestProperty8 { get; set; }
     }
     
     public class PacketPropertyTest
@@ -133,6 +134,40 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             {
                 {"TestProperty6", TestEnum1.TestValue3},
                 {"TestProperty7", TestEnum2.TestValue2},
+            });
+        }
+        
+        /// <summary>
+        /// Tests writing arrays.
+        /// </summary>
+        [Test]
+        public void TestWriteArray()
+        {
+            // Create the test properties.
+            var testProperties = new TestProperties()
+            {
+                TestProperty8 = new [] {1,2,3,4,5,6},
+            };
+            var testPropertiesType = testProperties.GetType();
+            
+            // Create the test BitWriter.
+            var stream = new MemoryStream();
+            var bitWriter = new BitWriter(stream);
+            
+            // Write the properties to the BitWriter and assert the expected data was written.
+            var writtenProperties = new Dictionary<string, object>();
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Write(testProperties, bitWriter, writtenProperties);
+            var bitReader = new BitReader(stream);
+            Assert.AreEqual(bitReader.Read<uint>(), 6);
+            Assert.AreEqual(bitReader.Read<int>(), 1);
+            Assert.AreEqual(bitReader.Read<int>(), 2);
+            Assert.AreEqual(bitReader.Read<int>(), 3);
+            Assert.AreEqual(bitReader.Read<int>(), 4);
+            Assert.AreEqual(bitReader.Read<int>(), 5);
+            Assert.AreEqual(bitReader.Read<int>(), 6);
+            Assert.AreEqual(writtenProperties, new Dictionary<string, object>()
+            {
+                {"TestProperty8", new [] {1,2,3,4,5,6}},
             });
         }
         

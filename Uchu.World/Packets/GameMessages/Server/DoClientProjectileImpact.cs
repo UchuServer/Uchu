@@ -1,36 +1,18 @@
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class DoClientProjectileImpact : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct DoClientProjectileImpact
     {
-        public override GameMessageId GameMessageId => GameMessageId.DoClientProjectileImpact;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.DoClientProjectileImpact;
+        [Default]
         public long ProjectileId { get; set; }
-        
+        [Default]
         public GameObject Owner { get; set; }
-        
+        [Default]
         public GameObject Target { get; set; }
-        
         public byte[] Data { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            if (writer.Flag(ProjectileId != default))
-                writer.Write(ProjectileId);
-
-            if (writer.Flag(Owner != default))
-                writer.Write(Owner);
-
-            if (writer.Flag(Target != default))
-                writer.Write(Target);
-
-            writer.Write((uint) Data.Length);
-
-            foreach (var b in Data)
-            {
-                writer.Write(b);
-            }
-        }
     }
 }
