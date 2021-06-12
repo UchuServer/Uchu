@@ -11,7 +11,7 @@ namespace Uchu.Core.Test.Serializable.Structure
         /// </summary>
         public struct SinglePropertyPacket
         {
-            public string TestProperty1 { get; set; }
+            public int TestProperty1 { get; set; }
         }
         
         /// <summary>
@@ -19,8 +19,8 @@ namespace Uchu.Core.Test.Serializable.Structure
         /// </summary>
         public struct MultiplePropertyPacket
         {
-            public string TestProperty1 { get; set; }
-            public string TestProperty2 { get; set; }
+            public int TestProperty1 { get; set; }
+            public int TestProperty2 { get; set; }
             public string TestProperty3 { get; set; }
             public string TestProperty4 { get; set; }
         }
@@ -60,9 +60,9 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(multiplePropertyPacket[0].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty1"));
             Assert.IsTrue(multiplePropertyPacket[1] is PacketProperty);
             Assert.AreEqual(multiplePropertyPacket[1].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty2"));
-            Assert.IsTrue(multiplePropertyPacket[2] is PacketProperty);
+            Assert.IsTrue(multiplePropertyPacket[2] is StringPacketProperty);
             Assert.AreEqual(multiplePropertyPacket[2].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty3"));
-            Assert.IsTrue(multiplePropertyPacket[3] is PacketProperty);
+            Assert.IsTrue(multiplePropertyPacket[3] is StringPacketProperty);
             Assert.AreEqual(multiplePropertyPacket[3].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty4"));
         }
         

@@ -41,7 +41,15 @@ namespace Uchu.Core
                 foreach (var property in type.GetProperties())
                 {
                     // Create the base packet property.
-                    IPacketProperty packetProperty = new PacketProperty(property);
+                    IPacketProperty packetProperty = null;
+                    if (property.PropertyType == typeof(string))
+                    {
+                        packetProperty = new StringPacketProperty(property);
+                    }
+                    else
+                    {
+                        packetProperty = new PacketProperty(property);
+                    }
                     if ((property.GetCustomAttribute(typeof(Default)) is Default defaultAttribute))
                     {
                         packetProperty = new FlagPacketProperty(packetProperty, defaultAttribute.ValueToIgnore);
