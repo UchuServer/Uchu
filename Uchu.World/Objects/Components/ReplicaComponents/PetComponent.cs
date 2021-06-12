@@ -173,8 +173,8 @@ namespace Uchu.World
                 
             PetTamingTryBuildResultMessage nmsg = new PetTamingTryBuildResultMessage();
             nmsg.Associate = msg.Associate;
-            nmsg.bSuccess = !(CorrectCount == Bricks.Count);
-            nmsg.iNumCorrect = CorrectCount;
+            nmsg.Success = !(CorrectCount == Bricks.Count);
+            nmsg.NumberCorrect = CorrectCount;
             (msg.Associate as Player).Message(nmsg);
         }
         
@@ -200,10 +200,10 @@ namespace Uchu.World
             player.Message(new PetResponseMessage
             {
                 Associate = player,
-                ObjIDPet = GameObject,
-                iPetCommandType = 0,
-                iResponse = 10, // Not entirely sure what this response ID is 
-                iTypeID = 0
+                PetId = GameObject,
+                PetCommandType = 0,
+                Response = 10, // Not entirely sure what this response ID is 
+                TypeId = 0
             });
 
             var inventoryComponent = player.GetComponent<InventoryManagerComponent>();
@@ -235,8 +235,8 @@ namespace Uchu.World
             player.Message( new MarkInventoryItemAsActiveMessage
             {
                 Associate = player,
-                bActive = true,
-                itemID = pet.Id
+                Active = true,
+                ItemId = pet.Id
             });
             
             // TODO: Add listener for name select

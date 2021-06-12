@@ -442,6 +442,17 @@ namespace Uchu.World
                 return;
             Connection.Send(packet);
         }
+        
+        /// <summary>
+        /// Sends a packet to a player
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        public void Message<T>(T packet) where T : struct
+        {
+            if (Id == ObjectId.Invalid)
+                return;
+            Connection.Send(packet);
+        }
 
         /// <summary>
         /// Tries to send a player to a different zone

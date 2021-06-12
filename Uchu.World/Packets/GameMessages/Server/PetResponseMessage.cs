@@ -1,22 +1,13 @@
-﻿using RakDotNet.IO;
-using Uchu.Core;
-
-namespace Uchu.World
+﻿namespace Uchu.World
 {
-    public class PetResponseMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct PetResponseMessage
     {
-        public override GameMessageId GameMessageId { get; } = GameMessageId.PetResponse;
-
-        public GameObject ObjIDPet;
-        public int iPetCommandType;
-        public int iResponse;
-        public int iTypeID;
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(ObjIDPet);
-            writer.Write(iPetCommandType);
-            writer.Write(iResponse);
-            writer.Write(iTypeID);
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.PetResponse;
+        public GameObject PetId { get; set; }
+        public int PetCommandType { get; set; }
+        public int Response { get; set; }
+        public int TypeId { get; set; }
     }
 }

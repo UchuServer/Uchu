@@ -1,30 +1,16 @@
 using System.Numerics;
-using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class NotifyRewardMailed : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct NotifyRewardMailed
     {
-        public override GameMessageId GameMessageId => GameMessageId.NotifyRewardMailed;
-
-        public ObjectId ObjectId;
-
-        public Vector3 StartPoint;
-
-        public ObjectId Subkey = (ObjectId) (-1);
-
-        public Lot TemplateId;
-
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(ObjectId);
-
-            writer.Write(StartPoint);
-
-            writer.Write(Subkey);
-
-            writer.Write(TemplateId);
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.NotifyRewardMailed;
+        public ObjectId ObjectId { get; set; }
+        public Vector3 StartPoint { get; set; }
+        public ObjectId Subkey { get; set; }
+        public Lot TemplateId { get; set; }
     }
 }

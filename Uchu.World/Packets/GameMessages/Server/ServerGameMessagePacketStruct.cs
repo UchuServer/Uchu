@@ -3,7 +3,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class ServerGameMessagePacketStruct : PacketStruct
+    public class ServerGameMessagePacketStruct : WorldPacketStruct
     {
         /// <summary>
         /// Creates the packet struct attribute for a Server Game Message.

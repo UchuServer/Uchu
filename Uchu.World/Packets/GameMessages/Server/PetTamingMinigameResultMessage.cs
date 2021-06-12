@@ -1,14 +1,10 @@
-﻿using RakDotNet.IO;
-
-namespace Uchu.World
+﻿namespace Uchu.World
 {
-    public class PetTamingMinigameResultMessage : ClientGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct PetTamingMinigameResultMessage
     {
-        public override GameMessageId GameMessageId { get; } = GameMessageId.PetTamingMinigameResult;
-        public bool bSuccess;
-        public override void Deserialize(BitReader reader)
-        {
-            bSuccess = reader.ReadBit();
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.PetTamingMinigameResult;
+        public bool Success { get; set; }
     }
 }

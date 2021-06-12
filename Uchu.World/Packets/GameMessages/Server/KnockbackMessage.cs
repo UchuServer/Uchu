@@ -1,32 +1,19 @@
 using System.Numerics;
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class KnockbackMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct KnockbackMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.Knockback;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.Knockback;
+        [Default]
         public GameObject Caster { get; set; }
-        
+        [Default]
         public GameObject Originator { get; set; }
-        
+        [Default]
         public int KnockbackTime { get; set; }
-        
         public Vector3 Vector { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            if (writer.Flag(Caster != default))
-                writer.Write(Caster);
-            
-            if (writer.Flag(Originator != default))
-                writer.Write(Originator);
-            
-            if (writer.Flag(KnockbackTime != default))
-                writer.Write(KnockbackTime);
-
-            writer.Write(Vector);
-        }
     }
 }

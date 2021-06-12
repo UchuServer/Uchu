@@ -1,16 +1,10 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class ResurrectMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct ResurrectMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.Resurrect;
-
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.Resurrect;
         public bool ResurrectImminently { get; set; }
-
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(ResurrectImminently);
-        }
     }
 }

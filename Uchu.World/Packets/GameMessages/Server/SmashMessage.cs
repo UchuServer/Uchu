@@ -1,27 +1,13 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class SmashMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct SmashMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.Smash;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.Smash;
         public bool IgnoreObjectVisibility { get; set; }
-        
         public float Force { get; set; }
-        
         public float GhostOpacity { get; set; }
-        
         public GameObject Killer { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(IgnoreObjectVisibility);
-
-            writer.Write(Force);
-            writer.Write(GhostOpacity);
-
-            writer.Write(Killer);
-        }
     }
 }

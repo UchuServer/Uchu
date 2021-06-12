@@ -183,7 +183,8 @@ namespace Uchu.StandardScripts.BlockYard
                     CantTurn = true,
                     CantUseItem = true,
                     CantEquip = true,
-                    CantInteract = true
+                    CantInteract = true,
+                    IgnoreImmunity = true,
                 }); // The animation handles movement
 
                 SpiderQueen.Transform.Rotate(new Quaternion { X = 0.0f, Y = -0.005077f, Z = 0.0f, W = 0.999f }); // Orientation for the animation to make sense
@@ -199,10 +200,10 @@ namespace Uchu.StandardScripts.BlockYard
                 Player.Message(new SetStatusImmunityMessage
                 {
                     Associate = SpiderQueen,
-                    state = ImmunityState.Push,
-                    bImmuneToSpeed = true,
-                    bImmuneToBasicAttack = true,
-                    bImmuneToDOT = true
+                    State = ImmunityState.Push,
+                    ImmuneToSpeed = true,
+                    ImmuneToBasicAttack = true,
+                    ImmuneToDOT = true
                 });
             }
         }

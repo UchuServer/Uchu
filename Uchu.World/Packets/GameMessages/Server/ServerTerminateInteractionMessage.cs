@@ -1,20 +1,11 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class ServerTerminateInteractionMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct ServerTerminateInteractionMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.ServerTerminateInteraction;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.ServerTerminateInteraction;
         public GameObject Terminator { get; set; }
-            
         public TerminateType Type { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(Terminator);
-
-            writer.Write((int) Type);
-        }
     }
 }

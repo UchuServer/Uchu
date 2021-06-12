@@ -1,14 +1,10 @@
-﻿using RakDotNet.IO;
-
-namespace Uchu.World
+﻿namespace Uchu.World
 {
-    public class RegisterPetIDMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct RegisterPetIDMessage
     {
-        public override GameMessageId GameMessageId { get; } = GameMessageId.RegisterPetID;
-        public GameObject Pet;
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(Pet);
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.RegisterPetID;
+        public GameObject Pet { get; set; }
     }
 }

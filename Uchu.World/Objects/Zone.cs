@@ -317,8 +317,18 @@ namespace Uchu.World
         {
             foreach (var player in Players.Where(p => p != excluded)) player.Message(message);
         }
+        
+        public void ExcludingMessage<T>(T message, Player excluded) where T : struct
+        {
+            foreach (var player in Players.Where(p => p != excluded)) player.Message(message);
+        }
 
         public void BroadcastMessage(IGameMessage message)
+        {
+            foreach (var player in Players) player.Message(message);
+        }
+        
+        public void BroadcastMessage<T>(T message) where T : struct
         {
             foreach (var player in Players) player.Message(message);
         }

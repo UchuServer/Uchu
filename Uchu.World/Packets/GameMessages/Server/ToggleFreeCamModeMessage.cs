@@ -1,13 +1,9 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class ToggleFreeCamModeMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct ToggleFreeCamModeMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.ToggleFreeCamMode;
-
-        public override void SerializeMessage(BitWriter writer)
-        {
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.ToggleFreeCamMode;
     }
 }

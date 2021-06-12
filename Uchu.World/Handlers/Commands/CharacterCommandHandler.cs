@@ -795,7 +795,8 @@ namespace Uchu.World.Handlers.Commands
                     CantTurn = true,
                     CantUseItem = true,
                     CantEquip = true,
-                    CantInteract = true
+                    CantInteract = true,
+                    IgnoreImmunity = true,
                 });
 
                 var _ = Task.Run(async () =>

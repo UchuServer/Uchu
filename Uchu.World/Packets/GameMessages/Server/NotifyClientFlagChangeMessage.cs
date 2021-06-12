@@ -1,19 +1,11 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class NotifyClientFlagChangeMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct NotifyClientFlagChangeMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.NotifyClientFlagChange;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.NotifyClientFlagChange;
         public bool Flag { get; set; }
-        
         public int FlagId { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(Flag);
-            writer.Write(FlagId);
-        }
     }
 }
