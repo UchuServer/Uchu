@@ -261,5 +261,34 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
                 {"TestProperty7", TestEnum2.TestValue3},
             });
         }
+        
+        /// <summary>
+        /// Tests reading arrays.
+        /// </summary>
+        [Test]
+        public void TestReadArray()
+        {
+            // Create the initial data.
+            var testProperties = new TestProperties();
+            var testPropertiesType = testProperties.GetType();
+            var stream = new MemoryStream();
+            var bitWriter = new BitWriter(stream);
+            bitWriter.Write<uint>(5);
+            bitWriter.Write<int>(7);
+            bitWriter.Write<int>(8);
+            bitWriter.Write<int>(9);
+            bitWriter.Write<int>(10);
+            bitWriter.Write<int>(11);
+
+            // Read the properties from the BitReader and assert the expected properties was read.
+            var readProperties = new Dictionary<string, object>();
+            var bitReader = new BitReader(stream);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Read(testProperties, bitReader, readProperties);
+            Assert.AreEqual(testProperties.TestProperty8, new int[] {7,8,9,10,11});
+            Assert.AreEqual(readProperties, new Dictionary<string, object>()
+            {
+                {"TestProperty8", new int[] {7,8,9,10,11}},
+            });
+        }
     }
 }

@@ -175,13 +175,33 @@ namespace Uchu.Core
         {
             // Read the property.
             object value = null;
-            if (this._customReader != null)
+            if (this._propertyType.IsArray)
             {
-                value = this._customReader(reader);
-            } else
-            {
-                value = _bitReaderReadMethod.MakeGenericMethod(this._propertyType).Invoke(reader, null);
+                var length = reader.Read<uint>();
+                var valueArray = Array.CreateInstance(this._propertyType.GetElementType(), length);
+                value = valueArray;
+                for (var i = 0; i < length; i++) {
+                    if (this._customReader != null)
+                    {
+                        valueArray.SetValue(this._customReader(reader), i);
+                    }
+                    else
+                    {
+                        valueArray.SetValue(_bitReaderReadMethod.MakeGenericMethod(this._propertyType.GetElementType()).Invoke(reader, null), i);
+                    }
+                }
+            } else {
+                if (this._customReader != null)
+                {
+                    value = this._customReader(reader);
+                }
+                else
+                {
+                    value = _bitReaderReadMethod.MakeGenericMethod(this._propertyType).Invoke(reader, null);
+                }
             }
+            
+
             this.Property.SetValue(objectToWrite, value);
             
             
