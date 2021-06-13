@@ -33,6 +33,7 @@ namespace Uchu.StandardScripts.General
                             Associate = gameObject,
                             Arguments = "achieve",
                             Target = gameObject,
+                            SecondParameter = -1,
                             Sender = player
                         });
                     }

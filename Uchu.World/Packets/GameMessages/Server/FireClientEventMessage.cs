@@ -1,40 +1,19 @@
-using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class FireClientEventMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct FireClientEventMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.FireEventClientSide;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.FireEventClientSide;
+        [Wide]
         public string Arguments { get; set; }
-        
         public GameObject Target { get; set; }
-        
+        [Default]
         public long FirstParameter { get; set; }
-
-        public int SecondParameter { get; set; } = -1;
-        
+        [Default(-1)]
+        public int SecondParameter { get; set; }
         public GameObject Sender { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write((uint) Arguments.Length);
-            writer.WriteString(Arguments, Arguments.Length, true);
-
-            writer.Write(Target);
-
-            if (writer.Flag(FirstParameter != default))
-            {
-                writer.Write(FirstParameter);
-            }
-
-            if (writer.Flag(SecondParameter != -1))
-            {
-                writer.Write(SecondParameter);
-            }
-
-            writer.Write(Sender);
-        }
     }
 }

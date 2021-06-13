@@ -35,6 +35,7 @@ namespace Uchu.World
                 Associate = GameObject,
                 Arguments = "RocketEquipped",
                 Target = rocket,
+                SecondParameter = -1,
                 Sender = player
             });
 

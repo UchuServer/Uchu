@@ -1,3 +1,5 @@
+using Uchu.Core;
+
 namespace Uchu.World
 {
     [ServerGameMessagePacketStruct]
@@ -5,6 +7,7 @@ namespace Uchu.World
     {
         public GameObject Associate { get; set; }
         public GameMessageId GameMessageId => GameMessageId.ChangeObjectWorldState;
+        [Default]
         public ObjectWorldState State { get; set; }
     }
 }

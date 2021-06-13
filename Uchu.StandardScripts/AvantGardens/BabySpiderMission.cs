@@ -24,7 +24,8 @@ namespace Uchu.StandardScripts.AvantGardens
                                 Associate = spider,
                                 Sender = player,
                                 Arguments = "toggle",
-                                Target = player
+                                Target = player,
+                                SecondParameter = -1,
                             });
                         }
 

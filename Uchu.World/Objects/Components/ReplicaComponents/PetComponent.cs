@@ -214,10 +214,10 @@ namespace Uchu.World
             player.Message(new AddPetToPlayerMessage
             {
                 Associate = player,
-                iElementalType = 0, // This appears to be just unused, they are in the DB but they weren't sent correctly in the packet captures
-                name = GameObject.Name,
-                petDBID = pet,
-                PetLOT = GameObject.Lot
+                ElementalType = 0, // This appears to be just unused, they are in the DB but they weren't sent correctly in the packet captures
+                Name = GameObject.Name,
+                PetDBId = pet,
+                PetLot = GameObject.Lot
             });
             
             player.Message(new RegisterPetIDMessage
