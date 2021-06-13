@@ -309,17 +309,17 @@ namespace Uchu.World
                 Associate = this,
                 Animation = celebration.Animation,
                 BackgroundObject = new Lot(celebration.BackgroundObject.Value),
-                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
+                CameraPathLot = new Lot(celebration.CameraPathLOT.Value),
                 CeleLeadIn = celebration.CeleLeadIn.Value,
                 CeleLeadOut = celebration.CeleLeadOut.Value,
-                CelebrationID = celebration.Id.Value,
+                CelebrationId = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconID = celebration.IconID.Value,
+                IconId = (uint) celebration.IconID.Value,
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,
                 PathNodeName = celebration.PathNodeName,
-                SoundGUID = celebration.SoundGUID,
+                SoundGuid = celebration.SoundGUID,
                 SubText = celebration.SubText
             }); // Start effect
         }

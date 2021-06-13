@@ -96,7 +96,7 @@ namespace Uchu.StandardScripts.BlockYard
                     DirectionRelativeAngleXz = 0.00f,
                     DirectionRelativeAngleY = 0.00f,
                     DirectionRelativeForce = 0.00f,
-                    KillType = 1,
+                    KillType = KillType.Silent,
                     Killer = default,
                     LootOwner = default
                 });
@@ -313,7 +313,7 @@ namespace Uchu.StandardScripts.BlockYard
                     DirectionRelativeAngleXz = 0.00f,
                     DirectionRelativeAngleY = 0.00f,
                     DirectionRelativeForce = 0.00f,
-                    KillType = 1,
+                    KillType = KillType.Silent,
                     Killer = default,
                     LootOwner = default
                 });

@@ -30,12 +30,11 @@ namespace Uchu.World
 
             rocket.WorldState = ObjectWorldState.Attached;
             
-            player.Message(new FireClientEventMessage
+            player.Message(new FireEventClientSideMessage()
             {
                 Associate = GameObject,
                 Arguments = "RocketEquipped",
                 Target = rocket,
-                SecondParameter = -1,
                 Sender = player
             });
 

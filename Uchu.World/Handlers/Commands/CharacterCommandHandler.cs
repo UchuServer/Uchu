@@ -741,7 +741,7 @@ namespace Uchu.World.Handlers.Commands
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = associate,
-                AnimationsId = arguments[0],
+                AnimationId = arguments[0],
                 Scale = scale
             });
 

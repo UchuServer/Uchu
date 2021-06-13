@@ -7,7 +7,7 @@ namespace Uchu.World.Scripting.Native
             @this.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = @this,
-                AnimationsId = animation,
+                AnimationId = animation,
                 PlayImmediate = playImmediate
             });
         }

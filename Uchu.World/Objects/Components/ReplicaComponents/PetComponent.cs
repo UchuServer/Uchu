@@ -137,7 +137,7 @@ namespace Uchu.World
 
                 var nmsg = new NotifyPetTamingPuzzleSelectedMessage();
                 nmsg.Associate = player;
-                nmsg.Bricks = Bricks;
+                nmsg.Bricks = Bricks.ToArray();
                 player.Message(nmsg);
                 player.Message(new NotifyPetTamingMinigame
                 {
@@ -200,7 +200,7 @@ namespace Uchu.World
             player.Message(new PetResponseMessage
             {
                 Associate = player,
-                PetId = GameObject,
+                Pet = GameObject,
                 PetCommandType = 0,
                 Response = 10, // Not entirely sure what this response ID is 
                 TypeId = 0
@@ -220,23 +220,23 @@ namespace Uchu.World
                 PetLot = GameObject.Lot
             });
             
-            player.Message(new RegisterPetIDMessage
+            player.Message(new RegisterPetIdMessage
             {
                 Associate = player,
-                Pet = GameObject
+                Pet = GameObject,
             });
             
-            player.Message(new RegisterPetDBIDMessage
+            player.Message(new RegisterPetDBIdMessage
             {
                 Associate = player,
-                PetItemObject = pet
+                Pet = pet,
             });
             
             player.Message( new MarkInventoryItemAsActiveMessage
             {
                 Associate = player,
                 Active = true,
-                ItemId = pet.Id
+                ItemId = pet,
             });
             
             // TODO: Add listener for name select

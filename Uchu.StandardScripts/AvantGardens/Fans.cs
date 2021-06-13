@@ -118,7 +118,7 @@ namespace Uchu.StandardScripts.AvantGardens
                             player.Message(new PlayAnimationMessage
                             {
                                 Associate = fanObject,
-                                AnimationsId = "fan-on",
+                                AnimationId = "fan-on",
                                 PlayImmediate = true,
                             });
                         }
@@ -127,7 +127,7 @@ namespace Uchu.StandardScripts.AvantGardens
                             player.Message(new PlayAnimationMessage
                             {
                                 Associate = fanObject,
-                                AnimationsId = "fan-off",
+                                AnimationId = "fan-off",
                                 PlayImmediate = true,
                             });
                         }

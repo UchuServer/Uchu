@@ -106,7 +106,7 @@ namespace Uchu.World.Handlers.GameMessages
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = player,
-                AnimationsId = animation.AnimationName
+                AnimationId = animation.AnimationName
             });
             
             player.Zone.ExcludingMessage(new EmotePlayedMessage

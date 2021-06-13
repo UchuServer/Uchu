@@ -1,23 +1,22 @@
-using System;
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class UnSmashMessage : ServerGameMessage
-    {
-        public override GameMessageId GameMessageId => GameMessageId.UnSmash;
-        
-        public GameObject Builder { get; set; }
+	[ServerGameMessagePacketStruct]
+	public struct UnSmashMessage
+	{
+		public GameObject Associate { get; set; }
+		public GameMessageId GameMessageId => GameMessageId.UnSmash;
+		[Default]
+		public GameObject BuilderId { get; set; }
+		[Default(3)]
+		public float Duration { get; set; }
 
-        public float Duration { get; set; } = 3f;
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            if (writer.Flag(Builder != default))
-                writer.Write(Builder);
-            
-            if (writer.Flag(Math.Abs(Duration - 3f) > 0.01f))
-                writer.Write(Duration);
-        }
-    }
+		public UnSmashMessage(GameObject associate = default, GameObject builderId = default, float duration = 3)
+		{
+			this.Associate = associate;
+			this.BuilderId = builderId;
+			this.Duration = duration;
+		}
+	}
 }

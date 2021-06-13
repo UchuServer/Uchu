@@ -1,5 +1,6 @@
 using System.Numerics;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
@@ -11,7 +12,7 @@ namespace Uchu.World
         
         public bool Success { get; set; }
         
-        public int SourceBag { get; set; }
+        public InventoryType SourceBag { get; set; }
         
         public GameObject Source { get; set; }
         
@@ -32,7 +33,7 @@ namespace Uchu.World
             FirstTime = reader.ReadBit();
             Success = reader.ReadBit();
 
-            SourceBag = reader.Read<int>();
+            SourceBag = (InventoryType) reader.Read<int>();
             Source = reader.ReadGameObject(Associate.Zone);
             SourceLot = reader.Read<Lot>();
             SourceType = reader.Read<int>();
