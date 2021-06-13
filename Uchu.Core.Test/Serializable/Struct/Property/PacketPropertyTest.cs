@@ -200,10 +200,10 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // REad the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty1")).Read(testProperties, bitReader, readProperties);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty2")).Read(testProperties, bitReader, readProperties);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty3")).Read(testProperties, bitReader, readProperties);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty4")).Read(testProperties, bitReader, readProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty1")).Read(testProperties, bitReader, readProperties, null);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty2")).Read(testProperties, bitReader, readProperties, null);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty3")).Read(testProperties, bitReader, readProperties, null);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty4")).Read(testProperties, bitReader, readProperties, null);
             Assert.AreEqual(testProperties.TestProperty1, -5);
             Assert.AreEqual(testProperties.TestProperty2, 6);
             Assert.AreEqual(testProperties.TestProperty3, -7);
@@ -236,7 +236,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // Read the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty5")).Read(testProperties, bitReader, readProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty5")).Read(testProperties, bitReader, readProperties, null);
             Assert.AreEqual(testProperties.TestProperty5, new Quaternion(5,6,7,8));
             Assert.AreEqual(readProperties, new Dictionary<string, object>()
             {
@@ -261,8 +261,8 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // Read the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty6")).Read(testProperties, bitReader, readProperties);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty7")).Read(testProperties, bitReader, readProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty6")).Read(testProperties, bitReader, readProperties, null);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty7")).Read(testProperties, bitReader, readProperties, null);
             Assert.AreEqual(testProperties.TestProperty6, TestEnum1.TestValue1);
             Assert.AreEqual(testProperties.TestProperty7, TestEnum2.TestValue3);
             Assert.AreEqual(readProperties, new Dictionary<string, object>()
@@ -297,8 +297,8 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // Read the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Read(testProperties, bitReader, readProperties);
-            new PacketProperty(testPropertiesType.GetProperty("TestProperty9")).Read(testProperties, bitReader, readProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Read(testProperties, bitReader, readProperties, null);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty9")).Read(testProperties, bitReader, readProperties, null);
             Assert.AreEqual(testProperties.TestProperty8, new int[] {7,8,9,10,11});
             Assert.AreEqual(testProperties.TestProperty9, new int[] {12,13,14});
             Assert.AreEqual(readProperties, new Dictionary<string, object>()

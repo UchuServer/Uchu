@@ -48,7 +48,8 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
         /// <param name="objectToWrite">Object with the property to read.</param>
         /// <param name="reader">Bit reader to read to.</param>
         /// <param name="readProperties">Properties that were previously read.</param>
-        public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties)
+        /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
+        public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
             this.DataRead = true;
         }

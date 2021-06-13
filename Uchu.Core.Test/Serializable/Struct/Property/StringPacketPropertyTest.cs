@@ -132,10 +132,10 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // REad the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
-            new StringPacketProperty(testStringsType.GetProperty("TestString1")).Read(testStrings, bitReader, readProperties);
-            new StringPacketProperty(testStringsType.GetProperty("TestString2")).Read(testStrings, bitReader, readProperties);
-            new StringPacketProperty(testStringsType.GetProperty("TestString3")).Read(testStrings, bitReader, readProperties);
-            new StringPacketProperty(testStringsType.GetProperty("TestString4")).Read(testStrings, bitReader, readProperties);
+            new StringPacketProperty(testStringsType.GetProperty("TestString1")).Read(testStrings, bitReader, readProperties, null);
+            new StringPacketProperty(testStringsType.GetProperty("TestString2")).Read(testStrings, bitReader, readProperties, null);
+            new StringPacketProperty(testStringsType.GetProperty("TestString3")).Read(testStrings, bitReader, readProperties, null);
+            new StringPacketProperty(testStringsType.GetProperty("TestString4")).Read(testStrings, bitReader, readProperties, null);
             Assert.AreEqual(testStrings.TestString1, "Test5");
             Assert.AreEqual(testStrings.TestString2, "Test6");
             Assert.AreEqual(testStrings.TestString3, "Test7");

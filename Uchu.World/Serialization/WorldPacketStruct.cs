@@ -1,4 +1,3 @@
-using System;
 using RakDotNet;
 using Uchu.Core;
 
@@ -16,7 +15,7 @@ namespace Uchu.World
             {
                 writer.Write(((Lot) o).Id);
             };
-            PacketProperty.CustomReaders[typeof(Lot)] = (reader) =>
+            PacketProperty.CustomReaders[typeof(Lot)] = (reader, context) =>
             {
                 return new Lot(reader.Read<int>());
             };
@@ -26,9 +25,9 @@ namespace Uchu.World
             {
                 writer.Write((GameObject) o);
             };
-            PacketProperty.CustomReaders[typeof(GameObject)] = (reader) =>
+            PacketProperty.CustomReaders[typeof(GameObject)] = (reader, context) =>
             {
-                throw new NotImplementedException(); // TODO: Requires context of the zone
+                return reader.ReadGameObject((Zone) context["Zone"]);
             };
         }
         

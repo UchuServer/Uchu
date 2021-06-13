@@ -150,13 +150,13 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             var bitReader = new BitReader(memoryStream);
             var readProperties = new Dictionary<string, object>();
             new FlagPacketProperty(new PacketProperty(typeof(TestFlagProperties).GetProperty("TestProperty1")), null)
-                .Read(testProperties, bitReader, readProperties);
+                .Read(testProperties, bitReader, readProperties, null);
             new FlagPacketProperty(new PacketProperty(typeof(TestFlagProperties).GetProperty("TestProperty2")), null)
-                .Read(testProperties, bitReader, readProperties);
+                .Read(testProperties, bitReader, readProperties, null);
             new FlagPacketProperty(new PacketProperty(typeof(TestFlagProperties).GetProperty("TestProperty3")), null)
-                .Read(testProperties, bitReader, readProperties);
+                .Read(testProperties, bitReader, readProperties, null);
             new FlagPacketProperty(new PacketProperty(typeof(TestFlagProperties).GetProperty("TestProperty4")), null)
-                .Read(testProperties, bitReader, readProperties);
+                .Read(testProperties, bitReader, readProperties, null);
             Assert.AreEqual(testProperties.TestProperty1, -5);
             Assert.AreEqual(testProperties.TestProperty2, Vector3.Zero);
             Assert.AreEqual(testProperties.TestProperty3, TestFlagEnum.TestValue2);

@@ -61,16 +61,16 @@ namespace Uchu.Core
         /// <summary>
         /// Special cases for read property types.
         /// </summary>
-        public static Dictionary<Type, Func<BitReader, object>> CustomReaders = new Dictionary<Type, Func<BitReader, object>>()
+        public static Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>> CustomReaders = new Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>>()
         {
             {
-                typeof(bool), (reader) =>
+                typeof(bool), (reader, context) =>
                 {
                     return reader.ReadBit();
                 }
             },
             {
-                typeof(Quaternion), (reader) =>
+                typeof(Quaternion), (reader, context) =>
                 {
                     // Special case for Quaternions where LU works with W,X,Y,Z while
                     // the convention is X,Y,Z,W.
@@ -78,7 +78,7 @@ namespace Uchu.Core
                 }
             },
             {
-                typeof(LegoDataDictionary), (reader) =>
+                typeof(LegoDataDictionary), (reader, context) =>
                 {
                     return LegoDataDictionary.FromString(reader.ReadString((int) reader.Read<uint>(), true));
                 }
@@ -114,7 +114,7 @@ namespace Uchu.Core
         /// <summary>
         /// Custom property reader for the type.
         /// </summary>
-        private Func<BitReader, object> _customReader;
+        private Func<BitReader, Dictionary<string, object>, object> _customReader;
         
         /// <summary>
         /// Creates the packet property.
@@ -213,7 +213,8 @@ namespace Uchu.Core
         /// <param name="objectToWrite">Object with the property to read.</param>
         /// <param name="reader">Bit reader to read to.</param>
         /// <param name="readProperties">Properties that were previously read.</param>
-        public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties)
+        /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
+        public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
             // Read the property.
             object value = null;
@@ -226,7 +227,7 @@ namespace Uchu.Core
                 for (var i = 0; i < length; i++) {
                     if (this._customReader != null)
                     {
-                        valueArray.SetValue(this._customReader(reader), i);
+                        valueArray.SetValue(this._customReader(reader, context), i);
                     }
                     else
                     {
@@ -237,7 +238,7 @@ namespace Uchu.Core
             } else {
                 if (this._customReader != null)
                 {
-                    value = this._customReader(reader);
+                    value = this._customReader(reader, context);
                 }
                 else
                 {
