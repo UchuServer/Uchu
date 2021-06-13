@@ -30,6 +30,8 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
         public TestEnum1 TestProperty6 { get; set; }
         public TestEnum2 TestProperty7 { get; set; }
         public int[] TestProperty8 { get; set; }
+        [StoreLengthAs(typeof(byte))]
+        public int[] TestProperty9 { get; set; }
     }
     
     public class PacketPropertyTest
@@ -147,6 +149,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             var testProperties = new TestProperties()
             {
                 TestProperty8 = new [] {1,2,3,4,5,6},
+                TestProperty9 = new [] {1,2,3,4},
             };
             var testPropertiesType = testProperties.GetType();
             
@@ -157,6 +160,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             // Write the properties to the BitWriter and assert the expected data was written.
             var writtenProperties = new Dictionary<string, object>();
             new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Write(testProperties, bitWriter, writtenProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty9")).Write(testProperties, bitWriter, writtenProperties);
             var bitReader = new BitReader(stream);
             Assert.AreEqual(bitReader.Read<uint>(), 6);
             Assert.AreEqual(bitReader.Read<int>(), 1);
@@ -165,9 +169,15 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             Assert.AreEqual(bitReader.Read<int>(), 4);
             Assert.AreEqual(bitReader.Read<int>(), 5);
             Assert.AreEqual(bitReader.Read<int>(), 6);
+            Assert.AreEqual(bitReader.Read<byte>(), 4);
+            Assert.AreEqual(bitReader.Read<int>(), 1);
+            Assert.AreEqual(bitReader.Read<int>(), 2);
+            Assert.AreEqual(bitReader.Read<int>(), 3);
+            Assert.AreEqual(bitReader.Read<int>(), 4);
             Assert.AreEqual(writtenProperties, new Dictionary<string, object>()
             {
                 {"TestProperty8", new [] {1,2,3,4,5,6}},
+                {"TestProperty9", new [] {1,2,3,4}},
             });
         }
         
@@ -279,15 +289,22 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             bitWriter.Write<int>(9);
             bitWriter.Write<int>(10);
             bitWriter.Write<int>(11);
+            bitWriter.Write<byte>(3);
+            bitWriter.Write<int>(12);
+            bitWriter.Write<int>(13);
+            bitWriter.Write<int>(14);
 
             // Read the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();
             var bitReader = new BitReader(stream);
             new PacketProperty(testPropertiesType.GetProperty("TestProperty8")).Read(testProperties, bitReader, readProperties);
+            new PacketProperty(testPropertiesType.GetProperty("TestProperty9")).Read(testProperties, bitReader, readProperties);
             Assert.AreEqual(testProperties.TestProperty8, new int[] {7,8,9,10,11});
+            Assert.AreEqual(testProperties.TestProperty9, new int[] {12,13,14});
             Assert.AreEqual(readProperties, new Dictionary<string, object>()
             {
                 {"TestProperty8", new int[] {7,8,9,10,11}},
+                {"TestProperty9", new int[] {12,13,14}},
             });
         }
     }

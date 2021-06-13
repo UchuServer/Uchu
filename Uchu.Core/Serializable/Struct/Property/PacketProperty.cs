@@ -101,6 +101,12 @@ namespace Uchu.Core
         private Type _propertyType;
 
         /// <summary>
+        /// Type of the property that the array length is written.
+        /// Property is unused for non-arrays.
+        /// </summary>
+        private Type _arrayLengthPropertyType = typeof(uint);
+
+        /// <summary>
         /// Custom property writer for the type.
         /// </summary>
         private Action<BitWriter, object> _customWriter;
@@ -147,6 +153,12 @@ namespace Uchu.Core
                     this._customReader = customReader;
                 }
             }
+            
+            // Get the array length type.
+            if (property.GetCustomAttribute(typeof(StoreLengthAs)) is StoreLengthAs storeLengthAs)
+            {
+                this._arrayLengthPropertyType = storeLengthAs.Type;
+            }
         }
 
         /// <summary>
@@ -162,7 +174,9 @@ namespace Uchu.Core
             if (this._propertyType.IsArray)
             {
                 var valueArray = (Array) value;
-                writer.Write<uint>((uint) valueArray.Length);
+                var length = Convert.ChangeType(valueArray.Length, this._arrayLengthPropertyType);
+                _bitWriterWriteMethod.MakeGenericMethod(this._arrayLengthPropertyType)
+                    .Invoke(writer, new object[] { length });
                 foreach (var subValue in valueArray)
                 {
                     if (this._customWriter != null)
@@ -205,7 +219,8 @@ namespace Uchu.Core
             object value = null;
             if (this._propertyType.IsArray)
             {
-                var length = reader.Read<uint>();
+                var length = Convert.ToUInt32(_bitReaderReadMethod.MakeGenericMethod(this._arrayLengthPropertyType)
+                        .Invoke(reader, null));
                 var valueArray = Array.CreateInstance(this._propertyType.GetElementType(), length);
                 value = valueArray;
                 for (var i = 0; i < length; i++) {
@@ -215,7 +230,8 @@ namespace Uchu.Core
                     }
                     else
                     {
-                        valueArray.SetValue(_bitReaderReadMethod.MakeGenericMethod(this._propertyType.GetElementType()).Invoke(reader, null), i);
+                        valueArray.SetValue(_bitReaderReadMethod.MakeGenericMethod(this._propertyType.GetElementType())
+                            .Invoke(reader, null), i);
                     }
                 }
             } else {
