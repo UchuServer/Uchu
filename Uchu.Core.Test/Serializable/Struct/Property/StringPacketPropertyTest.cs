@@ -55,15 +55,12 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             
             // Assert the strings were written.
             var bitReader = new BitReader(stream);
+            Assert.AreEqual(bitReader.Read<uint>(), 5);
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 'T');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 'e');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 's');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 't');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) '1');
-            for (var i = 0; i < 28; i++)
-            {
-                Assert.AreEqual(bitReader.Read<byte>(), 0);
-            }
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 'T');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 'e');
             Assert.AreEqual(bitReader.Read<byte>(), (byte) 's');
@@ -73,15 +70,12 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             {
                 Assert.AreEqual(bitReader.Read<byte>(), 0);
             }
+            Assert.AreEqual(bitReader.Read<uint>(), 5);
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 'T');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 'e');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 's');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 't');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) '3');
-            for (var i = 0; i < 28; i++)
-            {
-                Assert.AreEqual(bitReader.Read<ushort>(), 0);
-            }
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 'T');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 'e');
             Assert.AreEqual(bitReader.Read<ushort>(), (ushort) 's');
@@ -104,15 +98,12 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             var testStringsType = testStrings.GetType();
             var stream = new MemoryStream();
             var bitWriter = new BitWriter(stream);
+            bitWriter.Write<uint>(5);
             bitWriter.Write<byte>((byte) 'T');
             bitWriter.Write<byte>((byte) 'e');
             bitWriter.Write<byte>((byte) 's');
             bitWriter.Write<byte>((byte) 't');
             bitWriter.Write<byte>((byte) '5');
-            for (var i = 0; i < 28; i++)
-            { 
-                bitWriter.Write<byte>(0);
-            }
             bitWriter.Write<byte>((byte) 'T');
             bitWriter.Write<byte>((byte) 'e');
             bitWriter.Write<byte>((byte) 's');
@@ -122,15 +113,12 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             { 
                 bitWriter.Write<byte>(0);
             }
+            bitWriter.Write<uint>(5);
             bitWriter.Write<ushort>((ushort) 'T');
             bitWriter.Write<ushort>((ushort) 'e');
             bitWriter.Write<ushort>((ushort) 's');
             bitWriter.Write<ushort>((ushort) 't');
             bitWriter.Write<ushort>((ushort) '7');
-            for (var i = 0; i < 28; i++)
-            { 
-                bitWriter.Write<ushort>(0);
-            }
             bitWriter.Write<ushort>((ushort) 'T');
             bitWriter.Write<ushort>((ushort) 'e');
             bitWriter.Write<ushort>((ushort) 's');

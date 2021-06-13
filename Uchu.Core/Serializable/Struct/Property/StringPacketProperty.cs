@@ -14,7 +14,7 @@ namespace Uchu.Core
         /// <summary>
         /// Length of the string to read or write.
         /// </summary>
-        public int _length = 33;
+        public int _length = 0;
         
         /// <summary>
         /// Whether the encoded string is "wide" (2 bytes per character).
@@ -51,7 +51,13 @@ namespace Uchu.Core
         {
             // Write the string.
             var value = (string) this.Property.GetValue(objectToWrite);
-            writer.WriteString(value, this._length, this._isWide);
+            var length = this._length;
+            if (length == 0)
+            {
+                length = value.Length;
+                writer.Write<uint>((uint) length);
+            }
+            writer.WriteString(value, length, this._isWide);
 
             // Store the written string.
             if (writtenProperties != null)
@@ -69,7 +75,12 @@ namespace Uchu.Core
         public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties)
         {
             // Read the property.
-            var value = reader.ReadString(this._length, this._isWide);
+            var length = this._length;
+            if (length == 0)
+            {
+                length = reader.Read<int>();
+            }
+            var value = reader.ReadString(length, this._isWide);
             this.Property.SetValue(objectToWrite, value);
 
             // Store the written property.
