@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using InfectedRose.Core;
+using InfectedRose.Lvl;
 using RakDotNet.IO;
 
 namespace Uchu.Core
@@ -34,6 +35,27 @@ namespace Uchu.Core
                         writer.WriteNiQuaternion((Quaternion) o);
                     }
                 },
+                {
+                    typeof(LegoDataDictionary), (writer, o) =>
+                    {
+                        var data = (LegoDataDictionary) o;
+                        if (data != null)
+                        {
+                            var ldf = data.ToString();
+                            writer.Write((uint) ldf.Length);
+                            if (ldf.Length > 0)
+                            {
+                                writer.WriteString(ldf, ldf.Length, true);
+                                writer.Write((byte) 0);
+                                writer.Write((byte) 0);
+                            }
+                        }
+                        else
+                        {
+                            writer.Write<uint>(0u);
+                        }
+                    }
+                },
             };
         
         /// <summary>
@@ -53,6 +75,12 @@ namespace Uchu.Core
                     // Special case for Quaternions where LU works with W,X,Y,Z while
                     // the convention is X,Y,Z,W.
                     return reader.ReadNiQuaternion();
+                }
+            },
+            {
+                typeof(LegoDataDictionary), (reader) =>
+                {
+                    return LegoDataDictionary.FromString(reader.ReadString((int) reader.Read<uint>(), true));
                 }
             },
         };
