@@ -244,7 +244,7 @@ namespace Uchu.World
             foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
             {
                 Logger.Information($"Loading {path.PathName}");
-                    
+
                 try
                 {
                     SpawnPath(path);
@@ -275,32 +275,17 @@ namespace Uchu.World
             Start(obj);
             
             // Only spawns should get constructed on the client.
-            spawner?.SpawnCluster();
+            spawner?.Spawn();
         }
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
+            var network = InstancingUtilities.SpawnerNetwork(spawnerPath, this);
+
+            if (network.ActivateOnLoad)
             {
-                var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-                if (obj == null) return;
-
-                obj.Layer = StandardLayer.Hidden;
-
-                var spawner = obj.GetComponent<SpawnerComponent>();
-
-                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
-
-                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
-                {
-                    Position = w.Position,
-                    Rotation = ((LuzSpawnerWaypoint) w).Rotation,
-                }).ToList();
-
-                Start(obj);
-
-                spawner.SpawnCluster();
+                Start(network);
+                network.SpawnAll();
             }
         }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using InfectedRose.Lvl;
 using Uchu.Core;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
@@ -38,7 +37,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
             var towerSpawnerComponent = towerSpawnerObject.GetComponent<SpawnerComponent>();
             var legSpawnerComponents = new List<SpawnerComponent>();
 
-            var radius = (float) towerSpawnerComponent.Settings["hort_offset"];
+            var radius = (float) towerSpawnerComponent.GameObject.Settings["hort_offset"];
 
             for (var i = 0; i < 3; i++)
             {
@@ -66,9 +65,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                 legSpawnerObject.Transform.LookAt(towerSpawnerObject.Transform.Position);
 
                 var legSpawnerComponent = legSpawnerObject.AddComponent<SpawnerComponent>();
-                legSpawnerComponent.Settings = new LegoDataDictionary();
-                legSpawnerComponent.SpawnTemplate = new Lot((int) towerSpawnerComponent.Settings["legLOT"]);
-                legSpawnerComponent.LevelObject = new LevelObjectTemplate {Scale = 1};
+                legSpawnerComponent.SpawnTemplate = new Lot((int) towerSpawnerComponent.GameObject.Settings["legLOT"]);
                 // this time is a wild guess
                 legSpawnerComponent.RespawnTime = 50 * 1000;
 
@@ -84,7 +81,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                 Listen(legSpawnerComponent.OnRespawnInitiated, player =>
                 {
                     // Return if any leg is alive
-                    if (legSpawnerComponents.Any(spawnerComponent => spawnerComponent.ActiveSpawns.Count != 0))
+                    if (legSpawnerComponents.Any(spawnerComponent => spawnerComponent.HasActiveSpawn))
                         return;
 
                     // Arriving here in the code means all legs are smashed;
@@ -98,7 +95,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                     }
 
                     // Get tower object
-                    var tower = towerSpawnerComponent.ActiveSpawns.FirstOrDefault();
+                    var tower = towerSpawnerComponent.ActiveSpawn;
                     if (tower == default)
                         return;
 

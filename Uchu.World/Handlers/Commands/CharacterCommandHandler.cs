@@ -1,3 +1,4 @@
+using InfectedRose.Core;
 using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using System;

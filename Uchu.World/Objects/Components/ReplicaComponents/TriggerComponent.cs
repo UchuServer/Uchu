@@ -162,12 +162,11 @@ namespace Uchu.World
         private void DestroySpawnerNetworkObjects(TriggerCommand command, params object[] arguments)
         {
             var name = command.Arguments;
+            // Find all networks with this name
             var networks = Zone.GameObjects.Where(o => o.Name == name);
+            // Destroy all found networks
             foreach (var networkObject in networks.ToArray())
             {
-                foreach (var spawn in networkObject.GetComponent<SpawnerComponent>().ActiveSpawns.ToArray())
-                    Destroy(spawn);
-
                 Destroy(networkObject);
             }
         }
