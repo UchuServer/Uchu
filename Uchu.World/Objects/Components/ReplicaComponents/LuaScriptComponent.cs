@@ -32,7 +32,7 @@ namespace Uchu.World
                     return;
                 }
 
-                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride) && (string) scriptOverride != "")
                 {
                     ScriptName = (string) scriptOverride;
                 }
