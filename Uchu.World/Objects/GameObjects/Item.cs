@@ -393,7 +393,7 @@ namespace Uchu.World
         {
             if (Owner is Player player && Inventory != null)
             {
-                var message = new RemoveItemToInventoryMessage
+                var message = new RemoveItemFromInventoryMessage
                 {
                     Associate = player,
                     Item = this,

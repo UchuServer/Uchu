@@ -110,17 +110,17 @@ namespace Uchu.World
                     }
                 }
                 
-                NotifyPetTamingMinigame msg = new NotifyPetTamingMinigame();
+                NotifyPetTamingMinigameMessage msg = new NotifyPetTamingMinigameMessage();
 
                 msg.Associate = player;
                 
-                msg.bForceTeleport = true;
-                msg.PlayerTamingID = player.Id;
-                msg.PetID = GameObject.Id;
-                msg.notifyType = NotifyType.BEGIN;
+                msg.ForceTeleport = true;
+                msg.PlayerTaming = player;
+                msg.PetId = GameObject.Id;
+                msg.NotifyType = PetTamingNotifyType.Begin;
                 
                 Vector3 petPos = GameObject.Transform.Position;
-                msg.petsDestPos = petPos;
+                msg.PetDestinationPosition = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
                 var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
@@ -129,9 +129,9 @@ namespace Uchu.World
                     petPos.Y,
                     petPos.Z + (float) interaction_distance * (float)Math.Sin(-deg)
                 );
-                msg.telePos = pos;
+                msg.TeleportPosition = pos;
 
-                msg.teleRot = pos.QuaternionLookRotation(petPos);
+                msg.TeleportRotation = pos.QuaternionLookRotation(petPos);
                 
                 Zone.BroadcastMessage(msg);
 
@@ -139,16 +139,16 @@ namespace Uchu.World
                 nmsg.Associate = player;
                 nmsg.Bricks = Bricks.ToArray();
                 player.Message(nmsg);
-                player.Message(new NotifyPetTamingMinigame
+                player.Message(new NotifyPetTamingMinigameMessage
                 {
                     Associate = GameObject,
-                    bForceTeleport = false,
-                    notifyType = NotifyType.BEGIN,
-                    PetID = (ObjectId)(ulong)0,
-                    petsDestPos = Vector3.Zero,
-                    PlayerTamingID = player.Id,
-                    telePos = Vector3.Zero,
-                    teleRot = Quaternion.Identity
+                    ForceTeleport = false,
+                    NotifyType = PetTamingNotifyType.Begin,
+                    PetId = (ObjectId)(ulong)0,
+                    PetDestinationPosition = Vector3.Zero,
+                    PlayerTaming = player,
+                    TeleportPosition = Vector3.Zero,
+                    TeleportRotation = Quaternion.Identity
                 });
 
                 // Create all the pet listeners for other events

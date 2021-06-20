@@ -8,13 +8,13 @@ namespace Uchu.World
 	{
 		public GameObject Associate { get; set; }
 		public GameMessageId GameMessageId => GameMessageId.NotifyPetTamingMinigame;
-		public GameObject PetId { get; set; }
-		public GameObject PlayerTamingId { get; set; }
+		public ObjectId PetId { get; set; }
+		public Player PlayerTaming { get; set; }
 		public bool ForceTeleport { get; set; }
 		public PetTamingNotifyType NotifyType { get; set; }
-		public Vector3 PetDestPos { get; set; }
-		public Vector3 TelePos { get; set; }
+		public Vector3 PetDestinationPosition { get; set; }
+		public Vector3 TeleportPosition { get; set; }
 		[Default]
-		public Quaternion TeleRot { get; set; }
+		public Quaternion TeleportRotation { get; set; }
 	}
 }
