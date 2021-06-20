@@ -44,7 +44,7 @@ namespace Uchu.World
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
 
             if (levelObject.LegoInfo.TryGetValue("respawn", out var respawnTime))
-                spawnerComponent.RespawnTime = Convert.ToInt32((float) respawnTime * 1000);
+                spawnerComponent.RespawnTime = Convert.ToInt32(Convert.ToSingle(respawnTime) * 1000);
 
             return instance;
         }
