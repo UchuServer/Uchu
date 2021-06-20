@@ -13,14 +13,5 @@ namespace Uchu.World
 		public BuildType BuildType { get; set; }
 		public bool EnterBuildFromWorld { get; set; }
 		public bool EnterFlag { get; set; }
-
-		public ActivateBrickModeMessage(GameObject associate = default, GameObject buildObjectId = default, BuildType buildType = BuildType.OnProperty, bool enterBuildFromWorld = true, bool enterFlag = true)
-		{
-			this.Associate = associate;
-			this.BuildObjectId = buildObjectId;
-			this.BuildType = buildType;
-			this.EnterBuildFromWorld = enterBuildFromWorld;
-			this.EnterFlag = enterFlag;
-		}
 	}
 }

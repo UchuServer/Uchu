@@ -9,11 +9,5 @@ namespace Uchu.World
 		public GameMessageId GameMessageId => GameMessageId.ModifyGhostingDistance;
 		[Default(1)]
 		public float Distance { get; set; }
-
-		public ModifyGhostingDistanceMessage(GameObject associate = default, float distance = 1)
-		{
-			this.Associate = associate;
-			this.Distance = distance;
-		}
 	}
 }

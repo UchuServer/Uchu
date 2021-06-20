@@ -167,5 +167,25 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
                 {"TestProperty3", TestFlagEnum.TestValue2},
             });
         }
+        
+        /// <summary>
+        /// Tests reading properties with defaults.
+        /// </summary>
+        [Test]
+        public void TestReadDefaultValue()
+        {
+            // Write the test data.
+            var memoryStream = new MemoryStream();
+            var bitWriter = new BitWriter(memoryStream);
+            bitWriter.WriteBit(false);
+            
+            // Test reading the properties with flags.
+            var testProperties = new TestFlagProperties();
+            var bitReader = new BitReader(memoryStream);
+            var readProperties = new Dictionary<string, object>();
+            new FlagPacketProperty(new PacketProperty(typeof(TestFlagProperties).GetProperty("TestProperty1")), -5)
+                .Read(testProperties, bitReader, readProperties, null);
+            Assert.AreEqual(testProperties.TestProperty1, -5);
+        }
     }
 }

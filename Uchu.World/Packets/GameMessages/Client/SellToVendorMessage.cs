@@ -10,12 +10,5 @@ namespace Uchu.World
 		[Default(1)]
 		public int Count { get; set; }
 		public Item Item { get; set; }
-
-		public SellToVendorMessage(GameObject associate = default, int count = 1, Item item = default)
-		{
-			this.Associate = associate;
-			this.Count = count;
-			this.Item = item;
-		}
 	}
 }

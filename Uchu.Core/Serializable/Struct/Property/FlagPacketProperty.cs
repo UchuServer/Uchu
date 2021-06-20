@@ -58,8 +58,16 @@ namespace Uchu.Core
         public override void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
             // Read the value if the bit is set to true.
-            if (reader == null || !reader.ReadBit()) return;
-            this.WrappedProperty.Read(objectToWrite, reader, readProperties, context);
+            if (reader == null || !reader.ReadBit())
+            {
+                if (_valueToIgnore == null || !this.Property.CanWrite) return;
+                this.Property.SetValue(objectToWrite, _valueToIgnore);
+            }
+            else
+            {
+                this.WrappedProperty.Read(objectToWrite, reader, readProperties, context);
+            }
+            
         }
     }
 }

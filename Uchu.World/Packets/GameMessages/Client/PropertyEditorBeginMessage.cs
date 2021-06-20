@@ -15,14 +15,5 @@ namespace Uchu.World
 		public int StartMode { get; set; }
 		[Default]
 		public bool StartPaused { get; set; }
-
-		public PropertyEditorBeginMessage(GameObject associate = default, int distanceType = default, GameObject propertyObjectId = default, int startMode = 1, bool startPaused = default)
-		{
-			this.Associate = associate;
-			this.DistanceType = distanceType;
-			this.PropertyObjectId = propertyObjectId;
-			this.StartMode = startMode;
-			this.StartPaused = startPaused;
-		}
 	}
 }

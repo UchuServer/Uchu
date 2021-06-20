@@ -11,13 +11,5 @@ namespace Uchu.World
 		[Default(1)]
 		public int Count { get; set; }
 		public Lot Lot { get; set; }
-
-		public BuyFromVendorMessage(GameObject associate = default, bool confirmed = default, int count = 1, Lot lot = default)
-		{
-			this.Associate = associate;
-			this.Confirmed = confirmed;
-			this.Count = count;
-			this.Lot = lot;
-		}
 	}
 }

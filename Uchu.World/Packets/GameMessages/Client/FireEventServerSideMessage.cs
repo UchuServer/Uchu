@@ -16,15 +16,5 @@ namespace Uchu.World
 		[Default(-1)]
 		public int Param3 { get; set; }
 		public GameObject SenderId { get; set; }
-
-		public FireEventServerSideMessage(GameObject associate = default, string arguments = default, int param1 = -1, int param2 = -1, int param3 = -1, GameObject senderId = default)
-		{
-			this.Associate = associate;
-			this.Arguments = arguments;
-			this.Param1 = param1;
-			this.Param2 = param2;
-			this.Param3 = param3;
-			this.SenderId = senderId;
-		}
 	}
 }

@@ -11,13 +11,5 @@ namespace Uchu.World
 		public MissionLockState LockState { get; set; }
 		public string SubType { get; set; }
 		public string Type { get; set; }
-
-		public SetMissionTypeStateMessage(GameObject associate = default, MissionLockState lockState = MissionLockState.New, string subType = default, string type = default)
-		{
-			this.Associate = associate;
-			this.LockState = lockState;
-			this.SubType = subType;
-			this.Type = type;
-		}
 	}
 }

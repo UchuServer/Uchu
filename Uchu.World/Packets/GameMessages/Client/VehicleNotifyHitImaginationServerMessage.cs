@@ -16,14 +16,5 @@ namespace Uchu.World
 		public int PickupSpawnerIndex { get; set; }
 		[Default]
 		public Vector3 VehiclePosition { get; set; }
-
-		public VehicleNotifyHitImaginationServerMessage(GameObject associate = default, GameObject pickupObjId = default, GameObject pickupSpawnerId = default, int pickupSpawnerIndex = -1, Vector3 vehiclePosition = default)
-		{
-			this.Associate = associate;
-			this.PickupObjId = pickupObjId;
-			this.PickupSpawnerId = pickupSpawnerId;
-			this.PickupSpawnerIndex = pickupSpawnerIndex;
-			this.VehiclePosition = vehiclePosition;
-		}
 	}
 }

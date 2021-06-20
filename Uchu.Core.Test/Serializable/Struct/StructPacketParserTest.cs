@@ -1,3 +1,4 @@
+using System.IO;
 using System.Numerics;
 using NUnit.Framework;
 using RakDotNet.IO;
@@ -87,10 +88,10 @@ namespace Uchu.Core.Test.Serializable.Structure
         }
 
         /// <summary>
-        /// Tests SerializePacket.
+        /// Tests WritePacket.
         /// </summary>
         [Test]
-        public void TestSerializePacket()
+        public void TestWritePacket()
         {
             // Create the test packet.
             var packet = new DefaultPacket()
@@ -111,6 +112,33 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(reader.Read<int>(), 4);
             Assert.IsFalse(reader.ReadBit());
             Assert.AreEqual(reader.Read<int>(), 4);
+        }
+        
+        /// <summary>
+        /// Tests ReadPacket.
+        /// </summary>
+        [Test]
+        public void TestReadPacket()
+        {
+            // Write the data.
+            var stream = new MemoryStream();
+            var bitWriter = new BitWriter(stream);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<int>(2);
+            bitWriter.WriteBit(false);
+            bitWriter.Write<int>(3);
+
+            // Test reading the packet.
+            var packet = (DefaultPacket) StructPacketParser.ReadPacket(typeof(DefaultPacket), stream);
+            Assert.AreEqual(packet.TestProperty1, Vector3.One);
+            Assert.AreEqual(packet.TestProperty2, Vector3.One);
+            Assert.AreEqual(packet.TestProperty3, 2);
+            Assert.AreEqual(packet.TestProperty4, 4);
+            Assert.AreEqual(packet.TestProperty5, 3);
         }
     }
 }
