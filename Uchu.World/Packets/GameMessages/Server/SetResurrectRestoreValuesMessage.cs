@@ -13,13 +13,5 @@ namespace Uchu.World
 		public int HealthRestore { get; set; }
 		[Default(-1)]
 		public int ImaginationRestore { get; set; }
-
-		public SetResurrectRestoreValuesMessage(GameObject associate = default, int armorRestore = -1, int healthRestore = -1, int imaginationRestore = -1)
-		{
-			this.Associate = associate;
-			this.ArmorRestore = armorRestore;
-			this.HealthRestore = healthRestore;
-			this.ImaginationRestore = imaginationRestore;
-		}
 	}
 }

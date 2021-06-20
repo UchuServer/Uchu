@@ -13,7 +13,7 @@ namespace Uchu.World
 		public int CloneId { get; set; }
 		[Default]
 		public Vector3 Position { get; set; }
-		[Default(1)]
+		[Default]
 		public Quaternion Rotation { get; set; }
 		[Wide]
 		public string SpawnPoint { get; set; }

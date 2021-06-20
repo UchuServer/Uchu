@@ -136,19 +136,28 @@ namespace Uchu.StandardScripts.BlockYard
                     {
                         Name = "TornadoDebris",
                         EffectType = "debrisOn",
-                        Associate = item
+                        Associate = item,
+                        Priority = 1,
+                        Scale = 1,
+                        Serialize = true,
                     });
                     Player.Message(new PlayFXEffectMessage
                     {
                         Name = "TornadoVortex",
                         EffectType = "VortexOn",
-                        Associate = item
+                        Associate = item,
+                        Priority = 1,
+                        Scale = 1,
+                        Serialize = true,
                     });
                     Player.Message(new PlayFXEffectMessage
                     {
                         Name = "silhouette",
                         EffectType = "onSilhouette",
-                        Associate = item
+                        Associate = item,
+                        Priority = 1,
+                        Scale = 1,
+                        Serialize = true,
                     });
                 }
             }

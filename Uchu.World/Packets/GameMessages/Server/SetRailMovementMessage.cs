@@ -15,15 +15,5 @@ namespace Uchu.World
 		public int RailActivatorComponentId { get; set; }
 		[Default]
 		public GameObject RailActivatorObjId { get; set; }
-
-		public SetRailMovementMessage(GameObject associate = default, bool pathGoForward = default, string pathName = default, uint pathStart = default, int railActivatorComponentId = -1, GameObject railActivatorObjId = default)
-		{
-			this.Associate = associate;
-			this.PathGoForward = pathGoForward;
-			this.PathName = pathName;
-			this.PathStart = pathStart;
-			this.RailActivatorComponentId = railActivatorComponentId;
-			this.RailActivatorObjId = railActivatorObjId;
-		}
 	}
 }

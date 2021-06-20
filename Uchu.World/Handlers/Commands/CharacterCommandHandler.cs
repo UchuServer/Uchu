@@ -742,7 +742,8 @@ namespace Uchu.World.Handlers.Commands
             {
                 Associate = associate,
                 AnimationId = arguments[0],
-                Scale = scale
+                Priority = 0.4f,
+                Scale = scale,
             });
 
             return $"Attempting to play {arguments[0]} animation";

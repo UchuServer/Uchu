@@ -11,12 +11,5 @@ namespace Uchu.World
 		public int NewModerationStatus { get; set; }
 		[Wide]
 		public string RejectionReason { get; set; }
-
-		public PropertyModerationStatusUpdateMessage(GameObject associate = default, int newModerationStatus = -1, string rejectionReason = default)
-		{
-			this.Associate = associate;
-			this.NewModerationStatus = newModerationStatus;
-			this.RejectionReason = rejectionReason;
-		}
 	}
 }

@@ -23,6 +23,8 @@ namespace Uchu.StandardScripts.GnarledForest
                         AnimationId = "interact",
                         PlayImmediate = false,
                         TriggerOnCompleteMessage = false,
+                        Priority = 0.4f,
+                        Scale = 1,
                     });
                     player.Message(new ScriptNetworkVarUpdateMessage
                     {

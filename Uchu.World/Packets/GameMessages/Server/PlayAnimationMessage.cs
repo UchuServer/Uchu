@@ -16,16 +16,5 @@ namespace Uchu.World
 		public float Priority { get; set; }
 		[Default(1)]
 		public float Scale { get; set; }
-
-		public PlayAnimationMessage(GameObject associate = default, string animationId = default, bool expectAnimToExist = true, bool playImmediate = default, bool triggerOnCompleteMessage = default, float priority = 0.4f, float scale = 1)
-		{
-			this.Associate = associate;
-			this.AnimationId = animationId;
-			this.ExpectAnimToExist = expectAnimToExist;
-			this.PlayImmediate = playImmediate;
-			this.TriggerOnCompleteMessage = triggerOnCompleteMessage;
-			this.Priority = priority;
-			this.Scale = scale;
-		}
 	}
 }

@@ -11,12 +11,5 @@ namespace Uchu.World
 		public GameObject BuilderId { get; set; }
 		[Default(3)]
 		public float Duration { get; set; }
-
-		public UnSmashMessage(GameObject associate = default, GameObject builderId = default, float duration = 3)
-		{
-			this.Associate = associate;
-			this.BuilderId = builderId;
-			this.Duration = duration;
-		}
 	}
 }

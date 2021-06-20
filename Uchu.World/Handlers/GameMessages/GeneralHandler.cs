@@ -106,7 +106,9 @@ namespace Uchu.World.Handlers.GameMessages
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = player,
-                AnimationId = animation.AnimationName
+                AnimationId = animation.AnimationName,
+                Priority = 0.4f,
+                Scale = 1,
             });
             
             player.Zone.ExcludingMessage(new EmotePlayedMessage
@@ -142,7 +144,10 @@ namespace Uchu.World.Handlers.GameMessages
                     Associate = player,
                     EffectId = 7074,
                     EffectType = "create",
-                    Name = "levelup_body_glow"
+                    Name = "levelup_body_glow",
+                    Priority = 1,
+                    Scale = 1,
+                    Serialize = true,
                 });
 
                 player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");

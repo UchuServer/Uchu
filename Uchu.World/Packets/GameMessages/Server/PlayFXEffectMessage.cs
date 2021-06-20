@@ -19,17 +19,5 @@ namespace Uchu.World
 		[Default]
 		public GameObject Secondary { get; set; }
 		public bool Serialize { get; set; }
-
-		public PlayFXEffectMessage(GameObject associate = default, int effectId = -1, string effectType = default, float scale = 1, string name = default, float priority = 1, GameObject secondary = default, bool serialize = true)
-		{
-			this.Associate = associate;
-			this.EffectId = effectId;
-			this.EffectType = effectType;
-			this.Scale = scale;
-			this.Name = name;
-			this.Priority = priority;
-			this.Secondary = secondary;
-			this.Serialize = serialize;
-		}
 	}
 }

@@ -12,13 +12,5 @@ namespace Uchu.World
 		public bool LeavePlayerLocked { get; set; }
 		[Wide]
 		public string PathName { get; set; }
-
-		public EndCinematicMessage(GameObject associate = default, float leadOut = -1, bool leavePlayerLocked = default, string pathName = default)
-		{
-			this.Associate = associate;
-			this.LeadOut = leadOut;
-			this.LeavePlayerLocked = leavePlayerLocked;
-			this.PathName = pathName;
-		}
 	}
 }

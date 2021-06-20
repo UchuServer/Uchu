@@ -29,24 +29,5 @@ namespace Uchu.World
 		public string SoundGuid { get; set; }
 		[Wide]
 		public string SubText { get; set; }
-
-		public StartCelebrationEffectMessage(GameObject associate = default, string animation = default, int backgroundObject = 11164, int cameraPathLot = 12458, float celeLeadIn = 1, float celeLeadOut = 0.8f, int celebrationId = -1, float duration = default, uint iconId = default, string mainText = default, string mixerProgram = default, string musicCue = default, string pathNodeName = default, string soundGuid = default, string subText = default)
-		{
-			this.Associate = associate;
-			this.Animation = animation;
-			this.BackgroundObject = backgroundObject;
-			this.CameraPathLot = cameraPathLot;
-			this.CeleLeadIn = celeLeadIn;
-			this.CeleLeadOut = celeLeadOut;
-			this.CelebrationId = celebrationId;
-			this.Duration = duration;
-			this.IconId = iconId;
-			this.MainText = mainText;
-			this.MixerProgram = mixerProgram;
-			this.MusicCue = musicCue;
-			this.PathNodeName = pathNodeName;
-			this.SoundGuid = soundGuid;
-			this.SubText = subText;
-		}
 	}
 }

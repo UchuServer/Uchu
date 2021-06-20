@@ -20,18 +20,5 @@ namespace Uchu.World
 		public float VerticalVelocity { get; set; }
 		[Default(-1)]
 		public int WarningEffectId { get; set; }
-
-		public SetJetPackModeMessage(GameObject associate = default, bool bypassChecks = default, bool doHover = default, bool use = default, int effectId = -1, float airSpeed = 10, float maxAirSpeed = 15, float verticalVelocity = 1, int warningEffectId = -1)
-		{
-			this.Associate = associate;
-			this.BypassChecks = bypassChecks;
-			this.DoHover = doHover;
-			this.Use = use;
-			this.EffectId = effectId;
-			this.AirSpeed = airSpeed;
-			this.MaxAirSpeed = maxAirSpeed;
-			this.VerticalVelocity = verticalVelocity;
-			this.WarningEffectId = warningEffectId;
-		}
 	}
 }

@@ -8,7 +8,9 @@ namespace Uchu.World.Scripting.Native
             {
                 Associate = @this,
                 AnimationId = animation,
-                PlayImmediate = playImmediate
+                PlayImmediate = playImmediate,
+                Priority = 0.4f,
+                Scale = 1,
             });
         }
 
@@ -19,7 +21,10 @@ namespace Uchu.World.Scripting.Native
                 Associate = @this,
                 EffectId = id,
                 EffectType = type,
-                Name = name
+                Name = name,
+                Priority = 1,
+                Scale = 1,
+                Serialize = true,
             });
         }
 

@@ -20,18 +20,5 @@ namespace Uchu.World
 		[Default(-1)]
 		public BehaviorSlot SlotId { get; set; }
 		public bool Temporary { get; set; }
-
-		public AddSkillMessage(GameObject associate = default, int aiCombatWeight = default, bool fromSkillSet = default, SkillCastType castType = default, float timeSecs = -1, int timesCanCast = -1, uint skillId = default, BehaviorSlot slotId = BehaviorSlot.None, bool temporary = true)
-		{
-			this.Associate = associate;
-			this.AiCombatWeight = aiCombatWeight;
-			this.FromSkillSet = fromSkillSet;
-			this.CastType = castType;
-			this.TimeSecs = timeSecs;
-			this.TimesCanCast = timesCanCast;
-			this.SkillId = skillId;
-			this.SlotId = slotId;
-			this.Temporary = temporary;
-		}
 	}
 }

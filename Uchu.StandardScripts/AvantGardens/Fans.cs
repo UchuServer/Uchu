@@ -113,6 +113,9 @@ namespace Uchu.StandardScripts.AvantGardens
                                 EffectId = 495,
                                 EffectType = "fanOn",
                                 Name = "fanOn",
+                                Priority = 1,
+                                Scale = 1,
+                                Serialize = true,
                             });
                             
                             player.Message(new PlayAnimationMessage
@@ -120,6 +123,8 @@ namespace Uchu.StandardScripts.AvantGardens
                                 Associate = fanObject,
                                 AnimationId = "fan-on",
                                 PlayImmediate = true,
+                                Priority = 0.4f,
+                                Scale = 1,
                             });
                         }
                         else
@@ -129,6 +134,8 @@ namespace Uchu.StandardScripts.AvantGardens
                                 Associate = fanObject,
                                 AnimationId = "fan-off",
                                 PlayImmediate = true,
+                                Priority = 0.4f,
+                                Scale = 1,
                             });
                         }
                     });
