@@ -63,7 +63,11 @@ namespace Uchu.Core
         /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
         public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
-            
+            // The headers aren't used, so they are just read.
+            reader.Read<byte>();
+            reader.Read<ushort>();
+            reader.Read<uint>();
+            reader.Read<byte>();
         }
     }
 }

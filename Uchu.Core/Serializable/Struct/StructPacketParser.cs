@@ -70,7 +70,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="packet">Packet struct to write.</param>
         /// <typeparam name="T">Type of the packet.</typeparam>
-        /// <returns></returns>
+        /// <returns>Memory stream of the packet to write to the network.</returns>
         public static MemoryStream WritePacket<T>(T packet) where T : struct
         {
             // Create the bit writer.
@@ -87,6 +87,31 @@ namespace Uchu.Core
             // Return the stream.
             bitWriter.Dispose();
             return stream;
+        }
+        
+        /// <summary>
+        /// Creates the given packet struct from the given memory stream.
+        /// </summary>
+        /// <param name="packetType">Type of the packet to read.</param>
+        /// <param name="stream">Stream to read from.</param>
+        /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
+        /// <returns>Packet object that was read.</returns>
+        public static object ReadPacket(Type packetType, Stream stream, Dictionary<string, object> context = null)
+        {
+            // Create the bit reader.
+            var bitReader = new BitReader(stream);
+
+            // Read the properties.
+            var packet = Activator.CreateInstance(packetType);
+            var writtenProperties = new Dictionary<string, object>();
+            foreach (var property in GetPacketProperties(packetType))
+            {
+                property.Read(packet, bitReader, writtenProperties, context);
+            }
+            
+            // Return the packet.
+            bitReader.Dispose();
+            return packet;
         }
     }
 }

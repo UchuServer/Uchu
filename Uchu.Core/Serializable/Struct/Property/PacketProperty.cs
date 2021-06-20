@@ -246,10 +246,12 @@ namespace Uchu.Core
                 }
             }
             
+            // Set the value.
+            if (this.Property.CanWrite)
+            {
+                this.Property.SetValue(objectToWrite, value);
+            }
 
-            this.Property.SetValue(objectToWrite, value);
-            
-            
             // Store the written property.
             if (readProperties != null)
             {

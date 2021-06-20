@@ -163,38 +163,62 @@ namespace Uchu.World
                     {
                         // Packet handlers and game messages
                         var parameters = method.GetParameters();
-                        if (parameters.Length == 0 || !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
-                            continue;
-                        
-                        var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
-                        if (packet == null)
+                        if (parameters.Length == 0)
                             continue;
 
-                        // Game messages are stored separately
-                        if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                        if (typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
                         {
-                            var gameMessage = (IGameMessage) packet;
-                            if (gameMessage == null)
+                            // IPacket (object)-based handler.
+                            var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
+                            if (packet == null)
+                                continue;
+
+                            // Game messages are stored separately
+                            if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                            {
+                                var gameMessage = (IGameMessage) packet;
+                                if (gameMessage == null)
+                                    continue;
+                            
+                                _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler(instance, method,
+                                    parameters[0].ParameterType));
+                            }
+                            else
+                            {
+                                var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
+                                var packetId = attr.PacketId ?? packet.PacketId;
+
+                                if (!HandlerMap.ContainsKey(remoteConnectionType))
+                                    HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
+
+                                var handlers = HandlerMap[remoteConnectionType];
+
+                                Logger.Debug(!handlers.ContainsKey(packetId)
+                                    ? $"Registered handler for packet {packet}"
+                                    : $"Handler for packet {packet} overwritten");
+
+                                handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
+                            }
+                        }
+                        else if (parameters[0].ParameterType.IsValueType)
+                        {
+                            // Struct-based handler.
+                            var packet = Activator.CreateInstance(parameters[0].ParameterType);
+                            if (packet == null)
                                 continue;
                             
-                            _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler(instance, method,
-                                parameters[0].ParameterType));
-                        }
-                        else
-                        {
-                            var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
-                            var packetId = attr.PacketId ?? packet.PacketId;
-
-                            if (!HandlerMap.ContainsKey(remoteConnectionType))
-                                HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
-
-                            var handlers = HandlerMap[remoteConnectionType];
-
-                            Logger.Debug(!handlers.ContainsKey(packetId)
-                                ? $"Registered handler for packet {packet}"
-                                : $"Handler for packet {packet} overwritten");
-
-                            handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
+                            var gameMessageIdProperty = parameters[0].ParameterType.GetProperty("GameMessageId");
+                            if (gameMessageIdProperty != null)
+                            {
+                                if (!(gameMessageIdProperty.GetValue(packet) is GameMessageId gameMessageId))
+                                    continue;
+                                _gameMessageHandlerMap.Add(gameMessageId, new Handler(instance, method, 
+                                    parameters[0].ParameterType));
+                            }
+                            else
+                            {
+                                // TODO: Add packet handlers.
+                            }
                         }
                     }
                     else
@@ -257,12 +281,26 @@ namespace Uchu.World
                 return;
             }
 
-            var gameMessage = (IGameMessage)messageHandler.NewPacket();
-            gameMessage.Associate = associate;
-            reader.BaseStream.Position = 18;
-            reader.Read(gameMessage);
-
-            await InvokeHandlerAsync(messageHandler, gameMessage, player);
+            // Handle the packet.
+            if (messageHandler.PacketType.IsValueType)
+            {
+                // Handle a struct-based packet.
+                var gameMessage = StructPacketParser.ReadPacket(messageHandler.PacketType, reader.BaseStream, new Dictionary<string, object>()
+                {
+                    {"Zone", player.Zone}
+                });
+                await InvokeHandlerAsync(messageHandler, gameMessage, player);
+            }
+            else
+            {
+                // Handle an IPacket-based packet.
+                var gameMessage = (IGameMessage) messageHandler.NewPacket();
+                gameMessage.Associate = associate;
+                reader.BaseStream.Position = 18;
+                reader.Read(gameMessage);
+                
+                await InvokeHandlerAsync(messageHandler, gameMessage, player);
+            }
         }
 
         /// <summary>
@@ -271,7 +309,7 @@ namespace Uchu.World
         /// <param name="handler">The packet handler to call</param>
         /// <param name="packet">The packet to pass to the handler</param>
         /// <param name="player">The originator of the packet</param>
-        private static async Task InvokeHandlerAsync(Handler handler, IPacket packet, Player player)
+        private static async Task InvokeHandlerAsync(Handler handler, object packet, Player player)
         {
             var task = handler.Info.ReturnType == typeof(Task);
             var parameters = new object[] {packet, player};
