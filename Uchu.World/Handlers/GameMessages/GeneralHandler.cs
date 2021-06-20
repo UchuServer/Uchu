@@ -49,14 +49,14 @@ namespace Uchu.World.Handlers.GameMessages
             if (message.IsMultiInteract)
             {
                 // Multi-interact is mission
-                if (message.MultiInteractType == 0) // Mission Component
+                if (message.MultiInteractType == InteractionType.MissionOfferer) // Mission Component
                 {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
                 } 
-                else if (message.MultiInteractType == 1) // Any other case
+                else if (message.MultiInteractType == InteractionType.Vendor) // Any other case
                 {
                     await message.TargetObject.OnInteract.InvokeAsync(player);
                     await inventory.InteractAsync(message.TargetObject.Lot);
@@ -91,7 +91,7 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
+        public async Task ReadyForUpdatesHandler(ReadyForUpdatesMessage message, Player player)
         {
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);

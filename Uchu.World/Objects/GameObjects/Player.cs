@@ -50,8 +50,8 @@ namespace Uchu.World
         internal Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-            OnFireServerEvent = new Event<string, FireServerEventMessage>();
-            OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
+            OnFireServerEvent = new Event<string, FireEventServerSideMessage>();
+            OnReadyForUpdatesEvent = new Event<ReadyForUpdatesMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
@@ -226,9 +226,9 @@ namespace Uchu.World
         
         #region properties
 
-        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+        public Event<string, FireEventServerSideMessage> OnFireServerEvent { get; }
         
-        public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
+        public Event<ReadyForUpdatesMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
         

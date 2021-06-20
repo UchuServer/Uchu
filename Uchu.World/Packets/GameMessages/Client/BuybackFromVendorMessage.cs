@@ -1,27 +1,23 @@
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class BuybackFromVendorMessage : ClientGameMessage
+    [ClientGameMessagePacketStruct]
+    public struct BuybackFromVendorMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.BuybackFromVendor;
-        
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.BuybackFromVendor;
         public bool Confirmed { get; set; }
-
-        public int Count { get; set; } = 1;
-        
+        [Default(1)]
+        public int Count { get; set; }
         public Item Item { get; set; }
 
-        public override void Deserialize(BitReader reader)
+        public BuybackFromVendorMessage(GameObject associate = default, bool confirmed = default, int count = 1, Item item = default)
         {
-            Confirmed = reader.ReadBit();
-
-            if (reader.ReadBit())
-            {
-                Count = reader.Read<int>();
-            }
-
-            Item = reader.ReadGameObject<Item>(Associate.Zone);
+            this.Associate = associate;
+            this.Confirmed = confirmed;
+            this.Count = count;
+            this.Item = item;
         }
     }
 }

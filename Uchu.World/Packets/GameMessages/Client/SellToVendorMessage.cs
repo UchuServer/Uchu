@@ -1,23 +1,21 @@
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class SellToVendorMessage : ClientGameMessage
-    {
-        public override GameMessageId GameMessageId => GameMessageId.SellToVendor;
+	[ClientGameMessagePacketStruct]
+	public struct SellToVendorMessage
+	{
+		public GameObject Associate { get; set; }
+		public GameMessageId GameMessageId => GameMessageId.SellToVendor;
+		[Default(1)]
+		public int Count { get; set; }
+		public Item Item { get; set; }
 
-        public int Count { get; set; } = 1;
-        
-        public Item Item { get; set; }
-
-        public override void Deserialize(BitReader reader)
-        {
-            if (reader.ReadBit())
-            {
-                Count = reader.Read<int>();
-            }
-
-            Item = reader.ReadGameObject<Item>(Associate.Zone);
-        }
-    }
+		public SellToVendorMessage(GameObject associate = default, int count = 1, Item item = default)
+		{
+			this.Associate = associate;
+			this.Count = count;
+			this.Item = item;
+		}
+	}
 }
