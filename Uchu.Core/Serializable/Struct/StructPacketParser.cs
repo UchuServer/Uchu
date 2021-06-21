@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using RakDotNet;
 using RakDotNet.IO;
 
 namespace Uchu.Core
@@ -54,6 +52,21 @@ namespace Uchu.Core
                     {
                         packetProperty = new FlagPacketProperty(packetProperty, defaultAttribute.ValueToIgnore);
                     }
+                    
+                    // Wrap the required properties.
+                    var requiredProperties = new Dictionary<string, RequiredPacketProperty>();
+                    foreach (var requiredAttribute in property.GetCustomAttributes<Requires>())
+                    {
+                        if (!requiredProperties.ContainsKey(requiredAttribute.PropertyName))
+                        {
+                            var requiredPacketProperty = new RequiredPacketProperty(packetProperty, requiredAttribute.PropertyName);
+                            requiredProperties.Add(requiredAttribute.PropertyName, requiredPacketProperty);
+                            packetProperty = requiredPacketProperty;
+                        }
+                        requiredProperties[requiredAttribute.PropertyName].RequiredValues.Add(requiredAttribute.ValueToRequire);
+                    }
+                    
+                    // Add the packet property.
                     packetProperties.Add(packetProperty);
                 }
 
