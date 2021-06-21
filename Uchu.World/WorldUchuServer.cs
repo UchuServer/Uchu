@@ -204,7 +204,23 @@ namespace Uchu.World
                             }
                             else
                             {
-                                // TODO: Add packet handlers.
+                                var packetStruct = parameters[0].ParameterType.GetCustomAttribute<PacketStruct>(true);
+                                if (packetStruct == null)
+                                    continue;
+                                
+                                var remoteConnectionType = attr.RemoteConnectionType ?? packetStruct.RemoteConnectionType;
+                                var packetId = attr.PacketId ?? packetStruct.PacketId;
+
+                                if (!HandlerMap.ContainsKey(remoteConnectionType))
+                                    HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
+
+                                var handlers = HandlerMap[remoteConnectionType];
+
+                                Logger.Debug(!handlers.ContainsKey(packetId)
+                                    ? $"Registered handler for packet {packet}"
+                                    : $"Handler for packet {packet} overwritten");
+
+                                handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
                             }
                         }
                     }
