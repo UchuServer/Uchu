@@ -8,8 +8,9 @@ namespace Uchu.World
 	{
 		public GameObject Associate { get; set; }
 		public GameMessageId GameMessageId => GameMessageId.PlayerReachedRespawnCheckpoint;
-		public Vector3 Pos { get; set; }
+		public Vector3 Position { get; set; }
 		[Default]
-		public Quaternion Rot { get; set; }
+		[NiQuaternion]
+		public Quaternion Rotation { get; set; }
 	}
 }

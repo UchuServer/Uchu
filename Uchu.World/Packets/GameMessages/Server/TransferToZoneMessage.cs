@@ -14,6 +14,7 @@ namespace Uchu.World
 		[Default]
 		public Vector3 Position { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion Rotation { get; set; }
 		[Wide]
 		public string SpawnPoint { get; set; }

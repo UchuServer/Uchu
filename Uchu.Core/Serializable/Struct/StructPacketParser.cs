@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using RakDotNet.IO;
 
@@ -44,7 +45,10 @@ namespace Uchu.Core
                     {
                         packetProperty = new StringPacketProperty(property);
                     }
-                    else
+                    else if (property.PropertyType == typeof(Quaternion) && property.GetCustomAttribute<NiQuaternion>() != null)
+                    {
+                        packetProperty = new NiQuaternionProperty(property);
+                    } else
                     {
                         packetProperty = new PacketProperty(property);
                     }
@@ -100,6 +104,22 @@ namespace Uchu.Core
             // Return the stream.
             bitWriter.Dispose();
             return stream;
+        }
+        
+        /// <summary>
+        /// Writes the given packet struct to a writer.
+        /// </summary>
+        /// <param name="packet">Packet struct to write.</param>
+        /// <param name="bitWriter">Packet writer to write to.</param>
+        /// <typeparam name="T">Type of the packet.</typeparam>
+        public static void WritePacket<T>(T packet, BitWriter bitWriter) where T : struct
+        {
+            // Write the properties.
+            var writtenProperties = new Dictionary<string, object>();
+            foreach (var property in GetPacketProperties(typeof(T)))
+            {
+                property.Write(packet, bitWriter, writtenProperties);
+            }
         }
         
         /// <summary>

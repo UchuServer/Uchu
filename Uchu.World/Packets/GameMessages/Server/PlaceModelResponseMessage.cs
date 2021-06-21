@@ -15,6 +15,7 @@ namespace Uchu.World
 		[Default]
 		public int Response { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion Rotation { get; set; }
 	}
 }

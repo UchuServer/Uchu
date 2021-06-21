@@ -14,6 +14,7 @@ namespace Uchu.World
 		public Vector3 Position { get; set; }
 		public bool UseNavmesh { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion Rotation { get; set; }
 	}
 }

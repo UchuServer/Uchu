@@ -19,6 +19,7 @@ namespace Uchu.World
         [Default]
         public GameObject OptionalTarget { get; set; }
         [Default]
+        [NiQuaternion]
         public Quaternion OriginatorRotation { get; set; }
         public byte[] Content { get; set; }
         public int SkillId { get; set; }

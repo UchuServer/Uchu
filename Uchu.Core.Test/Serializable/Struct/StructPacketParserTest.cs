@@ -24,6 +24,9 @@ namespace Uchu.Core.Test.Serializable.Structure
             public int TestProperty2 { get; set; }
             public string TestProperty3 { get; set; }
             public string TestProperty4 { get; set; }
+            public Quaternion TestProperty5 { get; set; }
+            [NiQuaternion]
+            public Quaternion TestProperty6 { get; set; }
         }
         
         /// <summary>
@@ -56,7 +59,7 @@ namespace Uchu.Core.Test.Serializable.Structure
             
             // Test a packet with multiple properties.
             var multiplePropertyPacket = StructPacketParser.GetPacketProperties(typeof(MultiplePropertyPacket));
-            Assert.AreEqual(multiplePropertyPacket.Count, 4);
+            Assert.AreEqual(multiplePropertyPacket.Count, 6);
             Assert.IsTrue(multiplePropertyPacket[0] is PacketProperty);
             Assert.AreEqual(multiplePropertyPacket[0].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty1"));
             Assert.IsTrue(multiplePropertyPacket[1] is PacketProperty);
@@ -65,6 +68,10 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(multiplePropertyPacket[2].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty3"));
             Assert.IsTrue(multiplePropertyPacket[3] is StringPacketProperty);
             Assert.AreEqual(multiplePropertyPacket[3].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty4"));
+            Assert.IsTrue(multiplePropertyPacket[4] is PacketProperty);
+            Assert.AreEqual(multiplePropertyPacket[4].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty5"));
+            Assert.IsTrue(multiplePropertyPacket[5] is NiQuaternionProperty);
+            Assert.AreEqual(multiplePropertyPacket[5].Property, typeof(MultiplePropertyPacket).GetProperty("TestProperty6"));
         }
         
         /// <summary>

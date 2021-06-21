@@ -21,6 +21,7 @@ namespace Uchu.World
 		public int NextIndex { get; set; }
 		public Vector3 UnexpectedLocation { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion UnexpectedRotation { get; set; }
 	}
 }

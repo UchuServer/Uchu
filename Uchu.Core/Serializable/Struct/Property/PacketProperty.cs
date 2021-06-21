@@ -28,14 +28,6 @@ namespace Uchu.Core
                     }
                 },
                 {
-                    typeof(Quaternion), (writer, o) =>
-                    {
-                        // Special case for Quaternions where LU works with W,X,Y,Z while
-                        // the convention is X,Y,Z,W.
-                        writer.WriteNiQuaternion((Quaternion) o);
-                    }
-                },
-                {
                     typeof(LegoDataDictionary), (writer, o) =>
                     {
                         var data = (LegoDataDictionary) o;
@@ -67,14 +59,6 @@ namespace Uchu.Core
                 typeof(bool), (reader, context) =>
                 {
                     return reader.ReadBit();
-                }
-            },
-            {
-                typeof(Quaternion), (reader, context) =>
-                {
-                    // Special case for Quaternions where LU works with W,X,Y,Z while
-                    // the convention is X,Y,Z,W.
-                    return reader.ReadNiQuaternion();
                 }
             },
             {
@@ -255,7 +239,7 @@ namespace Uchu.Core
             // Store the written property.
             if (readProperties != null)
             {
-                readProperties[this.Property.Name] = this.Property.GetValue(objectToWrite);
+                readProperties[this.Property.Name] = value;
             }
         }
     }

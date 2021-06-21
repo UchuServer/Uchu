@@ -97,10 +97,10 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             var writtenProperties = new Dictionary<string, object>();
             new PacketProperty(testPropertiesType.GetProperty("TestProperty5")).Write(testProperties, bitWriter, writtenProperties);
             var bitReader = new BitReader(stream);
-            Assert.AreEqual(bitReader.Read<float>(), 4);
             Assert.AreEqual(bitReader.Read<float>(), 1);
             Assert.AreEqual(bitReader.Read<float>(), 2);
             Assert.AreEqual(bitReader.Read<float>(), 3);
+            Assert.AreEqual(bitReader.Read<float>(), 4);
             Assert.AreEqual(writtenProperties, new Dictionary<string, object>()
             {
                 {"TestProperty5", new Quaternion(1,2,3,4)},
@@ -228,10 +228,10 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
             var testPropertiesType = testProperties.GetType();
             var stream = new MemoryStream();
             var bitWriter = new BitWriter(stream);
-            bitWriter.Write<float>(8);
             bitWriter.Write<float>(5);
             bitWriter.Write<float>(6);
             bitWriter.Write<float>(7);
+            bitWriter.Write<float>(8);
 
             // Read the properties from the BitReader and assert the expected properties was read.
             var readProperties = new Dictionary<string, object>();

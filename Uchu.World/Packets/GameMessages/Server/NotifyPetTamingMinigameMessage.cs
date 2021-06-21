@@ -15,6 +15,7 @@ namespace Uchu.World
 		public Vector3 PetDestinationPosition { get; set; }
 		public Vector3 TeleportPosition { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion TeleportRotation { get; set; }
 	}
 }
