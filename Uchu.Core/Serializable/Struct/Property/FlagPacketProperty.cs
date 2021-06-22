@@ -61,7 +61,7 @@ namespace Uchu.Core
             if (reader == null || !reader.ReadBit())
             {
                 if (_valueToIgnore == null || !this.Property.CanWrite) return;
-                this.Property.SetValue(objectToWrite, _valueToIgnore);
+                this.Property.SetValue(objectToWrite, Convert.ChangeType(_valueToIgnore, this.Property.PropertyType));
             }
             else
             {
