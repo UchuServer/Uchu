@@ -239,7 +239,7 @@ namespace Uchu.Core
             // Store the written property.
             if (readProperties != null)
             {
-                readProperties[this.Property.Name] = value;
+                readProperties[this.Property.Name] = this.Property.GetValue(objectToWrite);
             }
         }
     }
