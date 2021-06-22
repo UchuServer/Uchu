@@ -11,6 +11,7 @@ namespace Uchu.World
 		public GameObject ModelId { get; set; }
 		public Vector3 Position { get; set; }
 		[Default]
+		[NiQuaternion]
 		public Quaternion Rotation { get; set; }
 	}
 }
