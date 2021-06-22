@@ -50,7 +50,7 @@ namespace Uchu.Core
         public void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
             // Write the string.
-            var value = (string) this.Property.GetValue(objectToWrite);
+            var value = (string) this.Property.GetValue(objectToWrite) ?? "";
             var length = this._length;
             if (length == 0)
             {
