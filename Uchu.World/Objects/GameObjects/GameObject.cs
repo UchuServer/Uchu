@@ -134,6 +134,7 @@ namespace Uchu.World
                 if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
                     this.GetComponent<LuaScriptComponent>() != default) return;
                 var scriptName = ((string) scriptNameValue).ToLower();
+                Logger.Debug($"{this} -> {scriptNameValue}");
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
@@ -189,31 +190,61 @@ namespace Uchu.World
 
         #region Component Management
 
-        public Component AddComponent(Type type)
+        /// <summary>
+        /// Adds a new component to the object, even if none exists.
+        /// </summary>
+        /// <param name="type">Type of the component.</param>
+        /// <returns>The new component.</returns>
+        public Component AddNewComponent(Type type)
         {
-            if (TryGetComponent(type, out var addedComponent)) return addedComponent;
-            
+            // Create the component.
             if (Object.Instantiate(type, Zone) is Component component)
             {
+                // Add the component.
                 component.GameObject = this;
-
                 Components.Add(component);
 
+                // Add the required components.
                 var requiredComponents = type.GetCustomAttributes<RequireComponentAttribute>().ToArray();
-
                 foreach (var attribute in requiredComponents.Where(r => r.Priority)) AddComponent(attribute.Type);
-
                 foreach (var attribute in requiredComponents.Where(r => !r.Priority)) AddComponent(attribute.Type);
 
+                // Start and return the component.
                 Start(component);
-
                 return component;
             }
 
+            // Show an error if the type is not a component.
             Logger.Error($"{type.FullName} does not inherit form Components but is being Created as one.");
             return null;
         }
+        
+        /// <summary>
+        /// Adds a new component to the object, even if none exists.
+        /// </summary>
+        /// <typeparam name="T">Type of the component.</typeparam>
+        /// <returns>The new component.</returns>
+        public T AddNewComponent<T>() where T : Component
+        {
+            return AddNewComponent(typeof(T)) as T;
+        }
+        
+        /// <summary>
+        /// Adds a component to the object if none exists.
+        /// </summary>
+        /// <param name="type">Type of the component.</param>
+        /// <returns>The new or existing component.</returns>
+        public Component AddComponent(Type type)
+        {
+            if (TryGetComponent(type, out var addedComponent)) return addedComponent;
+            return AddNewComponent(type);
+        }
 
+        /// <summary>
+        /// Adds a component to the object if none exists.
+        /// </summary>
+        /// <typeparam name="T">Type of the component.</typeparam>
+        /// <returns>The new or existing component.</returns>
         public T AddComponent<T>() where T : Component
         {
             return AddComponent(typeof(T)) as T;

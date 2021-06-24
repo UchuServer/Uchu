@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Uchu.Core;
-using Uchu.World.Scripting.Native;
 
 namespace Uchu.World.Scripting.Native
 {
@@ -58,12 +57,12 @@ namespace Uchu.World.Scripting.Native
             foreach (var type in _assembly.GetTypes())
             {
                 // Ignore non-object scripts.
-                if (type.BaseType != typeof(ObjectScript)) continue;
-                var objectSpecific = type.GetCustomAttribute<ObjectSpecific>();
+                if (type.BaseType != typeof(ScriptName)) continue;
+                var objectSpecific = type.GetCustomAttribute<ScriptName>();
                 if (objectSpecific == null) continue;
                 
                 // Add the object script.
-                this.ObjectScriptTypes.Add(objectSpecific.ScriptName.ToLower(), type);
+                this.ObjectScriptTypes.Add(objectSpecific.Name.ToLower(), type);
             }
         }
 
