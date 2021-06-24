@@ -1,22 +1,35 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.World;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
 
 namespace Uchu.StandardScripts.General
 {
-    public class Mailbox : NativeScript
+
+    [ScriptName("ScriptComponent_1088_script_name__removed")]
+    public class MailboxObjectScript : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public MailboxObjectScript(GameObject gameObject) : base(gameObject)
+        {
+            Listen(gameObject.OnInteract, async player =>
+            {
+                await player.OpenMailboxGuiAsync();
+            });
+        }
+    }
+    
+    public class MailboxEventScript : NativeScript
+    {
+        /// <summary>
+        /// Loads the script.
+        /// </summary>
         public override Task LoadAsync()
         {
-            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 3964))
-            {
-                Listen(gameObject.OnInteract, async player =>
-                {
-                    await player.OpenMailboxGuiAsync();
-                });
-            }
-
             Listen(Zone.OnPlayerLoad, player =>
             {
                 Listen(player.OnFireServerEvent, async (messagename, message) =>
@@ -25,10 +38,8 @@ namespace Uchu.StandardScripts.General
                     {
                         await UiHelper.ToggleAsync(player, "ToggleMail", false);
                     }
-
                 });
             });
-
             return Task.CompletedTask;
         }
     }

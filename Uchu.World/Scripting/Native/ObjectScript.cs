@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
 using Uchu.Physics;
+using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World.Scripting.Native
 {
@@ -49,6 +50,20 @@ namespace Uchu.World.Scripting.Native
                 this.UnloadAsync();
             });
         }
+
+        #region Object
+        /// <summary>
+        /// Destroys the object.
+        /// </summary>
+        /// <param name="killerId">Killer of the object.</param>
+        public void Die(Player killerId)
+        {
+            Task.Run(async () =>
+            {
+                await this.GameObject.GetComponent<DestructibleComponent>().SmashAsync(killerId);
+            });
+        }
+        #endregion
 
         #region Variable Storage
         /// <summary>
