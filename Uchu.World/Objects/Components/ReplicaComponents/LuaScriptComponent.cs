@@ -41,18 +41,16 @@ namespace Uchu.World
                 }
                 
                 // Set the script name.
-                ClientScriptName = script.Clientscriptname;
-                var scriptName = ScriptName ?? ClientScriptName;
-                Logger.Debug($"{GameObject} -> {scriptName}");
+                this.ClientScriptName = script.Clientscriptname;
+                Logger.Debug($"{GameObject} -> {this.ScriptName}, {this.ClientScriptName}");
                 
                 // Start the object script.
-                if (scriptName == null) return;
-                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
-                {
-                    if (!scriptName.ToLower().EndsWith(objectScriptName)) continue;
-                    Activator.CreateInstance(objectScriptType, GameObject);
-                    break;
-                }
+                var newObjectScriptName = Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
+                    objectScriptName => (this.ScriptName ?? "").ToLower().EndsWith(objectScriptName))
+                        ?? Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
+                            objectScriptName => (this.ClientScriptName ?? "").ToLower().EndsWith(objectScriptName));
+                if (newObjectScriptName == null) return;
+                Activator.CreateInstance(Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName], GameObject);
             });
         }
 
