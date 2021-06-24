@@ -133,6 +133,7 @@ namespace Uchu.World
             Logger.Information($"Checksum: 0x{Checksum:X}");
             Logger.Information($"Collecting objects for {ZoneId}");
 
+            await ScriptManager.LoadDefaultScriptsAsync();
             await LoadObjects();
             await LoadScripts();
 
@@ -146,8 +147,6 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadScripts()
         {
-            await ScriptManager.LoadDefaultScriptsAsync();
-            
             foreach (var scriptPack in ScriptManager.ScriptPacks)
             {
                 try

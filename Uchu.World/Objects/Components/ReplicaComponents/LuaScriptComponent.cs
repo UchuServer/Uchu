@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
 using InfectedRose.Lvl;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -21,14 +23,12 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
+                // Get the script component or custom script.
                 var scriptId = GameObject.Lot.GetComponentId(ComponentId.ScriptComponent);
-
                 var script = ClientCache.GetTable<ScriptComponent>().FirstOrDefault(s => s.Id == scriptId);
-
                 if (script == default)
                 {
                     Logger.Warning($"{GameObject} has an invalid script component entry: {scriptId}");
-                    
                     return;
                 }
 
@@ -41,9 +41,19 @@ namespace Uchu.World
                     ScriptName = script.Scriptname;
                 }
                 
+                // Set the script name.
                 ClientScriptName = script.Clientscriptname;
-            
-                Logger.Debug($"{GameObject} -> {ScriptName}");
+                var scriptName = ScriptName ?? ClientScriptName;
+                Logger.Debug($"{GameObject} -> {scriptName}");
+                
+                // Start the object script.
+                if (scriptName == null) return;
+                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
+                {
+                    if (!scriptName.ToLower().EndsWith(objectScriptName)) continue;
+                    Activator.CreateInstance(objectScriptType, GameObject);
+                    break;
+                }
             });
         }
 

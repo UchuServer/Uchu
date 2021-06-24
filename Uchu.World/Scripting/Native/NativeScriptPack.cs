@@ -11,6 +11,11 @@ namespace Uchu.World.Scripting.Native
 {
     internal class NativeScriptPack : ScriptPack
     {
+        /// <summary>
+        /// Object script types in the script pack.
+        /// </summary>
+        public Dictionary<string, Type> ObjectScriptTypes { get; } = new Dictionary<string, Type>();
+        
         private List<NativeScript> _scripts;
 
         private Assembly _assembly;
@@ -24,27 +29,41 @@ namespace Uchu.World.Scripting.Native
             _scripts = new List<NativeScript>();
         }
 
+        /// <summary>
+        /// Reads the assembly and adds the scripts.
+        /// </summary>
         internal void ReadAssembly()
         {
             _assembly = Assembly.Load(File.ReadAllBytes(Location));
-            
             _scripts = new List<NativeScript>();
 
+            // Add the zone scripts.
             foreach (var type in _assembly.GetTypes())
             {
-                if (type.BaseType != typeof(NativeScript)) return;
-
+                // Ignore non-native scripts.
+                if (type.BaseType != typeof(NativeScript)) continue;
                 var zoneSpecific = type.GetCustomAttributes<ZoneSpecificAttribute>().ToArray();
                 if (zoneSpecific.Length > 0)
                 {
                     if (zoneSpecific.FirstOrDefault(zoneSpecificEntry => zoneSpecificEntry.ZoneId == Zone.ZoneId) == default) continue;
                 }
 
+                // Add the scripts.
                 var instance = (NativeScript) Activator.CreateInstance(type);
-                
                 instance.SetZone(Zone);
-
                 _scripts.Add(instance);
+            }
+            
+            // Add the object scripts.
+            foreach (var type in _assembly.GetTypes())
+            {
+                // Ignore non-object scripts.
+                if (type.BaseType != typeof(ObjectScript)) continue;
+                var objectSpecific = type.GetCustomAttribute<ObjectSpecific>();
+                if (objectSpecific == null) continue;
+                
+                // Add the object script.
+                this.ObjectScriptTypes.Add(objectSpecific.ScriptName.ToLower(), type);
             }
         }
 

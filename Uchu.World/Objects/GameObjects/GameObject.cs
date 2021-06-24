@@ -8,6 +8,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -127,6 +128,18 @@ namespace Uchu.World
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);
+                
+                // Load the script for the object.
+                // Special case for when custom_script_server but there is no script component.
+                if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
+                    this.GetComponent<LuaScriptComponent>() != default) return;
+                var scriptName = ((string) scriptNameValue).ToLower();
+                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
+                {
+                    if (!scriptName.EndsWith(objectScriptName)) continue;
+                    Activator.CreateInstance(objectScriptType, this);
+                    break;
+                }
             });
 
             Listen(OnDestroyed, () =>
