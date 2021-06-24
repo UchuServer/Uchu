@@ -1,7 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Uchu.Core;
-using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 using Uchu.Core.Resources;
@@ -10,51 +8,29 @@ using DestructibleComponent = Uchu.World.DestructibleComponent;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    /// LUA Reference: l_ag_imag_smashable.lua
+    /// Native implementation of scripts/ai/np/l_ag_imag_smashable.lua
     /// </summary>
-    [ZoneSpecific(1000)]
-    public class ImaginationSmashable : NativeScript
+    [ScriptName("l_ag_imag_smashable.lua")]
+    public class ImaginationSmashable : ObjectScript
     {
-        private const string ScriptName = "l_ag_imag_smashable.lua";
-        
-        private Random _random;
-        
-        public override Task LoadAsync()
-        {
-            _random = new Random();
-            
-            foreach (var gameObject in HasLuaScript(ScriptName))
-            {
-                MountDrops(gameObject);
-            }
-
-            Listen(Zone.OnObject, obj =>
-            {
-                if (!(obj is GameObject gameObject))
-                    return;
-
-                if (HasLuaScript(gameObject, ScriptName))
-                {
-                    MountDrops(gameObject);
-                }
-            });
-            
-            return Task.CompletedTask;
-        }
-
         /// <summary>
-        /// Handles loot drops by ensuring the player has accepted the bob mission before allowing imagination to spawn.
-        /// Also spawns chickens with a 1/26 chance.
+        /// Randomizer for spawning chickens.
         /// </summary>
-        /// <param name="gameObject">The game object to set the restrictions for</param>
-        private void MountDrops(GameObject gameObject)
+        private Random _random = new Random();
+        
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public ImaginationSmashable(GameObject gameObject) : base(gameObject)
         {
             if (!gameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 return;
-
+            
+            // Listen to the object being smashed.
             Listen(destructibleComponent.OnSmashed, (killer, owner) =>
             {
-                // Manually spawn imagination if a user has the prerequisite mission as it's not in the crate LT
+                // Manually spawn imagination if a user has the prerequisite mission as it's not in the crate loot table.
                 var missionInventory = owner.GetComponent<MissionInventoryComponent>();
                 if (missionInventory != default && missionInventory.HasMission((int) MissionId.UnlockYourImagination))
                 {
@@ -66,16 +42,13 @@ namespace Uchu.StandardScripts.VentureExplorer
                     }
                 }
                 
-                // Spawn crate chicken
+                // Spawn the crate chicken.
                 var random = _random.Next(0, 26);
                 if (random != 1)
                     return;
-                
                 var chicken = GameObject.Instantiate(Zone, 8114, gameObject.Transform.Position);
-
                 Start(chicken);
                 Construct(chicken);
-
                 Task.Run(async () =>
                 {
                     await Task.Delay(4000);

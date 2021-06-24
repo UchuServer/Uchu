@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
+using System.Timers;
 using Uchu.Physics;
 
 namespace Uchu.World.Scripting.Native
@@ -10,7 +13,7 @@ namespace Uchu.World.Scripting.Native
         Leave,
     }
     
-    public abstract class ObjectScript : ObjectBase
+    public abstract class ObjectScript : NativeScript
     {
         /// <summary>
         /// Object controlled by the script.
@@ -21,6 +24,11 @@ namespace Uchu.World.Scripting.Native
         /// Dictionary of the variables stored by the script.
         /// </summary>
         private Dictionary<string, object> _variables = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Timers used by the script.
+        /// </summary>
+        private Dictionary<string, Timer> _timers = new Dictionary<string, Timer>();
         
         /// <summary>
         /// Creates the object script.
@@ -29,18 +37,17 @@ namespace Uchu.World.Scripting.Native
         public ObjectScript(GameObject gameObject)
         {
             this.GameObject = gameObject;
+            this.SetZone(gameObject.Zone);
             
             // Connect clearing on destroyed.
-            Listen(gameObject.OnDestroyed, this.Clear);
-        }
-
-        /// <summary>
-        /// Clears the script.
-        /// Should be called when the GameObject is destroyed.
-        /// </summary>
-        public virtual void Clear()
-        {
-            this.ClearListeners();
+            Listen(gameObject.OnDestroyed, () =>
+            {
+                // Stop the timers.
+                this.CancelAllTimers();
+                
+                // Unload the script.
+                this.UnloadAsync();
+            });
         }
 
         #region Variable Storage
@@ -63,6 +70,62 @@ namespace Uchu.World.Scripting.Native
         public T GetVar<T>(string name)
         {
             return (T) this._variables[name];
+        }
+        #endregion
+
+        #region Timers
+        /// <summary>
+        /// Starts a timer to be called back later. The timer
+        /// can be cancelled.
+        /// </summary>
+        /// <param name="duration"></param>
+        /// <param name="timerName"></param>
+        public void AddTimerWithCancel(float duration, string timerName)
+        {
+            // Cancel the existing timer.
+            this.CancelTimer(timerName);
+            
+            // Create and add the timer.
+            var timer = new Timer(duration * 1000);
+            timer.Elapsed += (sender, args) =>
+            {
+                this.OnTimerDone(timerName);
+            };
+            timer.AutoReset = false;
+            timer.Start();
+            this._timers[timerName] = timer;
+        }
+
+        /// <summary>
+        /// Cancels a timer.
+        /// </summary>
+        /// <param name="timerName">Timer to cancel.</param>
+        public void CancelTimer(string timerName)
+        {
+            if (!this._timers.ContainsKey(timerName)) return;
+            this._timers[timerName].Stop();
+            this._timers.Remove(timerName);
+        }
+
+        /// <summary>
+        /// Cancels all the timers of the script.
+        /// </summary>
+        public void CancelAllTimers()
+        {
+            foreach (var timer in this._timers.Values)
+            {
+                timer.Stop();
+            }
+            this._timers.Clear();
+        }
+
+        /// <summary>
+        /// Callback for the timer completing.
+        /// </summary>
+        /// <param name="timerName">Timer that was completed.</param>
+        public virtual void OnTimerDone(string timerName)
+        {
+            
         }
         #endregion
 
@@ -178,6 +241,33 @@ namespace Uchu.World.Scripting.Native
         {
             this.GameObject.PlayFX(name, type, id);
         }
+        
+        /// <summary>
+        /// Stops an effect on the game object.
+        /// </summary>
+        /// <param name="name">Name of the effect.</param>
+        public void StopFXEffect(string name)
+        {
+            this.GameObject.StopFX(name);
+        }
+        
+        /// <summary>
+        /// Plays an animation on the game object.
+        /// </summary>
+        /// <param name="name">Name of the animation.</param>
+        /// <param name="playImmediate">Whether the animation should be played immediately.</param>
+        public void PlayAnimation(string name, bool playImmediate = false)
+        {
+            this.GameObject.Animate(name, playImmediate);
+        }
         #endregion
+        
+        /// <summary>
+        /// Loads the script.
+        /// </summary>
+        public override Task LoadAsync()
+        {
+            throw new InvalidOperationException("Object scripts can't be loaded as native scripts.");
+        }
     }
 }
