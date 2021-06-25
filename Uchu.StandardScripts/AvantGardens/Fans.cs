@@ -33,11 +33,6 @@ namespace Uchu.StandardScripts.AvantGardens
         /// <param name="gameObject">Game object to control with the script.</param>
         public Fans(GameObject gameObject) : base(gameObject)
         {
-            // Set the initial variables.
-            this.SetVar("IsOn", false);
-            
-            // Toggle the initial effects.
-            this.ToggleFX();
             
             // Connect the switch.
             this._fanGroup = ((string) this.GameObject.Settings["groupID"]).Replace(";", "");
@@ -51,12 +46,17 @@ namespace Uchu.StandardScripts.AvantGardens
                 this.SetVar("IsOn", true);
                 this.ToggleFX();
             });
-                
             Listen(switchComponent.OnDeactivated, () =>
             {
                 this.SetVar("IsOn", false);
                 this.ToggleFX();
             });
+            
+            // Set the initial variables.
+            this.SetVar("IsOn", switchComponent.State);
+            
+            // Toggle the initial effects.
+            this.ToggleFX();
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Uchu.StandardScripts.AvantGardens
             // Update the effects.
             if (this.GetVar<bool>("IsOn") || !alive)
             {
-                this.PlayAnimation("fan-off", true);
+                this.StartAnimation("fan-off", true);
                 this.StopFXEffect("fanOn");
                 foreach (var volume in volumeGroup)
                 {
@@ -88,7 +88,7 @@ namespace Uchu.StandardScripts.AvantGardens
             }
             else
             {
-                this.PlayAnimation("fan-on", true);
+                this.StartAnimation("fan-on", true);
                 this.StartFXEffect("fanOn", "fanOn", 495);
                 foreach (var volume in volumeGroup)
                 {
