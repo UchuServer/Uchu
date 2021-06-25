@@ -484,6 +484,7 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
+                if (!recipient.Perspective.View(gameObject)) continue;
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
                 recipient.Connection.Send(new SerializePacket()
