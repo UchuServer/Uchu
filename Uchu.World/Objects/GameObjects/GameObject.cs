@@ -419,7 +419,7 @@ namespace Uchu.World
         #region From Template
 
         public static GameObject Instantiate(Type type, Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default)
+            Quaternion rotation = default, GameObject author = default)
         {
             return Instantiate(type, new LevelObjectTemplate
             {
@@ -428,19 +428,19 @@ namespace Uchu.World
                 Rotation = rotation,
                 Scale = 1,
                 LegoInfo = new LegoDataDictionary()
-            }, parent);
+            }, parent, author: author);
         }
 
         public static T Instantiate<T>(Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default) where T : GameObject
+            Quaternion rotation = default, GameObject author = default) where T : GameObject
         {
-            return Instantiate(typeof(T), parent, lot, position, rotation) as T;
+            return Instantiate(typeof(T), parent, lot, position, rotation, author) as T;
         }
 
         public static GameObject Instantiate(Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default)
+            Quaternion rotation = default, GameObject author = default)
         {
-            return Instantiate(typeof(GameObject), parent, lot, position, rotation);
+            return Instantiate(typeof(GameObject), parent, lot, position, rotation, author);
         }
 
         #endregion
@@ -448,7 +448,7 @@ namespace Uchu.World
         #region From LevelObject
 
         public static GameObject Instantiate(Type type, LevelObjectTemplate levelObject, Object parent,
-            SpawnerComponent spawner = default)
+            SpawnerComponent spawner = default, GameObject author = default)
         {
             // ReSharper disable PossibleInvalidOperationException
 
@@ -482,6 +482,13 @@ namespace Uchu.World
 
             instance.Spawner = spawner;
             instance.Settings = levelObject.LegoInfo;
+
+            // Set the author.
+            // Ensures the author is set before the object is started instead of after.
+            if (author != default && instance is AuthoredGameObject authoredGameObject)
+            {
+                authoredGameObject.Author = author;
+            }
 
             //
             // Collect all the components on this object
@@ -550,15 +557,17 @@ namespace Uchu.World
             return instance;
         }
 
-        public static T Instantiate<T>(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
+        public static T Instantiate<T>(LevelObjectTemplate levelObject, Object parent,
+            SpawnerComponent spawner = default, GameObject author = default)
             where T : GameObject
         {
-            return Instantiate(typeof(T), levelObject, parent, spawner) as T;
+            return Instantiate(typeof(T), levelObject, parent, spawner, author) as T;
         }
 
-        public static GameObject Instantiate(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
+        public static GameObject Instantiate(LevelObjectTemplate levelObject, Object parent,
+            SpawnerComponent spawner = default, GameObject author = default)
         {
-            return Instantiate(typeof(GameObject), levelObject, parent, spawner);
+            return Instantiate(typeof(GameObject), levelObject, parent, spawner, author);
         }
 
         #endregion

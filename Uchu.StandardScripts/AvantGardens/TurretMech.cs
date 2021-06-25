@@ -23,9 +23,9 @@ namespace Uchu.StandardScripts.AvantGardens
                     Zone,
                     6254,
                     gameObject.Transform.Position,
-                    gameObject.Transform.Rotation
+                    gameObject.Transform.Rotation,
+                    smasher
                 );
-                quickBuild.Author = smasher;
                 Start(quickBuild);
                 Construct(quickBuild);
 
