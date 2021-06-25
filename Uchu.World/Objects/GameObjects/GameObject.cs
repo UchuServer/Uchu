@@ -138,7 +138,7 @@ namespace Uchu.World
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
-                    Activator.CreateInstance(objectScriptType, this);
+                    this.Zone.LoadObjectScript(this, objectScriptType);
                     break;
                 }
             });

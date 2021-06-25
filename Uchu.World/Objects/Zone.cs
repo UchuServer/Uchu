@@ -69,6 +69,8 @@ namespace Uchu.World
         private long _objectUpdateTime;
         private long _scheduleUpdateTime;
         private long _timeSinceLastHeartBeat;
+        private bool _loadObjectScriptsImmediately;
+        private List<(GameObject, Type)> _queuedObjectScripts = new List<(GameObject, Type)>();
         
         public bool CalculatingTick { get; set; }
         public float DeltaTime { get; private set; }
@@ -135,11 +137,31 @@ namespace Uchu.World
 
             await ScriptManager.LoadDefaultScriptsAsync();
             await LoadObjects();
+            this._loadObjectScriptsImmediately = true;
             await LoadScripts();
-
             SetupGameLoop();
-            
             Loaded = true;
+        }
+
+        /// <summary>
+        /// Loads an object script. Either happens immediately or is queued
+        /// for when all the objects load depending on if the zone has loaded.
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="objectScriptType"></param>
+        public void LoadObjectScript(GameObject gameObject, Type objectScriptType)
+        {
+            if (this._loadObjectScriptsImmediately)
+            {
+                // Load the script.
+                Logger.Information($"Running object script: {objectScriptType.Name}");
+                Activator.CreateInstance(objectScriptType, gameObject);
+            }
+            else
+            {
+                // Queue the script to be loaded.
+                this._queuedObjectScripts.Add((gameObject, objectScriptType));
+            }
         }
 
         /// <summary>
@@ -147,6 +169,7 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadScripts()
         {
+            // Load the script packs.
             foreach (var scriptPack in ScriptManager.ScriptPacks)
             {
                 try
@@ -158,6 +181,12 @@ namespace Uchu.World
                 {
                     Logger.Information(e);
                 }
+            }
+            
+            // Load the object scripts.
+            foreach (var (gameObject, objectScriptType) in this._queuedObjectScripts)
+            {
+                this.LoadObjectScript(gameObject, objectScriptType);
             }
         }
         

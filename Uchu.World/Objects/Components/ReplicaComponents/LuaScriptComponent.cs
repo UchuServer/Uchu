@@ -50,7 +50,7 @@ namespace Uchu.World
                         ?? Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
                             objectScriptName => (this.ClientScriptName ?? "").ToLower().EndsWith(objectScriptName));
                 if (newObjectScriptName == null) return;
-                Activator.CreateInstance(Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName], GameObject);
+                this.Zone.LoadObjectScript(this.GameObject, Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName]);
             });
         }
 
