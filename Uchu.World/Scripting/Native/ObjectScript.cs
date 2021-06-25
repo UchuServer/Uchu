@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Lvl;
 using Uchu.Physics;
 
 namespace Uchu.World.Scripting.Native
@@ -115,6 +116,59 @@ namespace Uchu.World.Scripting.Native
         public void SetVar(string name, object value)
         {
             this._variables[name] = value;
+        }
+        
+        /// <summary>
+        /// Sets a networked variable of the script.
+        /// </summary>
+        /// <param name="name">Name of the variable to store.</param>
+        /// <param name="value">Value of the variable to store.</param>
+        public void SetNetworkVar(string name, object value)
+        {
+            // Set the variable.
+            this.SetVar(name, value);
+            
+            // Broadcast the variable change.
+            Task.Run(() =>
+            {
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                {
+                    Associate = this.GameObject,
+                    LDFInText = new LegoDataDictionary()
+                    {
+                        {name, value}
+                    }.ToString(),
+                });
+            });
+        }
+        
+        /// <summary>
+        /// Sets a networked variable of the script.
+        /// </summary>
+        /// <param name="name">Name of the variable to store.</param>
+        /// <param name="value">Value of the variable to store.</param>
+        /// <param name="type">Type of the LDF entry to send.</param>
+        public void SetNetworkVar(string name, object value, byte type)
+        {
+            // Set the variable.
+            this.SetVar(name, value);
+            
+            // Broadcast the variable change.
+            Task.Run(() =>
+            {
+                Console.WriteLine("SET: " + new LegoDataDictionary()
+                {
+                    {name, value, type}
+                }.ToString());
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                {
+                    Associate = this.GameObject,
+                    LDFInText = new LegoDataDictionary()
+                    {
+                        {name, value, type}
+                    }.ToString(),
+                });
+            });
         }
 
         /// <summary>
