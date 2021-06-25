@@ -8,7 +8,7 @@ using DestructibleComponent = Uchu.World.DestructibleComponent;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    /// Native implementation of scripts/ai/np/l_ag_imag_smashable.lua
+    /// Native implementation of scripts/ai/ag/l_ag_imag_smashable.lua
     /// </summary>
     [ScriptName("l_ag_imag_smashable.lua")]
     public class ImaginationSmashable : ObjectScript

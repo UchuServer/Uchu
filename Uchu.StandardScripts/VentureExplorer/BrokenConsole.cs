@@ -5,7 +5,7 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    /// Native implementation of scripts/ai/ag/l_npc_np_spaceman_bob.lua
+    /// Native implementation of scripts/ai/ag/l_ag_ship_player_shock_server.lua
     /// </summary>
     [ScriptName("l_ag_ship_player_shock_server.lua")]
     public class BrokenConsole : ObjectScript
