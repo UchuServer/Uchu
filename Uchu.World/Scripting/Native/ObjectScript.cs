@@ -219,12 +219,6 @@ namespace Uchu.World.Scripting.Native
                 playersInPhysicsObject.Remove(player);
                 this.OnProximityUpdate(name, PhysicsCollisionStatus.Leave, player);
             });
-            Listen(this.GameObject.Zone.OnPlayerLeave, (player) =>
-            {
-                if (!playersInPhysicsObject.Contains(player)) return;
-                playersInPhysicsObject.Remove(player);
-                this.OnProximityUpdate(name, PhysicsCollisionStatus.Leave, player);
-            });
         }
 
         /// <summary>
