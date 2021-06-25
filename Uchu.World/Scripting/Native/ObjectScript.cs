@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
 using Uchu.Physics;
-using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World.Scripting.Native
 {
@@ -16,6 +15,19 @@ namespace Uchu.World.Scripting.Native
     
     public abstract class ObjectScript : NativeScript
     {
+        private class FXEffect
+        {
+            public string Name { get; set; }
+            public string Type { get; set; }
+            public int Id { get; set; }
+        }
+        
+        private class Animation
+        {
+            public string Name { get; set; }
+            public bool PlayImmediate { get; set; }
+        }
+        
         /// <summary>
         /// Object controlled by the script.
         /// </summary>
@@ -30,6 +42,16 @@ namespace Uchu.World.Scripting.Native
         /// Timers used by the script.
         /// </summary>
         private Dictionary<string, Timer> _timers = new Dictionary<string, Timer>();
+
+        /// <summary>
+        /// Active effects to play for new players.
+        /// </summary>
+        private Dictionary<string, FXEffect> _effects = new Dictionary<string, FXEffect>();
+
+        /// <summary>
+        /// Active animation to play for new players.
+        /// </summary>
+        private Animation _animation;
         
         /// <summary>
         /// Creates the object script.
@@ -47,7 +69,26 @@ namespace Uchu.World.Scripting.Native
                 this.CancelAllTimers();
                 
                 // Unload the script.
+                this.ClearListeners();
                 this.UnloadAsync();
+            });
+            
+            // Connect players loading the objects.
+            foreach (var player in this.Zone.Players)
+            {
+                Listen(player.OnReadyForUpdatesEvent, (message) =>
+                {
+                    if (message.GameObject != this.GameObject) return;
+                    this.SendEffectsToPlayer(player);
+                });
+            }
+            Listen(this.Zone.OnPlayerLoad, (player) =>
+            {
+                Listen(player.OnReadyForUpdatesEvent, (message) =>
+                {
+                    if (message.GameObject != this.GameObject) return;
+                    this.SendEffectsToPlayer(player);
+                });
             });
         }
 
@@ -256,7 +297,26 @@ namespace Uchu.World.Scripting.Native
         {
             this.GameObject.PlayFX(name, type, id);
         }
-        
+
+        /// <summary>
+        /// Starts an effect on the game object. Intended for
+        /// effects that are long-running and may be active
+        /// when a player loads the area.
+        /// </summary>
+        /// <param name="name">Name of the effect.</param>
+        /// <param name="type">Type of the effect.</param>
+        /// <param name="id">Id of the effect.</param>
+        public void StartFXEffect(string name, string type, int id = -1)
+        {
+            this.GameObject.PlayFX(name, type, id);
+            this._effects[name] = new FXEffect()
+            {
+                Name = name,
+                Type = type,
+                Id = id,
+            };
+        }
+
         /// <summary>
         /// Stops an effect on the game object.
         /// </summary>
@@ -264,6 +324,7 @@ namespace Uchu.World.Scripting.Native
         public void StopFXEffect(string name)
         {
             this.GameObject.StopFX(name);
+            this._effects.Remove(name);
         }
         
         /// <summary>
@@ -274,6 +335,53 @@ namespace Uchu.World.Scripting.Native
         public void PlayAnimation(string name, bool playImmediate = false)
         {
             this.GameObject.Animate(name, playImmediate);
+        }
+        
+        /// <summary>
+        /// Starts an animation on the game object. Intended for
+        /// animations that are long-running and may be active
+        /// when a player loads the area.
+        /// </summary>
+        /// <param name="name">Name of the animation.</param>
+        /// <param name="playImmediate">Whether the animation should be played immediately.</param>
+        public void StartAnimation(string name, bool playImmediate = false)
+        {
+            this.GameObject.Animate(name, playImmediate);
+            this._animation = new Animation()
+            {
+                Name = name,
+                PlayImmediate = playImmediate,
+            };
+        }
+
+        /// <summary>
+        /// Sends the current animations and effects to the player.
+        /// </summary>
+        /// <param name="player">Player to send the animations and effects.</param>
+        private void SendEffectsToPlayer(Player player)
+        {
+            // Send the animation.
+            if (this._animation != null)
+            {
+                player.Message(new PlayAnimationMessage
+                {
+                    Associate = this.GameObject,
+                    AnimationsId = this._animation.Name,
+                    PlayImmediate = this._animation.PlayImmediate,
+                });
+            }
+            
+            // Send the effects.
+            foreach (var effect in this._effects.Values)
+            {
+                player.Message(new PlayFXEffectMessage
+                {
+                    Associate = this.GameObject,
+                    EffectId = effect.Id,
+                    EffectType = effect.Type,
+                    Name = effect.Name,
+                });
+            }
         }
         #endregion
         
