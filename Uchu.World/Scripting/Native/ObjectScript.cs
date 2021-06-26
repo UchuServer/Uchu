@@ -28,6 +28,11 @@ namespace Uchu.World.Scripting.Native
             public string Name { get; set; }
             public bool PlayImmediate { get; set; }
         }
+
+        /// <summary>
+        /// List of the run-once methods that were ran.
+        /// </summary>
+        private static List<Type> _runOnceMethodsRan = new List<Type>();
         
         /// <summary>
         /// Object controlled by the script.
@@ -63,6 +68,13 @@ namespace Uchu.World.Scripting.Native
             this.GameObject = gameObject;
             this.SetZone(gameObject.Zone);
             
+            // Determine if the run-once method should be run.
+            var firstRun = !_runOnceMethodsRan.Contains(this.GetType());
+            if (firstRun)
+            {
+                _runOnceMethodsRan.Add(this.GetType());
+            }
+            
             // Connect clearing on destroyed.
             Listen(gameObject.OnDestroyed, () =>
             {
@@ -73,6 +85,12 @@ namespace Uchu.World.Scripting.Native
                 this.ClearListeners();
                 this.UnloadAsync();
             });
+            
+            // Run the run-once method.
+            if (firstRun)
+            {
+                this.CompleteOnce();
+            }
             
             // Connect players loading the objects.
             foreach (var player in this.Zone.Players)
@@ -91,6 +109,14 @@ namespace Uchu.World.Scripting.Native
                     this.SendEffectsToPlayer(player);
                 });
             });
+        }
+        
+        /// <summary>
+        /// Callback that is run once with the first GameObject created.
+        /// </summary>
+        public virtual void CompleteOnce()
+        {
+            
         }
 
         #region Object

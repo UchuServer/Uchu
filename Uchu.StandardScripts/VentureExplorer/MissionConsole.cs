@@ -13,12 +13,6 @@ namespace Uchu.StandardScripts.VentureExplorer
     public class MissionConsole : ObjectScript
     {
         /// <summary>
-        /// Indicator for whether mission starting is being listened for
-        /// Intended to only be set up once to reset the flags of the consoles.
-        /// </summary>
-        private static bool _missionStartListenerActive = false;
-
-        /// <summary>
         /// List of all the consoles in the zone.
         /// </summary>
         private static List<GameObject> _consoles = new List<GameObject>();
@@ -53,10 +47,14 @@ namespace Uchu.StandardScripts.VentureExplorer
                     Name = "",
                 });
             });
-            
+        }
+
+        /// <summary>
+        /// Callback that is run once with the first GameObject created.
+        /// </summary>
+        public override void CompleteOnce()
+        {
             // Listen for the console mission being started (clear the flags for the consoles).
-            if (_missionStartListenerActive) return;
-            _missionStartListenerActive = true;
             Listen(Zone.OnPlayerLoad, player =>
             {
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;

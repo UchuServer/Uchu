@@ -11,13 +11,6 @@ namespace Uchu.StandardScripts.NexusTower
     public class Vault : ObjectScript
     {
         /// <summary>
-        /// Indicator for whether the close vault message
-        /// is being listened for. Intended to only be
-        /// set up once.
-        /// </summary>
-        private static bool _closeListenerActive = false;
-        
-        /// <summary>
         /// Creates the object script.
         /// </summary>
         /// <param name="gameObject">Game object to control with the script.</param>
@@ -33,10 +26,14 @@ namespace Uchu.StandardScripts.NexusTower
                     Associate = player,
                 });
             });
-            
+        }
+
+        /// <summary>
+        /// Callback that is run once with the first GameObject created.
+        /// </summary>
+        public override void CompleteOnce()
+        {
             // List to players closing the vault.
-            if (_closeListenerActive) return;
-            _closeListenerActive = true;
             Listen(Zone.OnPlayerLoad, player =>
             {
                 Listen(player.OnFireServerEvent, (s, message) =>
