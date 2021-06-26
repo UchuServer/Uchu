@@ -295,7 +295,6 @@ namespace Uchu.World.Scripting.Native
                 activePlayers.Add(player);
                 if (checkPlayers.Contains(player)) return;
                 this.OnProximityUpdate(name, PhysicsCollisionStatus.Enter, player);
-                Console.WriteLine("ENTER");
             };
             Listen(Zone.EarlyPhysics, () =>
             {
@@ -307,7 +306,6 @@ namespace Uchu.World.Scripting.Native
                 {
                     if (activePlayers.Contains(player)) continue;
                     this.OnProximityUpdate(name, PhysicsCollisionStatus.Leave, player);
-                    Console.WriteLine("LEAVE");
                 }
                 checkPlayers.Clear();
 
