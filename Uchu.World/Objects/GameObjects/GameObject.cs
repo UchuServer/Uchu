@@ -195,7 +195,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="type">Type of the component.</param>
         /// <returns>The new component.</returns>
-        public Component AddNewComponent(Type type)
+        private Component AddNewComponent(Type type)
         {
             // Create the component.
             if (Object.Instantiate(type, Zone) is Component component)
@@ -217,16 +217,6 @@ namespace Uchu.World
             // Show an error if the type is not a component.
             Logger.Error($"{type.FullName} does not inherit form Components but is being Created as one.");
             return null;
-        }
-        
-        /// <summary>
-        /// Adds a new component to the object, even if none exists.
-        /// </summary>
-        /// <typeparam name="T">Type of the component.</typeparam>
-        /// <returns>The new component.</returns>
-        public T AddNewComponent<T>() where T : Component
-        {
-            return AddNewComponent(typeof(T)) as T;
         }
         
         /// <summary>

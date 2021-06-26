@@ -274,7 +274,9 @@ namespace Uchu.World.Scripting.Native
         public void SetProximityRadius(float radius, string name)
         {
             // Add the cylinder physics body.
-            var physics = this.GameObject.AddNewComponent<PhysicsComponent>();
+            // Even if the physics is overriden, the physics body being tied
+            // to a physics component allows it to play nicely in the existing system.
+            var physics = this.GameObject.AddComponent<PhysicsComponent>();
             var physicsObject = CylinderBody.Create(
                 this.GameObject.Zone.Simulation,
                 this.GameObject.Transform.Position,
@@ -282,22 +284,37 @@ namespace Uchu.World.Scripting.Native
                 new Vector2(radius, radius * 2));
             physics.SetPhysics(physicsObject);
             
-            // Listen for players entering and leaving.
-            var playersInPhysicsObject = new List<Player>();
-            Listen(physics.OnEnter, (other) =>
+            // Listen to the physics.
+            // Similar implementation to PhysicsComponent.
+            var activePlayers = new List<Player>(); 
+            var checkPlayers = new List<Player>();
+            physicsObject.OnCollision = (collidedObject) =>
             {
-                if (!(other.GameObject is Player player)) return;
-                if (playersInPhysicsObject.Contains(player)) return;
-                playersInPhysicsObject.Add(player);
+                var collidedPhysicsObject = (PhysicsComponent) collidedObject.Associate;
+                if (!(collidedPhysicsObject.GameObject is Player player)) return;
+                activePlayers.Add(player);
+                if (checkPlayers.Contains(player)) return;
                 this.OnProximityUpdate(name, PhysicsCollisionStatus.Enter, player);
-                
-            });
-            Listen(physics.OnLeave, (other) =>
+                Console.WriteLine("ENTER");
+            };
+            Listen(Zone.EarlyPhysics, () =>
             {
-                if (!(other.GameObject is Player player)) return;
-                if (!playersInPhysicsObject.Contains(player)) return;
-                playersInPhysicsObject.Remove(player);
-                this.OnProximityUpdate(name, PhysicsCollisionStatus.Leave, player);
+                activePlayers.Clear();
+            });
+            Listen(Zone.LatePhysics, () =>
+            {
+                foreach (var player in checkPlayers)
+                {
+                    if (activePlayers.Contains(player)) continue;
+                    this.OnProximityUpdate(name, PhysicsCollisionStatus.Leave, player);
+                    Console.WriteLine("LEAVE");
+                }
+                checkPlayers.Clear();
+
+                foreach (var player in activePlayers)
+                {
+                    checkPlayers.Add(player);
+                }
             });
         }
 
