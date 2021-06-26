@@ -40,8 +40,8 @@ namespace Uchu.World.Scripting.Native
             foreach (var type in _assembly.GetTypes())
             {
                 // Ignore non-native scripts and object scripts.
-                if (type.BaseType != typeof(NativeScript)) continue;
-                if (type.BaseType == typeof(ObjectScript)) continue;
+                if (!type.IsAssignableTo(typeof(NativeScript))) continue;
+                if (type.IsAssignableTo(typeof(ObjectScript))) continue;
                 var zoneSpecific = type.GetCustomAttributes<ZoneSpecificAttribute>().ToArray();
                 if (zoneSpecific.Length > 0)
                 {
@@ -58,7 +58,7 @@ namespace Uchu.World.Scripting.Native
             foreach (var type in _assembly.GetTypes())
             {
                 // Ignore non-object scripts.
-                if (type.BaseType != typeof(ObjectScript)) continue;
+                if (!type.IsAssignableTo(typeof(ObjectScript))) continue;
                 var scriptName = type.GetCustomAttribute<ScriptName>();
                 if (scriptName == null) continue;
                 
