@@ -55,6 +55,8 @@ namespace Uchu.World.Client
         /// <returns>All of the types that match the index.</returns>
         public override async Task<object[]> FindAllAsync(object index)
         {
+            index = ConvertKey(index);
+            
             // Load the table.
             await this._semaphore.WaitAsync();
             this._cachedTable ??= await this.IndexTableAsync();

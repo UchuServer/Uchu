@@ -38,6 +38,7 @@ namespace Uchu.World.Client
         /// <returns>All of the types that match the index.</returns>
         public override async Task<object[]> FindAllAsync(object index)
         {
+            index = ConvertKey(index);
             return this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>();
         }
     }

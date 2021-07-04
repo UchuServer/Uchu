@@ -36,6 +36,20 @@ namespace Uchu.World.Client
                 break;
             }
         }
+        
+        /// <summary>
+        /// Converts an object to a key, such as for Lot ids.
+        /// </summary>
+        /// <param name="otherObject">Object to convert.</param>
+        /// <returns>The converted object.</returns>
+        internal static object ConvertKey(object otherObject)
+        {
+            if (otherObject is Lot lot)
+            {
+                return lot.Id;
+            }
+            return otherObject;
+        }
 
         /// <summary>
         /// Returns all of the given index.
