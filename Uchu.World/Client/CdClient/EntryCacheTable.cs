@@ -1,19 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Timer = System.Timers.Timer;
+using Microsoft.EntityFrameworkCore;
+using Uchu.Core.Client;
 
 namespace Uchu.World.Client
 {
-    public class BurstCacheTable : BaseTableCache
+    public class EntryCacheTable : BaseTableCache
     {
         /// <summary>
-        /// Time before the cached data is cleared.
+        /// Cache of the table.
         /// </summary>
-        private const int ClearTimeMilliseconds = 3000;
+        private Dictionary<object, object[]> _cachedTable = new Dictionary<object, object[]>();
         
         /// <summary>
         /// Semaphore for reading the table. Used to ensure multiple threads/tasks
@@ -22,31 +24,23 @@ namespace Uchu.World.Client
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         /// <summary>
-        /// 
+        /// Name of the column to read.
         /// </summary>
-        private Timer _resetTimer = new Timer(ClearTimeMilliseconds)
-        {
-            AutoReset = false,
-        };
+        private string _columnName;
         
         /// <summary>
-        /// Cache of the table.
+        /// Common context used for the cache tables.
         /// </summary>
-        private Dictionary<object, object[]> _cachedTable;
+        private static CdClientContext ClientContext = new CdClientContext();
         
         /// <summary>
-        /// Creates the burst table cache.
+        /// Creates the entry table cache.
         /// </summary>
         /// <param name="type">Type of the table.</param>
         /// <param name="index">Index of the table.</param>
-        public BurstCacheTable(Type type, PropertyInfo index) : base(type, index)
+        public EntryCacheTable(Type type, PropertyInfo index) : base(type, index)
         {
-            // Set up the timer.
-            this._resetTimer.Elapsed += (sender, args) =>
-            {
-                this._cachedTable = null;
-                GC.Collect();
-            };
+            this._columnName = this.TableIndex.GetCustomAttribute<ColumnAttribute>()?.Name;
         }
         
         /// <summary>
@@ -58,14 +52,18 @@ namespace Uchu.World.Client
         {
             index = ConvertKey(index);
             
-            // Load the table.
+            // Populate the cache entry.
             await this._semaphore.WaitAsync();
-            this._cachedTable ??= await this.IndexTableAsync();
+            if (!this._cachedTable.ContainsKey(index))
+            {
+                // Due to Reflection, LINQ isn't suitable in this case.
+                var table = (DbSet<T>) this._cdClientContextProperty.GetValue(ClientContext);
+                var sqlCommand = $"SELECT * FROM {this.TableType.Name} WHERE {this._columnName} = {index}";
+                this._cachedTable[index] = table?.FromSqlRaw(sqlCommand).ToArray<object>();
+            }
 
-            // Reset the timer and return the cached entry.
+            // Return the cached entry.
             this._semaphore.Release();
-            this._resetTimer.Stop();
-            this._resetTimer.Start();
             return (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
         }
     }

@@ -10,14 +10,19 @@ namespace Uchu.World.Client
     public abstract class BaseTableCache
     {
         /// <summary>
-        /// Client table property for the type.
+        /// Type of the table.
         /// </summary>
-        public readonly PropertyInfo _cdClientContextProperty;
+        public readonly Type TableType;
 
         /// <summary>
         /// Index of the table entries.
         /// </summary>
         public readonly PropertyInfo TableIndex;
+        
+        /// <summary>
+        /// Client table property for the type.
+        /// </summary>
+        internal readonly PropertyInfo _cdClientContextProperty;
 
         /// <summary>
         /// Creates the base table cache.
@@ -26,6 +31,7 @@ namespace Uchu.World.Client
         /// <param name="index">Index of the table.</param>
         public BaseTableCache(Type type, PropertyInfo index)
         {
+            this.TableType = type;
             this.TableIndex = index;
             
             var tableName = type.Name + "Table";
@@ -56,7 +62,7 @@ namespace Uchu.World.Client
         /// </summary>
         /// <param name="index">Index to search for.</param>
         /// <returns>All of the types that match the index.</returns>
-        public virtual async Task<object[]> FindAllAsync(object index)
+        public virtual async Task<T[]> FindAllAsync<T>(object index) where T : class
         {
             throw new NotImplementedException("Not implemented in the given context.");
         }
@@ -66,9 +72,9 @@ namespace Uchu.World.Client
         /// </summary>
         /// <param name="index">Index to search for.</param>
         /// <returns>The first value that matches the index.</returns>
-        public virtual async Task<object> FindAsync(object index)
+        public virtual async Task<T> FindAsync<T>(object index) where T : class
         {
-            return (await this.FindAllAsync(index)).FirstOrDefault();
+            return (await this.FindAllAsync<T>(index)).FirstOrDefault();
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -36,10 +37,10 @@ namespace Uchu.World.Client
         /// </summary>
         /// <param name="index">Index to search for.</param>
         /// <returns>All of the types that match the index.</returns>
-        public override async Task<object[]> FindAllAsync(object index)
+        public override async Task<T[]> FindAllAsync<T>(object index) where T : class
         {
             index = ConvertKey(index);
-            return this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>();
+            return (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
         }
     }
 }

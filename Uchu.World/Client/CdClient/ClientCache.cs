@@ -65,7 +65,7 @@ namespace Uchu.World.Client
                 switch (cacheType)
                 {
                     case CacheMethod.Entry:
-                        // TODO: Implement
+                        table = new EntryCacheTable(clientTableType, indexPropertyInfo);
                         break;
                     case CacheMethod.Burst:
                         table = new BurstCacheTable(clientTableType, indexPropertyInfo);
@@ -141,7 +141,7 @@ namespace Uchu.World.Client
         /// <returns>The first value that matches the index.</returns>
         public static async Task<T> FindAsync<T>(object index) where T : class
         {
-            return (T) (await GetCacheTable<T>().FindAsync(index));
+            return await GetCacheTable<T>().FindAsync<T>(index);
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Uchu.World.Client
         /// <returns>All of the types that match the index.</returns>
         public static async Task<T[]> FindAllAsync<T>(object index) where T : class
         {
-            return (await GetCacheTable<T>().FindAllAsync(index)).Cast<T>().ToArray();
+            return await GetCacheTable<T>().FindAllAsync<T>(index);
         }
 
         /// <summary>
