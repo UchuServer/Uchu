@@ -18,9 +18,14 @@ namespace Uchu.World.Client
     public static class ClientCache
     {
         /// <summary>
+        /// Cache of the tables.
+        /// </summary>
+        private static Dictionary<Type,BaseTableCache> _cacheTables = new Dictionary<Type,BaseTableCache>();
+        
+        /// <summary>
         /// Cache of the table objects used by GetTable and GetTableAsync
         /// </summary>
-        private static Dictionary<string,object> cacheTables = new Dictionary<string,object>();
+        private static Dictionary<string,object> _legacyCacheTables = new Dictionary<string,object>();
         
         /// <summary>
         /// All missions in the cd client
@@ -39,6 +44,7 @@ namespace Uchu.World.Client
         {
             // Set up the cache tables.
             Logger.Debug("Setting up cache tables");
+            var loadTableTasks = new List<Task>();
             foreach (var clientTableType in AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).Where(t => (t.GetCustomAttribute<TableAttribute>() != null)))
             {
                 // Determine the index.
@@ -53,10 +59,29 @@ namespace Uchu.World.Client
                 {
                     cacheType = cacheMethodAttribute.Method;
                 }
-                    
+
                 // Create the cache table.
-                // TODO: Implement
+                BaseTableCache table = null;
+                switch (cacheType)
+                {
+                    case CacheMethod.Entry:
+                        // TODO: Implement
+                        break;
+                    case CacheMethod.Burst:
+                        table = new BurstCacheTable(clientTableType, indexPropertyInfo);
+                        break;
+                    case CacheMethod.Persistent:
+                        var newTable = new PersistentCacheTable(clientTableType, indexPropertyInfo);
+                        table = newTable;
+                        loadTableTasks.Add(Task.Run(newTable.LoadAsync));
+                        break;
+                }
+                
+                // Store the table.
+                if (table == null) continue;
+                _cacheTables.Add(clientTableType, table);
             }
+            await Task.WhenAll(loadTableTasks);
 
             // Set up the mission cache.
             Logger.Debug("Setting up missions cache");
@@ -82,12 +107,12 @@ namespace Uchu.World.Client
         public static async Task<T[]> GetTableAsync<T>() where T : class
         {
             var tableName = typeof(T).Name + "Table";
-            if (!cacheTables.ContainsKey(tableName))
+            if (!_legacyCacheTables.ContainsKey(tableName))
             {
-                cacheTables[tableName] = new TableCache<T>(tableName);
+                _legacyCacheTables[tableName] = new TableCache<T>(tableName);
             }
 
-            return await ((TableCache<T>) cacheTables[tableName]).GetValuesAsync();
+            return await ((TableCache<T>) _legacyCacheTables[tableName]).GetValuesAsync();
         }
 
         /// <summary>
@@ -96,6 +121,60 @@ namespace Uchu.World.Client
         public static T[] GetTable<T>() where T : class
         {
             return GetTableAsync<T>().Result;
+        }
+
+        /// <summary>
+        /// Returns the cache table for the given type.
+        /// </summary>
+        /// <typeparam name="T">Type of the table.</typeparam>
+        /// <returns>The cache table for the given type.</returns>
+        private static BaseTableCache GetCacheTable<T>() where T : class
+        {
+            return _cacheTables[typeof(T)];
+        }
+
+        /// <summary>
+        /// Returns the first value of the given index.
+        /// </summary>
+        /// <typeparam name="T">Type of the table.</typeparam>
+        /// <param name="index">Index to search for.</param>
+        /// <returns>The first value that matches the index.</returns>
+        public static async Task<T> FindAsync<T>(object index) where T : class
+        {
+            return (T) (await GetCacheTable<T>().FindAsync(index));
+        }
+
+        /// <summary>
+        /// Returns all of the given index.
+        /// </summary>
+        /// <typeparam name="T">Type of the table.</typeparam>
+        /// <param name="index">Index to search for.</param>
+        /// <returns>All of the types that match the index.</returns>
+        public static async Task<T[]> FindAllAsync<T>(object index) where T : class
+        {
+            return (await GetCacheTable<T>().FindAllAsync(index)).Cast<T>().ToArray();
+        }
+
+        /// <summary>
+        /// Returns the first value of the given index.
+        /// </summary>
+        /// <typeparam name="T">Type of the table.</typeparam>
+        /// <param name="index">Index to search for.</param>
+        /// <returns>The first value that matches the index.</returns>
+        public static T Find<T>(object index) where T : class
+        {
+            return FindAsync<T>(index).Result;
+        }
+
+        /// <summary>
+        /// Returns all of the given index.
+        /// </summary>
+        /// <typeparam name="T">Type of the table.</typeparam>
+        /// <param name="index">Index to search for.</param>
+        /// <returns>All of the types that match the index.</returns>
+        public static T[] FindAll<T>(object index) where T : class
+        {
+            return FindAllAsync<T>(index).Result;
         }
     }
 }
