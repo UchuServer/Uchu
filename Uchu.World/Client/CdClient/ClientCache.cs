@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Client.Attribute;
@@ -36,6 +35,12 @@ namespace Uchu.World.Client
         /// All achievements in the cd client
         /// </summary>
         public static MissionInstance[] Achievements { get; private set; } = { };
+
+        /// <summary>
+        /// Special cache table for MissionInstance since it requires the Id to be the
+        /// id while the Uid is required for other cases.
+        /// </summary>
+        public static BurstCacheTable MissionTasksWithMissionIdCacheTable = new BurstCacheTable(typeof(MissionTasks), typeof(MissionTasks).GetProperty("Id"));
 
         /// <summary>
         /// Loads the initial cache
