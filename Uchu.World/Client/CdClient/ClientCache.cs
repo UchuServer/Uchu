@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Client.Attribute;
 using Uchu.World.Systems.Missions;
 
 namespace Uchu.World.Client
@@ -35,6 +37,28 @@ namespace Uchu.World.Client
         /// </summary>
         public static async Task LoadAsync()
         {
+            // Set up the cache tables.
+            Logger.Debug("Setting up cache tables");
+            foreach (var clientTableType in AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).Where(t => (t.GetCustomAttribute<TableAttribute>() != null)))
+            {
+                // Determine the index.
+                var indexPropertyInfo = clientTableType.GetProperties().FirstOrDefault(propertyInfo => propertyInfo.GetCustomAttribute<CacheIndexAttribute>() != null);
+                if (indexPropertyInfo == null) continue;
+                
+                // Get the cache type.
+                Logger.Debug($"Setting up cache table for {clientTableType.Name} with index {indexPropertyInfo.Name}");
+                var cacheType = CacheMethod.Entry;
+                var cacheMethodAttribute = clientTableType.GetCustomAttribute<CacheMethodAttribute>();
+                if (cacheMethodAttribute != null)
+                {
+                    cacheType = cacheMethodAttribute.Method;
+                }
+                    
+                // Create the cache table.
+                // TODO: Implement
+            }
+
+            // Set up the mission cache.
             Logger.Debug("Setting up missions cache");
             var missionTasks = (await GetTableAsync<Missions>())
                 .ToArray()
