@@ -71,13 +71,10 @@ namespace Uchu.World
                     return null;
                 }
             }
-            
-            var itemTemplate = (await ClientCache.GetTableAsync<Core.Client.Objects>()).FirstOrDefault(
-                o => o.Id == lot
-            );
 
-            var itemRegistryEntry = (await ClientCache.GetTableAsync<ComponentsRegistry>()).FirstOrDefault(
-                r => r.Id == lot && r.Componenttype == (int)ComponentId.ItemComponent
+            var itemTemplate = (await ClientCache.FindAsync<Core.Client.Objects>(lot));
+            var itemRegistryEntry = (await ClientCache.FindAllAsync<ComponentsRegistry>(lot)).FirstOrDefault(
+                r => r.Componenttype == (int) ComponentId.ItemComponent
             );
 
             if (itemTemplate == default || itemRegistryEntry == default)

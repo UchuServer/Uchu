@@ -39,8 +39,8 @@ namespace Uchu.World
         /// </summary>
         private void CollectMissions()
         {
-            var components = ClientCache.GetTable<ComponentsRegistry>().Where(
-                c => c.Id == GameObject.Lot && c.Componenttype == (int) ComponentId.MissionNPCComponent
+            var components = ClientCache.FindAll<ComponentsRegistry>(GameObject.Lot).Where(
+                c => c.Componenttype == (int) ComponentId.MissionNPCComponent
             ).ToArray();
 
             var missionComponents = components.SelectMany(

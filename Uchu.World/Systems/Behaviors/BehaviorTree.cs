@@ -303,10 +303,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <returns>The instantiated behavior base if succeeded, <c>null</c> otherwise</returns>
         private static async Task<BehaviorBase> BehaviorFromInfo(BehaviorInfo info)
         {
-            var behavior = (await ClientCache.GetTableAsync<BehaviorTemplate>()).FirstOrDefault(
-                t => t.BehaviorID == info.BaseBehavior
-            );
-
+            var behavior = (await ClientCache.FindAsync<BehaviorTemplate>(info.BaseBehavior));
             if (behavior?.TemplateID == null)
                 return null;
             
