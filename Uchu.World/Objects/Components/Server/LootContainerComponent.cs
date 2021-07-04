@@ -191,10 +191,7 @@ namespace Uchu.World
 
             if (destructible != default)
             {
-                var component = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
-                    c => c.Id == destructible
-                );
-
+                var component = (await ClientCache.FindAsync<Core.Client.DestructibleComponent>(destructible));
                 LootIndex = component.LootMatrixIndex ?? 0;
 
                 CurrencyIndex = component.CurrencyIndex ?? 0;

@@ -74,15 +74,14 @@ namespace Uchu.World
 
             var vendorComponent = (await ClientCache.GetTableAsync<Core.Client.VendorComponent>()).First(c => c.Id == componentId);
 
-            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l => l.LootMatrixIndex == vendorComponent.LootMatrixIndex);
+            var matrices = ClientCache.FindAll<Core.Client.LootMatrix>(vendorComponent.LootMatrixIndex);
 
             var shopItems = new List<ShopEntry>();
 
             foreach (var matrix in matrices)
             {
-                shopItems.AddRange(ClientCache.GetTable<LootTable>().Where(
-                    l => l.LootTableIndex == matrix.LootTableIndex
-                ).ToArray().Select(lootTable =>
+                shopItems.AddRange(ClientCache.FindAll<LootTable>(matrix.LootTableIndex)
+                    .ToArray().Select(lootTable =>
                 {
                     Debug.Assert(lootTable.Itemid != null, "lootTable.Itemid != null");
                     Debug.Assert(lootTable.SortPriority != null, "lootTable.SortPriority != null");

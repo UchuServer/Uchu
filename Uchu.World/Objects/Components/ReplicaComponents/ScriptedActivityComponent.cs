@@ -53,9 +53,7 @@ namespace Uchu.World
                     return;
                 }
 
-                Rewards = ClientCache.GetTable<ActivityRewards>().Where(
-                    a => a.ObjectTemplate == activityId
-                ).ToArray();
+                Rewards = ClientCache.FindAll<ActivityRewards>(activityId);
             });
         }
 
@@ -69,12 +67,9 @@ namespace Uchu.World
             {
                 var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
-                var items = ClientCache.GetTable<LootTable>().Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
-                
+                var items = ClientCache.FindAll<LootTable>(matrix.LootTableIndex).ToList();
                 for (var i = 0; i < count; i++)
                 {
-                    if (items.Count == default) break;
-                    
                     var proc = _random.NextDouble();
 
                     if (!(proc <= matrix.Percent)) continue;
@@ -104,10 +99,7 @@ namespace Uchu.World
 
             foreach (var reward in Rewards)
             {
-                var currencies = ClientCache.GetTable<CurrencyTable>().Where(c => 
-                    c.CurrencyIndex == reward.CurrencyIndex
-                );
-
+                var currencies = ClientCache.FindAll<CurrencyTable>(reward.CurrencyIndex);
                 foreach (var currency in currencies)
                 {
                     if (currency.Npcminlevel > reward.ChallengeRating) continue;

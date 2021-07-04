@@ -771,7 +771,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
-            ZoneTable WorldTable = ClientCache.GetTable<ZoneTable>().FirstOrDefault(t => t.ZoneID == id);
+            var WorldTable = ClientCache.Find<ZoneTable>(id);
 
             if (WorldTable == default)
             {

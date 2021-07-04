@@ -80,8 +80,8 @@ namespace Uchu.World
             {
                 var component = ClientCache.FindAll<ComponentsRegistry>(GameObject.Lot).FirstOrDefault(c =>
                     c.Componenttype == (int) ComponentId.InventoryComponent);
-                var itemTemplates = ClientCache.GetTable<Core.Client.InventoryComponent>()
-                    .Where(i => i.Id == component.Componentid && i.Itemid != default).ToArray();
+                var itemTemplates = ClientCache.FindAll<Core.Client.InventoryComponent>(component.Componentid)
+                    .Where(i => i.Itemid != default).ToArray();
 
                 foreach (var itemTemplate in itemTemplates)
                 {

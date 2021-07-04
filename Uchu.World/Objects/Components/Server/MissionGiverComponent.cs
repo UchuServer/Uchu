@@ -44,14 +44,14 @@ namespace Uchu.World
             ).ToArray();
 
             var missionComponents = components.SelectMany(
-                component => ClientCache.GetTable<MissionNPCComponent>().Where(m => m.Id == component.Componentid)
+                component => ClientCache.FindAll<MissionNPCComponent>(component.Componentid)
             ).ToArray();
 
             var missions = new List<(Missions, MissionNPCComponent)>();
             
             foreach (var npcComponent in missionComponents)
             {
-                var quest = ClientCache.GetTable<Missions>().FirstOrDefault(m => m.Id == npcComponent.MissionID);
+                var quest = ClientCache.Find<Missions>(npcComponent.MissionID);
 
                 if (quest == default)
                 {
