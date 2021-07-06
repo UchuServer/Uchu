@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Core.Client.Attribute;
@@ -90,8 +91,8 @@ namespace Uchu.World.Client
 
             // Set up the mission cache.
             Logger.Debug("Setting up missions cache");
-            var missionTasks = (await GetTableAsync<Missions>())
-                .ToArray()
+            await using var cdClient = new CdClientContext();
+            var missionTasks = (await cdClient.MissionsTable.ToArrayAsync())
                 .Select(async m =>
                 {
                     var instance = new MissionInstance(m.Id ?? 0, default);
@@ -118,14 +119,6 @@ namespace Uchu.World.Client
             }
 
             return await ((TableCache<T>) _legacyCacheTables[tableName]).GetValuesAsync();
-        }
-
-        /// <summary>
-        /// Fetches the values of a table.
-        /// </summary>
-        public static T[] GetTable<T>() where T : class
-        {
-            return GetTableAsync<T>().Result;
         }
 
         /// <summary>

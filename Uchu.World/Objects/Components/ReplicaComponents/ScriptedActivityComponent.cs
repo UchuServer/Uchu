@@ -51,9 +51,8 @@ namespace Uchu.World
 
         public async Task DropLootAsync(Player lootOwner)
         {
-            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l =>
-                Rewards.Any(r => r.LootMatrixIndex == l.LootMatrixIndex)
-            ).ToArray();
+            var matrices = Rewards.SelectMany(r =>
+                ClientCache.FindAll<Core.Client.LootMatrix>(r.LootMatrixIndex)).ToArray();
 
             foreach (var matrix in matrices)
             {

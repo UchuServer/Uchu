@@ -917,7 +917,8 @@ namespace Uchu.World.Handlers.Commands
             }
             else
             {
-                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
+                await using var cdClient = new CdClientContext();
+                emote = cdClient.EmotesTable.FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
             }
 
             if (emote?.Id == default)
