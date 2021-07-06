@@ -913,7 +913,7 @@ namespace Uchu.World.Handlers.Commands
             
             if (int.TryParse(arguments[0], out var id))
             {
-                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.Id == id);
+                emote = await ClientCache.FindAsync<Emotes>(id);
             }
             else
             {

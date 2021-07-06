@@ -37,15 +37,7 @@ namespace Uchu.World
                 }
 
                 var activityId = (int) id;
-                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
-                    a => a.ActivityID == activityId
-                );
-
-                if (ActivityInfo == default) return;
-                
-                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
-                    a => a.ActivityID == activityId
-                );
+                ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
 
                 if (ActivityInfo == default)
                 {

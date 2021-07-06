@@ -303,9 +303,7 @@ namespace Uchu.World
             if (itemRegistryEntry == default)
                 return default;
 
-            var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).FirstOrDefault(
-                i => i.Id == itemRegistryEntry.Componentid);
-
+            var itemComponent = (await ClientCache.FindAsync<ItemComponent>(itemRegistryEntry.Componentid));
             return itemComponent;
         }
 

@@ -90,8 +90,7 @@ namespace Uchu.World
                     
                     var lot = (Lot) itemTemplate.Itemid;
                     var componentId = lot.GetComponentId(ComponentId.ItemComponent);
-                    var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
-                        i => i.Id == componentId);
+                    var itemComponent = await ClientCache.FindAsync<ItemComponent>(componentId);
 
                     if (itemComponent.ItemType == default)
                         continue;

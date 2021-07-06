@@ -225,10 +225,7 @@ namespace Uchu.World
 
                 Smashable = destroyable.IsSmashable ?? false;
 
-                var faction = (await ClientCache.GetTableAsync<Factions>()).FirstOrDefault(
-                    f => f.Faction == Factions[0]
-                );
-                
+                var faction = await ClientCache.FindAsync<Factions>(Factions[0]);
                 if (faction?.EnemyList == default) return;
                 
                 if (string.IsNullOrWhiteSpace(faction.EnemyList)) return;

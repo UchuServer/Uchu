@@ -86,8 +86,7 @@ namespace Uchu.World
 
             // Set all the standard values
             instance.Settings = extraInfo ?? new LegoDataDictionary();
-            instance.ItemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
-                i => i.Id == itemRegistryEntry.Componentid);
+            instance.ItemComponent = await ClientCache.FindAsync<ItemComponent>(itemRegistryEntry.Componentid);
             instance.Owner = owner;
             instance.Count = count;
             instance.Slot = slot;
@@ -98,11 +97,8 @@ namespace Uchu.World
             instance.IsPackage = instance.Lot.GetComponentId(ComponentId.PackageComponent) != default;
             instance.Inventory = inventory;
             instance.LootType = lootType;
-            
-            var skills = (await ClientCache.GetTableAsync<ObjectSkills>()).Where(
-                s => s.ObjectTemplate == instance.Lot
-            ).ToArray();
 
+            var skills = (await ClientCache.FindAllAsync<ObjectSkills>(instance.Lot));
             instance.IsConsumable = skills.Any(
                 s => s.CastOnType == (int) SkillCastType.OnConsumed
             );

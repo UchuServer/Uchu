@@ -72,7 +72,7 @@ namespace Uchu.World
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.VendorComponent);
 
-            var vendorComponent = (await ClientCache.GetTableAsync<Core.Client.VendorComponent>()).First(c => c.Id == componentId);
+            var vendorComponent = await ClientCache.FindAsync<Core.Client.VendorComponent>(componentId);
 
             var matrices = ClientCache.FindAll<Core.Client.LootMatrix>(vendorComponent.LootMatrixIndex);
 
@@ -100,9 +100,7 @@ namespace Uchu.World
         public async Task Buy(Lot lot, uint count, Player player)
         {
             var componentId = lot.GetComponentId(ComponentId.ItemComponent);
-            var itemComponent = (await ClientCache.GetTableAsync<ItemComponent>()).First(
-                i => i.Id == componentId
-            );
+            var itemComponent = await ClientCache.FindAsync<ItemComponent>(componentId);
             
             if (count == default || itemComponent.BaseValue <= 0) return;
 
