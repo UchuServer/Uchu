@@ -61,6 +61,8 @@ namespace Uchu.World
                 var items = ClientCache.FindAll<LootTable>(matrix.LootTableIndex).ToList();
                 for (var i = 0; i < count; i++)
                 {
+                    if (items.Count == default) break;
+                    
                     var proc = _random.NextDouble();
 
                     if (!(proc <= matrix.Percent)) continue;
