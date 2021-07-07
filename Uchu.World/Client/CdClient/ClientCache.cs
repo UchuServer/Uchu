@@ -31,11 +31,6 @@ namespace Uchu.World.Client
         private static SemaphoreSlim _cacheTableSemaphore = new SemaphoreSlim(1);
         
         /// <summary>
-        /// Cache of the table objects used by GetTable and GetTableAsync
-        /// </summary>
-        private static Dictionary<string,object> _legacyCacheTables = new Dictionary<string,object>();
-        
-        /// <summary>
         /// All missions in the cd client
         /// </summary>
         private static MissionInstance[] Missions { get; set; } = { };
@@ -98,21 +93,6 @@ namespace Uchu.World.Client
             
             Missions = missionTasks.Select(t => t.Result).ToArray();
             Achievements = Missions.Where(m => !m.IsMission).ToArray();
-        }
-
-        /// <summary>
-        /// Fetches the values of a table asynchronously.
-        /// Will return without waiting if the data is already stored.
-        /// </summary>
-        public static async Task<T[]> GetTableAsync<T>() where T : class
-        {
-            var tableName = typeof(T).Name + "Table";
-            if (!_legacyCacheTables.ContainsKey(tableName))
-            {
-                _legacyCacheTables[tableName] = new TableCache<T>(tableName);
-            }
-
-            return await ((TableCache<T>) _legacyCacheTables[tableName]).GetValuesAsync();
         }
 
         /// <summary>
