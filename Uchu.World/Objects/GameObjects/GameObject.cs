@@ -9,6 +9,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Scripting.Native;
 
 namespace Uchu.World
 {
@@ -132,6 +133,19 @@ namespace Uchu.World
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);
+                
+                // Load the script for the object.
+                // Special case for when custom_script_server but there is no script component.
+                if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
+                    this.GetComponent<LuaScriptComponent>() != default) return;
+                var scriptName = ((string) scriptNameValue).ToLower();
+                Logger.Debug($"{this} -> {scriptNameValue}");
+                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
+                {
+                    if (!scriptName.EndsWith(objectScriptName)) continue;
+                    this.Zone.LoadObjectScript(this, objectScriptType);
+                    break;
+                }
             });
 
             Listen(OnDestroyed, () =>
@@ -181,31 +195,51 @@ namespace Uchu.World
 
         #region Component Management
 
-        public Component AddComponent(Type type)
+        /// <summary>
+        /// Adds a new component to the object, even if none exists.
+        /// </summary>
+        /// <param name="type">Type of the component.</param>
+        /// <returns>The new component.</returns>
+        private Component AddNewComponent(Type type)
         {
-            if (TryGetComponent(type, out var addedComponent)) return addedComponent;
-            
+            // Create the component.
             if (Object.Instantiate(type, Zone) is Component component)
             {
+                // Add the component.
                 component.GameObject = this;
-
                 Components.Add(component);
 
+                // Add the required components.
                 var requiredComponents = type.GetCustomAttributes<RequireComponentAttribute>().ToArray();
-
                 foreach (var attribute in requiredComponents.Where(r => r.Priority)) AddComponent(attribute.Type);
-
                 foreach (var attribute in requiredComponents.Where(r => !r.Priority)) AddComponent(attribute.Type);
 
+                // Start and return the component.
                 Start(component);
-
                 return component;
             }
 
+            // Show an error if the type is not a component.
             Logger.Error($"{type.FullName} does not inherit form Components but is being Created as one.");
             return null;
         }
+        
+        /// <summary>
+        /// Adds a component to the object if none exists.
+        /// </summary>
+        /// <param name="type">Type of the component.</param>
+        /// <returns>The new or existing component.</returns>
+        public Component AddComponent(Type type)
+        {
+            if (TryGetComponent(type, out var addedComponent)) return addedComponent;
+            return AddNewComponent(type);
+        }
 
+        /// <summary>
+        /// Adds a component to the object if none exists.
+        /// </summary>
+        /// <typeparam name="T">Type of the component.</typeparam>
+        /// <returns>The new or existing component.</returns>
         public T AddComponent<T>() where T : Component
         {
             return AddComponent(typeof(T)) as T;
@@ -380,7 +414,7 @@ namespace Uchu.World
         #region From Template
 
         public static GameObject Instantiate(Type type, Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default)
+            Quaternion rotation = default, GameObject author = default)
         {
             return Instantiate(type, new LevelObjectTemplate
             {
@@ -389,19 +423,19 @@ namespace Uchu.World
                 Rotation = rotation,
                 Scale = 1,
                 LegoInfo = new LegoDataDictionary()
-            }, parent);
+            }, parent, author: author);
         }
 
         public static T Instantiate<T>(Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default) where T : GameObject
+            Quaternion rotation = default, GameObject author = default) where T : GameObject
         {
-            return Instantiate(typeof(T), parent, lot, position, rotation) as T;
+            return Instantiate(typeof(T), parent, lot, position, rotation, author) as T;
         }
 
         public static GameObject Instantiate(Object parent, Lot lot, Vector3 position = default,
-            Quaternion rotation = default)
+            Quaternion rotation = default, GameObject author = default)
         {
-            return Instantiate(typeof(GameObject), parent, lot, position, rotation);
+            return Instantiate(typeof(GameObject), parent, lot, position, rotation, author);
         }
 
         #endregion
@@ -409,7 +443,7 @@ namespace Uchu.World
         #region From LevelObject
 
         public static GameObject Instantiate(Type type, LevelObjectTemplate levelObject, Object parent,
-            SpawnerComponent spawner = default)
+            SpawnerComponent spawner = default, GameObject author = default)
         {
             // ReSharper disable PossibleInvalidOperationException
 
@@ -443,6 +477,13 @@ namespace Uchu.World
 
             instance.Spawner = spawner;
             instance.Settings = levelObject.LegoInfo;
+
+            // Set the author.
+            // Ensures the author is set before the object is started instead of after.
+            if (author != default && instance is AuthoredGameObject authoredGameObject)
+            {
+                authoredGameObject.Author = author;
+            }
 
             //
             // Collect all the components on this object
@@ -511,15 +552,17 @@ namespace Uchu.World
             return instance;
         }
 
-        public static T Instantiate<T>(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
+        public static T Instantiate<T>(LevelObjectTemplate levelObject, Object parent,
+            SpawnerComponent spawner = default, GameObject author = default)
             where T : GameObject
         {
-            return Instantiate(typeof(T), levelObject, parent, spawner) as T;
+            return Instantiate(typeof(T), levelObject, parent, spawner, author) as T;
         }
 
-        public static GameObject Instantiate(LevelObjectTemplate levelObject, Object parent, SpawnerComponent spawner = default)
+        public static GameObject Instantiate(LevelObjectTemplate levelObject, Object parent,
+            SpawnerComponent spawner = default, GameObject author = default)
         {
-            return Instantiate(typeof(GameObject), levelObject, parent, spawner);
+            return Instantiate(typeof(GameObject), levelObject, parent, spawner, author);
         }
 
         #endregion

@@ -1,36 +1,34 @@
-using System.Threading.Tasks;
+using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
-    ///     LUA Reference: l_ag_saluting_npcs.lua
+    /// Native implementation of scripts/ai/ag/l_ag_saluting_npcs.lua
     /// </summary>
-    public class SalutingNpc : NativeScript
+    [ScriptName("l_ag_saluting_npcs.lua")]
+    public class SalutingNpc : ObjectScript
     {
-        private const string ScriptName = "l_ag_saluting_npcs.lua";
-        
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public SalutingNpc(GameObject gameObject) : base(gameObject)
         {
-            foreach (var gameObject in HasLuaScript(ScriptName))
+            // Listen for players saluting the object.
+            Listen(gameObject.OnEmoteReceived, (emoteId, player) =>
             {
-                Listen(gameObject.OnEmoteReceived, (emoteId, player) =>
+                if (emoteId == 356)
                 {
-                    if (emoteId == 356)
-                    {
-                        gameObject.Animate("salutePlayer");
-                    }
-                    
-                    return Task.CompletedTask;
-                });
-                
-                Listen(gameObject.OnInteract, player =>
-                {
-                    gameObject.Animate("salutePlayer");
-                });
-            }
+                    this.PlayAnimation("salutePlayer");
+                }
+            });
             
-            return Task.CompletedTask;
+            // Listen to players interacting with the object.
+            Listen(gameObject.OnInteract, player =>
+            {
+                this.PlayAnimation("salutePlayer");
+            });
         }
     }
 }

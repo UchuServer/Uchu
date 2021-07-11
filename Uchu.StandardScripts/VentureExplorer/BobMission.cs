@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
@@ -6,35 +5,30 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    ///     LUA Reference: l_npc_np_spaceman_bob.lua
+    /// Native implementation of scripts/ai/np/l_npc_np_spaceman_bob.lua
     /// </summary>
-    [ZoneSpecific(1000)]
-    public class BobMission : NativeScript
+    [ScriptName("l_npc_np_spaceman_bob.lua")]
+    public class BobMission : ObjectScript
     {
-        private const string ScriptName = "l_npc_np_spaceman_bob.lua";
-        
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public BobMission(GameObject gameObject) : base(gameObject)
         {
-            var gameObjects = HasLuaScript(ScriptName);
-
-            foreach (var gameObject in gameObjects)
+            if (!gameObject.TryGetComponent<MissionGiverComponent>(out var missionGiverComponent)) return;
+            
+            // Listen to the imagination mission completing.
+            Listen(missionGiverComponent.OnMissionOk, async message =>
             {
-                if (!gameObject.TryGetComponent<MissionGiverComponent>(out var missionGiverComponent)) continue;
-                
-                Listen(missionGiverComponent.OnMissionOk, async message =>
+                var (missionId, isComplete, _, responder) = message;
+                if (missionId == (int) MissionId.YourCreativeSpark 
+                    && isComplete && responder.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                 {
-                    var (missionId, isComplete, _, responder) = message;
-                    if (missionId == (int)MissionId.YourCreativeSpark 
-                        && isComplete 
-                        && responder.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
-                    {
-                        responder.GetComponent<DestroyableComponent>().Imagination = 6;
-                        await missionInventory.ScriptAsync(980, 4009);
-                    }
-                });
-            }
-
-            return Task.CompletedTask;
+                    responder.GetComponent<DestroyableComponent>().Imagination = 6;
+                    await missionInventory.ScriptAsync(980, 4009);
+                }
+            });
         }
     }
 }

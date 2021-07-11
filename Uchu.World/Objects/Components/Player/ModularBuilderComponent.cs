@@ -13,8 +13,15 @@ namespace Uchu.World
         
         public bool IsBuilding { get; private set; }
 
+        /// <summary>
+        /// Called when a modular build is completed.
+        /// </summary>
+        public Event<Lot[]> OnBuildFinished { get; }
+        
         protected ModularBuilderComponent()
         {
+            this.OnBuildFinished = new Event<Lot[]>();
+            
             Listen(OnStart, () =>
             {
                 var inventory = GameObject.GetComponent<InventoryComponent>();
@@ -96,14 +103,16 @@ namespace Uchu.World
                 await inventory.RemoveLotAsync(lot, 1, InventoryType.TemporaryModels);
             }
 
+            // Create the rocket.
             var model = new LegoDataDictionary
             {
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
-            
             await inventory.AddLotAsync(6416, 1, model, InventoryType.Models);
 
+            // Finish the build.
             await ConfirmFinish();
+            await this.OnBuildFinished.InvokeAsync(models);
         }
         
         public void DoneArranging(DoneArrangingWithItemMessage message)

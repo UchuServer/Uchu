@@ -100,6 +100,11 @@ namespace Uchu.World
                     return Task.CompletedTask;
                 }, 20 * 15);
                 
+                // Update the initial perspective for mission filters.
+                Task.Run(async () => {
+                    await Perspective.TickAsync();
+                });
+                
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
                 {
