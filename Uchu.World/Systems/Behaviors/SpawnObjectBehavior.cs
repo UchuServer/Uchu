@@ -27,10 +27,9 @@ namespace Uchu.World.Systems.Behaviors
                 parameters.Context.Associate.Zone, 
                 Lot, 
                 parameters.Context.Associate.Transform.Position, 
-                parameters.Context.Associate.Transform.Rotation
+                parameters.Context.Associate.Transform.Rotation,
+                parameters.Context.Associate
             );
-
-            obj.Author = parameters.Context.Associate;
 
             // Run in the background as long running task as game object construction can lead to game messages
             Task.Run(() =>

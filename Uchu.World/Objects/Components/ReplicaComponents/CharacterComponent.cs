@@ -177,7 +177,7 @@ namespace Uchu.World
                 });
             }
             
-            // Save all newly unlocked flags
+            // Save all newly unlocked and removed flags.
             foreach (var newlyUnlockedFlag in Flags.Where(flagId => 
                 character.Flags.All(flag => flag.Flag != flagId)))
             {
@@ -185,6 +185,11 @@ namespace Uchu.World
                 {
                     Flag = newlyUnlockedFlag
                 });
+            }
+            foreach (var removedFlag in character.Flags.Where(flag => 
+                Flags.All(flagId => flag.Flag != flagId)).ToArray())
+            {
+                character.Flags.Remove(removedFlag);
             }
 
             Logger.Debug($"Saved character for {GameObject}");

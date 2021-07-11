@@ -1,35 +1,20 @@
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
-    [ZoneSpecific(1001)]
-    public class CorruptedSentry : NativeScript
+    [ScriptName("ScriptComponent_1075_script_name__removed")]
+    public class CorruptedSentry : ObjectScript
     {
         /// <summary>
-        /// Loads the script.
+        /// Creates the object script.
         /// </summary>
-        public override Task LoadAsync()
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public CorruptedSentry(GameObject gameObject) : base(gameObject)
         {
-            foreach (var obj in Zone.Objects)
-            {
-                InitializeCorruptedSentry(obj);
-            }
-            Listen(Zone.OnObject, InitializeCorruptedSentry);
-            
-            return Task.CompletedTask;
-        }
-        
-        /// <summary>
-        /// Initializes the faction and enemies of the
-        /// corrupted sentry.
-        /// </summary>
-        /// <param name="obj">Corrupted sentry game object to initialize.</param>
-        private void InitializeCorruptedSentry(Object obj)
-        {
-            if (!(obj is GameObject gameObject)) return;
-            if (gameObject.Lot != 8433) return;
+            // For some reason, corrupted sentries do not have the factions
+            // and enemies correctly, which leads to the sentries not firing at
+            // players or them taking damage from players.
             if (!gameObject.TryGetComponent<DestroyableComponent>(out var destroyableComponent)) return;
             destroyableComponent.Factions = new[] {4};
             destroyableComponent.Enemies = new[] {1};

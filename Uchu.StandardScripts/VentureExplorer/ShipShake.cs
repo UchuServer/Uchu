@@ -6,35 +6,62 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
-    [ZoneSpecific(1000)]
-    public class ShipShake : NativeScript
+    /// <summary>
+    /// Native implementation of scripts/ai/ag/l_ag_ship_shake.lua
+    /// </summary>
+    [ScriptName("l_ag_ship_shake.lua")]
+    public class ShipShake : ObjectScript
     {
-        private const string ScriptName = "l_ag_ship_shake.lua";
+        /// <summary>
+        /// Base time to repeat the effect.
+        /// </summary>
+        public const int RepeatTime = 2;
 
-        private Random _random;
+        /// <summary>
+        /// Max random time added to play the effect.
+        /// </summary>
+        public const int RandomTime = 10;
 
-        private bool _running = true;
-        
-        private int RepeatTime { get; set; } = 2;
+        /// <summary>
+        /// Radius of the shake.
+        /// </summary>
+        public const float ShakeRadius = 500;
 
-        private int RandomTime { get; set; } = 10;
+        /// <summary>
+        /// Name of the shake effect.
+        /// </summary>
+        public const string FxName = "camshake-bridge";
 
-        private float ShakeRadius{ get; set; } = 500f;
+        /// <summary>
+        /// Randomizer for shaking the ship.
+        /// </summary>
+        private Random _random = new Random();
 
-        private GameObject DebrisObject { get; set; }
-        
-        private GameObject ShipFxObject { get; set; }
-        
-        private GameObject ShipFxObject2 { get; set; }
+        /// <summary>
+        /// Object for playing the debris.
+        /// </summary>
+        private GameObject _debrisObject;
 
-        private string FxName { get; set; } = "camshake-bridge";
-        
-        private GameObject Self { get; set; }
-        
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public ShipShake(GameObject gameObject) : base(gameObject)
+        {
+            // Get the effect objects.
+            _debrisObject = this.GetGroup("DebrisFX")[0];
+
+            // Start the initial timer.
+            this.AddTimerWithCancel(RepeatTime, "ShakeTimer");
+        }
+
+        /// <summary>
+        /// Returns the next time to run the shake timer.
+        /// </summary>
+        /// <returns>The next time to run the shake timer</returns>
         private int NewTime()
         {
-            var time = _random.Next(0, RandomTime + 1);
-
+            var time = this._random.Next(0, RandomTime + 1);
             if (time < RandomTime / 2)
             {
                 time += RandomTime / 2;
@@ -42,85 +69,45 @@ namespace Uchu.StandardScripts.VentureExplorer
 
             return RandomTime + time;
         }
-        
-        public override Task LoadAsync()
+
+        /// <summary>
+        /// Callback for the timer completing.
+        /// </summary>
+        /// <param name="timerName">Timer that was completed.</param>
+        public override void OnTimerDone(string timerName)
         {
-            Self = GameObject.Instantiate(Zone, 33, new Vector3
+            // Get the ship effect objects.
+            var shipFx1 = this.GetGroup("ShipFX")[0];
+            var shipFx2 = this.GetGroup("ShipFX2")[0];
+            
+            if (timerName == "ShakeTimer")
             {
-                /*
-                 * Arbitrary position
-                 */
-                X = -418,
-                Y = 585,
-                Z = -30
-            });
+                // Queue the next timer.
+                this.AddTimerWithCancel(this.NewTime(), "ShakeTimer");
 
-            Start(Self);
-
-            Construct(Self);
-            
-            _random = new Random();
-
-            DebrisObject = GetGroup("DebrisFX")[0];
-            ShipFxObject = GetGroup("ShipFX")[0];
-            ShipFxObject2 = GetGroup("ShipFX2")[0];
-            
-            Task.Run(async () =>
-            {
-                await Task.Delay(RepeatTime);
-
-                DoShake(false);
-            });
-            
-            return Task.CompletedTask;
-        }
-
-        private void DoShake(bool explodeIdle)
-        {
-            if (!_running) return;
-            
-            if (!explodeIdle)
-            {
-                SetTimer(() =>
-                {
-                    DoShake(false);
-                }, NewTime() * 1000);
-                
+                // Play the shake effect and falling debris.
                 Zone.BroadcastMessage(new PlayEmbeddedEffectOnAllClientsNearObjectMessage
                 {
-                    Associate = Self,
+                    Associate = this.GameObject,
                     Radius = ShakeRadius,
                     EffectName = FxName,
-                    FromObject = Self
+                    FromObject = this.GameObject
                 });
-                
-                DebrisObject.PlayFX("Debris", "DebrisFall");
+                this._debrisObject.PlayFX("Debris", "DebrisFall");
 
-                var randomFx = _random.Next(0, 4);
-                
-                ShipFxObject.PlayFX("FX", $"shipboom{randomFx}", 559);
-                
-                SetTimer(() =>
-                {
-                    DoShake(true);
-                }, 5000);
 
-                ShipFxObject2.Animate("explosion");
+                // Run the explosion.
+                var randomEffect = this._random.Next(0, 4);
+                shipFx1.PlayFX("FX", $"shipboom{randomEffect}", 559);
+                shipFx2.Animate("explosion");
+                this.AddTimerWithCancel(5, "ExplodeIdle");
             }
-            else
+            else if (timerName == "ExplodeIdle")
             {
-                ShipFxObject.Animate("idle");
-                ShipFxObject2.Animate("idle");
+                // Idle the explosion effects.
+                shipFx1.Animate("idle");
+                shipFx2.Animate("idle");
             }
-        }
-
-        public override Task UnloadAsync()
-        {
-            _running = false;
-
-            Destroy(Self);
-            
-            return Task.CompletedTask;
         }
     }
 }
