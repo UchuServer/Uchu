@@ -182,10 +182,6 @@ namespace Uchu.World.Scripting.Native
             // Broadcast the variable change.
             Task.Run(() =>
             {
-                Console.WriteLine("SET: " + new LegoDataDictionary()
-                {
-                    {name, value, type}
-                }.ToString());
                 this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
