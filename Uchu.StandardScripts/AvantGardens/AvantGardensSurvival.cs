@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using InfectedRose.Lvl;
 using Uchu.StandardScripts.Base;
 using Uchu.World;
@@ -26,7 +27,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 {
                     this.SetNetworkVar("Define_Player_To_UI", player.Id, 13);
                     this.SetNetworkVar("Show_ScoreBoard", 1, 7);
-                    this.SetNetworkVar("Update_ScoreBoard_Players.1", player.Id, 13);
+                    this.SetNetworkVar("Update_ScoreBoard_Players", new List<GameObject>() { player }, 13);
                 });
                     
                 var component = gameObject.GetComponent<ScriptedActivityComponent>();

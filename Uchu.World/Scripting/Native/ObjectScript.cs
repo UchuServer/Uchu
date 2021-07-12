@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -149,46 +150,49 @@ namespace Uchu.World.Scripting.Native
         /// </summary>
         /// <param name="name">Name of the variable to store.</param>
         /// <param name="value">Value of the variable to store.</param>
-        public void SetNetworkVar(string name, object value)
-        {
-            // Set the variable.
-            this.SetVar(name, value);
-            
-            // Broadcast the variable change.
-            Task.Run(() =>
-            {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
-                {
-                    Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
-                    {
-                        {name, value}
-                    }.ToString(),
-                });
-            });
-        }
-        
-        /// <summary>
-        /// Sets a networked variable of the script.
-        /// </summary>
-        /// <param name="name">Name of the variable to store.</param>
-        /// <param name="value">Value of the variable to store.</param>
         /// <param name="type">Type of the LDF entry to send.</param>
         public void SetNetworkVar(string name, object value, byte type)
         {
             // Set the variable.
             this.SetVar(name, value);
             
+            // Create the LDF.
+            var ldf = new LegoDataDictionary();
+            if (value is IList list)
+            {
+                for (var i = 0; i < list.Count; i++)
+                {
+                    var subValue = list[i];
+                    var key = name + "." + (i + 1);
+                    if (subValue is GameObject gameObject)
+                    {
+                        ldf.Add(key, gameObject.Id, type);
+                    }
+                    else
+                    {
+                        ldf.Add(key, subValue, type);
+                    }
+                }
+            }
+            else
+            {
+                if (value is GameObject gameObject)
+                {
+                    ldf.Add(name, gameObject.Id, type);
+                }
+                else
+                {
+                    ldf.Add(name, value, type);
+                }
+            }
+            
             // Broadcast the variable change.
             Task.Run(() =>
             {
                 this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
-                    {
-                        {name, value, type}
-                    }.ToString(),
+                    LDFInText = ldf.ToString(),
                 });
             });
         }
