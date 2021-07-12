@@ -210,8 +210,10 @@ namespace Uchu.World
             GC.Collect();
             
             // Spawns all the NPCs in the area
+            var zoneControlLot = ClientCache.GetTable<ZoneTable>().FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate ??= 2365;
             foreach (var levelObject in objects)
             {
+                if (levelObject.Lot == zoneControlLot) continue;
                 if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
                 {
                     Logger.Debug($"Trigger: {trigger}");
@@ -230,17 +232,12 @@ namespace Uchu.World
                 
             }
 
-            int? ZoneControlLot = ClientCache.GetTable<ZoneTable>().FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate;
-
-            int Lot = ZoneControlLot ??= 2365;
-
-            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: (ObjectId) 70368744177662);
-
-            Start(ZoneObject);
-
-            Objects.Append(ZoneObject);
-
-            ZoneControlObject = ZoneObject;
+            var zoneObject = GameObject.Instantiate(this, lot: zoneControlLot, objectId: (ObjectId) 70368744177662);
+            zoneObject.InitializeComponents();
+            Start(zoneObject);
+            
+            Objects.Append(zoneObject);
+            ZoneControlObject = zoneObject;
 
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             LoadSpawnPaths();
