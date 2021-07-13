@@ -155,7 +155,7 @@ namespace Uchu.World
         /// <summary>
         /// Scale for the objects that are spawned.
         /// </summary>
-        public float SpawnScale { get; set; }
+        public float SpawnScale { get; set; } = 1;
 
         /// <summary>
         /// Spawner node ID in the network it's in (sequential integers starting from 0).
