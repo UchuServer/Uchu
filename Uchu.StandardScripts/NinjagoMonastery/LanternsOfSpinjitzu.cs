@@ -1,35 +1,29 @@
-using System.Linq;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.NinjagoMonastery
 {
-    [ZoneSpecific(2000)]
-    public class LanternsOfSpinjitzu : NativeScript
+    [ScriptName("ScriptComponent_1620_script_name__removed")]
+    public class LanternOfSpinjitzu : ObjectScript
     {
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public LanternOfSpinjitzu(GameObject gameObject) : base(gameObject)
         {
-            // Earth lanterns (railposts)
-            var gameObjects = Zone.GameObjects.Where(g => g.Lot == 14387);
-
-            // This listens for all earth railposts instead of just the one near Cole but that's probably fine
-            foreach (var gameObject in gameObjects)
+            // Listen to players interacting with railposts
+            Listen(gameObject.OnInteract, async player =>
             {
-                Listen(gameObject.OnInteract, async player =>
-                {
-                    if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
-                        return;
-                    if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
-                        return;
+                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                    return;
+                if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                    return;
 
-                    // Cole's mission
-                    if (missionInventory.HasActive(2072))
-                        await characterComponent.SetFlagAsync(2020, true);
-                });
-            }
-
-            return Task.CompletedTask;
+                // If player has Cole's mission active, set flag to proceed with next mission
+                if (missionInventory.HasActive(2072))
+                    await characterComponent.SetFlagAsync(2020, true);
+            });
         }
     }
 }

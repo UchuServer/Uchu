@@ -1,29 +1,29 @@
-using System.Linq;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.NinjagoMonastery
 {
-    [ZoneSpecific(2000)]
-    public class ColeFear : NativeScript
+    [ScriptName("ScriptComponent_1647_script_name__removed")]
+    public class ColeFear : ObjectScript
     {
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public ColeFear(GameObject gameObject) : base(gameObject)
         {
-            var cole = Zone.GameObjects.First(g => g.Lot == 13790);
-
-            Listen(cole.OnEmoteReceived, (emote, player) =>
+            Listen(gameObject.OnEmoteReceived, (emote, player) =>
             {
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                     return;
-                // Mission to scare Cole
-                if (!missionInventory.HasActive(1818))
+
+                // Player should use Dragon Roar emote
+                if (emote != 393)
                     return;
-                // Emote: Dragon roar, target: Cole
+
+                // Script for mission 1818, target: Cole
                 missionInventory.ScriptAsync(2581, 13790);
             });
-
-            return Task.CompletedTask;
         }
     }
 }

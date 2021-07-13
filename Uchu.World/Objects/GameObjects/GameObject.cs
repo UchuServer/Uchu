@@ -100,7 +100,7 @@ namespace Uchu.World
 
         public Event<int, Player> OnEmoteReceived { get; }
 
-        public Event<GameObject> OnSkillEvent { get; }
+        public Event<GameObject, string> OnSkillEvent { get; }
 
         #endregion
         
@@ -128,7 +128,7 @@ namespace Uchu.World
 
             OnEmoteReceived = new Event<int, Player>();
 
-            OnSkillEvent = new Event<GameObject>();
+            OnSkillEvent = new Event<GameObject, string>();
 
             Listen(OnStart, () =>
             {

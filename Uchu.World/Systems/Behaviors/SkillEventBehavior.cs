@@ -12,7 +12,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            parameters.Context.Associate.OnSkillEvent.Invoke(parameters.BranchContext.Target);
+            parameters.Context.Associate.OnSkillEvent.Invoke(parameters.BranchContext.Target, EffectHandler);
         }
     }
 }
