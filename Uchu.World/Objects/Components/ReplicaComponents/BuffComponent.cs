@@ -91,7 +91,7 @@ namespace Uchu.World
 
         public void RemoveBuffById(uint buffId)
         {
-            _buffs.Remove(_buffs.First(buffInfo => buffInfo.BuffId == buffId));
+            _buffs.Remove(_buffs.FirstOrDefault(buffInfo => buffInfo.BuffId == buffId));
         }
 
         public override void Construct(BitWriter writer)
