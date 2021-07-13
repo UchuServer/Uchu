@@ -153,6 +153,11 @@ namespace Uchu.World
         public Lot SpawnTemplate { get; set; }
 
         /// <summary>
+        /// Scale for the objects that are spawned.
+        /// </summary>
+        public float SpawnScale { get; set; }
+
+        /// <summary>
         /// Spawner node ID in the network it's in (sequential integers starting from 0).
         /// </summary>
         public uint SpawnerNodeId { get; set; }
@@ -222,7 +227,7 @@ namespace Uchu.World
                 Lot = SpawnTemplate,
                 Position = Transform.Position,
                 Rotation = Transform.Rotation,
-                Scale = 1,
+                Scale = SpawnScale,
                 LegoInfo = GameObject.Settings,
                 ObjectId = ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
             };

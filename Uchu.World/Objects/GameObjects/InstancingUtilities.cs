@@ -42,6 +42,7 @@ namespace Uchu.World
             var spawnerComponent = instance.AddComponent<SpawnerComponent>();
 
             spawnerComponent.SpawnTemplate = new Lot((int) spawnTemplate);
+            spawnerComponent.SpawnScale = levelObject.Scale;
 
             if (levelObject.LegoInfo.TryGetValue("respawn", out var respawnTime))
                 spawnerComponent.RespawnTime = Convert.ToInt32(Convert.ToSingle(respawnTime) * 1000);
