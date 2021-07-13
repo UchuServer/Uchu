@@ -301,7 +301,7 @@ namespace Uchu.World
             }
 
             Start(obj);
-            
+
             // Only spawns should get constructed on the client.
             spawner?.Spawn();
         }
@@ -359,7 +359,7 @@ namespace Uchu.World
         public bool TryGetGameObject(long objectId, out GameObject result)
         {
             result = GameObjects.FirstOrDefault(o => o.Id == objectId);
-            return result != default;
+            return result != null;
         }
 
         public T GetGameObject<T>(long objectId) where T : GameObject
