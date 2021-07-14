@@ -42,7 +42,6 @@ namespace Uchu.World.Systems.Behaviors
             if (Imagination > 0 || !IsEnemyFaction)
                 parameters.State = reader.ReadBit();
 
-            Logger.Debug($"Switch Deserialize: state {parameters.State} imag {Imagination} enemyfac {IsEnemyFaction} buff {TargetHasBuff}");
             if (TargetHasBuff != default && TargetHasBuff != -1 && parameters.BranchContext?.Target != null)
             {
                 parameters.State = parameters.BranchContext.Target.TryGetComponent<BuffComponent>(out var buffComponent)
@@ -56,13 +55,11 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void SerializeStart(BitWriter writer, SwitchBehaviorExecutionParameters parameters)
         {
-            Logger.Debug($"Switch Serialize: {BehaviorId}");
             parameters.State = true;
             if (Imagination > 0 || !IsEnemyFaction)
             {
                 parameters.State = parameters.BranchContext.Target != default && parameters.NpcContext.Alive;
 
-                Logger.Debug($"Switch Serialize: state {parameters.State} imag {Imagination} enemyfac {IsEnemyFaction} buff {TargetHasBuff}");
                 if (TargetHasBuff != default && TargetHasBuff != -1 && parameters.BranchContext?.Target != null)
                 {
                     parameters.State = parameters.BranchContext.Target.TryGetComponent<BuffComponent>(out var buffComponent)
