@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -16,33 +17,27 @@ namespace Uchu.StandardScripts.NinjagoMonastery
             // GoToNpc tasks, so it should be fine to just call GoToNpc for them.)
 
             // https://lu.lcdruniverse.org/explorer/missions/1797
-            const int senseiWuLot = 13789;
-            const int senseiWuMission = 1797;
-            const int senseiWuMissionTarget = 13879; // NT_ASSEMBLY PET CONSOLE ???
-            var senseiWu = Zone.GameObjects.First(g => g.Lot == senseiWuLot);
+            var senseiWu = Zone.GameObjects.First(g => g.Lot == Lot.SenseiWuNpc);
             Listen(senseiWu.OnInteract, player =>
             {
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                     return;
-                if (!missionInventory.HasActive(senseiWuMission))
+                if (!missionInventory.HasActive((int) MissionId.DangerBelow))
                     return;
-                missionInventory.GoToNpcAsync(senseiWuMissionTarget);
-                missionInventory.GetMission(senseiWuMission).CompleteAsync();
+                missionInventory.GoToNpcAsync(Lot.AssemblyPetConsole);
+                missionInventory.GetMission((int) MissionId.DangerBelow).CompleteAsync();
             });
 
             // https://lu.lcdruniverse.org/explorer/missions/1798
-            const int jayLot = 13792;
-            const int jayMission = 1798;
-            const int jayMissionTarget = 13798; // some guard in a cave?
-            var jay = Zone.GameObjects.First(g => g.Lot == jayLot);
+            var jay = Zone.GameObjects.First(g => g.Lot == Lot.JayNpc);
             Listen(jay.OnInteract, player =>
             {
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
                     return;
-                if (!missionInventory.HasActive(jayMission))
+                if (!missionInventory.HasActive((int) MissionId.NinjaofLightning))
                     return;
-                missionInventory.GoToNpcAsync(jayMissionTarget);
-                missionInventory.GetMission(jayMission).CompleteAsync();
+                missionInventory.GoToNpcAsync(Lot.HariHowzenNpc);
+                missionInventory.GetMission((int) MissionId.NinjaofLightning).CompleteAsync();
             });
 
             return Task.CompletedTask;

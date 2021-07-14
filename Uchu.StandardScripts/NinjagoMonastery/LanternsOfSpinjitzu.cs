@@ -1,3 +1,4 @@
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -21,8 +22,8 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                     return;
 
                 // If player has Cole's mission active, set flag to proceed with next mission
-                if (missionInventory.HasActive(2072))
-                    await characterComponent.SetFlagAsync(2020, true);
+                if (missionInventory.HasActive(MissionId.LanternsofSpinjitzu))
+                    await characterComponent.SetFlagAsync(Flag.UsedEarthLantern, true);
             });
         }
     }

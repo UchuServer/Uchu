@@ -22,7 +22,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                     return;
 
                 // Script for mission 1818, target: Cole
-                missionInventory.ScriptAsync(2581, 13790);
+                missionInventory.ScriptAsync(2581, Lot.ColeNpc);
             });
         }
     }

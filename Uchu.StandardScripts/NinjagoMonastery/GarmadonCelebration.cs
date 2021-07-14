@@ -22,11 +22,11 @@ namespace Uchu.StandardScripts.NinjagoMonastery
 
                 // Check if player has seen celebration before
                 var character = player.GetComponent<CharacterComponent>();
-                if (character.GetFlag(125)) return;
+                if (character.GetFlag(Flag.WitnessedGarmadonCelebration)) return;
 
                 // Show celebration
                 player.TriggerCelebration(CelebrationId.LordGarmadon);
-                character.SetFlagAsync(125, true);
+                character.SetFlagAsync(Flag.WitnessedGarmadonCelebration, true);
             });
         }
     }

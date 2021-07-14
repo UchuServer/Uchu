@@ -14,7 +14,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
         public override Task LoadAsync()
         {
             // Add death listener to initially spawned enemies
-            var chopov = Zone.GameObjects.First(obj => obj.Lot == 16047);
+            var chopov = Zone.GameObjects.First(obj => obj.Lot == Lot.Chopov);
             Listen(chopov.GetComponent<DestroyableComponent>().OnDeath,
                 () => { SpawnQuickbuild("EarthShrine_ERail"); }
             );
@@ -24,12 +24,12 @@ namespace Uchu.StandardScripts.NinjagoMonastery
             //     () => { SpawnQuickbuild("..."); }
             // );
 
-            var krazi = Zone.GameObjects.First(obj => obj.Lot == 16049);
+            var krazi = Zone.GameObjects.First(obj => obj.Lot == Lot.Krazi);
             Listen(krazi.GetComponent<DestroyableComponent>().OnDeath,
                 () => { SpawnQuickbuild("LightningShrine_LRail"); }
             );
 
-            var bonezai = Zone.GameObjects.First(obj => obj.Lot == 16050);
+            var bonezai = Zone.GameObjects.First(obj => obj.Lot == Lot.Bonezai);
             Listen(bonezai.GetComponent<DestroyableComponent>().OnDeath,
                 () => { SpawnQuickbuild("IceShrine_QBBouncer"); }
             );
@@ -42,7 +42,7 @@ namespace Uchu.StandardScripts.NinjagoMonastery
 
                 switch (newObj.Lot)
                 {
-                    case 16047: // Chopov (Earth)
+                    case Lot.Chopov: // Chopov (Earth)
                         Listen(newObj.GetComponent<DestroyableComponent>().OnDeath,
                             () => { SpawnQuickbuild("EarthShrine_ERail"); }
                         );
@@ -54,13 +54,13 @@ namespace Uchu.StandardScripts.NinjagoMonastery
                     //     );
                     //     break;
 
-                    case 16049: // Krazi (Lightning)
+                    case Lot.Krazi: // Krazi (Lightning)
                         Listen(newObj.GetComponent<DestroyableComponent>().OnDeath,
                             () => { SpawnQuickbuild("LightningShrine_LRail"); }
                         );
                         break;
 
-                    case 16050: // Bonezai (Ice)
+                    case Lot.Bonezai: // Bonezai (Ice)
                         Listen(newObj.GetComponent<DestroyableComponent>().OnDeath,
                             () => { SpawnQuickbuild("IceShrine_QBBouncer"); }
                         );

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -18,26 +19,26 @@ namespace Uchu.StandardScripts.NinjagoMonastery
 
                 Listen(missionInventory.OnCompleteMission, instance =>
                 {
-                    switch (instance.MissionId)
+                    switch ((MissionId) instance.MissionId)
                     {
                         // Cole mission (Earth)
-                        case 1796:
-                            characterComponent.SetFlagAsync(2030, true);
+                        case MissionId.StudentofEarth:
+                            characterComponent.SetFlagAsync(Flag.EarthSpinjitzu, true);
                             // source: https://lu.lcdruniverse.org/explorer/missions/2053
                             break;
                         // Jay mission (Lightning)
-                        case 1952:
-                            characterComponent.SetFlagAsync(2031, true);
+                        case MissionId.StudentofLightning:
+                            characterComponent.SetFlagAsync(Flag.LightningSpinjitzu, true);
                             // source: https://lu.lcdruniverse.org/explorer/missions/2054
                             break;
                         // Zane mission (Ice)
-                        case 1959:
-                            characterComponent.SetFlagAsync(2032, true);
+                        case MissionId.StudentofIce:
+                            characterComponent.SetFlagAsync(Flag.IceSpinjitzu, true);
                             // source: https://lu.lcdruniverse.org/explorer/missions/2055
                             break;
                         // Kai mission (Fire)
-                        case 1962:
-                            characterComponent.SetFlagAsync(2033, true);
+                        case MissionId.StudentofFire:
+                            characterComponent.SetFlagAsync(Flag.FireSpinjitzu, true);
                             // source: https://lu.lcdruniverse.org/explorer/missions/2056
                             break;
                     }
