@@ -144,48 +144,94 @@ namespace Uchu.World.Scripting.Native
         {
             this._variables[name] = value;
         }
-        
+
         /// <summary>
-        /// Sets a networked variable of the script.
+        /// Prepares an LDF wot use with ScriptNetworkVarUpdateMessage and
+        /// sets the internal LDF data of the script component.
         /// </summary>
         /// <param name="name">Name of the variable to store.</param>
         /// <param name="value">Value of the variable to store.</param>
-        /// <param name="type">Type of the LDF entry to send.</param>
-        public void SetNetworkVar(string name, object value, byte type)
+        /// <param name="ldf">Dictionary to set up for sending with ScriptNetworkVarUpdateMessage.</param>
+        private void PrepareDictionary(string name, object value, LegoDataDictionary ldf)
         {
-            // Set the variable.
-            this.SetVar(name, value);
-            
-            // Create the LDF.
-            var ldf = new LegoDataDictionary();
+            // Add the value.
             if (value is IList list)
             {
+                // Add the list entries.
+                // These aren't stored in the script.
                 for (var i = 0; i < list.Count; i++)
                 {
                     var subValue = list[i];
                     var key = name + "." + (i + 1);
                     if (subValue is GameObject gameObject)
                     {
-                        ldf.Add(key, gameObject.Id, type);
+                        ldf.Add(key, gameObject.Id);
                     }
                     else
                     {
-                        ldf.Add(key, subValue, type);
+                        ldf.Add(key, subValue);
                     }
                 }
             }
             else
             {
+                // Convert the object.
+                var newValue = value;
                 if (value is GameObject gameObject)
                 {
-                    ldf.Add(name, gameObject.Id, type);
+                    newValue = (long) gameObject.Id;
                 }
-                else
+                
+                // Store the object.
+                if (this.GameObject.TryGetComponent<LuaScriptComponent>(out var component))
                 {
-                    ldf.Add(name, value, type);
+                    component.Data ??= new LegoDataDictionary();
+                    component.Data.Add(name, newValue);
                 }
+                ldf.Add(name, newValue);
+            }
+        }
+        
+        /// <summary>
+        /// Sets a networked variable of the script.
+        /// </summary>
+        /// <param name="name">Name of the variable to store.</param>
+        /// <param name="value">Value of the variable to store.</param>
+        public void SetNetworkVar(string name, object value)
+        {
+            // Set the variable.
+            this.SetVar(name, value);
+            
+            // Create the LDF.
+            var ldf = new LegoDataDictionary();
+            PrepareDictionary(name, value, ldf);
+
+            // Broadcast the variable change.
+            Task.Run(() =>
+            {
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                {
+                    Associate = this.GameObject,
+                    LDFInText = ldf.ToString(),
+                });
+            });
+        }
+        
+        /// <summary>
+        /// Sets a networked variable of the script.
+        /// </summary>
+        /// <param name="values">Values to send in the same request.</param>
+        public void SetNetworkVar((string, object)[] values)
+        {
+            // Set the variables and create the LDF.
+            var ldf = new LegoDataDictionary();
+            foreach (var (key, value) in values)
+            {
+                this.SetVar(key, value);
+                PrepareDictionary(key, value, ldf);
             }
             
+
             // Broadcast the variable change.
             Task.Run(() =>
             {
@@ -205,7 +251,25 @@ namespace Uchu.World.Scripting.Native
         /// <returns>Value of the variable to fetch.</returns>
         public T GetVar<T>(string name)
         {
+            // Add the value if it doesn't exist and is a value type.
+            if (!this._variables.ContainsKey(name) && typeof(T).IsValueType)
+            {
+                this._variables[name] = Activator.CreateInstance(typeof(T));
+            }
+            
+            // Return the value.
             return (T) this._variables[name];
+        }
+
+        /// <summary>
+        /// Gets a stored variable of the script.
+        /// </summary>
+        /// <param name="name">Name of the variable to fetch.</param>
+        /// <typeparam name="T">Type of the value.</typeparam>
+        /// <returns>Value of the variable to fetch.</returns>
+        public T GetNetworkVar<T>(string name)
+        {
+            return GetVar<T>(name);
         }
         #endregion
 
@@ -457,6 +521,68 @@ namespace Uchu.World.Scripting.Native
                     Name = effect.Name,
                 });
             }
+        }
+        #endregion
+
+        #region Activities/// <summary>
+        /// Adds a player to the current activity.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void AddActivityUser(Player player)
+        {
+            // TODO: More work required for activity scores.
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.Participants.Add(player);
+            Serialize(this.GameObject);
+        }
+        
+        /// <summary>
+        /// Removes a player from the current activity.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemoveActivityUser(Player player)
+        {
+            // TODO: Implement.
+        }
+        
+        /// <summary>
+        /// Sets the activity value for a given player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index of the value to set.</param>
+        /// <param name="value">Value to set.</param>
+        public void SetActivityUserData(Player player, int index, float value)
+        {
+            // TODO: Implement.
+        }
+        
+        /// <summary>
+        /// Returns the activity value for a given player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index of the value to set.</param>
+        /// <returns>The activity value for the player.</returns>
+        public float GetActivityUserData(Player player, int index)
+        {
+            return 0; // TODO: Implement.
+        }
+
+        /// <summary>
+        /// Starts the activity.
+        /// </summary>
+        public void ActivityStart()
+        {
+            // TODO: Send ActivityStart packet
+        }
+        
+        /// <summary>
+        /// Adds a player to the current minigame.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void MiniGameAddPlayer(Player player)
+        {
+            // TODO: Are there any more requirements? (Check packet captures)
+            this.AddActivityUser(player);
         }
         #endregion
         
