@@ -59,6 +59,10 @@ namespace Uchu.StandardScripts.Base
                 {
                     this.PlayerLoaded(player);
                 });
+                Listen(player.OnMessageBoxRespond, (buttonId, identifier, _) =>
+                {
+                    this.MessageBoxResponse(player, identifier, buttonId);
+                });
             });
             Listen(Zone.OnPlayerLeave, this.PlayerExit);
         }
