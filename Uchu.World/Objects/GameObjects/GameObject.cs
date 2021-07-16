@@ -506,7 +506,7 @@ namespace Uchu.World
             SpawnerComponent spawner = default, GameObject author = default)
         {
             // Check if spawner
-            if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _))
+            if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _) && spawner == default)
                 return InstancingUtilities.Spawner(levelObject, parent);
 
             var name = levelObject.LegoInfo.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
