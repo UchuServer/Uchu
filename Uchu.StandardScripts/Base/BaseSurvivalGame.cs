@@ -316,7 +316,10 @@ namespace Uchu.StandardScripts.Base
         /// <param name="player">Player to reset stats of.</param>
         private void ResetStats(Player player)
         {
-            // TODO: Set health, armor, and imagination to max
+            if (!player.TryGetComponent<DestroyableComponent>(out var destroyableComponent)) return;
+            destroyableComponent.Health = destroyableComponent.MaxHealth;
+            destroyableComponent.Armor = destroyableComponent.MaxArmor;
+            destroyableComponent.Imagination = destroyableComponent.MaxImagination;
         }
 
         /// <summary>
