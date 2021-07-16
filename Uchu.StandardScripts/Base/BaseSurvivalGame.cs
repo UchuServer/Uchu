@@ -66,6 +66,14 @@ namespace Uchu.StandardScripts.Base
                 {
                     this.MessageBoxResponse(player, identifier, buttonId);
                 });
+                if (player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
+                {
+                    Listen(destructibleComponent.OnDestroyed, () =>
+                    {
+                        this.PlayerDied(player);
+                    });
+                    Listen(destructibleComponent.OnResurrect, this.PlayerResurrected);
+                };
             });
             Listen(Zone.OnPlayerLeave, this.PlayerExit);
         }
