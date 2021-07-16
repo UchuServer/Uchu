@@ -25,6 +25,7 @@ namespace Uchu.World
         private uint _maxImagination;
         
         public int[] Factions { get; set; } = new int[0];
+        
         public int[] Friends { get; set; } = new int[0];
         
         public int[] Enemies { get; set; } = new int[0];
