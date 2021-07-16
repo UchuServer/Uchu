@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Timers;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -13,6 +17,21 @@ namespace Uchu.StandardScripts.Base
         /// Scripted activity component of the object.
         /// </summary>
         private ScriptedActivityComponent _scriptedActivityComponent;
+
+        /// <summary>
+        /// Update timers used for the activity.
+        /// </summary>
+        private Dictionary<string, Timer> _activityUpdateTimers = new Dictionary<string, Timer>();
+
+        /// <summary>
+        /// Complete timers used for the activity.
+        /// </summary>
+        private Dictionary<string, Timer> _activityCompleteTimers = new Dictionary<string, Timer>();
+
+        /// <summary>
+        /// Complete stopwatches used for the activity.
+        /// </summary>
+        private Dictionary<string, Stopwatch> _activityCompleteStopWatches = new Dictionary<string, Stopwatch>();
         
         /// <summary>
         /// Creates the object script.
@@ -164,7 +183,40 @@ namespace Uchu.StandardScripts.Base
         /// <param name="stopTime">Time to stop the timer.</param>
         public void ActivityTimerStart(string timerName, int updateTime, int stopTime = 0)
         {
-            // TODO: Implement.
+            // Stop the existing timer.
+            this.ActivityTimerStop(timerName);
+            
+            // Create the timers.
+            this._activityCompleteStopWatches[timerName] = new Stopwatch();
+            this._activityUpdateTimers[timerName] = new Timer(updateTime * 1000)
+            {
+                AutoReset = true,
+            };
+            if (stopTime != 0)
+            {
+                this._activityCompleteTimers[timerName] = new Timer(stopTime * 1000)
+                {
+                    AutoReset = false,
+                };
+            }
+
+            // Connect and start the timers.
+            this._activityCompleteStopWatches[timerName].Start();
+            this._activityUpdateTimers[timerName].Elapsed += (sender, args) =>
+            {
+                this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName));
+            };
+            this._activityUpdateTimers[timerName].Start();
+            if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer))
+            {
+                completeTimer.Elapsed += (sender, args) =>
+                {
+                    this.ActivityTimerStop(timerName);
+                    this.OnActivityTimeDone(timerName);
+                };
+                completeTimer.Start();
+            }
+            this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName));
         }
 
         /// <summary>
@@ -173,7 +225,20 @@ namespace Uchu.StandardScripts.Base
         /// <param name="timerName">Name of the timer to reset.</param>
         public void ActivityTimerReset(string timerName)
         {
-            // TODO: Implement.
+            if (this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
+            {
+                stopwatch.Restart();
+            }
+            if (this._activityUpdateTimers.TryGetValue(timerName, out var updateTimer))
+            {
+                updateTimer.Stop();
+                updateTimer.Start();
+            }
+            if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer))
+            {
+                completeTimer.Stop();
+                completeTimer.Start();
+            }
         }
         
         /// <summary>
@@ -182,7 +247,21 @@ namespace Uchu.StandardScripts.Base
         /// <param name="timerName">Name of the timer to stop.</param>
         public void ActivityTimerStop(string timerName)
         {
-            // TODO: Implement.
+            if (this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
+            {
+                stopwatch.Stop();
+                this._activityCompleteStopWatches.Remove(timerName);
+            }
+            if (this._activityUpdateTimers.TryGetValue(timerName, out var updateTimer))
+            {
+                updateTimer.Stop();
+                this._activityUpdateTimers.Remove(timerName);
+            }
+            if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer))
+            {
+                completeTimer.Stop();
+                this._activityCompleteTimers.Remove(timerName);
+            }
         }
 
         /// <summary>
@@ -190,7 +269,10 @@ namespace Uchu.StandardScripts.Base
         /// </summary>
         public void ActivityTimerStopAllTimers()
         {
-            // TODO: Implement.
+            foreach (var timerName in this._activityUpdateTimers.Keys.ToArray())
+            {
+                this.ActivityTimerStop(timerName);
+            }
         }
 
         /// <summary>
@@ -200,7 +282,7 @@ namespace Uchu.StandardScripts.Base
         /// <param name="addTime">Time to add.</param>
         public void ActivityTimerAddTime(string timerName, int addTime)
         {
-            // TODO: Implement.
+            throw new NotImplementedException("Not used by any script.");
         }
 
         /// <summary>
@@ -210,7 +292,11 @@ namespace Uchu.StandardScripts.Base
         /// <returns>The remaining time for a timer.</returns>
         public float ActivityTimerGetRemainingTime(string timerName)
         {
-            return 0; // TODO: Implement.
+            if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer) && this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
+            {
+                return (float) completeTimer.Interval - stopwatch.ElapsedMilliseconds;
+            }
+            return 0;
         }
 
         /// <summary>
@@ -220,7 +306,30 @@ namespace Uchu.StandardScripts.Base
         /// <returns>The elapsed time for a timer.</returns>
         public float ActivityTimerGetCurrentTime(string timerName)
         {
-            return 0; // TODO: Implement.
+            if (this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
+            {
+                return (float) stopwatch.ElapsedMilliseconds;
+            }
+            return 0;
+        }
+        
+        /// <summary>
+        /// Invoked when the timer updates.
+        /// </summary>
+        /// <param name="name">Name of the timer.</param>
+        /// <param name="timeRemaining">Time that is remaining.</param>
+        public virtual void OnActivityTimerUpdate(string name, float timeRemaining)
+        {
+            
+        }
+        
+        /// <summary>
+        /// Invoked when the timer is done.
+        /// </summary>
+        /// <param name="name">Name of the timer.</param>
+        public virtual void OnActivityTimeDone(string name)
+        {
+            
         }
     }
 }

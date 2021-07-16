@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using InfectedRose.Lvl;
 using Uchu.World;
 
 namespace Uchu.StandardScripts.Base
@@ -12,6 +10,11 @@ namespace Uchu.StandardScripts.Base
     /// </summary>
     public class BaseSurvivalGame : GenericActivityManager
     {
+        /// <summary>
+        /// Configuration for the round.
+        /// </summary>
+        private SurvivalConfiguration.SurvivalConfiguration _configuration;
+        
         /// <summary>
         /// Players who entered the game.
         /// </summary>
@@ -168,15 +171,15 @@ namespace Uchu.StandardScripts.Base
                 this.PlayerConfirmed();
                 if (this._waitingPlayers.Count == 0)
                 {
-                    // TODO: this.ActivityTimerStopAllTimers();
-                    // TODO: ActivityTimerStart(self, 'AllAcceptedDelay', 1, gConstants.startDelay) --(timerName, updateTime, stopTime)
+                    this.ActivityTimerStopAllTimers();
+                    this.ActivityTimerStart("AllAcceptedDelay", 1, this._configuration.StartDelay);
                 }
                 else
                 {
                     if (!this.GetVar<bool>("AcceptedDelayStarted"))
                     {
                         this.SetVar("AcceptedDelayStarted", true);
-                        // TODO: ActivityTimerStart(self, 'AcceptedDelay', 1, gConstants.acceptedDelay ) --(timerName, updateTime, stopTime)
+                        this.ActivityTimerStart("AcceptedDelay", 1, this._configuration.AcceptedDelay);
                     }
                 }
             }
@@ -191,7 +194,7 @@ namespace Uchu.StandardScripts.Base
             }
             
             // Reduce the total players.
-            // TODO: this.SetActivityValue(player, 1, 0)
+            this.SetActivityValue(player, 1, 0);
             this.SetNetworkVar("NumberOfPlayers", this.GetNetworkVar<int>("NumberOfPlayers") - 1);
         }
 
@@ -220,8 +223,8 @@ namespace Uchu.StandardScripts.Base
             if (this.GetVar<bool>("wavesStarted"))
             {
                 // Set the final time, notify the clients, and end the game.
-                // TODO: var finalTime = ActivityTimerGetCurrentTime(self, 'ClockTick')
-                // TODO: SetActivityValue(self, msg.playerID, 1, finalTime)
+                var finalTime = this.ActivityTimerGetCurrentTime("ClockTick");
+                this.SetActivityValue(player, 1, finalTime);
                 // TODO: self:NotifyClientZoneObject{name = 'Player_Died', paramObj = msg.playerID, rerouteID = msg.playerID, param1 = finalTime, paramStr = tostring(checkAllPlayersDead())}
                 this.GameOver(player);
             }
@@ -255,16 +258,22 @@ namespace Uchu.StandardScripts.Base
             } else if (name == "Exit_Question" && buttonId == 1)
             {
                 // Return the player to Avant Gardens.
-                // TODO: this.ResetStats(player);
+                this.ResetStats(player);
                 this.SetNetworkVar("Exit_Waves", player);
                 // TODO: msg.sender:TransferToLastNonInstance{ playerID = msg.sender, bUseLastPosition = false, pos_x = 131.83, pos_y = 376, pos_z = -180.31, rot_x = 0, rot_y = -0.268720, rot_z = 0, rot_w = 0.963218}
             }
         }
         
-        // TODO: Implement and determine arguments.
-        public void SetGameVariables()
+        /// <summary>
+        /// Sets the configuration of the round.
+        /// </summary>
+        /// <param name="configuration">Configuration of the round.</param>
+        /// <param name="mobSets">Mob sets of the round.</param>
+        /// <param name="spawnerNetworks">Spawner networks of the round.</param>
+        /// <param name="missionsToUpdate">Missions to update at the end of the round.</param>
+        public void SetGameVariables(SurvivalConfiguration.SurvivalConfiguration configuration, object mobSets, object spawnerNetworks, object missionsToUpdate)
         {
-            
+            this._configuration = configuration;
         }
 
         /// <summary>
@@ -280,15 +289,15 @@ namespace Uchu.StandardScripts.Base
             // Start the delay.
             if (this._waitingPlayers.Count == 0) // TODO: Check that this._players.Count == this.GetNetworkVar<bool>("NumberOfPlayers"). Currently, NumberOfPlayers is 4 instead of the expected players.
             {
-                // TODO: this.ActivityTimerStopAllTimers();
-                // TODO: ActivityTimerStart(self, 'AllAcceptedDelay', 1, gConstants.startDelay) --(timerName, updateTime, stopTime)
+                this.ActivityTimerStopAllTimers();
+                this.ActivityTimerStart("AllAcceptedDelay", 1, this._configuration.StartDelay);
             }
             else
             {
                 if (!this.GetVar<bool>("AcceptedDelayStarted"))
                 {
                     this.SetVar("AcceptedDelayStarted", true);
-                    // TODO: ActivityTimerStart(self, 'AcceptedDelay', 1, gConstants.acceptedDelay ) --(timerName, updateTime, stopTime)
+                    this.ActivityTimerStart("AcceptedDelay", 1, this._configuration.AcceptedDelay);
                 }
             }
         }
@@ -409,7 +418,7 @@ namespace Uchu.StandardScripts.Base
 		        end*/
                 
                 // Stop the activity.
-                // TODO: StopActivity(self, playerID, scoreVar, timeVar) 
+                StopActivity(player, scoreVar, timeVar);
             }
             
             // Reset the state.
@@ -527,7 +536,7 @@ namespace Uchu.StandardScripts.Base
         /// </summary>
         /// <param name="name">Name of the timer.</param>
         /// <param name="timeRemaining">Time that is remaining.</param>
-        public void OnActivityTimerUpdate(string name, float timeRemaining)
+        public override void OnActivityTimerUpdate(string name, float timeRemaining)
         {
             if (name == "AcceptedDelay")
             {
@@ -545,7 +554,7 @@ namespace Uchu.StandardScripts.Base
         /// Invoked when the timer is done.
         /// </summary>
         /// <param name="name">Name of the timer.</param>
-        public void OnActivityTimeDone(string name)
+        public override void OnActivityTimeDone(string name)
         {
             if (name == "AcceptedDelay")
             {
@@ -562,29 +571,32 @@ namespace Uchu.StandardScripts.Base
             {
                 // Start the game.
                 this.ActivityTimerStart("AllAcceptedDelay", 1);
-                // TODO: this.ActivityTimerStart("SpawnTick", gConstants.waveTime);
+                this.ActivityTimerStart("SpawnTick", this._configuration.WaveTime);
                 this.SpawnMobs();
-                // TODO: this.ActivityTimerStart("CoolDownStart", (gConstants.rewardInterval*gConstants.waveTime), (gConstants.rewardInterval*gConstants.waveTime));
+                this.ActivityTimerStart("CoolDownStart", (this._configuration.RewardInterval * this._configuration.WaveTime), (this._configuration.RewardInterval * this._configuration.WaveTime));
                 this.ActivityTimerStart("PlaySpawnSound", 3, 3);
             } else if (name == "CoolDownStart")
             {
-                // TODO: Comment
+                // Start the cooldown.
                 this.SetVar("isCoolDown", true);
                 this.ActivityTimerStop("SpawnTick");
-                // TODO: this.ActivityTimerStart("CoolDownStop", gConstants.coolDownTime, gConstants.coolDownTime);
+                this.ActivityTimerStart("CoolDownStop", this._configuration.CoolDownTime, this._configuration.CoolDownTime);
                 
+                // update the spawner.
                 // TODO: this.UpdateSpawner(tSpawnerNetworks.rewardNetworks[1], 1);
                 this._rewardTick += 1;
 
+                // Reset the spawners.
                 // TODO: this.SpawnerReset(tSpawnerNetworks.baseNetworks, true, 0);
                 // TODO: this.SpawnerReset(tSpawnerNetworks.randNetworks, true, 0);
             } else if (name == "CoolDownStop")
             {
-                // TODO: Comment
+                // Start the timers for the next cooldown.
                 this.SetVar("isCoolDown", false);
-                // TODO: this.ActivityTimerStart("SpawnTick", gConstants.waveTime);
-                // TODO: this.ActivityTimerStart("CoolDownStart", (gConstants.rewardInterval*gConstants.waveTime), (gConstants.rewardInterval*gConstants.waveTime));
+                this.ActivityTimerStart("SpawnTick", this._configuration.WaveTime);
+                this.ActivityTimerStart("CoolDownStart", (this._configuration.RewardInterval * this._configuration.WaveTime), (this._configuration.RewardInterval * this._configuration.WaveTime));
                 
+                // Spawn the enemies.
                 this.SpawnMobs();
                 this.ActivityTimerStart("PlaySpawnSound", 3, 3);
             } else if (name == "PlaySpawnSound")
