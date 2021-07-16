@@ -136,7 +136,11 @@ namespace Uchu.StandardScripts.Base
             
             // Move the players to the spawn point.
             this.SetPlayerSpawnPoints();
-            // TODO: msg.playerID:PlayerSetCameraCyclingMode{ cyclingMode = ALLOW_CYCLE_TEAMMATES, bAllowCyclingWhileDeadOnly = true }
+            player.Message(new PlayerSetCameraCyclingModeMessage()
+            {
+                AllowCyclingWhileDeadOnly = true,
+                CyclingMode = CyclingMode.AllowCycleTeammates,
+            });
             
             if (!this.GetNetworkVar<bool>("wavesStarted"))
             {
