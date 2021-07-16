@@ -60,8 +60,7 @@ namespace Uchu.World
             {
                 RailActivatorComponentId = GameObject.Lot.GetComponentId(ComponentId.RailActivator);
 
-                var railComponent = (await ClientCache.GetTableAsync<Core.Client.RailActivatorComponent>())
-                    .First(c => c.Id == RailActivatorComponentId);
+                var railComponent = await ClientCache.FindAsync<Core.Client.RailActivatorComponent>(RailActivatorComponentId);
 
                 ActivatorDamageImmune = (bool) GameObject.Settings["rail_activator_damage_immune"];
                 LoopSound = (string) GameObject.Settings["rail_loop_sound"];

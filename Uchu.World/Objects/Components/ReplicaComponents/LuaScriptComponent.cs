@@ -24,7 +24,7 @@ namespace Uchu.World
             {
                 // Get the script component or custom script.
                 var scriptId = GameObject.Lot.GetComponentId(ComponentId.ScriptComponent);
-                var script = ClientCache.GetTable<ScriptComponent>().FirstOrDefault(s => s.Id == scriptId);
+                var script = ClientCache.Find<ScriptComponent>(scriptId);
                 if (script == default)
                 {
                     Logger.Warning($"{GameObject} has an invalid script component entry: {scriptId}");
