@@ -572,7 +572,10 @@ namespace Uchu.World.Scripting.Native
         /// </summary>
         public void ActivityStart()
         {
-            // TODO: Send ActivityStart packet
+            GameObject.Zone.BroadcastMessage(new ActivityStartMessage()
+            {
+                Associate = this.GameObject,
+            });
         }
         
         /// <summary>
@@ -581,7 +584,6 @@ namespace Uchu.World.Scripting.Native
         /// <param name="player">Player to add.</param>
         public void MiniGameAddPlayer(Player player)
         {
-            // TODO: Are there any more requirements? (Check packet captures)
             this.AddActivityUser(player);
         }
         #endregion
