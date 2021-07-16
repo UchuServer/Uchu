@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Uchu.World;
 
 namespace Uchu.StandardScripts.Base
@@ -61,19 +62,18 @@ namespace Uchu.StandardScripts.Base
                 Listen(player.OnWorldLoad, () =>
                 {
                     this.PlayerLoaded(player);
+
+                    if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+                    Listen(destructibleComponent.OnSmashed, (otherGameObject, otherPlayer) =>
+                    {
+                        this.PlayerDied(player);
+                    });
+                    Listen(destructibleComponent.OnResurrect, this.PlayerResurrected);
                 });
                 Listen(player.OnMessageBoxRespond, (buttonId, identifier, _) =>
                 {
                     this.MessageBoxResponse(player, identifier, buttonId);
                 });
-                if (player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
-                {
-                    Listen(destructibleComponent.OnDestroyed, () =>
-                    {
-                        this.PlayerDied(player);
-                    });
-                    Listen(destructibleComponent.OnResurrect, this.PlayerResurrected);
-                };
             });
             Listen(Zone.OnPlayerLeave, this.PlayerExit);
         }
@@ -239,8 +239,12 @@ namespace Uchu.StandardScripts.Base
             else
             {
                 // Resurrect the player (most likely smashed themself).
-                // TODO: player.Resurrect();
-                this.SetPlayerSpawnPoints();
+                if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
+                Task.Run(async () =>
+                {
+                    await destructibleComponent.ResurrectAsync();
+                    this.SetPlayerSpawnPoints();
+                });
             }
         }
 
@@ -419,7 +423,10 @@ namespace Uchu.StandardScripts.Base
                 // TODO: self:NotifyClientZoneObject{name = 'Update_ScoreBoard', paramObj = playerID, paramStr = tostring(scoreVar), param1 = timeVar}
                 
                 // Resurrect the player.
-                // TODO: playerID:Resurrect()
+                if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
+                {
+                    destructibleComponent.ResurrectAsync();
+                }
                 
                 // Update the missions.
                 var taskType = this.GetVar<string>("missionType") ?? "survival_time_team";

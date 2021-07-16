@@ -154,9 +154,8 @@ namespace Uchu.World
                 {
                     await GenerateYieldsAsync(owner);
                 }
-
-                await OnSmashed.InvokeAsync(smasher, owner);
             }
+            await OnSmashed.InvokeAsync(smasher, owner);
         }
         
         private async Task GenerateYieldsAsync(Player owner)
