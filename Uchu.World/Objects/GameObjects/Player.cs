@@ -322,7 +322,7 @@ namespace Uchu.World
                 CeleLeadOut = celebration.CeleLeadOut.Value,
                 CelebrationID = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconID = celebration.IconID.Value,
+                IconID = celebration.IconID ?? default,
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,
