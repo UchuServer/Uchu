@@ -69,6 +69,8 @@ namespace Uchu.World
         private long _objectUpdateTime;
         private long _scheduleUpdateTime;
         private long _timeSinceLastHeartBeat;
+        private bool _loadObjectScriptsImmediately;
+        private List<(GameObject, Type)> _queuedObjectScripts = new List<(GameObject, Type)>();
         
         public bool CalculatingTick { get; set; }
         public float DeltaTime { get; private set; }
@@ -133,12 +135,33 @@ namespace Uchu.World
             Logger.Information($"Checksum: 0x{Checksum:X}");
             Logger.Information($"Collecting objects for {ZoneId}");
 
+            await ScriptManager.LoadDefaultScriptsAsync();
             await LoadObjects();
+            this._loadObjectScriptsImmediately = true;
             await LoadScripts();
-
             SetupGameLoop();
-            
             Loaded = true;
+        }
+
+        /// <summary>
+        /// Loads an object script. Either happens immediately or is queued
+        /// for when all the objects load depending on if the zone has loaded.
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="objectScriptType"></param>
+        public void LoadObjectScript(GameObject gameObject, Type objectScriptType)
+        {
+            if (this._loadObjectScriptsImmediately)
+            {
+                // Load the script.
+                Logger.Information($"Running object script: {objectScriptType.Name}");
+                Activator.CreateInstance(objectScriptType, gameObject);
+            }
+            else
+            {
+                // Queue the script to be loaded.
+                this._queuedObjectScripts.Add((gameObject, objectScriptType));
+            }
         }
 
         /// <summary>
@@ -146,8 +169,7 @@ namespace Uchu.World
         /// </summary>
         private async Task LoadScripts()
         {
-            await ScriptManager.LoadDefaultScriptsAsync();
-            
+            // Load the script packs.
             foreach (var scriptPack in ScriptManager.ScriptPacks)
             {
                 try
@@ -159,6 +181,12 @@ namespace Uchu.World
                 {
                     Logger.Information(e);
                 }
+            }
+            
+            // Load the object scripts.
+            foreach (var (gameObject, objectScriptType) in this._queuedObjectScripts)
+            {
+                this.LoadObjectScript(gameObject, objectScriptType);
             }
         }
         
@@ -244,7 +272,7 @@ namespace Uchu.World
             foreach (var path in ZoneInfo.LuzFile.PathData.OfType<LuzSpawnerPath>())
             {
                 Logger.Information($"Loading {path.PathName}");
-                    
+
                 try
                 {
                     SpawnPath(path);
@@ -273,34 +301,19 @@ namespace Uchu.World
             }
 
             Start(obj);
-            
+
             // Only spawns should get constructed on the client.
-            spawner?.SpawnCluster();
+            spawner?.Spawn();
         }
 
         private void SpawnPath(LuzSpawnerPath spawnerPath)
         {
-            if (spawnerPath.ActivateSpawnerNetworkOnLoad)
+            var network = InstancingUtilities.SpawnerNetwork(spawnerPath, this);
+
+            if (network.ActivateOnLoad)
             {
-                var obj = InstancingUtilities.Spawner(spawnerPath, this);
-
-                if (obj == null) return;
-
-                obj.Layer = StandardLayer.Hidden;
-
-                var spawner = obj.GetComponent<SpawnerComponent>();
-
-                spawner.SpawnsToMaintain = (int)spawnerPath.NumberToMaintain;
-
-                spawner.SpawnLocations = spawnerPath.Waypoints.Select(w => new SpawnLocation
-                {
-                    Position = w.Position,
-                    Rotation = Quaternion.Identity
-                }).ToList();
-
-                Start(obj);
-
-                spawner.SpawnCluster();
+                Start(network);
+                network.SpawnAll();
             }
         }
 
@@ -346,7 +359,7 @@ namespace Uchu.World
         public bool TryGetGameObject(long objectId, out GameObject result)
         {
             result = GameObjects.FirstOrDefault(o => o.Id == objectId);
-            return result != default;
+            return result != null;
         }
 
         public T GetGameObject<T>(long objectId) where T : GameObject
@@ -456,6 +469,7 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
+                if (!recipient.Perspective.View(gameObject)) continue;
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
                 recipient.Connection.Send(new SerializePacket()

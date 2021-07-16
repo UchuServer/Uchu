@@ -98,6 +98,11 @@ namespace Uchu.World
                     return Task.CompletedTask;
                 }, 20 * 15);
                 
+                // Update the initial perspective for mission filters.
+                Task.Run(async () => {
+                    await Perspective.TickAsync();
+                });
+                
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
                 {
@@ -313,7 +318,7 @@ namespace Uchu.World
                 CeleLeadOut = celebration.CeleLeadOut.Value,
                 CelebrationID = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconID = celebration.IconID.Value,
+                IconID = celebration.IconID ?? default,
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,

@@ -12,6 +12,11 @@ namespace Uchu.World.Scripting
 {
     public class ScriptManager
     {
+        /// <summary>
+        /// Object scripts types in the script manager.
+        /// </summary>
+        public Dictionary<string, Type> ObjectScriptTypes { get; } = new Dictionary<string, Type>();
+        
         private Zone Zone { get; }
         
         private ManagedScriptEngine ManagedScriptEngine { get; }
@@ -24,13 +29,31 @@ namespace Uchu.World.Scripting
             
             ManagedScriptEngine = new ManagedScriptEngine();
         }
-        
+
+        /// <summary>
+        /// Loads the zone scripts.
+        /// </summary>
         internal async Task LoadDefaultScriptsAsync()
         {
             ScriptPacks = new List<ScriptPack>();
             
             ScriptPacks.AddRange(LoadNativeScripts());
             ScriptPacks.AddRange(await LoadManagedScriptsAsync());
+            
+            // Store the object script types.
+            foreach (var pack in ScriptPacks)
+            {
+                if (!(pack is NativeScriptPack nativePack)) continue;
+                foreach (var (scriptName, objectScriptType) in nativePack.ObjectScriptTypes)
+                {
+                    if (ObjectScriptTypes.ContainsKey(scriptName))
+                    {
+                        Logger.Warning($"Object script time registered multiple times: {scriptName}");
+                    }
+                    ObjectScriptTypes[scriptName] = objectScriptType;
+                    Logger.Information($"Registered object script {scriptName}");
+                }
+            }
         }
 
         private List<ScriptPack> LoadNativeScripts()

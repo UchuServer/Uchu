@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -7,69 +6,55 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
-    [ZoneSpecific(1100)]
-    public class MaelstromVacuum : NativeScript
+    /// <summary>
+    /// Native implementation of scripts/02_client/Equipment/l_maelstrom_extracticator_client.lua
+    /// </summary>
+    [ScriptName("l_maelstrom_extracticator_client.lua")]
+    public class MaelstromVacuum : ObjectScript
     {
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public MaelstromVacuum(GameObject gameObject) : base(gameObject)
         {
-            Listen(Zone.OnObject, obj =>
+            if (!(gameObject is AuthoredGameObject authoredGameObject)) return;
+            if (!(authoredGameObject.Author is Player player)) return;
+            
+            // Listen to the player attempting to collect.
+            Listen(player.OnFireServerEvent, (name, message) =>
             {
-                if (!(obj is AuthoredGameObject gameObject)) return;
-                
-                if (gameObject.Lot != 14596) return;
-                
-                if (!(gameObject.Author is Player player)) return;
+                if (name != "attemptCollection") return;
+                if (message.Associate != gameObject) return;
 
-                Delegate onFireServerEventDelegate = null;
-                onFireServerEventDelegate = Listen(player.OnFireServerEvent, (name, message) =>
+                // Determine the closest sample and return if it is too far.
+                var samples = Zone.GameObjects.Where(g => g.Lot == 14718).ToList();
+                var position = gameObject.Transform.Position;
+                samples.Sort((a, b) => (int) (
+                    Vector3.Distance(position, a.Transform.Position) -
+                    Vector3.Distance(position, b.Transform.Position)
+                ));
+                var selected = samples.FirstOrDefault();
+                if (selected == default) return;
+                if (Vector3.Distance(position, selected.Transform.Position) > 15) return;
+
+                // Animate the vacuum and clear it.
+                var smashable = selected.GetComponent<DestructibleComponent>();
+                Task.Run(async () =>
                 {
-                    if (name != "attemptCollection") return;
-                    
-                    if (message.Associate != gameObject) return;
-                    
-                    ReleaseListener(onFireServerEventDelegate);
-                    
-                    var samples = Zone.GameObjects.Where(g => g.Lot == 14718).ToList();
-
-                    var position = gameObject.Transform.Position;
-
-                    samples.Sort((a, b) => (int) (
-                        Vector3.Distance(position, a.Transform.Position) -
-                        Vector3.Distance(position, b.Transform.Position)
-                    ));
-
-                    var selected = samples.FirstOrDefault();
-
-                    if (selected == default) return;
-
-                    if (Vector3.Distance(position, selected.Transform.Position) > 15) return;
-
-                    var smashable = selected.GetComponent<DestructibleComponent>();
-                    
-                    Task.Run(async () =>
-                    {
-                        gameObject.Animate("collect_maelstrom");
-                        
-                        await Task.Delay(4000);
-
-                        await smashable.SmashAsync(gameObject, gameObject.Author as Player);
-                    });
-                });
-
-                Delegate onReadyForUpdatesEventDelegate = null;
-                onReadyForUpdatesEventDelegate = Listen(player.OnReadyForUpdatesEvent, (message) =>
-                {
-                    if (message.GameObject.Lot != 14596) return;
-                    
-                    if (message.GameObject != gameObject) return;
-                    
-                    ReleaseListener(onReadyForUpdatesEventDelegate);
-                    
-                    message.GameObject.Animate("idle_maelstrom");
+                    gameObject.Animate("collect_maelstrom");
+                    await Task.Delay(4000);
+                    await smashable.SmashAsync(gameObject, authoredGameObject.Author as Player);
                 });
             });
             
-            return Task.CompletedTask;
+            // List to the player being ready for updates (animations).
+            Listen(player.OnReadyForUpdatesEvent, (message) =>
+            {
+                if (message.GameObject.Lot != 14596) return;
+                if (message.GameObject != gameObject) return;
+                this.PlayAnimation("idle_maelstrom");
+            });
         }
     }
 }

@@ -1,14 +1,17 @@
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.General
 {
-    public class ImaginationFountain : NativeScript
+    [ScriptName("ScriptComponent_1419_script_name__removed")]
+    public class ImaginationFountain : ObjectScript
     {
-        private readonly (Lot, int)[] ImaginationDrops = {
+        /// <summary>
+        /// Imagination drop LOT to total.
+        /// </summary>
+        private static readonly (Lot, int)[] ImaginationDrops = {
             (Lot.Imagination, 1),
             (Lot.TwoImagination, 2),
             (Lot.ThreeImagination, 3),
@@ -16,32 +19,29 @@ namespace Uchu.StandardScripts.General
             (Lot.TenImagination, 10)
         };
         
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public ImaginationFountain(GameObject gameObject) : base(gameObject)
         {
-            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 12940))
+            // Listen to the fountain being interacted with.
+            Listen(gameObject.OnInteract, player =>
             {
-                Listen(gameObject.OnInteract, player =>
+                if (!player.TryGetComponent<DestroyableComponent>(out var stats)) return;
+                var toGive = (int) stats.MaxImagination;
+                while (toGive > 0)
                 {
-                    if (!player.TryGetComponent<DestroyableComponent>(out var stats)) return;
-
-                    var toGive = (int) stats.MaxImagination;
-
-                    while (toGive > 0)
-                    {
-                        var array = ImaginationDrops.Where((_, i) => i >= toGive).ToArray();
-
-                        var (lot, cost) = array.Length == 0 ? ImaginationDrops.Last() : array.Max();
-
-                        toGive -= cost;
-
-                        var loot = InstancingUtilities.InstantiateLoot(lot, player, gameObject, gameObject.Transform.Position+ Vector3.UnitY * 3);
-
-                        Start(loot);
-                    }
-                });
-            }
-            
-            return Task.CompletedTask;
+                    // Get the imagination to drop.
+                    var array = ImaginationDrops.Where((_, i) => i >= toGive).ToArray();
+                    var (lot, cost) = array.Length == 0 ? ImaginationDrops.Last() : array.Max();
+                    toGive -= cost;
+                    
+                    // Drop the loot.
+                    var loot = InstancingUtilities.InstantiateLoot(lot, player, gameObject, gameObject.Transform.Position+ Vector3.UnitY * 3);
+                    Start(loot);
+                }
+            });
         }
     }
 }
