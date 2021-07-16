@@ -372,8 +372,17 @@ namespace Uchu.StandardScripts.Base
             // Teleport the players, starting at the index 1 because of Lua table starting at 1.
             for (var i = 1; i <= this._players.Count; i++)
             {
-                // TODO: local spawnObj = self:GetObjectsInGroup{ group = 'P' .. k .. '_Spawn', ignoreSpawners = true }.objects[1], remember 1 -> 0
-                // TODO: Teleport player to position and rotation if spawnObj exists.
+                var spawnObjects = GetGroup("P" + i + "_Spawn");
+                if (spawnObjects.Length == 0) continue;
+                
+                var player = this._players[i - 1];
+                var spawnObject = spawnObjects[0];
+                player.Message(new TeleportMessage
+                    {
+                        Associate = player,
+                        Position = spawnObject.Transform.Position,
+                        Rotation = spawnObject.Transform.Rotation,
+                    });
             }            
         }
 
