@@ -102,6 +102,10 @@ namespace Uchu.World
 
         public Event<GameObject, string> OnSkillEvent { get; }
 
+        public Event OnCancelRailMovement { get; }
+
+        public Event OnRailMovementReady { get; }
+
         #endregion
         
         #region Macro
@@ -129,6 +133,10 @@ namespace Uchu.World
             OnEmoteReceived = new Event<int, Player>();
 
             OnSkillEvent = new Event<GameObject, string>();
+
+            OnRailMovementReady = new Event();
+
+            OnCancelRailMovement = new Event();
 
             Listen(OnStart, () =>
             {

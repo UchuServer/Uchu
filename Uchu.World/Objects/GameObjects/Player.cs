@@ -57,8 +57,6 @@ namespace Uchu.World
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
-            OnRailMovementReady = new Event();
-            OnCancelRailMovement = new Event();
 
             Listen(OnStart, () =>
             {
@@ -247,10 +245,6 @@ namespace Uchu.World
         public Event OnWorldLoad { get; }
 
         public Event<Vector3, Quaternion> OnPositionUpdate { get; }
-
-        public Event OnCancelRailMovement { get; }
-
-        public Event OnRailMovementReady { get; }
 
         public IRakConnection Connection { get; private set; }
 
