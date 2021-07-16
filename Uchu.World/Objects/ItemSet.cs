@@ -110,7 +110,8 @@ namespace Uchu.World.Objects
         /// <param name="lot">The lot for which we wish to check if item sets should be tracked</param>
         public static async Task CreateIfNewSet(InventoryComponent inventory, Lot lot)
         {
-            var clientItemSets = (await ClientCache.GetTableAsync<ItemSets>()).Where(
+            await using var context = new CdClientContext();
+            var clientItemSets = context.ItemSetsTable.Where(
                 i => i.ItemIDs.Contains(lot.ToString()));
 
             foreach (var clientItemSet in clientItemSets)
