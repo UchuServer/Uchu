@@ -373,7 +373,14 @@ namespace Uchu.StandardScripts.Base
         private bool CheckAllPlayersDead()
         {
             // Return false if 1 player is alive.
-            // TODO: Implement
+            foreach (var player in this._players)
+            {
+                if (!player.TryGetComponent<DestroyableComponent>(out var destroyableComponent)) continue;
+                if (destroyableComponent.Health > 0)
+                {
+                    return true;
+                }
+            }
             
             // Return true (no players are alive).
             return true;
