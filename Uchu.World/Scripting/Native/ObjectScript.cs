@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
@@ -44,6 +45,12 @@ namespace Uchu.World.Scripting.Native
         /// Dictionary of the variables stored by the script.
         /// </summary>
         private Dictionary<string, object> _variables = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Dictionary of the variables that were sent already to players. This is
+        /// used to stop duplicate script variable messages from being sent.
+        /// </summary>
+        private Dictionary<Player, Dictionary<string, object>> _sentVariables = new Dictionary<Player, Dictionary<string, object>>();
 
         /// <summary>
         /// Timers used by the script.
@@ -109,6 +116,13 @@ namespace Uchu.World.Scripting.Native
                     if (message.GameObject != this.GameObject) return;
                     this.SendEffectsToPlayer(player);
                 });
+            });
+            
+            // Connect players leaving.
+            Listen(this.Zone.OnPlayerLeave, (player) =>
+            {
+                if (!this._sentVariables.ContainsKey(player)) return;
+                this._sentVariables.Remove(player);
             });
         }
         
@@ -209,37 +223,37 @@ namespace Uchu.World.Scripting.Native
             // Broadcast the variable change.
             Task.Run(() =>
             {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                // Create the message.
+                var message = new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
                     LDFInText = ldf.ToString(),
-                });
-            });
-        }
-        
-        /// <summary>
-        /// Sets a networked variable of the script.
-        /// </summary>
-        /// <param name="values">Values to send in the same request.</param>
-        public void SetNetworkVar((string, object)[] values)
-        {
-            // Set the variables and create the LDF.
-            var ldf = new LegoDataDictionary();
-            foreach (var (key, value) in values)
-            {
-                this.SetVar(key, value);
-                PrepareDictionary(key, value, ldf);
-            }
-            
-
-            // Broadcast the variable change.
-            Task.Run(() =>
-            {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                };
+                
+                // Send the players the message.
+                foreach (var player in this.Zone.Players)
                 {
-                    Associate = this.GameObject,
-                    LDFInText = ldf.ToString(),
-                });
+                    // Ignore sending the message if the player was already send the message.
+                    // This prevents sending unintended duplicate messages to existing players
+                    // but allows new players to see the change. Mainly for Avant Gardens
+                    // Survival with a player joining after 1 or more players is ready, where
+                    // sending to show the scoreboard clears the ready players.
+                    if (!(value is IList) && this._variables.ContainsKey(name) && Equals(this._variables[name], value))
+                    {
+                        if (!this._sentVariables.ContainsKey(player))
+                        {
+                            this._sentVariables[player] = new Dictionary<string, object>();
+                        }
+                        if (this._sentVariables[player].ContainsKey(name) && Equals(this._sentVariables[player][name], value))
+                        {
+                            continue;
+                        }
+                        this._sentVariables[player][name] = value;
+                    }
+                    
+                    // Send the message.
+                    player.Message(message);
+                }
             });
         }
 

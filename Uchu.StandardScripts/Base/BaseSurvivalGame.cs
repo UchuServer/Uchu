@@ -126,12 +126,8 @@ namespace Uchu.StandardScripts.Base
             this.SetNetworkVar("Define_Player_To_UI", player);
             if (!this.GetNetworkVar<bool>("wavesStarted"))
             {
-                // These need to be sent together, otherwise the players don't show up.
-                this.SetNetworkVar(new (string, object)[]
-                {
-                    ("Update_ScoreBoard_Players", this._players),
-                    ("Show_ScoreBoard", true)
-                });
+                this.SetNetworkVar("Update_ScoreBoard_Players", this._players);
+                this.SetNetworkVar("Show_ScoreBoard", true);
             }
             
             // Move the players to the spawn point.
@@ -365,7 +361,6 @@ namespace Uchu.StandardScripts.Base
             
             // Start the waves.
             // TODO: activateSpawnerNetwork(tSpawnerNetworks.smashNetworks)
-            // TODO: These may need to be sent together.
             this.SetNetworkVar("wavesStarted", true);
             this.SetNetworkVar("Start_Wave_Message", "Start!");
         }
