@@ -207,7 +207,7 @@ namespace Uchu.StandardScripts.Base
             
             // Reduce the total players.
             this.SetActivityValue(player, 1, 0);
-            this.SetNetworkVar("NumberOfPlayers", this.GetNetworkVar<int>("NumberOfPlayers") - 1);
+            this.SetNetworkVar("NumberOfPlayers", this.GetNetworkVar<long>("NumberOfPlayers") - 1);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace Uchu.StandardScripts.Base
             this._waitingPlayers.Remove(player);
             
             // Start the delay.
-            if (this._waitingPlayers.Count == 0) // TODO: Check that this._players.Count == this.GetNetworkVar<bool>("NumberOfPlayers"). Currently, NumberOfPlayers is 4 instead of the expected players.
+            if (this._waitingPlayers.Count == 0) // TODO: Check that this._players.Count == this.GetNetworkVar<long>("NumberOfPlayers"). Currently, NumberOfPlayers is 4 instead of the expected players.
             {
                 this.ActivityTimerStopAllTimers();
                 this.ActivityTimerStart("AllAcceptedDelay", 1, this._configuration.StartDelay);
