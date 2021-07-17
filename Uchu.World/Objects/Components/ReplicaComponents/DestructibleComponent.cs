@@ -189,8 +189,18 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Drops player coins when smashed.
+        /// </summary>
+        /// <param name="owner">Player to drop coins of.</param>
         private void GeneratePlayerYieldsAsync(Player owner)
         {
+            // Return if the zone doesn't allow dropping coins.
+            var zoneTable = ClientCache.GetTable<ZoneTable>().First(z => z.ZoneID == (int) owner.Zone.ZoneId);
+            var playerLoseCoinsOnDeath = zoneTable.PlayerLoseCoinsOnDeath ?? true;
+            if (!playerLoseCoinsOnDeath) return;
+            
+            // Drop the player coins.
             if (GameObject.TryGetComponent<CharacterComponent>(out var character))
             {
                 var coinToDrop = Math.Min((long) Math.Round(character.Currency * 0.1), 10000);
