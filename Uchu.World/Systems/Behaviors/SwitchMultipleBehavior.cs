@@ -23,23 +23,46 @@ namespace Uchu.World.Systems.Behaviors
 
         private float ChargeTime { get; set; }
         private float DistanceToTarget { get; set; }
-        private BehaviorBase Behavior1 { get; set; }
-        private BehaviorBase Behavior2 { get; set; }
-        private float Value1 { get; set; }
+        
+        private List<BehaviorBase> Behaviors = new List<BehaviorBase>();
+
+        private List<float> Values = new List<float>();
 
         public override async Task BuildAsync()
         {
+            //what do these do?
             ChargeTime = await GetParameter<float>("charge_up");
             DistanceToTarget = await GetParameter<float>("distance_to_target");
-            Behavior1 = await GetBehavior("behavior 1");
-            Behavior2 = await GetBehavior("behavior 2");
-            Value1 = await GetParameter<float>("value 1");
+
+            //dynamically load all possible behaviors the switch can have
+            bool valid = true;
+            int count = 1;
+            while (valid){
+                BehaviorBase Behavior = await GetBehavior("behavior " + count);
+                float Value = await GetParameter<float>("value " + count);
+                if (Behavior == null || Behavior == default || Behavior.BehaviorId == 0){
+                    valid = false;
+                } else {
+                    count++;
+                    Behaviors.Add(Behavior);
+                    Values.Add(Value);
+                }
+            }
         }
 
         protected override void DeserializeStart(BitReader reader, SwitchMultipleBehaviorExecutionParameters parameters)
         {
             parameters.Value = reader.Read<float>();
-            parameters.Behavior = parameters.Value <= Value1 ? Behavior1 : Behavior2;
+            BehaviorBase currentBehavior = Behaviors[0];
+            //check each behavior's threshold to see if we go past it, when we find one that's too much we break out of the loop
+            for (int i = 1; i < Values.Count(); i++){
+                if (parameters.Value > Values[i-1]){
+                    currentBehavior = Behaviors[i];
+                } else {
+                    break;
+                }
+            }
+            parameters.Behavior = currentBehavior;
             parameters.Parameters =
                 parameters.Behavior.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
