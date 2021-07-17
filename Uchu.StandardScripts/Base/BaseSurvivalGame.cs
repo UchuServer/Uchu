@@ -569,14 +569,15 @@ namespace Uchu.StandardScripts.Base
         /// </summary>
         /// <param name="name">Name of the timer.</param>
         /// <param name="timeRemaining">Time that is remaining.</param>
-        public override void OnActivityTimerUpdate(string name, float timeRemaining)
+        /// <param name="timeElapsed">Time that is elapsed.</param>
+        public override void OnActivityTimerUpdate(string name, float timeRemaining, float timeElapsed)
         {
             if (name == "AcceptedDelay")
             {
                 this.SetNetworkVar("Update_Default_Start_Timer", Math.Ceiling(timeRemaining));
             } else if (name == "ClockTick")
             {
-                this.SetNetworkVar("Update_Timer", timeRemaining);
+                this.SetNetworkVar("Update_Timer", timeElapsed);
             } else if (name == "SpawnTick" && !this.GetVar<bool>("isCoolDown"))
             {
                 this.SpawnMobs();
@@ -603,7 +604,7 @@ namespace Uchu.StandardScripts.Base
             } else if (name == "StartDelay")
             {
                 // Start the game.
-                this.ActivityTimerStart("AllAcceptedDelay", 1);
+                this.ActivityTimerStart("ClockTick", 1);
                 this.ActivityTimerStart("SpawnTick", this._configuration.WaveTime);
                 this.SpawnMobs();
                 this.ActivityTimerStart("CoolDownStart", (this._configuration.RewardInterval * this._configuration.WaveTime), (this._configuration.RewardInterval * this._configuration.WaveTime));

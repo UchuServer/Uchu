@@ -204,7 +204,7 @@ namespace Uchu.StandardScripts.Base
             this._activityCompleteStopWatches[timerName].Start();
             this._activityUpdateTimers[timerName].Elapsed += (sender, args) =>
             {
-                this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName));
+                this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName), this.ActivityTimerGetCurrentTime(timerName));
             };
             this._activityUpdateTimers[timerName].Start();
             if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer))
@@ -216,7 +216,7 @@ namespace Uchu.StandardScripts.Base
                 };
                 completeTimer.Start();
             }
-            this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName));
+            this.OnActivityTimerUpdate(timerName, this.ActivityTimerGetRemainingTime(timerName), this.ActivityTimerGetCurrentTime(timerName));
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace Uchu.StandardScripts.Base
         {
             if (this._activityCompleteTimers.TryGetValue(timerName, out var completeTimer) && this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
             {
-                return (float) completeTimer.Interval - stopwatch.ElapsedMilliseconds;
+                return ((float) completeTimer.Interval - stopwatch.ElapsedMilliseconds) / 1000.0f;
             }
             return 0;
         }
@@ -308,7 +308,7 @@ namespace Uchu.StandardScripts.Base
         {
             if (this._activityCompleteStopWatches.TryGetValue(timerName, out var stopwatch))
             {
-                return (float) stopwatch.ElapsedMilliseconds;
+                return stopwatch.ElapsedMilliseconds / 1000.0f;
             }
             return 0;
         }
@@ -318,7 +318,8 @@ namespace Uchu.StandardScripts.Base
         /// </summary>
         /// <param name="name">Name of the timer.</param>
         /// <param name="timeRemaining">Time that is remaining.</param>
-        public virtual void OnActivityTimerUpdate(string name, float timeRemaining)
+        /// <param name="timeElapsed">Time that is elapsed.</param>
+        public virtual void OnActivityTimerUpdate(string name, float timeRemaining, float timeElapsed)
         {
             
         }
