@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.StandardScripts.Base.SurvivalConfiguration;
 using Uchu.World;
 
 namespace Uchu.StandardScripts.Base
@@ -15,6 +16,21 @@ namespace Uchu.StandardScripts.Base
         /// Configuration for the round.
         /// </summary>
         private SurvivalConfiguration.SurvivalConfiguration _configuration;
+
+        /// <summary>
+        /// Mob sets used for the round.
+        /// </summary>
+        private SurvivalMobSets _mobSets;
+
+        /// <summary>
+        /// Spawner networks used for the round.
+        /// </summary>
+        private SurvivalSpawnerNetworks _spawnerNetworks;
+        
+        /// <summary>
+        /// Missions to update when the round ends.
+        /// </summary>
+        private Dictionary<int, int> _missionsToUpdate;
         
         /// <summary>
         /// Players who entered the game.
@@ -283,9 +299,12 @@ namespace Uchu.StandardScripts.Base
         /// <param name="mobSets">Mob sets of the round.</param>
         /// <param name="spawnerNetworks">Spawner networks of the round.</param>
         /// <param name="missionsToUpdate">Missions to update at the end of the round.</param>
-        public void SetGameVariables(SurvivalConfiguration.SurvivalConfiguration configuration, object mobSets, object spawnerNetworks, object missionsToUpdate)
+        public void SetGameVariables(SurvivalConfiguration.SurvivalConfiguration configuration, SurvivalMobSets mobSets, SurvivalSpawnerNetworks spawnerNetworks, Dictionary<int, int> missionsToUpdate)
         {
             this._configuration = configuration;
+            this._mobSets = mobSets;
+            this._spawnerNetworks = spawnerNetworks;
+            this._missionsToUpdate = missionsToUpdate;
         }
 
         /// <summary>
