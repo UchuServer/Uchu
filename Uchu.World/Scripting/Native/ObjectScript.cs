@@ -551,7 +551,8 @@ namespace Uchu.World.Scripting.Native
         }
         #endregion
 
-        #region Activities/// <summary>
+        #region Activities
+        /// <summary>
         /// Adds a player to the current activity.
         /// </summary>
         /// <param name="player">Player to add.</param>

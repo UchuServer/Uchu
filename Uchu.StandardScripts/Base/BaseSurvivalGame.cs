@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Uchu.Core;
 using Uchu.StandardScripts.Base.SurvivalConfiguration;
 using Uchu.World;
 
@@ -448,26 +449,27 @@ namespace Uchu.StandardScripts.Base
                 // TODO: self:NotifyClientZoneObject{name = 'Update_ScoreBoard', paramObj = playerID, paramStr = tostring(scoreVar), param1 = timeVar}
                 
                 // Resurrect the player.
-                if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
+                if (player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
                 {
                     destructibleComponent.ResurrectAsync();
                 }
                 
                 // Update the missions.
                 var taskType = this.GetVar<string>("missionType") ?? "survival_time_team";
-                // TODO: playerID:UpdateMissionTask{ taskType = taskType, value = timeVar, value2 = self:GetActivityID().activityID} --  target = self, 
-                /* TODO:
-                 for missionID,trgtTime in pairs(missionsToUpdate) do
-		            -- Determine if we are on the desired mission
-		            local missionState = playerID:GetMissionState{missionID = missionID}.missionState
-		            
-		            -- Are we on the mission?
-		            -- Do we satisfy the associated pre-requisite challenge time?
-		            if((missionState == 2 or missionState == 10) and (timeVar >= trgtTime)) then
-		                -- Update the task
-		                playerID:UpdateMissionTask{taskType = "complete", value = missionID, value2 = 1, target = self}
-		            end
-		        end*/
+                if (player.TryGetComponent<MissionInventoryComponent>(out var missionComponent))
+                {
+                    missionComponent.MinigameAchievementAsync(5, taskType, timeVar);
+                    foreach (var (missionId, targetTime) in this._missionsToUpdate)
+                    {
+                        // Complete the custom mission if the mission is active and target was reached.
+                        var mission = missionComponent.GetMission(missionId);
+                        if (mission == null) continue;
+                        if ((mission.State == MissionState.Active || mission.State == MissionState.CompletedActive) && timeVar >= targetTime)
+                        {
+                            missionComponent.ScriptAsync(mission.Tasks[0].TaskId, (int) timeVar);
+                        }
+                    }
+                }
                 
                 // Stop the activity.
                 StopActivity(player, scoreVar, timeVar);
