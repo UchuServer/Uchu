@@ -530,10 +530,8 @@ namespace Uchu.World.Scripting.Native
         /// <param name="player">Player to add.</param>
         public void AddActivityUser(Player player)
         {
-            // TODO: More work required for activity scores.
             if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
-            component.Participants.Add(player);
-            Serialize(this.GameObject);
+            component.AddPlayer(player);
         }
         
         /// <summary>
@@ -542,7 +540,8 @@ namespace Uchu.World.Scripting.Native
         /// <param name="player">Player to remove.</param>
         public void RemoveActivityUser(Player player)
         {
-            // TODO: Implement.
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.RemovePlayer(player);
         }
         
         /// <summary>
@@ -553,7 +552,8 @@ namespace Uchu.World.Scripting.Native
         /// <param name="value">Value to set.</param>
         public void SetActivityUserData(Player player, int index, float value)
         {
-            // TODO: Implement.
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.SetParameter(player, index, value);
         }
         
         /// <summary>
@@ -564,7 +564,8 @@ namespace Uchu.World.Scripting.Native
         /// <returns>The activity value for the player.</returns>
         public float GetActivityUserData(Player player, int index)
         {
-            return 0; // TODO: Implement.
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return 0;
+            return component.GetParameter(player, index);
         }
 
         /// <summary>

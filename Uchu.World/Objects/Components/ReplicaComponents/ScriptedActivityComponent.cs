@@ -17,7 +17,7 @@ namespace Uchu.World
         
         public readonly List<GameObject> Participants = new List<GameObject>();
 
-        public float[] Parameters { get; set; } = new float[10];
+        public List<float[]> Parameters { get; set; } = new List<float[]>();
 
         public override ComponentId Id => ComponentId.ScriptedActivityComponent;
 
@@ -25,6 +25,9 @@ namespace Uchu.World
         
         public ActivityRewards[] Rewards { get; private set; }
 
+        /// <summary>
+        /// Creates the scripted activity component.
+        /// </summary>
         protected ScriptedActivityComponent()
         {
             _random = new Random();
@@ -59,6 +62,10 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Drops loot for the activity.
+        /// </summary>
+        /// <param name="lootOwner">Owner of the loot.</param>
         public async Task DropLootAsync(Player lootOwner)
         {
             var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l =>
@@ -121,11 +128,73 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Adds a player to the activity.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void AddPlayer(Player player)
+        {
+            // Add the player.
+            if (this.Participants.Contains(player)) return;
+            this.Participants.Add(player);
+            this.Parameters.Add(new float[10]);
+            
+            // Serialize the object.
+            GameObject.Serialize(this.GameObject);
+        }
+        
+        /// <summary>
+        /// Removes a player from the activity.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemovePlayer(Player player)
+        {
+            // Remove the player.
+            if (!this.Participants.Contains(player)) return;
+            var index = this.Participants.IndexOf(player);
+            this.Participants.Remove(player);
+            this.Parameters.RemoveAt(index);
+            
+            // Serialize the object.
+            GameObject.Serialize(this.GameObject);
+        }
+
+        /// <summary>
+        /// Gets a parameter for a player.
+        /// </summary>
+        /// <param name="player">Player to get.</param>
+        /// <param name="index">Index to get.</param>
+        public float GetParameter(Player player, int index)
+        {
+            if (!this.Participants.Contains(player)) return 0;
+            return this.Parameters[this.Participants.IndexOf(player)][index];
+        }
+
+        /// <summary>
+        /// Sets a parameter for a player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index to set.</param>
+        /// <param name="value">Value to set.</param>
+        public void SetParameter(Player player, int index, float value)
+        {
+            if (!this.Participants.Contains(player)) return;
+            this.Parameters[this.Participants.IndexOf(player)][index] = value;
+        }
+
+        /// <summary>
+        /// Writes the Construct information.
+        /// </summary>
+        /// <param name="writer">Writer to write to.</param>
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);
         }
 
+        /// <summary>
+        /// Writes the Serialize information.
+        /// </summary>
+        /// <param name="writer">Writer to write to.</param>
         public override void Serialize(BitWriter writer)
         {
             writer.WriteBit(true);
@@ -135,7 +204,8 @@ namespace Uchu.World
             {
                 writer.Write(contributor);
 
-                foreach (var parameter in Parameters) writer.Write(parameter);
+                foreach (var parameter in Parameters[this.Participants.IndexOf(contributor)])
+                    writer.Write(parameter);
             }
         }
     }
