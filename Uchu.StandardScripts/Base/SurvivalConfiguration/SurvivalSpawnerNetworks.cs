@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Uchu.StandardScripts.Base.SurvivalConfiguration
 {
     public class SurvivalSpawnerNetworks

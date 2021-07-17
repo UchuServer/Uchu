@@ -49,6 +49,7 @@ namespace Uchu.World
         // Managed objects
         private List<Object> ManagedObjects { get; }
         private List<GameObject> SpawnedObjects { get; }
+        public List<SpawnerNetwork> SpawnerNetworks { get; }
         
         // Macro properties
         public Object[] Objects => ManagedObjects.ToArray();
@@ -115,6 +116,7 @@ namespace Uchu.World
             NewScheduledActions = new List<ScheduledAction>();
             ManagedObjects = new List<Object>();
             SpawnedObjects = new List<GameObject>();
+            SpawnerNetworks = new List<SpawnerNetwork>();
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
@@ -309,9 +311,10 @@ namespace Uchu.World
 
             if (network.ActivateOnLoad)
             {
-                Start(network);
+                network.Activate();
                 network.SpawnAll();
             }
+            this.SpawnerNetworks.Add(network);
         }
 
         #endregion

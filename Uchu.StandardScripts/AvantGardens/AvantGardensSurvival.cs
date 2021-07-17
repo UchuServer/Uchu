@@ -113,7 +113,7 @@ namespace Uchu.StandardScripts.AvantGardens
             };
             var spawnerNetworks = new SurvivalSpawnerNetworks()
             {
-                BaseNetworks = new SurvivalSpawnerNetworkSet("baseMobSet")
+                BaseNetworks = new SurvivalSpawnerNetworkSet("BaseMobSet")
                 {
                     new SurvivalSpawnerNetwork()
                     {
@@ -121,7 +121,7 @@ namespace Uchu.StandardScripts.AvantGardens
                         SpawnerNumber = "",
                     },
                 },
-                RandomNetworks = new SurvivalSpawnerNetworkSet("randMobSet")
+                RandomNetworks = new SurvivalSpawnerNetworkSet("RandomMobSet")
                 {
                     new SurvivalSpawnerNetwork()
                     {
@@ -137,6 +137,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     {
                         SpawnerName = new List<string>() { "MobA_", "MobB_", "MobC_" },
                         SpawnerNumber = "03",
+                        IsLocked = true,
                     },
                 },
                 RewardNetworks = new SurvivalSpawnerNetworkSet()

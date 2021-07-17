@@ -166,6 +166,16 @@ namespace Uchu.World.Scripting.Native
             return triggers.ToArray();
         }
 
+        /// <summary>
+        /// Gets the first spawner of a given name.
+        /// </summary>
+        /// <param name="name">Name of the spawner.</param>
+        /// <returns>The spawner of a given name.</returns>
+        protected SpawnerNetwork GetSpawnerByName(string name)
+        {
+            return Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == name);
+        }
+
         protected static void SetTimer(Action action, int time)
         {
             Task.Run(async () =>

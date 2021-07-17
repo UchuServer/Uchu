@@ -234,7 +234,7 @@ namespace Uchu.StandardScripts.Base
             }
             else
             {
-                // TODO: spawnerResetT(tSpawnerNetworks.rewardNetworks)
+                this.SpawnerReset(this._spawnerNetworks.RewardNetworks);
             }
         }
 
@@ -354,8 +354,8 @@ namespace Uchu.StandardScripts.Base
             this.SetupActivity(4);
             this.ActivityStart();
             this.SetVar("playersReady", true);
-            this.SetVar("baseMobSetNum", 1);
-            this.SetVar("randMobSetNum", 1);
+            this.SetVar("BaseMobSetNum", 1);
+            this.SetVar("RandomMobSetNum", 1);
             this.SetVar("AcceptedDelayStarted", false);
             this._waitingPlayers.Clear();
             
@@ -379,7 +379,7 @@ namespace Uchu.StandardScripts.Base
             this.SetVar("missionType", this._players.Count == 1 ? "survival_time_solo" : "survival_time_team");
             
             // Start the waves.
-            // TODO: activateSpawnerNetwork(tSpawnerNetworks.smashNetworks)
+            this.ActivateSpawnerNetwork(this._spawnerNetworks.SmashNetworks);
             this.SetNetworkVar("wavesStarted", true);
             this.SetNetworkVar("Start_Wave_Message", "Start!");
         }
@@ -435,9 +435,9 @@ namespace Uchu.StandardScripts.Base
             if (!this.CheckAllPlayersDead()) return;
             
             // Reset the enemies.
-            // TODO: spawnerResetT(tSpawnerNetworks.baseNetworks)
-            // TODO: spawnerResetT(tSpawnerNetworks.randNetworks)
-            // TODO: spawnerResetT(tSpawnerNetworks.rewardNetworks)
+            this.SpawnerReset(this._spawnerNetworks.BaseNetworks);
+            this.SpawnerReset(this._spawnerNetworks.RandomNetworks);
+            this.SpawnerReset(this._spawnerNetworks.RewardNetworks);
             
             // Finish the players.
             foreach (var player in this._players)
@@ -477,16 +477,14 @@ namespace Uchu.StandardScripts.Base
             this._waveNumber = 1;
             this._rewardTick = 1;
             this._totalSpawned = 0;
-            this.SetNetworkVar("wavesStarted", false); // TODO: Determine type
+            this.SetNetworkVar("wavesStarted", false);
             
-            /*
-             * TODO:
-             if gConstants.bUseMobLots then
-                gConstants.iLotPhase = 1                -- put LotPhase back to 1
-                updateMobLots(self, tSpawnerNetworks.baseNetworks)         
-                updateMobLots(self, tSpawnerNetworks.randNetworks)   
-            end   
-             */
+            // Revert the enemies.
+            if (this._configuration.UseMobLots)
+            {
+                this.UpdateMobLots(this._spawnerNetworks.BaseNetworks);
+                this.UpdateMobLots(this._spawnerNetworks.RandomNetworks);
+            }
             
             // Reset the spawn points.
             this.SetPlayerSpawnPoints();
@@ -501,72 +499,186 @@ namespace Uchu.StandardScripts.Base
         }
 
         /// <summary>
-        /// Returns a new random number that doesn't match the previous one.
+        /// Starts a spawner network.
         /// </summary>
-        /// <param name="oldNumber">Old number to compare.</param>
-        /// <param name="maxRandom">Max random number to use.</param>
-        /// <returns>The random number.</returns>
-        private string NewRandom(string oldNumber, int maxRandom)
+        /// <param name="spawnerNetwork">Network to start.</param>
+        public void ActivateSpawnerNetwork(SurvivalSpawnerNetworkSet spawnerNetwork)
         {
-            // Return 1 if the max is 1.
-            if (maxRandom == 1)
+            // Activate the network.
+            foreach (var spawnerData in spawnerNetwork)
             {
-                return "01";
-            }
-
-            // Generate a new number until a new number is returned.
-            string newRandomNumber = null;
-            do
-            {
-                newRandomNumber = _random.Next(maxRandom).ToString();
-                if (newRandomNumber.Length == 1)
+                foreach (var name in spawnerData.SpawnerName)
                 {
-                    newRandomNumber = "0" + newRandomNumber;
+                    var spawner = this.GetSpawnerByName(name + spawnerData.SpawnerNumber);
+                    if (spawner == null) continue;
+                    spawner.Activate();
+                    spawner.SpawnAll();
                 }
-            } while (newRandomNumber == oldNumber);
-            return newRandomNumber;
+            }
         }
+        
+        /// <summary>
+        /// Resets a spawner network.
+        /// </summary>
+        /// <param name="spawnerNetwork">Spawner network to reset.</param>
+        /// <param name="maintainSpawnNumber">Whether to maintain a number of spawned enemies.</param>
+        /// <param name="numberToMaintain">Number of enemies to maintain.</param>
+        public void SpawnerReset(SurvivalSpawnerNetworkSet spawnerNetwork, bool maintainSpawnNumber = false, int numberToMaintain = -1)
+        {
+            // Reset the spawners.
+            var totalSpawned = 0;
+            foreach (var spawnerData in spawnerNetwork)
+            {
+                foreach (var name in spawnerData.SpawnerName)
+                {
+                    // Get the spawner.
+                    var spawner = this.GetSpawnerByName(name + spawnerData.SpawnerNumber);
+                    if (spawner == null) continue;
+                    
+                    // Add the total spawned.
+                    totalSpawned += spawner.ActiveCount;
+                    
+                    // Destroy the objects.
+                    if (!maintainSpawnNumber)
+                    {
+                        spawner.DestroyActiveObjects();
+                    }
+                    
+                    // Set the objects to maintain.
+                    if (numberToMaintain != -1)
+                    {
+                        spawner.SpawnsToMaintain = (uint) numberToMaintain;
+                    }
+                    
+                    // Deactivate the spawner.
+                    spawnerData.IsActive = false;
+                    spawner.Reset();
+                    spawner.Deactivate();
+                }
+            }
+            
+            // Set the total spawned.
+            if (totalSpawned > this._totalSpawned)
+            {
+                this._totalSpawned = totalSpawned;
+            }
+        }
+        
+        /// <summary>
+        /// Runs a spawner.
+        /// </summary>
+        /// <param name="spawner">Spawner to run.</param>
+        /// <param name="spawnNumber">Total enemies to spawn.</param>
+        public void SpawnNow(SpawnerNetwork spawner, int spawnNumber)
+        {
+            // Run the spawner.
+            if (spawner == null) return;
+            spawner.MaxToSpawn = spawnNumber;
+            spawner.Activate();
+            spawner.SpawnAll();
+        }
+        
+        /// <summary>
+        /// Returns a random set to use.
+        /// </summary>
+        /// <param name="setName">Name of the set.</param>
+        /// <param name="setNumber">Number of the set.</param>
+        /// <returns>Random set to use.</returns>
+        public List<int> GetRandomSet(string setName, int setNumber)
+        {
+            var randomNumber = this._random.Next(0, this._mobSets[setName]["tier" + setNumber].Count);
+            var randomSet = this._mobSets[setName]["tier" + setNumber][randomNumber];
+            return randomSet;
+        }
+        
+        /// <summary>
+        /// Returns a random number for the given spawners.
+        /// </summary>
+        /// <param name="spawner">Spawners to get a random number from.</param>
+        /// <returns>A random index to use from the set.</returns>
+        public int GetRandomSpawnerNumber(SurvivalSpawnerNetworkSet spawner)
+        {
+            var randomNumber = 0;
+            var valid = false;
 
-        // TODO: Implement and determine arguments.
-        public void ActivateSpawnerNetwork()
-        {
+            // Get a random number until a valid number is reached.
+            while (!valid)
+            {
+                // Get the max random number and new random number.
+                randomNumber = spawner.Count(network => !network.IsLocked);
+                randomNumber = this._random.Next(0, randomNumber);
+
+                // Determine if the number is valid.
+                if (randomNumber == 0)
+                {
+                    valid = true;
+                } else if (!spawner[randomNumber].IsActive)
+                {
+                    valid = true;
+                    spawner[randomNumber].IsActive = true;
+                }
+            }
             
+            // Return the number.
+            return randomNumber;
         }
         
-        // TODO: Implement and determine arguments.
-        public void SpawnerReset()
+        /// <summary>
+        /// Runs a spawner.
+        /// </summary>
+        /// <param name="network">Spawner to update.</param>
+        /// <param name="spawnNumber">Number to spawn.</param>
+        public void UpdateSpawner(SurvivalSpawnerNetwork network, int spawnNumber)
         {
-            
+            var spawner = this.GetSpawnerByName(network.SpawnerName[0] + network.SpawnerNumber);
+            this.SpawnNow(spawner, spawnNumber);
         }
         
-        // TODO: Implement and determine arguments.
-        public void SpawnNow()
+        /// <summary>
+        /// Runs a random spawner.
+        /// </summary>
+        /// <param name="network">Set of spawners to randomize.</param>
+        public void UpdateSpawner(SurvivalSpawnerNetworkSet network)
         {
+            // Get the next spawner.
+            var newSet = this.GetRandomSet(network.Set, this.GetVar<int>(network.Set + "Num"));
+            var newSpawner = this.GetRandomSpawnerNumber(network);
             
+            // Run the spawners.
+            for (var key = 0; key < newSet.Count; key++)
+            {
+                var index = newSet[key] - 1;
+                if (index != 0)
+                {
+                    var spawner = this.GetSpawnerByName(network[newSpawner].SpawnerName[key] + network[newSpawner].SpawnerNumber);
+                    this.SpawnNow(spawner, index);
+                }
+            }
         }
         
-        // TODO: Implement and determine arguments.
-        public void GetRandomSet()
+        /// <summary>
+        /// Updates the LOTs of the spawners.
+        /// </summary>
+        /// <param name="network">Spawner network to update.</param>
+        public void UpdateMobLots(SurvivalSpawnerNetworkSet network)
         {
-            
-        }
-        
-        // TODO: Implement and determine arguments.
-        public void GetRandomSpawnerNumber()
-        {
-            
-        }
-        
-        // TODO: Implement and determine arguments.
-        public void UpdateSpawner()
-        {
-            
-        }
-        
-        // TODO: Implement and determine arguments.
-        public void UpdateMobLots()
-        {
-            
+            var phase = this._configuration.LotPhase;
+            foreach (var spawnerData in network)
+            {
+                foreach (var name in spawnerData.SpawnerName)
+                {
+                    // Get the spawner and LOT to use.
+                    var spawner = this.GetSpawnerByName(name + spawnerData.SpawnerNumber);
+                    var splitName = name.Split("_");
+                    var lotName = splitName.Length > 1 && splitName[1] != "" ? splitName[1] : splitName[0];
+                    
+                    // Set the lot.
+                    if (spawner == null) continue;
+                    var lotSet = this._mobSets.MobLots[lotName];
+                    var lot = lotSet[Math.Min(phase, lotSet.Count) - 1];
+                    spawner.SetLot(lot);
+                }
+            }
         }
 
         /// <summary>
@@ -579,8 +691,63 @@ namespace Uchu.StandardScripts.Base
             // Increment the wave.
             this._waveNumber += 1;
             var spawnNumber = this._waveNumber;
+            if (spawnNumber > this._configuration.RewardInterval)
+            {
+                spawnNumber += -(this._rewardTick - 1);
+            }
             
-            // TODO: Implement rest
+            // Set the mob set numbers.
+            for (var key = 0; key < this._configuration.BaseMobsStartTierAt.Count; key++)
+            {
+                if (this._configuration.BaseMobsStartTierAt[key] == spawnNumber)
+                {
+                    this.SetVar("BaseMobSetNum", key + 1);
+                }
+            }
+            for (var key = 0; key < this._configuration.RandomMobsStartTierAt.Count; key++)
+            {
+                if (this._configuration.RandomMobsStartTierAt[key] == spawnNumber)
+                {
+                    this.SetVar("RandomMobSetNum", key + 1);
+                }
+            }
+            
+            // Unlock the third random set.
+            if (this._waveNumber == this._configuration.UnlockNetwork3)
+            {
+                this._spawnerNetworks.RandomNetworks[2].IsLocked = false;
+            }
+            
+            // Set the next mob set.
+            this.UpdateSpawner(this._spawnerNetworks.BaseNetworks);
+            if (spawnNumber >= this._configuration.StartMobSet2)
+            {
+                if (spawnNumber == this._configuration.StartMobSet2)
+                {
+                    this.SetNetworkVar("Spawn_Mob", "2");
+                }
+                this.UpdateSpawner(this._spawnerNetworks.RandomNetworks);
+            }
+            if (spawnNumber >= this._configuration.StartMobSet3)
+            {
+                if (spawnNumber == this._configuration.StartMobSet3)
+                {
+                    this.SetNetworkVar("Spawn_Mob", "3");
+                }
+                this.UpdateSpawner(this._spawnerNetworks.RandomNetworks);
+            }
+            
+            // Switch to LOT phases.
+            if (this._configuration.UseMobLots && this._configuration.LotPhase < this._spawnerNetworks.BaseNetworks[0].SpawnerName.Count)
+            {
+                if (spawnNumber >= this._configuration.BaseMobsStartTierAt[^1])
+                {
+                    this._configuration.LotPhase += 1;
+                    this._waveNumber = 1;
+                }
+            }
+            this.UpdateMobLots(this._spawnerNetworks.BaseNetworks);
+            this.UpdateMobLots(this._spawnerNetworks.RandomNetworks);
         }
 
         /// <summary>
@@ -636,12 +803,12 @@ namespace Uchu.StandardScripts.Base
                 this.ActivityTimerStart("CoolDownStop", this._configuration.CoolDownTime, this._configuration.CoolDownTime);
                 
                 // update the spawner.
-                // TODO: this.UpdateSpawner(tSpawnerNetworks.rewardNetworks[1], 1);
+                this.UpdateSpawner(this._spawnerNetworks.RewardNetworks[0], 1);
                 this._rewardTick += 1;
 
                 // Reset the spawners.
-                // TODO: this.SpawnerReset(tSpawnerNetworks.baseNetworks, true, 0);
-                // TODO: this.SpawnerReset(tSpawnerNetworks.randNetworks, true, 0);
+                this.SpawnerReset(this._spawnerNetworks.BaseNetworks, true, 0);
+                this.SpawnerReset(this._spawnerNetworks.RandomNetworks, true, 0);
             } else if (name == "CoolDownStop")
             {
                 // Start the timers for the next cooldown.

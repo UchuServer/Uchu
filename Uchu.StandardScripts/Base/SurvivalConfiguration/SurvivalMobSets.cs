@@ -19,5 +19,12 @@ namespace Uchu.StandardScripts.Base.SurvivalConfiguration
         /// Random mobs spawned for a given tier.
         /// </summary>
         public Dictionary<string, List<List<int>>> RandomMobSet { get; set; }
+        
+        /// <summary>
+        /// Fetches a set by name.
+        /// </summary>
+        /// <param name="index">Index to search.</param>
+        public Dictionary<string, List<List<int>>> this[string index]
+            => (Dictionary<string, List<List<int>>>) typeof(SurvivalMobSets).GetProperty(index)?.GetValue(this);
     }
 }
