@@ -35,11 +35,11 @@ namespace Uchu.World.Systems.Behaviors
             DistanceToTarget = await GetParameter<float>("distance_to_target");
 
             //dynamically load all possible behaviors the switch can have
-            bool valid = true;
-            int count = 1;
+            var valid = true;
+            var count = 1;
             while (valid){
-                BehaviorBase Behavior = await GetBehavior("behavior " + count);
-                float Value = await GetParameter<float>("value " + count);
+                var Behavior = await GetBehavior("behavior " + count);
+                var Value = await GetParameter<float>("value " + count);
                 if (Behavior == null || Behavior == default || Behavior.BehaviorId == 0){
                     valid = false;
                 } else {
@@ -53,7 +53,7 @@ namespace Uchu.World.Systems.Behaviors
         protected override void DeserializeStart(BitReader reader, SwitchMultipleBehaviorExecutionParameters parameters)
         {
             parameters.Value = reader.Read<float>();
-            BehaviorBase currentBehavior = Behaviors[0];
+            var currentBehavior = Behaviors[0];
             //check each behavior's threshold to see if we go past it, when we find one that's too much we break out of the loop
             for (int i = 1; i < Values.Count(); i++){
                 if (parameters.Value > Values[i-1]){
