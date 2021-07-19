@@ -358,21 +358,20 @@ namespace Uchu.World.Scripting.Native
 
         #region Physics
         /// <summary>
-        /// Adds a cylinder physics body to the object.
+        /// Adds a sphere physics body to the object.
         /// </summary>
         /// <param name="radius"></param>
         /// <param name="name"></param>
         public void SetProximityRadius(float radius, string name)
         {
-            // Add an object and a cylinder physics body.
+            // Add an object and a sphere physics body.
             // One game object/script may require multiple physics bodies.
             var proximityObject = GameObject.Instantiate(GameObject.Zone);
             var physics = proximityObject.AddComponent<PhysicsComponent>();
-            var physicsObject = CylinderBody.Create(
+            var physicsObject = SphereBody.Create(
                 this.GameObject.Zone.Simulation,
                 this.GameObject.Transform.Position,
-                this.GameObject.Transform.Rotation,
-                new Vector2(radius, radius * 2));
+                radius);
             physics.SetPhysics(physicsObject);
             
             // Listen for players entering and leaving.

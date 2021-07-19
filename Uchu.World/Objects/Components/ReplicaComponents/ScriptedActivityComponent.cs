@@ -40,15 +40,7 @@ namespace Uchu.World
                 }
 
                 var activityId = (int) id;
-                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
-                    a => a.ActivityID == activityId
-                );
-
-                if (ActivityInfo == default) return;
-                
-                ActivityInfo = (await ClientCache.GetTableAsync<Activities>()).FirstOrDefault(
-                    a => a.ActivityID == activityId
-                );
+                ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
 
                 if (ActivityInfo == default)
                 {
@@ -56,9 +48,7 @@ namespace Uchu.World
                     return;
                 }
 
-                Rewards = ClientCache.GetTable<ActivityRewards>().Where(
-                    a => a.ObjectTemplate == activityId
-                ).ToArray();
+                Rewards = ClientCache.FindAll<ActivityRewards>(activityId);
             });
         }
 
@@ -68,16 +58,14 @@ namespace Uchu.World
         /// <param name="lootOwner">Owner of the loot.</param>
         public async Task DropLootAsync(Player lootOwner)
         {
-            var matrices = ClientCache.GetTable<Core.Client.LootMatrix>().Where(l =>
-                Rewards.Any(r => r.LootMatrixIndex == l.LootMatrixIndex)
-            ).ToArray();
+            var matrices = Rewards.SelectMany(r =>
+                ClientCache.FindAll<Core.Client.LootMatrix>(r.LootMatrixIndex)).ToArray();
 
             foreach (var matrix in matrices)
             {
                 var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
-                var items = ClientCache.GetTable<LootTable>().Where(t => t.LootTableIndex == matrix.LootTableIndex).ToList();
-                
+                var items = ClientCache.FindAll<LootTable>(matrix.LootTableIndex).ToList();
                 for (var i = 0; i < count; i++)
                 {
                     if (items.Count == default) break;
@@ -111,10 +99,7 @@ namespace Uchu.World
 
             foreach (var reward in Rewards)
             {
-                var currencies = ClientCache.GetTable<CurrencyTable>().Where(c => 
-                    c.CurrencyIndex == reward.CurrencyIndex
-                );
-
+                var currencies = ClientCache.FindAll<CurrencyTable>(reward.CurrencyIndex);
                 foreach (var currency in currencies)
                 {
                     if (currency.Npcminlevel > reward.ChallengeRating) continue;

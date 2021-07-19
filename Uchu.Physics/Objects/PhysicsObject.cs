@@ -6,14 +6,17 @@ namespace Uchu.Physics
     public abstract class PhysicsObject : IDisposable
     {
         /// <summary>
+        /// Value used to determine the order in which objects are passed to the collision detection functions.
+        /// </summary>
+        public abstract int CollisionPrecedence { get; }
+
+        public bool CanCollideIntoThings = false;
+        public bool CanBeCollidedInto = true;
+
+        /// <summary>
         /// Event for a collision occuring with another object.
         /// </summary>
         public Action<PhysicsObject> OnCollision { get; set; }
-        
-        /// <summary>
-        /// Id of the physics object.
-        /// </summary>
-        public abstract int Id { get; }
         
         /// <summary>
         /// Simulation attached to the physics object.
@@ -33,15 +36,23 @@ namespace Uchu.Physics
         {
             Simulation = simulation;
         }
-        
+
         /// <summary>
         /// Position of the physics object.
         /// </summary>
-        public virtual Vector3 Position { get; set; }
+        public Vector3 Position { get; set; }
+
+        /// <summary>
+        /// Orientation of the cube.
+        /// </summary>
+        public Quaternion Rotation { get; set; }
 
         /// <summary>
         /// Disposes the physics object.
         /// </summary>
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            Simulation.Release(this);
+        }
     }
 }

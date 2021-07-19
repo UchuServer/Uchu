@@ -424,7 +424,7 @@ namespace Uchu.World
 
                 instance.Name = name;
 
-                var obj = ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == lot);
+                var obj = ClientCache.Find<Core.Client.Objects>(lot);
                 instance.ClientName = obj?.Name;
 
                 instance.Spawner = spawner;

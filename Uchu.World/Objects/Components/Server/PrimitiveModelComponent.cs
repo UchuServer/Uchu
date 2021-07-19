@@ -52,7 +52,7 @@ namespace Uchu.World
                         Y = (float) GameObject.Settings["primitiveModelValueY"]
                     };
 
-                    return CylinderBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, cylinderSize);
+                    return SphereBody.Create(Zone.Simulation, Transform.Position, cylinderSize.X);
                 case PrimitiveModelType.Sphere:
                     break;
                 case PrimitiveModelType.Invalid:
