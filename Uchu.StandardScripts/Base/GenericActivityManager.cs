@@ -158,21 +158,44 @@ namespace Uchu.StandardScripts.Base
                 // Remove the player from the activity.
                 this.RemoveActivityUser(player);
                 
-                /* TODO
-                 local actID = self:GetActivityID().activityID
-                -- get the leaderboard data for the user and update summary screen if it exists
-                player:RequestActivitySummaryLeaderboardData{target = self, queryType = 1, gameID = actID }
-                self:NotifyClientObject{name = "ToggleLeaderBoard", param1 = actID, paramObj = player , rerouteID = player}
-                 */
+                // Send requesting the activity summary.
+                // TODO: Remove hard-coded activity id. (5 works for now, but should be able to be fetched)
+                player.Message(new RequestActivitySummaryLeaderboardDataMessage()
+                {
+                    Associate = player,
+                    GameId = 5,
+                    QueryType = 1,
+                });
+                player.Message(new NotifyClientObjectMessage()
+                {
+                    Name = "ToggleLeaderBoard",
+                    Param1 = 5,
+                    ParamObj = player,
+                });
                 
                 // Remove the player from the activity.
                 this.RemoveActivityUser(player);
             }
         }
 
+        /// <summary>
+        /// Sends the RequestActivitySummaryLeaderboardDataMessage message to a client.
+        /// </summary>
+        /// <param name="player">Player to send.</param>
+        /// <param name="activityId">Activity id to send.</param>
+        /// <param name="numberOfResults">Number of results to send.</param>
         public void GetLeaderboardData(Player player, int activityId, int numberOfResults)
         {
-            // TODO: Implement.
+            player.Message(new RequestActivitySummaryLeaderboardDataMessage()
+            {
+                Associate = player,
+                GameId = 5,
+                QueryType = 2,
+                ResultsEnd = 10,
+                ResultsStart = 0,
+                Target = default,
+                Weekly = false,
+            });
         }
 
         /// <summary>

@@ -165,7 +165,7 @@ namespace Uchu.StandardScripts.Base
                 // Start the player.
                 this._waitingPlayers.Remove(player);
                 this.UpdatePlayer(player);
-                // TODO: GetLeaderboardData(self, playerID, self:GetActivityID().activityID, 50)
+                this.GetLeaderboardData(player, 5, 50);
                 this.ResetStats(player);
             }
         }
@@ -365,7 +365,7 @@ namespace Uchu.StandardScripts.Base
             {
                 this._waitingPlayers.Add(player);
                 this.UpdatePlayer(player);
-                // TODO: this.GetLeaderboardData(player, self:GetActivityID().activityID, 50);
+                this.GetLeaderboardData(player, 5, 50);
                 this.ResetStats(player);
                 
                 // Charge the player for the activity.
