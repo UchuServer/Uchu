@@ -20,8 +20,7 @@ namespace Uchu.StandardScripts.ForbiddenValley
         {
             // Load physics object information from CDClient.
             var phantomPhysicsComponentId = gameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-            var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
-                .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
+            var cdcComponent = ClientCache.Find<Core.Client.PhysicsComponent>(phantomPhysicsComponentId);
             var assetPath = cdcComponent?.Physicsasset;
 
             // Configure physics object.
