@@ -1,59 +1,45 @@
 ﻿using System.Numerics;
-using System.Threading.Tasks;
-using InfectedRose.Lvl;
-using Microsoft.Scripting;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.GnarledForest
 {
-    [ZoneSpecific(1300)]
-    public class TikiTorch: NativeScript
+    [ScriptName("ScriptComponent_946_script_name__removed")]
+    public class TikiTorch : ObjectScript
     {
-        private const string ScriptName = "ScriptComponent_946_script_name__removed";
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public TikiTorch(GameObject gameObject) : base(gameObject)
         {
-            foreach (var gameObject in HasLuaScript(ScriptName))
+            // Listen to the tiki torch being interacted with.
+            Listen(gameObject.OnInteract, player =>
             {
-                Listen(gameObject.OnInteract, async player =>
+                // Play the animation.
+                this.PlayAnimation("interact");
+                this.SetNetworkVar("bIsInUse", 1, 7);
+
+                // Drop the imagination.
+                for (var i = 0; i < 2; i++)
                 {
-                    player.Message(new PlayAnimationMessage
-                    {
-                        Associate = gameObject,
-                        AnimationId = "interact",
-                        PlayImmediate = false,
-                        TriggerOnCompleteMessage = false,
-                        Priority = 0.4f,
-                        Scale = 1,
-                    });
-                    player.Message(new ScriptNetworkVarUpdateMessage
-                    {
-                        Associate = gameObject,
-                        Data = new LegoDataDictionary
-                        {
-                            {"bIsInUse", true},
-                        },
-                    });
+                    var loot = InstancingUtilities.InstantiateLoot(Lot.Imagination, player, gameObject,
+                        gameObject.Transform.Position + Vector3.UnitY);
+                    Start(loot);
+                }
 
-                    for (int i = 0; i < 2; i++)
-                    {
-                        var loot = InstancingUtilities.InstantiateLoot(Lot.Imagination, player, gameObject, gameObject.Transform.Position + Vector3.UnitY);
-                        Start(loot);
-                    }
-                    
-                    await Task.Delay(500);
-                    player.Message(new ScriptNetworkVarUpdateMessage
-                    {
-                        Associate = gameObject,
-                        Data = new LegoDataDictionary
-                        {
-                            {"bIsInUse", false},
-                        },
-                    });
-                });
-            }
-
-            return Task.CompletedTask;
+                // Reset the torch.
+                this.AddTimerWithCancel(0.5f, "ResetTikiTorch");
+            });
+        }
+        
+        /// <summary>
+        /// Callback for the timer completing.
+        /// </summary>
+        /// <param name="timerName">Timer that was completed.</param>
+        public override void OnTimerDone(string timerName)
+        {
+            this.SetNetworkVar("bIsInUse", 0, 7);
         }
     }
 }

@@ -57,9 +57,7 @@ namespace Uchu.World
 
                     foreach (var skillEntry in SkillComponent.DefaultSkillSet)
                     {
-                        var skillInfo = (await ClientCache.GetTableAsync<SkillBehavior>()).First(
-                            s => s.SkillID == skillEntry.SkillId
-                        );
+                        var skillInfo = await ClientCache.FindAsync<SkillBehavior>(skillEntry.SkillId);
                         
                         SkillEntries.Add(new NpcSkillEntry
                         {
@@ -133,7 +131,7 @@ namespace Uchu.World
                 if (entry.GameObject.TryGetComponent<TriggerComponent>(out _))
                     continue;
                 
-                if (Stats.Enemies.Contains(entry.Factions.First()))
+                if (Stats.Enemies.Contains(entry.Factions.First()) && !Stats.Friends.Contains(entry.Factions.First()))
                 {
                     targets.Add(entry.GameObject);
                 }

@@ -6,38 +6,34 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.ForbiddenValley
 {
-    [ZoneSpecific(1400)]
-    public class GateCrasher : NativeScript
+    /// <summary>
+    /// Native implementation of scripts/ai/fv/l_act_bounce_over_wall.lua
+    /// </summary>
+    [ScriptName("l_act_bounce_over_wall.lua")]
+    public class GateCrasher : ObjectScript
     {
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public GateCrasher(GameObject gameObject) : base(gameObject)
         {
+            // Load physics object information from CDClient.
+            var phantomPhysicsComponentId = gameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
+            var cdcComponent = ClientCache.Find<Core.Client.PhysicsComponent>(phantomPhysicsComponentId);
+            var assetPath = cdcComponent?.Physicsasset;
 
-            var gameObjects = HasLuaScript("l_act_bounce_over_wall.lua");
+            // Configure physics object.
+            var physics = gameObject.AddComponent<PhysicsComponent>();
+            physics.SetPhysicsByPath(assetPath);
 
-            foreach (var gameObject in gameObjects)
+            // Listen for players entering.
+            Listen(physics.OnEnter, async other =>
             {
-                // Load physics object information from cdclient
-                var phantomPhysicsComponentId = gameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-                var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
-                    .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
-                var assetPath = cdcComponent?.Physicsasset;
-
-                // Configure physics object
-                var physics = gameObject.AddComponent<PhysicsComponent>();
-                physics.SetPhysicsByPath(assetPath);
-
-                // Listen for players entering
-                Listen(physics.OnEnter, async other =>
-                {
-                    if (!(other.GameObject is Player player)) return;
-
-                    if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
-
-                    await missionInventoryComponent.ScriptAsync(1241, gameObject.Lot);
-                });
-            }
-
-            return Task.CompletedTask;
+                if (!(other.GameObject is Player player)) return;
+                if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
+                await missionInventoryComponent.ScriptAsync(1241, gameObject.Lot);
+            });
         }
     }
 }

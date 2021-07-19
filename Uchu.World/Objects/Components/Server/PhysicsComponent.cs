@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Uchu.Core;
@@ -75,6 +76,23 @@ namespace Uchu.World
                     await inventory.DiscoverAsync((string) poiGroup);
                 });
             }
+
+            if (GameObject.Settings.TryGetValue("respawnVol", out var isRespawnVolume) && (bool) isRespawnVolume)
+            {
+                Listen(GameObject.GetComponent<PhysicsComponent>().OnEnter, async component =>
+                {
+                    if (!(component.GameObject is Player player)) return;
+
+                    var rotation = (Vector4) GameObject.Settings["rspRot"];
+
+                    player.Message(new PlayerReachedRespawnCheckpointMessage
+                    {
+                        Associate = player,
+                        Position = (Vector3) GameObject.Settings["rspPos"],
+                        Rotation = new Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W),
+                    });
+                });
+            }
         }
 
         public void SetPhysicsByPath(string path) // We can't read HKX so this is basically just a bodge
@@ -82,26 +100,47 @@ namespace Uchu.World
             path ??= "";
 
             path = path.ToLower();
-            PhysicsObject finalObject = null;
+            PhysicsObject finalObject;
 
+            Vector3 size;
+
+            // 10 x 5 x 1 (the file name is wrong)
             if (path.Contains("misc_phys_10x1x5"))
             {
-                // 10 x 5 x 1, the file name is messed up this is correct
-                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(10, 5, 1) * GameObject.Transform.Scale);
+                size = new Vector3(10, 5, 1)* Math.Abs(GameObject.Transform.Scale);
+                // the origin is at the bottom center for this one, instead of in the middle
+                // it's also offset a little bit in the x direction but it's not really noticeable
+                var posRelativeToHkxOrigin = new Vector3(0, 0.5f * size.Y, 0);
+                var pos = Transform.Position + Vector3.Transform(posRelativeToHkxOrigin, Transform.Rotation);
+                finalObject = BoxBody.Create(Zone.Simulation, pos, Transform.Rotation, size );
             }
+            // 640 x 1 x 640. used for https://lu.lcdruniverse.org/explorer/objects/5633
             else if (path.Contains("misc_phys_640x640"))
             {
-                // 640 x 1 x 640
-                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(640, 640, 12.5f) * GameObject.Transform.Scale);
+                size = new Vector3(640, 640, 12.5f)* Math.Abs(GameObject.Transform.Scale);
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, size );
             }
+            // 20 x 50 x 1. used for https://lu.lcdruniverse.org/explorer/objects/8575
             else if (path.Contains("trigger_wall_tall"))
             {
-                // 20 x 50 x 1
-                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, new Vector3(20, 50, 1) * GameObject.Transform.Scale);
+                size = new Vector3(20, 50, 1) * Math.Abs(GameObject.Transform.Scale);
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, size);
             }
+            // 1 x 13 x 20. used for https://lu.lcdruniverse.org/explorer/objects/12384
+            else if (path.Contains("poi_trigger_wall.hkx"))
+            {
+                size = new Vector3(1, 13, 20) * Math.Abs(GameObject.Transform.Scale);
+                // the origin is at the bottom center for this one, instead of in the middle
+                var posRelativeToHkxOrigin = new Vector3(0, 0.5f * size.Y, 0);
+                var pos = Transform.Position + Vector3.Transform(posRelativeToHkxOrigin, Transform.Rotation);
+
+                finalObject = BoxBody.Create(Zone.Simulation, pos, Transform.Rotation, size);
+            }
+            // default is a 5x5x5 cube
             else
             {
-                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, Vector3.One * 4 * GameObject.Transform.Scale);
+                size = Vector3.One * 5f * Math.Abs(GameObject.Transform.Scale);
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, size);
             }
 
             SetPhysics(finalObject);
@@ -132,7 +171,7 @@ namespace Uchu.World
 
         private void Late()
         {
-            foreach (var other in Check)
+            foreach (var other in Check.ToArray())
             {
                 if (other?.Associate == default) continue;
                 
@@ -144,7 +183,7 @@ namespace Uchu.World
             
             Check.Clear();
 
-            foreach (var active in Active)
+            foreach (var active in Active.ToArray())
             {
                 if (active?.Associate == default) continue;
 

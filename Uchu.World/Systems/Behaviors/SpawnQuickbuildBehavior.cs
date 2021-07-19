@@ -38,11 +38,12 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            var quickBuild = GameObject.Instantiate(
+            var quickBuild = GameObject.Instantiate<AuthoredGameObject>(
                 parameters.Context.Associate.Zone,
                 Lot,
                 parameters.Context.Associate.Transform.Position,
-                parameters.Context.Associate.Transform.Rotation
+                parameters.Context.Associate.Transform.Rotation,
+                parameters.Context.Associate
             );
 
             quickBuild.Transform.Position = parameters.Context.Associate.Transform.Position;

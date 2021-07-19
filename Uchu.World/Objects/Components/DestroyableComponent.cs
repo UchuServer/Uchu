@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,8 @@ namespace Uchu.World
         private uint _maxImagination;
         
         public int[] Factions { get; set; } = new int[0];
+        
+        public int[] Friends { get; set; } = new int[0];
         
         public int[] Enemies { get; set; } = new int[0];
         
@@ -217,25 +220,41 @@ namespace Uchu.World
                 else CollectObjectStats();
 
                 var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-                var destroyable = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
-                    c => c.Id == componentId
-                );
+                var destroyable = (await ClientCache.FindAsync<Core.Client.DestructibleComponent>(componentId));
                 
                 if (destroyable == default) return;
 
-                Factions = new[] {destroyable.Faction ?? 1};
+                var factions = new List<int>();
+
+                if (destroyable.Faction != null)
+                    factions.Add((int) destroyable.Faction);
+
+                if (int.TryParse(destroyable.FactionList, out var secondFaction)
+                    && secondFaction != destroyable.Faction)
+                    factions.Add(secondFaction);
+
+                if (factions.Count == 0) factions.Add(1);
+
+                Factions = factions.ToArray();
 
                 Smashable = destroyable.IsSmashable ?? false;
 
-                var faction = (await ClientCache.GetTableAsync<Factions>()).FirstOrDefault(
-                    f => f.Faction == Factions[0]
-                );
-                
+                var faction = await ClientCache.FindAsync<Factions>(Factions[0]);
                 if (faction?.EnemyList == default) return;
                 
                 if (string.IsNullOrWhiteSpace(faction.EnemyList)) return;
 
                 Enemies = faction.EnemyList
+                    .Replace(" ", "")
+                    .Split(',')
+                    .Select(int.Parse)
+                    .ToArray();
+
+                if (faction?.FriendList == default) return;
+                
+                if (string.IsNullOrWhiteSpace(faction.FriendList)) return;
+                
+                Friends = faction.FriendList
                     .Replace(" ", "")
                     .Split(',')
                     .Select(int.Parse)
@@ -319,9 +338,7 @@ namespace Uchu.World
         private void CollectObjectStats()
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-            var stats = ClientCache.GetTable<Core.Client.DestructibleComponent>().FirstOrDefault(
-                o => o.Id == componentId
-            );
+            var stats = ClientCache.Find<Core.Client.DestructibleComponent>(componentId);
 
             if (stats == default) return;
             HasStats = true;

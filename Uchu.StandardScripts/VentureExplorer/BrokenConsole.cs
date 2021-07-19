@@ -1,61 +1,55 @@
 using System.Numerics;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    ///     LUA Reference: l_ag_ship_player_shock_server.lua
+    /// Native implementation of scripts/ai/ag/l_ag_ship_player_shock_server.lua
     /// </summary>
-    [ZoneSpecific(1000)]
-    [ZoneSpecific(1001)]
-    public class BrokenConsole : NativeScript
+    [ScriptName("l_ag_ship_player_shock_server.lua")]
+    public class BrokenConsole : ObjectScript
     {
-        private const string ScriptName = "l_ag_ship_player_shock_server.lua";
-        
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public BrokenConsole(GameObject gameObject) : base(gameObject)
         {
-            var gameObjects = HasLuaScript(ScriptName);
-            
-            foreach (var gameObject in gameObjects)
+            // Connect the player interacting.
+            Listen(gameObject.OnInteract, player =>
             {
-                Listen(gameObject.OnInteract, player =>
+                // Terminate the interaction.
+                player.Message(new ServerTerminateInteractionMessage
                 {
-                    player.Message(new TerminateInteractionMessage()
-                    {
-                        Associate = player,
-                        Terminator = gameObject,
-                        Type = TerminateType.FromInteraction
-                    });
-
-                    player.Animate("knockback-recovery", true);
-                    
-                    player.Message(new KnockbackMessage
-                    {
-                        Associate = player,
-                        Caster = gameObject,
-                        Originator = gameObject,
-                        Vector = new Vector3
-                        {
-                            X = -20,
-                            Y = 10,
-                            Z = -20
-                        }
-                    });
-                    
-                    gameObject.PlayFX("console_sparks", "create", 1430);
-
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(2000);
-                        
-                        gameObject.StopFX("console_sparks");
-                    });
+                    Associate = player,
+                    Terminator = gameObject,
+                    Type = TerminateType.FromInteraction
                 });
-            }
-            
-            return Task.CompletedTask;
+
+                // Perform the knockback effect.
+                player.Animate("knockback-recovery", true);
+                player.Message(new KnockbackMessage
+                {
+                    Associate = player,
+                    Caster = gameObject,
+                    Originator = gameObject,
+                    Vector = new Vector3(-20, 10, -20),
+                });
+                
+                // Start and stop the console sparks.
+                this.PlayFXEffect("console_sparks", "create", 1430);
+                this.AddTimerWithCancel(2, "FXTime");
+            });
+        }
+        
+        /// <summary>
+        /// Callback for the timer completing.
+        /// </summary>
+        /// <param name="timerName">Timer that was completed.</param>
+        public override void OnTimerDone(string timerName)
+        {
+            this.StopFXEffect("console_sparks");
         }
     }
 }

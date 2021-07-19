@@ -1,72 +1,53 @@
 using System;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    ///     LUA Reference: l_ag_space_stuff.lua
+    /// Native implementation of scripts/ai/ag/l_ag_space_stuff.lua
     /// </summary>
-    [ZoneSpecific(1000)]
-    public class SpaceStuff : NativeScript
+    [ScriptName("l_ag_space_stuff.lua")]
+    public class SpaceStuff : ObjectScript
     {
-        private const string ScriptName = "l_ag_space_stuff.lua";
-
-        private Random _random;
-
-        private bool _running = true;
+        /// <summary>
+        /// Randomizer for the effects.
+        /// </summary>
+        private Random _random = new Random();
         
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public SpaceStuff(GameObject gameObject) : base(gameObject)
         {
-            _random = new Random();
-            
-            foreach (var gameObject in HasLuaScript(ScriptName))
-            {
-                Task.Run(async () =>
-                {
-                    await DoSpaceStuff(gameObject);
-                });
-            }
-
-            return Task.CompletedTask;
+            // Start the initial timer.
+            this.AddTimerWithCancel(5, "FloaterScale");
         }
-
-        private async Task DoSpaceStuff(GameObject gameObject)
+        
+        /// <summary>
+        /// Callback for the timer completing.
+        /// </summary>
+        /// <param name="timerName">Timer that was completed.</param>
+        public override void OnTimerDone(string timerName)
         {
-            var path = false;
-            
-            while (_running)
+            if (timerName == "FloaterScale")
             {
-                if (path)
-                {
-                    var pathType = _random.Next(1, 5);
-                    var randomTime = _random.Next(20, 26);
-
-                    gameObject.Animate($"path_0{pathType}");
-
-                    await Task.Delay(randomTime * 1000);
-                    
-                    path = false;
-                }
-                else
-                {
-                    var scaleType = _random.Next(1, 6);
-                    
-                    gameObject.Animate($"scale_0{scaleType}");
-
-                    await Task.Delay(400);
-
-                    path = true;
-                }
+                // Play the animation.
+                var scaleType = _random.Next(1, 6);
+                this.PlayAnimation($"scale_0{scaleType}");
+                
+                // Start the next timer.
+                this.AddTimerWithCancel(0.4f, "FloaterScale");
+            } else if (timerName == "FloaterPath")
+            {
+                // Play the animation.
+                var scaleType = _random.Next(1, 5);
+                this.PlayAnimation($"scale_0{scaleType}");
+                
+                // Start the next timer.
+                this.AddTimerWithCancel(_random.Next(20, 26), "FloaterScale");
             }
-        }
-
-        public override Task UnloadAsync()
-        {
-            _running = false;
-
-            return Task.CompletedTask;
         }
     }
 }

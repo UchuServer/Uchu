@@ -1,42 +1,42 @@
-using System.Linq;
-using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.AvantGardens
 {
-    [ZoneSpecific(1100)]
-    public class BabySpiderMission : NativeScript
+    [ScriptName("ScriptComponent_1586_script_name__removed")]
+    public class BabySpiderMission : ObjectScript
     {
-        public override Task LoadAsync()
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
+        public BabySpiderMission(GameObject gameObject) : base(gameObject)
         {
-            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 15902))
+            // Listen to the caged spider pile being interacted with.
+            Listen(gameObject.OnInteract, async player =>
             {
-                Listen(gameObject.OnInteract, async player =>
+                if (player.TryGetComponent<CharacterComponent>(out var character))
                 {
-                    if (player.TryGetComponent<CharacterComponent>(out var character))
+                    // Set the character flag and toggle the caged spider.
+                    await character.SetFlagAsync(74, true);
+                    foreach (var spider in this.GetGroup("cagedSpider"))
                     {
-                        await character.SetFlagAsync(74, true);
-                        foreach (var spider in GetGroup("cagedSpider"))
+                        player.Message(new FireClientEventMessage
                         {
-                            player.Message(new FireEventClientSideMessage
-                            {
-                                Associate = spider,
-                                Sender = player,
-                                Arguments = "toggle",
-                                Target = player,
-                            });
-                        }
-
-                        if (player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager))
-                        {
-                            await inventoryManager.RemoveAllAsync(14553);
-                        }
+                            Associate = spider,
+                            Sender = player,
+                            Arguments = "toggle",
+                            Target = player
+                        });
                     }
-                });
-            }
-            
-            return Task.CompletedTask;
+
+                    // Remove the cube from the character's inventory.
+                    if (player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager))
+                    {
+                        await inventoryManager.RemoveAllAsync(14553);
+                    }
+                }
+            });
         }
     }
 }

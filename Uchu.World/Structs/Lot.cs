@@ -52,8 +52,7 @@ namespace Uchu.World
         {
             get
             {
-                var id = Id;
-                return ClientCache.GetTable<Core.Client.Objects>().FirstOrDefault(o => o.Id == id);
+                return ClientCache.Find<Core.Client.Objects>(Id);
             }
         }
 
@@ -64,9 +63,8 @@ namespace Uchu.World
 
         public int GetComponentId(int componentType)
         {
-            var id = Id;
-            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().FirstOrDefault(
-                r => r.Id == id && r.Componenttype == componentType
+            var itemRegistryEntry = ClientCache.FindAll<ComponentsRegistry>(Id).FirstOrDefault(
+                r => r.Componenttype == componentType
             );
 
             return itemRegistryEntry?.Componentid ?? 0;
@@ -80,8 +78,8 @@ namespace Uchu.World
         public int[] GetComponentIds(int componentType)
         {
             var id = Id;
-            var itemRegistryEntry = ClientCache.GetTable<ComponentsRegistry>().Where(
-                r => r.Id == id && r.Componenttype == componentType
+            var itemRegistryEntry = ClientCache.FindAll<ComponentsRegistry>(Id).Where(
+                r => r.Componenttype == componentType
             );
 
             return itemRegistryEntry.Select(r => r.Componentid.Value).ToArray();
@@ -127,6 +125,18 @@ namespace Uchu.World
         public const int ParadoxFactionVendorProxy = 7097;
         public const int AssemblyFactionVendorProxy = 7096;
         public const int VentureFactionVendorProxy = 7095;
+
+        public const int SenseiWuNpc = 13789;
+        public const int ColeNpc = 13790;
+        public const int JayNpc = 13792;
+        public const int AssemblyPetConsole = 13879;
+        public const int HariHowzenNpc = 13798;
+
+        public const int Chopov = 16047;
+        public const int Frakjaw = 16049;
+        public const int Krazi = 16049;
+        public const int Bonezai = 16050;
+
 
         #endregion
     }

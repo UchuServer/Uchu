@@ -50,8 +50,8 @@ namespace Uchu.World
         internal Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-            OnFireServerEvent = new Event<string, FireEventServerSideMessage>();
-            OnReadyForUpdatesEvent = new Event<ReadyForUpdatesMessage>();
+            OnFireServerEvent = new Event<string, FireServerEventMessage>();
+            OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
@@ -97,6 +97,11 @@ namespace Uchu.World
                     
                     return Task.CompletedTask;
                 }, 20 * 15);
+                
+                // Update the initial perspective for mission filters.
+                Task.Run(async () => {
+                    await Perspective.TickAsync();
+                });
                 
                 // Update the player view filters every five seconds
                 Zone.Update(this, async () =>
@@ -200,12 +205,12 @@ namespace Uchu.World
             
             // Physics
             var physics = AddComponent<PhysicsComponent>();
-            var box = CapsuleBody.Create(
+            var box = SphereBody.Create(
                 Zone.Simulation,
                 Transform.Position,
-                Transform.Rotation,
-                new Vector2(2, 4)
+                2f
             );
+            box.CanCollideIntoThings = true;
 
             physics.SetPhysics(box);
             
@@ -226,9 +231,9 @@ namespace Uchu.World
         
         #region properties
 
-        public Event<string, FireEventServerSideMessage> OnFireServerEvent { get; }
+        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
         
-        public Event<ReadyForUpdatesMessage> OnReadyForUpdatesEvent { get; }
+        public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
         
@@ -301,25 +306,24 @@ namespace Uchu.World
         /// <param name="celebrationId">The Id of the celebration to trigger</param>
         public async Task TriggerCelebration(CelebrationId celebrationId)
         {
-            var celebrations = await ClientCache.GetTableAsync<CelebrationParameters>();
-            var celebration = (celebrations.Where(t => t.Id == (int)celebrationId).ToArray())[0];
+            var celebration = (await ClientCache.FindAsync<CelebrationParameters>((int) celebrationId));
 
             this.Message(new StartCelebrationEffectMessage
             {
                 Associate = this,
                 Animation = celebration.Animation,
                 BackgroundObject = new Lot(celebration.BackgroundObject.Value),
-                CameraPathLot = new Lot(celebration.CameraPathLOT.Value),
+                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
                 CeleLeadIn = celebration.CeleLeadIn.Value,
                 CeleLeadOut = celebration.CeleLeadOut.Value,
-                CelebrationId = celebration.Id.Value,
+                CelebrationID = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconId = (uint) celebration.IconID.Value,
+                IconID = celebration.IconID ?? default,
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,
                 PathNodeName = celebration.PathNodeName,
-                SoundGuid = celebration.SoundGUID,
+                SoundGUID = celebration.SoundGUID,
                 SubText = celebration.SubText
             }); // Start effect
         }
@@ -356,16 +360,11 @@ namespace Uchu.World
         private void UpdatePhysics(Vector3 position, Quaternion rotation)
         {
             if (!(TryGetComponent<PhysicsComponent>(out var physicsComponent) && 
-                  physicsComponent.Physics is PhysicsBody physics))
+                  physicsComponent.Physics is { } physics))
                 return;
 
             physics.Position = Transform.Position;
             physics.Rotation = Transform.Rotation;
-
-            var details = GetComponent<ControllablePhysicsComponent>();
-            
-            physics.AngularVelocity = details.HasAngularVelocity ? details.AngularVelocity : Vector3.Zero;
-            physics.LinearVelocity = details.HasVelocity ? details.Velocity : Vector3.Zero;
         }
 
         /// <summary>
@@ -437,17 +436,6 @@ namespace Uchu.World
         /// </summary>
         /// <param name="packet">The packet to send</param>
         public void Message(ISerializable packet)
-        {
-            if (Id == ObjectId.Invalid)
-                return;
-            Connection.Send(packet);
-        }
-        
-        /// <summary>
-        /// Sends a packet to a player
-        /// </summary>
-        /// <param name="packet">The packet to send</param>
-        public void Message<T>(T packet) where T : struct
         {
             if (Id == ObjectId.Invalid)
                 return;

@@ -85,32 +85,18 @@ namespace Uchu.World
                         break;
                     case "OnEnter":
                     {
-                        // Find physics asset path from cdclient
-                        var phantomPhysicsComponentId =
-                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
-                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
-                        var assetPath = cdcComponent?.Physicsasset;
-
-                        // Give physics object correct dimensions
-                        physics = GameObject.AddComponent<PhysicsComponent>();
-                        physics.SetPhysicsByPath(assetPath);
+                        if (!GameObject.TryGetComponent<PhysicsComponent>(out _))
+                            GameObject.AddComponent<PhantomPhysicsComponent>();
+                        physics = GameObject.GetComponent<PhysicsComponent>();
 
                         Listen(physics.OnEnter, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
                     }
                     case "OnExit":
                     {
-                        // Find physics asset path from cdclient
-                        var phantomPhysicsComponentId =
-                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-                        var cdcComponent = ClientCache.GetTable<Core.Client.PhysicsComponent>()
-                            .FirstOrDefault(r => r.Id == phantomPhysicsComponentId);
-                        var assetPath = cdcComponent?.Physicsasset;
-
-                        // Give physics object correct dimensions
-                        physics = GameObject.AddComponent<PhysicsComponent>();
-                        physics.SetPhysicsByPath(assetPath);
+                        if (!GameObject.TryGetComponent<PhysicsComponent>(out _))
+                            GameObject.AddComponent<PhantomPhysicsComponent>();
+                        physics = GameObject.GetComponent<PhysicsComponent>();
 
                         Listen(physics.OnLeave, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
@@ -151,9 +137,24 @@ namespace Uchu.World
                 case "updateMission":
                     UpdateMission(command, arguments);
                     break;
+                case "DestroySpawnerNetworkObjects":
+                    DestroySpawnerNetworkObjects(command, arguments);
+                    break;
             }
 
             GameObject.Serialize(GameObject);
+        }
+
+        private void DestroySpawnerNetworkObjects(TriggerCommand command, params object[] arguments)
+        {
+            var name = command.Arguments;
+            // Find all networks with this name
+            var networks = Zone.GameObjects.Where(o => o.Name == name);
+            // Destroy all found networks
+            foreach (var networkObject in networks.ToArray())
+            {
+                Destroy(networkObject);
+            }
         }
 
         private void UpdateMission(TriggerCommand command, params object[] arguments)

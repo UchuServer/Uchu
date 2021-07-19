@@ -1,5 +1,6 @@
+using System;
 using System.Linq;
-using InfectedRose.Lvl;
+using InfectedRose.Core;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -21,18 +22,16 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
+                // Get the script component or custom script.
                 var scriptId = GameObject.Lot.GetComponentId(ComponentId.ScriptComponent);
-
-                var script = ClientCache.GetTable<ScriptComponent>().FirstOrDefault(s => s.Id == scriptId);
-
+                var script = ClientCache.Find<ScriptComponent>(scriptId);
                 if (script == default)
                 {
                     Logger.Warning($"{GameObject} has an invalid script component entry: {scriptId}");
-                    
                     return;
                 }
 
-                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride))
+                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride) && (string) scriptOverride != "")
                 {
                     ScriptName = (string) scriptOverride;
                 }
@@ -41,9 +40,17 @@ namespace Uchu.World
                     ScriptName = script.Scriptname;
                 }
                 
-                ClientScriptName = script.Clientscriptname;
-            
-                Logger.Debug($"{GameObject} -> {ScriptName}");
+                // Set the script name.
+                this.ClientScriptName = script.Clientscriptname;
+                Logger.Debug($"{GameObject} -> {this.ScriptName}, {this.ClientScriptName}");
+                
+                // Start the object script.
+                var newObjectScriptName = Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
+                    objectScriptName => (this.ScriptName ?? "").ToLower().EndsWith(objectScriptName))
+                        ?? Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
+                            objectScriptName => (this.ClientScriptName ?? "").ToLower().EndsWith(objectScriptName));
+                if (newObjectScriptName == null) return;
+                this.Zone.LoadObjectScript(this.GameObject, Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName]);
             });
         }
 

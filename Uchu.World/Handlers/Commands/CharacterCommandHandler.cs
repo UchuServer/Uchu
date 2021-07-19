@@ -1,3 +1,4 @@
+using InfectedRose.Core;
 using InfectedRose.Lvl;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -772,7 +773,7 @@ namespace Uchu.World.Handlers.Commands
 
             if (!int.TryParse(arguments[0], out var id)) return "Invalid <zoneId>";
 
-            ZoneTable WorldTable = ClientCache.GetTable<ZoneTable>().FirstOrDefault(t => t.ZoneID == id);
+            var WorldTable = ClientCache.Find<ZoneTable>(id);
 
             if (WorldTable == default)
             {
@@ -915,11 +916,12 @@ namespace Uchu.World.Handlers.Commands
             
             if (int.TryParse(arguments[0], out var id))
             {
-                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.Id == id);
+                emote = await ClientCache.FindAsync<Emotes>(id);
             }
             else
             {
-                emote = (await ClientCache.GetTableAsync<Emotes>()).FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
+                await using var cdClient = new CdClientContext();
+                emote = cdClient.EmotesTable.FirstOrDefault(c => c.AnimationName == arguments[0].ToLower());
             }
 
             if (emote?.Id == default)
@@ -1212,6 +1214,22 @@ namespace Uchu.World.Handlers.Commands
             player.GravityScale = scale;
 
             return $"Successfully set gravity scale to: {player.GravityScale}";
+        }
+
+        [CommandHandler(Signature = "fixcolemission", Help = "Completes Cole's 'Student of Earth' mission",
+            GameMasterLevel = GameMasterLevel.Player)]
+        public async Task<string> FixColeMission(string[] arguments, Player player)
+        {
+            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                return "Could not get character component";
+            if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
+                return "Could not get mission inventory component";
+            if (!missionInventoryComponent.HasCompleted(1796))
+                return "You haven't completed the required missions yet!";
+
+            await characterComponent.SetFlagAsync(2030, true);
+
+            return "Done!";
         }
     }
 }
