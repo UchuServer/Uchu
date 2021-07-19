@@ -37,15 +37,19 @@ namespace Uchu.World.Systems.Behaviors
             //dynamically load all possible behaviors the switch can have
             var valid = true;
             var count = 1;
-            while (valid){
-                var Behavior = await GetBehavior("behavior " + count);
-                var Value = await GetParameter<float>("value " + count);
-                if (Behavior == null || Behavior == default || Behavior.BehaviorId == 0){
+            while (valid)
+            {
+                var behavior = await GetBehavior("behavior " + count);
+                var value = await GetParameter<float>("value " + count);
+                if (behavior == default || behavior.BehaviorId == 0)
+                {
                     valid = false;
-                } else {
+                }
+                else
+                {
                     count++;
-                    Behaviors.Add(Behavior);
-                    Values.Add(Value);
+                    Behaviors.Add(behavior);
+                    Values.Add(value);
                 }
             }
         }
