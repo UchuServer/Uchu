@@ -193,7 +193,7 @@ namespace Uchu.World
         private void GeneratePlayerYieldsAsync(Player owner)
         {
             // Return if the zone doesn't allow dropping coins.
-            var zoneTable = ClientCache.GetTable<ZoneTable>().First(z => z.ZoneID == (int) owner.Zone.ZoneId);
+            var zoneTable = ClientCache.Find<ZoneTable>((int) owner.Zone.ZoneId);
             var playerLoseCoinsOnDeath = zoneTable.PlayerLoseCoinsOnDeath ?? true;
             if (!playerLoseCoinsOnDeath) return;
             

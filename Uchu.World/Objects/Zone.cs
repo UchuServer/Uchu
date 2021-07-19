@@ -212,7 +212,7 @@ namespace Uchu.World
             GC.Collect();
             
             // Spawns all the NPCs in the area
-            var zoneControlLot = ClientCache.GetTable<ZoneTable>().FirstOrDefault(o => o.ZoneID == this.ZoneId.Id).ZoneControlTemplate ??= 2365;
+            var zoneControlLot = ClientCache.Find<ZoneTable>(this.ZoneId.Id).ZoneControlTemplate ??= 2365;
             foreach (var levelObject in objects)
             {
                 if (levelObject.Lot == zoneControlLot) continue;

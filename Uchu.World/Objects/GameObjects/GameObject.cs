@@ -260,9 +260,7 @@ namespace Uchu.World
         {
             // ReSharper disable PossibleInvalidOperationException
             // Collect all the components on this object.
-            var registryComponents = ClientCache.GetTable<ComponentsRegistry>().Where(
-                r => r.Id == this.Lot
-            ).ToArray();
+            var registryComponents = ClientCache.FindAll<ComponentsRegistry>(this.Lot);
 
             // Select all the none networked components on this object.
             var componentEntries = registryComponents.Where(o =>
