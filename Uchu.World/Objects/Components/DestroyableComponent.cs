@@ -220,9 +220,7 @@ namespace Uchu.World
                 else CollectObjectStats();
 
                 var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-                var destroyable = (await ClientCache.GetTableAsync<Core.Client.DestructibleComponent>()).FirstOrDefault(
-                    c => c.Id == componentId
-                );
+                var destroyable = (await ClientCache.FindAsync<Core.Client.DestructibleComponent>(componentId));
                 
                 if (destroyable == default) return;
 
@@ -241,10 +239,7 @@ namespace Uchu.World
 
                 Smashable = destroyable.IsSmashable ?? false;
 
-                var faction = (await ClientCache.GetTableAsync<Factions>()).FirstOrDefault(
-                    f => f.Faction == Factions[0]
-                );
-                
+                var faction = await ClientCache.FindAsync<Factions>(Factions[0]);
                 if (faction?.EnemyList == default) return;
                 
                 if (string.IsNullOrWhiteSpace(faction.EnemyList)) return;
@@ -343,9 +338,7 @@ namespace Uchu.World
         private void CollectObjectStats()
         {
             var componentId = GameObject.Lot.GetComponentId(ComponentId.DestructibleComponent);
-            var stats = ClientCache.GetTable<Core.Client.DestructibleComponent>().FirstOrDefault(
-                o => o.Id == componentId
-            );
+            var stats = ClientCache.Find<Core.Client.DestructibleComponent>(componentId);
 
             if (stats == default) return;
             HasStats = true;
