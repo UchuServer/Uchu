@@ -85,30 +85,18 @@ namespace Uchu.World
                         break;
                     case "OnEnter":
                     {
-                        // Find physics asset path from cdclient
-                        var phantomPhysicsComponentId =
-                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-                        var cdcComponent = ClientCache.Find<Core.Client.PhysicsComponent>(phantomPhysicsComponentId);
-                        var assetPath = cdcComponent?.Physicsasset;
-
-                        // Give physics object correct dimensions
-                        physics = GameObject.AddComponent<PhysicsComponent>();
-                        physics.SetPhysicsByPath(assetPath);
+                        if (!GameObject.TryGetComponent<PhysicsComponent>(out _))
+                            GameObject.AddComponent<PhantomPhysicsComponent>();
+                        physics = GameObject.GetComponent<PhysicsComponent>();
 
                         Listen(physics.OnEnter, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
                     }
                     case "OnExit":
                     {
-                        // Find physics asset path from cdclient
-                        var phantomPhysicsComponentId =
-                            GameObject.Lot.GetComponentId(ComponentId.PhantomPhysicsComponent);
-                        var cdcComponent = ClientCache.Find<Core.Client.PhysicsComponent>(phantomPhysicsComponentId);
-                        var assetPath = cdcComponent?.Physicsasset;
-
-                        // Give physics object correct dimensions
-                        physics = GameObject.AddComponent<PhysicsComponent>();
-                        physics.SetPhysicsByPath(assetPath);
+                        if (!GameObject.TryGetComponent<PhysicsComponent>(out _))
+                            GameObject.AddComponent<PhantomPhysicsComponent>();
+                        physics = GameObject.GetComponent<PhysicsComponent>();
 
                         Listen(physics.OnLeave, other => { ExecuteEvent(@event, other.GameObject); });
                         break;
