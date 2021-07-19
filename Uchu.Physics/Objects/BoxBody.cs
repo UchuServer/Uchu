@@ -47,6 +47,35 @@ namespace Uchu.Physics
         public Vector3[] Vertices;
 
         /// <summary>
+        /// Check if this box contains at least one of an array of points.
+        /// </summary>
+        /// <param name="points">Array of points (vectors).</param>
+        public bool ContainsAnyPoint(Vector3[] points)
+        {
+            var inverse = new Quaternion(Rotation.X, Rotation.Y, Rotation.Z, -Rotation.W);
+
+            var boxMinX = - Size.X / 2;
+            var boxMaxX = + Size.X / 2;
+            var boxMinY = - Size.Y / 2;
+            var boxMaxY = + Size.Y / 2;
+            var boxMinZ = - Size.Z / 2;
+            var boxMaxZ = + Size.Z / 2;
+
+            foreach (var point in points)
+            {
+                // Find relative coordinates
+                var rel = Vector3.Transform(point - Position, inverse);
+
+                if (rel.X > boxMinX && rel.X < boxMaxX
+                 && rel.Y > boxMinY && rel.Y < boxMaxY
+                 && rel.Z > boxMinZ && rel.Z < boxMaxZ)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Finds the vertices of a box body.
         /// </summary>
         /// <returns>A List containing the positions of the vertices.</returns>

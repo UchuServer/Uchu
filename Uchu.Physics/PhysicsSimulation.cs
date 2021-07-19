@@ -55,7 +55,6 @@ namespace Uchu.Physics
         /// </summary>
         /// <param name="firstObject">The first object</param>
         /// <param name="secondObject">The second object</param>
-        /// <returns></returns>
         /// <exception cref="NotSupportedException">Occurs when an unknown type of physics object is passed to the method</exception>
         public static bool Collides(PhysicsObject firstObject, PhysicsObject secondObject)
         {
@@ -75,12 +74,12 @@ namespace Uchu.Physics
             // First precedence value >= second precedence value
             // Cube = 1, sphere = 0
 
-            if (first is BoxBody box1 && second is BoxBody box2)
-                return BoxBoxCollision(box1, box2);
             if (first is BoxBody box && second is SphereBody sphere)
                 return BoxSphereCollision(box, sphere);
             if (first is SphereBody sphere1 && second is SphereBody sphere2)
                 return SphereSphereCollision(sphere1, sphere2);
+            if (first is BoxBody box1 && second is BoxBody box2)
+                return BoxBoxCollision(box1, box2);
 
             throw new NotSupportedException();
         }
@@ -88,13 +87,15 @@ namespace Uchu.Physics
         /// <summary>
         /// Determine whether two boxes intersect.
         /// </summary>
-        /// <param name="firstBox"></param>
-        /// <param name="secondBox"></param>
-        /// <returns></returns>
+        /// <remarks>
+        /// Not 100% accurate; it only checks vertex-face collisions, not edge-edge.
+        /// However, this should be accurate enough for our use case.
+        /// </remarks>
+        /// <param name="firstBox">The first box</param>
+        /// <param name="secondBox">The second box</param>
         public static bool BoxBoxCollision(BoxBody firstBox, BoxBody secondBox)
         {
-            // Not implemented. Might not be necessary.
-            return false;
+            return firstBox.ContainsAnyPoint(secondBox.Vertices) || secondBox.ContainsAnyPoint(firstBox.Vertices);
         }
 
         /// <summary>
@@ -102,7 +103,6 @@ namespace Uchu.Physics
         /// </summary>
         /// <param name="box">Box physics object</param>
         /// <param name="sphere">Sphere physics object</param>
-        /// <returns></returns>
         public static bool BoxSphereCollision(BoxBody box, SphereBody sphere)
         {
             // reference frame: box at (0, 0, 0), sides aligned with axes
@@ -137,7 +137,6 @@ namespace Uchu.Physics
         /// </summary>
         /// <param name="firstSphere">The first sphere</param>
         /// <param name="secondSphere">The second sphere</param>
-        /// <returns></returns>
         public static bool SphereSphereCollision(SphereBody firstSphere, SphereBody secondSphere)
         {
             var maxDistanceSquared = Math.Pow(firstSphere.Radius + secondSphere.Radius, 2);

@@ -79,5 +79,55 @@ namespace Uchu.Physics.Test
             Assert.IsFalse(PhysicsSimulation.BoxSphereCollision(boxAtZeroRotated, sphere2));
             Assert.IsTrue(PhysicsSimulation.BoxSphereCollision(boxAtZeroRotated, sphere3));
         }
+
+        [Test]
+        public void BoxBoxCollision()
+        {
+            // This test does not check cases where the boxes collide but none of
+            // the vertices are contained by the other box (edge-edge collisions).
+
+            // 10x10x10 at (0,0,0)
+            var boxAtZero = BoxBody.Create(_simulation,
+                new Vector3(0, 0, 0),
+                Quaternion.Identity,
+                Vector3.One * 10);
+
+            // 1x1x1 at (5,5,5)
+            var smallBox5 = BoxBody.Create(_simulation,
+                new Vector3(5,5,5),
+                Quaternion.Identity,
+                Vector3.One);
+
+            // 5x5x5 at (-7,0,0)
+            var box7 = BoxBody.Create(_simulation,
+                new Vector3(-7, 0, 0),
+                Quaternion.Identity,
+                Vector3.One * 5);
+
+            // 1x10x1 at (0,8,0)
+            var box8 = BoxBody.Create(_simulation,
+                new Vector3(0, 8, 0),
+                Quaternion.Identity,
+                new Vector3(1, 10, 1));
+
+            // 1x10x1 at (0,8,0) but rotated 90 deg around Z axis
+            var box8Rotated = BoxBody.Create(_simulation,
+                new Vector3(0, 8, 0),
+                Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float) (Math.Tau / 4)),
+                new Vector3(1, 10, 1));
+
+            // 1x1x1 at (4,8.5,0.5)
+            var box9 = BoxBody.Create(_simulation,
+                new Vector3(4, 8.5f, 0.5f),
+                Quaternion.Identity,
+                new Vector3(1, 1, 1));
+
+            Assert.IsTrue(PhysicsSimulation.BoxBoxCollision(boxAtZero, smallBox5));
+            Assert.IsTrue(PhysicsSimulation.BoxBoxCollision(boxAtZero, box7));
+            Assert.IsTrue(PhysicsSimulation.BoxBoxCollision(boxAtZero, box8));
+            Assert.IsFalse(PhysicsSimulation.BoxBoxCollision(boxAtZero, box8Rotated));
+            Assert.IsFalse(PhysicsSimulation.BoxBoxCollision(smallBox5, box7));
+            Assert.IsTrue(PhysicsSimulation.BoxBoxCollision(box9, box8Rotated));
+        }
     }
 }
