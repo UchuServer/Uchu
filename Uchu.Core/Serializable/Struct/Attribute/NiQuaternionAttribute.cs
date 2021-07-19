@@ -7,7 +7,7 @@ namespace Uchu.Core
     /// of a Quaternion (X,Y,Z,W).
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class NiQuaternion : Attribute
+    public class NiQuaternionAttribute : Attribute
     {
         
     }

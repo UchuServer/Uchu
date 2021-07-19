@@ -3,12 +3,12 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class WorldPacketStruct : PacketStruct
+    public class WorldPacketStructAttribute : PacketStructAttribute
     {
         /// <summary>
         /// Registers the World-specific writers and readers.
         /// </summary>
-        static WorldPacketStruct()
+        static WorldPacketStructAttribute()
         {
             // Add Lot.
             PacketProperty.CustomWriters[typeof(Lot)] = (writer, o) =>
@@ -37,7 +37,7 @@ namespace Uchu.World
         /// <param name="messageIdentifier">Message identifier of the packet.</param>
         /// <param name="remoteConnectionType">Remote connection type of the packet.</param>
         /// <param name="packetId">Id of the packet.</param>
-        public WorldPacketStruct(MessageIdentifier messageIdentifier,RemoteConnectionType remoteConnectionType, uint packetId) : base(messageIdentifier, remoteConnectionType, packetId)
+        public WorldPacketStructAttribute(MessageIdentifier messageIdentifier,RemoteConnectionType remoteConnectionType, uint packetId) : base(messageIdentifier, remoteConnectionType, packetId)
         {
             
         }

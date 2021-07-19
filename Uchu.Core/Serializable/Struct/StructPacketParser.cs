@@ -31,7 +31,7 @@ namespace Uchu.Core
                 var packetProperties = new List<IPacketProperty>();
                 
                 // Add the packet information.
-                if (type.GetCustomAttribute(typeof(PacketStruct)) is PacketStruct packetStruct)
+                if (type.GetCustomAttribute(typeof(PacketStructAttribute)) is PacketStructAttribute packetStruct)
                 {
                     packetProperties.Add(new PacketInformation(packetStruct.MessageIdentifier, packetStruct.RemoteConnectionType, packetStruct.PacketId));
                 }
@@ -45,21 +45,21 @@ namespace Uchu.Core
                     {
                         packetProperty = new StringPacketProperty(property);
                     }
-                    else if (property.PropertyType == typeof(Quaternion) && property.GetCustomAttribute<NiQuaternion>() != null)
+                    else if (property.PropertyType == typeof(Quaternion) && property.GetCustomAttribute<NiQuaternionAttribute>() != null)
                     {
                         packetProperty = new NiQuaternionProperty(property);
                     } else
                     {
                         packetProperty = new PacketProperty(property);
                     }
-                    if ((property.GetCustomAttribute(typeof(Default)) is Default defaultAttribute))
+                    if ((property.GetCustomAttribute(typeof(DefaultAttribute)) is DefaultAttribute defaultAttribute))
                     {
                         packetProperty = new FlagPacketProperty(packetProperty, defaultAttribute.ValueToIgnore);
                     }
                     
                     // Wrap the required properties.
                     var requiredProperties = new Dictionary<string, RequiredPacketProperty>();
-                    foreach (var requiredAttribute in property.GetCustomAttributes<Requires>())
+                    foreach (var requiredAttribute in property.GetCustomAttributes<RequiresAttribute>())
                     {
                         if (!requiredProperties.ContainsKey(requiredAttribute.PropertyName))
                         {

@@ -31,11 +31,11 @@ namespace Uchu.Core
             this.Property = property;
             
             // Determine the string properties.
-            if (property.GetCustomAttribute(typeof(Length)) is Length length)
+            if (property.GetCustomAttribute(typeof(LengthAttribute)) is LengthAttribute length)
             {
                 this._length = length.StringLength;
             }
-            if (property.GetCustomAttribute(typeof(Wide)) is Wide)
+            if (property.GetCustomAttribute(typeof(WideAttribute)) is WideAttribute)
             {
                 this._isWide = true;
             }

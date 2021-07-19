@@ -139,7 +139,7 @@ namespace Uchu.Core
             }
             
             // Get the array length type.
-            if (property.GetCustomAttribute(typeof(StoreLengthAs)) is StoreLengthAs storeLengthAs)
+            if (property.GetCustomAttribute(typeof(StoreLengthAsAttribute)) is StoreLengthAsAttribute storeLengthAs)
             {
                 this._arrayLengthPropertyType = storeLengthAs.Type;
             }

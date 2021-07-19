@@ -6,18 +6,18 @@ namespace Uchu.Core
     /// Overrides the type used for the length of an array.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class StoreLengthAs : Attribute
+    public class StoreLengthAsAttribute : Attribute
     {
         /// <summary>
         /// Type that is used for the array length. 
         /// </summary>
-        public Type Type;
+        public Type Type { get; }
         
         /// <summary>
         /// Creates the attribute.
         /// </summary>
         /// <param name="type">Type that is used for the array length.</param>
-        public StoreLengthAs(Type type)
+        public StoreLengthAsAttribute(Type type)
         {
             this.Type = type;
         }

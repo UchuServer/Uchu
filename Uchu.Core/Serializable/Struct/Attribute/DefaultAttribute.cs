@@ -6,7 +6,7 @@ namespace Uchu.Core
     /// Indicates a bit flag is used for a property.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class Default : Attribute
+    public class DefaultAttribute : Attribute
     {
         /// <summary>
         /// Value that is checked. If the value matches, the
@@ -19,7 +19,7 @@ namespace Uchu.Core
         /// Creates the attribute with the value to ignore
         /// set to null for objects and default for structs.
         /// </summary>
-        public Default()
+        public DefaultAttribute()
         {
             this.ValueToIgnore = null;
         }
@@ -28,7 +28,7 @@ namespace Uchu.Core
         /// Creates the attribute.
         /// </summary>
         /// <param name="valueToIgnore">Value to ignore writing.</param>
-        public Default(object valueToIgnore)
+        public DefaultAttribute(object valueToIgnore)
         {
             this.ValueToIgnore = valueToIgnore;
         }

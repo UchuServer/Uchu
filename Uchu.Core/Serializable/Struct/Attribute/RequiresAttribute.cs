@@ -7,7 +7,7 @@ namespace Uchu.Core
     /// if a property values matches.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-    public class Requires : Attribute
+    public class RequiresAttribute : Attribute
     {
         /// <summary>
         /// Property name that is checked before attempting
@@ -26,7 +26,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="valueToRequire">Value required.</param>
-        public Requires(string propertyName, object valueToRequire)
+        public RequiresAttribute(string propertyName, object valueToRequire)
         {
             this.PropertyName = propertyName;
             this.ValueToRequire = valueToRequire;
@@ -37,7 +37,7 @@ namespace Uchu.Core
         /// The Value To Require will be the bool true.
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
-        public Requires(string propertyName) : this(propertyName, true)
+        public RequiresAttribute(string propertyName) : this(propertyName, true)
         {
             
         }

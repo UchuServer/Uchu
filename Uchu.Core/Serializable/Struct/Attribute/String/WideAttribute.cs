@@ -7,7 +7,7 @@ namespace Uchu.Core
     /// characters (2 bytes per character).
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class Wide : Attribute
+    public class WideAttribute : Attribute
     {
         
     }

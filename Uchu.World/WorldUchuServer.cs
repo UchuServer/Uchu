@@ -204,7 +204,7 @@ namespace Uchu.World
                             }
                             else
                             {
-                                var packetStruct = parameters[0].ParameterType.GetCustomAttribute<PacketStruct>(true);
+                                var packetStruct = parameters[0].ParameterType.GetCustomAttribute<PacketStructAttribute>(true);
                                 if (packetStruct == null)
                                     continue;
                                 

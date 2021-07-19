@@ -7,7 +7,7 @@ namespace Uchu.Core
     /// the applied string.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class Length : Attribute
+    public class LengthAttribute : Attribute
     {
         /// <summary>
         /// Length of the string to read or write.
@@ -18,7 +18,7 @@ namespace Uchu.Core
         /// Creates the length attribute.
         /// </summary>
         /// <param name="stringLength"></param>
-        public Length(int length)
+        public LengthAttribute(int length)
         {
             this.StringLength = length;
         }
