@@ -14,6 +14,6 @@ namespace Uchu.World
 		[Default(-1)]
 		public int RailActivatorComponentId { get; set; }
 		[Default]
-		public GameObject RailActivatorObjId { get; set; }
+		public GameObject RailActivator { get; set; }
 	}
 }

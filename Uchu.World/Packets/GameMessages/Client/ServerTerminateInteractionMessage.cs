@@ -5,7 +5,7 @@ namespace Uchu.World
 	{
 		public GameObject Associate { get; set; }
 		public GameMessageId GameMessageId => GameMessageId.ServerTerminateInteraction;
-		public GameObject ObjIdTerminator { get; set; }
-		public TerminateType TerminateType { get; set; }
+		public GameObject Terminator { get; set; }
+		public TerminateType Type { get; set; }
 	}
 }

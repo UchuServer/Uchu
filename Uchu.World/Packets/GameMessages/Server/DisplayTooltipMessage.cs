@@ -1,4 +1,4 @@
-using InfectedRose.Lvl;
+using InfectedRose.Core;
 using Uchu.Core;
 
 namespace Uchu.World

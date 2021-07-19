@@ -9,7 +9,7 @@ namespace Uchu.World
 		public GameMessageId GameMessageId => GameMessageId.PlayAnimation;
 		[Wide]
 		public string AnimationId { get; set; }
-		public bool ExpectAnimToExist { get; set; }
+		public bool ExpectAnimationToExist { get; set; }
 		public bool PlayImmediate { get; set; }
 		public bool TriggerOnCompleteMessage { get; set; }
 		[Default(0.4f)]

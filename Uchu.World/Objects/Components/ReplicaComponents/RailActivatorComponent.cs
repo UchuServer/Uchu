@@ -133,7 +133,7 @@ namespace Uchu.World
             player.Message(new PlayAnimationMessage
             {
                 Associate = player,
-                AnimationsId = StartAnim,
+                AnimationId = StartAnim,
                 ExpectAnimationToExist = true,
                 PlayImmediate = false,
                 TriggerOnCompleteMessage = false,
@@ -158,7 +158,7 @@ namespace Uchu.World
 
                 PathName = Path,
                 RailActivator = GameObject,
-                RailActivatorComponent = RailActivatorComponentId,
+                RailActivatorComponentId = RailActivatorComponentId,
 
             });
 
@@ -171,7 +171,7 @@ namespace Uchu.World
                 player.Message(new PlayAnimationMessage
                 {
                     Associate = player,
-                    AnimationsId = LoopAnim,
+                    AnimationId = LoopAnim,
                     ExpectAnimationToExist = true,
                     PlayImmediate = false,
                     TriggerOnCompleteMessage = false,
@@ -195,7 +195,7 @@ namespace Uchu.World
                     PathName = Path,
                     PathStart = PathStart,
                     RailActivator = GameObject,
-                    RailActivatorComponent = RailActivatorComponentId,
+                    RailActivatorComponentId = RailActivatorComponentId,
                 });
             });
 
@@ -225,7 +225,7 @@ namespace Uchu.World
                 player.Message(new PlayAnimationMessage
                 {
                     Associate = player,
-                    AnimationsId = StopAnim,
+                    AnimationId = StopAnim,
                     ExpectAnimationToExist = true,
                     PlayImmediate = false,
                     TriggerOnCompleteMessage = false,
