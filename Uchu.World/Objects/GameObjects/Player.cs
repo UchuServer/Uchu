@@ -205,12 +205,12 @@ namespace Uchu.World
             
             // Physics
             var physics = AddComponent<PhysicsComponent>();
-            var box = CapsuleBody.Create(
+            var box = SphereBody.Create(
                 Zone.Simulation,
                 Transform.Position,
-                Transform.Rotation,
-                new Vector2(2, 4)
+                2f
             );
+            box.CanCollideIntoThings = true;
 
             physics.SetPhysics(box);
             
@@ -361,16 +361,11 @@ namespace Uchu.World
         private void UpdatePhysics(Vector3 position, Quaternion rotation)
         {
             if (!(TryGetComponent<PhysicsComponent>(out var physicsComponent) && 
-                  physicsComponent.Physics is PhysicsBody physics))
+                  physicsComponent.Physics is { } physics))
                 return;
 
             physics.Position = Transform.Position;
             physics.Rotation = Transform.Rotation;
-
-            var details = GetComponent<ControllablePhysicsComponent>();
-            
-            physics.AngularVelocity = details.HasAngularVelocity ? details.AngularVelocity : Vector3.Zero;
-            physics.LinearVelocity = details.HasVelocity ? details.Velocity : Vector3.Zero;
         }
 
         /// <summary>
