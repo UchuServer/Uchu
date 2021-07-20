@@ -24,11 +24,14 @@ namespace Uchu.StandardScripts.General
             //Console.WriteLine("Death barrier positioned at " + gameObject.Transform.Position + ", Scale of GameObject is " + gameObject.Transform.Scale);
 
             var physics = gameObject.GetComponent<PhysicsComponent>();
-            if (physics == null || physics == default) return;
+            if (physics == default) return;
             Listen(physics.OnEnter, other =>
             {
                 if (!(other.GameObject is Player player)) return;
-                player.GetComponent<DestroyableComponent>().Health = 0;
+                Task.Run(async () =>
+                {
+                    await player.GetComponent<DestructibleComponent>().SmashAsync(player);
+                });
             });
         }
     }
