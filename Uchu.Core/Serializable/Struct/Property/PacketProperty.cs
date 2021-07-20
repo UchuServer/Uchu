@@ -125,7 +125,7 @@ namespace Uchu.Core
             }
             foreach (var (customWriterType, customWriter) in CustomWriters)
             {
-                if (customWriterType ==readerWriterType || readerWriterType.IsSubclassOf(customWriterType))
+                if (customWriterType == readerWriterType || readerWriterType.IsSubclassOf(customWriterType))
                 {
                     this._customWriter = customWriter;
                 }
@@ -157,10 +157,16 @@ namespace Uchu.Core
             var value = this.Property.GetValue(objectToWrite);
             if (this._propertyType.IsArray)
             {
+                // Write the length if the type is defined.
+                // Some packets, like UIMessageServerToSingleClientMessage, do not send a length.
                 var valueArray = (Array) value;
-                var length = Convert.ChangeType(valueArray.Length, this._arrayLengthPropertyType);
-                _bitWriterWriteMethod.MakeGenericMethod(this._arrayLengthPropertyType)
-                    .Invoke(writer, new object[] { length });
+                if (this._arrayLengthPropertyType != null) {
+                    var length = Convert.ChangeType(valueArray.Length, this._arrayLengthPropertyType);
+                    _bitWriterWriteMethod.MakeGenericMethod(this._arrayLengthPropertyType)
+                        .Invoke(writer, new object[] { length });
+                }
+                
+                // Write the array values.
                 foreach (var subValue in valueArray)
                 {
                     if (this._customWriter != null)
@@ -174,6 +180,7 @@ namespace Uchu.Core
             }
             else
             {
+                // Write the value.
                 if (this._customWriter != null)
                 {
                     this._customWriter(writer, value);
