@@ -21,17 +21,14 @@ namespace Uchu.StandardScripts.General
         /// <param name="gameObject">Game object to control with the script.</param>
         public DeathPlane(GameObject gameObject) : base(gameObject)
         {
-            Console.WriteLine("Death barrier positioned at " + gameObject.Transform.Position);
+            //Console.WriteLine("Death barrier positioned at " + gameObject.Transform.Position + ", Scale of GameObject is " + gameObject.Transform.Scale);
 
             var physics = gameObject.GetComponent<PhysicsComponent>();
             if (physics == null || physics == default) return;
             Listen(physics.OnEnter, other =>
             {
                 if (!(other.GameObject is Player player)) return;
-                Task.Run(async () =>
-                {
-                    player.GetComponent<DestroyableComponent>().Health = 0;
-                });
+                player.GetComponent<DestroyableComponent>().Health = 0;
             });
         }
     }

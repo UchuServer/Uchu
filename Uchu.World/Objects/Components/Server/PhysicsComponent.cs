@@ -117,7 +117,7 @@ namespace Uchu.World
             // 640 x 1 x 640. used for https://lu.lcdruniverse.org/explorer/objects/5633
             else if (path.Contains("misc_phys_640x640"))
             {
-                size = new Vector3(640, 640, 12.5f)* Math.Abs(GameObject.Transform.Scale);
+                size = new Vector3(640, 12.5f, 640)* Math.Abs(GameObject.Transform.Scale);
                 finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, size );
             }
             // 20 x 50 x 1. used for https://lu.lcdruniverse.org/explorer/objects/8575
