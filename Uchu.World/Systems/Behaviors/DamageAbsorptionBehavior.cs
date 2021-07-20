@@ -28,7 +28,7 @@ namespace Uchu.World.Systems.Behaviors
             */
             //i have no idea if there is a case of a behavior casting absorption on something else, but the branch context target creates a null exception
             DestroyableComponent absorb;
-            if (parameters.BranchContext.Target != null && !parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out absorb)) {} 
+            if (parameters.BranchContext.Target != null && parameters.BranchContext.Target.TryGetComponent<DestroyableComponent>(out absorb)) {} 
             else if (!(parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out absorb))) return;
             absorb.DamageAbsorptionPoints += AbsorbAmount;
             //Console.WriteLine("Given " + AbsorbAmount + " absorption points to " + absorb.GameObject.Name);
