@@ -288,6 +288,13 @@ namespace Uchu.World
         {
             LatestDamageSource = source;
             LatestEffect = effectHandler;
+
+            if (Shielded) return;
+
+            var absorptionDamage = Math.Min(value, DamageAbsorptionPoints);
+
+            value -= absorptionDamage;
+            DamageAbsorptionPoints -= absorptionDamage;
             
             var armorDamage = Math.Min(value, Armor);
 
