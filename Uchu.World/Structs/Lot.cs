@@ -137,6 +137,7 @@ namespace Uchu.World
         public const int Krazi = 16049;
         public const int Bonezai = 16050;
 
+        public const int MaelstromInfectedBrick = 6194;
 
         #endregion
     }
