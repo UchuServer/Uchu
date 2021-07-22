@@ -8,7 +8,7 @@ namespace Uchu.World
 		public GameObject Associate { get; set; }
 		public GameMessageId GameMessageId => GameMessageId.RequestServerProjectileImpact;
 		[Default]
-		public GameObject Projectile { get; set; }
+		public long Projectile { get; set; }
 		[Default]
 		public GameObject Target { get; set; }
 		public byte[] Data { get; set; }
