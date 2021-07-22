@@ -130,7 +130,7 @@ namespace Uchu.World
             Checksum = ZoneInfo.LuzFile.GenerateChecksum(ZoneInfo.LvlFiles);
             ZoneId = (ZoneId) ZoneInfo.LuzFile.WorldId;
             SpawnPosition = ZoneInfo.LuzFile.SpawnPoint;
-            SpawnRotation = ZoneInfo.LuzFile.SpawnRotation;
+            SpawnRotation = new Quaternion(ZoneInfo.LuzFile.SpawnRotation.W, ZoneInfo.LuzFile.SpawnRotation.X, ZoneInfo.LuzFile.SpawnRotation.Y, ZoneInfo.LuzFile.SpawnRotation.Z);
             
             Logger.Information($"Checksum: 0x{Checksum:X}");
             Logger.Information($"Collecting objects for {ZoneId}");
