@@ -442,6 +442,9 @@ namespace Uchu.StandardScripts.Base
             this.SpawnerReset(this._spawnerNetworks.RandomNetworks);
             this.SpawnerReset(this._spawnerNetworks.RewardNetworks);
             
+            // Stop the timers.
+            this.ActivityTimerStopAllTimers();
+            
             // Finish the players.
             foreach (var player in this._players)
             {
