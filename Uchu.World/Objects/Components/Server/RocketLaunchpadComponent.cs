@@ -81,8 +81,6 @@ namespace Uchu.World
             if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
                 return;
             characterComponent.LandingByRocket = true;
-            characterComponent.SpawnPosition = default;
-            characterComponent.SpawnRotation = default;
             if (this.AlternativeTargetScene != default && this.AlternativeTargetScenePrecondition.HasValue &&
                 await Requirements.CheckPreconditionAsync(this.AlternativeTargetScenePrecondition.Value, player))
             {
