@@ -207,5 +207,19 @@ namespace Uchu.Core
         public List<UnlockedEmote> UnlockedEmotes { get; set; }
         
         public List<CharacterFlag> Flags { get; set; }
+
+        public float? SpawnPositionX { get; set; }
+        
+        public float? SpawnPositionY { get; set; }
+        
+        public float? SpawnPositionZ { get; set; }
+        
+        public float? SpawnRotationW { get; set; }
+
+        public float? SpawnRotationX { get; set; }
+        
+        public float? SpawnRotationY { get; set; }
+        
+        public float? SpawnRotationZ { get; set; }
     }
 }

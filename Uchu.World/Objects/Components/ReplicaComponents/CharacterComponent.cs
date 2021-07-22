@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -100,6 +101,18 @@ namespace Uchu.World
             Lh = character.Lh;
             Rh = character.Rh;
             Name = character.Name;
+            
+            // Set the initial spawn location if one is defined.
+            if (character.SpawnPositionX.HasValue && character.SpawnPositionY.HasValue &&
+                character.SpawnPositionZ.HasValue)
+            {
+                Transform.Position = new Vector3(character.SpawnPositionX.Value, character.SpawnPositionY.Value, character.SpawnPositionZ.Value);
+            }
+            if (character.SpawnRotationW.HasValue && character.SpawnRotationX.HasValue &&
+                character.SpawnRotationY.HasValue && character.SpawnRotationZ.HasValue)
+            {
+                Transform.Rotation = new Quaternion(character.SpawnRotationX.Value, character.SpawnRotationY.Value, character.SpawnRotationZ.Value, character.SpawnRotationW.Value);
+            }
         }
         
         /// <summary>
