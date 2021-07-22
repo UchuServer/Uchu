@@ -199,13 +199,13 @@ namespace Uchu.World
             character.Rh = Rh;
             character.Name = Name;
             character.SpawnLocationName = SpawnLocationName;
-            character.SpawnPositionX = SpawnPosition.X;
-            character.SpawnPositionY = SpawnPosition.Y;
-            character.SpawnPositionZ = SpawnPosition.Z;
-            character.SpawnRotationW = SpawnRotation.W;
-            character.SpawnRotationX = SpawnRotation.X;
-            character.SpawnRotationY = SpawnRotation.Y;
-            character.SpawnRotationZ = SpawnRotation.Z;
+            character.SpawnPositionX = (SpawnPosition == default ? (float?) null : SpawnPosition.X);
+            character.SpawnPositionY = (SpawnPosition == default ? (float?) null : SpawnPosition.Y);
+            character.SpawnPositionZ = (SpawnPosition == default ? (float?) null : SpawnPosition.Z);
+            character.SpawnRotationW = (SpawnRotation == default ? (float?) null : SpawnRotation.W);
+            character.SpawnRotationX = (SpawnRotation == default ? (float?) null : SpawnRotation.X);
+            character.SpawnRotationY = (SpawnRotation == default ? (float?) null : SpawnRotation.Y);
+            character.SpawnRotationZ = (SpawnRotation == default ? (float?) null : SpawnRotation.Z);
 
             // Save all newly unlocked emotes
             foreach (var newlyUnlockedEmoteId in Emotes.Where(emoteId => 
