@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.StandardScripts.Base.SurvivalConfiguration;
 using Uchu.World;
+using Uchu.World.Social;
 
 namespace Uchu.StandardScripts.Base
 {
@@ -140,6 +141,7 @@ namespace Uchu.StandardScripts.Base
             // TODO: self:MiniGameSetTeam{playerID = msg.playerID, teamID = 1} (Teams don't function as expected in Uchu yet)
             
             // Set up the player UI.
+            UiHelper.StateAsync(player, "Survival");
             this.SetNetworkVar("Define_Player_To_UI", player);
             if (!this.GetNetworkVar<bool>("wavesStarted"))
             {
