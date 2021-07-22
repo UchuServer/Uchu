@@ -106,12 +106,14 @@ namespace Uchu.World
             if (character.SpawnPositionX.HasValue && character.SpawnPositionY.HasValue &&
                 character.SpawnPositionZ.HasValue)
             {
-                Transform.Position = new Vector3(character.SpawnPositionX.Value, character.SpawnPositionY.Value, character.SpawnPositionZ.Value);
+                SpawnPosition = new Vector3(character.SpawnPositionX.Value, character.SpawnPositionY.Value, character.SpawnPositionZ.Value);
+                Transform.Position = SpawnPosition;
             }
             if (character.SpawnRotationW.HasValue && character.SpawnRotationX.HasValue &&
                 character.SpawnRotationY.HasValue && character.SpawnRotationZ.HasValue)
             {
-                Transform.Rotation = new Quaternion(character.SpawnRotationX.Value, character.SpawnRotationY.Value, character.SpawnRotationZ.Value, character.SpawnRotationW.Value);
+                SpawnRotation = new Quaternion(character.SpawnRotationX.Value, character.SpawnRotationY.Value, character.SpawnRotationZ.Value, character.SpawnRotationW.Value);
+                Transform.Rotation = SpawnRotation;
             }
         }
         
@@ -179,6 +181,13 @@ namespace Uchu.World
             character.Lh = Lh;
             character.Rh = Rh;
             character.Name = Name;
+            character.SpawnPositionX = SpawnPosition.X;
+            character.SpawnPositionY = SpawnPosition.Y;
+            character.SpawnPositionZ = SpawnPosition.Z;
+            character.SpawnRotationW = SpawnRotation.W;
+            character.SpawnRotationX = SpawnRotation.X;
+            character.SpawnRotationY = SpawnRotation.Y;
+            character.SpawnRotationZ = SpawnRotation.Z;
 
             // Save all newly unlocked emotes
             foreach (var newlyUnlockedEmoteId in Emotes.Where(emoteId => 
@@ -222,6 +231,10 @@ namespace Uchu.World
         public long GuildId { get; set; } = -1;
 
         public string GuildName { get; set; }
+        
+        public Vector3 SpawnPosition { get; set; }
+        
+        public Quaternion SpawnRotation { get; set; }
 
         public override ComponentId Id => ComponentId.CharacterComponent;
         
