@@ -371,12 +371,14 @@ namespace Uchu.World
         /// Teleports the player to a different position
         /// </summary>
         /// <param name="position">The position to teleport the player to</param>
-        public void Teleport(Vector3 position, bool ignore = false)
+        public void Teleport(Vector3 position, Quaternion? rotation = null, bool ignore = false)
         {
             Message(new TeleportMessage
             {
                 Associate = this,
+                SetRotation = rotation != null,
                 Position = position,
+                Rotation = rotation?? Quaternion.Identity,
                 IgnoreY = ignore
             });
         }
