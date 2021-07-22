@@ -208,6 +208,9 @@ namespace Uchu.Core
         
         public List<CharacterFlag> Flags { get; set; }
 
+        [MaxLength(33)]
+        public string SpawnLocationName { get; set; }
+        
         public float? SpawnPositionX { get; set; }
         
         public float? SpawnPositionY { get; set; }
