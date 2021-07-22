@@ -2,6 +2,7 @@ using System.Linq;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Services;
 
 namespace Uchu.World
 {
@@ -17,7 +18,7 @@ namespace Uchu.World
         /// Precondition required for landing at the
         /// alternative scene.
         /// </summary>
-        public string AlternativeTargetScenePrecondition { get; set; }
+        public int? AlternativeTargetScenePrecondition { get; set; }
         
         /// <summary>
         /// Target scene (spawn location) for landing if the
@@ -38,8 +39,11 @@ namespace Uchu.World
                 if (rocketLaunchpadComponent != default)
                 {
                     this.TargetScene = rocketLaunchpadComponent.TargetScene;
-                    this.AlternativeTargetScenePrecondition = rocketLaunchpadComponent.AltLandingPrecondition;
                     this.AlternativeTargetScene = rocketLaunchpadComponent.AltLandingSpawnPointName;
+                    if (int.TryParse(rocketLaunchpadComponent.AltLandingPrecondition, out var altLandingPrecondition))
+                    {
+                        this.AlternativeTargetScenePrecondition = altLandingPrecondition;
+                    }
                 }
                 
                 // Listen for the player requesting to launch.
@@ -51,7 +55,7 @@ namespace Uchu.World
         /// Launches a player.
         /// </summary>
         /// <param name="player">Player who requested launching.</param>
-        public void OnInteract(Player player)
+        public async void OnInteract(Player player)
         {
             // Get the player rocket.
             var rocket = player.GetComponent<InventoryManagerComponent>()[InventoryType.Models].Items.FirstOrDefault(
@@ -77,7 +81,15 @@ namespace Uchu.World
             if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
                 return;
             characterComponent.LandingByRocket = true;
-            characterComponent.SpawnLocationName = this.TargetScene;
+            if (this.AlternativeTargetScene != default && this.AlternativeTargetScenePrecondition.HasValue &&
+                await Requirements.CheckPreconditionAsync(this.AlternativeTargetScenePrecondition.Value, player))
+            {
+                characterComponent.SpawnLocationName = this.AlternativeTargetScene;
+            }
+            else
+            {
+                characterComponent.SpawnLocationName = this.TargetScene;
+            }
         }
     }
 }
