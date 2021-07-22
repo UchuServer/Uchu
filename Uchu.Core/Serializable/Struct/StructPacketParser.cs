@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
+using System.Threading;
 using RakDotNet.IO;
 
 namespace Uchu.Core
@@ -16,6 +17,12 @@ namespace Uchu.Core
         private static readonly Dictionary<Type, List<IPacketProperty>> CachePacketProperties = new Dictionary<Type, List<IPacketProperty>>();
 
         /// <summary>
+        /// Semaphore for accessing CachePacketProperties. In practice,
+        /// state corruption was being logged.
+        /// </summary>
+        private static readonly SemaphoreSlim CachePacketPropertiesSemaphore = new SemaphoreSlim(1);
+        
+        /// <summary>
         /// Returns a list of packet properties for writing and reading packets.
         /// 
         /// </summary>
@@ -25,6 +32,7 @@ namespace Uchu.Core
         public static List<IPacketProperty> GetPacketProperties(Type type)
         {
             // Populate the cache entry if needed.
+            CachePacketPropertiesSemaphore.Wait();
             if (!CachePacketProperties.ContainsKey(type))
             {
                 // Create the list to store the packet properties.
@@ -77,6 +85,7 @@ namespace Uchu.Core
                 // Store the packet properties.
                 CachePacketProperties[type] = packetProperties;
             }
+            CachePacketPropertiesSemaphore.Release();
             
             // Return the cache entry.
             return CachePacketProperties[type];
