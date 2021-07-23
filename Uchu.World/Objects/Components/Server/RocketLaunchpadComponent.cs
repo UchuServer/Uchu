@@ -33,7 +33,7 @@ namespace Uchu.World
         {
             Listen(OnStart, () =>
             {
-                // Load the laucnhpad information.
+                // Load the launchpad information.
                 var componentId = GameObject.Lot.GetComponentId(ComponentId.RocketLaunchComponent);
                 var rocketLaunchpadComponent = ClientCache.Find<RocketLaunchpadControlComponent>(componentId);
                 if (rocketLaunchpadComponent != default)
