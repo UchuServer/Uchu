@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -100,6 +101,37 @@ namespace Uchu.World
             Lh = character.Lh;
             Rh = character.Rh;
             Name = character.Name;
+            SpawnLocationName = character.SpawnLocationName;
+            
+            // Set the initial spawn location if one is defined.
+            if (SpawnLocationName != default)
+            {
+                // Get the respawn location object.
+                var spawnLocationObject = Zone.GameObjects.FirstOrDefault(o =>
+                    o.Settings.ContainsKey("respawnname") && (string) o.Settings["respawnname"] == SpawnLocationName);
+                if (spawnLocationObject == default) return;
+                
+                // Load based on the spawn location.
+                SpawnPosition = spawnLocationObject.Transform.Position;
+                SpawnRotation = spawnLocationObject.Transform.Rotation;
+                Transform.Position = SpawnPosition;
+                Transform.Rotation = SpawnRotation;
+                SpawnLocationName = null;
+            } else {
+                // Load the last spawn point.
+                if (character.SpawnPositionX.HasValue && character.SpawnPositionY.HasValue &&
+                    character.SpawnPositionZ.HasValue)
+                {
+                    SpawnPosition = new Vector3(character.SpawnPositionX.Value, character.SpawnPositionY.Value, character.SpawnPositionZ.Value);
+                    Transform.Position = SpawnPosition;
+                }
+                if (character.SpawnRotationW.HasValue && character.SpawnRotationX.HasValue &&
+                    character.SpawnRotationY.HasValue && character.SpawnRotationZ.HasValue)
+                {
+                    SpawnRotation = new Quaternion(character.SpawnRotationX.Value, character.SpawnRotationY.Value, character.SpawnRotationZ.Value, character.SpawnRotationW.Value);
+                    Transform.Rotation = SpawnRotation;
+                }
+            }
         }
         
         /// <summary>
@@ -166,6 +198,14 @@ namespace Uchu.World
             character.Lh = Lh;
             character.Rh = Rh;
             character.Name = Name;
+            character.SpawnLocationName = SpawnLocationName;
+            character.SpawnPositionX = (SpawnPosition == default ? (float?) null : SpawnPosition.X);
+            character.SpawnPositionY = (SpawnPosition == default ? (float?) null : SpawnPosition.Y);
+            character.SpawnPositionZ = (SpawnPosition == default ? (float?) null : SpawnPosition.Z);
+            character.SpawnRotationW = (SpawnRotation == default ? (float?) null : SpawnRotation.W);
+            character.SpawnRotationX = (SpawnRotation == default ? (float?) null : SpawnRotation.X);
+            character.SpawnRotationY = (SpawnRotation == default ? (float?) null : SpawnRotation.Y);
+            character.SpawnRotationZ = (SpawnRotation == default ? (float?) null : SpawnRotation.Z);
 
             // Save all newly unlocked emotes
             foreach (var newlyUnlockedEmoteId in Emotes.Where(emoteId => 
@@ -209,6 +249,12 @@ namespace Uchu.World
         public long GuildId { get; set; } = -1;
 
         public string GuildName { get; set; }
+        
+        public string SpawnLocationName { get; set; }
+        
+        public Vector3 SpawnPosition { get; set; }
+        
+        public Quaternion SpawnRotation { get; set; }
 
         public override ComponentId Id => ComponentId.CharacterComponent;
         

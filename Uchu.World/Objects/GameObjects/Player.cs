@@ -485,7 +485,13 @@ namespace Uchu.World
             if (UchuServer.Port == serverInformation.Port)
                 return;
             
-            GetComponent<CharacterComponent>().LastZone = zoneId;
+            // Reset the spawns so they don't persist to the next world and cause the player to go out of bounds.
+            if (this.TryGetComponent<CharacterComponent>(out var characterComponent))
+            {
+                characterComponent.LastZone = zoneId;
+                characterComponent.SpawnPosition = default;
+                characterComponent.SpawnRotation = default;
+            }
             await GetComponent<SaveComponent>().SaveAsync(false);
             
             Message(new ServerRedirectionPacket
