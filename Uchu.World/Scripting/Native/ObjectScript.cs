@@ -197,25 +197,12 @@ namespace Uchu.World.Scripting.Native
                 }
                 
                 // Store the object.
-                if (value is bool boolValue)
+                if (this.GameObject.TryGetComponent<LuaScriptComponent>(out var component))
                 {
-                    newValue = boolValue ? 1 : 0;
-                    if (this.GameObject.TryGetComponent<LuaScriptComponent>(out var component))
-                    {
-                        component.Data ??= new LegoDataDictionary();
-                        component.Data.Add(name, newValue, 7);
-                    }
-                    ldf.Add(name, newValue, 7);
+                    component.Data ??= new LegoDataDictionary();
+                    component.Data.Add(name, newValue);
                 }
-                else
-                {
-                    if (this.GameObject.TryGetComponent<LuaScriptComponent>(out var component))
-                    {
-                        component.Data ??= new LegoDataDictionary();
-                        component.Data.Add(name, newValue);
-                    }
-                    ldf.Add(name, newValue);
-                }
+                ldf.Add(name, newValue);
             }
         }
         

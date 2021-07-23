@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Uchu.Core;
@@ -252,7 +253,14 @@ namespace Uchu.StandardScripts.Base
                 // Set the final time, notify the clients, and end the game.
                 var finalTime = this.ActivityTimerGetCurrentTime("ClockTick");
                 this.SetActivityValue(player, 1, finalTime);
-                // TODO: self:NotifyClientZoneObject{name = 'Player_Died', paramObj = msg.playerID, rerouteID = msg.playerID, param1 = finalTime, paramStr = tostring(checkAllPlayersDead())}
+                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage()
+                {
+                    Associate = this.GameObject,
+                    Name = "Player_Died",
+                    ParamObj = player,
+                    ParamStr = this.CheckAllPlayersDead() ? "true" : "false",
+                    Param1 = (int) finalTime,
+                });
                 this.GameOver(player);
             }
             else
@@ -451,7 +459,14 @@ namespace Uchu.StandardScripts.Base
                 // Get the values.
                 var timeVar = this.GetActivityValue(player, 1);
                 var scoreVar = this.GetActivityValue(player, 0);
-                // TODO: self:NotifyClientZoneObject{name = 'Update_ScoreBoard', paramObj = playerID, paramStr = tostring(scoreVar), param1 = timeVar}
+                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage()
+                {
+                    Associate = this.GameObject,
+                    Name = "Update_ScoreBoard",
+                    ParamObj = player,
+                    ParamStr = scoreVar.ToString(CultureInfo.InvariantCulture),
+                    Param1 = (int) scoreVar,
+                });
                 
                 // Resurrect the player.
                 if (player.TryGetComponent<DestructibleComponent>(out var destructibleComponent))
