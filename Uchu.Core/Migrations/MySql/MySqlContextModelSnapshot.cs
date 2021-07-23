@@ -126,6 +126,31 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<long>("ShirtStyle")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("SpawnLocationName")
+                        .HasMaxLength(33)
+                        .HasColumnType("varchar(33)");
+
+                    b.Property<float?>("SpawnPositionX")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnPositionY")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnPositionZ")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnRotationW")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnRotationX")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnRotationY")
+                        .HasColumnType("float");
+
+                    b.Property<float?>("SpawnRotationZ")
+                        .HasColumnType("float");
+
                     b.Property<long>("TotalArmorPowerUpsCollected")
                         .HasColumnType("bigint");
 
