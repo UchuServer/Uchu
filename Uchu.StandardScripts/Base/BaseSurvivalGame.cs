@@ -404,10 +404,10 @@ namespace Uchu.StandardScripts.Base
             // Return false if 1 player is alive.
             foreach (var player in this._players)
             {
-                if (!player.TryGetComponent<DestroyableComponent>(out var destroyableComponent)) continue;
-                if (destroyableComponent.Health > 0)
+                if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) continue;
+                if (destructibleComponent.Alive)
                 {
-                    return true;
+                    return false;
                 }
             }
             
