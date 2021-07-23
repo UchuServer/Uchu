@@ -15,5 +15,11 @@ namespace Uchu.World.Systems.Behaviors
             StartAction = await GetBehavior("action");
             UseTarget = await GetParameter<int>("use_target");
         }
+        public override void ExecuteStart(BehaviorExecutionParameters parameters)
+        {
+            if (parameters.EnclosedContext != default){
+                parameters.EnclosedContext.End.Invoke();
+            }
+        }
     }
 }

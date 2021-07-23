@@ -32,6 +32,11 @@ namespace Uchu.World.Systems.Behaviors
         public ExecutionBranchContext BranchContext { get; set; }
 
         /// <summary>
+        /// If the behavior Starts, extra information for execution in the branch
+        /// </summary>
+        public ExecutionEnclosedContext EnclosedContext { get; set; }
+
+        /// <summary>
         /// Returns the context as a NpcContext, can cause a NullReference if the context can't be casted.
         /// </summary>
         public NpcExecutionContext NpcContext

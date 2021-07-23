@@ -198,6 +198,8 @@ namespace Uchu.World
 
         public Event OnDeath { get; }
 
+        public Event OnAttacked { get; }
+
         protected DestroyableComponent()
         {
             OnHealthChanged = new Event<uint, int>();
@@ -288,6 +290,8 @@ namespace Uchu.World
         {
             LatestDamageSource = source;
             LatestEffect = effectHandler;
+
+            OnAttacked.Invoke();
 
             if (Shielded) return;
 

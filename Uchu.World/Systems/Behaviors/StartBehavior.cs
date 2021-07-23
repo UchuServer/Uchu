@@ -32,6 +32,7 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void ExecuteStart(StartBehaviorExecutionParameters parameters)
         {
+            parameters.EnclosedContext = new ExecutionEnclosedContext();
             Action.ExecuteStart(parameters.Parameters);
         }
     }
