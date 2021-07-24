@@ -8,7 +8,7 @@ using Timer = System.Timers.Timer;
 
 namespace Uchu.World
 {
-    public class MovingPlatformComponent : StructReplicaComponent<MovingPlatformSerialization,MovingPlatformSerialization>
+    public class MovingPlatformComponent : StructReplicaComponent<MovingPlatformSerialization>
     {
         /// <summary>
         ///     Current timer.

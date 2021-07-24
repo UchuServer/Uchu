@@ -8,7 +8,7 @@ using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
 {
-    public class BaseCombatAiComponent : StructReplicaComponent<BaseCombatAISerialization,BaseCombatAISerialization>
+    public class BaseCombatAiComponent : StructReplicaComponent<BaseCombatAISerialization>
     {
         public bool PerformingAction { get; set; }
 
