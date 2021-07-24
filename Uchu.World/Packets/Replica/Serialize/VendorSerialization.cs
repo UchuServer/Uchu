@@ -1,9 +1,13 @@
+using Uchu.Core;
+
 namespace Uchu.World
 {
     public struct VendorSerialization
     {
-        public bool UnknownFlag1 { get; set; }
-        public bool UnknownFlag2 { get; set; }
-        public bool UnknownFlag3 { get; set; }
+        public bool HasVendorInfo { get; set; }
+        [Requires("HasVendorInfo")]
+        public bool HasStandardItems { get; set; }
+        [Requires("HasVendorInfo")]
+        public bool HasMulticostItems { get; set; }
     }
 }

@@ -44,9 +44,9 @@ namespace Uchu.World
         public override VendorSerialization GetConstructPacket()
         {
             var packet = base.GetConstructPacket();
-            packet.UnknownFlag1 = true;
-            packet.UnknownFlag2 = true;
-            packet.UnknownFlag3 = false;
+            packet.HasVendorInfo = true;
+            packet.HasStandardItems = true;
+            packet.HasMulticostItems = false;
             return packet;
         }
         
