@@ -9,7 +9,7 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
-    public class VendorComponent : StructReplicaComponent<VendorSerialization,VendorSerialization>
+    public class VendorComponent : StructReplicaComponent<VendorSerialization>
     {
         public override ComponentId Id => ComponentId.VendorComponent;
         
