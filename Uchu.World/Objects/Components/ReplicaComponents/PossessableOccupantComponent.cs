@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public class PossessableOccupantComponent : StructReplicaComponent<PossessableOccupantSerialization,PossessableOccupantSerialization>
+    public class PossessableOccupantComponent : StructReplicaComponent<PossessableOccupantSerialization>
     {
         public override ComponentId Id => ComponentId.Component107;
 
