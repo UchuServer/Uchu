@@ -34,7 +34,7 @@ namespace Uchu.Core
         /// <param name="writtenProperties">Properties that were previously written.</param>
         public override void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
-            if (!writtenProperties.ContainsKey(this._propertyToCheck))
+            if (writtenProperties == null || !writtenProperties.ContainsKey(this._propertyToCheck))
                 return;
 
             if (!RequiredValues.Any(value => object.Equals(value, writtenProperties[this._propertyToCheck]))) return;
@@ -50,7 +50,7 @@ namespace Uchu.Core
         /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
         public override void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
-            if (!readProperties.ContainsKey(this._propertyToCheck))
+            if (readProperties == null || !readProperties.ContainsKey(this._propertyToCheck))
                 return;
 
             if (!RequiredValues.Any(value => object.Equals(value, readProperties[this._propertyToCheck]))) return;
