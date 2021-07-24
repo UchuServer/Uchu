@@ -4,15 +4,14 @@ namespace Uchu.World
 {
     public struct PossessableSerialization
     {
-        public bool UnknownFlag1 { get; set; }
+        public bool PossessableInfoExists { get; set; }
         [Default]
-        [Requires("UnknownFlag1")]
+        [Requires("PossessableInfoExists")]
         public GameObject Driver { get; set; }
-        [Requires("UnknownFlag1")]
-        public bool UnknownFlag2 { get; set; }
-        [Requires("UnknownFlag2")]
-        public uint UnknownUint { get; set; }
-        [Requires("UnknownFlag1")]
-        public bool UnknownFlag3 { get; set; }
+        [Requires("PossessableInfoExists")]
+        [Default]
+        public uint Animation { get; set; }
+        [Requires("PossessableInfoExists")]
+        public bool ImmediateDepossess { get; set; }
     }
 }

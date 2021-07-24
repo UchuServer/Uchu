@@ -13,9 +13,8 @@ namespace Uchu.World
         public override PossessableSerialization GetPacket()
         {
             var packet = base.GetPacket();
-            packet.UnknownFlag1 = true;
-            packet.UnknownFlag2 = false;
-            packet.UnknownFlag3 = false;
+            packet.PossessableInfoExists = true;
+            packet.ImmediateDepossess = false;
             return packet;
         }
     }
