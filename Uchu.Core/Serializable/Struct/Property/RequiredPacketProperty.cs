@@ -9,7 +9,7 @@ namespace Uchu.Core
         /// <summary>
         /// Values for the property that are required to write.
         /// </summary>
-        public readonly List<object> RequiredValues = new List<object>();
+        public List<object> RequiredValues { get; } = new List<object>();
 
         /// <summary>
         /// Property that is checked.

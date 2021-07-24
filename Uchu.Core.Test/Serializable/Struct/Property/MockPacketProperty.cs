@@ -9,7 +9,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property { get; }
+        public PropertyInfo StructProperty { get; }
 
         /// <summary>
         /// Whether the mock packet property was written.
@@ -28,7 +28,7 @@ namespace Uchu.Core.Test.Serializable.Structure.Property
         /// <param name="property">Property to write.</param>
         public MockPacketProperty(PropertyInfo property)
         {
-            this.Property = property;
+            this.StructProperty = property;
         }
 
         /// <summary>

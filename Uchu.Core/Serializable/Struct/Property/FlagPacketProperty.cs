@@ -25,7 +25,7 @@ namespace Uchu.Core
         public FlagPacketProperty(IPacketProperty packetProperty, object valueToIgnore) : base(packetProperty)
         {
             this._valueToIgnore = valueToIgnore;
-            this._defaultValue = this.Property.PropertyType.IsValueType ? Activator.CreateInstance(this.Property.PropertyType) : null;
+            this._defaultValue = this.StructProperty.PropertyType.IsValueType ? Activator.CreateInstance(this.StructProperty.PropertyType) : null;
         }
         
         /// <summary>
@@ -36,7 +36,7 @@ namespace Uchu.Core
         /// <param name="writtenProperties">Properties that were previously written.</param>
         public override void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
-            var value = this.Property.GetValue(objectToWrite);
+            var value = this.StructProperty.GetValue(objectToWrite);
             if (object.Equals(value, this._valueToIgnore) || object.Equals(value?.ToString(), this._valueToIgnore) || (_valueToIgnore == null && object.Equals(value, this._defaultValue)) )
             {
                 writer?.WriteBit(false);
@@ -60,8 +60,8 @@ namespace Uchu.Core
             // Read the value if the bit is set to true.
             if (reader == null || !reader.ReadBit())
             {
-                if (_valueToIgnore == null || !this.Property.CanWrite) return;
-                this.Property.SetValue(objectToWrite, Convert.ChangeType(_valueToIgnore, this.Property.PropertyType));
+                if (_valueToIgnore == null || !this.StructProperty.CanWrite) return;
+                this.StructProperty.SetValue(objectToWrite, Convert.ChangeType(_valueToIgnore, this.StructProperty.PropertyType));
             }
             else
             {

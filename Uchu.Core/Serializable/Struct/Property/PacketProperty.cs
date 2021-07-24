@@ -14,18 +14,16 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property { get; }
+        public PropertyInfo StructProperty { get; }
 
         /// <summary>
         /// Special cases for written property types.
         /// </summary>
-        public static Dictionary<Type, Action<BitWriter, object>> CustomWriters = new Dictionary<Type, Action<BitWriter, object>>()
+        public static Dictionary<Type, Action<BitWriter, object>> CustomWriters { get; }  =
+            new Dictionary<Type, Action<BitWriter, object>>()
             {
                 {
-                    typeof(bool), (writer, o) =>
-                    {
-                        writer.WriteBit((bool) o);
-                    }
+                    typeof(bool), (writer, o) => { writer.WriteBit((bool) o); }
                 },
                 {
                     typeof(LegoDataDictionary), (writer, o) =>
@@ -49,11 +47,11 @@ namespace Uchu.Core
                     }
                 },
             };
-        
+
         /// <summary>
         /// Special cases for read property types.
         /// </summary>
-        public static Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>> CustomReaders = new Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>>()
+        public static Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>> CustomReaders { get; } = new Dictionary<Type, Func<BitReader, Dictionary<string, object>, object>>()
         {
             {
                 typeof(bool), (reader, context) =>
@@ -107,7 +105,7 @@ namespace Uchu.Core
         public PacketProperty(PropertyInfo property)
         {
             // Store the property.
-            this.Property = property;
+            this.StructProperty = property;
             
             // Get the type to write.
             if (property == null) return;
@@ -154,7 +152,7 @@ namespace Uchu.Core
         public void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
             // Write the property.
-            var value = this.Property.GetValue(objectToWrite);
+            var value = this.StructProperty.GetValue(objectToWrite);
             if (this._propertyType.IsArray)
             {
                 // Write the length if the type is defined.
@@ -194,7 +192,7 @@ namespace Uchu.Core
             // Store the written property.
             if (writtenProperties != null)
             {
-                writtenProperties[this.Property.Name] = value;
+                writtenProperties[this.StructProperty.Name] = value;
             }
         }
 
@@ -238,15 +236,15 @@ namespace Uchu.Core
             }
             
             // Set the value.
-            if (this.Property.CanWrite)
+            if (this.StructProperty.CanWrite)
             {
-                this.Property.SetValue(objectToWrite, value);
+                this.StructProperty.SetValue(objectToWrite, value);
             }
 
             // Store the written property.
             if (readProperties != null)
             {
-                readProperties[this.Property.Name] = this.Property.GetValue(objectToWrite);
+                readProperties[this.StructProperty.Name] = this.StructProperty.GetValue(objectToWrite);
             }
         }
     }

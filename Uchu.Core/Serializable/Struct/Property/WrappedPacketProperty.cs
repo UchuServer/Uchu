@@ -9,7 +9,7 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property => WrappedProperty.Property;
+        public PropertyInfo StructProperty => WrappedProperty.StructProperty;
 
         /// <summary>
         /// Packet property that is wrapped.

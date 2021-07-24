@@ -10,7 +10,7 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property => null;
+        public PropertyInfo StructProperty => null;
         
         /// <summary>
         /// Message identifier of the packet.

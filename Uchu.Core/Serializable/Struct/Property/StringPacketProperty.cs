@@ -9,17 +9,17 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property { get; }
+        public PropertyInfo StructProperty { get; }
 
         /// <summary>
         /// Length of the string to read or write.
         /// </summary>
-        public int _length = 0;
+        private int _length = 0;
         
         /// <summary>
         /// Whether the encoded string is "wide" (2 bytes per character).
         /// </summary>
-        public bool _isWide = false;
+        private bool _isWide = false;
         
         /// <summary>
         /// Creates the string packet property.
@@ -28,7 +28,7 @@ namespace Uchu.Core
         public StringPacketProperty(PropertyInfo property)
         {
             // Store the property.
-            this.Property = property;
+            this.StructProperty = property;
             
             // Determine the string properties.
             if (property.GetCustomAttribute(typeof(LengthAttribute)) is LengthAttribute length)
@@ -50,7 +50,7 @@ namespace Uchu.Core
         public void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
             // Write the string.
-            var value = (string) this.Property.GetValue(objectToWrite) ?? "";
+            var value = (string) this.StructProperty.GetValue(objectToWrite) ?? "";
             var length = this._length;
             if (length == 0)
             {
@@ -62,7 +62,7 @@ namespace Uchu.Core
             // Store the written string.
             if (writtenProperties != null)
             {
-                writtenProperties[this.Property.Name] = value;
+                writtenProperties[this.StructProperty.Name] = value;
             }
         }
 
@@ -82,12 +82,12 @@ namespace Uchu.Core
                 length = reader.Read<int>();
             }
             var value = reader.ReadString(length, this._isWide);
-            this.Property.SetValue(objectToWrite, value);
+            this.StructProperty.SetValue(objectToWrite, value);
 
             // Store the written property.
             if (readProperties != null)
             {
-                readProperties[this.Property.Name] = this.Property.GetValue(objectToWrite);
+                readProperties[this.StructProperty.Name] = this.StructProperty.GetValue(objectToWrite);
             }
         }
     }

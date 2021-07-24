@@ -9,7 +9,7 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        PropertyInfo Property { get; }
+        PropertyInfo StructProperty { get; }
 
         /// <summary>
         /// Writes the property to the writer.

@@ -11,7 +11,7 @@ namespace Uchu.Core
         /// <summary>
         /// Property that is read from or read to.
         /// </summary>
-        public PropertyInfo Property { get; }
+        public PropertyInfo StructProperty { get; }
 
         /// <summary>
         /// Creates the packet property.
@@ -20,7 +20,7 @@ namespace Uchu.Core
         public NiQuaternionProperty(PropertyInfo property)
         {
             // Store the property.
-            this.Property = property;
+            this.StructProperty = property;
         }
         
         /// <summary>
@@ -32,13 +32,13 @@ namespace Uchu.Core
         public void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
             // Write the property.
-            var value = this.Property.GetValue(objectToWrite);
+            var value = this.StructProperty.GetValue(objectToWrite);
             writer.WriteNiQuaternion((Quaternion) value);
 
             // Store the written property.
             if (writtenProperties != null)
             {
-                writtenProperties[this.Property.Name] = value;
+                writtenProperties[this.StructProperty.Name] = value;
             }
         }
 
@@ -53,15 +53,15 @@ namespace Uchu.Core
         {
             // Set the value.
             object value = reader.ReadNiQuaternion();
-            if (this.Property.CanWrite)
+            if (this.StructProperty.CanWrite)
             {
-                this.Property.SetValue(objectToWrite, value);
+                this.StructProperty.SetValue(objectToWrite, value);
             }
 
             // Store the written property.
             if (readProperties != null)
             {
-                readProperties[this.Property.Name] = this.Property.GetValue(objectToWrite);
+                readProperties[this.StructProperty.Name] = this.StructProperty.GetValue(objectToWrite);
             }
         }
     }
