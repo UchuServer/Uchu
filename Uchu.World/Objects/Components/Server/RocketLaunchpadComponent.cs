@@ -69,7 +69,8 @@ namespace Uchu.World
 
             // Equip the rocket.
             rocket.WorldState = ObjectWorldState.Attached;
-            player.Message(new FireClientEventMessage
+            
+            player.Message(new FireEventClientSideMessage
             {
                 Associate = GameObject,
                 Arguments = "RocketEquipped",

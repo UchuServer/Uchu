@@ -2,8 +2,10 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    public class ClientRailMovementReadyMessage : ClientGameMessage
+    [ClientGameMessagePacketStruct]
+    public struct ClientRailMovementReadyMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.ClientRailMovementReady;
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.ClientRailMovementReady;
     }
 }

@@ -50,8 +50,8 @@ namespace Uchu.World
         internal Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-            OnFireServerEvent = new Event<string, FireServerEventMessage>();
-            OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
+            OnFireServerEvent = new Event<string, FireEventServerSideMessage>();
+            OnReadyForUpdatesEvent = new Event<ReadyForUpdatesMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
@@ -231,9 +231,9 @@ namespace Uchu.World
         
         #region properties
 
-        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+        public Event<string, FireEventServerSideMessage> OnFireServerEvent { get; }
         
-        public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
+        public Event<ReadyForUpdatesMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
         
@@ -313,17 +313,17 @@ namespace Uchu.World
                 Associate = this,
                 Animation = celebration.Animation,
                 BackgroundObject = new Lot(celebration.BackgroundObject.Value),
-                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
+                CameraPathLot = new Lot(celebration.CameraPathLOT.Value),
                 CeleLeadIn = celebration.CeleLeadIn.Value,
                 CeleLeadOut = celebration.CeleLeadOut.Value,
-                CelebrationID = celebration.Id.Value,
+                CelebrationId = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconID = celebration.IconID ?? default,
+                IconId = (uint) (celebration.IconID ?? default),
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,
                 PathNodeName = celebration.PathNodeName,
-                SoundGUID = celebration.SoundGUID,
+                SoundGuid = celebration.SoundGUID,
                 SubText = celebration.SubText
             }); // Start effect
         }
@@ -436,6 +436,17 @@ namespace Uchu.World
         /// </summary>
         /// <param name="packet">The packet to send</param>
         public void Message(ISerializable packet)
+        {
+            if (Id == ObjectId.Invalid)
+                return;
+            Connection.Send(packet);
+        }
+        
+        /// <summary>
+        /// Sends a packet to a player
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        public void Message<T>(T packet) where T : struct
         {
             if (Id == ObjectId.Invalid)
                 return;
