@@ -227,7 +227,7 @@ namespace Uchu.World.Scripting.Native
                 var message = new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
-                    LDFInText = ldf.ToString(),
+                    Data = ldf,
                 };
                 
                 // Send the players the message.
@@ -518,7 +518,7 @@ namespace Uchu.World.Scripting.Native
                 player.Message(new PlayAnimationMessage
                 {
                     Associate = this.GameObject,
-                    AnimationsId = this._animation.Name,
+                    AnimationId = this._animation.Name,
                     PlayImmediate = this._animation.PlayImmediate,
                 });
             }

@@ -164,7 +164,7 @@ namespace Uchu.StandardScripts.Base
                 {
                     Associate = player,
                     GameId = 5,
-                    QueryType = 1,
+                    QueryType = QueryType.TopCharacter,
                 });
                 player.Message(new NotifyClientObjectMessage()
                 {
@@ -190,7 +190,7 @@ namespace Uchu.StandardScripts.Base
             {
                 Associate = player,
                 GameId = 5,
-                QueryType = 2,
+                QueryType = QueryType.TopSocial,
                 ResultsEnd = 10,
                 ResultsStart = 0,
                 Target = default,

@@ -1,14 +1,9 @@
-using RakDotNet.IO;
-
 namespace Uchu.World
 {
-    public class ActivityStartMessage : ServerGameMessage
+    [ServerGameMessagePacketStruct]
+    public struct ActivityStartMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.ActivityStart;
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            
-        }
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.ActivityStart;
     }
 }
