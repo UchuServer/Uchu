@@ -83,13 +83,20 @@ namespace Uchu.World
                 {
                     if (!(component.GameObject is Player player)) return;
 
+                    var position = (Vector3) GameObject.Settings["rspPos"];
                     var rotation = (Vector4) GameObject.Settings["rspRot"];
+                    var newRotation = new Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W);
+                    if (player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                    {
+                        characterComponent.SpawnPosition = position;
+                        characterComponent.SpawnRotation = newRotation;
+                    }
 
                     player.Message(new PlayerReachedRespawnCheckpointMessage
                     {
                         Associate = player,
-                        Position = (Vector3) GameObject.Settings["rspPos"],
-                        Rotation = new Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W),
+                        Position = position,
+                        Rotation = newRotation,
                     });
                 });
             }

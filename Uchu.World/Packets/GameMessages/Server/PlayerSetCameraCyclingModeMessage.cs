@@ -1,21 +1,14 @@
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class PlayerSetCameraCyclingModeMessage : ServerGameMessage
-    {
-        public override GameMessageId GameMessageId => GameMessageId.PlayerSetCameraCyclingMode;
-
-        public bool AllowCyclingWhileDeadOnly { get; set; }
-
-        public CyclingMode CyclingMode { get; set; }
-
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(AllowCyclingWhileDeadOnly);
-
-            if (writer.Flag(CyclingMode != CyclingMode.AllowCycleTeammates))
-                writer.Write((uint) CyclingMode);
-        }
-    }
+	[ServerGameMessagePacketStruct]
+	public struct PlayerSetCameraCyclingModeMessage
+	{
+		public GameObject Associate { get; set; }
+		public GameMessageId GameMessageId => GameMessageId.PlayerSetCameraCyclingMode;
+		public bool AllowCyclingWhileDeadOnly { get; set; }
+		[Default]
+		public CyclingMode CyclingMode { get; set; }
+	}
 }

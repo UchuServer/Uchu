@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public enum CyclingMode : uint
+    public enum CyclingMode
     {
         AllowCycleTeammates,
         DisallowCycling,

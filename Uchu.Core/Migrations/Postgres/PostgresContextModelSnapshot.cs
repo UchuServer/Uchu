@@ -15,9 +15,9 @@ namespace Uchu.Core.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityByDefaultColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "5.0.2");
+                .HasAnnotation("ProductVersion", "5.0.5")
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
@@ -128,6 +128,31 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("ShirtStyle")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("SpawnLocationName")
+                        .HasMaxLength(33)
+                        .HasColumnType("character varying(33)");
+
+                    b.Property<float?>("SpawnPositionX")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnPositionY")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnPositionZ")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnRotationW")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnRotationX")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnRotationY")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("SpawnRotationZ")
+                        .HasColumnType("real");
+
                     b.Property<long>("TotalArmorPowerUpsCollected")
                         .HasColumnType("bigint");
 
@@ -230,7 +255,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
@@ -250,7 +275,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<int>("AttachmentCount")
                         .HasColumnType("integer");
@@ -292,7 +317,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("CurrencyA")
                         .HasColumnType("bigint");
@@ -316,7 +341,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("Author")
                         .HasColumnType("bigint");
@@ -340,7 +365,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("BestFriend")
                         .HasColumnType("boolean");
@@ -361,7 +386,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("BestFriend")
                         .HasColumnType("boolean");
@@ -401,7 +426,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint");
@@ -463,7 +488,7 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
@@ -492,7 +517,7 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<int>("MissionId")
                         .HasColumnType("integer");
@@ -512,7 +537,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<int>("Count")
                         .HasColumnType("integer");
@@ -558,7 +583,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("ItemId")
                         .HasColumnType("bigint");
@@ -581,7 +606,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
@@ -601,7 +626,7 @@ namespace Uchu.Core.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .UseIdentityByDefaultColumn();
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("Banned")
                         .HasColumnType("boolean");

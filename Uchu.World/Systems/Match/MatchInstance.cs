@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Core;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
@@ -159,19 +159,25 @@ namespace Uchu.World.Systems.Match
                     if (!_playersSentTime.Contains(player))
                     {
                         _playersSentTime.Add(player);
-                        player.Message(new MatchUpdate()
+                        player.Message(new MatchUpdateMessage
                         {
                             Associate = player,
-                            Data = $"time=3:{(_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0}",
+                            Data = new LegoDataDictionary
+                            {
+                                {"time", (_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0, 3},
+                            },
                             Type = MatchUpdateType.SetInitialTime,
                         });
                     }
                     else if (remainingTimeChanged)
                     {
-                        player.Message(new MatchUpdate()
+                        player.Message(new MatchUpdateMessage
                         {
                             Associate = player,
-                            Data = $"time=3:{(_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0}",
+                            Data = new LegoDataDictionary
+                            {
+                                {"time", (_countdown.Interval - _countdownStopwatch.ElapsedMilliseconds)/1000.0, 3},
+                            },
                             Type = MatchUpdateType.SetTime,
                         });
                     }
@@ -213,26 +219,34 @@ namespace Uchu.World.Systems.Match
         public void AddPlayer(Player player)
         {
             // Send the response.
-            player.Message(new MatchResponse()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
-                Response = 0,
+                Response = MatchResponseType.Ok,
             });
             
             // Store the player and send the player.
             _players.Add(player);
             foreach (var otherPlayer in _players)
             {
-                player.Message(new MatchUpdate()
+                player.Message(new MatchUpdateMessage
                 {
                     Associate = player,
-                    Data = $"player=9:{otherPlayer.Id}\nplayerName=0:{otherPlayer.Name}",
+                    Data = new LegoDataDictionary
+                    {
+                        {"player", player.Id, 9},
+                        {"nplayerName", player.Name, 0},
+                    },
                     Type = MatchUpdateType.PlayerAdded,
                 });
-                otherPlayer.Message(new MatchUpdate()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
-                    Data = $"player=9:{player.Id}\nplayerName=0:{player.Name}",
+                    Data = new LegoDataDictionary
+                    {
+                        {"player", player.Id, 9},
+                        {"nplayerName", player.Name, 0},
+                    },
                     Type = MatchUpdateType.PlayerAdded,
                 });
             }
@@ -247,10 +261,10 @@ namespace Uchu.World.Systems.Match
                 await Task.Delay(1000);
                 foreach (var otherPlayer in _players)
                 {
-                    player.Message(new MatchUpdate()
+                    player.Message(new MatchUpdateMessage
                     {
                         Associate = player,
-                        Data = $"player=9:{otherPlayer.Id}",
+                        Data = new LegoDataDictionary {{"player", player.Id, 9}},
                         Type = (_readyPlayers.Contains(otherPlayer) ? MatchUpdateType.PlayerReady : MatchUpdateType.PlayerNotReady),
                     });
                 }
@@ -269,10 +283,10 @@ namespace Uchu.World.Systems.Match
             _playersSentTime.Remove(player);
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdate()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
-                    Data = $"player=9:{player.Id}",
+                    Data = new LegoDataDictionary {{"player", player.Id, 9}},
                     Type = MatchUpdateType.PlayerRemoved,
                 });
             }
@@ -289,17 +303,17 @@ namespace Uchu.World.Systems.Match
         {
             // Send to all players that the player is ready.
             _readyPlayers.Add(player);
-            player.Message(new MatchResponse()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
                 Response = 0,
             });
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdate()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
-                    Data = $"player=9:{player.Id}",
+                    Data = new LegoDataDictionary {{"player", player.Id, 9}},
                     Type = MatchUpdateType.PlayerReady,
                 });
             }
@@ -316,17 +330,17 @@ namespace Uchu.World.Systems.Match
         {
             // Send to all players that the player is no longer ready.
             _readyPlayers.Remove(player);
-            player.Message(new MatchResponse()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
                 Response = 0,
             });
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdate()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
-                    Data = $"player=9:{player.Id}",
+                    Data = new LegoDataDictionary {{"player", player.Id, 9}},
                     Type = MatchUpdateType.PlayerNotReady,
                 });
             }
