@@ -20,7 +20,7 @@ namespace Uchu.StandardScripts.VentureExplorer
             Listen(gameObject.OnInteract, player =>
             {
                 // Terminate the interaction.
-                player.Message(new ServerTerminateInteractionMessage()
+                player.Message(new ServerTerminateInteractionMessage
                 {
                     Associate = player,
                     Terminator = gameObject,

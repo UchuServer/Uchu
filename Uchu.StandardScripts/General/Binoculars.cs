@@ -29,7 +29,7 @@ namespace Uchu.StandardScripts.General
                 if (player.TryGetComponent<CharacterComponent>(out var character))
                 {
                     await character.SetFlagAsync(flag, true);
-                    player.Message(new FireEventClientSideMessage()
+                    player.Message(new FireEventClientSideMessage
                     {
                         Associate = gameObject,
                         Arguments = "achieve",

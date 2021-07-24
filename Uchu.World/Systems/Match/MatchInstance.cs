@@ -159,7 +159,7 @@ namespace Uchu.World.Systems.Match
                     if (!_playersSentTime.Contains(player))
                     {
                         _playersSentTime.Add(player);
-                        player.Message(new MatchUpdateMessage()
+                        player.Message(new MatchUpdateMessage
                         {
                             Associate = player,
                             Data = new LegoDataDictionary
@@ -171,7 +171,7 @@ namespace Uchu.World.Systems.Match
                     }
                     else if (remainingTimeChanged)
                     {
-                        player.Message(new MatchUpdateMessage()
+                        player.Message(new MatchUpdateMessage
                         {
                             Associate = player,
                             Data = new LegoDataDictionary
@@ -219,7 +219,7 @@ namespace Uchu.World.Systems.Match
         public void AddPlayer(Player player)
         {
             // Send the response.
-            player.Message(new MatchResponseMessage()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
                 Response = MatchResponseType.Ok,
@@ -229,7 +229,7 @@ namespace Uchu.World.Systems.Match
             _players.Add(player);
             foreach (var otherPlayer in _players)
             {
-                player.Message(new MatchUpdateMessage()
+                player.Message(new MatchUpdateMessage
                 {
                     Associate = player,
                     Data = new LegoDataDictionary
@@ -239,7 +239,7 @@ namespace Uchu.World.Systems.Match
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });
-                otherPlayer.Message(new MatchUpdateMessage()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
                     Data = new LegoDataDictionary
@@ -261,7 +261,7 @@ namespace Uchu.World.Systems.Match
                 await Task.Delay(1000);
                 foreach (var otherPlayer in _players)
                 {
-                    player.Message(new MatchUpdateMessage()
+                    player.Message(new MatchUpdateMessage
                     {
                         Associate = player,
                         Data = new LegoDataDictionary {{"player", player.Id, 9}},
@@ -283,7 +283,7 @@ namespace Uchu.World.Systems.Match
             _playersSentTime.Remove(player);
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdateMessage()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
                     Data = new LegoDataDictionary {{"player", player.Id, 9}},
@@ -303,14 +303,14 @@ namespace Uchu.World.Systems.Match
         {
             // Send to all players that the player is ready.
             _readyPlayers.Add(player);
-            player.Message(new MatchResponseMessage()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
                 Response = 0,
             });
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdateMessage()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
                     Data = new LegoDataDictionary {{"player", player.Id, 9}},
@@ -330,14 +330,14 @@ namespace Uchu.World.Systems.Match
         {
             // Send to all players that the player is no longer ready.
             _readyPlayers.Remove(player);
-            player.Message(new MatchResponseMessage()
+            player.Message(new MatchResponseMessage
             {
                 Associate = player,
                 Response = 0,
             });
             foreach (var otherPlayer in _players)
             {
-                otherPlayer.Message(new MatchUpdateMessage()
+                otherPlayer.Message(new MatchUpdateMessage
                 {
                     Associate = otherPlayer,
                     Data = new LegoDataDictionary {{"player", player.Id, 9}},

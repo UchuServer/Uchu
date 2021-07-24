@@ -363,7 +363,7 @@ namespace Uchu.World
         {
             if (Owner is Player player && Inventory != null)
             {
-                player.Message(new AddItemToInventoryClientSyncMessage()
+                player.Message(new AddItemToInventoryClientSyncMessage
                 {
                     Associate = player,
                     Item = this,
