@@ -225,7 +225,7 @@ namespace Uchu.World
                 Pet = GameObject,
             });
             
-            player.Message(new RegisterPetDBIdMessage
+            player.Message(new RegisterPetDbIdMessage
             {
                 Associate = player,
                 Pet = pet,

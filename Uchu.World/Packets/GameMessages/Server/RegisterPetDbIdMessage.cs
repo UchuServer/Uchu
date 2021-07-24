@@ -1,7 +1,7 @@
 namespace Uchu.World
 {
 	[ServerGameMessagePacketStruct]
-	public struct RegisterPetDBIdMessage
+	public struct RegisterPetDbIdMessage
 	{
 		public GameObject Associate { get; set; }
 		public GameMessageId GameMessageId => GameMessageId.RegisterPetDBId;
