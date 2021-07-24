@@ -1,6 +1,6 @@
 namespace Uchu.World
 {
-    public struct SwitchSerialize
+    public struct SwitchSerialization
     {
         public bool State { get; set; }
     }

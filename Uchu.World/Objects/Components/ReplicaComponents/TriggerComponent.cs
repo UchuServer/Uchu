@@ -11,7 +11,7 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
-    public class TriggerComponent : StructReplicaComponent<TriggerSerialize>
+    public class TriggerComponent : StructReplicaComponent<TriggerSerialization>
     {
         public Trigger Trigger { get; private set; }
         
@@ -288,7 +288,7 @@ namespace Uchu.World
         /// Creates the packet for the replica component.
         /// </summary>
         /// <returns>The packet for the replica component.</returns>
-        public override TriggerSerialize GetPacket()
+        public override TriggerSerialization GetPacket()
         {
             var packet = base.GetPacket();
             if (Trigger != default)

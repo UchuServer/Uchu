@@ -7,7 +7,7 @@ using Uchu.Physics;
 
 namespace Uchu.World
 {
-    public class SwitchComponent : StructReplicaComponent<SwitchSerialize>
+    public class SwitchComponent : StructReplicaComponent<SwitchSerialization>
     {
         public bool State { get; set; }
 
