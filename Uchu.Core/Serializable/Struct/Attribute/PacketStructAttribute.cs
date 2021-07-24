@@ -4,7 +4,7 @@ using RakDotNet;
 namespace Uchu.Core
 {
     /// <summary>
-    /// Indicates a bit flag is used for a property.
+    /// Header information about a packet.
     /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     public class PacketStructAttribute : Attribute
