@@ -8,7 +8,6 @@ namespace Uchu.World
         public bool UnknownFlag1 { get; set; }
         public bool HasPath { get; set; }
         [Wide]
-        // [Default]
         [StoreLengthAs(typeof(ushort))]
         [Requires("HasPath")]
         public string PathName { get; set; }
