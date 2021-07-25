@@ -169,10 +169,7 @@ namespace Uchu.World.Services
         private static bool ItemEquipped(Preconditions preconditions, Player player)
         {
             var inventory = player.GetComponent<InventoryComponent>();
-
-            var lot = preconditions.TargetLOT.InterpretCollection().First();
-
-            return inventory.HasEquipped(lot);
+            return preconditions.TargetLOT.InterpretCollection().Any(lot => inventory.HasEquipped(lot));
         }
 
         private static bool ItemNotEquipped(Preconditions preconditions, Player player)

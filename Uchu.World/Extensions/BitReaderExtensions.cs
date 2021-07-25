@@ -9,7 +9,7 @@ namespace Uchu.World
         {
             var id = @this.Read<long>();
 
-            if (id == -1) return null;
+            if (id <= 0) return null;
 
             var gameObject = zone.GameObjects.FirstOrDefault(g => g.Id == id);
 

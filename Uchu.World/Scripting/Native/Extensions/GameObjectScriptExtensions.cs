@@ -7,8 +7,10 @@ namespace Uchu.World.Scripting.Native
             @this.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = @this,
-                AnimationsId = animation,
-                PlayImmediate = playImmediate
+                AnimationId = animation,
+                PlayImmediate = playImmediate,
+                Priority = 0.4f,
+                Scale = 1,
             });
         }
 
@@ -20,6 +22,9 @@ namespace Uchu.World.Scripting.Native
                 EffectId = id,
                 EffectType = type,
                 Name = name,
+                Priority = 1,
+                Scale = 1,
+                Serialize = true,
             }, excluded);
         }
 

@@ -21,7 +21,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     await character.SetFlagAsync(74, true);
                     foreach (var spider in this.GetGroup("cagedSpider"))
                     {
-                        player.Message(new FireClientEventMessage
+                        player.Message(new FireEventClientSideMessage
                         {
                             Associate = spider,
                             Sender = player,

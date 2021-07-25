@@ -160,10 +160,10 @@ namespace Uchu.World.Scripting.Native
                 this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
+                    Data = new LegoDataDictionary()
                     {
                         {name, value}
-                    }.ToString(),
+                    },
                 });
             });
         }
@@ -185,10 +185,10 @@ namespace Uchu.World.Scripting.Native
                 this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
+                    Data = new LegoDataDictionary()
                     {
                         {name, value, type}
-                    }.ToString(),
+                    },
                 });
             });
         }
@@ -436,8 +436,10 @@ namespace Uchu.World.Scripting.Native
                 player.Message(new PlayAnimationMessage
                 {
                     Associate = this.GameObject,
-                    AnimationsId = this._animation.Name,
+                    AnimationId = this._animation.Name,
                     PlayImmediate = this._animation.PlayImmediate,
+                    Priority = 0.4f,
+                    Scale = 1,
                 });
             }
             
@@ -450,6 +452,9 @@ namespace Uchu.World.Scripting.Native
                     EffectId = effect.Id,
                     EffectType = effect.Type,
                     Name = effect.Name,
+                    Priority = 1,
+                    Scale = 1,
+                    Serialize = true,
                 });
             }
         }

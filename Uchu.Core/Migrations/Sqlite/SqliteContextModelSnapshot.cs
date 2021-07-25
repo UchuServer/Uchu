@@ -125,6 +125,31 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.Property<long>("ShirtStyle")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("SpawnLocationName")
+                        .HasMaxLength(33)
+                        .HasColumnType("TEXT");
+
+                    b.Property<float?>("SpawnPositionX")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnPositionY")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnPositionZ")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnRotationW")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnRotationX")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnRotationY")
+                        .HasColumnType("REAL");
+
+                    b.Property<float?>("SpawnRotationZ")
+                        .HasColumnType("REAL");
+
                     b.Property<long>("TotalArmorPowerUpsCollected")
                         .HasColumnType("INTEGER");
 
