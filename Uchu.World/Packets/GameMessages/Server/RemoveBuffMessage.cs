@@ -3,9 +3,12 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
-    public class RemoveBuffMessage : ServerGameMessage
+    public struct RemoveBuffMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.RemoveBuff;
+
+        public GameObject Associate { get; set; }
+        
+        public GameMessageId GameMessageId => GameMessageId.RemoveBuff;
 
         public bool FromRemoveBehavior { get; set; }
 
@@ -15,12 +18,5 @@ namespace Uchu.World
 
         public uint BuffID { get; set; }
         
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(FromRemoveBehavior);
-            writer.WriteBit(FromUnequip);
-            writer.WriteBit(RemoveImmunity);
-            writer.Write(BuffID);
-        }
     }
 }

@@ -1,11 +1,14 @@
 using System;
 using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class AddBuffMessage : ServerGameMessage
+    public struct AddBuffMessage
     {
-        public override GameMessageId GameMessageId => GameMessageId.AddBuff;
+        public GameObject Associate { get; set; }
+        
+        public GameMessageId GameMessageId => GameMessageId.AddBuff;
 
         public bool AddedByTeammate { get; set; }
 
@@ -15,13 +18,15 @@ namespace Uchu.World
 
         public bool CancelOnDamaged { get; set; }
 
-        public bool CancelOnDeath { get; set; } = true; //default in docs
+        [Default(true)]
+        public bool CancelOnDeath { get; set; } //default true in docs
 
         public bool CancelOnLogout { get; set; }
 
         public bool CancelOnMove { get; set; }
 
-        public bool CancelOnRemoveBuff { get; set; } = true; //default in docs, also ????
+        [Default(true)]
+        public bool CancelOnRemoveBuff { get; set; } //default true in docs, also ????
 
         public bool CancelOnUi { get; set; }
 
@@ -42,27 +47,5 @@ namespace Uchu.World
         public uint BuffID { get; set; }
 
         public uint DurationMS { get; set; }
-        
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.WriteBit(AddedByTeammate);
-            writer.WriteBit(ApplyOnTeammates);
-            writer.WriteBit(CancelOnDamageAbsorbRanOut);
-            writer.WriteBit(CancelOnDamaged);
-            writer.WriteBit(CancelOnDeath);
-            writer.WriteBit(CancelOnLogout);
-            writer.WriteBit(CancelOnMove);
-            writer.WriteBit(CancelOnRemoveBuff);
-            writer.WriteBit(CancelOnUi);
-            writer.WriteBit(CancelOnUnequip);
-            writer.WriteBit(CancelOnZone);
-            writer.WriteBit(IgnoreImmunities);
-            writer.WriteBit(IsImmunity);
-            writer.WriteBit(UseRefCount);
-            writer.Write(Caster);
-            writer.Write(AddedBy);
-            writer.Write(BuffID);
-            writer.Write(DurationMS);
-        }
     }
 }
