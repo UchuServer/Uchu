@@ -14,6 +14,14 @@ namespace Uchu.StandardScripts.NexusTower
                 var inventory = player.GetComponent<InventoryManagerComponent>();
                 inventory.RemoveLotAsync(Lot.MaelstromInfectedBrick, 25);
                 inventory.AddLotAsync(Lot.FactionTokenProxy, 5);
+
+                // Terminate interaction so the player can interact again.
+                player.Message(new TerminateInteractionMessage
+                {
+                    Associate = player,
+                    Terminator = gameObject,
+                    Type = TerminateType.FromInteraction,
+                });
             });
         }
     }

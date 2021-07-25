@@ -19,6 +19,14 @@ namespace Uchu.StandardScripts.NexusTower
                         player, gameObject, gameObject.Transform.Position + Vector3.UnitY * 3);
                     Start(loot);
                 }
+
+                // Terminate interaction so the player can interact again.
+                player.Message(new TerminateInteractionMessage
+                {
+                    Associate = player,
+                    Terminator = gameObject,
+                    Type = TerminateType.FromInteraction,
+                });
             });
         }
     }
