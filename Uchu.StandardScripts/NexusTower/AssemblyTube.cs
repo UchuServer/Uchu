@@ -41,7 +41,7 @@ namespace Uchu.StandardScripts.NexusTower
                 {
                     Associate = player,
                     LockPlayer = true,
-                    Path = cinematic,
+                    PathName = cinematic,
                     LeadIn = 0.5f,
                 });
 

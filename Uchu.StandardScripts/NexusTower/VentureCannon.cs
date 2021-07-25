@@ -34,7 +34,7 @@ namespace Uchu.StandardScripts.NexusTower
                 {
                     Associate = player,
                     LockPlayer = true,
-                    Path = enterCinematic,
+                    PathName = enterCinematic,
                 });
 
                 player.Animate(enterAnimation);
