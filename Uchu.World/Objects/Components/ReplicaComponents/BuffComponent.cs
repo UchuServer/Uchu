@@ -48,16 +48,12 @@ namespace Uchu.World
 
             if (buffInfo.CancelOnDamaged)
             {
-                Delegate cancelOnDamaged1 = null;
-                Delegate cancelOnDamaged2 = null;
-                Action<uint, int> damaged = ((newValue, delta) => {
-                    if (delta >= 0) return;
-                    ReleaseListener(cancelOnDamaged1);
-                    ReleaseListener(cancelOnDamaged2);
+                Delegate cancelOnDamaged = null;
+                cancelOnDamaged = Listen(destroyable.OnAttacked, () => 
+                {
+                    ReleaseListener(cancelOnDamaged);
                     RemoveBuff(buffInfo);
                 });
-                cancelOnDamaged1 = Listen(destroyable.OnArmorChanged, damaged);
-                cancelOnDamaged2 = Listen(destroyable.OnHealthChanged, damaged);
             }
 
             if (buffInfo.DurationSecs != 0)
