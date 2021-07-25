@@ -742,8 +742,9 @@ namespace Uchu.World.Handlers.Commands
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = associate,
-                AnimationsId = arguments[0],
-                Scale = scale
+                AnimationId = arguments[0],
+                Priority = 0.4f,
+                Scale = scale,
             });
 
             return $"Attempting to play {arguments[0]} animation";
@@ -796,7 +797,8 @@ namespace Uchu.World.Handlers.Commands
                     CantTurn = true,
                     CantUseItem = true,
                     CantEquip = true,
-                    CantInteract = true
+                    CantInteract = true,
+                    IgnoreImmunity = true,
                 });
 
                 var _ = Task.Run(async () =>

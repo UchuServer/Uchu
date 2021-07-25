@@ -528,7 +528,8 @@ namespace Uchu.World
                     player.Message(new ModifyLegoScoreMessage
                     {
                         Associate = player,
-                        Score = UniverseScore - oldScore
+                        Score = UniverseScore - oldScore,
+                        SourceType = LootType.Mission,
                     });
                 }
             }
@@ -583,7 +584,8 @@ namespace Uchu.World
                     Associate = player,
                     Score = RequiredUniverseScore == long.MaxValue 
                         ? UniverseScore 
-                        : RequiredUniverseScore - UniverseScore
+                        : RequiredUniverseScore - UniverseScore,
+                    SourceType = LootType.Mission,
                 });
             }
         }

@@ -1,21 +1,16 @@
 using System.Numerics;
-using RakDotNet.IO;
+using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class PlayerReachedRespawnCheckpointMessage: ServerGameMessage
-
-    {
-        public override GameMessageId GameMessageId => GameMessageId.PlayerReachedRespawnCheckpoint;
-
-        public Vector3 Position { get; set; }
-
-        public Quaternion Rotation { get; set; }
-
-        public override void SerializeMessage(BitWriter writer)
-        {
-            writer.Write(Position);
-            writer.Write(Rotation);
-        }
-    }
+	[ServerGameMessagePacketStruct]
+	public struct PlayerReachedRespawnCheckpointMessage
+	{
+		public GameObject Associate { get; set; }
+		public GameMessageId GameMessageId => GameMessageId.PlayerReachedRespawnCheckpoint;
+		public Vector3 Position { get; set; }
+		[Default]
+		[NiQuaternion]
+		public Quaternion Rotation { get; set; }
+	}
 }
