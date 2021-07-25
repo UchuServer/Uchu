@@ -53,25 +53,25 @@ namespace Uchu.Core.Test.Serializable.Structure
         {
             // Test a packet with a single property.
             var singlePropertyPacket = StructPacketParser.GetPacketProperties(typeof(SinglePropertyPacket));
-            Assert.AreEqual(singlePropertyPacket.Count, 1);
-            Assert.IsTrue(singlePropertyPacket[0] is PacketProperty);
-            Assert.AreEqual(singlePropertyPacket[0].StructProperty, typeof(SinglePropertyPacket).GetProperty("TestProperty1"));
+            Assert.AreEqual(singlePropertyPacket.Properties.Count, 1);
+            Assert.IsTrue(singlePropertyPacket.Properties[0] is PacketProperty);
+            Assert.AreEqual(singlePropertyPacket.Properties[0].StructProperty, typeof(SinglePropertyPacket).GetProperty("TestProperty1"));
             
             // Test a packet with multiple properties.
             var multiplePropertyPacket = StructPacketParser.GetPacketProperties(typeof(MultiplePropertyPacket));
-            Assert.AreEqual(multiplePropertyPacket.Count, 6);
-            Assert.IsTrue(multiplePropertyPacket[0] is PacketProperty);
-            Assert.AreEqual(multiplePropertyPacket[0].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty1"));
-            Assert.IsTrue(multiplePropertyPacket[1] is PacketProperty);
-            Assert.AreEqual(multiplePropertyPacket[1].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty2"));
-            Assert.IsTrue(multiplePropertyPacket[2] is StringPacketProperty);
-            Assert.AreEqual(multiplePropertyPacket[2].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty3"));
-            Assert.IsTrue(multiplePropertyPacket[3] is StringPacketProperty);
-            Assert.AreEqual(multiplePropertyPacket[3].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty4"));
-            Assert.IsTrue(multiplePropertyPacket[4] is PacketProperty);
-            Assert.AreEqual(multiplePropertyPacket[4].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty5"));
-            Assert.IsTrue(multiplePropertyPacket[5] is NiQuaternionProperty);
-            Assert.AreEqual(multiplePropertyPacket[5].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty6"));
+            Assert.AreEqual(multiplePropertyPacket.Properties.Count, 6);
+            Assert.IsTrue(multiplePropertyPacket.Properties[0] is PacketProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[0].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty1"));
+            Assert.IsTrue(multiplePropertyPacket.Properties[1] is PacketProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[1].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty2"));
+            Assert.IsTrue(multiplePropertyPacket.Properties[2] is StringPacketProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[2].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty3"));
+            Assert.IsTrue(multiplePropertyPacket.Properties[3] is StringPacketProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[3].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty4"));
+            Assert.IsTrue(multiplePropertyPacket.Properties[4] is PacketProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[4].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty5"));
+            Assert.IsTrue(multiplePropertyPacket.Properties[5] is NiQuaternionProperty);
+            Assert.AreEqual(multiplePropertyPacket.Properties[5].StructProperty, typeof(MultiplePropertyPacket).GetProperty("TestProperty6"));
         }
         
         /// <summary>
@@ -81,17 +81,17 @@ namespace Uchu.Core.Test.Serializable.Structure
         public void TestGetPacketPropertiesDefaults()
         {
             var hasFlagPropertyPacket = StructPacketParser.GetPacketProperties(typeof(DefaultPacket));
-            Assert.AreEqual(hasFlagPropertyPacket.Count, 5);
-            Assert.IsTrue(hasFlagPropertyPacket[0] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[0].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty1"));
-            Assert.IsTrue(hasFlagPropertyPacket[1] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[1].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty2"));
-            Assert.IsTrue(hasFlagPropertyPacket[2] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[2].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty3"));
-            Assert.IsTrue(hasFlagPropertyPacket[3] is FlagPacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[3].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty4"));
-            Assert.IsTrue(hasFlagPropertyPacket[4] is PacketProperty);
-            Assert.AreEqual(hasFlagPropertyPacket[4].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty5"));
+            Assert.AreEqual(hasFlagPropertyPacket.Properties.Count, 5);
+            Assert.IsTrue(hasFlagPropertyPacket.Properties[0] is FlagPacketProperty);
+            Assert.AreEqual(hasFlagPropertyPacket.Properties[0].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty1"));
+            Assert.IsTrue(hasFlagPropertyPacket.Properties[1] is FlagPacketProperty);
+            Assert.AreEqual(hasFlagPropertyPacket.Properties[1].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty2"));
+            Assert.IsTrue(hasFlagPropertyPacket.Properties[2] is FlagPacketProperty);
+            Assert.AreEqual(hasFlagPropertyPacket.Properties[2].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty3"));
+            Assert.IsTrue(hasFlagPropertyPacket.Properties[3] is FlagPacketProperty);
+            Assert.AreEqual(hasFlagPropertyPacket.Properties[3].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty4"));
+            Assert.IsTrue(hasFlagPropertyPacket.Properties[4] is PacketProperty);
+            Assert.AreEqual(hasFlagPropertyPacket.Properties[4].StructProperty, typeof(DefaultPacket).GetProperty("TestProperty5"));
         }
 
         /// <summary>

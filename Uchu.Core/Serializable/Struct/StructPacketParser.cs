@@ -14,7 +14,7 @@ namespace Uchu.Core
         /// Cache of the packet properties.
         /// These are compiled once and used for each read and write.
         /// </summary>
-        private static readonly Dictionary<Type, List<IPacketProperty>> CachePacketProperties = new Dictionary<Type, List<IPacketProperty>>();
+        private static readonly Dictionary<Type, StructPacketProperty> CachePacketProperties = new Dictionary<Type, StructPacketProperty>();
 
         /// <summary>
         /// Semaphore for accessing CachePacketProperties. In practice,
@@ -29,61 +29,13 @@ namespace Uchu.Core
         /// <param name="type">Type to check the properties of.</param>
         /// <returns>List of properties to write.</returns>
         /// <exception cref="InvalidOperationException">Properties are invalid.</exception>
-        public static List<IPacketProperty> GetPacketProperties(Type type)
+        public static StructPacketProperty GetPacketProperties(Type type)
         {
             // Populate the cache entry if needed.
             CachePacketPropertiesSemaphore.Wait();
             if (!CachePacketProperties.ContainsKey(type))
             {
-                // Create the list to store the packet properties.
-                var packetProperties = new List<IPacketProperty>();
-                
-                // Add the packet information.
-                if (type.GetCustomAttribute(typeof(PacketStructAttribute)) is PacketStructAttribute packetStruct)
-                {
-                    packetProperties.Add(new PacketInformation(packetStruct.MessageIdentifier, packetStruct.RemoteConnectionType, packetStruct.PacketId));
-                }
-                
-                // Convert the properties to PacketProperties.
-                foreach (var property in type.GetProperties())
-                {
-                    // Create the base packet property.
-                    IPacketProperty packetProperty = null;
-                    if (property.PropertyType == typeof(string))
-                    {
-                        packetProperty = new StringPacketProperty(property);
-                    }
-                    else if (property.PropertyType == typeof(Quaternion) && property.GetCustomAttribute<NiQuaternionAttribute>() != null)
-                    {
-                        packetProperty = new NiQuaternionProperty(property);
-                    } else
-                    {
-                        packetProperty = new PacketProperty(property);
-                    }
-                    if ((property.GetCustomAttribute(typeof(DefaultAttribute)) is DefaultAttribute defaultAttribute))
-                    {
-                        packetProperty = new FlagPacketProperty(packetProperty, defaultAttribute.ValueToIgnore);
-                    }
-                    
-                    // Wrap the required properties.
-                    var requiredProperties = new Dictionary<string, RequiredPacketProperty>();
-                    foreach (var requiredAttribute in property.GetCustomAttributes<RequiresAttribute>())
-                    {
-                        if (!requiredProperties.ContainsKey(requiredAttribute.PropertyName))
-                        {
-                            var requiredPacketProperty = new RequiredPacketProperty(packetProperty, requiredAttribute.PropertyName);
-                            requiredProperties.Add(requiredAttribute.PropertyName, requiredPacketProperty);
-                            packetProperty = requiredPacketProperty;
-                        }
-                        requiredProperties[requiredAttribute.PropertyName].RequiredValues.Add(requiredAttribute.ValueToRequire);
-                    }
-                    
-                    // Add the packet property.
-                    packetProperties.Add(packetProperty);
-                }
-
-                // Store the packet properties.
-                CachePacketProperties[type] = packetProperties;
+                CachePacketProperties[type] = new StructPacketProperty(type);
             }
             CachePacketPropertiesSemaphore.Release();
             
@@ -105,10 +57,7 @@ namespace Uchu.Core
 
             // Write the properties.
             var writtenProperties = new Dictionary<string, object>();
-            foreach (var property in GetPacketProperties(typeof(T)))
-            {
-                property.Write(packet, bitWriter, writtenProperties);
-            }
+            GetPacketProperties(typeof(T)).Write(packet, bitWriter, writtenProperties);
             
             // Return the stream.
             bitWriter.Dispose();
@@ -125,10 +74,7 @@ namespace Uchu.Core
         {
             // Write the properties.
             var writtenProperties = new Dictionary<string, object>();
-            foreach (var property in GetPacketProperties(typeof(T)))
-            {
-                property.Write(packet, bitWriter, writtenProperties);
-            }
+            GetPacketProperties(typeof(T)).Write(packet, bitWriter, writtenProperties);
         }
         
         /// <summary>
@@ -146,10 +92,7 @@ namespace Uchu.Core
             // Read the properties.
             var packet = Activator.CreateInstance(packetType);
             var writtenProperties = new Dictionary<string, object>();
-            foreach (var property in GetPacketProperties(packetType))
-            {
-                property.Read(packet, bitReader, writtenProperties, context);
-            }
+            GetPacketProperties(packetType).Read(packet, bitReader, writtenProperties, context);
             
             // Return the packet.
             bitReader.Dispose();
