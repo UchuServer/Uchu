@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Threading.Tasks;
-using InfectedRose.Luz;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -15,47 +14,68 @@ namespace Uchu.StandardScripts.NexusTower
             var group = (string) gameObject.Settings["teleGroup"];
             var cinematic = (string) gameObject.Settings["Cinematic"];
 
-            // All these must have a physics component to detect the player entering
+            // All these must have a physics component to detect the player entering.
             if (!gameObject.TryGetComponent<PhysicsComponent>(out var phys))
                 return;
 
             Listen(phys.OnEnter, other =>
             {
-                // Should only teleport players
+                // Should only teleport players.
                 if (!(other.GameObject is Player player))
                     return;
 
-                // Find teleporter target location
+                // Find teleporter target location.
                 var target = Zone.GameObjects.FirstOrDefault(obj => obj.Settings.TryGetValue("groupID", out var group2)
                                                        && ((string) group2).Split(";").Contains(group));
                 if (target == null)
                     return;
 
-                // Show camera path. Lock player so animation can't be canceled.
-                player.Message(new PlayCinematicMessage
+                // The player shouldn't be able to move during the animation and the teleportation.
+                player.Message(new SetStunnedMessage
                 {
                     Associate = player,
-                    LeadIn = 1f,
-                    LockPlayer = true,
-                    PathName = cinematic,
-                    StartTimeAdvance = -1f,
+                    Originator = gameObject,
+                    StateChangeType = StunState.Push,
+                    CantAttack = true,
+                    CantJump = true,
+                    CantMove = true,
+                    CantTurn = true,
                 });
 
+                // Show teleport animation.
                 player.Animate("paradoxdeath");
-                // paradox-teleport-in and nexusteleport also exist, don't know if they're used somewhere else
+                // paradox-teleport-in and nexusteleport also exist, don't know if they're used somewhere else.
 
-                // Default time in case camera path can't be found in luz file
-                var time = 1f;
-                // Find total camera path (cinematic) duration
-                if (Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(p =>
-                    p is LuzCameraPath && p.PathName == cinematic) is LuzCameraPath cameraPath)
-                    time = cameraPath.Waypoints.Sum(point => ((LuzCameraWaypoint) point).Time);
-
-                // At the end of the cinematic, rebuild the player at the target location
+                // At the end of the cinematic, rebuild the player at the target location.
                 Task.Run(async () =>
                 {
-                    await Task.Delay((int) (time * 1000) + 500);
+                    // Wait for the animation to complete.
+                    await Task.Delay(2000);
+
+                    // Teleport player to target location.
                     player.Teleport(target.Transform.Position);
+
+                    // Show camera path.
+                    player.Message(new PlayCinematicMessage
+                    {
+                        Associate = player,
+                        LockPlayer = true,
+                        PathName = cinematic,
+                    });
+
+                    // Un-stun player.
+                    player.Message(new SetStunnedMessage
+                    {
+                        Associate = player,
+                        Originator = gameObject,
+                        StateChangeType = StunState.Pop,
+                        CantAttack = true,
+                        CantJump = true,
+                        CantMove = true,
+                        CantTurn = true,
+                    });
+
+                    // Show rebuilding animation.
                     player.Animate("paradox-teleport-in");
                 });
             });
