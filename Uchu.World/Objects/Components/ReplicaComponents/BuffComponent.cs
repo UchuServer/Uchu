@@ -48,23 +48,16 @@ namespace Uchu.World
 
             if (buffInfo.CancelOnDamaged)
             {
-                // this looks ugly, maybe there's a better way to listen once
                 Delegate cancelOnDamaged1 = null;
                 Delegate cancelOnDamaged2 = null;
-                cancelOnDamaged1 = Listen(destroyable.OnArmorChanged, (newValue, delta) =>
-                {
+                Action<uint, int> damaged = ((newValue, delta) => {
                     if (delta >= 0) return;
                     ReleaseListener(cancelOnDamaged1);
                     ReleaseListener(cancelOnDamaged2);
                     RemoveBuff(buffInfo);
                 });
-                cancelOnDamaged2 = Listen(destroyable.OnHealthChanged, (newValue, delta) =>
-                {
-                    if (delta >= 0) return;
-                    ReleaseListener(cancelOnDamaged1);
-                    ReleaseListener(cancelOnDamaged2);
-                    RemoveBuff(buffInfo);
-                });
+                cancelOnDamaged1 = Listen(destroyable.OnArmorChanged, damaged);
+                cancelOnDamaged2 = Listen(destroyable.OnHealthChanged, damaged);
             }
 
             if (buffInfo.DurationSecs != 0)
@@ -77,6 +70,28 @@ namespace Uchu.World
             // if (buffInfo.CancelOnZone) ;
             // if (buffInfo.CancelOnUi) ;
             // if (buffInfo.CancelOnLogout) ;
+            if (GameObject is Player player){
+                player.Message(new AddBuffMessage {
+                    AddedByTeammate = false, //we don't know the source yet, how will this affect gameplay?
+                    ApplyOnTeammates = buffInfo.ApplyOnTeammates,
+                    CancelOnDamageAbsorbRanOut = false, //no var
+                    CancelOnDamaged = buffInfo.CancelOnDamaged,
+                    CancelOnDeath = buffInfo.CancelOnDeath,
+                    CancelOnLogout = buffInfo.CancelOnLogout,
+                    CancelOnMove = false, //no var
+                    CancelOnRemoveBuff = buffInfo.CancelOnRemoveBuff,
+                    CancelOnUi = buffInfo.CancelOnUi,
+                    CancelOnUnequip = buffInfo.CancelOnUnequip,
+                    CancelOnZone = buffInfo.CancelOnZone,
+                    IgnoreImmunities = false, //no var
+                    IsImmunity = false, //no var
+                    UseRefCount = buffInfo.UseRefCount,
+                    Caster = GameObject, //still don't know source
+                    AddedBy = GameObject, //i have zero clue what this is
+                    BuffID = buffInfo.BuffId,
+                    DurationMS = buffInfo.DurationSecs * 1000,
+                });
+            }
         }
 
         public bool HasBuff(uint buffId)
@@ -86,11 +101,27 @@ namespace Uchu.World
 
         public void RemoveBuff(BuffInfo buffInfo)
         {
+            if (GameObject is Player player){
+                player.Message(new RemoveBuffMessage {
+                    FromRemoveBehavior = false, //these three need to be investigated
+                    FromUnequip = false,
+                    RemoveImmunity = false,
+                    BuffID = buffInfo.BuffId
+                });
+            }
             _buffs.Remove(buffInfo);
         }
 
         public void RemoveBuffById(uint buffId)
         {
+            if (GameObject is Player player){
+                player.Message(new RemoveBuffMessage {
+                    FromRemoveBehavior = false,
+                    FromUnequip = false,
+                    RemoveImmunity = false,
+                    BuffID = buffId
+                });
+            }
             _buffs.Remove(_buffs.FirstOrDefault(buffInfo => buffInfo.BuffId == buffId));
         }
 
