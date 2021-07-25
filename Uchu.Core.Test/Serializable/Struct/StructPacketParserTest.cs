@@ -32,6 +32,7 @@ namespace Uchu.Core.Test.Serializable.Structure
         /// <summary>
         /// Packet with Default.
         /// </summary>
+        [Struct]
         public struct DefaultPacket
         {
             [Default]
@@ -43,6 +44,16 @@ namespace Uchu.Core.Test.Serializable.Structure
             [Default(4)]
             public int TestProperty4 { get; set; }
             public int TestProperty5 { get; set; }
+        }
+        
+        /// <summary>
+        /// Packet with a nested struct.
+        /// </summary>
+        public struct NestedPacket
+        {
+            public int Value { get; set; }
+            [Default]
+            public DefaultPacket SubPacket { get; set; }
         }
         
         /// <summary>
@@ -146,6 +157,69 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(packet.TestProperty3, 2);
             Assert.AreEqual(packet.TestProperty4, 4);
             Assert.AreEqual(packet.TestProperty5, 3);
+        }
+
+        /// <summary>
+        /// Tests WritePacket with a nested struct.
+        /// </summary>
+        [Test]
+        public void TestWritePacketNested()
+        {
+            // Create the test packet.
+            var packet = new NestedPacket()
+            {
+                Value = 2,
+                SubPacket = new DefaultPacket()
+                {
+                    TestProperty1 = Vector3.One,
+                    TestProperty2 = Vector3.Zero,
+                    TestProperty3 = 4,
+                    TestProperty4 = 4,
+                    TestProperty5 = 4,
+                }
+            };
+            
+            // Test writing the packet.
+            var reader = new BitReader(StructPacketParser.WritePacket(packet));
+            Assert.AreEqual(reader.Read<int>(), 2);
+            Assert.IsTrue(reader.ReadBit());
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<Vector3>(), Vector3.One);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 4);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 4);
+        }
+        
+        /// <summary>
+        /// Tests ReadPacket with a nest struct.
+        /// </summary>
+        [Test]
+        public void TestReadPacketNested()
+        {
+            // Write the data.
+            var stream = new MemoryStream();
+            var bitWriter = new BitWriter(stream);
+            bitWriter.Write<int>(1);
+            bitWriter.WriteBit(true);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<int>(2);
+            bitWriter.WriteBit(false);
+            bitWriter.Write<int>(3);
+
+            // Test reading the packet.
+            var packet = (NestedPacket) StructPacketParser.ReadPacket(typeof(NestedPacket), stream);
+            Assert.AreEqual(packet.Value, 1);
+            Assert.AreEqual(packet.SubPacket.TestProperty1, Vector3.One);
+            Assert.AreEqual(packet.SubPacket.TestProperty2, Vector3.One);
+            Assert.AreEqual(packet.SubPacket.TestProperty3, 2);
+            Assert.AreEqual(packet.SubPacket.TestProperty4, 4);
+            Assert.AreEqual(packet.SubPacket.TestProperty5, 3);
         }
     }
 }

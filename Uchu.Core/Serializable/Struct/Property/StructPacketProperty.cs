@@ -52,6 +52,10 @@ namespace Uchu.Core
                 {
                     packetProperty = new NiQuaternionProperty(property);
                 }
+                else if (property.PropertyType.IsValueType && property.PropertyType.GetCustomAttribute<StructAttribute>() != null)
+                {
+                    packetProperty = new StructPacketProperty(property);
+                }
                 else
                 {
                     packetProperty = new PacketProperty(property);
@@ -87,10 +91,17 @@ namespace Uchu.Core
         /// <param name="writtenProperties">Properties that were previously written.</param>
         public void Write(object objectToWrite, BitWriter writer, Dictionary<string, object> writtenProperties)
         {
+            // Convert the object if it is a property.
+            if (this.StructProperty != null)
+            {
+                objectToWrite = this.StructProperty.GetValue(objectToWrite);
+            }
+            
             // Write the properties.
+            var subWrittenProperties = new Dictionary<string, object>();
             foreach (var property in this.Properties)
             {
-                property.Write(objectToWrite, writer, writtenProperties);
+                property.Write(objectToWrite, writer, subWrittenProperties);
             }
 
             // Store the written string.
@@ -109,16 +120,25 @@ namespace Uchu.Core
         /// <param name="context">Properties that provide context for reading, such as world zone ids.</param>
         public void Read(object objectToWrite, BitReader reader, Dictionary<string, object> readProperties, Dictionary<string, object> context)
         {
+            // Convert the object if it is a property.
+            var baseObjectToWrite = objectToWrite;
+            if (this.StructProperty != null)
+            {
+                objectToWrite = Activator.CreateInstance(this.StructProperty.PropertyType);
+            }
+            
             // Read the struct.
+            var subReadProperties = new Dictionary<string, object>();
             foreach (var property in this.Properties)
             {
-                property.Read(objectToWrite, reader, readProperties, context);
+                property.Read(objectToWrite, reader, subReadProperties, context);
             }
 
             // Store the written property.
             if (readProperties != null && this.StructProperty != null)
             {
-                readProperties[this.StructProperty.Name] = this.StructProperty.GetValue(objectToWrite);
+                readProperties[this.StructProperty.Name] = objectToWrite;
+                this.StructProperty.SetValue(baseObjectToWrite, objectToWrite);
             }
         }
     }
