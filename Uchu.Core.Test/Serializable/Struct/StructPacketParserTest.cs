@@ -49,11 +49,13 @@ namespace Uchu.Core.Test.Serializable.Structure
         /// <summary>
         /// Packet with a nested struct.
         /// </summary>
+        [Struct]
         public struct NestedPacket
         {
             public int Value { get; set; }
             [Default]
             public DefaultPacket SubPacket { get; set; }
+            public DefaultPacket[] SubPackets { get; set; }
         }
         
         /// <summary>
@@ -176,6 +178,25 @@ namespace Uchu.Core.Test.Serializable.Structure
                     TestProperty3 = 4,
                     TestProperty4 = 4,
                     TestProperty5 = 4,
+                },
+                SubPackets = new DefaultPacket[]
+                {
+                    new DefaultPacket()
+                    {
+                        TestProperty1 = Vector3.One,
+                        TestProperty2 = Vector3.Zero,
+                        TestProperty3 = 5,
+                        TestProperty4 = 5,
+                        TestProperty5 = 5,
+                    },
+                    new DefaultPacket()
+                    {
+                        TestProperty1 = Vector3.One,
+                        TestProperty2 = Vector3.Zero,
+                        TestProperty3 = 6,
+                        TestProperty4 = 6,
+                        TestProperty5 = 6,
+                    },
                 }
             };
             
@@ -190,6 +211,25 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(reader.Read<int>(), 4);
             Assert.IsFalse(reader.ReadBit());
             Assert.AreEqual(reader.Read<int>(), 4);
+            Assert.AreEqual(reader.Read<int>(), 2);
+            
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<Vector3>(), Vector3.One);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 5);
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 5);
+            Assert.AreEqual(reader.Read<int>(), 5);
+            
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<Vector3>(), Vector3.One);
+            Assert.IsFalse(reader.ReadBit());
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 6);
+            Assert.IsTrue(reader.ReadBit());
+            Assert.AreEqual(reader.Read<int>(), 6);
+            Assert.AreEqual(reader.Read<int>(), 6);
         }
         
         /// <summary>
@@ -211,6 +251,24 @@ namespace Uchu.Core.Test.Serializable.Structure
             bitWriter.Write<int>(2);
             bitWriter.WriteBit(false);
             bitWriter.Write<int>(3);
+            bitWriter.Write<int>(2);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<int>(5);
+            bitWriter.WriteBit(false);
+            bitWriter.Write<int>(6);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<Vector3>(Vector3.One);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<int>(7);
+            bitWriter.WriteBit(true);
+            bitWriter.Write<int>(8);
+            bitWriter.Write<int>(9);
 
             // Test reading the packet.
             var packet = (NestedPacket) StructPacketParser.ReadPacket(typeof(NestedPacket), stream);
@@ -220,6 +278,17 @@ namespace Uchu.Core.Test.Serializable.Structure
             Assert.AreEqual(packet.SubPacket.TestProperty3, 2);
             Assert.AreEqual(packet.SubPacket.TestProperty4, 4);
             Assert.AreEqual(packet.SubPacket.TestProperty5, 3);
+            Assert.AreEqual(packet.SubPackets.Length, 2);
+            Assert.AreEqual(packet.SubPackets[0].TestProperty1, Vector3.One);
+            Assert.AreEqual(packet.SubPackets[0].TestProperty2, Vector3.One);
+            Assert.AreEqual(packet.SubPackets[0].TestProperty3, 5);
+            Assert.AreEqual(packet.SubPackets[0].TestProperty4, 4);
+            Assert.AreEqual(packet.SubPackets[0].TestProperty5, 6);
+            Assert.AreEqual(packet.SubPackets[1].TestProperty1, Vector3.One);
+            Assert.AreEqual(packet.SubPackets[1].TestProperty2, Vector3.One);
+            Assert.AreEqual(packet.SubPackets[1].TestProperty3, 7);
+            Assert.AreEqual(packet.SubPackets[1].TestProperty4, 8);
+            Assert.AreEqual(packet.SubPackets[1].TestProperty5, 9);
         }
     }
 }
