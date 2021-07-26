@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.StandardScripts.Base.SurvivalConfiguration;
@@ -303,7 +304,7 @@ namespace Uchu.StandardScripts.Base
                 // Return the player to Avant Gardens.
                 this.ResetStats(player);
                 this.SetNetworkVar("Exit_Waves", player);
-                // TODO: msg.sender:TransferToLastNonInstance{ playerID = msg.sender, bUseLastPosition = false, pos_x = 131.83, pos_y = 376, pos_z = -180.31, rot_x = 0, rot_y = -0.268720, rot_z = 0, rot_w = 0.963218}
+                player.SendToWorldAsync(1100, new Vector3(131.83f, 376, -180.31f), new Quaternion(0, -0.268720f, 0, 0.963218f));
             }
         }
         

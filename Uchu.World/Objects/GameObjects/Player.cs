@@ -459,9 +459,10 @@ namespace Uchu.World
         /// <summary>
         /// Tries to send a player to a different zone
         /// </summary>
-        /// <param name="zoneId"></param>
-        /// <returns></returns>
-        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
+        /// <param name="zoneId">The zone id to travel to</param>
+        /// <param name="spawnPosition">Position to spawn at</param>
+        /// <param name="spawnRotation">Rotation to spawn at</param>
+        public async Task<bool> SendToWorldAsync(ZoneId zoneId, Vector3 spawnPosition = default, Quaternion spawnRotation = default)
         {
             Logger.Debug($"Requesting server for: {zoneId}");
 
@@ -482,7 +483,7 @@ namespace Uchu.World
             }
             
             Logger.Debug($"Yielded {server?.Port.ToString() ?? "<void>"} for {zoneId}");
-            await SendToWorldAsync(server, zoneId);
+            await SendToWorldAsync(server, zoneId, spawnPosition, spawnRotation);
             return true;
         }
         
@@ -491,18 +492,20 @@ namespace Uchu.World
         /// </summary>
         /// <param name="serverInformation">Information regarding the server to connect to</param>
         /// <param name="zoneId">The zone id to travel to</param>
-        public async Task SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId)
+        /// <param name="spawnPosition">Position to spawn at</param>
+        /// <param name="spawnRotation">Rotation to spawn at</param>
+        public async Task SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId, Vector3 spawnPosition = default, Quaternion spawnRotation = default)
         {
             // Don't redirect the user to a world they're already in
             if (UchuServer.Port == serverInformation.Port)
                 return;
             
-            // Reset the spawns so they don't persist to the next world and cause the player to go out of bounds.
+            // Set the spawns so they don't persist to the next world and cause the player to go out of bounds.
             if (this.TryGetComponent<CharacterComponent>(out var characterComponent))
             {
                 characterComponent.LastZone = zoneId;
-                characterComponent.SpawnPosition = default;
-                characterComponent.SpawnRotation = default;
+                characterComponent.SpawnPosition = spawnPosition;
+                characterComponent.SpawnRotation = spawnRotation;
             }
             await GetComponent<SaveComponent>().SaveAsync(false);
             
