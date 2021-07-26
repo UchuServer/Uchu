@@ -23,6 +23,12 @@ namespace Uchu.StandardScripts.Base
             // Set the points of the enemy.
             this.SetNetworkVar("points", Points);
             
+            // Set the factions of the enemy.
+            // Sentries don't have the correct factions by default for some reason.
+            if (!gameObject.TryGetComponent<DestroyableComponent>(out var destroyableComponent)) return;
+            destroyableComponent.Factions = new[] {4};
+            destroyableComponent.Enemies = new[] {1};
+            
             // Listen to the enemy being smashed.
             if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent));
             Listen(destructibleComponent.OnSmashed, (o, player) =>
