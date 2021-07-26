@@ -284,12 +284,6 @@ namespace Uchu.StandardScripts.Base
             }
         }
 
-        // TODO: Implement and determine arguments.
-        private void NotifyObject()
-        {
-            
-        }
-
         /// <summary>
         /// Invoked when a player responds to a message box.
         /// </summary>
