@@ -43,6 +43,16 @@ namespace Uchu.StandardScripts.Base
         }
 
         /// <summary>
+        /// Returns the id of the activity.
+        /// </summary>
+        /// <returns>Id of the activity.</returns>
+        public int GetActivityId()
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
+            return activity.ActivityInfo.ActivityID ?? 0;
+        }
+
+        /// <summary>
         /// Sets up the activity.
         /// </summary>
         /// <param name="maxPlayers">Max players of the activity.</param>
@@ -159,18 +169,18 @@ namespace Uchu.StandardScripts.Base
                 this.RemoveActivityUser(player);
                 
                 // Send requesting the activity summary.
-                // TODO: Remove hard-coded activity id. (5 works for now, but should be able to be fetched)
+                var activityId = this.GetActivityId();
                 player.Message(new RequestActivitySummaryLeaderboardDataMessage()
                 {
                     Associate = player,
-                    GameId = 5,
+                    GameId = activityId,
                     QueryType = QueryType.TopCharacter,
                 });
                 player.Message(new NotifyClientObjectMessage()
                 {
                     Associate = this.GameObject,
                     Name = "ToggleLeaderBoard",
-                    Param1 = 5,
+                    Param1 = activityId,
                     ParamObj = player,
                 });
                 
@@ -190,7 +200,7 @@ namespace Uchu.StandardScripts.Base
             player.Message(new RequestActivitySummaryLeaderboardDataMessage()
             {
                 Associate = player,
-                GameId = 5,
+                GameId = this.GetActivityId(),
                 QueryType = QueryType.TopSocial,
                 ResultsEnd = 10,
                 ResultsStart = 0,

@@ -172,7 +172,7 @@ namespace Uchu.StandardScripts.Base
                 // Start the player.
                 this._waitingPlayers.Remove(player);
                 this.UpdatePlayer(player);
-                this.GetLeaderboardData(player, 5, 50);
+                this.GetLeaderboardData(player, this.GetActivityId(), 50);
                 this.ResetStats(player);
             }
         }
@@ -379,7 +379,7 @@ namespace Uchu.StandardScripts.Base
             {
                 this._waitingPlayers.Add(player);
                 this.UpdatePlayer(player);
-                this.GetLeaderboardData(player, 5, 50);
+                this.GetLeaderboardData(player, this.GetActivityId(), 50);
                 this.ResetStats(player);
                 
                 // Charge the player for the activity.
@@ -484,7 +484,7 @@ namespace Uchu.StandardScripts.Base
                 var taskType = this.GetVar<string>("missionType") ?? "survival_time_team";
                 if (player.TryGetComponent<MissionInventoryComponent>(out var missionComponent))
                 {
-                    missionComponent.MinigameAchievementAsync(5, taskType, timeVar);
+                    missionComponent.MinigameAchievementAsync(this.GetActivityId(), taskType, timeVar);
                     foreach (var (missionId, targetTime) in this._missionsToUpdate)
                     {
                         // Complete the custom mission if the mission is active and target was reached.
