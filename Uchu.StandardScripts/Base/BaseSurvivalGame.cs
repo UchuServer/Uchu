@@ -187,10 +187,13 @@ namespace Uchu.StandardScripts.Base
             // Remove the player.
             if (this._players.Contains(player))
             {
-                player.Message(new SetPlayerAllowedRespawnMessage()
+                Task.Run(() =>
                 {
-                    Associate = player,
-                    DontPromptForRespawn = false,
+                    player.Message(new SetPlayerAllowedRespawnMessage()
+                    {
+                        Associate = player,
+                        DontPromptForRespawn = false,
+                    });
                 });
                 this._players.Remove(player);
             }
