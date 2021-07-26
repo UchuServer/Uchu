@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Timers;
+using Uchu.Core.Client;
 using Uchu.World;
+using Uchu.World.Client;
 using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.Base
@@ -50,6 +52,24 @@ namespace Uchu.StandardScripts.Base
         {
             if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
             return activity.ActivityInfo.ActivityID ?? 0;
+        }
+
+        /// <summary>
+        /// Charges the cost for the activity. Not done in the match provisioner
+        /// so the player isn't charged for a round that hasn't started.
+        /// </summary>
+        /// <param name="player"></param>
+        public void ChargeActivityCost(Player player)
+        {
+            // Get the activity cost.
+            var matchData = ClientCache.Find<Activities>(this.GetActivityId());
+            var matchCurrencyLot = matchData.OptionalCostLOT;
+            var matchCurrencyCount = matchData.OptionalCostCount;
+            
+            // Remove the cost.
+            if (!matchCurrencyLot.HasValue || !matchCurrencyCount.HasValue) return;
+            if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) return;
+            inventoryManager.RemoveLotAsync(matchCurrencyLot.Value,(uint) matchCurrencyCount.Value);
         }
 
         /// <summary>

@@ -386,7 +386,7 @@ namespace Uchu.StandardScripts.Base
                 // Charge the player for the activity.
                 if (!this.GetVar<bool>("firstTimeDone"))
                 {
-                    // TODO: Either remove this or move charging for activities here.
+                    this.ChargeActivityCost(player);
                 }
             }
             this.SetVar("firstTimerDone", true);
