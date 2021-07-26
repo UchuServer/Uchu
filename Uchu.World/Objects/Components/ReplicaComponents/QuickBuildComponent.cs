@@ -293,7 +293,11 @@ namespace Uchu.World
             Enabled = true;
             Success = false;
 
-            if (!Participants.Contains(player)) AddPlayer(player);
+            if (!Participants.Contains(player))
+            {
+                AddPlayer(player);
+                SetParameter(player, 1, 1);
+            }
 
             GameObject.Serialize(GameObject);
 

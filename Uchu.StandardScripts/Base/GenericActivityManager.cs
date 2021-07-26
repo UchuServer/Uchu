@@ -45,16 +45,6 @@ namespace Uchu.StandardScripts.Base
         }
 
         /// <summary>
-        /// Returns the id of the activity.
-        /// </summary>
-        /// <returns>Id of the activity.</returns>
-        public int GetActivityId()
-        {
-            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
-            return activity.ActivityInfo.ActivityID ?? 0;
-        }
-
-        /// <summary>
         /// Charges the cost for the activity. Not done in the match provisioner
         /// so the player isn't charged for a round that hasn't started.
         /// </summary>
@@ -184,7 +174,7 @@ namespace Uchu.StandardScripts.Base
                 }
                 
                 // Distribute the rewards.
-                // TODO: self:DistributeActivityRewards{ userID = player, bAutoAddCurrency = true, bAutoAddItems = true }
+                this.DistributeActivityRewards(player, true, true);
                 
                 // Update the leaderboard.
                 // TODO: self:UpdateActivityLeaderboard{ userID = player }

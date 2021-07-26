@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using InfectedRose.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
+using Uchu.World.Client;
 using Timer = System.Timers.Timer;
 
 namespace Uchu.World.Scripting.Native
@@ -546,6 +548,16 @@ namespace Uchu.World.Scripting.Native
 
         #region Activities
         /// <summary>
+        /// Returns the id of the activity.
+        /// </summary>
+        /// <returns>Id of the activity.</returns>
+        public int GetActivityId()
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
+            return activity.ActivityInfo.ActivityID ?? 0;
+        }
+        
+        /// <summary>
         /// Adds a player to the current activity.
         /// </summary>
         /// <param name="player">Player to add.</param>
@@ -607,6 +619,18 @@ namespace Uchu.World.Scripting.Native
         public void MiniGameAddPlayer(Player player)
         {
             this.AddActivityUser(player);
+        }
+
+        /// <summary>
+        /// Distributes activity rewards to a player.
+        /// </summary>
+        /// <param name="player">Player to award.</param>
+        /// <param name="autoAddCurrency">Whether to automatically add currency to the player instead of dropping.</param>
+        /// <param name="autoAddItems">Whether to automatically add items to the player instead of dropping.</param>
+        public void DistributeActivityRewards(Player player, bool autoAddCurrency = false, bool autoAddItems = false)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.DropLootAsync(player, autoAddCurrency, autoAddItems).Wait();
         }
         #endregion
         
