@@ -158,7 +158,11 @@ namespace Uchu.StandardScripts.Base
         /// <summary>
         /// Stops the activity for a player.
         /// </summary>
-        /// TODO: Add parameter names
+        /// <param name="player">Player to stop the activity for.</param>
+        /// <param name="score">Score to finish with.</param>
+        /// <param name="value1">Value 1 to finish with.</param>
+        /// <param name="value2">Value 2 to finish with.</param>
+        /// <param name="quit">Whether the player quit.</param>
         public void StopActivity(Player player, float score, float value1 = -1, float value2 = -1, bool quit = false)
         {
             if (quit)
