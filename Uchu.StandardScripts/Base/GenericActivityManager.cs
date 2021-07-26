@@ -168,6 +168,7 @@ namespace Uchu.StandardScripts.Base
                 });
                 player.Message(new NotifyClientObjectMessage()
                 {
+                    Associate = this.GameObject,
                     Name = "ToggleLeaderBoard",
                     Param1 = 5,
                     ParamObj = player,
