@@ -215,6 +215,8 @@ namespace Uchu.World
             OnMaxImaginationChanged = new Event<uint, int>();
             
             OnDeath = new Event();
+
+            OnAttacked = new Event();
             
             Listen(OnStart, async () =>
             {

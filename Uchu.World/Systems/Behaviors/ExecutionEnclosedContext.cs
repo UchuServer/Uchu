@@ -12,6 +12,7 @@ namespace Uchu.World.Systems.Behaviors
         public Event End { get; set; }
         public ExecutionEnclosedContext()
         {
+            End = new Event();
         }
     }
 }
