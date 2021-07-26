@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Core;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
 using InfectedRose.Utilities;
@@ -213,9 +214,14 @@ namespace Uchu.World
             
             // Spawns all the NPCs in the area
             var zoneControlLot = ClientCache.Find<ZoneTable>(this.ZoneId.Id).ZoneControlTemplate ??= 2365;
+            var zoneControlSettings = new LegoDataDictionary();
             foreach (var levelObject in objects)
             {
-                if (levelObject.Lot == zoneControlLot) continue;
+                if (levelObject.Lot == zoneControlLot)
+                {
+                    zoneControlSettings = levelObject.LegoInfo;
+                    continue;
+                }
                 if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
                 {
                     Logger.Debug($"Trigger: {trigger}");
@@ -235,6 +241,7 @@ namespace Uchu.World
             }
 
             var zoneObject = GameObject.Instantiate(this, lot: zoneControlLot, objectId: (ObjectId) 70368744177662);
+            zoneObject.Settings = zoneControlSettings;
             zoneObject.InitializeComponents();
             Start(zoneObject);
             
