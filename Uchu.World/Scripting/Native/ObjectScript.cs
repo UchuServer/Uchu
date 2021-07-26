@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using InfectedRose.Core;
 using Uchu.Physics;
+using Timer = System.Timers.Timer;
 
 namespace Uchu.World.Scripting.Native
 {
@@ -47,10 +46,11 @@ namespace Uchu.World.Scripting.Native
         private Dictionary<string, object> _variables = new Dictionary<string, object>();
 
         /// <summary>
-        /// Dictionary of the variables that were sent already to players. This is
-        /// used to stop duplicate script variable messages from being sent.
+        /// "Transactions" for grouping together network variable changes. Some
+        /// scripts, like Avant Gardens Survival, don't act as expected when multiple
+        /// messages are sent in place of one message like live.
         /// </summary>
-        private Dictionary<Player, Dictionary<string, object>> _sentVariables = new Dictionary<Player, Dictionary<string, object>>();
+        private Dictionary<Thread, LegoDataDictionary> _variableChangeTransactions = new Dictionary<Thread, LegoDataDictionary>();
 
         /// <summary>
         /// Timers used by the script.
@@ -116,13 +116,6 @@ namespace Uchu.World.Scripting.Native
                     if (message.GameObject != this.GameObject) return;
                     this.SendEffectsToPlayer(player);
                 });
-            });
-            
-            // Connect players leaving.
-            Listen(this.Zone.OnPlayerLeave, (player) =>
-            {
-                if (!this._sentVariables.ContainsKey(player)) return;
-                this._sentVariables.Remove(player);
             });
         }
         
@@ -215,45 +208,59 @@ namespace Uchu.World.Scripting.Native
         {
             // Set the variable.
             this.SetVar(name, value);
-            
-            // Create the LDF.
-            var ldf = new LegoDataDictionary();
-            PrepareDictionary(name, value, ldf);
 
-            // Broadcast the variable change.
+            if (this._variableChangeTransactions.ContainsKey(Thread.CurrentThread))
+            {
+                // Add to the transaction.
+                PrepareDictionary(name, value, this._variableChangeTransactions[Thread.CurrentThread]);
+            }
+            else
+            {
+                // Create the LDF.
+                var ldf = new LegoDataDictionary();
+                PrepareDictionary(name, value, ldf);
+
+                // Broadcast the variable changes.
+                Task.Run(() =>
+                {
+                    this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                    {
+                        Associate = this.GameObject,
+                        Data = ldf,
+                    });
+                });
+            }
+        }
+
+        /// <summary>
+        /// Starts a "transaction" for storing network variable changes
+        /// to be sent together when ended.
+        /// </summary>
+        public void StartNetworkVarTransaction()
+        {
+            if (this._variableChangeTransactions.ContainsKey(Thread.CurrentThread)) return;
+            this._variableChangeTransactions[Thread.CurrentThread] = new LegoDataDictionary();
+        }
+        
+        /// <summary>
+        /// Completes a "transaction" for storing network variable changes
+        /// and sends the stored network variables changes.
+        /// </summary>
+        public void FinishNetworkVarTransaction()
+        {
+            // Remove the LDF.
+            if (!this._variableChangeTransactions.ContainsKey(Thread.CurrentThread)) return;
+            var ldf = this._variableChangeTransactions[Thread.CurrentThread];
+            this._variableChangeTransactions.Remove(Thread.CurrentThread);
+            
+            // Broadcast the variable changes.
             Task.Run(() =>
             {
-                // Create the message.
-                var message = new ScriptNetworkVarUpdateMessage()
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
                 {
                     Associate = this.GameObject,
                     Data = ldf,
-                };
-                
-                // Send the players the message.
-                foreach (var player in this.Zone.Players)
-                {
-                    // Ignore sending the message if the player was already send the message.
-                    // This prevents sending unintended duplicate messages to existing players
-                    // but allows new players to see the change. Mainly for Avant Gardens
-                    // Survival with a player joining after 1 or more players is ready, where
-                    // sending to show the scoreboard clears the ready players.
-                    if (!(value is IList) && this._variables.ContainsKey(name) && Equals(this._variables[name], value))
-                    {
-                        if (!this._sentVariables.ContainsKey(player))
-                        {
-                            this._sentVariables[player] = new Dictionary<string, object>();
-                        }
-                        if (this._sentVariables[player].ContainsKey(name) && Equals(this._sentVariables[player][name], value))
-                        {
-                            continue;
-                        }
-                        this._sentVariables[player][name] = value;
-                    }
-                    
-                    // Send the message.
-                    player.Message(message);
-                }
+                });
             });
         }
 

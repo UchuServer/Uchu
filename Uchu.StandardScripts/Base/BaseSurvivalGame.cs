@@ -80,8 +80,12 @@ namespace Uchu.StandardScripts.Base
             {
                 Listen(player.OnWorldLoad, () =>
                 {
+                    // Run the player loading.
+                    this.StartNetworkVarTransaction();
                     this.PlayerLoaded(player);
+                    this.FinishNetworkVarTransaction();
 
+                    // Listen to the player being smashed and resurrected.
                     if (!player.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
                     Listen(destructibleComponent.OnSmashed, (otherGameObject, otherPlayer) =>
                     {
@@ -391,8 +395,10 @@ namespace Uchu.StandardScripts.Base
             
             // Start the waves.
             this.ActivateSpawnerNetwork(this._spawnerNetworks.SmashNetworks);
+            this.StartNetworkVarTransaction();
             this.SetNetworkVar("wavesStarted", true);
             this.SetNetworkVar("Start_Wave_Message", "Start!");
+            this.FinishNetworkVarTransaction();
         }
 
         /// <summary>
