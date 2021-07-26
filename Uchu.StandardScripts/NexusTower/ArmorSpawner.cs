@@ -9,6 +9,10 @@ namespace Uchu.StandardScripts.NexusTower
     {
         private const int ArmorCount = 3;
 
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public ArmorSpawner(GameObject gameObject) : base(gameObject)
         {
             Listen(gameObject.OnInteract, player => {

@@ -6,6 +6,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("ScriptComponent_1537_script_name__removed")]
     public class MaelstromConverter : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public MaelstromConverter(GameObject gameObject) : base(gameObject)
         {
             Listen(gameObject.OnInteract, player =>

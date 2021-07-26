@@ -7,6 +7,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("L_NT_SENTINELWALKWAY_SERVER.lua")]
     public class SentinelSpeedPad : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public SentinelSpeedPad(GameObject gameObject) : base(gameObject)
         {
             // https://lu.lcdruniverse.org/explorer/objects/12041
@@ -18,6 +22,7 @@ namespace Uchu.StandardScripts.NexusTower
             if (!gameObject.TryGetComponent<PhantomPhysicsComponent>(out var phantomPhysicsComponent))
                 return;
 
+            // Create physics effect to accelerate player
             phantomPhysicsComponent.IsEffectActive = true;
             phantomPhysicsComponent.EffectType = PhantomPhysicsEffectType.Push;
             phantomPhysicsComponent.EffectAmount = 115f; // This is accurate, found in captures

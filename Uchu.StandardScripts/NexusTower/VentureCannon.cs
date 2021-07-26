@@ -8,6 +8,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("ScriptComponent_1519_script_name__removed")]
     public class VentureCannon : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public VentureCannon(GameObject gameObject) : base(gameObject)
         {
             // Get info from object settings

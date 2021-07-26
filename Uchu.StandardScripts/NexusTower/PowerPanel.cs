@@ -10,6 +10,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("ScriptComponent_1483_script_name__removed")]
     public class PowerPanel : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public PowerPanel(GameObject gameObject) : base(gameObject)
         {
             // Find animation duration from cdclient.
@@ -19,6 +23,7 @@ namespace Uchu.StandardScripts.NexusTower
 
             Listen(gameObject.OnInteract, player =>
             {
+                // If the player has this mission active, they should fix the panel. Don't display explosion/sparks animation.
                 if (player.GetComponent<MissionInventoryComponent>().HasActive(MissionId.PowerintheTower))
                 {
                     // Show animation of player fixing the panel.

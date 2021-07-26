@@ -9,6 +9,10 @@ namespace Uchu.StandardScripts.NexusTower
     {
         private const int HealthCount = 3;
 
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public HealthSpawner(GameObject gameObject) : base(gameObject)
         {
             Listen(gameObject.OnInteract, player => {

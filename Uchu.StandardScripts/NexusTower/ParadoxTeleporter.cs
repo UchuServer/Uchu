@@ -8,6 +8,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("L_NT_PARADOXTELE_SERVER.lua")]
     public class ParadoxTeleporter : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public ParadoxTeleporter(GameObject gameObject) : base(gameObject)
         {
             // Get info from object settings

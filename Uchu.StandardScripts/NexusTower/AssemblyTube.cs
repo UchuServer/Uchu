@@ -9,6 +9,10 @@ namespace Uchu.StandardScripts.NexusTower
     [ScriptName("L_NT_ASSEMBLYTUBE_SERVER.lua")]
     public class AssemblyTube : ObjectScript
     {
+        /// <summary>
+        /// Creates the object script.
+        /// </summary>
+        /// <param name="gameObject">Game object to control with the script.</param>
         public AssemblyTube(GameObject gameObject) : base(gameObject)
         {
             // Get info from object settings
