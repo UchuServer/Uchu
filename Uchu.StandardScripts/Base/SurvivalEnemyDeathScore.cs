@@ -30,7 +30,7 @@ namespace Uchu.StandardScripts.Base
             destroyableComponent.Enemies = new[] {1};
             
             // Listen to the enemy being smashed.
-            if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent));
+            if (!GameObject.TryGetComponent<DestructibleComponent>(out var destructibleComponent)) return;
             Listen(destructibleComponent.OnSmashed, (o, player) =>
             {
                 if (!GameObject.Zone.ZoneControlObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return;
