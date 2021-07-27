@@ -207,6 +207,7 @@ namespace Uchu.World
         {
             if (!this.Participants.Contains(player)) return;
             this.Parameters[this.Participants.IndexOf(player)][index] = value;
+            GameObject.Serialize(this.GameObject);
         }
 
         /// <summary>
