@@ -473,7 +473,7 @@ namespace Uchu.StandardScripts.Base
                     Name = "Update_ScoreBoard",
                     ParamObj = player,
                     ParamStr = scoreVar.ToString(CultureInfo.InvariantCulture),
-                    Param1 = (int) scoreVar,
+                    Param1 = (int) timeVar,
                 });
                 
                 // Resurrect the player.

@@ -179,9 +179,6 @@ namespace Uchu.StandardScripts.Base
                 // Update the leaderboard.
                 // TODO: self:UpdateActivityLeaderboard{ userID = player }
                 
-                // Remove the player from the activity.
-                this.RemoveActivityUser(player);
-                
                 // Send requesting the activity summary.
                 var activityId = this.GetActivityId();
                 player.Message(new RequestActivitySummaryLeaderboardDataMessage()
