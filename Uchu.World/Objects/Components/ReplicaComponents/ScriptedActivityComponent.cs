@@ -70,9 +70,7 @@ namespace Uchu.World
             foreach (var activityRewards in this.Rewards)
             {
                 if (playerScore < activityRewards.ActivityRating) continue;
-                if (reward != default && (reward.ChallengeRating > activityRewards.ChallengeRating ||
-                                          (reward.ChallengeRating == activityRewards.ChallengeRating &&
-                                           reward.ActivityRating > activityRewards.ActivityRating))) continue;
+                if (reward != default && reward.ActivityRating > activityRewards.ActivityRating) continue;
                 reward = activityRewards;
             }
             if (reward == default) return;
