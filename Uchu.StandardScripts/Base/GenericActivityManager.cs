@@ -181,13 +181,13 @@ namespace Uchu.StandardScripts.Base
                 
                 // Send requesting the activity summary.
                 var activityId = this.GetActivityId();
-                player.Message(new RequestActivitySummaryLeaderboardDataMessage()
+                player.Message(new RequestActivitySummaryLeaderboardDataMessage
                 {
                     Associate = player,
                     GameId = activityId,
                     QueryType = QueryType.TopCharacter,
                 });
-                player.Message(new NotifyClientObjectMessage()
+                player.Message(new NotifyClientObjectMessage
                 {
                     Associate = this.GameObject,
                     Name = "ToggleLeaderBoard",
@@ -208,7 +208,7 @@ namespace Uchu.StandardScripts.Base
         /// <param name="numberOfResults">Number of results to send.</param>
         public void GetLeaderboardData(Player player, int activityId, int numberOfResults)
         {
-            player.Message(new RequestActivitySummaryLeaderboardDataMessage()
+            player.Message(new RequestActivitySummaryLeaderboardDataMessage
             {
                 Associate = player,
                 GameId = this.GetActivityId(),

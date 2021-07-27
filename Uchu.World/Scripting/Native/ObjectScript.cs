@@ -225,7 +225,7 @@ namespace Uchu.World.Scripting.Native
                 // Broadcast the variable changes.
                 Task.Run(() =>
                 {
-                    this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                    this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage
                     {
                         Associate = this.GameObject,
                         Data = ldf,
@@ -258,7 +258,7 @@ namespace Uchu.World.Scripting.Native
             // Broadcast the variable changes.
             Task.Run(() =>
             {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage
                 {
                     Associate = this.GameObject,
                     Data = ldf,
@@ -606,7 +606,7 @@ namespace Uchu.World.Scripting.Native
         /// </summary>
         public void ActivityStart()
         {
-            GameObject.Zone.BroadcastMessage(new ActivityStartMessage()
+            GameObject.Zone.BroadcastMessage(new ActivityStartMessage
             {
                 Associate = this.GameObject,
             });

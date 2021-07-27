@@ -157,7 +157,7 @@ namespace Uchu.StandardScripts.Base
             
             // Move the players to the spawn point.
             this.SetPlayerSpawnPoints();
-            player.Message(new PlayerSetCameraCyclingModeMessage()
+            player.Message(new PlayerSetCameraCyclingModeMessage
             {
                 AllowCyclingWhileDeadOnly = true,
                 CyclingMode = CyclingMode.AllowCycleTeammates,
@@ -189,7 +189,7 @@ namespace Uchu.StandardScripts.Base
             {
                 Task.Run(() =>
                 {
-                    player.Message(new SetPlayerAllowedRespawnMessage()
+                    player.Message(new SetPlayerAllowedRespawnMessage
                     {
                         Associate = player,
                         DontPromptForRespawn = false,
@@ -265,7 +265,7 @@ namespace Uchu.StandardScripts.Base
                 // Set the final time, notify the clients, and end the game.
                 var finalTime = this.ActivityTimerGetCurrentTime("ClockTick");
                 this.SetActivityValue(player, 1, finalTime);
-                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage()
+                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage
                 {
                     Associate = this.GameObject,
                     Name = "Player_Died",
@@ -467,7 +467,7 @@ namespace Uchu.StandardScripts.Base
                 // Get the values.
                 var timeVar = this.GetActivityValue(player, 1);
                 var scoreVar = this.GetActivityValue(player, 0);
-                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage()
+                this.Zone.BroadcastMessage(new NotifyClientZoneObjectMessage
                 {
                     Associate = this.GameObject,
                     Name = "Update_ScoreBoard",
@@ -854,7 +854,7 @@ namespace Uchu.StandardScripts.Base
                 // Play the horn sound.
                 foreach (var player in this._players)
                 {
-                    player.Message(new PlayNDAudioEmitterMessage()
+                    player.Message(new PlayNDAudioEmitterMessage
                     {
                         Associate = player,
                         NDAudioEventGUID = "{ca36045d-89df-4e96-a317-1e152d226b69}",
