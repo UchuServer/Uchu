@@ -20,6 +20,8 @@ namespace Uchu.World.Systems.Behaviors
         /// </summary>
         public int Duration { get; set; }
 
+        public StartBehavior StartNode { get; set; }
+
         public ExecutionBranchContext()
         {
         }

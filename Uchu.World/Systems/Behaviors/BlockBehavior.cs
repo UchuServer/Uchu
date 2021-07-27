@@ -35,23 +35,24 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            //this actually works
-            //wow my brain hurts
             if (!(parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out var destroyable))) return;
-            if (parameters.EnclosedContext == default) return; //prevent accidental invincibility
-            var blocker = parameters.Context.Associate;
+            Console.WriteLine("got the destroyable");
+            if (parameters.BranchContext.StartNode == default) return; //prevent accidental invincibility
+            Console.WriteLine("got past branch check");
+            var startNode = parameters.BranchContext.StartNode;
             destroyable.Shielded = true;
             BlocksLeft = BlockableAttacks;
             Action blockAction = default;
             Action finish = default;
             blockAction = (() => 
             {
+                Console.WriteLine("should block attack");
                 BlocksLeft--;
                 if (BlocksLeft == 0){
                     destroyable.Shielded = false;
                     BreakAction.ExecuteStart(parameters);
                     destroyable.OnAttacked.RemoveListener(blockAction);
-                    parameters.EnclosedContext.End.RemoveListener(finish);
+                    startNode.End.RemoveListener(finish);
                 }
             });
             finish = (() => 
@@ -59,10 +60,10 @@ namespace Uchu.World.Systems.Behaviors
                 destroyable.Shielded = false;
                 BlocksLeft = 0;
                 destroyable.OnAttacked.RemoveListener(blockAction);
-                parameters.EnclosedContext.End.RemoveListener(finish);
+                startNode.End.RemoveListener(finish);
             });
             destroyable.OnAttacked.AddListener(blockAction);
-            parameters.EnclosedContext.End.AddListener(finish);
+            startNode.End.AddListener(finish);
         }
     }
 }

@@ -12,14 +12,12 @@ namespace Uchu.World.Systems.Behaviors
         
         public override async Task BuildAsync()
         {
-            StartAction = await GetBehavior("action");
+            StartAction = await GetBehavior("start_action");
             UseTarget = await GetParameter<int>("use_target");
         }
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            if (parameters.EnclosedContext != default){
-                parameters.EnclosedContext.End.Invoke();
-            }
+            ((StartBehavior)StartAction).End.Invoke();
         }
     }
 }

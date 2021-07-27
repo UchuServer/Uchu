@@ -17,7 +17,8 @@ namespace Uchu.World.Systems.Behaviors
             BranchContext = new ExecutionBranchContext
             {
                 Duration = branchContext.Duration,
-                Target = branchContext.Target
+                Target = branchContext.Target,
+                StartNode = branchContext.StartNode
             };
         }
         
@@ -30,11 +31,6 @@ namespace Uchu.World.Systems.Behaviors
         /// If the behavior branched, extra information for execution in the branch
         /// </summary>
         public ExecutionBranchContext BranchContext { get; set; }
-
-        /// <summary>
-        /// If the behavior Starts, extra information for execution in the branch
-        /// </summary>
-        public ExecutionEnclosedContext EnclosedContext { get; set; }
 
         /// <summary>
         /// Returns the context as a NpcContext, can cause a NullReference if the context can't be casted.
@@ -51,7 +47,7 @@ namespace Uchu.World.Systems.Behaviors
         /// <remarks>
         /// Primarily used to delay certain behaviors.
         /// </remarks>
-        /// <param name="delay">The delay in milliseconds to execute the action, if set le 0 this will execute on the next tick</param>
+        /// <param name="delay">The delay in milliseconds to execute the action, if set to 0 this will execute on the next tick</param>
         /// <param name="delegate">The action to execute</param>
         public void Schedule(Action @delegate, float delay = 0)
         {
