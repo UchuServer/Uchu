@@ -30,7 +30,19 @@ namespace Uchu.World.Systems.Behaviors
 
         protected override void DeserializeStart(BitReader reader, StartBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = Action.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
+            parameters.Parameters = Action.DeserializeStart(reader, parameters.Context, new ExecutionBranchContext{
+                Target = parameters.BranchContext.Target,
+                Duration = parameters.BranchContext.Duration,
+                StartNode = this,
+            });
+        }
+        protected override void SerializeStart(BitWriter writer, StartBehaviorExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext, new ExecutionBranchContext{
+                Target = parameters.BranchContext.Target,
+                Duration = parameters.BranchContext.Duration,
+                StartNode = this,
+            });
         }
 
         protected override void ExecuteStart(StartBehaviorExecutionParameters parameters)
