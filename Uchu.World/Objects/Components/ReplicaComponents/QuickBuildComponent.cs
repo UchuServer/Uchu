@@ -20,7 +20,6 @@ namespace Uchu.World
     {
         private float _completeTime;
         private int _imaginationCost;
-        private float _timeToSmash;
         private float _resetTime;
 
         private PauseTimer _timer;
@@ -46,6 +45,8 @@ namespace Uchu.World
 
         public bool Enabled { get; set; } = true;
         public bool ConnectedToSpawner { get; private set; }
+
+        public float TimeToSmash { get; set; }
 
         public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
 
@@ -105,7 +106,7 @@ namespace Uchu.World
                 // If no completion time is provided we assume 1 second per imagination spent
                 _completeTime = clientComponent.Completetime ?? _imaginationCost;
                 
-                _timeToSmash = clientComponent.Timebeforesmash ?? 0;
+                TimeToSmash = clientComponent.Timebeforesmash ?? 0;
                 _resetTime = clientComponent.Resettime ?? 0;
 
                 //if (!GameObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) ||
@@ -216,7 +217,7 @@ namespace Uchu.World
             Activator.Layer = StandardLayer.Hidden;
             
             // Sync the respawn time and the reset time between the two components
-            spawner.RespawnTime = (uint) (_resetTime + _timeToSmash) * 1000;
+            spawner.RespawnTime = (uint) (_resetTime + TimeToSmash) * 1000;
             
             Listen(spawner.OnRespawnInitiated, Show);
             Listen(spawner.OnRespawnTimeCompleted, Hide);
@@ -451,7 +452,7 @@ namespace Uchu.World
                 var timer = new Timer
                 {
                     AutoReset = false,
-                    Interval = _timeToSmash * 1000
+                    Interval = TimeToSmash * 1000
                 };
                 timer.Elapsed += (sender, args) => { ResetBuild(player); };
 
