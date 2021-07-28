@@ -30,6 +30,8 @@ namespace Uchu.World
 
         public bool AbilityDowntime { get; set; }
 
+        public bool Stunned { get; set; }
+
         public List<NpcSkillEntry> SkillEntries { get; set; }
 
         private SkillComponent SkillComponent { get; set; }
@@ -84,33 +86,36 @@ namespace Uchu.World
                 || QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed)
                 return Task.CompletedTask;
 
-            if (Cooldown <= 0)
+            if (!Stunned)
             {
-                AbilityDowntime = false;
-                var elapsedCooldown = FrozenCooldown;
-                
-                Cooldown = 1000f;
-                FrozenCooldown = Cooldown;
-
-                foreach (var entry in SkillEntries)
+                if (Cooldown <= 0)
                 {
-                    entry.Cooldown -= elapsedCooldown;
-                    if (entry.Cooldown > 0 || AbilityDowntime)
-                        continue;
-
-                    var time = SkillComponent.CalculateSkill(entry.Tree, (int) entry.SkillId);
-                    if (time == 0)
-                        continue;
-
-                    AbilityDowntime = true;
-                    entry.Cooldown = entry.AbilityCooldown + time;
-                    
-                    Cooldown += time;
+                    AbilityDowntime = false;
+                    var elapsedCooldown = FrozenCooldown;
+                
+                    Cooldown = 1000f;
                     FrozenCooldown = Cooldown;
-                }
-            }
 
-            Cooldown -= delta;
+                    foreach (var entry in SkillEntries)
+                    {
+                        entry.Cooldown -= elapsedCooldown;
+                        if (entry.Cooldown > 0 || AbilityDowntime)
+                            continue;
+
+                        var time = SkillComponent.CalculateSkill(entry.Tree, (int) entry.SkillId);
+                        if (time == 0)
+                            continue;
+
+                        AbilityDowntime = true;
+                        entry.Cooldown = entry.AbilityCooldown + time;
+                    
+                        Cooldown += time;
+                        FrozenCooldown = Cooldown;
+                    }
+                }
+                Cooldown -= delta;
+            }
+            
 
             return Task.CompletedTask;
         }

@@ -64,7 +64,7 @@ namespace Uchu.World.Systems.Behaviors
             blockAction = (() => 
             {
                 BlocksLeft--;
-                Console.WriteLine("Blocks left: " + BlocksLeft);
+                //Console.WriteLine("Blocks left: " + BlocksLeft);
                 if (BlocksLeft <= 0){
                     destroyable.Shielded = false;
                     destroyable.OnAttacked.RemoveListener(blockAction);
