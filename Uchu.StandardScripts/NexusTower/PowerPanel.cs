@@ -63,10 +63,7 @@ namespace Uchu.StandardScripts.NexusTower
                         Caster = gameObject,
                         Originator = gameObject,
                         KnockbackTime = 200,
-                        Vector = Vector3.Transform(new Vector3(15,
-                                5,
-                                0),
-                            gameObject.Transform.Rotation),
+                        Vector = Vector3.Transform(new Vector3(15, 5, 0), gameObject.Transform.Rotation),
                     });
                     player.Animate("knockback-recovery", true, 2f);
 
