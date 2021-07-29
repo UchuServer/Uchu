@@ -290,7 +290,7 @@ namespace Uchu.Core.Client
 			optionsBuilder.UseSqlite("Data Source=./CDClient.db");
 		}
 
-		public ValueTask DisposeAsync()
+		public override ValueTask DisposeAsync()
 		{
 			return new ValueTask(Task.CompletedTask);
 		}

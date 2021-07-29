@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Uchu.Core.Data
 {
-    public class ThreadedList<T> : IList<T> where T : class
+    public class ThreadedList<T> : IList<T>, IDisposable where T : class
     {
         /// <summary>
         /// Count of the entries in the list.
@@ -185,6 +185,23 @@ namespace Uchu.Core.Data
             this._list.RemoveAt(index);
             this.InvalidateSubLists();
             this._semaphore.Release();
+        }
+
+        /// <summary>
+        /// Disposes the list.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            _semaphore?.Dispose();
+        }
+
+        /// <summary>
+        /// Disposes the list.
+        /// </summary>
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
