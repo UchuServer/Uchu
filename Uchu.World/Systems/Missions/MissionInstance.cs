@@ -407,7 +407,7 @@ namespace Uchu.World.Systems.Missions
 
                 foreach (var task in Tasks)
                 {
-                    var taskInstance = mission.Tasks.First(t => t.TaskId == task.TaskId);
+                    var taskInstance = mission.Tasks.FirstOrDefault(t => t.TaskId == task.TaskId);
                     if (taskInstance == default)
                         continue;
                 
