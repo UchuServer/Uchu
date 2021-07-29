@@ -18,7 +18,7 @@ namespace Uchu.StandardScripts.GnarledForest
             {
                 // Play the animation.
                 this.PlayAnimation("interact");
-                this.SetNetworkVar("bIsInUse", 1, 7);
+                this.SetNetworkVar("bIsInUse", true);
 
                 // Drop the imagination.
                 for (var i = 0; i < 2; i++)
@@ -39,7 +39,7 @@ namespace Uchu.StandardScripts.GnarledForest
         /// <param name="timerName">Timer that was completed.</param>
         public override void OnTimerDone(string timerName)
         {
-            this.SetNetworkVar("bIsInUse", 0, 7);
+            this.SetNetworkVar("bIsInUse", false);
         }
     }
 }
