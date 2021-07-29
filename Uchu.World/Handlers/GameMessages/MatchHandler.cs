@@ -1,3 +1,4 @@
+using InfectedRose.Core;
 using Uchu.Core;
 using Uchu.World.Systems.Match;
 
@@ -31,6 +32,12 @@ namespace Uchu.World.Handlers.GameMessages
                     Provisioner.PlayerNotReady(player);
                 }
             }
+        }
+
+        [PacketHandler]
+        public void RequestActivitySummaryLeaderboardDataMessageHandler(RequestActivitySummaryLeaderboardDataMessage message, Player player)
+        {
+            // TODO: Implement sending SendActivitySummaryLeaderboardDataMessage.
         }
     }
 }

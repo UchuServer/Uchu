@@ -2,7 +2,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-	[ClientGameMessagePacketStruct]
+	[ServerGameMessagePacketStruct]
 	public struct RequestActivitySummaryLeaderboardDataMessage
 	{
 		public GameObject Associate { get; set; }

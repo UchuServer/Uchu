@@ -58,6 +58,7 @@ namespace Uchu.World
             network.MaxToSpawn = spawnerPath.MaxSpawnCount;
             network.RespawnTime = spawnerPath.RespawnTime * 1000;
             network.SpawnsToMaintain = spawnerPath.NumberToMaintain;
+            network.InitialSpawnsToMaintain = spawnerPath.NumberToMaintain;
             network.Name = spawnerPath.PathName;
 
             foreach (var pathWaypoint in spawnerPath.Waypoints)
