@@ -280,6 +280,11 @@ namespace Uchu.Core.Client
 
 		public DbSet<sysdiagrams> sysdiagramsTable { get; set; }
 
+		public async Task EnsureUpdatedAsync()
+		{
+			await Database.MigrateAsync().ConfigureAwait(false);
+		}
+		
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			optionsBuilder.UseSqlite("Data Source=./CDClient.db");
