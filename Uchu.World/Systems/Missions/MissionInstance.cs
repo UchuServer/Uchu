@@ -186,11 +186,6 @@ namespace Uchu.World.Systems.Missions
         public int RewardBankInventory { get; private set; }
 
         #endregion template
-        
-        /// <summary>
-        /// Whether the mission is part of mission of the day
-        /// </summary>
-        public bool InMissionOfTheDay { get; private set; }
 
         /// <summary>
         /// Cooldown time for repeating the mission.
@@ -249,7 +244,7 @@ namespace Uchu.World.Systems.Missions
         /// Checks if this mission is can be repeated and the cooldown time is satisfied.
         /// </summary>
         /// <returns><c>true</c> if can be repeated right now, <c>false</c> otherwise</returns>
-        public bool CanRepeat => IsMission && State == MissionState.Completed && (Repeatable || InMissionOfTheDay) && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
+        public bool CanRepeat => IsMission && State == MissionState.Completed && Repeatable && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
         
         #endregion properties
         static MissionInstance()
@@ -314,13 +309,7 @@ namespace Uchu.World.Systems.Missions
             RewardCurrencyRepeatable = mission.Rewardcurrencyrepeatable ?? 0;
             RewardScore = mission.LegoScore ?? 0;
             Repeatable = mission.Repeatable ?? false;
-            InMissionOfTheDay = mission.InMOTD ?? false;
             CooldownTime = mission.CooldownTime ?? 0;
-            if (InMissionOfTheDay && CooldownTime == 0)
-            {
-                // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
-                CooldownTime = 1300;
-            }
             
             // Emotes
             RewardEmote1 = mission.Rewardemote ?? -1;
