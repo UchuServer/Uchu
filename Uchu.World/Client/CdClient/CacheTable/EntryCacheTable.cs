@@ -63,8 +63,9 @@ namespace Uchu.World.Client
             }
 
             // Return the cached entry.
+            var result = (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
             this._semaphore.Release();
-            return (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
+            return result;
         }
     }
 }
