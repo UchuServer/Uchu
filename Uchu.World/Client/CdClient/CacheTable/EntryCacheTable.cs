@@ -21,7 +21,7 @@ namespace Uchu.World.Client
         /// Semaphore for reading the table. Used to ensure multiple threads/tasks
         /// aren't trying to create the cache at once.
         /// </summary>
-        private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         /// <summary>
         /// Name of the column to read.
@@ -53,7 +53,7 @@ namespace Uchu.World.Client
             index = ConvertKey(index);
             
             // Populate the cache entry.
-            await this._semaphore.WaitAsync();
+            await _semaphore.WaitAsync();
             if (!this._cachedTable.ContainsKey(index))
             {
                 // Due to Reflection, LINQ isn't suitable in this case.
@@ -64,7 +64,7 @@ namespace Uchu.World.Client
 
             // Return the cached entry.
             var result = (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
-            this._semaphore.Release();
+            _semaphore.Release();
             return result;
         }
     }
