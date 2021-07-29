@@ -576,6 +576,25 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Progresses minigame tasks
+        /// </summary>
+        /// <param name="activityId">Activity id of the minigame.</param>
+        /// <param name="targetGroup">Target group to progress.</param>
+        /// <param name="value">Value to progress with.</param>
+        public async Task MinigameAchievementAsync(int activityId, string targetGroup, float value)
+        {
+            foreach (var task in FindActiveTasksAsync<MinigameAchievementTask>())
+            {
+                await task.ReportProgress(activityId, targetGroup, value);
+            }
+
+            await StartUnlockableAchievementsAsync<MinigameAchievementTask>(MissionTaskType.MinigameAchievement, targetGroup, async task =>
+            {
+                await task.ReportProgress(activityId, targetGroup, value);
+            });
+        }
+
+        /// <summary>
         /// Progresses all use skill tasks using the given skill id
         /// </summary>
         /// <param name="skillId">The skill id to progress the tasks with</param>
