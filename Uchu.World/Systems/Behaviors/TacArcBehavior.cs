@@ -224,6 +224,7 @@ namespace Uchu.World.Systems.Behaviors
             var targets = validTargets.Where(target =>
             {
                 var transform = target.Transform;
+                if (transform == null) return false;
                 var distance = Vector3.Distance(transform.Position, sourcePosition);
                 return distance <= context.MaxRange && context.MinRange <= distance;
             }).ToList();
