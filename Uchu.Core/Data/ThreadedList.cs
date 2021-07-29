@@ -30,7 +30,7 @@ namespace Uchu.Core.Data
         /// <summary>
         /// Dictionary of cached arrays that are stored until the list changes.
         /// </summary>
-        public readonly Dictionary<int, object[]> _arrays = new Dictionary<int, object[]>();
+        private readonly Dictionary<int, object[]> _arrays = new Dictionary<int, object[]>();
         
         /// <summary>
         /// Indexes the list.
@@ -78,7 +78,7 @@ namespace Uchu.Core.Data
         /// Returns an array that is cached until the data changes.
         /// </summary>
         /// <returns>The converted array.</returns>
-        public T[] ToArray() => this.GetArray<T>((list) => list.ToArray());
+        public T[] ToArray() => this.GetArray((list) => list.ToArray());
         
         /// <summary>
         /// Returns an array that is cached until the data changes.
