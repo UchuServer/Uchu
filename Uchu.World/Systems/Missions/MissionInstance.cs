@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -247,6 +248,14 @@ namespace Uchu.World.Systems.Missions
         public bool CanRepeat => IsMission && State == MissionState.Completed && Repeatable && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
         
         #endregion properties
+        
+        /// <summary>
+        /// Semaphore used for marking missions as complete. A race condition can occur
+        /// if multiple tasks attempt to mark the mission as complete, resulting in
+        /// the rewards being given multiple times.
+        /// </summary>
+        private readonly SemaphoreSlim _completeMissionSemaphore = new SemaphoreSlim(1, 1);
+        
         static MissionInstance()
         {
             TaskTypes = new Dictionary<MissionTaskType, Type>()
@@ -480,6 +489,7 @@ namespace Uchu.World.Systems.Missions
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
         public async Task CompleteAsync(Lot rewardItem = default)
         {
+            await _completeMissionSemaphore.WaitAsync();
             if (State == default)
                 await StartAsync();
                 
@@ -510,6 +520,7 @@ namespace Uchu.World.Systems.Missions
             
             await missionInventory.MissionCompleteAsync(MissionId); 
             await missionInventory.OnCompleteMission.InvokeAsync(this);
+            _completeMissionSemaphore.Release();
         }
 
         /// <summary>
