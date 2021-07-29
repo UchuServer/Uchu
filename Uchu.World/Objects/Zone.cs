@@ -17,6 +17,7 @@ using Sentry;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Data;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
@@ -48,14 +49,14 @@ namespace Uchu.World
         private Timer GameLoop { get; set; }
         
         // Managed objects
-        private List<Object> ManagedObjects { get; }
-        private List<GameObject> SpawnedObjects { get; }
-        public List<SpawnerNetwork> SpawnerNetworks { get; }
+        private ThreadedList<Object> ManagedObjects { get; }
+        private ThreadedList<GameObject> SpawnedObjects { get; }
+        public ThreadedList<SpawnerNetwork> SpawnerNetworks { get; }
         
         // Macro properties
-        public Object[] Objects => ManagedObjects.ToArray();
-        public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
-        public Player[] Players => Objects.OfType<Player>().ToArray();
+        public Object[] Objects => this.ManagedObjects.GetArray((list) => list.ToArray());
+        public GameObject[] GameObjects => this.ManagedObjects.GetArray((list) => list.OfType<GameObject>().ToArray());
+        public Player[] Players => this.ManagedObjects.GetArray((list) => list.OfType<Player>().ToArray());
         public GameObject[] Spawned => SpawnedObjects.ToArray();
         public ZoneId ZoneId { get; private set; }
         public Vector3 SpawnPosition { get; private set; }
@@ -78,7 +79,7 @@ namespace Uchu.World
         public float DeltaTime { get; private set; }
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
-        private List<UpdatedObject> UpdatedObjects { get; }
+        private ThreadedList<UpdatedObject> UpdatedObjects { get; }
         private List<ScheduledAction> NewScheduledActions { get; }
         private List<ScheduledAction> ScheduledActions { get; }
         
@@ -112,12 +113,12 @@ namespace Uchu.World
 
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
-            UpdatedObjects = new List<UpdatedObject>();
+            UpdatedObjects = new ThreadedList<UpdatedObject>();
             ScheduledActions = new List<ScheduledAction>();
             NewScheduledActions = new List<ScheduledAction>();
-            ManagedObjects = new List<Object>();
-            SpawnedObjects = new List<GameObject>();
-            SpawnerNetworks = new List<SpawnerNetwork>();
+            ManagedObjects = new ThreadedList<Object>();
+            SpawnedObjects = new ThreadedList<GameObject>();
+            SpawnerNetworks = new ThreadedList<SpawnerNetwork>();
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
