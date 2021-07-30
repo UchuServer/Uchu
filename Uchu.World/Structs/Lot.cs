@@ -139,6 +139,18 @@ namespace Uchu.World
 
         public const int MaelstromInfectedBrick = 6194;
 
+        public const int CombatChallengeActivator = 12045;
+        public const int CombatChallengeTarget1 = 13556;
+        public const int CombatChallengeTarget2 = 13764;
+        public const int CombatChallengeTarget3 = 13765;
+        public const int CombatChallengeTarget4 = 13766;
+        public const int CombatChallengeTarget5 = 13767;
+        public const int CombatChallengeTarget6 = 13768;
+        public const int CombatChallengeTarget7 = 13769;
+        public const int CombatChallengeTarget8 = 13770;
+        public const int CombatChallengeTarget9 = 13771;
+        public const int CombatChallengeTarget10 = 13772;
+
         #endregion
     }
 }
