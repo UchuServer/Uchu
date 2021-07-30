@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Uchu.Core.Data
 {
-    public class ThreadedList<T> : IList<T>, IDisposable where T : class
+    public class ThreadedCollection<T> : IList<T>, IDisposable where T : class
     {
         /// <summary>
         /// Count of the entries in the list.

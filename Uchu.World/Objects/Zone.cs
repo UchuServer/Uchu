@@ -49,9 +49,9 @@ namespace Uchu.World
         private Timer GameLoop { get; set; }
         
         // Managed objects
-        private ThreadedList<Object> ManagedObjects { get; }
-        private ThreadedList<GameObject> SpawnedObjects { get; }
-        public ThreadedList<SpawnerNetwork> SpawnerNetworks { get; }
+        private ThreadedCollection<Object> ManagedObjects { get; }
+        private ThreadedCollection<GameObject> SpawnedObjects { get; }
+        public ThreadedCollection<SpawnerNetwork> SpawnerNetworks { get; }
         
         // Macro properties
         public Object[] Objects => this.ManagedObjects.GetArray((list) => list.ToArray());
@@ -79,7 +79,7 @@ namespace Uchu.World
         public float DeltaTime { get; private set; }
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
-        private ThreadedList<UpdatedObject> UpdatedObjects { get; }
+        private ThreadedCollection<UpdatedObject> UpdatedObjects { get; }
         private List<ScheduledAction> NewScheduledActions { get; }
         private List<ScheduledAction> ScheduledActions { get; }
         
@@ -113,12 +113,12 @@ namespace Uchu.World
 
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
-            UpdatedObjects = new ThreadedList<UpdatedObject>();
+            UpdatedObjects = new ThreadedCollection<UpdatedObject>();
             ScheduledActions = new List<ScheduledAction>();
             NewScheduledActions = new List<ScheduledAction>();
-            ManagedObjects = new ThreadedList<Object>();
-            SpawnedObjects = new ThreadedList<GameObject>();
-            SpawnerNetworks = new ThreadedList<SpawnerNetwork>();
+            ManagedObjects = new ThreadedCollection<Object>();
+            SpawnedObjects = new ThreadedCollection<GameObject>();
+            SpawnerNetworks = new ThreadedCollection<SpawnerNetwork>();
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
