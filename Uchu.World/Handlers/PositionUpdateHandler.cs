@@ -25,7 +25,7 @@ namespace Uchu.World.Handlers
             physics.IsOnGround = packet.IsOnGround;
             physics.NegativeAngularVelocity = packet.NegativeAngularVelocity;
 
-            physics.HasVelocity = (packet.Position != Vector3.Zero);
+            physics.HasVelocity = (packet.Velocity != Vector3.Zero);
 
             physics.Velocity = packet.Velocity;
 
@@ -33,7 +33,7 @@ namespace Uchu.World.Handlers
 
             physics.AngularVelocity = packet.AngularVelocity;
 
-            physics.Platform = player.Zone.GameObjects.FirstOrDefault(g => g.Id == packet.PlatformObjectId);
+            physics.Platform = packet.PlatformObjectId;
 
             physics.PlatformPosition = packet.PlatformPosition;
 
