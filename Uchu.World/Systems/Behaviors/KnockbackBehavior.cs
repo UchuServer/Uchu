@@ -28,7 +28,8 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
-            writer.WriteBit(false);
+            if (branchContext.Target.TryGetComponent<DestroyableComponent>(out var destroyable)) writer.WriteBit(destroyable.ShieldedKnockback);
+            else writer.WriteBit(false);
             if (branchContext.Target is Player target)
             {
                 var targetDirection = context.Associate.Transform.Position - target.Transform.Position;

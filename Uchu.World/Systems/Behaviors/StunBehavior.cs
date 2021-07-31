@@ -46,8 +46,10 @@ namespace Uchu.World.Systems.Behaviors
         public override BehaviorExecutionParameters SerializeStart(BitWriter writer, NpcExecutionContext context,
             ExecutionBranchContext branchContext)
         {
+            
             if (StunCaster != 1)
-                writer.WriteBit(false);
+                if (branchContext.Target.TryGetComponent<DestroyableComponent>(out var destroyable)) writer.WriteBit(destroyable.ShieldedStun);
+                else writer.WriteBit(false);
             return base.SerializeStart(writer, context, branchContext);
         }
         public override void ExecuteStart(BehaviorExecutionParameters parameters)

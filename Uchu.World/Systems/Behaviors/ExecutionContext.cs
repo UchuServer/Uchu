@@ -41,7 +41,7 @@ namespace Uchu.World.Systems.Behaviors
         }
 
         /// <summary>
-        /// Syncs a the skill using a syncskill bitstream
+        /// Syncs a skill using a syncskill bitstream
         /// </summary>
         /// <param name="handle">The behavior handle to sync</param>
         /// <param name="reader">The sync skill bitstream</param>

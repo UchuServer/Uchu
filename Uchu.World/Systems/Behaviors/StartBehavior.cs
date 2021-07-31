@@ -48,8 +48,6 @@ namespace Uchu.World.Systems.Behaviors
         protected override void ExecuteStart(StartBehaviorExecutionParameters parameters)
         {
             parameters.Parameters.BranchContext.StartNode = this;
-            //System.Console.WriteLine(parameters.Parameters.BranchContext.StartNode.BehaviorId);
-            //this seems to give the ID just fine, but when BlockBehavior tries to access the StartNode, it is always null. Why?
             Action.ExecuteStart(parameters.Parameters);
         }
     }

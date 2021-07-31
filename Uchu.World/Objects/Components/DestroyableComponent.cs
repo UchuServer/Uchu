@@ -39,6 +39,10 @@ namespace Uchu.World
         
         public bool Shielded { get; set; }
 
+        public bool ShieldedStun { get; set; }
+
+        public bool ShieldedKnockback { get; set; }
+
         public GameObject LatestDamageSource { get; private set; }
         
         public string LatestEffect { get; private set; }

@@ -46,6 +46,8 @@ namespace Uchu.World.Systems.Behaviors
         protected override void DeserializeStart(BitReader reader, BlockBehaviorExecutionParameters parameters)
         {
             parameters.Parameters = BreakAction.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
+            //how do these work? this behavior is so different compared to the others, i have a feeling this wouldn't
+            //work in some circumstances. you could unblock, but how would the game predict that beforehand?
         }
         protected override void SerializeStart(BitWriter writer, BlockBehaviorExecutionParameters parameters)
         {
@@ -56,30 +58,34 @@ namespace Uchu.World.Systems.Behaviors
             if (!(parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out var destroyable))) return;
             if (parameters.BranchContext.StartNode == default) return; //prevent accidental invincibility
             var startNode = parameters.BranchContext.StartNode;
-            destroyable.Shielded = true;
+            destroyable.Shielded = BlockDamage;
+            destroyable.ShieldedKnockback = BlockKnockback;
+            destroyable.ShieldedStun = BlockStun;
             BlocksLeft = BlockableAttacks;
-            //Console.WriteLine("Blockable attacks: " + BlocksLeft);
             Action blockAction = default;
             Action finish = default;
             blockAction = (() => 
             {
                 BlocksLeft--;
-                //Console.WriteLine("Blocks left: " + BlocksLeft);
                 if (BlocksLeft <= 0){
                     destroyable.Shielded = false;
+                    destroyable.ShieldedKnockback = false;
+                    destroyable.ShieldedStun = false;
                     destroyable.OnAttacked.RemoveListener(blockAction);
                     startNode.End.RemoveListener(finish);
-                    //Console.WriteLine("should've removed both listeners and broke shield");
-                    BreakAction.ExecuteStart(parameters.Parameters);
+                    BreakAction.ExecuteStart(parameters.Parameters); //this causes an error with reading a bit in knockback, likely because it's being executed so far in the future
+                    //after the packets have been sent
                 }
             });
             finish = (() => 
             {
                 destroyable.Shielded = false;
+                destroyable.ShieldedKnockback = false;
+                destroyable.ShieldedStun = false;
                 BlocksLeft = 0;
                 destroyable.OnAttacked.RemoveListener(blockAction);
                 startNode.End.RemoveListener(finish);
-                //Console.WriteLine("should've removed both listeners");
+                //unblocking normally is completely fine from my testing
             });
             destroyable.OnAttacked.AddListener(blockAction);
             startNode.End.AddListener(finish);
