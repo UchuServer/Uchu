@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using InfectedRose.Core;
 using InfectedRose.Lvl;
 using Uchu.StandardScripts.Base;
@@ -33,9 +34,15 @@ namespace Uchu.StandardScripts.NexusTower
         private GameObject _spawnedTarget;
 
         private bool _active = false;
+        
+        private readonly Quaternion _targetRotation;
 
         public CombatChallenge(GameObject gameObject) : base(gameObject)
         {
+            // Calculate rotation quaternion for spawned objects.
+            this._targetRotation = Quaternion.Concatenate(gameObject.Transform.Rotation,
+                Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float) Math.PI));
+            
             // Show the initial screen when player interacts (asks player to confirm they want to join)
             Listen(gameObject.OnInteract, player =>
             {
@@ -99,7 +106,7 @@ namespace Uchu.StandardScripts.NexusTower
             {
                 Lot = Targets[Math.Min(this._targetsDestroyed / 2, Targets.Length - 1)],
                 Position = this.GameObject.Transform.Position,
-                Rotation = this.GameObject.Transform.Rotation,
+                Rotation = this._targetRotation,
                 Scale = 1,
                 LegoInfo = new LegoDataDictionary(),
             }, this.Zone);
