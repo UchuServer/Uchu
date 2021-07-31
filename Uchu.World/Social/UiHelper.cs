@@ -84,7 +84,7 @@ namespace Uchu.World.Social
             Amf3Helper.WriteText(writer, "index");
 
             writer.Write((byte) Amf3Type.Integer);
-            Amf3Helper.WriteNumber2(writer, (uint) index);
+            Amf3Helper.WriteNumber(writer, (uint) index);
 
             writer.Write((byte) Amf3Type.Null);
             
@@ -170,37 +170,7 @@ namespace Uchu.World.Social
             await using var stream = new MemoryStream();
             using var writer = new BitWriter(stream);
 
-            writer.Write((byte) Amf3Type.Array);
-            writer.Write<byte>(1);
-
-            foreach (var (key, value) in arguments)
-            {
-                Amf3Helper.WriteText(writer, key);
-
-                switch (value)
-                {
-                    case string str:
-                        writer.Write((byte) Amf3Type.String);
-                        Amf3Helper.WriteText(writer, str);
-                        break;
-                    case int integer:
-                        writer.Write((byte) Amf3Type.Integer);
-                        Amf3Helper.WriteNumber2(writer, (uint) integer);
-                        break;
-                    case uint unsigned:
-                        writer.Write((byte) Amf3Type.Integer);
-                        Amf3Helper.WriteNumber2(writer, unsigned);
-                        break;
-                    case bool boolean:
-                        writer.Write((byte) (boolean ? Amf3Type.True : Amf3Type.False));
-                        break;
-                    case null:
-                        writer.Write((byte) Amf3Type.Undefined);
-                        break;
-                }
-            }
-
-            writer.Write((byte) Amf3Type.Null);
+            Amf3Helper.Write(writer, arguments);
             
             @this.Message(new UIMessageServerToSingleClientMessage
             {
