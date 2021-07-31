@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
@@ -186,11 +187,6 @@ namespace Uchu.World.Systems.Missions
         public int RewardBankInventory { get; private set; }
 
         #endregion template
-        
-        /// <summary>
-        /// Whether the mission is part of mission of the day
-        /// </summary>
-        public bool InMissionOfTheDay { get; private set; }
 
         /// <summary>
         /// Cooldown time for repeating the mission.
@@ -249,9 +245,17 @@ namespace Uchu.World.Systems.Missions
         /// Checks if this mission is can be repeated and the cooldown time is satisfied.
         /// </summary>
         /// <returns><c>true</c> if can be repeated right now, <c>false</c> otherwise</returns>
-        public bool CanRepeat => IsMission && State == MissionState.Completed && (Repeatable || InMissionOfTheDay) && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
+        public bool CanRepeat => IsMission && State == MissionState.Completed && Repeatable && (LastCompletion == default || LastCompletion + (CooldownTime * 60) <= DateTimeOffset.Now.ToUnixTimeSeconds());
         
         #endregion properties
+        
+        /// <summary>
+        /// Semaphore used for marking missions as complete. A race condition can occur
+        /// if multiple tasks attempt to mark the mission as complete, resulting in
+        /// the rewards being given multiple times.
+        /// </summary>
+        private readonly SemaphoreSlim _completeMissionSemaphore = new SemaphoreSlim(1, 1);
+        
         static MissionInstance()
         {
             TaskTypes = new Dictionary<MissionTaskType, Type>()
@@ -314,13 +318,7 @@ namespace Uchu.World.Systems.Missions
             RewardCurrencyRepeatable = mission.Rewardcurrencyrepeatable ?? 0;
             RewardScore = mission.LegoScore ?? 0;
             Repeatable = mission.Repeatable ?? false;
-            InMissionOfTheDay = mission.InMOTD ?? false;
             CooldownTime = mission.CooldownTime ?? 0;
-            if (InMissionOfTheDay && CooldownTime == 0)
-            {
-                // Prevents infinite loop of getting and completing daily quest. ~22 hour timer is used by other daily quests.
-                CooldownTime = 1300;
-            }
             
             // Emotes
             RewardEmote1 = mission.Rewardemote ?? -1;
@@ -408,7 +406,7 @@ namespace Uchu.World.Systems.Missions
 
                 foreach (var task in Tasks)
                 {
-                    var taskInstance = mission.Tasks.First(t => t.TaskId == task.TaskId);
+                    var taskInstance = mission.Tasks.FirstOrDefault(t => t.TaskId == task.TaskId);
                     if (taskInstance == default)
                         continue;
                 
@@ -491,6 +489,7 @@ namespace Uchu.World.Systems.Missions
         /// <exception cref="InvalidOperationException">If this mission hasn't been loaded yet</exception>
         public async Task CompleteAsync(Lot rewardItem = default)
         {
+            await _completeMissionSemaphore.WaitAsync();
             if (State == default)
                 await StartAsync();
                 
@@ -521,6 +520,7 @@ namespace Uchu.World.Systems.Missions
             
             await missionInventory.MissionCompleteAsync(MissionId); 
             await missionInventory.OnCompleteMission.InvokeAsync(this);
+            _completeMissionSemaphore.Release();
         }
 
         /// <summary>

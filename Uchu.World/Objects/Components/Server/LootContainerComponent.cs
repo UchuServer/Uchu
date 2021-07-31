@@ -109,7 +109,7 @@ namespace Uchu.World
 
                     if (result <= matrix.Percentage)
                     {
-                        yields.Add(entry.Lot, (uint)count);
+                        yields[entry.Lot] = (yields.ContainsKey(entry.Lot) ? yields[entry.Lot] : 0) + (uint) count;
                     }
                 }
             }
