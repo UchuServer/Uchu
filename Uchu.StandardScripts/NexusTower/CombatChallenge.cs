@@ -36,26 +36,29 @@ namespace Uchu.StandardScripts.NexusTower
 
         public CombatChallenge(GameObject gameObject) : base(gameObject)
         {
+            // Show the initial screen when player interacts (asks player to confirm they want to join)
             Listen(gameObject.OnInteract, player =>
             {
-                // Show the initial screen (asks player to confirm they want to join)
                 player.Message(new NotifyClientObjectMessage
                 {
                     Associate = gameObject,
                     Name = "UI_Open",
                     ParamObj = player,
                 });
-                // Start the activity when player presses Start button
-                Listen(player.OnMessageBoxRespond, (button, identifier, data) =>
-                {
-                    // Check if player clicked the correct button
-                    if (!(identifier == "PlayButton" && button == 1))
-                        return;
-                    if (this._active)
-                        return;
-                    this._active = true;
-                    this.Start(player);
-                });
+            });
+
+            // Start the activity when player presses Start button
+            Listen(gameObject.OnMessageBoxRespond, (player, message) =>
+            {
+                var button = message.Button;
+                var identifier = message.Identifier;
+                // Check if player clicked the correct button
+                if (!(identifier == "PlayButton" && button == 1))
+                    return;
+                if (this._active)
+                    return;
+                this._active = true;
+                this.Start(player);
             });
         }
 

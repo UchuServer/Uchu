@@ -106,6 +106,8 @@ namespace Uchu.World
 
         public Event OnRailMovementReady { get; }
 
+        public Event<Player, MessageBoxRespondMessage> OnMessageBoxRespond { get; }
+
         #endregion
         
         #region Macro
@@ -137,6 +139,8 @@ namespace Uchu.World
             OnRailMovementReady = new Event();
 
             OnCancelRailMovement = new Event();
+
+            OnMessageBoxRespond = new Event<Player, MessageBoxRespondMessage>();
 
             Listen(OnStart, () =>
             {

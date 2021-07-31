@@ -53,7 +53,6 @@ namespace Uchu.World
             OnFireServerEvent = new Event<string, FireEventServerSideMessage>();
             OnReadyForUpdatesEvent = new Event<ReadyForUpdatesMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
-            OnMessageBoxRespond = new Event<int, string, string>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
@@ -246,8 +245,6 @@ namespace Uchu.World
         public Event OnWorldLoad { get; }
 
         public Event<Vector3, Quaternion> OnPositionUpdate { get; }
-        
-        public Event<int, string, string> OnMessageBoxRespond { get; }
 
         public IRakConnection Connection { get; private set; }
 
