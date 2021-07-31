@@ -30,6 +30,10 @@ namespace Uchu.StandardScripts.NexusTower
                     var stats = player.GetComponent<DestroyableComponent>();
                     stats.Health = 1;
                     stats.Armor = 0;
+
+                    // Set flag for https://lu-explorer.web.app/missions/1295
+                    var character = player.GetComponent<CharacterComponent>();
+                    character.SetFlagAsync(1911, true);
                 }, 2000);
             });
         }
