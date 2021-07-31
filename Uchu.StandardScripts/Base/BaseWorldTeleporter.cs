@@ -10,31 +10,37 @@ namespace Uchu.StandardScripts.Base
         protected virtual int TargetZone { get; }
         protected virtual string TargetSpawnLocation { get; }
         protected virtual string Animation { get; }
+        protected virtual string AcceptIdentifier { get; } = "TransferBox";
+        protected virtual string CancelIdentifier { get; } = "TransferBox";
+        protected virtual bool CheckUserData { get; } = true;
 
-        private const string Identifier = "TransferBox";
+        protected virtual void ShowTransferPopup(Player player)
+        {
+            player.Message(new DisplayMessageBoxMessage
+            {
+                Associate = player,
+                Identifier = this.AcceptIdentifier,
+                CallbackClient = GameObject,
+                Show = true,
+                UserData = this.TargetZone.ToString(),
+                Text = this.MessageBoxText,
+            });
+        }
 
         protected BaseWorldTeleporter(GameObject gameObject) : base(gameObject)
         {
-            Listen(gameObject.OnInteract, player =>
-            {
-                player.Message(new DisplayMessageBoxMessage
-                {
-                    Associate = player,
-                    Identifier = Identifier,
-                    CallbackClient = gameObject,
-                    Show = true,
-                    UserData = this.TargetZone.ToString(),
-                    Text = this.MessageBoxText,
-                });
-            });
+            Listen(gameObject.OnInteract, this.ShowTransferPopup);
+            
             Listen(this.Zone.OnPlayerLoad, player =>
             {
                 this.Listen(player.OnMessageBoxRespond, (button, identifier, userData) =>
                 {
-                    // Ensure player clicked correct button
-                    if (!(identifier == Identifier && userData == this.TargetZone.ToString()))
+                    // Ensure player is answering the right message box
+                    // Identifier differs for accept/cancel for LEGO® Club world teleporter interaction
+                    if ((identifier != this.AcceptIdentifier && identifier != this.CancelIdentifier)
+                        || (CheckUserData && userData != this.TargetZone.ToString()))
                         return;
-
+                    
                     // If user clicked no, terminate interaction
                     if (button != 1)
                     {
