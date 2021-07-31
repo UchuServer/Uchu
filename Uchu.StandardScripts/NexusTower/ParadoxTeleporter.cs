@@ -82,6 +82,10 @@ namespace Uchu.StandardScripts.NexusTower
                     // Show rebuilding animation.
                     player.Animate("paradox-teleport-in");
                 });
+
+                // Progress mission 1047
+                var missionInventory = player.GetComponent<MissionInventoryComponent>();
+                missionInventory.ScriptAsync(1491, gameObject.Lot);
             });
         }
     }

@@ -31,6 +31,17 @@ namespace Uchu.StandardScripts.NexusTower
             var direction = Vector3.Transform(new Vector3(-1, 0, 0),
                 GameObject.Transform.Rotation);
             phantomPhysicsComponent.EffectDirection = direction;
+
+            var physics = gameObject.GetComponent<PhysicsComponent>();
+            Listen(physics.OnEnter, other =>
+            {
+                if (!(other.GameObject is Player player))
+                    return;
+
+                // Progress mission 1047
+                var missionInventory = player.GetComponent<MissionInventoryComponent>();
+                missionInventory.ScriptAsync(1492, gameObject.Lot);
+            });
         }
     }
 }

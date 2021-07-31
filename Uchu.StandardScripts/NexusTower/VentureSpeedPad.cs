@@ -24,6 +24,10 @@ namespace Uchu.StandardScripts.NexusTower
 
                 // This skill gives a speed boost for 4 seconds
                 await skill.CalculateSkillAsync(927, player);
+
+                // Progress mission 1047
+                var missionInventory = player.GetComponent<MissionInventoryComponent>();
+                await missionInventory.ScriptAsync(1489, gameObject.Lot);
             });
         }
     }
