@@ -93,6 +93,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task ReadyForUpdatesHandler(ReadyForUpdatesMessage message, Player player)
         {
+            if (message.GameObject == null) return;
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
             Zone.SendSerialization(message.GameObject, new []{ player });

@@ -79,7 +79,9 @@ namespace Uchu.World.Systems.Behaviors
                 if (!parameters.CalculateImpact)
                     continue;
                 
-                // Only server side projectiles have to be computed    
+                // Only server side projectiles have to be computed
+                if (parameters.Context.Associate?.Transform == null) continue;
+                if (parameters.BranchContext.Target?.Transform == null) continue;
                 var distance = Vector3.Distance(parameters.Context.Associate.Transform.Position, 
                     parameters.BranchContext.Target.Transform.Position);
                 var time = (int) (distance / (double) ProjectileSpeed * 1000);

@@ -223,7 +223,7 @@ namespace Uchu.World.Systems.Match
                     Data = new LegoDataDictionary
                     {
                         {"player", player.Id, 9},
-                        {"nplayerName", player.Name, 0},
+                        {"playerName", player.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });
@@ -233,7 +233,7 @@ namespace Uchu.World.Systems.Match
                     Data = new LegoDataDictionary
                     {
                         {"player", player.Id, 9},
-                        {"nplayerName", player.Name, 0},
+                        {"playerName", player.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });
