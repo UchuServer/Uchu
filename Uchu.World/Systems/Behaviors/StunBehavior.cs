@@ -54,23 +54,15 @@ namespace Uchu.World.Systems.Behaviors
         }
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            System.Console.WriteLine(StunCaster == 0);
-            System.Console.WriteLine(parameters.BranchContext.Target != null);
-            System.Console.WriteLine(parameters.BranchContext.Duration != 0);
-            if (parameters.BranchContext.Target != null){
-                System.Console.WriteLine(parameters.BranchContext.Target.TryGetComponent<BaseCombatAiComponent>(out var no));
-            } else {
-                System.Console.WriteLine("no basecombatai");
-            }
             if (StunCaster == 0 && parameters.BranchContext.Target != null && parameters.BranchContext.Duration != 0 &&
                 parameters.BranchContext.Target.TryGetComponent<BaseCombatAiComponent>(out var ai))
             {
-                System.Console.WriteLine("stunned");
                 ai.Stunned = true;
                 parameters.Schedule(() => {
                     ai.Stunned = false;
                 }, parameters.BranchContext.Duration);
             }
+            //this doesn't work because it does not pass the target check, target is always null. it doesn't error, but it also doesn't do anything for the time being.
         }
     }
 }
