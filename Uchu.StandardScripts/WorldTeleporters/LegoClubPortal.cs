@@ -7,6 +7,7 @@ using Uchu.World.Social;
 namespace Uchu.StandardScripts.WorldTeleporters
 {
     [ScriptName("ScriptComponent_1239_script_name__removed")]
+    [ScriptName("ScriptComponent_1485_script_name__removed")]
     public class LegoClubPortal : BaseWorldTeleporter
     {
         protected override string MessageBoxText => this.TargetZone switch
