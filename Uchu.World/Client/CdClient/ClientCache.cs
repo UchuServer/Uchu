@@ -51,10 +51,6 @@ namespace Uchu.World.Client
         /// </summary>
         public static async Task LoadAsync()
         {
-            // Update the CDClient database.
-            await using var cdContext = new CdClientContext();
-            await cdContext.EnsureUpdatedAsync();
-            
             // Set up the cache tables.
             Logger.Debug("Setting up persistent cache tables");
             var loadTableTasks = new List<Task>();
