@@ -128,8 +128,10 @@ namespace Uchu.StandardScripts.NexusTower
             });
 
             // If the timer hasn't ended yet, spawn a new target when this one dies.
-            Listen(stats.OnDeath, () =>
+            var destructibleComponent = this._spawnedTarget.GetComponent<DestructibleComponent>();
+            Listen(destructibleComponent.OnSmashed, (smasher, lootOwner) =>
             {
+                Destroy(this._spawnedTarget);
                 this._targetsDestroyed++;
                 if (this._active)
                     this.SpawnTarget(player);
