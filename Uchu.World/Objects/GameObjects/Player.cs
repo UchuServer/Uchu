@@ -50,9 +50,10 @@ namespace Uchu.World
         internal Player()
         {
             OnRespondToMission = new Event<int, GameObject, Lot>();
-            OnFireServerEvent = new Event<string, FireServerEventMessage>();
-            OnReadyForUpdatesEvent = new Event<ReadyForUpdateMessage>();
+            OnFireServerEvent = new Event<string, FireEventServerSideMessage>();
+            OnReadyForUpdatesEvent = new Event<ReadyForUpdatesMessage>();
             OnPositionUpdate = new Event<Vector3, Quaternion>();
+            OnMessageBoxRespond = new Event<int, string, string>();
             OnPetTamingTryBuild = new Event<PetTamingTryBuildMessage>();
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
@@ -231,9 +232,9 @@ namespace Uchu.World
         
         #region properties
 
-        public Event<string, FireServerEventMessage> OnFireServerEvent { get; }
+        public Event<string, FireEventServerSideMessage> OnFireServerEvent { get; }
         
-        public Event<ReadyForUpdateMessage> OnReadyForUpdatesEvent { get; }
+        public Event<ReadyForUpdatesMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
         
@@ -245,6 +246,8 @@ namespace Uchu.World
         public Event OnWorldLoad { get; }
 
         public Event<Vector3, Quaternion> OnPositionUpdate { get; }
+        
+        public Event<int, string, string> OnMessageBoxRespond { get; }
 
         public IRakConnection Connection { get; private set; }
 
@@ -313,17 +316,17 @@ namespace Uchu.World
                 Associate = this,
                 Animation = celebration.Animation,
                 BackgroundObject = new Lot(celebration.BackgroundObject.Value),
-                CameraPathLOT = new Lot(celebration.CameraPathLOT.Value),
+                CameraPathLot = new Lot(celebration.CameraPathLOT.Value),
                 CeleLeadIn = celebration.CeleLeadIn.Value,
                 CeleLeadOut = celebration.CeleLeadOut.Value,
-                CelebrationID = celebration.Id.Value,
+                CelebrationId = celebration.Id.Value,
                 Duration = celebration.Duration.Value,
-                IconID = celebration.IconID ?? default,
+                IconId = (uint) (celebration.IconID ?? default),
                 MainText = celebration.MainText,
                 MixerProgram = celebration.MixerProgram,
                 MusicCue = celebration.MusicCue,
                 PathNodeName = celebration.PathNodeName,
-                SoundGUID = celebration.SoundGUID,
+                SoundGuid = celebration.SoundGUID,
                 SubText = celebration.SubText
             }); // Start effect
         }
@@ -441,13 +444,25 @@ namespace Uchu.World
                 return;
             Connection.Send(packet);
         }
+        
+        /// <summary>
+        /// Sends a packet to a player
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        public void Message<T>(T packet) where T : struct
+        {
+            if (Id == ObjectId.Invalid)
+                return;
+            Connection.Send(packet);
+        }
 
         /// <summary>
         /// Tries to send a player to a different zone
         /// </summary>
-        /// <param name="zoneId"></param>
-        /// <returns></returns>
-        public async Task<bool> SendToWorldAsync(ZoneId zoneId)
+        /// <param name="zoneId">The zone id to travel to</param>
+        /// <param name="spawnPosition">Position to spawn at</param>
+        /// <param name="spawnRotation">Rotation to spawn at</param>
+        public async Task<bool> SendToWorldAsync(ZoneId zoneId, Vector3 spawnPosition = default, Quaternion spawnRotation = default)
         {
             Logger.Debug($"Requesting server for: {zoneId}");
 
@@ -468,7 +483,7 @@ namespace Uchu.World
             }
             
             Logger.Debug($"Yielded {server?.Port.ToString() ?? "<void>"} for {zoneId}");
-            await SendToWorldAsync(server, zoneId);
+            await SendToWorldAsync(server, zoneId, spawnPosition, spawnRotation);
             return true;
         }
         
@@ -477,13 +492,21 @@ namespace Uchu.World
         /// </summary>
         /// <param name="serverInformation">Information regarding the server to connect to</param>
         /// <param name="zoneId">The zone id to travel to</param>
-        public async Task SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId)
+        /// <param name="spawnPosition">Position to spawn at</param>
+        /// <param name="spawnRotation">Rotation to spawn at</param>
+        public async Task SendToWorldAsync(InstanceInfo serverInformation, ZoneId zoneId, Vector3 spawnPosition = default, Quaternion spawnRotation = default)
         {
             // Don't redirect the user to a world they're already in
             if (UchuServer.Port == serverInformation.Port)
                 return;
             
-            GetComponent<CharacterComponent>().LastZone = zoneId;
+            // Set the spawns so they don't persist to the next world and cause the player to go out of bounds.
+            if (this.TryGetComponent<CharacterComponent>(out var characterComponent))
+            {
+                characterComponent.LastZone = zoneId;
+                characterComponent.SpawnPosition = spawnPosition;
+                characterComponent.SpawnRotation = spawnRotation;
+            }
             await GetComponent<SaveComponent>().SaveAsync(false);
             
             Message(new ServerRedirectionPacket

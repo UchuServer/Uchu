@@ -9,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Python;
 using Uchu.World.Api;
 using Uchu.World.Client;
@@ -55,6 +56,10 @@ namespace Uchu.World
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
             await base.ConfigureAsync(configFile);
 
+            // Update the CDClient database.
+            await using var cdContext = new CdClientContext();
+            await cdContext.EnsureUpdatedAsync();
+            
             ZoneParser = new ZoneParser(Resources);
             Whitelist = new Whitelist(Resources);
 
@@ -163,25 +168,16 @@ namespace Uchu.World
                     {
                         // Packet handlers and game messages
                         var parameters = method.GetParameters();
-                        if (parameters.Length == 0 || !typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
-                            continue;
-                        
-                        var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
-                        if (packet == null)
+                        if (parameters.Length == 0)
                             continue;
 
-                        // Game messages are stored separately
-                        if (typeof(IGameMessage).IsAssignableFrom(parameters[0].ParameterType))
+                        if (typeof(IPacket).IsAssignableFrom(parameters[0].ParameterType))
                         {
-                            var gameMessage = (IGameMessage) packet;
-                            if (gameMessage == null)
+                            // IPacket (object)-based handler.
+                            var packet = (IPacket) Activator.CreateInstance(parameters[0].ParameterType);
+                            if (packet == null)
                                 continue;
                             
-                            _gameMessageHandlerMap.Add(gameMessage.GameMessageId, new Handler(instance, method,
-                                parameters[0].ParameterType));
-                        }
-                        else
-                        {
                             var remoteConnectionType = attr.RemoteConnectionType ?? packet.RemoteConnectionType;
                             var packetId = attr.PacketId ?? packet.PacketId;
 
@@ -195,6 +191,42 @@ namespace Uchu.World
                                 : $"Handler for packet {packet} overwritten");
 
                             handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
+                        }
+                        else if (parameters[0].ParameterType.IsValueType)
+                        {
+                            // Struct-based handler.
+                            var packet = Activator.CreateInstance(parameters[0].ParameterType);
+                            if (packet == null)
+                                continue;
+                            
+                            var gameMessageIdProperty = parameters[0].ParameterType.GetProperty("GameMessageId");
+                            if (gameMessageIdProperty != null)
+                            {
+                                if (!(gameMessageIdProperty.GetValue(packet) is GameMessageId gameMessageId))
+                                    continue;
+                                _gameMessageHandlerMap.Add(gameMessageId, new Handler(instance, method, 
+                                    parameters[0].ParameterType));
+                            }
+                            else
+                            {
+                                var packetStruct = parameters[0].ParameterType.GetCustomAttribute<PacketStructAttribute>(true);
+                                if (packetStruct == null)
+                                    continue;
+                                
+                                var remoteConnectionType = attr.RemoteConnectionType ?? packetStruct.RemoteConnectionType;
+                                var packetId = attr.PacketId ?? packetStruct.PacketId;
+
+                                if (!HandlerMap.ContainsKey(remoteConnectionType))
+                                    HandlerMap[remoteConnectionType] = new Dictionary<uint, Handler>();
+
+                                var handlers = HandlerMap[remoteConnectionType];
+
+                                Logger.Debug(!handlers.ContainsKey(packetId)
+                                    ? $"Registered handler for packet {packet}"
+                                    : $"Handler for packet {packet} overwritten");
+
+                                handlers[packetId] = new Handler(instance, method, parameters[0].ParameterType);
+                            }
                         }
                     }
                     else
@@ -257,11 +289,11 @@ namespace Uchu.World
                 return;
             }
 
-            var gameMessage = (IGameMessage)messageHandler.NewPacket();
-            gameMessage.Associate = associate;
-            reader.BaseStream.Position = 18;
-            reader.Read(gameMessage);
-
+            // Handle a struct-based packet.
+            var gameMessage = StructPacketParser.ReadPacket(messageHandler.PacketType, reader.BaseStream, new Dictionary<string, object>()
+            {
+                {"Zone", player.Zone}
+            });
             await InvokeHandlerAsync(messageHandler, gameMessage, player);
         }
 
@@ -271,7 +303,7 @@ namespace Uchu.World
         /// <param name="handler">The packet handler to call</param>
         /// <param name="packet">The packet to pass to the handler</param>
         /// <param name="player">The originator of the packet</param>
-        private static async Task InvokeHandlerAsync(Handler handler, IPacket packet, Player player)
+        private static async Task InvokeHandlerAsync(Handler handler, object packet, Player player)
         {
             var task = handler.Info.ReturnType == typeof(Task);
             var parameters = new object[] {packet, player};

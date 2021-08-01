@@ -49,14 +49,14 @@ namespace Uchu.World.Handlers.GameMessages
             if (message.IsMultiInteract)
             {
                 // Multi-interact is mission
-                if (message.MultiInteractType == 0) // Mission Component
+                if (message.MultiInteractType == InteractionType.MissionOfferer) // Mission Component
                 {
                     player.GetComponent<MissionInventoryComponent>().MessageOfferMission(
                         (int) message.MultiInteractId,
                         message.TargetObject
                     );
                 } 
-                else if (message.MultiInteractType == 1) // Any other case
+                else if (message.MultiInteractType == InteractionType.Vendor) // Any other case
                 {
                     await message.TargetObject.OnInteract.InvokeAsync(player);
                     await inventory.InteractAsync(message.TargetObject.Lot);
@@ -91,8 +91,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public async Task ReadyForUpdatesHandler(ReadyForUpdateMessage message, Player player)
+        public async Task ReadyForUpdatesHandler(ReadyForUpdatesMessage message, Player player)
         {
+            if (message.GameObject == null) return;
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
             Zone.SendSerialization(message.GameObject, new []{ player });
@@ -106,7 +107,9 @@ namespace Uchu.World.Handlers.GameMessages
             player.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = player,
-                AnimationsId = animation.AnimationName
+                AnimationId = animation.AnimationName,
+                Priority = 0.4f,
+                Scale = 1,
             });
             
             player.Zone.ExcludingMessage(new EmotePlayedMessage
@@ -142,7 +145,10 @@ namespace Uchu.World.Handlers.GameMessages
                     Associate = player,
                     EffectId = 7074,
                     EffectType = "create",
-                    Name = "levelup_body_glow"
+                    Name = "levelup_body_glow",
+                    Priority = 1,
+                    Scale = 1,
+                    Serialize = true,
                 });
 
                 player.Zone.BroadcastChatMessage($"{character.Name} has reached Level {character.Level}!");
@@ -165,6 +171,12 @@ namespace Uchu.World.Handlers.GameMessages
                     UnexpectedRotation = movingPlatformComponent.TargetRotation,
                 });
             }
+        }
+
+        [PacketHandler]
+        public void MessageBoxRespondMessageHandler(MessageBoxRespondMessage message, Player player)
+        {
+            player.OnMessageBoxRespond.Invoke(message.Button, message.Identifier, message.UserData);
         }
     }
 }

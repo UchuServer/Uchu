@@ -1,10 +1,13 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using InfectedRose.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
+using Uchu.World.Client;
+using Timer = System.Timers.Timer;
 
 namespace Uchu.World.Scripting.Native
 {
@@ -43,6 +46,13 @@ namespace Uchu.World.Scripting.Native
         /// Dictionary of the variables stored by the script.
         /// </summary>
         private Dictionary<string, object> _variables = new Dictionary<string, object>();
+
+        /// <summary>
+        /// "Transactions" for grouping together network variable changes. Some
+        /// scripts, like Avant Gardens Survival, don't act as expected when multiple
+        /// messages are sent in place of one message like live.
+        /// </summary>
+        private Dictionary<Thread, LegoDataDictionary> _variableChangeTransactions = new Dictionary<Thread, LegoDataDictionary>();
 
         /// <summary>
         /// Timers used by the script.
@@ -143,6 +153,53 @@ namespace Uchu.World.Scripting.Native
         {
             this._variables[name] = value;
         }
+
+        /// <summary>
+        /// Prepares an LDF wot use with ScriptNetworkVarUpdateMessage and
+        /// sets the internal LDF data of the script component.
+        /// </summary>
+        /// <param name="name">Name of the variable to store.</param>
+        /// <param name="value">Value of the variable to store.</param>
+        /// <param name="ldf">Dictionary to set up for sending with ScriptNetworkVarUpdateMessage.</param>
+        private void PrepareDictionary(string name, object value, LegoDataDictionary ldf)
+        {
+            // Add the value.
+            if (value is IList list)
+            {
+                // Add the list entries.
+                // These aren't stored in the script.
+                for (var i = 0; i < list.Count; i++)
+                {
+                    var subValue = list[i];
+                    var key = name + "." + (i + 1);
+                    if (subValue is GameObject gameObject)
+                    {
+                        ldf.Add(key, gameObject.Id);
+                    }
+                    else
+                    {
+                        ldf.Add(key, subValue);
+                    }
+                }
+            }
+            else
+            {
+                // Convert the object.
+                var newValue = value;
+                if (value is GameObject gameObject)
+                {
+                    newValue = (long) gameObject.Id;
+                }
+                
+                // Store the object.
+                if (this.GameObject.TryGetComponent<LuaScriptComponent>(out var component))
+                {
+                    component.Data ??= new LegoDataDictionary();
+                    component.Data.Add(name, newValue);
+                }
+                ldf.Add(name, newValue);
+            }
+        }
         
         /// <summary>
         /// Sets a networked variable of the script.
@@ -153,42 +210,58 @@ namespace Uchu.World.Scripting.Native
         {
             // Set the variable.
             this.SetVar(name, value);
-            
-            // Broadcast the variable change.
-            Task.Run(() =>
+
+            if (this._variableChangeTransactions.ContainsKey(Thread.CurrentThread))
             {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                // Add to the transaction.
+                PrepareDictionary(name, value, this._variableChangeTransactions[Thread.CurrentThread]);
+            }
+            else
+            {
+                // Create the LDF.
+                var ldf = new LegoDataDictionary();
+                PrepareDictionary(name, value, ldf);
+
+                // Broadcast the variable changes.
+                Task.Run(() =>
                 {
-                    Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
+                    this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage
                     {
-                        {name, value}
-                    }.ToString(),
+                        Associate = this.GameObject,
+                        Data = ldf,
+                    });
                 });
-            });
+            }
+        }
+
+        /// <summary>
+        /// Starts a "transaction" for storing network variable changes
+        /// to be sent together when ended.
+        /// </summary>
+        public void StartNetworkVarTransaction()
+        {
+            if (this._variableChangeTransactions.ContainsKey(Thread.CurrentThread)) return;
+            this._variableChangeTransactions[Thread.CurrentThread] = new LegoDataDictionary();
         }
         
         /// <summary>
-        /// Sets a networked variable of the script.
+        /// Completes a "transaction" for storing network variable changes
+        /// and sends the stored network variables changes.
         /// </summary>
-        /// <param name="name">Name of the variable to store.</param>
-        /// <param name="value">Value of the variable to store.</param>
-        /// <param name="type">Type of the LDF entry to send.</param>
-        public void SetNetworkVar(string name, object value, byte type)
+        public void FinishNetworkVarTransaction()
         {
-            // Set the variable.
-            this.SetVar(name, value);
+            // Remove the LDF.
+            if (!this._variableChangeTransactions.ContainsKey(Thread.CurrentThread)) return;
+            var ldf = this._variableChangeTransactions[Thread.CurrentThread];
+            this._variableChangeTransactions.Remove(Thread.CurrentThread);
             
-            // Broadcast the variable change.
+            // Broadcast the variable changes.
             Task.Run(() =>
             {
-                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage()
+                this.Zone.BroadcastMessage(new ScriptNetworkVarUpdateMessage
                 {
                     Associate = this.GameObject,
-                    LDFInText = new LegoDataDictionary()
-                    {
-                        {name, value, type}
-                    }.ToString(),
+                    Data = ldf,
                 });
             });
         }
@@ -201,7 +274,25 @@ namespace Uchu.World.Scripting.Native
         /// <returns>Value of the variable to fetch.</returns>
         public T GetVar<T>(string name)
         {
+            // Add the value if it doesn't exist and is a value type.
+            if (!this._variables.ContainsKey(name) && typeof(T).IsValueType)
+            {
+                this._variables[name] = Activator.CreateInstance(typeof(T));
+            }
+            
+            // Return the value.
             return (T) this._variables[name];
+        }
+
+        /// <summary>
+        /// Gets a stored variable of the script.
+        /// </summary>
+        /// <param name="name">Name of the variable to fetch.</param>
+        /// <typeparam name="T">Type of the value.</typeparam>
+        /// <returns>Value of the variable to fetch.</returns>
+        public T GetNetworkVar<T>(string name)
+        {
+            return GetVar<T>(name);
         }
         #endregion
 
@@ -436,7 +527,7 @@ namespace Uchu.World.Scripting.Native
                 player.Message(new PlayAnimationMessage
                 {
                     Associate = this.GameObject,
-                    AnimationsId = this._animation.Name,
+                    AnimationId = this._animation.Name,
                     PlayImmediate = this._animation.PlayImmediate,
                 });
             }
@@ -452,6 +543,94 @@ namespace Uchu.World.Scripting.Native
                     Name = effect.Name,
                 });
             }
+        }
+        #endregion
+
+        #region Activities
+        /// <summary>
+        /// Returns the id of the activity.
+        /// </summary>
+        /// <returns>Id of the activity.</returns>
+        public int GetActivityId()
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
+            return activity.ActivityInfo.ActivityID ?? 0;
+        }
+        
+        /// <summary>
+        /// Adds a player to the current activity.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void AddActivityUser(Player player)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.AddPlayer(player);
+        }
+        
+        /// <summary>
+        /// Removes a player from the current activity.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemoveActivityUser(Player player)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.RemovePlayer(player);
+        }
+        
+        /// <summary>
+        /// Sets the activity value for a given player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index of the value to set.</param>
+        /// <param name="value">Value to set.</param>
+        public void SetActivityUserData(Player player, int index, float value)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.SetParameter(player, index, value);
+        }
+        
+        /// <summary>
+        /// Returns the activity value for a given player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index of the value to set.</param>
+        /// <returns>The activity value for the player.</returns>
+        public float GetActivityUserData(Player player, int index)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return 0;
+            return component.GetParameter(player, index);
+        }
+
+        /// <summary>
+        /// Starts the activity.
+        /// </summary>
+        public void ActivityStart()
+        {
+            GameObject.Zone.BroadcastMessage(new ActivityStartMessage
+            {
+                Associate = this.GameObject,
+            });
+        }
+        
+        /// <summary>
+        /// Adds a player to the current minigame.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void MiniGameAddPlayer(Player player)
+        {
+            this.AddActivityUser(player);
+        }
+
+        /// <summary>
+        /// Distributes activity rewards to a player.
+        /// </summary>
+        /// <param name="player">Player to award.</param>
+        /// <param name="autoAddCurrency">Whether to automatically add currency to the player instead of dropping.</param>
+        /// <param name="autoAddItems">Whether to automatically add items to the player instead of dropping.</param>
+        public void DistributeActivityRewards(Player player, bool autoAddCurrency = false, bool autoAddItems = false)
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var component)) return;
+            component.DropLootAsync(player, autoAddCurrency, autoAddItems).Wait();
         }
         #endregion
         

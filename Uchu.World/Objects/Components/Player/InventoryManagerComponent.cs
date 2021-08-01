@@ -59,6 +59,13 @@ namespace Uchu.World
         #endregion properties
 
         #region constructors
+
+        /// <summary>
+        /// Whether the inventory has loaded or not. If it hasn't loaded,
+        /// it will not be saved.
+        /// </summary>
+        private bool _loaded = false;
+        
         protected InventoryManagerComponent()
         {
             Listen(OnStart, async () =>
@@ -97,6 +104,7 @@ namespace Uchu.World
                 if (this[InventoryType.Hidden] is {} hiddenInventory)
                     await hiddenInventory.LoadItems(playerCharacter.Items.Where(i => i.ParentId != ObjectId.Invalid 
                         && (InventoryType) i.InventoryType == InventoryType.Hidden));
+                this._loaded = true;
             });
 
             Listen(OnDestroyed, () =>
@@ -114,6 +122,7 @@ namespace Uchu.World
 
         public async Task SaveAsync(UchuContext context)
         {
+            if (!this._loaded) return;
             var itemsToSave = Items;
 
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
@@ -398,7 +407,7 @@ namespace Uchu.World
                     else
                     {
                         // Display item-bouncing-off-backpack animation
-                        ((Player) GameObject).Message(new NotifyRewardMailed
+                        ((Player) GameObject).Message(new NotifyRewardMailedMessage
                         {
                             ObjectId = ObjectId.Standalone,
                             StartPoint = new Vector3(0, 0, 0),

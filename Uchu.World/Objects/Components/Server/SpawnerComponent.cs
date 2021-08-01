@@ -14,9 +14,19 @@ namespace Uchu.World
         private List<SpawnerComponent> SpawnerNodes { get; set; }
 
         /// <summary>
+        /// Whether the spawner network is active or not.
+        /// </summary>
+        public bool Active { get; private set; }
+        
+        /// <summary>
         /// Minimum number of entities to have spawned at a time.
         /// </summary>
         public uint SpawnsToMaintain { get; set; } = 1;
+        
+        /// <summary>
+        /// Initial minimum number of entities to have spawned at a time.
+        /// </summary>
+        public uint InitialSpawnsToMaintain { get; set; } = 1;
 
         /// <summary>
         /// Time to wait before spawning a new entity when one is destroyed, in milliseconds.
@@ -55,6 +65,7 @@ namespace Uchu.World
                 Zone.Schedule(() =>
                 {
                     OnRespawnTimeCompleted.Invoke(lootOwner);
+                    if (!this.Active) return;
                     TrySpawn();
                 }, RespawnTime);
             });
@@ -121,6 +132,61 @@ namespace Uchu.World
                 TrySpawn();
             }
         }
+
+        /// <summary>
+        /// Activates the spawner.
+        /// </summary>
+        public void Activate()
+        {
+            if (this.Active) return;
+            Start(this);
+            this.Active = true;
+        }
+
+        /// <summary>
+        /// Deactivates the spawner.
+        /// </summary>
+        public void Deactivate()
+        {
+            if (!this.Active) return;
+            this.Active = false;
+        }
+
+        /// <summary>
+        /// Resets the spawner.
+        /// </summary>
+        public void Reset()
+        {
+            foreach (var node in SpawnerNodes)
+            {
+                node.Reset();
+            }
+            this.SpawnsToMaintain = this.InitialSpawnsToMaintain;
+        }
+
+        /// <summary>
+        /// Sets the LOT of the spawners.
+        /// </summary>
+        /// <param name="lot">Lot to use.</param>
+        public void SetLot(Lot lot)
+        {
+            foreach (var node in SpawnerNodes)
+            {
+                node.ChangeSpawnTemplate(lot);
+            }
+        }
+
+        /// <summary>
+        /// Clears the active objects created by the spawner.
+        /// </summary>
+        public void DestroyActiveObjects()
+        {
+            foreach (var node in SpawnerNodes)
+            {
+                if (!node.HasActiveSpawn) continue;
+                Destroy(node.ActiveSpawn);
+            }
+        }
     }
     /// <summary>
     /// Component responsible for spawning objects. Can be part of a spawner network.
@@ -151,6 +217,11 @@ namespace Uchu.World
         /// The LOT of the object this spawner spawns.
         /// </summary>
         public Lot SpawnTemplate { get; set; }
+
+        /// <summary>
+        /// The initial LOT of the object this spawner spawns.
+        /// </summary>
+        public Lot InitialSpawnTemplate { get; set; }
 
         /// <summary>
         /// Scale for the objects that are spawned.
@@ -271,6 +342,29 @@ namespace Uchu.World
             }
 
             return obj;
+        }
+
+        /// <summary>
+        /// Changes the lot and stored the initial LOT to be
+        /// reset later.
+        /// </summary>
+        /// <param name="lot">LOT to set.</param>
+        public void ChangeSpawnTemplate(Lot lot)
+        {
+            if (this.InitialSpawnTemplate == default)
+            {
+                this.InitialSpawnTemplate = this.SpawnTemplate;
+            }
+            this.SpawnTemplate = lot;
+        }
+
+        /// <summary>
+        /// Resets the LOT to the initial value.
+        /// </summary>
+        public void Reset()
+        {
+            if (this.InitialSpawnTemplate == default) return;
+            this.SpawnTemplate = this.InitialSpawnTemplate;
         }
     }
 }

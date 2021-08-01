@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Core.Config;
 using Uchu.Core.Providers;
 using Uchu.Master.Api;
@@ -157,9 +158,11 @@ namespace Uchu.Master
         {
             try
             {
-                await using var ctx = new UchuContext();
+                await using var uchuContext = new UchuContext();
+                await uchuContext.EnsureUpdatedAsync();
                 
-                await ctx.EnsureUpdatedAsync();
+                await using var cdClientContext = new CdClientContext();
+                await cdClientContext.EnsureUpdatedAsync();
 
                 return true;
             }

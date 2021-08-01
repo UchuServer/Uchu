@@ -90,6 +90,12 @@ namespace Uchu.World
         }
         
         /// <summary>
+        /// Whether the inventory has loaded or not. If it hasn't loaded,
+        /// it will not be saved.
+        /// </summary>
+        private bool _loaded = false;
+        
+        /// <summary>
         /// Loads all player missions, combining the cd client and uchu database into mission instances
         /// </summary>
         private async Task LoadAsync()
@@ -115,6 +121,7 @@ namespace Uchu.World
                         Missions.Add(instance);
                     }
                 }
+                this._loaded = true;
 
                 Listen(player.OnRespondToMission, async (missionId, receiver, rewardLot) =>
                 {
@@ -129,6 +136,7 @@ namespace Uchu.World
         /// <param name="context">The database context to save to</param>
         public async Task SaveAsync(UchuContext context)
         {
+            if (!this._loaded) return;
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Missions)
                 .ThenInclude(m => m.Tasks)
@@ -572,6 +580,25 @@ namespace Uchu.World
             await StartUnlockableAchievementsAsync<DiscoverTask>(MissionTaskType.Discover, poiGroup, async task =>
             {
                 await task.ReportProgress(poiGroup);
+            });
+        }
+
+        /// <summary>
+        /// Progresses minigame tasks
+        /// </summary>
+        /// <param name="activityId">Activity id of the minigame.</param>
+        /// <param name="targetGroup">Target group to progress.</param>
+        /// <param name="value">Value to progress with.</param>
+        public async Task MinigameAchievementAsync(int activityId, string targetGroup, float value)
+        {
+            foreach (var task in FindActiveTasksAsync<MinigameAchievementTask>())
+            {
+                await task.ReportProgress(activityId, targetGroup, value);
+            }
+
+            await StartUnlockableAchievementsAsync<MinigameAchievementTask>(MissionTaskType.MinigameAchievement, targetGroup, async task =>
+            {
+                await task.ReportProgress(activityId, targetGroup, value);
             });
         }
 
