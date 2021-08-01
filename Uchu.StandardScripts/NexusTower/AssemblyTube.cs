@@ -66,9 +66,10 @@ namespace Uchu.StandardScripts.NexusTower
                     player.Animate("tube-resurrect");
                 });
 
-                // Progress mission 1047
+                // Progress mission 1047 and 1331
                 var missionInventory = player.GetComponent<MissionInventoryComponent>();
                 missionInventory.ScriptAsync(1490, gameObject.Lot);
+                missionInventory.ScriptAsync(1861, gameObject.Lot);
             });
         }
     }
