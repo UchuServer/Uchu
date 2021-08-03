@@ -42,7 +42,7 @@ namespace Uchu.StandardScripts.General
                 });
                 Task.Run(async () =>
                 {
-                    await player.GetComponent<DestructibleComponent>().SmashAsync(player, animation: "big-shark-death");
+                    await player.GetComponent<DestructibleComponent>().SmashAsync(gameObject, animation: "big-shark-death");
                 });
             });
         }

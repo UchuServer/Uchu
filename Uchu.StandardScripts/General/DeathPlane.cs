@@ -30,7 +30,7 @@ namespace Uchu.StandardScripts.General
                 if (!(other.GameObject is Player player)) return;
                 Task.Run(async () =>
                 {
-                    await player.GetComponent<DestructibleComponent>().SmashAsync(player);
+                    await player.GetComponent<DestructibleComponent>().SmashAsync(gameObject);
                 });
             });
         }
