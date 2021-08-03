@@ -21,8 +21,6 @@ namespace Uchu.StandardScripts.General
         /// <param name="gameObject">Game object to control with the script.</param>
         public DeathPlane(GameObject gameObject) : base(gameObject)
         {
-            //Console.WriteLine("Death barrier positioned at " + gameObject.Transform.Position + ", Scale of GameObject is " + gameObject.Transform.Scale);
-
             var physics = gameObject.GetComponent<PhysicsComponent>();
             if (physics == default) return;
             Listen(physics.OnEnter, other =>

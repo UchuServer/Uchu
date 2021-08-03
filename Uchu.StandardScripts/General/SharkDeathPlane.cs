@@ -30,12 +30,7 @@ namespace Uchu.StandardScripts.General
                 var missionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
                 Task.Run(async () => 
                 {
-                    //script specifically has these achievements in this order
-
-                    //i don't think the dependencies work yet, but i presume
-                    //the script did it in this order so you wouldn't get the 
-                    //last death of one achievement, and get the first of the 
-                    //next one on the same death
+                    //achievements require this order
                     await missionInventoryComponent.ScriptAsync(665, gameObject.Lot);
                     await missionInventoryComponent.ScriptAsync(664, gameObject.Lot);
                     await missionInventoryComponent.ScriptAsync(663, gameObject.Lot);
