@@ -275,6 +275,7 @@ namespace Uchu.World.Systems.Missions
                 [MissionTaskType.TamePet] = typeof(PetTameTask),
                 [MissionTaskType.Discover] = typeof(DiscoverTask),
                 [MissionTaskType.MinigameAchievement] = typeof(MinigameAchievementTask),
+                [MissionTaskType.StatPickups] = typeof(StatPickupsTask),
             };
         }
         

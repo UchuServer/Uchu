@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Uchu.Core.Resources;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -13,6 +14,7 @@ namespace Uchu.StandardScripts.General
                 Listen(player.OnLootPickup, lot =>
                 {
                     var stats = player.GetComponent<DestroyableComponent>();
+                    var missionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
                     
                     switch (lot)
                     {
@@ -65,6 +67,7 @@ namespace Uchu.StandardScripts.General
                             return Task.CompletedTask;
                     }
                     
+                    missionInventoryComponent.StatPickupsAsync(lot);
                     return Task.CompletedTask;
                 });
 

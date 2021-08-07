@@ -671,6 +671,23 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Progresses all stat pickup tasks using the given lot
+        /// </summary>
+        /// <param name="lot">The lot to progress the tasks with</param>
+        public async Task StatPickupsAsync(Lot lot)
+        {
+            foreach (var task in FindActiveTasksAsync<StatPickupsTask>())
+            {
+                await task.ReportProgress(lot);
+            }
+
+            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, lot, async task =>
+            {
+                await task.ReportProgress(lot);
+            });
+        }
+
+        /// <summary>
         /// Progresses the taming pet tasks.
         /// </summary>
         /// <param name="Pet">the lot of the tamed pet</param>

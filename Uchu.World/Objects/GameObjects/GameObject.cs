@@ -148,12 +148,19 @@ namespace Uchu.World
                     this.GetComponent<LuaScriptComponent>() != default) return;
                 var scriptName = ((string) scriptNameValue).ToLower();
                 Logger.Debug($"{this} -> {scriptNameValue}");
+                //var a = false;
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
                     this.Zone.LoadObjectScript(this, objectScriptType);
+                //    a = true;
                     break;
                 }
+                /*
+                if (!a && scriptName != ""){
+                    Console.WriteLine("Did not load script: " + scriptName + " Object LOT: " + Lot.Id);
+                }
+                */
             });
 
             Listen(OnDestroyed, () =>
