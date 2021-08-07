@@ -16,6 +16,7 @@ namespace Uchu.StandardScripts.General
                 {Lot.TwoImagination, 129},
                 {Lot.ThreeImagination, 906},
                 {Lot.FiveImagination, 907},
+                {Lot.TenImagination, 908},
                 {Lot.Health, 5},
                 {Lot.TwoHealth, 902},
                 {Lot.ThreeHealth, 903},
