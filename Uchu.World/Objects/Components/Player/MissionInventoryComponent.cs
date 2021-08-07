@@ -674,16 +674,16 @@ namespace Uchu.World
         /// Progresses all stat pickup tasks using the given lot
         /// </summary>
         /// <param name="lot">The lot to progress the tasks with</param>
-        public async Task StatPickupsAsync(Lot lot)
+        public async Task StatPickupsAsync(int skill)
         {
             foreach (var task in FindActiveTasksAsync<StatPickupsTask>())
             {
-                await task.ReportProgress(lot);
+                await task.ReportProgress(skill);
             }
 
-            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, lot, async task =>
+            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, skill, async task =>
             {
-                await task.ReportProgress(lot);
+                await task.ReportProgress(skill);
             });
         }
 
