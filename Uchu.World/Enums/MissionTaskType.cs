@@ -16,7 +16,7 @@ namespace Uchu.World
         Interact,
         MissionComplete,
         EarnReputation,
-        StatPickups = 21,
+        CollectPowerup = 21,
         TamePet,
         Racing,
         Flag,

@@ -3,14 +3,14 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class StatPickupsTask : MissionTaskInstance
+    public class CollectPowerupTask : MissionTaskInstance
     {
-        public StatPickupsTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+        public CollectPowerupTask(MissionInstance mission, int taskId, int missionTaskIndex) 
             : base(mission, taskId, missionTaskIndex)
         {
         }
 
-        public override MissionTaskType Type => MissionTaskType.StatPickups;
+        public override MissionTaskType Type => MissionTaskType.CollectPowerup;
 
         public async Task ReportProgress(int lot)
         {

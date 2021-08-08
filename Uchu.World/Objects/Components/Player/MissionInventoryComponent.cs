@@ -612,17 +612,24 @@ namespace Uchu.World
             {
                 await task.ReportProgress(skillId);
             }
-            //stat pickups are skills
-            foreach (var task in FindActiveTasksAsync<StatPickupsTask>())
-            {
-                await task.ReportProgress(skillId);
-            }
-
             await StartUnlockableAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
             });
-            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, skillId, async task =>
+        }
+
+        /// <summary>
+        /// Progresses all collect powerup tasks using the given skill id
+        /// </summary>
+        /// <param name="skillId">The skill id to progress the tasks with</param>
+        public async Task CollectPowerupAsync(int skillId)
+        {
+            //stat pickups are skills
+            foreach (var task in FindActiveTasksAsync<CollectPowerupTask>())
+            {
+                await task.ReportProgress(skillId);
+            }
+            await StartUnlockableAchievementsAsync<CollectPowerupTask>(MissionTaskType.CollectPowerup, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
             });
