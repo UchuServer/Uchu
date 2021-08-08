@@ -19,10 +19,10 @@ namespace Uchu.StandardScripts.General
                 {
                     var objectSkill = (ClientCache.FindAll<ObjectSkills>(lot).Where(skill => skill.CastOnType == (int)SkillCastType.OnCollect)).FirstOrDefault();
                     if (objectSkill == default) return Task.CompletedTask;
-                    var skill = player.GetComponent<SkillComponent>();
+                    var skillComponent = player.GetComponent<SkillComponent>();
                     var missionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
-                    skill.CalculateSkillAsync((int)objectSkill.SkillID, player);
-                    missionInventoryComponent.CollectPowerupAsync((int)objectSkill.SkillID);
+                    skillComponent.CalculateSkillAsync((int) objectSkill.SkillID, player);
+                    missionInventoryComponent.CollectPowerupAsync((int) objectSkill.SkillID);
                     return Task.CompletedTask;
                 });
 

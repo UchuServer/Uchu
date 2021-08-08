@@ -160,7 +160,6 @@ namespace Uchu.World
                 if (!scriptLoaded && scriptName != ""){
                     Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
                 }
-                
             });
 
             Listen(OnDestroyed, () =>

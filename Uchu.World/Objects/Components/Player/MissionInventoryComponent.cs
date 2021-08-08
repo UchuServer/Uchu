@@ -612,6 +612,7 @@ namespace Uchu.World
             {
                 await task.ReportProgress(skillId);
             }
+
             await StartUnlockableAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
@@ -629,6 +630,7 @@ namespace Uchu.World
             {
                 await task.ReportProgress(skillId);
             }
+            
             await StartUnlockableAchievementsAsync<CollectPowerupTask>(MissionTaskType.CollectPowerup, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
