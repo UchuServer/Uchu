@@ -37,7 +37,6 @@ namespace Uchu.StandardScripts.General
                     var skill = player.GetComponent<SkillComponent>();
                     var missionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
                     skill.CalculateSkillAsync(pickups[lot], player);
-                    missionInventoryComponent.StatPickupsAsync(pickups[lot]);
                     return Task.CompletedTask;
                 });
 

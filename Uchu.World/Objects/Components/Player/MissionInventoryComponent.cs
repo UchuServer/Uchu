@@ -612,8 +612,17 @@ namespace Uchu.World
             {
                 await task.ReportProgress(skillId);
             }
+            //stat pickups are skills
+            foreach (var task in FindActiveTasksAsync<StatPickupsTask>())
+            {
+                await task.ReportProgress(skillId);
+            }
 
             await StartUnlockableAchievementsAsync<UseSkillTask>(MissionTaskType.UseSkill, skillId, async task =>
+            {
+                await task.ReportProgress(skillId);
+            });
+            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, skillId, async task =>
             {
                 await task.ReportProgress(skillId);
             });
@@ -667,23 +676,6 @@ namespace Uchu.World
             await StartUnlockableAchievementsAsync<FlagTask>(MissionTaskType.Flag, flag, async task =>
             {
                 await task.ReportProgress(flag);
-            });
-        }
-
-        /// <summary>
-        /// Progresses all stat pickup tasks using the given lot
-        /// </summary>
-        /// <param name="lot">The lot to progress the tasks with</param>
-        public async Task StatPickupsAsync(int skill)
-        {
-            foreach (var task in FindActiveTasksAsync<StatPickupsTask>())
-            {
-                await task.ReportProgress(skill);
-            }
-
-            await StartUnlockableAchievementsAsync<StatPickupsTask>(MissionTaskType.StatPickups, skill, async task =>
-            {
-                await task.ReportProgress(skill);
             });
         }
 

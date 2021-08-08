@@ -148,16 +148,16 @@ namespace Uchu.World
                     this.GetComponent<LuaScriptComponent>() != default) return;
                 var scriptName = ((string) scriptNameValue).ToLower();
                 Logger.Debug($"{this} -> {scriptNameValue}");
-                var a = false;
+                var scriptLoaded = false;
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
                     this.Zone.LoadObjectScript(this, objectScriptType);
-                    a = true;
+                    scriptLoaded = true;
                     break;
                 }
                 //if it attempted to load a script that isn't here yet, log it
-                if (!a && scriptName != ""){
+                if (!scriptLoaded && scriptName != ""){
                     Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
                 }
                 
