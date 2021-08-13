@@ -363,6 +363,10 @@ namespace Uchu.World
             if (stackSize == default) 
                 stackSize = int.MaxValue;
             
+            // If ItemType is Vehicle
+            if(itemComponent.ItemType == 22)
+                stackSize = 1;
+
             var totalAdded = 0L;
             var totalToAdd = count;
 
