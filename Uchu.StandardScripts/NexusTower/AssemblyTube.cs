@@ -33,10 +33,7 @@ namespace Uchu.StandardScripts.NexusTower
                     return;
 
                 // Find teleporter target location
-                var target = Zone.GameObjects.FirstOrDefault(obj =>
-                    obj.Settings.TryGetValue("groupID", out var group2)
-                    && ((string) group2).Split(";").Contains(group));
-
+                var target = GetGroup(group).FirstOrDefault();
                 if (target == null)
                     return;
 
