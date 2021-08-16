@@ -1,141 +1,75 @@
+using System.Collections.Generic;
 using RakDotNet.IO;
 
 namespace Uchu.World.Social
 {
-    // Stolen from https://github.com/LUNIServer/UniverseServer/blob/master/Source/WorldServer.cpp
-    // TODO: Replace with sane code
+    // Stolen from https://github.com/lcdr/utils/blob/master/utils/amf3.py
+    // (Python code for WriteNumber translated to C#. Python code is
+    // available under the AGPLv3 license, of which you can find a copy
+    // in the top-level directory of Uchu.)
     public static class Amf3Helper
     {
         public static void WriteNumber(BitWriter writer, uint n)
         {
-            if (n < 128)
+            if (n < 0x80)
             {
                 writer.Write((byte) n);
             }
-            else
+            else if (n < 0x4000)
             {
-                writer.WriteBit(true);
-                writer.WriteBit(true);
-                if (n < 2048)
-                {
-                    writer.WriteBit(false);
-                }
-                else
-                {
-                    writer.WriteBit(true);
-                    if (n < 65536)
-                    {
-                        writer.WriteBit(false);
-                    }
-                    else
-                    {
-                        if (n > 2097151) n = 2097151;
-
-                        writer.WriteBit(true);
-                        writer.WriteBit(false);
-                        writer.WriteBit((n & 1048576) > 0);
-                        writer.WriteBit((n & 524288) > 0);
-                        writer.WriteBit((n & 262144) > 0);
-
-                        writer.WriteBit(true);
-                        writer.WriteBit(false);
-                        writer.WriteBit((n & 131072) > 0);
-                        writer.WriteBit((n & 65536) > 0);
-                    }
-
-                    writer.WriteBit((n & 32768) > 0);
-                    writer.WriteBit((n & 16384) > 0);
-                    writer.WriteBit((n & 8192) > 0);
-                    writer.WriteBit((n & 4096) > 0);
-
-                    writer.WriteBit(true);
-                    writer.WriteBit(false);
-                    writer.WriteBit((n & 2048) > 0);
-                }
-
-                writer.WriteBit((n & 1024) > 0);
-                writer.WriteBit((n & 512) > 0);
-                writer.WriteBit((n & 256) > 0);
-                writer.WriteBit((n & 128) > 0);
-                writer.WriteBit((n & 64) > 0);
-
-                writer.WriteBit(true);
-                writer.WriteBit(false);
-                writer.WriteBit((n & 32) > 0);
-                writer.WriteBit((n & 16) > 0);
-                writer.WriteBit((n & 8) > 0);
-                writer.WriteBit((n & 4) > 0);
-                writer.WriteBit((n & 2) > 0);
-                writer.WriteBit((n & 1) > 0);
+                writer.Write((byte) ((n >> 7) | 0x80));
+                writer.Write((byte) (n & 0x7f));
+            }
+            else if (n < 0x200000)
+            {
+                writer.Write((byte) ((n >> 14) | 0x80));
+                writer.Write((byte) ((n >> 7) | 0x80));
+                writer.Write((byte) (n & 0x7f));
+            }
+            else if (n < 0x20000000)
+            {
+                writer.Write((byte) ((n >> 22) | 0x80));
+                writer.Write((byte) ((n >> 15) | 0x80));
+                writer.Write((byte) ((n >> 7) | 0x80));
+                writer.Write((byte) (n & 0xff));
             }
         }
 
-        public static void WriteNumber2(BitWriter writer, uint n)
+        public static void Write(BitWriter writer, object value)
         {
-            if (n < 128)
+            switch (value)
             {
-                writer.Write((byte) n);
+                case string str:
+                    writer.Write((byte) Amf3Type.String);
+                    WriteText(writer, str);
+                    break;
+                case int integer:
+                    writer.Write((byte) Amf3Type.Integer);
+                    WriteNumber(writer, (uint) integer);
+                    break;
+                case uint unsigned:
+                    writer.Write((byte) Amf3Type.Integer);
+                    WriteNumber(writer, unsigned);
+                    break;
+                case bool boolean:
+                    writer.Write((byte) (boolean ? Amf3Type.True : Amf3Type.False));
+                    break;
+                case IDictionary<string, object> dict:
+                    writer.Write((byte) Amf3Type.Array);
+                    WriteArray(writer, dict);
+                    break;
+                case null:
+                    writer.Write((byte) Amf3Type.Undefined);
+                    break;
             }
-            else
-            {
-                writer.WriteBit(true);
 
-                var flag = n > 2097151;
-
-                if (n < 16383)
-                {
-                    if (flag)
-                    {
-                        writer.WriteBit((n & 268435456) > 0);
-                        writer.WriteBit((n & 134217728) > 0);
-                        writer.WriteBit((n & 67108864) > 0);
-                        writer.WriteBit((n & 33554432) > 0);
-                        writer.WriteBit((n & 16777216) > 0);
-                        writer.WriteBit((n & 8388608) > 0);
-                        writer.WriteBit((n & 4194304) > 0);
-                        writer.WriteBit(true);
-                        writer.WriteBit((n & 2097152) > 0);
-                    }
-
-                    writer.WriteBit((n & 1048576) > 0);
-                    writer.WriteBit((n & 524288) > 0);
-                    writer.WriteBit((n & 262144) > 0);
-                    writer.WriteBit((n & 131072) > 0);
-                    writer.WriteBit((n & 65536) > 0);
-                    writer.WriteBit((n & 32768) > 0);
-                    
-                    if (flag) writer.WriteBit(true);
-
-                    writer.WriteBit((n & 16384) > 0);
-                    
-                    if (!flag) writer.WriteBit(true);
-                }
-
-                writer.WriteBit((n & 8192) > 0);
-                writer.WriteBit((n & 4096) > 0);
-                writer.WriteBit((n & 2048) > 0);
-                writer.WriteBit((n & 1024) > 0);
-                writer.WriteBit((n & 512) > 0);
-                writer.WriteBit((n & 256) > 0);
-                writer.WriteBit((n & 128) > 0);
-
-                if (!flag) writer.WriteBit(false);
-
-                writer.WriteBit((n & 64) > 0);
-                writer.WriteBit((n & 32) > 0);
-                writer.WriteBit((n & 16) > 0);
-                writer.WriteBit((n & 8) > 0);
-                writer.WriteBit((n & 4) > 0);
-                writer.WriteBit((n & 2) > 0);
-                writer.WriteBit((n & 1) > 0);
-            }
         }
 
         public static void WriteText(BitWriter writer, string value)
         {
             var size = (value.Length << 1) + 1;
 
-            WriteNumber2(writer, (uint) size);
+            WriteNumber(writer, (uint) size);
 
             foreach (var character in value)
             {
@@ -143,13 +77,15 @@ namespace Uchu.World.Social
             }
         }
 
-        public static void Array(BitWriter writer, int length)
+        public static void WriteArray(BitWriter writer, IDictionary<string, object> dict)
         {
-            writer.Write((byte) Amf3Type.Array);
-            
-            var size = (length << 1) | 1;
-
-            WriteNumber2(writer, (uint) size);
+            WriteNumber(writer, 0x01);
+            foreach (var (key, value) in dict)
+            {
+                WriteText(writer, key);
+                Write(writer, value);
+            }
+            writer.Write((byte) Amf3Type.Null);
         }
     }
 }
