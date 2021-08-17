@@ -99,6 +99,8 @@ namespace Uchu.World
             instance.Inventory = inventory;
             instance.LootType = lootType;
 
+            instance.InitializeComponents();
+
             var skills = (await ClientCache.FindAllAsync<ObjectSkills>(instance.Lot));
             instance.IsConsumable = skills.Any(
                 s => s.CastOnType == (int) SkillCastType.OnConsumed
