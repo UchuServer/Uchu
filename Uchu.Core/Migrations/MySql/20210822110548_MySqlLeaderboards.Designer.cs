@@ -2,32 +2,31 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
 
-namespace Uchu.Core.Migrations
+namespace Uchu.Core.Migrations.MySql
 {
-    [DbContext(typeof(PostgresContext))]
-    partial class PostgresContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(MySqlContext))]
+    [Migration("20210822110548_MySqlLeaderboards")]
+    partial class MySqlLeaderboards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "5.0.5")
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64)
+                .HasAnnotation("ProductVersion", "5.0.5");
 
             modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Activity")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
@@ -36,19 +35,19 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("NumPlayed")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("Points")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("Time")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("Week")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    b.Property<int>("Zone")
-                        .HasColumnType("integer");
+                    b.Property<ushort>("Zone")
+                        .HasColumnType("smallint unsigned");
 
                     b.HasKey("Id");
 
@@ -61,27 +60,27 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("BaseHealth")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("BaseImagination")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("Currency")
                         .HasColumnType("bigint");
 
                     b.Property<int>("CurrentArmor")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("CurrentHealth")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("CurrentImagination")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("CustomName")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("character varying(33)");
+                        .HasColumnType("varchar(33)");
 
                     b.Property<long>("EyeStyle")
                         .HasColumnType("bigint");
@@ -90,7 +89,7 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<bool>("FreeToPlay")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint");
@@ -102,10 +101,10 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("InventorySize")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<bool>("LandingByRocket")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("LastActivity")
                         .HasColumnType("bigint");
@@ -114,13 +113,13 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("LastInstance")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("LastZone")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("LaunchedRocketFrom")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("Level")
                         .HasColumnType("bigint");
@@ -129,13 +128,13 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("MaximumArmor")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("MaximumHealth")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("MaximumImagination")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("MouthStyle")
                         .HasColumnType("bigint");
@@ -143,10 +142,10 @@ namespace Uchu.Core.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("character varying(33)");
+                        .HasColumnType("varchar(33)");
 
                     b.Property<bool>("NameRejected")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("PantsColor")
                         .HasColumnType("bigint");
@@ -156,7 +155,7 @@ namespace Uchu.Core.Migrations
 
                     b.Property<string>("Rocket")
                         .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("varchar(30)");
 
                     b.Property<long>("ShirtColor")
                         .HasColumnType("bigint");
@@ -166,28 +165,28 @@ namespace Uchu.Core.Migrations
 
                     b.Property<string>("SpawnLocationName")
                         .HasMaxLength(33)
-                        .HasColumnType("character varying(33)");
+                        .HasColumnType("varchar(33)");
 
                     b.Property<float?>("SpawnPositionX")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnPositionY")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnPositionZ")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnRotationW")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnRotationX")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnRotationY")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<float?>("SpawnRotationZ")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.Property<long>("TotalArmorPowerUpsCollected")
                         .HasColumnType("bigint");
@@ -277,7 +276,7 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("VaultInventorySize")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -290,14 +289,13 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Flag")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -310,38 +308,37 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("AttachmentCount")
-                        .HasColumnType("integer");
+                    b.Property<ushort>("AttachmentCount")
+                        .HasColumnType("smallint unsigned");
 
-                    b.Property<decimal>("AttachmentCurrency")
-                        .HasColumnType("numeric(20,0)");
+                    b.Property<ulong>("AttachmentCurrency")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<int>("AttachmentLot")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Body")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("ExpirationTime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("Read")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("RecipientId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Subject")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -352,8 +349,7 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("CurrencyA")
                         .HasColumnType("bigint");
@@ -376,20 +372,19 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("Author")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Message")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<long>("Receiver")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("SentTime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -400,11 +395,10 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("BestFriend")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("FriendA")
                         .HasColumnType("bigint");
@@ -421,11 +415,10 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("BestFriend")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<long>("Receiver")
                         .HasColumnType("bigint");
@@ -434,7 +427,7 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<bool>("Sent")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
 
@@ -450,7 +443,7 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -461,8 +454,7 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint");
@@ -492,25 +484,25 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("ExtraInfo")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<int>("InventoryType")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsBound")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsEquipped")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Lot")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("ParentId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Slot")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -523,23 +515,22 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("int");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("CompletionCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("LastCompletion")
                         .HasColumnType("bigint");
 
                     b.Property<int>("MissionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("State")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -552,14 +543,13 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("int");
 
                     b.Property<int>("MissionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("TaskId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -572,17 +562,16 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Count")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("MissionTaskId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<float>("Value")
-                        .HasColumnType("real");
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
@@ -595,19 +584,19 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("char(36)");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Key")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("ZoneId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -618,8 +607,7 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("ItemId")
                         .HasColumnType("bigint");
@@ -641,14 +629,13 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("EmoteId")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -661,41 +648,40 @@ namespace Uchu.Core.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("Banned")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("BannedReason")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<int>("CharacterIndex")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("CustomLockout")
-                        .HasColumnType("text");
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("FirstTimeOnSubscription")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("FreeToPlay")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("GameMasterLevel")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Password")
                         .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
+                        .HasColumnType("varchar(60)");
 
                     b.Property<bool>("Sso")
-                        .HasColumnType("boolean");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(33)
-                        .HasColumnType("character varying(33)");
+                        .HasColumnType("varchar(33)");
 
                     b.HasKey("Id");
 

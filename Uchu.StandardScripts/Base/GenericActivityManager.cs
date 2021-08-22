@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Timers;
+using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World;
 using Uchu.World.Client;
@@ -177,16 +179,11 @@ namespace Uchu.StandardScripts.Base
                 this.DistributeActivityRewards(player, true, true);
                 
                 // Update the leaderboard.
-                // TODO: self:UpdateActivityLeaderboard{ userID = player }
-                
+                this.UpdateActivityLeaderboard(player);
+
                 // Send requesting the activity summary.
                 var activityId = this.GetActivityId();
-                player.Message(new RequestActivitySummaryLeaderboardDataMessage
-                {
-                    Associate = player,
-                    GameId = activityId,
-                    QueryType = QueryType.TopCharacter,
-                });
+
                 player.Message(new NotifyClientObjectMessage
                 {
                     Associate = this.GameObject,
@@ -201,6 +198,97 @@ namespace Uchu.StandardScripts.Base
         }
 
         /// <summary>
+        /// Update the activity leaderboard with a player's score.
+        /// </summary>
+        /// <param name="player">The player with the new score.</param>
+        public void UpdateActivityLeaderboard(Player player)
+        {
+            var yearAndWeek = ISOWeek.GetYear(DateTime.Now) * 100 + ISOWeek.GetWeekOfYear(DateTime.Now);
+
+            using var ctx = new UchuContext();
+
+            var existingWeekly = ctx.ActivityScores.FirstOrDefault(entry =>
+                entry.Activity == this.GetActivityId()
+                && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
+                && entry.CharacterId == (long) player.Id
+                && entry.Week == yearAndWeek);
+
+            var existingAllTime = ctx.ActivityScores.FirstOrDefault(entry =>
+                entry.Activity == this.GetActivityId()
+                && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
+                && entry.CharacterId == (long) player.Id
+                && entry.Week == 0);
+
+            var leaderboardType = this.GetActivityLeaderboardType();
+
+            // For racing and AG monument, a shorter time is better
+            var timeHigherIsBetter = leaderboardType == LeaderboardType.Footrace
+                                     || leaderboardType == LeaderboardType.AvantGardensSurvival
+                                     || leaderboardType == LeaderboardType.BattleOfNimbusStation;
+
+            var timeVar = Convert.ToInt32(this.GetActivityValue(player, 1));
+            var scoreVar = Convert.ToInt32(this.GetActivityValue(player, 0));
+
+            // Update existing weekly leaderboard entry
+            if (existingWeekly != null)
+            {
+                existingWeekly.Time = timeHigherIsBetter
+                    ? Math.Max(existingWeekly.Time, timeVar)
+                    : Math.Min(existingWeekly.Time, timeVar);
+
+                existingWeekly.Points = Math.Max(existingWeekly.Points, scoreVar);
+
+                ctx.ActivityScores.Update(existingWeekly);
+            }
+            // Add new entry
+            else
+            {
+                ctx.ActivityScores.Add(new ActivityScore
+                {
+                    Activity = this.GetActivityId(),
+                    Zone = player.Zone.ZoneId,
+                    CharacterId = player.Id,
+                    Points = scoreVar,
+                    Time = timeVar,
+                    Week = yearAndWeek,
+                });
+            }
+
+            // Update existing all-time leaderboard entry.
+            if (existingAllTime != null)
+            {
+                existingAllTime.NumPlayed++;
+
+                existingAllTime.Time = timeHigherIsBetter
+                    ? Math.Max(existingAllTime.Time, timeVar)
+                    : Math.Min(existingAllTime.Time, timeVar);
+
+                existingAllTime.Points = Math.Max(existingAllTime.Points, scoreVar);
+
+                existingAllTime.LastPlayed = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                ctx.ActivityScores.Update(existingAllTime);
+            }
+            // Add new entry.
+            else
+            {
+                ctx.ActivityScores.Add(new ActivityScore
+                {
+                    Activity = this.GetActivityId(),
+                    Zone = player.Zone.ZoneId,
+                    CharacterId = player.Id,
+                    Points = scoreVar,
+                    Time = timeVar,
+                    LastPlayed = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    NumPlayed = 1,
+                    Week = 0,
+                });
+            }
+
+            ctx.SaveChanges();
+        }
+
+        /// <summary>
         /// Sends the RequestActivitySummaryLeaderboardDataMessage message to a client.
         /// </summary>
         /// <param name="player">Player to send.</param>
@@ -208,16 +296,6 @@ namespace Uchu.StandardScripts.Base
         /// <param name="numberOfResults">Number of results to send.</param>
         public void GetLeaderboardData(Player player, int activityId, int numberOfResults)
         {
-            player.Message(new RequestActivitySummaryLeaderboardDataMessage
-            {
-                Associate = player,
-                GameId = this.GetActivityId(),
-                QueryType = QueryType.TopSocial,
-                ResultsEnd = 10,
-                ResultsStart = 0,
-                Target = default,
-                Weekly = false,
-            });
         }
 
         /// <summary>
