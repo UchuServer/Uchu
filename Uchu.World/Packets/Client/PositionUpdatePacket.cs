@@ -17,7 +17,7 @@ namespace Uchu.World
         public Vector3 AngularVelocity { get; set; }
         public bool IsOnPlatform { get; set; }
         [Requires("IsOnPlatform")]
-        public long PlatformObjectId { get; set; }
+        public GameObject PlatformObjectId { get; set; }
         [Requires("IsOnPlatform")]
         public Vector3 PlatformPosition { get; set; }
         [Requires("IsOnPlatform")]

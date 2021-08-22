@@ -9,37 +9,44 @@ using Uchu.Core.Client;
 namespace Uchu.Core.Migrations.CdClient
 {
     [DbContext(typeof(CdClientContext))]
-    [Migration("20190924113641_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20210729143330_GoToNpcCorrections")]
+    partial class GoToNpcCorrections
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "5.0.5");
 
-            modelBuilder.Entity("Uchu.Core.CdClient.AICombatRoles", b =>
+            modelBuilder.Entity("Uchu.Core.Client.AICombatRoles", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("PreferredRole")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("preferredRole");
 
                     b.Property<float?>("SpecificMaxRange")
+                        .HasColumnType("REAL")
                         .HasColumnName("specificMaxRange");
 
                     b.Property<float?>("SpecificMinRange")
+                        .HasColumnType("REAL")
                         .HasColumnName("specificMinRange");
 
                     b.Property<float?>("SpecifiedMaxRangeNOUSE")
+                        .HasColumnType("REAL")
                         .HasColumnName("specifiedMaxRangeNOUSE");
 
                     b.Property<float?>("SpecifiedMinRangeNOUSE")
+                        .HasColumnType("REAL")
                         .HasColumnName("specifiedMinRangeNOUSE");
 
                     b.HasKey("EfId");
@@ -47,34 +54,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("AICombatRoles");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.AccessoryDefaultLoc", b =>
+            modelBuilder.Entity("Uchu.Core.Client.AccessoryDefaultLoc", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Description");
 
                     b.Property<int?>("GroupID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("GroupID");
 
                     b.Property<float?>("PosX")
+                        .HasColumnType("REAL")
                         .HasColumnName("Pos_X");
 
                     b.Property<float?>("PosY")
+                        .HasColumnType("REAL")
                         .HasColumnName("Pos_Y");
 
                     b.Property<float?>("PosZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("Pos_Z");
 
                     b.Property<float?>("RotX")
+                        .HasColumnType("REAL")
                         .HasColumnName("Rot_X");
 
                     b.Property<float?>("RotY")
+                        .HasColumnType("REAL")
                         .HasColumnName("Rot_Y");
 
                     b.Property<float?>("RotZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("Rot_Z");
 
                     b.HasKey("EfId");
@@ -82,67 +98,87 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("AccessoryDefaultLoc");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Activities", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Activities", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ActivityID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ActivityID");
 
                     b.Property<int?>("CommunityActivityFlagID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CommunityActivityFlagID");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("InstanceMapID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("instanceMapID");
 
                     b.Property<int?>("LeaderboardType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("leaderboardType");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("MaxTeamSize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("maxTeamSize");
 
                     b.Property<int?>("MaxTeams")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("maxTeams");
 
                     b.Property<int?>("MinTeamSize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minTeamSize");
 
                     b.Property<int?>("MinTeams")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minTeams");
 
                     b.Property<bool?>("NoTeamLootOnDeath")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("noTeamLootOnDeath");
 
                     b.Property<int?>("OptionalCostCount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("optionalCostCount");
 
                     b.Property<int?>("OptionalCostLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("optionalCostLOT");
 
                     b.Property<float?>("OptionalPercentage")
+                        .HasColumnType("REAL")
                         .HasColumnName("optionalPercentage");
 
                     b.Property<bool?>("RequiresUniqueData")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("requiresUniqueData");
 
                     b.Property<bool?>("ShowUIRewards")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("showUIRewards");
 
                     b.Property<int?>("StartDelay")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("startDelay");
 
                     b.Property<int?>("WaitTime")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("waitTime");
 
                     b.HasKey("EfId");
@@ -150,31 +186,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Activities");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ActivityRewards", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ActivityRewards", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ActivityRating")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("activityRating");
 
                     b.Property<int?>("ActivityRewardIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ActivityRewardIndex");
 
                     b.Property<int?>("ChallengeRating")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ChallengeRating");
 
                     b.Property<int?>("CurrencyIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CurrencyIndex");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.Property<int?>("ObjectTemplate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("objectTemplate");
 
                     b.HasKey("EfId");
@@ -182,25 +226,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ActivityRewards");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ActivityText", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ActivityText", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ActivityID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("activityID");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<string>("Type")
+                        .HasColumnType("TEXT")
                         .HasColumnName("type");
 
                     b.HasKey("EfId");
@@ -208,19 +258,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ActivityText");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.AnimationIndex", b =>
+            modelBuilder.Entity("Uchu.Core.Client.AnimationIndex", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AnimationGroupID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("animationGroupID");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<string>("GroupType")
+                        .HasColumnType("TEXT")
                         .HasColumnName("groupType");
 
                     b.HasKey("EfId");
@@ -228,49 +282,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("AnimationIndex");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Animations", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Animations", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AnimationGroupID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("animationGroupID");
 
                     b.Property<float?>("Animationlength")
+                        .HasColumnType("REAL")
                         .HasColumnName("animation_length");
 
                     b.Property<string>("Animationname")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animation_name");
 
                     b.Property<string>("Animationtype")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animation_type");
 
                     b.Property<float?>("BlendTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("blendTime");
 
                     b.Property<float?>("Chancetoplay")
+                        .HasColumnType("REAL")
                         .HasColumnName("chance_to_play");
 
                     b.Property<string>("Faceanimationname")
+                        .HasColumnType("TEXT")
                         .HasColumnName("face_animation_name");
 
                     b.Property<bool?>("HideEquip")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("hideEquip");
 
                     b.Property<bool?>("IgnoreUpperBody")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ignoreUpperBody");
 
                     b.Property<int?>("Maxloops")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("max_loops");
 
                     b.Property<int?>("Minloops")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("min_loops");
 
                     b.Property<float?>("Priority")
+                        .HasColumnType("REAL")
                         .HasColumnName("priority");
 
                     b.Property<bool?>("Restartable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("restartable");
 
                     b.HasKey("EfId");
@@ -278,61 +346,79 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Animations");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BaseCombatAIComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BaseCombatAIComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AggroRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("aggroRadius");
 
                     b.Property<int?>("BehaviorType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorType");
 
                     b.Property<int?>("CombatRole")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("combatRole");
 
                     b.Property<float?>("CombatRoundLength")
+                        .HasColumnType("REAL")
                         .HasColumnName("combatRoundLength");
 
                     b.Property<float?>("CombatStartDelay")
+                        .HasColumnType("REAL")
                         .HasColumnName("combatStartDelay");
 
                     b.Property<float?>("HardTetherRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("hardTetherRadius");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("IgnoreMediator")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ignoreMediator");
 
                     b.Property<bool?>("IgnoreParent")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ignoreParent");
 
                     b.Property<bool?>("IgnoreStatReset")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ignoreStatReset");
 
                     b.Property<float?>("MaxRoundLength")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxRoundLength");
 
                     b.Property<float?>("MinRoundLength")
+                        .HasColumnType("REAL")
                         .HasColumnName("minRoundLength");
 
                     b.Property<float?>("PursuitSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("pursuitSpeed");
 
                     b.Property<float?>("SoftTetherRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("softTetherRadius");
 
                     b.Property<float?>("SpawnTimer")
+                        .HasColumnType("REAL")
                         .HasColumnName("spawnTimer");
 
                     b.Property<int?>("TetherEffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("tetherEffectID");
 
                     b.Property<float?>("TetherSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("tetherSpeed");
 
                     b.HasKey("EfId");
@@ -340,112 +426,147 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BaseCombatAIComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BehaviorEffect", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BehaviorEffect", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AnimationName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animationName");
 
                     b.Property<bool?>("AttachToObject")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("attachToObject");
 
                     b.Property<string>("AudioEventGUID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID");
 
                     b.Property<string>("BoneName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("boneName");
 
                     b.Property<float?>("CameraDuration")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraDuration");
 
                     b.Property<int?>("CameraEffectType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cameraEffectType");
 
                     b.Property<float?>("CameraFrequency")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraFrequency");
 
                     b.Property<float?>("CameraPitch")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraPitch");
 
                     b.Property<float?>("CameraRoll")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraRoll");
 
                     b.Property<float?>("CameraRotFrequency")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraRotFrequency");
 
                     b.Property<float?>("CameraXAmp")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraXAmp");
 
                     b.Property<float?>("CameraYAmp")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraYAmp");
 
                     b.Property<float?>("CameraYaw")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraYaw");
 
                     b.Property<float?>("CameraZAmp")
+                        .HasColumnType("REAL")
                         .HasColumnName("cameraZAmp");
 
                     b.Property<int?>("EffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effectID");
 
                     b.Property<string>("EffectName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("effectName");
 
                     b.Property<string>("EffectType")
+                        .HasColumnType("TEXT")
                         .HasColumnName("effectType");
 
                     b.Property<float?>("MeshDuration")
+                        .HasColumnType("REAL")
                         .HasColumnName("meshDuration");
 
                     b.Property<int?>("MeshID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("meshID");
 
                     b.Property<string>("MeshLockedNode")
+                        .HasColumnType("TEXT")
                         .HasColumnName("meshLockedNode");
 
                     b.Property<int?>("MotionID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("motionID");
 
                     b.Property<float?>("PcreateDuration")
+                        .HasColumnType("REAL")
                         .HasColumnName("pcreateDuration");
 
                     b.Property<float?>("RenderDelayVal")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderDelayVal");
 
                     b.Property<float?>("RenderEffectTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderEffectTime");
 
                     b.Property<int?>("RenderEffectType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("renderEffectType");
 
                     b.Property<float?>("RenderEndVal")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderEndVal");
 
                     b.Property<string>("RenderRGBA")
+                        .HasColumnType("TEXT")
                         .HasColumnName("renderRGBA");
 
                     b.Property<int?>("RenderShaderVal")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("renderShaderVal");
 
                     b.Property<float?>("RenderStartVal")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderStartVal");
 
                     b.Property<float?>("RenderValue1")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderValue1");
 
                     b.Property<float?>("RenderValue2")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderValue2");
 
                     b.Property<float?>("RenderValue3")
+                        .HasColumnType("REAL")
                         .HasColumnName("renderValue3");
 
                     b.Property<int?>("TrailID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("trailID");
 
                     b.Property<bool?>("UseSecondary")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("useSecondary");
 
                     b.HasKey("EfId");
@@ -453,19 +574,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BehaviorEffect");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BehaviorParameter", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BehaviorParameter", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("BehaviorID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID");
 
                     b.Property<string>("ParameterID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("parameterID");
 
                     b.Property<float?>("Value")
+                        .HasColumnType("REAL")
                         .HasColumnName("value");
 
                     b.HasKey("EfId");
@@ -473,22 +598,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BehaviorParameter");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BehaviorTemplate", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BehaviorTemplate", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("BehaviorID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID");
 
                     b.Property<string>("EffectHandle")
+                        .HasColumnType("TEXT")
                         .HasColumnName("effectHandle");
 
                     b.Property<int?>("EffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effectID");
 
                     b.Property<int?>("TemplateID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("templateID");
 
                     b.HasKey("EfId");
@@ -496,16 +626,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BehaviorTemplate");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BehaviorTemplateName", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BehaviorTemplateName", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<int?>("TemplateID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("templateID");
 
                     b.HasKey("EfId");
@@ -513,46 +646,59 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BehaviorTemplateName");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Blueprints", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Blueprints", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("Accountid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("accountid");
 
                     b.Property<int?>("Categoryid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("categoryid");
 
                     b.Property<long?>("Characterid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("characterid");
 
                     b.Property<long?>("Created")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("created");
 
                     b.Property<bool?>("Deleted")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("deleted");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<long?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Lxfpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("lxfpath");
 
                     b.Property<long?>("Modified")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("modified");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<int?>("Price")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("price");
 
                     b.Property<int?>("Rating")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rating");
 
                     b.HasKey("EfId");
@@ -560,40 +706,51 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Blueprints");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BrickColors", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BrickColors", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("Alpha")
+                        .HasColumnType("REAL")
                         .HasColumnName("alpha");
 
                     b.Property<float?>("Blue")
+                        .HasColumnType("REAL")
                         .HasColumnName("blue");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<bool?>("FactoryValid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("factoryValid");
 
                     b.Property<float?>("Green")
+                        .HasColumnType("REAL")
                         .HasColumnName("green");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Legopaletteid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("legopaletteid");
 
                     b.Property<float?>("Red")
+                        .HasColumnType("REAL")
                         .HasColumnName("red");
 
                     b.Property<int?>("ValidCharacters")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("validCharacters");
 
                     b.Property<int?>("ValidTypes")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("validTypes");
 
                     b.HasKey("EfId");
@@ -601,16 +758,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BrickColors");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BrickIDTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BrickIDTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("LEGOBrickID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LEGOBrickID");
 
                     b.Property<int?>("NDObjectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("NDObjectID");
 
                     b.HasKey("EfId");
@@ -618,19 +778,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BrickIDTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BuffDefinitions", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BuffDefinitions", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<float?>("Priority")
+                        .HasColumnType("REAL")
                         .HasColumnName("Priority");
 
                     b.Property<string>("UIIcon")
+                        .HasColumnType("TEXT")
                         .HasColumnName("UIIcon");
 
                     b.HasKey("EfId");
@@ -638,25 +802,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BuffDefinitions");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.BuffParameters", b =>
+            modelBuilder.Entity("Uchu.Core.Client.BuffParameters", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("BuffID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("BuffID");
 
                     b.Property<int?>("EffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("EffectID");
 
                     b.Property<float?>("NumberValue")
+                        .HasColumnType("REAL")
                         .HasColumnName("NumberValue");
 
                     b.Property<string>("ParameterName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ParameterName");
 
                     b.Property<string>("StringValue")
+                        .HasColumnType("TEXT")
                         .HasColumnName("StringValue");
 
                     b.HasKey("EfId");
@@ -664,190 +834,251 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("BuffParameters");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Camera", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Camera", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("Cameracollisionpadding")
+                        .HasColumnType("REAL")
                         .HasColumnName("camera_collision_padding");
 
                     b.Property<string>("Cameraname")
+                        .HasColumnType("TEXT")
                         .HasColumnName("camera_name");
 
                     b.Property<float?>("Fadeplayerminrange")
+                        .HasColumnType("REAL")
                         .HasColumnName("fade_player_min_range");
 
                     b.Property<float?>("Glidespeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("glide_speed");
 
                     b.Property<float?>("Horizontalreturnmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("horizontal_return_modifier");
 
                     b.Property<float?>("Horizontalrotatemodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("horizontal_rotate_modifier");
 
                     b.Property<float?>("Horizontalrotatetolerance")
+                        .HasColumnType("REAL")
                         .HasColumnName("horizontal_rotate_tolerance");
 
                     b.Property<float?>("Inputmovementscalar")
+                        .HasColumnType("REAL")
                         .HasColumnName("input_movement_scalar");
 
                     b.Property<float?>("Inputrotationscalar")
+                        .HasColumnType("REAL")
                         .HasColumnName("input_rotation_scalar");
 
                     b.Property<float?>("Inputzoomscalar")
+                        .HasColumnType("REAL")
                         .HasColumnName("input_zoom_scalar");
 
                     b.Property<float?>("Lookforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("look_forward_offset");
 
                     b.Property<float?>("Lookupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("look_up_offset");
 
                     b.Property<float?>("Maximumautoglideangle")
+                        .HasColumnType("REAL")
                         .HasColumnName("maximum_auto_glide_angle");
 
                     b.Property<float?>("Maximumignorejumpdistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("maximum_ignore_jump_distance");
 
                     b.Property<float?>("Maximumpitchdesired")
+                        .HasColumnType("REAL")
                         .HasColumnName("maximum_pitch_desired");
 
                     b.Property<float?>("Maximumverticaldampeningdistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("maximum_vertical_dampening_distance");
 
                     b.Property<float?>("Maximumzoom")
+                        .HasColumnType("REAL")
                         .HasColumnName("maximum_zoom");
 
                     b.Property<float?>("Minglidedistancetolerance")
+                        .HasColumnType("REAL")
                         .HasColumnName("min_glide_distance_tolerance");
 
                     b.Property<float?>("Minimumignorejumpdistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("minimum_ignore_jump_distance");
 
                     b.Property<float?>("Minimumpitchdesired")
+                        .HasColumnType("REAL")
                         .HasColumnName("minimum_pitch_desired");
 
                     b.Property<float?>("Minimumtetherglidedistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("minimum_tether_glide_distance");
 
                     b.Property<float?>("Minimumverticaldampeningdistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("minimum_vertical_dampening_distance");
 
                     b.Property<float?>("Minimumzoom")
+                        .HasColumnType("REAL")
                         .HasColumnName("minimum_zoom");
 
                     b.Property<float?>("Minmovementdeltatolerance")
+                        .HasColumnType("REAL")
                         .HasColumnName("min_movement_delta_tolerance");
 
                     b.Property<float?>("Pitchangletolerance")
+                        .HasColumnType("REAL")
                         .HasColumnName("pitch_angle_tolerance");
 
                     b.Property<float?>("Pitchreturnmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("pitch_return_modifier");
 
                     b.Property<float?>("Returnfrominclinemodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("return_from_incline_modifier");
 
                     b.Property<float?>("Set0FOV")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_FOV");
 
                     b.Property<float?>("Set0angularrelaxation")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_angular_relaxation");
 
                     b.Property<float?>("Set0maxyawangle")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_max_yaw_angle");
 
                     b.Property<float?>("Set0positionforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_position_forward_offset");
 
                     b.Property<float?>("Set0positionupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_position_up_offset");
 
                     b.Property<float?>("Set0speedinfluenceondir")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_0_speed_influence_on_dir");
 
                     b.Property<float?>("Set1FOV")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_FOV");
 
                     b.Property<float?>("Set1angularrelaxation")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_angular_relaxation");
 
                     b.Property<int?>("Set1fadeincamerasetchange")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("set_1_fade_in_camera_set_change");
 
                     b.Property<int?>("Set1fadeoutcamerasetchange")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("set_1_fade_out_camera_set_change");
 
                     b.Property<float?>("Set1lookforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_look_forward_offset");
 
                     b.Property<float?>("Set1lookupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_look_up_offset");
 
                     b.Property<float?>("Set1maxyawangle")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_max_yaw_angle");
 
                     b.Property<float?>("Set1positionforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_position_forward_offset");
 
                     b.Property<float?>("Set1positionupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_position_up_offset");
 
                     b.Property<float?>("Set1speedinfluenceondir")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_1_speed_influence_on_dir");
 
                     b.Property<float?>("Set2FOV")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_FOV");
 
                     b.Property<float?>("Set2angularrelaxation")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_angular_relaxation");
 
                     b.Property<int?>("Set2fadeincamerasetchange")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("set_2_fade_in_camera_set_change");
 
                     b.Property<int?>("Set2fadeoutcamerasetchange")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("set_2_fade_out_camera_set_change");
 
                     b.Property<float?>("Set2lookforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_look_forward_offset");
 
                     b.Property<float?>("Set2lookupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_look_up_offset");
 
                     b.Property<float?>("Set2maxyawangle")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_max_yaw_angle");
 
                     b.Property<float?>("Set2positionforwardoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_position_forward_offset");
 
                     b.Property<float?>("Set2positionupoffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_position_up_offset");
 
                     b.Property<float?>("Set2speedinfluenceondir")
+                        .HasColumnType("REAL")
                         .HasColumnName("set_2_speed_influence_on_dir");
 
                     b.Property<float?>("Startingzoom")
+                        .HasColumnType("REAL")
                         .HasColumnName("starting_zoom");
 
                     b.Property<float?>("Tetherinreturnmultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("tether_in_return_multiplier");
 
                     b.Property<float?>("Tetheroutreturnmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("tether_out_return_modifier");
 
                     b.Property<float?>("Verticlemovementdampeningmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("verticle_movement_dampening_modifier");
 
                     b.Property<float?>("Yawbehaviorspeedmultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("yaw_behavior_speed_multiplier");
 
                     b.Property<float?>("Yawsigncorrection")
+                        .HasColumnType("REAL")
                         .HasColumnName("yaw_sign_correction");
 
                     b.Property<float?>("Zoomreturnmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("zoom_return_modifier");
 
                     b.HasKey("EfId");
@@ -855,100 +1086,131 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Camera");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.CelebrationParameters", b =>
+            modelBuilder.Entity("Uchu.Core.Client.CelebrationParameters", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AmbientB")
+                        .HasColumnType("REAL")
                         .HasColumnName("ambientB");
 
                     b.Property<float?>("AmbientG")
+                        .HasColumnType("REAL")
                         .HasColumnName("ambientG");
 
                     b.Property<float?>("AmbientR")
+                        .HasColumnType("REAL")
                         .HasColumnName("ambientR");
 
                     b.Property<string>("Animation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animation");
 
                     b.Property<int?>("BackgroundObject")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("backgroundObject");
 
                     b.Property<float?>("BlendTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("blendTime");
 
                     b.Property<int?>("CameraPathLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cameraPathLOT");
 
                     b.Property<float?>("CeleLeadIn")
+                        .HasColumnType("REAL")
                         .HasColumnName("celeLeadIn");
 
                     b.Property<float?>("CeleLeadOut")
+                        .HasColumnType("REAL")
                         .HasColumnName("celeLeadOut");
 
                     b.Property<float?>("DirectionalB")
+                        .HasColumnType("REAL")
                         .HasColumnName("directionalB");
 
                     b.Property<float?>("DirectionalG")
+                        .HasColumnType("REAL")
                         .HasColumnName("directionalG");
 
                     b.Property<float?>("DirectionalR")
+                        .HasColumnType("REAL")
                         .HasColumnName("directionalR");
 
                     b.Property<float?>("Duration")
+                        .HasColumnType("REAL")
                         .HasColumnName("duration");
 
                     b.Property<float?>("FogColorB")
+                        .HasColumnType("REAL")
                         .HasColumnName("fogColorB");
 
                     b.Property<float?>("FogColorG")
+                        .HasColumnType("REAL")
                         .HasColumnName("fogColorG");
 
                     b.Property<float?>("FogColorR")
+                        .HasColumnType("REAL")
                         .HasColumnName("fogColorR");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("LightPositionX")
+                        .HasColumnType("REAL")
                         .HasColumnName("lightPositionX");
 
                     b.Property<float?>("LightPositionY")
+                        .HasColumnType("REAL")
                         .HasColumnName("lightPositionY");
 
                     b.Property<float?>("LightPositionZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("lightPositionZ");
 
                     b.Property<string>("MainText")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mainText");
 
                     b.Property<string>("MixerProgram")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mixerProgram");
 
                     b.Property<string>("MusicCue")
+                        .HasColumnType("TEXT")
                         .HasColumnName("musicCue");
 
                     b.Property<string>("PathNodeName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("pathNodeName");
 
                     b.Property<string>("SoundGUID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("soundGUID");
 
                     b.Property<float?>("SpecularB")
+                        .HasColumnType("REAL")
                         .HasColumnName("specularB");
 
                     b.Property<float?>("SpecularG")
+                        .HasColumnType("REAL")
                         .HasColumnName("specularG");
 
                     b.Property<float?>("SpecularR")
+                        .HasColumnType("REAL")
                         .HasColumnName("specularR");
 
                     b.Property<string>("SubText")
+                        .HasColumnType("TEXT")
                         .HasColumnName("subText");
 
                     b.HasKey("EfId");
@@ -956,19 +1218,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("CelebrationParameters");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ChoiceBuildComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ChoiceBuildComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("ImaginationOverride")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("imaginationOverride");
 
                     b.Property<string>("Selections")
+                        .HasColumnType("TEXT")
                         .HasColumnName("selections");
 
                     b.HasKey("EfId");
@@ -976,16 +1242,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ChoiceBuildComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.CollectibleComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.CollectibleComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Requirementmission")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("requirement_mission");
 
                     b.HasKey("EfId");
@@ -993,19 +1262,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("CollectibleComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ComponentsRegistry", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ComponentsRegistry", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Componentid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("component_id");
 
                     b.Property<int?>("Componenttype")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("component_type");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -1013,85 +1286,111 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ComponentsRegistry");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ControlSchemes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ControlSchemes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Controlscheme")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("control_scheme");
 
                     b.Property<float?>("Freecamfastspeedmultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("freecam_fast_speed_multiplier");
 
                     b.Property<float?>("Freecammousemodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("freecam_mouse_modifier");
 
                     b.Property<float?>("Freecamslowspeedmultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("freecam_slow_speed_multiplier");
 
                     b.Property<float?>("Freecamspeedmodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("freecam_speed_modifier");
 
                     b.Property<float?>("Gamepadpitchrotsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("gamepad_pitch_rot_sensitivity");
 
                     b.Property<float?>("Gamepadtriggersensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("gamepad_trigger_sensitivity");
 
                     b.Property<float?>("Gamepadyawrotsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("gamepad_yaw_rot_sensitivity");
 
                     b.Property<float?>("Keyboardpitchsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("keyboard_pitch_sensitivity");
 
                     b.Property<float?>("Keyboardyawsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("keyboard_yaw_sensitivity");
 
                     b.Property<float?>("Keyboardzoomsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("keyboard_zoom_sensitivity");
 
                     b.Property<float?>("Mousezoomwheelsensitivity")
+                        .HasColumnType("REAL")
                         .HasColumnName("mouse_zoom_wheel_sensitivity");
 
                     b.Property<float?>("Rotationspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("rotation_speed");
 
                     b.Property<float?>("Runbackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("run_backward_speed");
 
                     b.Property<float?>("Runstrafebackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("run_strafe_backward_speed");
 
                     b.Property<float?>("Runstrafeforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("run_strafe_forward_speed");
 
                     b.Property<float?>("Runstrafespeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("run_strafe_speed");
 
                     b.Property<string>("Schemename")
+                        .HasColumnType("TEXT")
                         .HasColumnName("scheme_name");
 
                     b.Property<float?>("Walkbackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walk_backward_speed");
 
                     b.Property<float?>("Walkforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walk_forward_speed");
 
                     b.Property<float?>("Walkstrafebackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walk_strafe_backward_speed");
 
                     b.Property<float?>("Walkstrafeforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walk_strafe_forward_speed");
 
                     b.Property<float?>("Walkstrafespeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walk_strafe_speed");
 
                     b.Property<float?>("Xmousemovesensitivitymodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("x_mouse_move_sensitivity_modifier");
 
                     b.Property<float?>("Ymousemovesensitivitymodifier")
+                        .HasColumnType("REAL")
                         .HasColumnName("y_mouse_move_sensitivity_modifier");
 
                     b.HasKey("EfId");
@@ -1099,16 +1398,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ControlSchemes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.CurrencyDenominations", b =>
+            modelBuilder.Entity("Uchu.Core.Client.CurrencyDenominations", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Objectid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("objectid");
 
                     b.Property<int?>("Value")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("value");
 
                     b.HasKey("EfId");
@@ -1116,25 +1418,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("CurrencyDenominations");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.CurrencyTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.CurrencyTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("CurrencyIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("currencyIndex");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Maxvalue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("maxvalue");
 
                     b.Property<int?>("Minvalue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minvalue");
 
                     b.Property<int?>("Npcminlevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("npcminlevel");
 
                     b.HasKey("EfId");
@@ -1142,16 +1450,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("CurrencyTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.DBExclude", b =>
+            modelBuilder.Entity("Uchu.Core.Client.DBExclude", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Column")
+                        .HasColumnType("TEXT")
                         .HasColumnName("column");
 
                     b.Property<string>("Table")
+                        .HasColumnType("TEXT")
                         .HasColumnName("table");
 
                     b.HasKey("EfId");
@@ -1159,31 +1470,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("DBExclude");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.DeletionRestrictions", b =>
+            modelBuilder.Entity("Uchu.Core.Client.DeletionRestrictions", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("CheckType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("checkType");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Ids")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ids");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<bool?>("Restricted")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("restricted");
 
                     b.HasKey("EfId");
@@ -1191,52 +1510,67 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("DeletionRestrictions");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.DestructibleComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.DestructibleComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("Armor")
+                        .HasColumnType("REAL")
                         .HasColumnName("armor");
 
                     b.Property<int?>("Attackpriority")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("attack_priority");
 
                     b.Property<int?>("CurrencyIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CurrencyIndex");
 
                     b.Property<int?>("Deathbehavior")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("death_behavior");
 
                     b.Property<int?>("DifficultyLevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("difficultyLevel");
 
                     b.Property<int?>("Faction")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("faction");
 
                     b.Property<string>("FactionList")
+                        .HasColumnType("TEXT")
                         .HasColumnName("factionList");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Imagination")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("imagination");
 
                     b.Property<bool?>("IsSmashable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isSmashable");
 
                     b.Property<bool?>("Isnpc")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isnpc");
 
                     b.Property<int?>("Level")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("level");
 
                     b.Property<int?>("Life")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("life");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.HasKey("EfId");
@@ -1244,16 +1578,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("DestructibleComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.DevModelBehaviors", b =>
+            modelBuilder.Entity("Uchu.Core.Client.DevModelBehaviors", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("BehaviorID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("BehaviorID");
 
                     b.Property<int?>("ModelID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ModelID");
 
                     b.HasKey("EfId");
@@ -1261,37 +1598,47 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("DevModelBehaviors");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Emotes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Emotes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AnimationName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animationName");
 
                     b.Property<string>("Channel")
+                        .HasColumnType("TEXT")
                         .HasColumnName("channel");
 
                     b.Property<string>("Command")
+                        .HasColumnType("TEXT")
                         .HasColumnName("command");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<string>("IconFilename")
+                        .HasColumnType("TEXT")
                         .HasColumnName("iconFilename");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<bool?>("Locked")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locked");
 
                     b.HasKey("EfId");
@@ -1299,19 +1646,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Emotes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.EventGating", b =>
+            modelBuilder.Entity("Uchu.Core.Client.EventGating", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("Dateend")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("date_end");
 
                     b.Property<long?>("Datestart")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("date_start");
 
                     b.Property<string>("EventName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("eventName");
 
                     b.HasKey("EfId");
@@ -1319,37 +1670,47 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("EventGating");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ExhibitComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ExhibitComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("FImaginationCost")
+                        .HasColumnType("REAL")
                         .HasColumnName("fImaginationCost");
 
                     b.Property<float?>("FReputationSizeMultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("fReputationSizeMultiplier");
 
                     b.Property<float?>("Height")
+                        .HasColumnType("REAL")
                         .HasColumnName("height");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("Length")
+                        .HasColumnType("REAL")
                         .HasColumnName("length");
 
                     b.Property<float?>("OffsetX")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetX");
 
                     b.Property<float?>("OffsetY")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetY");
 
                     b.Property<float?>("OffsetZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetZ");
 
                     b.Property<float?>("Width")
+                        .HasColumnType("REAL")
                         .HasColumnName("width");
 
                     b.HasKey("EfId");
@@ -1357,25 +1718,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ExhibitComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Factions", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Factions", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("EnemyList")
+                        .HasColumnType("TEXT")
                         .HasColumnName("enemyList");
 
                     b.Property<int?>("Faction")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("faction");
 
                     b.Property<string>("FactionList")
+                        .HasColumnType("TEXT")
                         .HasColumnName("factionList");
 
                     b.Property<bool?>("FactionListFriendly")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("factionListFriendly");
 
                     b.Property<string>("FriendList")
+                        .HasColumnType("TEXT")
                         .HasColumnName("friendList");
 
                     b.HasKey("EfId");
@@ -1383,25 +1750,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Factions");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.FeatureGating", b =>
+            modelBuilder.Entity("Uchu.Core.Client.FeatureGating", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Current")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("current");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<string>("FeatureName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("featureName");
 
                     b.Property<int?>("Major")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("major");
 
                     b.Property<int?>("Minor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minor");
 
                     b.HasKey("EfId");
@@ -1409,16 +1782,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("FeatureGating");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.FlairTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.FlairTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Asset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("asset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -1426,19 +1802,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("FlairTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Icons", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Icons", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("IconID");
 
                     b.Property<string>("IconName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("IconName");
 
                     b.Property<string>("IconPath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("IconPath");
 
                     b.HasKey("EfId");
@@ -1446,22 +1826,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Icons");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.InventoryComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.InventoryComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("count");
 
                     b.Property<bool?>("Equip")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("equip");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Itemid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemid");
 
                     b.HasKey("EfId");
@@ -1469,136 +1854,179 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("InventoryComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ItemComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ItemComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AltCurrencyCost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("altCurrencyCost");
 
                     b.Property<int?>("AnimationFlag")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("animationFlag");
 
                     b.Property<string>("AudioEquipMetaEventSet")
+                        .HasColumnType("TEXT")
                         .HasColumnName("audioEquipMetaEventSet");
 
                     b.Property<string>("AudioEventUse")
+                        .HasColumnType("TEXT")
                         .HasColumnName("audioEventUse");
 
                     b.Property<int?>("BaseValue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("baseValue");
 
                     b.Property<int?>("BuildTypes")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("buildTypes");
 
                     b.Property<int?>("Color1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("color1");
 
                     b.Property<int?>("CommendationCost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("commendationCost");
 
                     b.Property<int?>("CommendationLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("commendationLOT");
 
                     b.Property<string>("CurrencyCosts")
+                        .HasColumnType("TEXT")
                         .HasColumnName("currencyCosts");
 
                     b.Property<int?>("CurrencyLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("currencyLOT");
 
                     b.Property<int?>("Decal")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("decal");
 
                     b.Property<int?>("DelResIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("delResIndex");
 
                     b.Property<int?>("EquipEffects")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("equipEffects");
 
                     b.Property<string>("EquipLocation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("equipLocation");
 
                     b.Property<int?>("ForgeType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("forgeType");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("InLootTable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("inLootTable");
 
                     b.Property<bool?>("InVendor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("inVendor");
 
                     b.Property<string>("IngredientInfo")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ingredientInfo");
 
                     b.Property<bool?>("IsBOE")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isBOE");
 
                     b.Property<bool?>("IsBOP")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isBOP");
 
                     b.Property<bool?>("IsKitPiece")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isKitPiece");
 
                     b.Property<bool?>("IsTwoHanded")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isTwoHanded");
 
                     b.Property<bool?>("IsUnique")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isUnique");
 
                     b.Property<long?>("ItemInfo")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemInfo");
 
                     b.Property<int?>("ItemRating")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemRating");
 
                     b.Property<int?>("ItemType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemType");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<int?>("MinNumRequired")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minNumRequired");
 
                     b.Property<bool?>("NoEquipAnimation")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("noEquipAnimation");
 
                     b.Property<int?>("OffsetGroupID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("offsetGroupID");
 
                     b.Property<int?>("Rarity")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rarity");
 
                     b.Property<bool?>("ReadyForQA")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("readyForQA");
 
                     b.Property<int?>("ReqAchievementID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reqAchievementID");
 
                     b.Property<int?>("ReqFlagID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reqFlagID");
 
                     b.Property<string>("ReqPrecondition")
+                        .HasColumnType("TEXT")
                         .HasColumnName("reqPrecondition");
 
                     b.Property<int?>("ReqSpecRank")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reqSpecRank");
 
                     b.Property<int?>("ReqSpecialtyID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reqSpecialtyID");
 
                     b.Property<float?>("SellMultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("SellMultiplier");
 
                     b.Property<int?>("StackSize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("stackSize");
 
                     b.Property<string>("SubItems")
+                        .HasColumnType("TEXT")
                         .HasColumnName("subItems");
 
                     b.HasKey("EfId");
@@ -1606,16 +2034,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ItemComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ItemEggData", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ItemEggData", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Chassietypeid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chassie_type_id");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -1623,37 +2054,47 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ItemEggData");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ItemFoodData", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ItemFoodData", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Element1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_1");
 
                     b.Property<int?>("Element1amount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_1_amount");
 
                     b.Property<int?>("Element2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_2");
 
                     b.Property<int?>("Element2amount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_2_amount");
 
                     b.Property<int?>("Element3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_3");
 
                     b.Property<int?>("Element3amount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_3_amount");
 
                     b.Property<int?>("Element4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_4");
 
                     b.Property<int?>("Element4amount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("element_4_amount");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -1661,19 +2102,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ItemFoodData");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ItemSetSkills", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ItemSetSkills", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("SkillCastType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SkillCastType");
 
                     b.Property<int?>("SkillID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SkillID");
 
                     b.Property<int?>("SkillSetID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SkillSetID");
 
                     b.HasKey("EfId");
@@ -1681,55 +2126,71 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ItemSetSkills");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ItemSets", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ItemSets", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<string>("ItemIDs")
+                        .HasColumnType("TEXT")
                         .HasColumnName("itemIDs");
 
                     b.Property<int?>("KitID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("kitID");
 
                     b.Property<int?>("KitImage")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("kitImage");
 
                     b.Property<int?>("KitRank")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("kitRank");
 
                     b.Property<int?>("KitType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("kitType");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<float?>("Priority")
+                        .HasColumnType("REAL")
                         .HasColumnName("priority");
 
                     b.Property<int?>("SetID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("setID");
 
                     b.Property<int?>("SkillSetWith2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSetWith2");
 
                     b.Property<int?>("SkillSetWith3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSetWith3");
 
                     b.Property<int?>("SkillSetWith4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSetWith4");
 
                     b.Property<int?>("SkillSetWith5")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSetWith5");
 
                     b.Property<int?>("SkillSetWith6")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSetWith6");
 
                     b.HasKey("EfId");
@@ -1737,28 +2198,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ItemSets");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.JetPackPadComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.JetPackPadComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LotBlocker")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lotBlocker");
 
                     b.Property<int?>("LotWarningVolume")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lotWarningVolume");
 
                     b.Property<float?>("WarnDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("warnDistance");
 
                     b.Property<float?>("XDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("xDistance");
 
                     b.Property<float?>("YDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("yDistance");
 
                     b.HasKey("EfId");
@@ -1766,31 +2234,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("JetPackPadComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LUPExhibitComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LUPExhibitComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("MaxXZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxXZ");
 
                     b.Property<float?>("MaxY")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxY");
 
                     b.Property<float?>("MinXZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("minXZ");
 
                     b.Property<float?>("OffsetX")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetX");
 
                     b.Property<float?>("OffsetY")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetY");
 
                     b.Property<float?>("OffsetZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("offsetZ");
 
                     b.HasKey("EfId");
@@ -1798,28 +2274,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LUPExhibitComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LUPExhibitModelData", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LUPExhibitModelData", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<int?>("LOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LOT");
 
                     b.Property<float?>("MaxXZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxXZ");
 
                     b.Property<float?>("MaxY")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxY");
 
                     b.Property<float?>("MinXZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("minXZ");
 
                     b.Property<string>("Owner")
+                        .HasColumnType("TEXT")
                         .HasColumnName("owner");
 
                     b.HasKey("EfId");
@@ -1827,13 +2310,15 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LUPExhibitModelData");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LUPZoneIDs", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LUPZoneIDs", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ZoneID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("zoneID");
 
                     b.HasKey("EfId");
@@ -1841,16 +2326,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LUPZoneIDs");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LanguageType", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LanguageType", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("LanguageDescription")
+                        .HasColumnType("TEXT")
                         .HasColumnName("LanguageDescription");
 
                     b.Property<int?>("LanguageID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LanguageID");
 
                     b.HasKey("EfId");
@@ -1858,19 +2346,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LanguageType");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LevelProgressionLookup", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LevelProgressionLookup", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("BehaviorEffect")
+                        .HasColumnType("TEXT")
                         .HasColumnName("BehaviorEffect");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("RequiredUScore")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("requiredUScore");
 
                     b.HasKey("EfId");
@@ -1878,37 +2370,47 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LevelProgressionLookup");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LootMatrix", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LootMatrix", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("FlagID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("flagID");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.Property<int?>("LootTableIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootTableIndex");
 
                     b.Property<int?>("MaxToDrop")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("maxToDrop");
 
                     b.Property<int?>("MinToDrop")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minToDrop");
 
                     b.Property<float?>("Percent")
+                        .HasColumnType("REAL")
                         .HasColumnName("percent");
 
                     b.Property<int?>("RarityTableIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("RarityTableIndex");
 
                     b.HasKey("EfId");
@@ -1916,16 +2418,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LootMatrix");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LootMatrixIndex", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LootMatrixIndex", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("InNpcEditor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("inNpcEditor");
 
                     b.Property<int?>("LootMatrixIndexColumn")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.HasKey("EfId");
@@ -1933,25 +2438,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LootMatrixIndex");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LootTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LootTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Itemid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemid");
 
                     b.Property<int?>("LootTableIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootTableIndex");
 
                     b.Property<bool?>("MissionDrop")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("MissionDrop");
 
                     b.Property<int?>("SortPriority")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("sortPriority");
 
                     b.HasKey("EfId");
@@ -1959,13 +2470,15 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LootTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.LootTableIndex", b =>
+            modelBuilder.Entity("Uchu.Core.Client.LootTableIndex", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("LootTableIndexColumn")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootTableIndex");
 
                     b.HasKey("EfId");
@@ -1973,49 +2486,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("LootTableIndex");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Chest")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chest");
 
                     b.Property<int?>("Chestdecal")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chestdecal");
 
                     b.Property<int?>("Eyebrowstyle")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("eyebrowstyle");
 
                     b.Property<int?>("Eyesstyle")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("eyesstyle");
 
                     b.Property<int?>("Haircolor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("haircolor");
 
                     b.Property<int?>("Hairstyle")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("hairstyle");
 
                     b.Property<int?>("Head")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("head");
 
                     b.Property<int?>("Headcolor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("headcolor");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Lefthand")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lefthand");
 
                     b.Property<int?>("Legs")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("legs");
 
                     b.Property<int?>("Mouthstyle")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("mouthstyle");
 
                     b.Property<int?>("Righthand")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("righthand");
 
                     b.HasKey("EfId");
@@ -2023,28 +2550,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigDecalsEyebrows", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigDecalsEyebrows", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("CharacterCreateValid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CharacterCreateValid");
 
                     b.Property<bool?>("Female")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("female");
 
                     b.Property<string>("Highpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("High_path");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<string>("Lowpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Low_path");
 
                     b.Property<bool?>("Male")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("male");
 
                     b.HasKey("EfId");
@@ -2052,28 +2586,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigDecals_Eyebrows");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigDecalsEyes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigDecalsEyes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("CharacterCreateValid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CharacterCreateValid");
 
                     b.Property<bool?>("Female")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("female");
 
                     b.Property<string>("Highpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("High_path");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<string>("Lowpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Low_path");
 
                     b.Property<bool?>("Male")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("male");
 
                     b.HasKey("EfId");
@@ -2081,16 +2622,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigDecals_Eyes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigDecalsLegs", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigDecalsLegs", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Highpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("High_path");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.HasKey("EfId");
@@ -2098,28 +2642,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigDecals_Legs");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigDecalsMouths", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigDecalsMouths", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("CharacterCreateValid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CharacterCreateValid");
 
                     b.Property<bool?>("Female")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("female");
 
                     b.Property<string>("Highpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("High_path");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<string>("Lowpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Low_path");
 
                     b.Property<bool?>("Male")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("male");
 
                     b.HasKey("EfId");
@@ -2127,25 +2678,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigDecals_Mouths");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MinifigDecalsTorsos", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MinifigDecalsTorsos", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("CharacterCreateValid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CharacterCreateValid");
 
                     b.Property<bool?>("Female")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("female");
 
                     b.Property<string>("Highpath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("High_path");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<bool?>("Male")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("male");
 
                     b.HasKey("EfId");
@@ -2153,34 +2710,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MinifigDecals_Torsos");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MissionEmail", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MissionEmail", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AttachmentLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("attachmentLOT");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("MessageType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("messageType");
 
                     b.Property<int?>("MissionID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("missionID");
 
                     b.Property<int?>("NotificationGroup")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("notificationGroup");
 
                     b.HasKey("EfId");
@@ -2188,25 +2754,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MissionEmail");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MissionNPCComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MissionNPCComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("AcceptsMission")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("acceptsMission");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("MissionID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("missionID");
 
                     b.Property<bool?>("OffersMission")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("offersMission");
 
                     b.HasKey("EfId");
@@ -2214,49 +2786,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MissionNPCComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MissionTasks", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MissionTasks", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("IconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("LargeTaskIcon")
+                        .HasColumnType("TEXT")
                         .HasColumnName("largeTaskIcon");
 
                     b.Property<int?>("LargeTaskIconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("largeTaskIconID");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("Target")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("target");
 
                     b.Property<string>("TargetGroup")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetGroup");
 
                     b.Property<int?>("TargetValue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("targetValue");
 
                     b.Property<string>("TaskParam1")
+                        .HasColumnType("TEXT")
                         .HasColumnName("taskParam1");
 
                     b.Property<int?>("TaskType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("taskType");
 
                     b.Property<int?>("Uid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("uid");
 
                     b.HasKey("EfId");
@@ -2264,109 +2850,143 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MissionTasks");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MissionText", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MissionText", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AudioEventGUIDCompleted")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Completed");
 
                     b.Property<string>("AudioEventGUIDFailed")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Failed");
 
                     b.Property<string>("AudioEventGUIDInteract")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Interact");
 
                     b.Property<string>("AudioEventGUIDOfferAccept")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_OfferAccept");
 
                     b.Property<string>("AudioEventGUIDOfferDeny")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_OfferDeny");
 
                     b.Property<string>("AudioEventGUIDProgress")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Progress");
 
                     b.Property<string>("AudioEventGUIDTurnIn")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_TurnIn");
 
                     b.Property<string>("AudioMusicCueOfferAccept")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioMusicCue_OfferAccept");
 
                     b.Property<string>("AudioMusicCueTurnIn")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioMusicCue_TurnIn");
 
                     b.Property<string>("CinematicAccepted")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CinematicAccepted");
 
                     b.Property<float?>("CinematicAcceptedLeadin")
+                        .HasColumnType("REAL")
                         .HasColumnName("CinematicAcceptedLeadin");
 
                     b.Property<string>("CinematicCompleted")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CinematicCompleted");
 
                     b.Property<float?>("CinematicCompletedLeadin")
+                        .HasColumnType("REAL")
                         .HasColumnName("CinematicCompletedLeadin");
 
                     b.Property<string>("CinematicRepeatable")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CinematicRepeatable");
 
                     b.Property<string>("CinematicRepeatableCompleted")
+                        .HasColumnType("TEXT")
                         .HasColumnName("CinematicRepeatableCompleted");
 
                     b.Property<float?>("CinematicRepeatableCompletedLeadin")
+                        .HasColumnType("REAL")
                         .HasColumnName("CinematicRepeatableCompletedLeadin");
 
                     b.Property<float?>("CinematicRepeatableLeadin")
+                        .HasColumnType("REAL")
                         .HasColumnName("CinematicRepeatableLeadin");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("IconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<string>("MissionIcon")
+                        .HasColumnType("TEXT")
                         .HasColumnName("missionIcon");
 
                     b.Property<string>("OfferNPCIcon")
+                        .HasColumnType("TEXT")
                         .HasColumnName("offerNPCIcon");
 
                     b.Property<string>("Onclickanim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("onclick_anim");
 
                     b.Property<string>("State1anim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_1_anim");
 
                     b.Property<string>("State2anim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_2_anim");
 
                     b.Property<string>("State3anim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_3_anim");
 
                     b.Property<string>("State3turninanim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_3_turnin_anim");
 
                     b.Property<string>("State4anim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_4_anim");
 
                     b.Property<string>("State4turninanim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("state_4_turnin_anim");
 
                     b.Property<string>("Storyicon")
+                        .HasColumnType("TEXT")
                         .HasColumnName("story_icon");
 
                     b.Property<int?>("TurnInIconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("turnInIconID");
 
                     b.HasKey("EfId");
@@ -2374,166 +2994,219 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MissionText");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Missions", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Missions", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("CooldownTime")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cooldownTime");
 
                     b.Property<string>("Definedsubtype")
+                        .HasColumnType("TEXT")
                         .HasColumnName("defined_subtype");
 
                     b.Property<string>("Definedtype")
+                        .HasColumnType("TEXT")
                         .HasColumnName("defined_type");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<string>("HUDStates")
+                        .HasColumnType("TEXT")
                         .HasColumnName("HUDStates");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("InMOTD")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("inMOTD");
 
                     b.Property<bool?>("IsChoiceReward")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isChoiceReward");
 
                     b.Property<bool?>("IsMission")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isMission");
 
                     b.Property<bool?>("IsRandom")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isRandom");
 
                     b.Property<int?>("LegoScore")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LegoScore");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("MissionIconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("missionIconID");
 
                     b.Property<int?>("OfferobjectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("offer_objectID");
 
                     b.Property<string>("PrereqMissionID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("prereqMissionID");
 
                     b.Property<string>("RandomPool")
+                        .HasColumnType("TEXT")
                         .HasColumnName("randomPool");
 
                     b.Property<bool?>("Repeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("repeatable");
 
                     b.Property<int?>("Rewardbankinventory")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_bankinventory");
 
                     b.Property<long?>("Rewardcurrency")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_currency");
 
                     b.Property<long?>("Rewardcurrencyrepeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_currency_repeatable");
 
                     b.Property<int?>("Rewardemote")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_emote");
 
                     b.Property<int?>("Rewardemote2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_emote2");
 
                     b.Property<int?>("Rewardemote3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_emote3");
 
                     b.Property<int?>("Rewardemote4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_emote4");
 
                     b.Property<int?>("Rewarditem1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item1");
 
                     b.Property<int?>("Rewarditem1count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item1_count");
 
                     b.Property<int?>("Rewarditem1repeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item1_repeatable");
 
                     b.Property<int?>("Rewarditem1repeatcount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item1_repeat_count");
 
                     b.Property<int?>("Rewarditem2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item2");
 
                     b.Property<int?>("Rewarditem2count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item2_count");
 
                     b.Property<int?>("Rewarditem2repeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item2_repeatable");
 
                     b.Property<int?>("Rewarditem2repeatcount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item2_repeat_count");
 
                     b.Property<int?>("Rewarditem3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item3");
 
                     b.Property<int?>("Rewarditem3count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item3_count");
 
                     b.Property<int?>("Rewarditem3repeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item3_repeatable");
 
                     b.Property<int?>("Rewarditem3repeatcount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item3_repeat_count");
 
                     b.Property<int?>("Rewarditem4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item4");
 
                     b.Property<int?>("Rewarditem4count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item4_count");
 
                     b.Property<int?>("Rewarditem4repeatable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item4_repeatable");
 
                     b.Property<int?>("Rewarditem4repeatcount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_item4_repeat_count");
 
                     b.Property<int?>("Rewardmaxhealth")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maxhealth");
 
                     b.Property<int?>("Rewardmaximagination")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maximagination");
 
                     b.Property<int?>("Rewardmaxinventory")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maxinventory");
 
                     b.Property<int?>("Rewardmaxmodel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maxmodel");
 
                     b.Property<long?>("Rewardmaxwallet")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maxwallet");
 
                     b.Property<int?>("Rewardmaxwidget")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_maxwidget");
 
                     b.Property<long?>("Rewardreputation")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reward_reputation");
 
                     b.Property<int?>("TargetobjectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("target_objectID");
 
                     b.Property<int?>("Timelimit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("time_limit");
 
                     b.Property<int?>("UIPrereqID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("UIPrereqID");
 
                     b.Property<int?>("UISortOrder")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("UISortOrder");
 
                     b.HasKey("EfId");
@@ -2541,16 +3214,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Missions");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ModelBehavior", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ModelBehavior", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("DefinitionXMLfilename")
+                        .HasColumnType("TEXT")
                         .HasColumnName("definitionXMLfilename");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -2558,34 +3234,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ModelBehavior");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ModularBuildComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ModularBuildComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AudioEventGUIDComplete")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Complete");
 
                     b.Property<string>("AudioEventGUIDPresent")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Present");
 
                     b.Property<string>("AudioEventGUIDSnap")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventGUID_Snap");
 
                     b.Property<int?>("BuildType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("buildType");
 
                     b.Property<int?>("CreatedLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("createdLOT");
 
                     b.Property<int?>("CreatedPhysicsID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("createdPhysicsID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Xml")
+                        .HasColumnType("TEXT")
                         .HasColumnName("xml");
 
                     b.HasKey("EfId");
@@ -2593,28 +3278,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ModularBuildComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ModuleComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ModuleComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AssembledEffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("assembledEffectID");
 
                     b.Property<int?>("BuildType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("buildType");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("PartCode")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("partCode");
 
                     b.Property<string>("PrimarySoundGUID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("primarySoundGUID");
 
                     b.Property<string>("Xml")
+                        .HasColumnType("TEXT")
                         .HasColumnName("xml");
 
                     b.HasKey("EfId");
@@ -2622,40 +3314,51 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ModuleComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MotionFX", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MotionFX", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AddVelocity")
+                        .HasColumnType("REAL")
                         .HasColumnName("addVelocity");
 
                     b.Property<string>("DestGroupName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("destGroupName");
 
                     b.Property<float?>("Distance")
+                        .HasColumnType("REAL")
                         .HasColumnName("distance");
 
                     b.Property<float?>("Duration")
+                        .HasColumnType("REAL")
                         .HasColumnName("duration");
 
                     b.Property<float?>("EndScale")
+                        .HasColumnType("REAL")
                         .HasColumnName("endScale");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("SlamVelocity")
+                        .HasColumnType("REAL")
                         .HasColumnName("slamVelocity");
 
                     b.Property<float?>("StartScale")
+                        .HasColumnType("REAL")
                         .HasColumnName("startScale");
 
                     b.Property<int?>("TypeID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("typeID");
 
                     b.Property<float?>("Velocity")
+                        .HasColumnType("REAL")
                         .HasColumnName("velocity");
 
                     b.HasKey("EfId");
@@ -2663,34 +3366,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MotionFX");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MovementAIComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MovementAIComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AttachedPath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("attachedPath");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("MovementType")
+                        .HasColumnType("TEXT")
                         .HasColumnName("MovementType");
 
                     b.Property<float?>("WanderChance")
+                        .HasColumnType("REAL")
                         .HasColumnName("WanderChance");
 
                     b.Property<float?>("WanderDelayMax")
+                        .HasColumnType("REAL")
                         .HasColumnName("WanderDelayMax");
 
                     b.Property<float?>("WanderDelayMin")
+                        .HasColumnType("REAL")
                         .HasColumnName("WanderDelayMin");
 
                     b.Property<float?>("WanderRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("WanderRadius");
 
                     b.Property<float?>("WanderSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("WanderSpeed");
 
                     b.HasKey("EfId");
@@ -2698,34 +3410,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MovementAIComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.MovingPlatforms", b =>
+            modelBuilder.Entity("Uchu.Core.Client.MovingPlatforms", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("PlatformIsSimpleMover")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("platformIsSimpleMover");
 
                     b.Property<float?>("PlatformMoveTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("platformMoveTime");
 
                     b.Property<float?>("PlatformMoveX")
+                        .HasColumnType("REAL")
                         .HasColumnName("platformMoveX");
 
                     b.Property<float?>("PlatformMoveY")
+                        .HasColumnType("REAL")
                         .HasColumnName("platformMoveY");
 
                     b.Property<float?>("PlatformMoveZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("platformMoveZ");
 
                     b.Property<bool?>("PlatformStartAtEnd")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("platformStartAtEnd");
 
                     b.HasKey("EfId");
@@ -2733,55 +3454,71 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("MovingPlatforms");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.NpcIcons", b =>
+            modelBuilder.Entity("Uchu.Core.Client.NpcIcons", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Color")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("color");
 
                     b.Property<string>("CompositeConnectionNode")
+                        .HasColumnType("TEXT")
                         .HasColumnName("compositeConnectionNode");
 
                     b.Property<float?>("CompositeHorizOffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("compositeHorizOffset");
 
                     b.Property<string>("CompositeIconTexture")
+                        .HasColumnType("TEXT")
                         .HasColumnName("compositeIconTexture");
 
                     b.Property<int?>("CompositeLOTMultiMission")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("compositeLOTMultiMission");
 
                     b.Property<int?>("CompositeLOTMultiMissionVentor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("compositeLOTMultiMissionVentor");
 
                     b.Property<float?>("CompositeScale")
+                        .HasColumnType("REAL")
                         .HasColumnName("compositeScale");
 
                     b.Property<float?>("CompositeVertOffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("compositeVertOffset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("IsClickable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isClickable");
 
                     b.Property<int?>("LOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LOT");
 
                     b.Property<float?>("Offset")
+                        .HasColumnType("REAL")
                         .HasColumnName("offset");
 
                     b.Property<bool?>("RotateToFace")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rotateToFace");
 
                     b.Property<float?>("Scale")
+                        .HasColumnType("REAL")
                         .HasColumnName("scale");
 
                     b.Property<string>("Texture")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Texture");
 
                     b.HasKey("EfId");
@@ -2789,31 +3526,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("NpcIcons");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ObjectBehaviorXREF", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ObjectBehaviorXREF", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("BehaviorID1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID1");
 
                     b.Property<long?>("BehaviorID2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID2");
 
                     b.Property<long?>("BehaviorID3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID3");
 
                     b.Property<long?>("BehaviorID4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID4");
 
                     b.Property<long?>("BehaviorID5")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID5");
 
                     b.Property<int?>("LOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LOT");
 
                     b.Property<int?>("Type")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("type");
 
                     b.HasKey("EfId");
@@ -2821,16 +3566,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ObjectBehaviorXREF");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ObjectBehaviors", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ObjectBehaviors", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("BehaviorID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("BehaviorID");
 
                     b.Property<string>("Xmldata")
+                        .HasColumnType("TEXT")
                         .HasColumnName("xmldata");
 
                     b.HasKey("EfId");
@@ -2838,22 +3586,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ObjectBehaviors");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ObjectSkills", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ObjectSkills", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AICombatWeight")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("AICombatWeight");
 
                     b.Property<int?>("CastOnType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("castOnType");
 
                     b.Property<int?>("ObjectTemplate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("objectTemplate");
 
                     b.Property<int?>("SkillID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillID");
 
                     b.HasKey("EfId");
@@ -2861,52 +3614,67 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ObjectSkills");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Objects", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Objects", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<string>("DisplayName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("displayName");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<bool?>("HQvalid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("HQ_valid");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("InteractionDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("interactionDistance");
 
                     b.Property<string>("InternalNotes")
+                        .HasColumnType("TEXT")
                         .HasColumnName("_internalNotes");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<bool?>("Nametag")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("nametag");
 
                     b.Property<int?>("NpcTemplateID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("npcTemplateID");
 
                     b.Property<bool?>("Placeable")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("placeable");
 
                     b.Property<string>("Type")
+                        .HasColumnType("TEXT")
                         .HasColumnName("type");
 
                     b.HasKey("EfId");
@@ -2914,19 +3682,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Objects");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PackageComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PackageComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.Property<int?>("PackageType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("packageType");
 
                     b.HasKey("EfId");
@@ -2934,22 +3706,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PackageComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PetAbilities", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PetAbilities", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AbilityName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AbilityName");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("ImaginationCost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ImaginationCost");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.HasKey("EfId");
@@ -2957,55 +3734,71 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PetAbilities");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PetComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PetComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AudioMetaEventSet")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioMetaEventSet");
 
                     b.Property<string>("BuffIDs")
+                        .HasColumnType("TEXT")
                         .HasColumnName("buffIDs");
 
                     b.Property<int?>("ElementType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("elementType");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("IdleTimeMax")
+                        .HasColumnType("REAL")
                         .HasColumnName("idleTimeMax");
 
                     b.Property<float?>("IdleTimeMin")
+                        .HasColumnType("REAL")
                         .HasColumnName("idleTimeMin");
 
                     b.Property<float?>("ImaginationDrainRate")
+                        .HasColumnType("REAL")
                         .HasColumnName("imaginationDrainRate");
 
                     b.Property<float?>("MaxTameUpdateTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxTameUpdateTime");
 
                     b.Property<float?>("MinTameUpdateTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("minTameUpdateTime");
 
                     b.Property<float?>("PercentTameChance")
+                        .HasColumnType("REAL")
                         .HasColumnName("percentTameChance");
 
                     b.Property<int?>("PetForm")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("petForm");
 
                     b.Property<float?>("RunSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("runSpeed");
 
                     b.Property<float?>("SprintSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("sprintSpeed");
 
                     b.Property<float?>("Tamability")
+                        .HasColumnType("REAL")
                         .HasColumnName("tamability");
 
                     b.Property<float?>("WalkSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("walkSpeed");
 
                     b.HasKey("EfId");
@@ -3013,16 +3806,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PetComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PetNestComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PetNestComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ElementalType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ElementalType");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -3030,58 +3826,75 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PetNestComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PhysicsComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PhysicsComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AirSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("airSpeed");
 
                     b.Property<string>("BoundaryAsset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("boundaryAsset");
 
                     b.Property<int?>("CollisionGroup")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("collisionGroup");
 
                     b.Property<float?>("Doublejump")
+                        .HasColumnType("REAL")
                         .HasColumnName("doublejump");
 
                     b.Property<float?>("Friction")
+                        .HasColumnType("REAL")
                         .HasColumnName("friction");
 
                     b.Property<string>("GravityVolumeAsset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gravityVolumeAsset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("Jump")
+                        .HasColumnType("REAL")
                         .HasColumnName("jump");
 
                     b.Property<float?>("JumpAirSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("jumpAirSpeed");
 
                     b.Property<int?>("PcShapeType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("pcShapeType");
 
                     b.Property<string>("Physicsasset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("physics_asset");
 
                     b.Property<float?>("PlayerHeight")
+                        .HasColumnType("REAL")
                         .HasColumnName("playerHeight");
 
                     b.Property<float?>("PlayerRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("playerRadius");
 
                     b.Property<float?>("RotSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("rotSpeed");
 
                     b.Property<float?>("Speed")
+                        .HasColumnType("REAL")
                         .HasColumnName("speed");
 
                     b.Property<float?>("Static")
+                        .HasColumnType("REAL")
                         .HasColumnName("static");
 
                     b.HasKey("EfId");
@@ -3089,22 +3902,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PhysicsComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PlayerFlags", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PlayerFlags", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("OnlySetByServer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("OnlySetByServer");
 
                     b.Property<bool?>("SessionOnly")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SessionOnly");
 
                     b.Property<bool?>("SessionZoneOnly")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SessionZoneOnly");
 
                     b.HasKey("EfId");
@@ -3112,22 +3930,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PlayerFlags");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PlayerStatistics", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PlayerStatistics", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<int?>("SortOrder")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("sortOrder");
 
                     b.Property<int?>("StatID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("statID");
 
                     b.HasKey("EfId");
@@ -3135,55 +3958,71 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PlayerStatistics");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PossessableComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PossessableComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AttachOffsetFwd")
+                        .HasColumnType("REAL")
                         .HasColumnName("attachOffsetFwd");
 
                     b.Property<float?>("AttachOffsetRight")
+                        .HasColumnType("REAL")
                         .HasColumnName("attachOffsetRight");
 
                     b.Property<float?>("BillboardOffsetUp")
+                        .HasColumnType("REAL")
                         .HasColumnName("billboardOffsetUp");
 
                     b.Property<int?>("ControlSchemeID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("controlSchemeID");
 
                     b.Property<bool?>("DepossessOnHit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("depossessOnHit");
 
                     b.Property<float?>("HitStunTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("hitStunTime");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("MinifigAttachAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("minifigAttachAnimation");
 
                     b.Property<string>("MinifigAttachPoint")
+                        .HasColumnType("TEXT")
                         .HasColumnName("minifigAttachPoint");
 
                     b.Property<string>("MinifigDetachAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("minifigDetachAnimation");
 
                     b.Property<string>("MountAttachAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mountAttachAnimation");
 
                     b.Property<string>("MountDetachAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mountDetachAnimation");
 
                     b.Property<int?>("PossessionType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("possessionType");
 
                     b.Property<int?>("SkillSet")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillSet");
 
                     b.Property<bool?>("WantBillboard")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("wantBillboard");
 
                     b.HasKey("EfId");
@@ -3191,40 +4030,51 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PossessableComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Preconditions", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Preconditions", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("TargetCount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("targetCount");
 
                     b.Property<string>("TargetGroup")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetGroup");
 
                     b.Property<string>("TargetLOT")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetLOT");
 
                     b.Property<int?>("Type")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("type");
 
                     b.Property<long?>("ValidContexts")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("validContexts");
 
                     b.HasKey("EfId");
@@ -3232,25 +4082,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Preconditions");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PropertyEntranceComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PropertyEntranceComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("GroupType")
+                        .HasColumnType("TEXT")
                         .HasColumnName("groupType");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("IsOnProperty")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("isOnProperty");
 
                     b.Property<int?>("MapID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("mapID");
 
                     b.Property<string>("PropertyName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("propertyName");
 
                     b.HasKey("EfId");
@@ -3258,70 +4114,91 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PropertyEntranceComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.PropertyTemplate", b =>
+            modelBuilder.Entity("Uchu.Core.Client.PropertyTemplate", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AchievementRequired")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("achievementRequired");
 
                     b.Property<int?>("CloneLimit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cloneLimit");
 
                     b.Property<int?>("DurationType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("durationType");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("MapID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("mapID");
 
                     b.Property<float?>("MaxBuildHeight")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxBuildHeight");
 
                     b.Property<int?>("MinimumPrice")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("minimumPrice");
 
                     b.Property<string>("Path")
+                        .HasColumnType("TEXT")
                         .HasColumnName("path");
 
                     b.Property<int?>("RentDuration")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rentDuration");
 
                     b.Property<int?>("ReputationPerMinute")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("reputationPerMinute");
 
                     b.Property<int?>("Sizecode")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("sizecode");
 
                     b.Property<string>("SpawnName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("spawnName");
 
                     b.Property<int?>("Type")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("type");
 
                     b.Property<int?>("VendorMapID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("vendorMapID");
 
                     b.Property<float?>("ZoneX")
+                        .HasColumnType("REAL")
                         .HasColumnName("zoneX");
 
                     b.Property<float?>("ZoneY")
+                        .HasColumnType("REAL")
                         .HasColumnName("zoneY");
 
                     b.Property<float?>("ZoneZ")
+                        .HasColumnType("REAL")
                         .HasColumnName("zoneZ");
 
                     b.HasKey("EfId");
@@ -3329,22 +4206,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("PropertyTemplate");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ProximityMonitorComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ProximityMonitorComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("LoadOnClient")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LoadOnClient");
 
                     b.Property<bool?>("LoadOnServer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LoadOnServer");
 
                     b.Property<string>("Proximities")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Proximities");
 
                     b.HasKey("EfId");
@@ -3352,34 +4234,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ProximityMonitorComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ProximityTypes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ProximityTypes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("CollisionGroup")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CollisionGroup");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("IconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("LoadOnClient")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LoadOnClient");
 
                     b.Property<bool?>("LoadOnServer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LoadOnServer");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Name");
 
                     b.Property<bool?>("PassiveChecks")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("PassiveChecks");
 
                     b.Property<int?>("Radius")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("Radius");
 
                     b.HasKey("EfId");
@@ -3387,28 +4278,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ProximityTypes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RacingModuleComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RacingModuleComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("Acceleration")
+                        .HasColumnType("REAL")
                         .HasColumnName("acceleration");
 
                     b.Property<float?>("Handling")
+                        .HasColumnType("REAL")
                         .HasColumnName("handling");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("Imagination")
+                        .HasColumnType("REAL")
                         .HasColumnName("imagination");
 
                     b.Property<float?>("Stability")
+                        .HasColumnType("REAL")
                         .HasColumnName("stability");
 
                     b.Property<float?>("TopSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("topSpeed");
 
                     b.HasKey("EfId");
@@ -3416,58 +4314,75 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RacingModuleComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RailActivatorComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RailActivatorComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("CameraLocked")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cameraLocked");
 
                     b.Property<bool?>("DamageImmune")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("DamageImmune");
 
                     b.Property<string>("EffectIDs")
+                        .HasColumnType("TEXT")
                         .HasColumnName("effectIDs");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("LoopAnim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("loopAnim");
 
                     b.Property<string>("LoopSound")
+                        .HasColumnType("TEXT")
                         .HasColumnName("loopSound");
 
                     b.Property<bool?>("NoAggro")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("NoAggro");
 
                     b.Property<bool?>("PlayerCollision")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("playerCollision");
 
                     b.Property<string>("Preconditions")
+                        .HasColumnType("TEXT")
                         .HasColumnName("preconditions");
 
                     b.Property<bool?>("ShowNameBillboard")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ShowNameBillboard");
 
                     b.Property<string>("StartAnim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("startAnim");
 
                     b.Property<string>("StartEffectID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("StartEffectID");
 
                     b.Property<string>("StartSound")
+                        .HasColumnType("TEXT")
                         .HasColumnName("startSound");
 
                     b.Property<string>("StopAnim")
+                        .HasColumnType("TEXT")
                         .HasColumnName("stopAnim");
 
                     b.Property<string>("StopEffectID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("StopEffectID");
 
                     b.Property<string>("StopSound")
+                        .HasColumnType("TEXT")
                         .HasColumnName("stopSound");
 
                     b.HasKey("EfId");
@@ -3475,22 +4390,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RailActivatorComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RarityTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RarityTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<float?>("Randmax")
+                        .HasColumnType("REAL")
                         .HasColumnName("randmax");
 
                     b.Property<int?>("Rarity")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rarity");
 
                     b.Property<int?>("RarityTableIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("RarityTableIndex");
 
                     b.HasKey("EfId");
@@ -3498,13 +4418,15 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RarityTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RarityTableIndex", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RarityTableIndex", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("RarityTableIndexColumn")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("RarityTableIndex");
 
                     b.HasKey("EfId");
@@ -3512,40 +4434,51 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RarityTableIndex");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RebuildComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RebuildComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ActivityID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("activityID");
 
                     b.Property<float?>("Completetime")
+                        .HasColumnType("REAL")
                         .HasColumnName("complete_time");
 
                     b.Property<string>("Custommodules")
+                        .HasColumnType("TEXT")
                         .HasColumnName("custom_modules");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("Interruptible")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("interruptible");
 
                     b.Property<int?>("Postimaginationcost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("post_imagination_cost");
 
                     b.Property<float?>("Resettime")
+                        .HasColumnType("REAL")
                         .HasColumnName("reset_time");
 
                     b.Property<bool?>("Selfactivator")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("self_activator");
 
                     b.Property<int?>("Takeimagination")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("take_imagination");
 
                     b.Property<float?>("Timebeforesmash")
+                        .HasColumnType("REAL")
                         .HasColumnName("time_before_smash");
 
                     b.HasKey("EfId");
@@ -3553,49 +4486,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RebuildComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RebuildSections", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RebuildSections", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("BPlaced")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("bPlaced");
 
                     b.Property<float?>("Fallanglex")
+                        .HasColumnType("REAL")
                         .HasColumnName("fall_angle_x");
 
                     b.Property<float?>("Fallangley")
+                        .HasColumnType("REAL")
                         .HasColumnName("fall_angle_y");
 
                     b.Property<float?>("Fallanglez")
+                        .HasColumnType("REAL")
                         .HasColumnName("fall_angle_z");
 
                     b.Property<float?>("Fallheight")
+                        .HasColumnType("REAL")
                         .HasColumnName("fall_height");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("ObjectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("objectID");
 
                     b.Property<float?>("Offsetx")
+                        .HasColumnType("REAL")
                         .HasColumnName("offset_x");
 
                     b.Property<float?>("Offsety")
+                        .HasColumnType("REAL")
                         .HasColumnName("offset_y");
 
                     b.Property<float?>("Offsetz")
+                        .HasColumnType("REAL")
                         .HasColumnName("offset_z");
 
                     b.Property<int?>("RebuildID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rebuildID");
 
                     b.Property<string>("Requireslist")
+                        .HasColumnType("TEXT")
                         .HasColumnName("requires_list");
 
                     b.Property<int?>("Size")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("size");
 
                     b.HasKey("EfId");
@@ -3603,16 +4550,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RebuildSections");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ReleaseVersion", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ReleaseVersion", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<long?>("ReleaseDate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ReleaseDate");
 
                     b.Property<string>("ReleaseVersionColumn")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ReleaseVersion");
 
                     b.HasKey("EfId");
@@ -3620,94 +4570,123 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Release_Version");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RenderComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RenderComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AnimationFlag")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("animationFlag");
 
                     b.Property<string>("AnimationGroupIDs")
+                        .HasColumnType("TEXT")
                         .HasColumnName("animationGroupIDs");
 
                     b.Property<bool?>("AttachIndicatorsToNode")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("attachIndicatorsToNode");
 
                     b.Property<string>("AudioMetaEventSet")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioMetaEventSet");
 
                     b.Property<float?>("BillboardHeight")
+                        .HasColumnType("REAL")
                         .HasColumnName("billboardHeight");
 
                     b.Property<float?>("ChatBubbleOffset")
+                        .HasColumnType("REAL")
                         .HasColumnName("chatBubbleOffset");
 
                     b.Property<int?>("Effect1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect1");
 
                     b.Property<int?>("Effect2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect2");
 
                     b.Property<int?>("Effect3")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect3");
 
                     b.Property<int?>("Effect4")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect4");
 
                     b.Property<int?>("Effect5")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect5");
 
                     b.Property<int?>("Effect6")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("effect6");
 
                     b.Property<bool?>("Fade")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("fade");
 
                     b.Property<float?>("FadeInTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("fadeInTime");
 
                     b.Property<bool?>("GradualSnap")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("gradualSnap");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("IconID");
 
                     b.Property<string>("Iconasset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("icon_asset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("IgnoreCameraCollision")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ignoreCameraCollision");
 
                     b.Property<string>("LXFMLFolder")
+                        .HasColumnType("TEXT")
                         .HasColumnName("LXFMLFolder");
 
                     b.Property<float?>("MaxShadowDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("maxShadowDistance");
 
                     b.Property<bool?>("PreloadAnimations")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("preloadAnimations");
 
                     b.Property<int?>("RenderComponentLOD1")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("renderComponentLOD1");
 
                     b.Property<int?>("RenderComponentLOD2")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("renderComponentLOD2");
 
                     b.Property<string>("Renderasset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("render_asset");
 
                     b.Property<int?>("Shaderid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("shader_id");
 
                     b.Property<bool?>("StaticBillboard")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("staticBillboard");
 
                     b.Property<bool?>("Usedropshadow")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("usedropshadow");
 
                     b.HasKey("EfId");
@@ -3715,31 +4694,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RenderComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RenderComponentFlash", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RenderComponentFlash", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<bool?>("Animated")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("animated");
 
                     b.Property<string>("ElementName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("elementName");
 
                     b.Property<string>("FlashPath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("flashPath");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<bool?>("Interactive")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("interactive");
 
                     b.Property<string>("NodeName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("nodeName");
 
                     b.Property<int?>("Uid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("_uid");
 
                     b.HasKey("EfId");
@@ -3747,16 +4734,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RenderComponentFlash");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RenderComponentWrapper", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RenderComponentWrapper", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("DefaultWrapperAsset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("defaultWrapperAsset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -3764,19 +4754,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RenderComponentWrapper");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RenderIconAssets", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RenderIconAssets", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Blankcolumn")
+                        .HasColumnType("TEXT")
                         .HasColumnName("blank_column");
 
                     b.Property<string>("Iconasset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("icon_asset");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -3784,19 +4778,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RenderIconAssets");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ReputationRewards", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ReputationRewards", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("RepLevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("repLevel");
 
                     b.Property<float?>("Reputation")
+                        .HasColumnType("REAL")
                         .HasColumnName("reputation");
 
                     b.Property<int?>("Sublevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("sublevel");
 
                     b.HasKey("EfId");
@@ -3804,25 +4802,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ReputationRewards");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RewardCodes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RewardCodes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("AttachmentLOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("attachmentLOT");
 
                     b.Property<string>("Code")
+                        .HasColumnType("TEXT")
                         .HasColumnName("code");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.HasKey("EfId");
@@ -3830,28 +4834,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RewardCodes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.Rewards", b =>
+            modelBuilder.Entity("Uchu.Core.Client.Rewards", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Count")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("count");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LevelID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LevelID");
 
                     b.Property<int?>("MissionID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("MissionID");
 
                     b.Property<int?>("RewardType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("RewardType");
 
                     b.Property<int?>("Value")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("value");
 
                     b.HasKey("EfId");
@@ -3859,49 +4870,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("Rewards");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.RocketLaunchpadControlComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.RocketLaunchpadControlComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("AltLandingPrecondition")
+                        .HasColumnType("TEXT")
                         .HasColumnName("altLandingPrecondition");
 
                     b.Property<string>("AltLandingSpawnPointName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("altLandingSpawnPointName");
 
                     b.Property<int?>("DefaultZoneID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("defaultZoneID");
 
                     b.Property<int?>("GmLevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("gmLevel");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("LaunchMusic")
+                        .HasColumnType("TEXT")
                         .HasColumnName("launchMusic");
 
                     b.Property<string>("LaunchPrecondition")
+                        .HasColumnType("TEXT")
                         .HasColumnName("launchPrecondition");
 
                     b.Property<string>("PlayerAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("playerAnimation");
 
                     b.Property<string>("RocketAnimation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("rocketAnimation");
 
                     b.Property<string>("TargetScene")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetScene");
 
                     b.Property<int?>("TargetZone")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("targetZone");
 
                     b.Property<bool?>("UseAltLandingPrecondition")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("useAltLandingPrecondition");
 
                     b.Property<bool?>("UseLaunchPrecondition")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("useLaunchPrecondition");
 
                     b.HasKey("EfId");
@@ -3909,16 +4934,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("RocketLaunchpadControlComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SceneTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SceneTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("SceneID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("sceneID");
 
                     b.Property<string>("SceneName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("sceneName");
 
                     b.HasKey("EfId");
@@ -3926,19 +4954,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SceneTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ScriptComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ScriptComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Clientscriptname")
+                        .HasColumnType("TEXT")
                         .HasColumnName("client_script_name");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Scriptname")
+                        .HasColumnType("TEXT")
                         .HasColumnName("script_name");
 
                     b.HasKey("EfId");
@@ -3946,67 +4978,87 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ScriptComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SkillBehavior", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SkillBehavior", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ArmorBonusUI")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("armorBonusUI");
 
                     b.Property<int?>("BehaviorID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("behaviorID");
 
                     b.Property<int?>("CancelType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cancelType");
 
                     b.Property<int?>("CastTypeDesc")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("castTypeDesc");
 
                     b.Property<float?>("Cooldown")
+                        .HasColumnType("REAL")
                         .HasColumnName("cooldown");
 
                     b.Property<int?>("Cooldowngroup")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("cooldowngroup");
 
                     b.Property<int?>("DamageUI")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("damageUI");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<bool?>("HideIcon")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("hideIcon");
 
                     b.Property<int?>("ImBonusUI")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("imBonusUI");
 
                     b.Property<int?>("Imaginationcost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("imaginationcost");
 
                     b.Property<bool?>("InNpcEditor")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("inNpcEditor");
 
                     b.Property<int?>("LifeBonusUI")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lifeBonusUI");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("OomBehaviorEffectID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("oomBehaviorEffectID");
 
                     b.Property<string>("OomSkillID")
+                        .HasColumnType("TEXT")
                         .HasColumnName("oomSkillID");
 
                     b.Property<int?>("SkillID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillID");
 
                     b.Property<int?>("SkillIcon")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("skillIcon");
 
                     b.HasKey("EfId");
@@ -4014,37 +5066,47 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SkillBehavior");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SmashableChain", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SmashableChain", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("ChainIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chainIndex");
 
                     b.Property<int?>("ChainLevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chainLevel");
 
                     b.Property<int?>("ChainStepID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("chainStepID");
 
                     b.Property<int?>("CurrencyIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("currencyIndex");
 
                     b.Property<int?>("CurrencyLevel")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("currencyLevel");
 
                     b.Property<int?>("LootMatrixID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lootMatrixID");
 
                     b.Property<int?>("RarityTableIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("rarityTableIndex");
 
                     b.Property<int?>("SmashCount")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("smashCount");
 
                     b.Property<int?>("TimeLimit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("timeLimit");
 
                     b.HasKey("EfId");
@@ -4052,22 +5114,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SmashableChain");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SmashableChainIndex", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SmashableChainIndex", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Continuous")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("continuous");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("TargetGroup")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetGroup");
 
                     b.HasKey("EfId");
@@ -4075,16 +5142,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SmashableChainIndex");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SmashableComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SmashableComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.HasKey("EfId");
@@ -4092,16 +5162,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SmashableComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SmashableElements", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SmashableElements", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("DropWeight")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("dropWeight");
 
                     b.Property<int?>("ElementID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("elementID");
 
                     b.HasKey("EfId");
@@ -4109,31 +5182,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SmashableElements");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SpeedchatMenu", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SpeedchatMenu", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("EmoteId")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("emoteId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("ImageName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("imageName");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("ParentId")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("parentId");
 
                     b.HasKey("EfId");
@@ -4141,31 +5222,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SpeedchatMenu");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SubscriptionPricing", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SubscriptionPricing", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("CountryCode")
+                        .HasColumnType("TEXT")
                         .HasColumnName("countryCode");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("MonetarySymbol")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("monetarySymbol");
 
                     b.Property<string>("MonthlyFeeBronze")
+                        .HasColumnType("TEXT")
                         .HasColumnName("monthlyFeeBronze");
 
                     b.Property<string>("MonthlyFeeGold")
+                        .HasColumnType("TEXT")
                         .HasColumnName("monthlyFeeGold");
 
                     b.Property<string>("MonthlyFeeSilver")
+                        .HasColumnType("TEXT")
                         .HasColumnName("monthlyFeeSilver");
 
                     b.Property<bool?>("SymbolIsAppended")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("symbolIsAppended");
 
                     b.HasKey("EfId");
@@ -4173,16 +5262,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SubscriptionPricing");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.SurfaceType", b =>
+            modelBuilder.Entity("Uchu.Core.Client.SurfaceType", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("FootstepNDAudioMetaEventSetName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("FootstepNDAudioMetaEventSetName");
 
                     b.Property<int?>("SurfaceTypeColumn")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SurfaceType");
 
                     b.HasKey("EfId");
@@ -4190,49 +5282,63 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("SurfaceType");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.TamingBuildPuzzles", b =>
+            modelBuilder.Entity("Uchu.Core.Client.TamingBuildPuzzles", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Difficulty")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("Difficulty");
 
                     b.Property<float?>("Duration")
+                        .HasColumnType("REAL")
                         .HasColumnName("Duration");
 
                     b.Property<string>("FullModelLXF")
+                        .HasColumnType("TEXT")
                         .HasColumnName("FullModelLXF");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("ImagCostPerBuild")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("imagCostPerBuild");
 
                     b.Property<string>("InvalidPiecesLXF")
+                        .HasColumnType("TEXT")
                         .HasColumnName("InvalidPiecesLXF");
 
                     b.Property<string>("ModelName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ModelName");
 
                     b.Property<int?>("NPCLot")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("NPCLot");
 
                     b.Property<int?>("NumValidPieces")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("NumValidPieces");
 
                     b.Property<int?>("PuzzleModelLot")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("PuzzleModelLot");
 
                     b.Property<int?>("Timelimit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("Timelimit");
 
                     b.Property<int?>("TotalNumPieces")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("TotalNumPieces");
 
                     b.Property<string>("ValidPiecesLXF")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ValidPiecesLXF");
 
                     b.HasKey("EfId");
@@ -4240,16 +5346,19 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("TamingBuildPuzzles");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.TextDescription", b =>
+            modelBuilder.Entity("Uchu.Core.Client.TextDescription", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("TestDescription")
+                        .HasColumnType("TEXT")
                         .HasColumnName("TestDescription");
 
                     b.Property<int?>("TextID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("TextID");
 
                     b.HasKey("EfId");
@@ -4257,19 +5366,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("TextDescription");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.TextLanguage", b =>
+            modelBuilder.Entity("Uchu.Core.Client.TextLanguage", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("LanguageID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LanguageID");
 
                     b.Property<string>("Text")
+                        .HasColumnType("TEXT")
                         .HasColumnName("Text");
 
                     b.Property<int?>("TextID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("TextID");
 
                     b.HasKey("EfId");
@@ -4277,88 +5390,115 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("TextLanguage");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.TrailEffects", b =>
+            modelBuilder.Entity("Uchu.Core.Client.TrailEffects", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("BirthDelay")
+                        .HasColumnType("REAL")
                         .HasColumnName("birthDelay");
 
                     b.Property<int?>("Blendmode")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("blendmode");
 
                     b.Property<string>("Bone1")
+                        .HasColumnType("TEXT")
                         .HasColumnName("bone1");
 
                     b.Property<string>("Bone2")
+                        .HasColumnType("TEXT")
                         .HasColumnName("bone2");
 
                     b.Property<float?>("Cardlifetime")
+                        .HasColumnType("REAL")
                         .HasColumnName("cardlifetime");
 
                     b.Property<float?>("Colorlifetime")
+                        .HasColumnType("REAL")
                         .HasColumnName("colorlifetime");
 
                     b.Property<float?>("DeathDelay")
+                        .HasColumnType("REAL")
                         .HasColumnName("deathDelay");
 
                     b.Property<float?>("EndColorA")
+                        .HasColumnType("REAL")
                         .HasColumnName("endColorA");
 
                     b.Property<float?>("EndColorB")
+                        .HasColumnType("REAL")
                         .HasColumnName("endColorB");
 
                     b.Property<float?>("EndColorG")
+                        .HasColumnType("REAL")
                         .HasColumnName("endColorG");
 
                     b.Property<float?>("EndColorR")
+                        .HasColumnType("REAL")
                         .HasColumnName("endColorR");
 
                     b.Property<int?>("Maxparticles")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("max_particles");
 
                     b.Property<float?>("MiddleColorA")
+                        .HasColumnType("REAL")
                         .HasColumnName("middleColorA");
 
                     b.Property<float?>("MiddleColorB")
+                        .HasColumnType("REAL")
                         .HasColumnName("middleColorB");
 
                     b.Property<float?>("MiddleColorG")
+                        .HasColumnType("REAL")
                         .HasColumnName("middleColorG");
 
                     b.Property<float?>("MiddleColorR")
+                        .HasColumnType("REAL")
                         .HasColumnName("middleColorR");
 
                     b.Property<float?>("MinTailFade")
+                        .HasColumnType("REAL")
                         .HasColumnName("minTailFade");
 
                     b.Property<float?>("StartColorA")
+                        .HasColumnType("REAL")
                         .HasColumnName("startColorA");
 
                     b.Property<float?>("StartColorB")
+                        .HasColumnType("REAL")
                         .HasColumnName("startColorB");
 
                     b.Property<float?>("StartColorG")
+                        .HasColumnType("REAL")
                         .HasColumnName("startColorG");
 
                     b.Property<float?>("StartColorR")
+                        .HasColumnType("REAL")
                         .HasColumnName("startColorR");
 
                     b.Property<float?>("TailFade")
+                        .HasColumnType("REAL")
                         .HasColumnName("tailFade");
 
                     b.Property<float?>("TexLength")
+                        .HasColumnType("REAL")
                         .HasColumnName("texLength");
 
                     b.Property<float?>("TexWidth")
+                        .HasColumnType("REAL")
                         .HasColumnName("texWidth");
 
                     b.Property<string>("TextureName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("textureName");
 
                     b.Property<int?>("TrailID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("trailID");
 
                     b.HasKey("EfId");
@@ -4366,25 +5506,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("TrailEffects");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.UGBehaviorSounds", b =>
+            modelBuilder.Entity("Uchu.Core.Client.UGBehaviorSounds", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<string>("Guid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("guid");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.HasKey("EfId");
@@ -4392,319 +5538,423 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("UGBehaviorSounds");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.VehiclePhysics", b =>
+            modelBuilder.Entity("Uchu.Core.Client.VehiclePhysics", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("AudioAirtimeForHeavyLand")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioAirtimeForHeavyLand");
 
                     b.Property<float?>("AudioAirtimeForLightLand")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioAirtimeForLightLand");
 
                     b.Property<string>("AudioEventEngine")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventEngine");
 
                     b.Property<string>("AudioEventHeavyHit")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventHeavyHit");
 
                     b.Property<string>("AudioEventHeavyLand")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventHeavyLand");
 
                     b.Property<string>("AudioEventLightHit")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventLightHit");
 
                     b.Property<string>("AudioEventLightLand")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventLightLand");
 
                     b.Property<string>("AudioEventSkid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventSkid");
 
                     b.Property<string>("AudioEventStart")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventStart");
 
                     b.Property<string>("AudioEventTreadConcrete")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadConcrete");
 
                     b.Property<string>("AudioEventTreadDirt")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadDirt");
 
                     b.Property<string>("AudioEventTreadGrass")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadGrass");
 
                     b.Property<string>("AudioEventTreadGravel")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadGravel");
 
                     b.Property<string>("AudioEventTreadIce")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadIce");
 
                     b.Property<string>("AudioEventTreadLeaves")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadLeaves");
 
                     b.Property<string>("AudioEventTreadMetal")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadMetal");
 
                     b.Property<string>("AudioEventTreadMud")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadMud");
 
                     b.Property<string>("AudioEventTreadPlastic")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadPlastic");
 
                     b.Property<string>("AudioEventTreadSand")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadSand");
 
                     b.Property<string>("AudioEventTreadSnow")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadSnow");
 
                     b.Property<string>("AudioEventTreadWater")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadWater");
 
                     b.Property<string>("AudioEventTreadWood")
+                        .HasColumnType("TEXT")
                         .HasColumnName("AudioEventTreadWood");
 
                     b.Property<float?>("AudioSpeedThresholdHeavyHit")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioSpeedThresholdHeavyHit");
 
                     b.Property<float?>("AudioSpeedThresholdLightHit")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioSpeedThresholdLightHit");
 
                     b.Property<float?>("AudioTimeoutHeavyHit")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioTimeoutHeavyHit");
 
                     b.Property<float?>("AudioTimeoutLightHit")
+                        .HasColumnType("REAL")
                         .HasColumnName("AudioTimeoutLightHit");
 
                     b.Property<bool?>("BWheelsVisible")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("bWheelsVisible");
 
                     b.Property<float?>("FAeroAirDensity")
+                        .HasColumnType("REAL")
                         .HasColumnName("fAeroAirDensity");
 
                     b.Property<float?>("FAeroDragCoefficient")
+                        .HasColumnType("REAL")
                         .HasColumnName("fAeroDragCoefficient");
 
                     b.Property<float?>("FAeroExtraGravity")
+                        .HasColumnType("REAL")
                         .HasColumnName("fAeroExtraGravity");
 
                     b.Property<float?>("FAeroFrontalArea")
+                        .HasColumnType("REAL")
                         .HasColumnName("fAeroFrontalArea");
 
                     b.Property<float?>("FAeroLiftCoefficient")
+                        .HasColumnType("REAL")
                         .HasColumnName("fAeroLiftCoefficient");
 
                     b.Property<float?>("FBoostAccelerateChange")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBoostAccelerateChange");
 
                     b.Property<float?>("FBoostCostPerSecond")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBoostCostPerSecond");
 
                     b.Property<float?>("FBoostDampingChange")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBoostDampingChange");
 
                     b.Property<float?>("FBoostTopSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBoostTopSpeed");
 
                     b.Property<float?>("FBrakeFrontTorque")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBrakeFrontTorque");
 
                     b.Property<float?>("FBrakeMinInputToBlock")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBrakeMinInputToBlock");
 
                     b.Property<float?>("FBrakeMinTimeToBlock")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBrakeMinTimeToBlock");
 
                     b.Property<float?>("FBrakeRearTorque")
+                        .HasColumnType("REAL")
                         .HasColumnName("fBrakeRearTorque");
 
                     b.Property<float?>("FCenterOfMassFwd")
+                        .HasColumnType("REAL")
                         .HasColumnName("fCenterOfMassFwd");
 
                     b.Property<float?>("FCenterOfMassRight")
+                        .HasColumnType("REAL")
                         .HasColumnName("fCenterOfMassRight");
 
                     b.Property<float?>("FCenterOfMassUp")
+                        .HasColumnType("REAL")
                         .HasColumnName("fCenterOfMassUp");
 
                     b.Property<float?>("FChassisFriction")
+                        .HasColumnType("REAL")
                         .HasColumnName("fChassisFriction");
 
                     b.Property<float?>("FCollisionSpinDamping")
+                        .HasColumnType("REAL")
                         .HasColumnName("fCollisionSpinDamping");
 
                     b.Property<float?>("FCollisionThreshold")
+                        .HasColumnType("REAL")
                         .HasColumnName("fCollisionThreshold");
 
                     b.Property<float?>("FEngineTorque")
+                        .HasColumnType("REAL")
                         .HasColumnName("fEngineTorque");
 
                     b.Property<float?>("FExtraTorqueFactor")
+                        .HasColumnType("REAL")
                         .HasColumnName("fExtraTorqueFactor");
 
                     b.Property<float?>("FFrontTireFriction")
+                        .HasColumnType("REAL")
                         .HasColumnName("fFrontTireFriction");
 
                     b.Property<float?>("FFrontTireFrictionSlide")
+                        .HasColumnType("REAL")
                         .HasColumnName("fFrontTireFrictionSlide");
 
                     b.Property<float?>("FFrontTireSlipAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fFrontTireSlipAngle");
 
                     b.Property<float?>("FFwdBias")
+                        .HasColumnType("REAL")
                         .HasColumnName("fFwdBias");
 
                     b.Property<float?>("FGravityScale")
+                        .HasColumnType("REAL")
                         .HasColumnName("fGravityScale");
 
                     b.Property<float?>("FImaginationTankSize")
+                        .HasColumnType("REAL")
                         .HasColumnName("fImaginationTankSize");
 
                     b.Property<float?>("FInertiaPitch")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInertiaPitch");
 
                     b.Property<float?>("FInertiaRoll")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInertiaRoll");
 
                     b.Property<float?>("FInertiaYaw")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInertiaYaw");
 
                     b.Property<float?>("FInputAccelSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputAccelSpeed");
 
                     b.Property<float?>("FInputDeadAccelDownSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputDeadAccelDownSpeed");
 
                     b.Property<float?>("FInputDeadDecelDownSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputDeadDecelDownSpeed");
 
                     b.Property<float?>("FInputDeadTurnBackSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputDeadTurnBackSpeed");
 
                     b.Property<float?>("FInputDeadZone")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputDeadZone");
 
                     b.Property<float?>("FInputDecelSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputDecelSpeed");
 
                     b.Property<float?>("FInputInitialSlope")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputInitialSlope");
 
                     b.Property<float?>("FInputSlopeChangePointX")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputSlopeChangePointX");
 
                     b.Property<float?>("FInputTurnSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fInputTurnSpeed");
 
                     b.Property<float?>("FMass")
+                        .HasColumnType("REAL")
                         .HasColumnName("fMass");
 
                     b.Property<float?>("FMaxSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("fMaxSpeed");
 
                     b.Property<float?>("FNormalSpinDamping")
+                        .HasColumnType("REAL")
                         .HasColumnName("fNormalSpinDamping");
 
                     b.Property<float?>("FPowerslideNeutralAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fPowerslideNeutralAngle");
 
                     b.Property<float?>("FPowerslideTorqueStrength")
+                        .HasColumnType("REAL")
                         .HasColumnName("fPowerslideTorqueStrength");
 
                     b.Property<float?>("FRearTireFriction")
+                        .HasColumnType("REAL")
                         .HasColumnName("fRearTireFriction");
 
                     b.Property<float?>("FRearTireFrictionSlide")
+                        .HasColumnType("REAL")
                         .HasColumnName("fRearTireFrictionSlide");
 
                     b.Property<float?>("FRearTireSlipAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fRearTireSlipAngle");
 
                     b.Property<float?>("FReorientPitchStrength")
+                        .HasColumnType("REAL")
                         .HasColumnName("fReorientPitchStrength");
 
                     b.Property<float?>("FReorientRollStrength")
+                        .HasColumnType("REAL")
                         .HasColumnName("fReorientRollStrength");
 
                     b.Property<float?>("FSkillCost")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSkillCost");
 
                     b.Property<float?>("FSteeringMaxAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSteeringMaxAngle");
 
                     b.Property<float?>("FSteeringMinAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSteeringMinAngle");
 
                     b.Property<float?>("FSteeringSpeedLimitForMaxAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSteeringSpeedLimitForMaxAngle");
 
                     b.Property<float?>("FSuspensionDampingCompression")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSuspensionDampingCompression");
 
                     b.Property<float?>("FSuspensionDampingRelaxation")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSuspensionDampingRelaxation");
 
                     b.Property<float?>("FSuspensionLength")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSuspensionLength");
 
                     b.Property<float?>("FSuspensionStrength")
+                        .HasColumnType("REAL")
                         .HasColumnName("fSuspensionStrength");
 
                     b.Property<float?>("FTorquePitchFactor")
+                        .HasColumnType("REAL")
                         .HasColumnName("fTorquePitchFactor");
 
                     b.Property<float?>("FTorqueRollFactor")
+                        .HasColumnType("REAL")
                         .HasColumnName("fTorqueRollFactor");
 
                     b.Property<float?>("FTorqueYawFactor")
+                        .HasColumnType("REAL")
                         .HasColumnName("fTorqueYawFactor");
 
                     b.Property<float?>("FWheelHardpointFrontFwd")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointFrontFwd");
 
                     b.Property<float?>("FWheelHardpointFrontRight")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointFrontRight");
 
                     b.Property<float?>("FWheelHardpointFrontUp")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointFrontUp");
 
                     b.Property<float?>("FWheelHardpointRearFwd")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointRearFwd");
 
                     b.Property<float?>("FWheelHardpointRearRight")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointRearRight");
 
                     b.Property<float?>("FWheelHardpointRearUp")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelHardpointRearUp");
 
                     b.Property<float?>("FWheelMass")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelMass");
 
                     b.Property<float?>("FWheelRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelRadius");
 
                     b.Property<float?>("FWheelWidth")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWheelWidth");
 
                     b.Property<float?>("FWreckMinAngle")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWreckMinAngle");
 
                     b.Property<float?>("FWreckSpeedBase")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWreckSpeedBase");
 
                     b.Property<float?>("FWreckSpeedPercent")
+                        .HasColumnType("REAL")
                         .HasColumnName("fWreckSpeedPercent");
 
                     b.Property<string>("HkxFilename")
+                        .HasColumnType("TEXT")
                         .HasColumnName("hkxFilename");
 
                     b.Property<int?>("IChassisCollisionGroup")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iChassisCollisionGroup");
 
                     b.Property<int?>("IPowerslideNumTorqueApplications")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iPowerslideNumTorqueApplications");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -4712,22 +5962,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("VehiclePhysics");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.VehicleStatMap", b =>
+            modelBuilder.Entity("Uchu.Core.Client.VehicleStatMap", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("HavokChangePerModuleStat")
+                        .HasColumnType("REAL")
                         .HasColumnName("HavokChangePerModuleStat");
 
                     b.Property<string>("HavokStat")
+                        .HasColumnType("TEXT")
                         .HasColumnName("HavokStat");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("ModuleStat")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ModuleStat");
 
                     b.HasKey("EfId");
@@ -4735,25 +5990,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("VehicleStatMap");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.VendorComponent", b =>
+            modelBuilder.Entity("Uchu.Core.Client.VendorComponent", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("BuyScalar")
+                        .HasColumnType("REAL")
                         .HasColumnName("buyScalar");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LootMatrixIndex")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LootMatrixIndex");
 
                     b.Property<float?>("RefreshTimeSeconds")
+                        .HasColumnType("REAL")
                         .HasColumnName("refreshTimeSeconds");
 
                     b.Property<float?>("SellScalar")
+                        .HasColumnType("REAL")
                         .HasColumnName("sellScalar");
 
                     b.HasKey("EfId");
@@ -4761,25 +6022,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("VendorComponent");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.WhatsCoolItemSpotlight", b =>
+            modelBuilder.Entity("Uchu.Core.Client.WhatsCoolItemSpotlight", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("ItemID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("itemID");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.HasKey("EfId");
@@ -4787,28 +6054,35 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("WhatsCoolItemSpotlight");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.WhatsCoolNewsAndTips", b =>
+            modelBuilder.Entity("Uchu.Core.Client.WhatsCoolNewsAndTips", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iconID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<int?>("Type")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("type");
 
                     b.HasKey("EfId");
@@ -4816,181 +6090,239 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("WhatsCoolNewsAndTips");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.WorldConfig", b =>
+            modelBuilder.Entity("Uchu.Core.Client.WorldConfig", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<float?>("CharacterGroundedSpeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("characterGroundedSpeed");
 
                     b.Property<float?>("CharacterGroundedTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("characterGroundedTime");
 
                     b.Property<int?>("CharacterVersion")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("CharacterVersion");
 
                     b.Property<float?>("Charactereyeheight")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_eye_height");
 
                     b.Property<float?>("Charactermaxslope")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_max_slope");
 
                     b.Property<float?>("Characterrotationspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_rotation_speed");
 
                     b.Property<float?>("Characterrunbackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_run_backward_speed");
 
                     b.Property<float?>("Characterrunstrafebackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_run_strafe_backward_speed");
 
                     b.Property<float?>("Characterrunstrafeforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_run_strafe_forward_speed");
 
                     b.Property<float?>("Characterrunstrafespeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_run_strafe_speed");
 
                     b.Property<int?>("Charactervotesperday")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("character_votes_per_day");
 
                     b.Property<float?>("Characterwalkbackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_walk_backward_speed");
 
                     b.Property<float?>("Characterwalkforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_walk_forward_speed");
 
                     b.Property<float?>("Characterwalkstrafebackwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_walk_strafe_backward_speed");
 
                     b.Property<float?>("Characterwalkstrafeforwardspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_walk_strafe_forward_speed");
 
                     b.Property<float?>("Characterwalkstrafespeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("character_walk_strafe_speed");
 
                     b.Property<int?>("Coinslostondeathmax")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("coins_lost_on_death_max");
 
                     b.Property<float?>("Coinslostondeathmaxtimeout")
+                        .HasColumnType("REAL")
                         .HasColumnName("coins_lost_on_death_max_timeout");
 
                     b.Property<int?>("Coinslostondeathmin")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("coins_lost_on_death_min");
 
                     b.Property<float?>("Coinslostondeathmintimeout")
+                        .HasColumnType("REAL")
                         .HasColumnName("coins_lost_on_death_min_timeout");
 
                     b.Property<float?>("Coinslostondeathpercent")
+                        .HasColumnType("REAL")
                         .HasColumnName("coins_lost_on_death_percent");
 
                     b.Property<int?>("DefaultHomespaceTemplate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("defaultHomespaceTemplate");
 
                     b.Property<float?>("DefaultPropertyMaxHeight")
+                        .HasColumnType("REAL")
                         .HasColumnName("defaultPropertyMaxHeight");
 
                     b.Property<float?>("Defaultrespawntime")
+                        .HasColumnType("REAL")
                         .HasColumnName("defaultrespawntime");
 
                     b.Property<float?>("FReputationPerVote")
+                        .HasColumnType("REAL")
                         .HasColumnName("fReputationPerVote");
 
                     b.Property<float?>("Flightairspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("flight_airspeed");
 
                     b.Property<float?>("Flightfuelratio")
+                        .HasColumnType("REAL")
                         .HasColumnName("flight_fuel_ratio");
 
                     b.Property<float?>("Flightmaxairspeed")
+                        .HasColumnType("REAL")
                         .HasColumnName("flight_max_airspeed");
 
                     b.Property<float?>("Flightverticalvelocity")
+                        .HasColumnType("REAL")
                         .HasColumnName("flight_vertical_velocity");
 
                     b.Property<float?>("GlobalImmunityTime")
+                        .HasColumnType("REAL")
                         .HasColumnName("globalImmunityTime");
 
                     b.Property<float?>("Globalcooldown")
+                        .HasColumnType("REAL")
                         .HasColumnName("global_cooldown");
 
                     b.Property<int?>("LevelCap")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LevelCap");
 
                     b.Property<int?>("LevelCapCurrencyConversion")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LevelCapCurrencyConversion");
 
                     b.Property<string>("LevelUpBehaviorEffect")
+                        .HasColumnType("TEXT")
                         .HasColumnName("LevelUpBehaviorEffect");
 
                     b.Property<int?>("Mailbasefee")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("mail_base_fee");
 
                     b.Property<float?>("Mailpercentattachmentfee")
+                        .HasColumnType("REAL")
                         .HasColumnName("mail_percent_attachment_fee");
 
                     b.Property<float?>("Missiontooltiptimeout")
+                        .HasColumnType("REAL")
                         .HasColumnName("mission_tooltip_timeout");
 
                     b.Property<bool?>("ModelModerateOnCreate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("modelModerateOnCreate");
 
                     b.Property<int?>("NPropertyCloneLimit")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("nPropertyCloneLimit");
 
                     b.Property<float?>("Pebroadphaseworldsize")
+                        .HasColumnType("REAL")
                         .HasColumnName("pebroadphaseworldsize");
 
                     b.Property<float?>("Pegameobjscalefactor")
+                        .HasColumnType("REAL")
                         .HasColumnName("pegameobjscalefactor");
 
                     b.Property<float?>("Pegravityvalue")
+                        .HasColumnType("REAL")
                         .HasColumnName("pegravityvalue");
 
                     b.Property<float?>("Petfollowradius")
+                        .HasColumnType("REAL")
                         .HasColumnName("pet_follow_radius");
 
                     b.Property<int?>("PropertyModRequestsAllowedInterval")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyModRequestsAllowedInterval");
 
                     b.Property<int?>("PropertyModRequestsAllowedSpike")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyModRequestsAllowedSpike");
 
                     b.Property<int?>("PropertyModRequestsAllowedTotal")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyModRequestsAllowedTotal");
 
                     b.Property<int?>("PropertyModRequestsIntervalDuration")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyModRequestsIntervalDuration");
 
                     b.Property<int?>("PropertyModRequestsSpikeDuration")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyModRequestsSpikeDuration");
 
                     b.Property<int?>("PropertyReputationDelay")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("propertyReputationDelay");
 
                     b.Property<int?>("Propertymoderationrequestapprovalcost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("property_moderation_request_approval_cost");
 
                     b.Property<int?>("Propertymoderationrequestreviewcost")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("property_moderation_request_review_cost");
 
                     b.Property<float?>("ReputationPerBattlePromotion")
+                        .HasColumnType("REAL")
                         .HasColumnName("reputationPerBattlePromotion");
 
                     b.Property<float?>("ReputationPerVoteCast")
+                        .HasColumnType("REAL")
                         .HasColumnName("reputationPerVoteCast");
 
                     b.Property<float?>("ReputationPerVoteReceived")
+                        .HasColumnType("REAL")
                         .HasColumnName("reputationPerVoteReceived");
 
                     b.Property<int?>("ShowcaseTopModelConsiderationBattles")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("showcaseTopModelConsiderationBattles");
 
                     b.Property<float?>("Vendorbuymultiplier")
+                        .HasColumnType("REAL")
                         .HasColumnName("vendor_buy_multiplier");
 
                     b.Property<int?>("WorldConfigID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("WorldConfigID");
 
                     b.HasKey("EfId");
@@ -4998,34 +6330,43 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("WorldConfig");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ZoneLoadingTips", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ZoneLoadingTips", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Imagelocation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("imagelocation");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<string>("TargetVersion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("targetVersion");
 
                     b.Property<int?>("Weight")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("weight");
 
                     b.Property<int?>("Zoneid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("zoneid");
 
                     b.HasKey("EfId");
@@ -5033,22 +6374,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ZoneLoadingTips");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ZoneSummary", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ZoneSummary", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Type")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("type");
 
                     b.Property<int?>("UniqueID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("_uniqueID");
 
                     b.Property<int?>("Value")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("value");
 
                     b.Property<int?>("ZoneID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("zoneID");
 
                     b.HasKey("EfId");
@@ -5056,91 +6402,119 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ZoneSummary");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.ZoneTable", b =>
+            modelBuilder.Entity("Uchu.Core.Client.ZoneTable", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("ClientPhysicsFramerate")
+                        .HasColumnType("TEXT")
                         .HasColumnName("clientPhysicsFramerate");
 
                     b.Property<bool?>("DisableSaveLoc")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("disableSaveLoc");
 
                     b.Property<string>("DisplayDescription")
+                        .HasColumnType("TEXT")
                         .HasColumnName("DisplayDescription");
 
                     b.Property<float?>("FZoneWeight")
+                        .HasColumnType("REAL")
                         .HasColumnName("fZoneWeight");
 
                     b.Property<string>("Gateversion")
+                        .HasColumnType("TEXT")
                         .HasColumnName("gate_version");
 
                     b.Property<float?>("Ghostdistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("ghostdistance");
 
                     b.Property<float?>("Ghostdistancemin")
+                        .HasColumnType("REAL")
                         .HasColumnName("ghostdistance_min");
 
                     b.Property<int?>("HeightInChunks")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("heightInChunks");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.Property<bool?>("Localize")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("localize");
 
                     b.Property<string>("MapFolder")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mapFolder");
 
                     b.Property<string>("MixerProgram")
+                        .HasColumnType("TEXT")
                         .HasColumnName("mixerProgram");
 
                     b.Property<bool?>("MountsAllowed")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("mountsAllowed");
 
                     b.Property<bool?>("PetsAllowed")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("petsAllowed");
 
                     b.Property<bool?>("PlayerLoseCoinsOnDeath")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("PlayerLoseCoinsOnDeath");
 
                     b.Property<int?>("Populationhardcap")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("population_hard_cap");
 
                     b.Property<int?>("Populationsoftcap")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("population_soft_cap");
 
                     b.Property<int?>("ScriptID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("scriptID");
 
                     b.Property<string>("ServerPhysicsFramerate")
+                        .HasColumnType("TEXT")
                         .HasColumnName("serverPhysicsFramerate");
 
                     b.Property<float?>("SmashableMaxDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("smashableMaxDistance");
 
                     b.Property<float?>("SmashableMinDistance")
+                        .HasColumnType("REAL")
                         .HasColumnName("smashableMinDistance");
 
                     b.Property<float?>("TeamRadius")
+                        .HasColumnType("REAL")
                         .HasColumnName("teamRadius");
 
                     b.Property<string>("Thumbnail")
+                        .HasColumnType("TEXT")
                         .HasColumnName("thumbnail");
 
                     b.Property<int?>("WidthInChunks")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("widthInChunks");
 
                     b.Property<int?>("ZoneControlTemplate")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("zoneControlTemplate");
 
                     b.Property<int?>("ZoneID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("zoneID");
 
                     b.Property<string>("ZoneName")
+                        .HasColumnType("TEXT")
                         .HasColumnName("zoneName");
 
                     b.HasKey("EfId");
@@ -5148,22 +6522,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("ZoneTable");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.brickAttributes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.brickAttributes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Displayorder")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("display_order");
 
                     b.Property<int?>("ID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("ID");
 
                     b.Property<string>("Iconasset")
+                        .HasColumnType("TEXT")
                         .HasColumnName("icon_asset");
 
                     b.Property<int?>("LocStatus")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("locStatus");
 
                     b.HasKey("EfId");
@@ -5171,31 +6550,39 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("brickAttributes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.dtproperties", b =>
+            modelBuilder.Entity("Uchu.Core.Client.dtproperties", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("Lvalue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("lvalue");
 
                     b.Property<int?>("Objectid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("objectid");
 
                     b.Property<string>("Property")
+                        .HasColumnType("TEXT")
                         .HasColumnName("property");
 
                     b.Property<string>("Uvalue")
+                        .HasColumnType("TEXT")
                         .HasColumnName("uvalue");
 
                     b.Property<string>("Value")
+                        .HasColumnType("TEXT")
                         .HasColumnName("value");
 
                     b.Property<int?>("Version")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("version");
 
                     b.HasKey("EfId");
@@ -5203,19 +6590,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("dtproperties");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapAnimationPriorities", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapAnimationPriorities", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<float?>("Priority")
+                        .HasColumnType("REAL")
                         .HasColumnName("priority");
 
                     b.HasKey("EfId");
@@ -5223,22 +6614,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapAnimationPriorities");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapAssetType", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapAssetType", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Label")
+                        .HasColumnType("TEXT")
                         .HasColumnName("label");
 
                     b.Property<string>("Pathdir")
+                        .HasColumnType("TEXT")
                         .HasColumnName("pathdir");
 
                     b.Property<string>("Typelabel")
+                        .HasColumnType("TEXT")
                         .HasColumnName("typelabel");
 
                     b.HasKey("EfId");
@@ -5246,19 +6642,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapAssetType");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapBlueprintCategory", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapBlueprintCategory", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<bool?>("Enabled")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("enabled");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -5266,19 +6666,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("map_BlueprintCategory");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapIcon", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapIcon", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("IconID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iconID");
 
                     b.Property<int?>("IconState")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("iconState");
 
                     b.Property<int?>("LOT")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("LOT");
 
                     b.HasKey("EfId");
@@ -5286,19 +6690,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapIcon");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapItemTypes", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapItemTypes", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<string>("EquipLocation")
+                        .HasColumnType("TEXT")
                         .HasColumnName("equipLocation");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -5306,19 +6714,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapItemTypes");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapRenderEffects", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapRenderEffects", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT")
                         .HasColumnName("description");
 
                     b.Property<int?>("GameID")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("gameID");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.HasKey("EfId");
@@ -5326,22 +6738,27 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapRenderEffects");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapShaders", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapShaders", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("GameValue")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("gameValue");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<string>("Label")
+                        .HasColumnType("TEXT")
                         .HasColumnName("label");
 
                     b.Property<int?>("Priority")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("priority");
 
                     b.HasKey("EfId");
@@ -5349,19 +6766,23 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapShaders");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.mapTextureResource", b =>
+            modelBuilder.Entity("Uchu.Core.Client.mapTextureResource", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<int?>("Id")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
                     b.Property<int?>("SurfaceType")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("SurfaceType");
 
                     b.Property<string>("Texturepath")
+                        .HasColumnType("TEXT")
                         .HasColumnName("texturepath");
 
                     b.HasKey("EfId");
@@ -5369,25 +6790,31 @@ namespace Uchu.Core.Migrations.CdClient
                     b.ToTable("mapTextureResource");
                 });
 
-            modelBuilder.Entity("Uchu.Core.CdClient.sysdiagrams", b =>
+            modelBuilder.Entity("Uchu.Core.Client.sysdiagrams", b =>
                 {
                     b.Property<int>("EfId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
                         .HasColumnName("efId");
 
                     b.Property<string>("Definition")
+                        .HasColumnType("TEXT")
                         .HasColumnName("definition");
 
                     b.Property<int?>("Diagramid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("diagram_id");
 
                     b.Property<string>("Name")
+                        .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<int?>("Principalid")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("principal_id");
 
                     b.Property<int?>("Version")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("version");
 
                     b.HasKey("EfId");

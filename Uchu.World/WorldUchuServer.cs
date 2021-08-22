@@ -9,6 +9,7 @@ using RakDotNet;
 using RakDotNet.IO;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Python;
 using Uchu.World.Api;
 using Uchu.World.Client;
@@ -55,6 +56,10 @@ namespace Uchu.World
             Logger.Information($"Created WorldServer on PID {Process.GetCurrentProcess().Id.ToString()}");
             await base.ConfigureAsync(configFile);
 
+            // Update the CDClient database.
+            await using var cdContext = new CdClientContext();
+            await cdContext.EnsureUpdatedAsync();
+            
             ZoneParser = new ZoneParser(Resources);
             Whitelist = new Whitelist(Resources);
 

@@ -94,11 +94,13 @@ namespace Uchu.StandardScripts.Base
                     });
                     Listen(destructibleComponent.OnResurrect, this.PlayerResurrected);
                 });
-                Listen(player.OnMessageBoxRespond, (buttonId, identifier, _) =>
-                {
-                    this.MessageBoxResponse(player, identifier, buttonId);
-                });
             });
+
+            Listen(this.GameObject.OnMessageBoxRespond, (player, message) =>
+            {
+                this.MessageBoxResponse(player, message.Identifier, message.Button);
+            });
+
             Listen(Zone.OnPlayerLeave, this.PlayerExit);
         }
 

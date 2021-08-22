@@ -2,14 +2,14 @@ namespace Uchu.World.Scripting.Native
 {
     public static class GameObjectScriptExtensions
     {
-        public static void Animate(this GameObject @this, string animation, bool playImmediate = false)
+        public static void Animate(this GameObject @this, string animation, bool playImmediate = false, float priority = 0.4f)
         {
             @this.Zone.BroadcastMessage(new PlayAnimationMessage
             {
                 Associate = @this,
                 AnimationId = animation,
                 PlayImmediate = playImmediate,
-                Priority = 0.4f,
+                Priority = priority,
                 Scale = 1,
             });
         }

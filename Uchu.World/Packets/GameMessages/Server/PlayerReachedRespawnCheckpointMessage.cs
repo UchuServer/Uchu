@@ -10,7 +10,6 @@ namespace Uchu.World
 		public GameMessageId GameMessageId => GameMessageId.PlayerReachedRespawnCheckpoint;
 		public Vector3 Position { get; set; }
 		[Default]
-		[NiQuaternion]
 		public Quaternion Rotation { get; set; }
 	}
 }

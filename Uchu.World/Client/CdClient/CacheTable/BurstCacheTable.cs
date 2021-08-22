@@ -42,10 +42,12 @@ namespace Uchu.World.Client
         public BurstCacheTable(Type type, PropertyInfo index) : base(type, index)
         {
             // Set up the timer.
-            this._resetTimer.Elapsed += (sender, args) =>
+            this._resetTimer.Elapsed += async (sender, args) =>
             {
+                await this._semaphore.WaitAsync();
                 this._cachedTable = null;
                 GC.Collect();
+                this._semaphore.Release();
             };
         }
         
@@ -63,10 +65,11 @@ namespace Uchu.World.Client
             this._cachedTable ??= await this.IndexTableAsync();
 
             // Reset the timer and return the cached entry.
+            var result = (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
             this._semaphore.Release();
             this._resetTimer.Stop();
             this._resetTimer.Start();
-            return (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
+            return result;
         }
     }
 }

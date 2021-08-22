@@ -3,18 +3,18 @@ using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Missions
 {
-    public class UseConsumableTask : MissionTaskInstance
+    public class CollectPowerupTask : MissionTaskInstance
     {
-        public UseConsumableTask(MissionInstance mission, int taskId, int missionTaskIndex) 
+        public CollectPowerupTask(MissionInstance mission, int taskId, int missionTaskIndex) 
             : base(mission, taskId, missionTaskIndex)
         {
         }
 
-        public override MissionTaskType Type => MissionTaskType.UseConsumable;
+        public override MissionTaskType Type => MissionTaskType.CollectPowerup;
 
         public async Task ReportProgress(int lot)
         {
-            if (Target != lot)
+            if (!Targets.Contains(lot))
                 return;
             
             AddProgress(lot);

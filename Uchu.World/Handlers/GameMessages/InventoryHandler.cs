@@ -80,12 +80,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
-            if (message.ItemToUnEquip == default)
-            {
-                Logger.Error($"{player} attempted to un equip invalid item.");
-                
-                return;
-            }
+            if (message.ItemToUnEquip == null) return;
             
             await message.ItemToUnEquip.UnEquipAsync();
 

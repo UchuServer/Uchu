@@ -93,6 +93,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async Task ReadyForUpdatesHandler(ReadyForUpdatesMessage message, Player player)
         {
+            if (message.GameObject == null) return;
             Logger.Debug($"Loaded: {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
             Zone.SendSerialization(message.GameObject, new []{ player });
@@ -175,7 +176,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void MessageBoxRespondMessageHandler(MessageBoxRespondMessage message, Player player)
         {
-            player.OnMessageBoxRespond.Invoke(message.Button, message.Identifier, message.UserData);
+            message.Associate?.OnMessageBoxRespond.Invoke(player, message);
         }
     }
 }
