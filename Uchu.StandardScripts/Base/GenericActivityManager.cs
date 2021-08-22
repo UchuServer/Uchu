@@ -108,9 +108,10 @@ namespace Uchu.StandardScripts.Base
         /// </summary>
         /// <param name="player">Player to set.</param>
         /// <param name="score">Score to set.</param>
-        public void InitialActivityScore(Player player, float score)
+        /// <param name="index">Index of the activity score variable.</param>
+        public void InitialActivityScore(Player player, float score, int index = 0)
         {
-            this.SetActivityUserData(player, 0, score);
+            this.SetActivityUserData(player, index, score);
         }
 
         /// <summary>
