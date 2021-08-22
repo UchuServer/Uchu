@@ -145,7 +145,7 @@ namespace Uchu.World
                 // Load the script for the object.
                 // Special case for when custom_script_server but there is no script component.
                 if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
-                    this.GetComponent<LuaScriptComponent>() != default) return;
+                    this.GetComponent<LuaScriptComponent>() != default || this.GetComponent<SpawnerComponent>() != default) return;
                 var scriptName = ((string) scriptNameValue).ToLower();
                 Logger.Debug($"{this} -> {scriptNameValue}");
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
