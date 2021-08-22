@@ -137,6 +137,8 @@ namespace Uchu.World
         public const int Krazi = 16049;
         public const int Bonezai = 16050;
 
+        public const int MonumentRaceFinishTrigger = 3298;
+        public const int MonumentRaceCancelTrigger = 3297;
 
         #endregion
     }
