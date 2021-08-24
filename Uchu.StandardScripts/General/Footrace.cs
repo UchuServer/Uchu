@@ -33,6 +33,8 @@ namespace Uchu.StandardScripts.General
             {
                 Listen(player.OnFireServerEvent, (arguments, message) =>
                 {
+                    if (message.Associate != gameObject)
+                        return;
                     var args = arguments.Split('_');
                     if (args.Length < 2)
                         return;
