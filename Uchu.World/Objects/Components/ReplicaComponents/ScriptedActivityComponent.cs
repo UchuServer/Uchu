@@ -163,7 +163,11 @@ namespace Uchu.World
             if (this.Participants.Contains(player)) return;
             this.Participants.Add(player);
             this.Parameters.Add(new float[10]);
-            
+
+            // Make sure the player will keep receiving updates for this object
+            // even when they're far away while playing the footrace.
+            player.Perspective.RenderDistanceFilter?.AddBypassFilter(this.GameObject);
+
             // Serialize the object.
             GameObject.Serialize(this.GameObject);
         }
@@ -182,6 +186,10 @@ namespace Uchu.World
             
             // Serialize the object.
             GameObject.Serialize(this.GameObject);
+
+            // Remove the override that was added to ensure the player
+            // receives updates while playing the footrace.
+            player.Perspective.RenderDistanceFilter?.RemoveBypassFilter(this.GameObject);
         }
 
         /// <summary>
