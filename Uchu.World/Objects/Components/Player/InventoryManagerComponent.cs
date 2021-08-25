@@ -363,7 +363,7 @@ namespace Uchu.World
             if (stackSize == default) 
                 stackSize = int.MaxValue;
             
-            if (settings != null)
+            if (settings != null && settings.Count > 0)
                 stackSize = 1;
 
             var totalAdded = 0L;
