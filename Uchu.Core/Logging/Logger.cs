@@ -54,6 +54,20 @@ namespace Uchu.Core
                 });
             }
         }
+
+        /// <summary>
+        /// Sets the server information to the log messages used to
+        /// identify the server type. Used for conditions where
+        /// the logs are together, such as in a Docker container.
+        /// </summary>
+        /// <param name="type">Server type to add.</param>
+        public static void SetServerTypeInformation(string type)
+        {
+            foreach (var output in NexusLogger.Outputs)
+            {
+                output.AdditionalLogInfo.Add(type);
+            }
+        }
         
         /// <summary>
         /// Logs a message.

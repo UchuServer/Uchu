@@ -271,11 +271,13 @@ namespace Uchu.Master
                 await using var file = File.OpenRead(configFilename);
                 Config = (UchuConfiguration) serializer.Deserialize(file);
                 Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
             }
             else
             {
                 Config = new UchuConfiguration();
                 Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
 
                 Config.DllSource.ScriptDllSource.Add("Enter path to Uchu.StandardScripts.dll");
 
