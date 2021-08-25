@@ -153,6 +153,7 @@ namespace Uchu.World
 
         public const int MonumentRaceFinishTrigger = 3298;
         public const int MonumentRaceCancelTrigger = 3297;
+        public const int MonumentFinishLine = 4967;
 
         #endregion
     }

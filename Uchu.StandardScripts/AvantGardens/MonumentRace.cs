@@ -77,7 +77,6 @@ namespace Uchu.StandardScripts.AvantGardens
                 // Stop activity when user presses exit button
                 else if (message.Identifier == "player_dialog_cancel_course" && message.Button == 1)
                     this.PlayerExit(player);
-
             });
 
             var finish = Zone.GameObjects.FirstOrDefault(g => g.Lot == Lot.MonumentRaceFinishTrigger);
@@ -110,7 +109,11 @@ namespace Uchu.StandardScripts.AvantGardens
 
                 // Progress missions
                 if (player.TryGetComponent<MissionInventoryComponent>(out var missionComponent))
+                {
                     missionComponent.MinigameAchievementAsync(this.GetActivityId(), "performact_time", -elapsed);
+                    // Vector Longview mission: https://lu.lcdruniverse.org/explorer/missions/1884
+                    missionComponent.ScriptAsync(2679, Lot.MonumentFinishLine);
+                }
             });
 
             // End activity when player leaves area
