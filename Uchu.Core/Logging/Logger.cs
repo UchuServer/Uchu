@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Nexus.Logging.Attribute;
 using Nexus.Logging.Output;
 using Uchu.Core.Config;
 
@@ -74,6 +75,7 @@ namespace Uchu.Core
         /// </summary>
         /// <param name="content">Content to log. Can be an object, like an exception.</param>
         /// <param name="logLevel">Log level to output with.</param>
+        [LogTraceIgnore]
         public static void Log(object content, LogLevel logLevel = LogLevel.Information)
         {
             NexusLogger.Log(content, logLevel);
@@ -83,6 +85,7 @@ namespace Uchu.Core
         /// Logs a message as a Debug level.
         /// </summary>
         /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
         public static void Debug(object content)
         {
             NexusLogger.Debug(content);
@@ -92,6 +95,7 @@ namespace Uchu.Core
         /// Logs a message as an Information level.
         /// </summary>
         /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
         public static void Information(object content)
         {
             NexusLogger.Info(content);
@@ -101,6 +105,7 @@ namespace Uchu.Core
         /// Logs a message as a Warning level.
         /// </summary>
         /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
         public static void Warning(object content)
         {
             NexusLogger.Warn(content);
@@ -110,6 +115,7 @@ namespace Uchu.Core
         /// Logs a message as a Error level.
         /// </summary>
         /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
         public static void Error(object content)
         {
             NexusLogger.Error(content);
