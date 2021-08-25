@@ -6,6 +6,7 @@
         Assembly = 47,
         Paradox = 48,
         Sentinel = 49,
+        InFootrace = 115,
         WitnessedGarmadonCelebration = 125,
         UsedEarthLantern = 2020,
         EarthSpinjitzu = 2030,

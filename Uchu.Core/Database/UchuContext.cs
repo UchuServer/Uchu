@@ -40,6 +40,8 @@ namespace Uchu.Core
 
         public DbSet<CharacterFlag> Flags => ContextBase.Flags;
 
+        public DbSet<ActivityScore> ActivityScores => ContextBase.ActivityScores;
+
         public UchuContext()
         {
             var config = UchuContextBase.Config;

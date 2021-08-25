@@ -17,6 +17,41 @@ namespace Uchu.Core.Migrations.MySql
                 .HasAnnotation("Relational:MaxIdentifierLength", 64)
                 .HasAnnotation("ProductVersion", "5.0.5");
 
+            modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Activity")
+                        .HasColumnType("int");
+
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LastPlayed")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("NumPlayed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Time")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Week")
+                        .HasColumnType("int");
+
+                    b.Property<ushort>("Zone")
+                        .HasColumnType("smallint unsigned");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityScores");
+                });
+
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
                     b.Property<long>("Id")
