@@ -38,9 +38,10 @@ namespace Uchu.StandardScripts.NexusTower
                 if (!(other.GameObject is Player player))
                     return;
 
-                // Progress mission 1047
+                // Progress mission 1047 and 1331
                 var missionInventory = player.GetComponent<MissionInventoryComponent>();
                 missionInventory.ScriptAsync(1492, gameObject.Lot);
+                missionInventory.ScriptAsync(1861, gameObject.Lot);
             });
         }
     }

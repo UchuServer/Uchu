@@ -311,18 +311,10 @@ namespace Uchu.World
             if (IsEquipped)
                 await UnEquipAsync();
 
-            // Disassemble item
-            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory) 
-                && Settings.TryGetValue("assemblyPartLOTs", out var list))
-            {
-                foreach (var part in (LegoDataList) list)
-                {
-                    await inventory.AddLotAsync((int) part, 1);
-                }
-            }
-
-            foreach (var subItem in SubItems)
-                await inventory.RemoveItemAsync(subItem);
+            // Delete sub items
+            if (Owner.TryGetComponent<InventoryManagerComponent>(out var inventory))
+                foreach (var subItem in SubItems)
+                    await inventory.RemoveItemAsync(subItem);
 
             Destroy(this);
         }

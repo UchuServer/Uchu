@@ -176,7 +176,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void MessageBoxRespondMessageHandler(MessageBoxRespondMessage message, Player player)
         {
-            message.Associate.OnMessageBoxRespond.Invoke(player, message);
+            message.Associate?.OnMessageBoxRespond.Invoke(player, message);
         }
     }
 }

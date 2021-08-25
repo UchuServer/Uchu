@@ -151,6 +151,10 @@ namespace Uchu.World
         public const int CombatChallengeTarget9 = 13771;
         public const int CombatChallengeTarget10 = 13772;
 
+        public const int MonumentRaceFinishTrigger = 3298;
+        public const int MonumentRaceCancelTrigger = 3297;
+        public const int MonumentFinishLine = 4967;
+
         #endregion
     }
 }

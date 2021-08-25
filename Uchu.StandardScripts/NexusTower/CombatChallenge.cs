@@ -128,8 +128,10 @@ namespace Uchu.StandardScripts.NexusTower
             });
 
             // If the timer hasn't ended yet, spawn a new target when this one dies.
-            Listen(stats.OnDeath, () =>
+            var destructibleComponent = this._spawnedTarget.GetComponent<DestructibleComponent>();
+            Listen(destructibleComponent.OnSmashed, (smasher, lootOwner) =>
             {
+                Destroy(this._spawnedTarget);
                 this._targetsDestroyed++;
                 if (this._active)
                     this.SpawnTarget(player);
@@ -150,24 +152,7 @@ namespace Uchu.StandardScripts.NexusTower
             {
                 this._active = false;
 
-                // Destroy current target
-                this._spawnedTarget.GetComponent<DestructibleComponent>().SmashAsync(this.GameObject);
-
-                // Complete achievements
-                var missionInventory = this._activePlayer.GetComponent<MissionInventoryComponent>();
-                var score = this.GetActivityValue(this._activePlayer, 0);
-                if (score >= 25)
-                    missionInventory.ScriptAsync(1449, Lot.CombatChallengeActivator);
-                if (score >= 100)
-                    missionInventory.ScriptAsync(1869, Lot.CombatChallengeActivator);
-                if (score >= 240)
-                    missionInventory.ScriptAsync(1870, Lot.CombatChallengeActivator);
-                if (score >= 290)
-                    missionInventory.ScriptAsync(1871, Lot.CombatChallengeActivator);
-
-                this.StopActivity(this._activePlayer, this.GetActivityValue(this._activePlayer, 0));
-
-                // Hide UI after 5 seconds
+                // Schedule UI to be hidden after 5 seconds
                 Zone.Schedule(() =>
                 {
                     // Hide UI
@@ -175,6 +160,26 @@ namespace Uchu.StandardScripts.NexusTower
                     // Allow interaction again
                     this.SetNetworkVar("bInUse", false);
                 }, 5000);
+
+                // Destroy current target
+                this._spawnedTarget?.GetComponent<DestructibleComponent>()?.SmashAsync(this.GameObject);
+
+                // Complete achievements
+                if (this._activePlayer != null &&
+                    this._activePlayer.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
+                {
+                    var score = this.GetActivityValue(this._activePlayer, 0);
+                    if (score >= 25)
+                        missionInventory.ScriptAsync(1449, Lot.CombatChallengeActivator);
+                    if (score >= 100)
+                        missionInventory.ScriptAsync(1869, Lot.CombatChallengeActivator);
+                    if (score >= 240)
+                        missionInventory.ScriptAsync(1870, Lot.CombatChallengeActivator);
+                    if (score >= 290)
+                        missionInventory.ScriptAsync(1871, Lot.CombatChallengeActivator);
+                }
+
+                this.StopActivity(this._activePlayer, this.GetActivityValue(this._activePlayer, 0));
             }
         }
     }

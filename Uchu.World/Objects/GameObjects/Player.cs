@@ -378,7 +378,7 @@ namespace Uchu.World
                 Associate = this,
                 SetRotation = rotation != null,
                 Position = position,
-                Rotation = rotation?? Quaternion.Identity,
+                Rotation = rotation ?? Quaternion.Identity,
                 IgnoreY = ignore
             });
         }
