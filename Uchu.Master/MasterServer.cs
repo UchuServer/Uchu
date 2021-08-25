@@ -269,11 +269,13 @@ namespace Uchu.Master
             if (File.Exists(configFilename))
             {
                 await using var file = File.OpenRead(configFilename);
-                LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
+                Config = (UchuConfiguration) serializer.Deserialize(file);
+                Logger.SetConfiguration(Config);
             }
             else
             {
-                LogQueue.Config = Config = new UchuConfiguration();
+                Config = new UchuConfiguration();
+                Logger.SetConfiguration(Config);
 
                 Config.DllSource.ScriptDllSource.Add("Enter path to Uchu.StandardScripts.dll");
 

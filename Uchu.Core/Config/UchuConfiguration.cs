@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Uchu.Core.Config
 {
