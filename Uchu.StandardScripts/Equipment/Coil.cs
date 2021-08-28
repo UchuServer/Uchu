@@ -31,7 +31,6 @@ namespace Uchu.StandardScripts.Equipment
         }
         private async void Effect(GameObject target)
         {
-            System.Console.WriteLine("fire");
             Task.Delay(100);
             var skillComponent = target.GetComponent<SkillComponent>();
             skillComponent.CalculateSkillAsync(SkillID, target);
