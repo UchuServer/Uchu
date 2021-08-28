@@ -58,6 +58,7 @@ namespace Uchu.World
             OnNotifyTamingBuildSuccessMessage = new Event<NotifyTamingBuildSuccessMessage>();
             OnLootPickup = new Event<Lot>();
             OnWorldLoad = new Event();
+            OnSmashObject = new Event<GameObject>();
 
             Listen(OnStart, () =>
             {
@@ -237,6 +238,8 @@ namespace Uchu.World
         public Event<ReadyForUpdatesMessage> OnReadyForUpdatesEvent { get; }
 
         public Event<int, GameObject, Lot> OnRespondToMission { get; }
+
+        public Event<GameObject> OnSmashObject { get; }
         
         public Event<PetTamingTryBuildMessage> OnPetTamingTryBuild { get; }
         public Event<NotifyTamingBuildSuccessMessage> OnNotifyTamingBuildSuccessMessage { get; }

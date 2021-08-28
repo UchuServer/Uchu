@@ -16,6 +16,7 @@ namespace Uchu.StandardScripts.General
             if (gameObject is Item item)
             {
                 SkillID = 394;
+                SetID = 2;
                 ItemsRequired = 4;
                 CooldownTime = 11;
                 Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) => 
