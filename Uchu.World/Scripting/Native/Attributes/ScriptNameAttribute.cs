@@ -2,7 +2,7 @@ using System;
 
 namespace Uchu.World.Scripting.Native
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class ScriptName : Attribute
     {
         /// <summary>

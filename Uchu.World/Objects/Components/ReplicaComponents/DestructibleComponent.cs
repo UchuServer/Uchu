@@ -156,7 +156,7 @@ namespace Uchu.World
             await OnSmashed.InvokeAsync(smasher, owner);
         }
         
-        private async Task GenerateYieldsAsync(Player owner)
+        public async Task GenerateYieldsAsync(Player owner)
         {
             var container = GameObject.GetComponent<LootContainerComponent>();
             

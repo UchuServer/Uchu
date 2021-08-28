@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using InfectedRose.Core;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -67,6 +68,16 @@ namespace Uchu.World.Handlers.GameMessages
             await player.GetComponent<InventoryManagerComponent>()
                 .RemoveItemAsync(message.Item, message.Item.Count - message.TotalItems, 
                     message.InventoryType, true);
+
+            // Disassemble item
+            if (player.TryGetComponent<InventoryManagerComponent>(out var inventory)
+                && message.Item.Settings.TryGetValue("assemblyPartLOTs", out var list))
+            {
+                foreach (var part in (LegoDataList) list)
+                {
+                    await inventory.AddLotAsync((int) part, 1);
+                }
+            }
         }
 
         [PacketHandler]
