@@ -10,7 +10,7 @@ namespace Uchu.World.Systems.Behaviors
         private bool ShowMiniBosses { get; set; }
         private bool ShowPetDigs { get; set; }
         //what is the bitstream serialization for this?
-        //i'm not certain, but i would guess it's just 3 bools for each, i haven't tested this at all though
+        //if i were to guess, it's the three bools + a duration, maybe just the duration, but i haven't tried any of that yet
         public override async Task BuildAsync()
         {
             ShowCollectibles = await GetParameter<bool>("show_collectibles");
