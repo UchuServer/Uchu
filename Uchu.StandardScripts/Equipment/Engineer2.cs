@@ -3,20 +3,20 @@ using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
-namespace Uchu.StandardScripts.General
+namespace Uchu.StandardScripts.Equipment
 {
     /// <summary>
-    /// Native implementation of scripts/equipmenttriggers/assemblyengineer1.lua
+    /// Native implementation of scripts/equipmenttriggers/assemblyengineer2.lua
     /// </summary>
-    [ScriptName("assemblyengineer1.lua")]
-    public class Engineer1 : SkillSetTriggerTemplate
+    [ScriptName("assemblyengineer2.lua")]
+    public class Engineer2 : SkillSetTriggerTemplate
     {
-        public Engineer1(GameObject gameObject) : base(gameObject)
+        public Engineer2(GameObject gameObject) : base(gameObject)
         {
             if (gameObject is Item item)
             {
-                SkillID = 394;
-                SetID = 2;
+                SkillID = 581;
+                SetID = 3;
                 ItemsRequired = 4;
                 CooldownTime = 11;
                 Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) => 

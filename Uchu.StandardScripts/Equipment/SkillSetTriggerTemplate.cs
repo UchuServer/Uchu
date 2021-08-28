@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
-namespace Uchu.StandardScripts.General
+namespace Uchu.StandardScripts.Equipment
 {
     /// <summary>
     /// Native implementation of scripts/equipmenttriggers/skillsettriggertemplate.lua
@@ -25,13 +25,15 @@ namespace Uchu.StandardScripts.General
         }
         protected void Process(Item item)
         {
+            //much better
             if (item.IsEquipped && Ready)
             {
                 bool priority = true;
                 var inventoryComponent = item.Owner.GetComponent<InventoryComponent>();
                 foreach (var otherItem in inventoryComponent.EquippedItems)
                 {
-                    if (otherItem.Lot > item.Lot && inventoryComponent.ActiveItemSets.Find(i => i.SetID == SetID).ItemsInSet.Contains(otherItem.Lot))
+                    var set = inventoryComponent.ActiveItemSets.Find(i => i.SetID == SetID);
+                    if (otherItem.Lot > item.Lot && set.ItemsInSet.Contains(otherItem.Lot))
                     {
                         priority = false;
                     }
