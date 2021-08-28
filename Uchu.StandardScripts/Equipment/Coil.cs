@@ -9,10 +9,9 @@ namespace Uchu.StandardScripts.Equipment
         //there isn't a script for this in the client, but three scripts have basically the exact same code, so it's easier to do this
         public int SkillID { get; set; }
         public int CoilThreshold { get; set; }
-        private int CoilCount { get; set; }
+        private int CoilCount = 0;
         public Coil(GameObject gameObject) : base(gameObject)
         {
-            CoilCount = 0;
         }
         protected void Process(Item item)
         {
@@ -22,14 +21,20 @@ namespace Uchu.StandardScripts.Equipment
                 if (CoilCount >= CoilThreshold)
                 {
                     CoilCount = 0;
-                    var skillComponent = item.Owner.GetComponent<SkillComponent>();
-                    skillComponent.CalculateSkillAsync(SkillID, item.Owner);
+                    Effect(item.Owner);
                 }
             } 
             else 
             {
                 CoilCount = 0;
             }
+        }
+        private async void Effect(GameObject target)
+        {
+            System.Console.WriteLine("fire");
+            Task.Delay(100);
+            var skillComponent = target.GetComponent<SkillComponent>();
+            skillComponent.CalculateSkillAsync(SkillID, target);
         }
     }
 }
