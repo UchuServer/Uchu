@@ -7,7 +7,7 @@ namespace Uchu.StandardScripts.Equipment
     /// <summary>
     /// Native implementation of scripts/equipmenttriggers/skillsettriggertemplate.lua
     /// </summary>
-    [ScriptName("skillsettriggertemplate.lua")]
+    //[ScriptName("skillsettriggertemplate.lua")]
     public class SkillSetTriggerTemplate : ObjectScript
     {
         public int SkillID { get; set; }

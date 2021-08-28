@@ -8,7 +8,16 @@ using RakDotNet.IO;
 
 namespace Uchu.World.Systems.Behaviors
 {
-    public class DarkInspirationBehavior : BehaviorBase
+    public class DarkInspirationExecutionParameters : BehaviorExecutionParameters
+    {
+        public BehaviorExecutionParameters Parameters { get; set; }
+
+        public DarkInspirationExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
+            : base(context, branchContext)
+        {
+        }
+    }
+    public class DarkInspirationBehavior : BehaviorBase<DarkInspirationExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.DarkInspiration;
 
@@ -20,10 +29,10 @@ namespace Uchu.World.Systems.Behaviors
         public override async Task BuildAsync()
         {
             Action = await GetBehavior("action");
-            Faction = await GetParameter<int>("faction_list"); //i don't know how to feel about this
+            Faction = await GetParameter<int>("faction_list"); //this is a list, but is being interpreted as just an int, but it's usually only one number
         }
 
-        public override void ExecuteStart(BehaviorExecutionParameters parameters)
+        protected override void ExecuteStart(DarkInspirationExecutionParameters parameters)
         {
             OnSmash = (target) => 
             {
@@ -31,7 +40,7 @@ namespace Uchu.World.Systems.Behaviors
                 {
                     if (component.Factions.Contains(Faction))
                     {
-                        Action.ExecuteStart(parameters);
+                        Action.ExecuteStart(parameters.Parameters);
                     }
                 }
             };
@@ -47,6 +56,14 @@ namespace Uchu.World.Systems.Behaviors
             {
                 player.OnSmashObject.RemoveListener(OnSmash);
             }
+        }
+        protected override void SerializeStart(BitWriter writer, DarkInspirationExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
+        }
+        protected override void DeserializeStart(BitReader reader, DarkInspirationExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
         }
     }
 }
