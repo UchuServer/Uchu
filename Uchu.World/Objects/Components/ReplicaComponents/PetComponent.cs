@@ -78,8 +78,19 @@ namespace Uchu.World
             if (PetWild)
             {
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(UchuServer.Config.ResourcesConfiguration.GameResourceFolder,
-                    ClientCache.Find<TamingBuildPuzzles>(GameObject.Lot).ValidPiecesLXF));
+                //var currentPath = Zone.Server.Config.ResourcesConfiguration.GameResourceFolder;
+                var currentPath = Zone.Server.Resources.RootPath;
+                var partsToFind = ClientCache.Find<TamingBuildPuzzles>(GameObject.Lot)
+                    .ValidPiecesLXF.ToLower().Split('\\');
+                foreach (var part in partsToFind)
+                {
+                    var allFound = Directory.GetFileSystemEntries(currentPath);
+                    var matching = allFound.FirstOrDefault(path => String.Equals(path, Path.Combine(currentPath, part), StringComparison.CurrentCultureIgnoreCase));
+                    currentPath = matching ?? throw new FileNotFoundException("Could not find " + currentPath);
+                }
+                doc.Load(currentPath);
+
+                Console.WriteLine(doc.DocumentElement.ChildNodes.Count);
 
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
                 {
@@ -134,10 +145,10 @@ namespace Uchu.World
                 
                 Zone.BroadcastMessage(msg);
 
-                var nmsg = new NotifyPetTamingPuzzleSelectedMessage();
-                nmsg.Associate = player;
-                nmsg.Bricks = Bricks.ToArray();
-                player.Message(nmsg);
+                player.Message(new NotifyPetTamingPuzzleSelectedMessage{
+                    Associate = player,
+                    Bricks = Bricks.ToArray()
+                });
                 player.Message(new NotifyPetTamingMinigameMessage
                 {
                     Associate = GameObject,
