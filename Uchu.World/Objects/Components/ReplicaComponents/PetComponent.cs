@@ -90,8 +90,6 @@ namespace Uchu.World
                 }
                 doc.Load(currentPath);
 
-                Console.WriteLine(doc.DocumentElement.ChildNodes.Count);
-
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
                 {
                     if (node.Name == "Bricks")
@@ -120,17 +118,17 @@ namespace Uchu.World
                     }
                 }
                 
-                NotifyPetTamingMinigameMessage msg = new NotifyPetTamingMinigameMessage();
+                //NotifyPetTamingMinigameMessage msg = new NotifyPetTamingMinigameMessage();
 
-                msg.Associate = player;
+                //msg.Associate = player;
                 
-                msg.ForceTeleport = true;
-                msg.PlayerTaming = player;
-                msg.PetId = GameObject.Id;
-                msg.NotifyType = PetTamingNotifyType.Begin;
+                //msg.ForceTeleport = true;
+                //msg.PlayerTaming = player;
+                //msg.PetId = GameObject.Id;
+                //msg.NotifyType = PetTamingNotifyType.Begin;
                 
                 Vector3 petPos = GameObject.Transform.Position;
-                msg.PetDestinationPosition = petPos;
+                //msg.PetDestinationPosition = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
                 var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
@@ -139,11 +137,20 @@ namespace Uchu.World
                     petPos.Y,
                     petPos.Z + (float) interaction_distance * (float)Math.Sin(-deg)
                 );
-                msg.TeleportPosition = pos;
+                //msg.TeleportPosition = pos;
 
-                msg.TeleportRotation = pos.QuaternionLookRotation(petPos);
-                
-                Zone.BroadcastMessage(msg);
+                //msg.TeleportRotation = pos.QuaternionLookRotation(petPos);
+
+                Zone.BroadcastMessage(new NotifyPetTamingMinigameMessage{
+                    Associate = player,
+                    ForceTeleport = true,
+                    PlayerTaming = player,
+                    PetId = GameObject.Id,
+                    NotifyType = PetTamingNotifyType.Begin,
+                    PetDestinationPosition = petPos,
+                    TeleportPosition = pos,
+                    TeleportRotation = pos.QuaternionLookRotation(petPos)
+                });
 
                 player.Message(new NotifyPetTamingPuzzleSelectedMessage{
                     Associate = player,
