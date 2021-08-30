@@ -17,6 +17,12 @@ namespace Uchu.StandardScripts.AvantGardens
         {
             Listen(gameObject.OnInteract, async player =>
             {
+                player.Message(new TerminateInteractionMessage
+                {
+                    Associate = player,
+                    Terminator = gameObject,
+                    Type = TerminateType.FromInteraction,
+                });
                 if (player.TryGetComponent<CharacterComponent>(out var character) && !Active)
                 {
                     Active = true;
