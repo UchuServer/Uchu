@@ -143,6 +143,12 @@ namespace Uchu.World
 
                 finalObject = BoxBody.Create(Zone.Simulation, pos, Transform.Rotation, size);
             }
+            // approx. 20 x 5 x 7, used for https://lu.lcdruniverse.org/explorer/objects/12041
+            else if (path.Contains("fx_nt_sentinal_ground_arrows.hkx"))
+            {
+                size = new Vector3(20, 5, 7) * Math.Abs(GameObject.Transform.Scale);
+                finalObject = BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, size);
+            }
             // default is a 5x5x5 cube
             else
             {

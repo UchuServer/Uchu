@@ -556,7 +556,21 @@ namespace Uchu.World.Scripting.Native
             if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity)) return 0;
             return activity.ActivityInfo.ActivityID ?? 0;
         }
-        
+
+        /// <summary>
+        /// Returns the leaderboard type of the activity.
+        /// </summary>
+        /// <returns>Leaderboard type of the activity.</returns>
+        public LeaderboardType GetActivityLeaderboardType()
+        {
+            if (!this.GameObject.TryGetComponent<ScriptedActivityComponent>(out var activity))
+                return 0;
+            if (activity.ActivityInfo.LeaderboardType == null)
+                return 0;
+
+            return (LeaderboardType) activity.ActivityInfo.LeaderboardType;
+        }
+
         /// <summary>
         /// Adds a player to the current activity.
         /// </summary>

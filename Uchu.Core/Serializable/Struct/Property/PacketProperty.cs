@@ -31,7 +31,7 @@ namespace Uchu.Core
                         var data = (LegoDataDictionary) o;
                         if (data != null)
                         {
-                            var ldf = data.ToString();
+                            var ldf = data.ToString("\n");
                             writer.Write((uint) ldf.Length);
                             if (ldf.Length > 0)
                             {

@@ -16,6 +16,41 @@ namespace Uchu.Core.Migrations.Sqlite
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.5");
 
+            modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Activity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("LastPlayed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NumPlayed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Time")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Week")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ushort>("Zone")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityScores");
+                });
+
             modelBuilder.Entity("Uchu.Core.Character", b =>
                 {
                     b.Property<long>("Id")
