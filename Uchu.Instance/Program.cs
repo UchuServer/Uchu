@@ -40,9 +40,11 @@ namespace Uchu.Instance
                 switch (ServerType)
                 {
                     case ServerType.Authentication:
+                        Logger.SetServerTypeInformation("Auth");
                         await UchuServer.StartAsync(typeof(LoginHandler).Assembly, true);
                         break;
                     case ServerType.Character:
+                        Logger.SetServerTypeInformation("Char");
                         await UchuServer.StartAsync(typeof(CharacterHandler).Assembly);
                         break;
                     case ServerType.World:
