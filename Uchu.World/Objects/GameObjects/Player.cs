@@ -363,7 +363,9 @@ namespace Uchu.World
                   physicsComponent.Physics is { } physics))
                 return;
 
-            physics.Position = Transform.Position;
+            // The Transform.Position of the player refers to the bottom of the player, not the center. Since the player
+            // is treated as a sphere of radius 1, moving the sphere up by 1 corrects this.
+            physics.Position = Transform.Position + new Vector3(0, 1, 0);
             physics.Rotation = Transform.Rotation;
         }
 
