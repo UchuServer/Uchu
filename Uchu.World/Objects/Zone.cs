@@ -148,6 +148,57 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Sets up the object script for an object.
+        /// </summary>
+        /// <param name="gameObject">Game object to load.</param>
+        public void LoadScriptForObject(GameObject gameObject)
+        {
+            // Get the script names to try to load.
+            var scriptNames = new List<string>();
+            var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
+            if (gameObject.Settings.TryGetValue("custom_script_server", out var serverScriptOverride) &&
+                (string) serverScriptOverride != "")
+            {
+                scriptNames.Add(((string) serverScriptOverride).ToLower());
+            }
+            if (scriptComponent?.ScriptName != null && scriptComponent.ScriptName != "" && !scriptNames.Contains(scriptComponent.ScriptName.ToLower()))
+            {
+                scriptNames.Add(scriptComponent.ScriptName.ToLower());
+            }
+            if (gameObject.Settings.TryGetValue("custom_script_client", out var clientScriptOverride) && (string) clientScriptOverride != "" && !scriptNames.Contains(((string) clientScriptOverride).ToLower()))
+            {
+                scriptNames.Add(((string) clientScriptOverride).ToLower());
+            }
+            if (scriptComponent?.ClientScriptName != null && scriptComponent.ClientScriptName != "" && !scriptNames.Contains(scriptComponent.ClientScriptName.ToLower()))
+            {
+                scriptNames.Add(scriptComponent.ClientScriptName.ToLower());
+            }
+
+            //Log the script names.
+            if (scriptNames.Count == 0) return;
+            var scriptNamesOutput = scriptNames.Aggregate((i, j) => i + ", " + j);
+            Logger.Debug($"Loading script for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
+
+            // Attempt to load a script.
+            var scriptLoaded = false;
+            foreach (var scriptName in scriptNames)
+            {
+                if (scriptLoaded) break;
+                foreach (var (objectScriptName, objectScriptType) in this.ScriptManager.ObjectScriptTypes)
+                {
+                    if (!scriptName.EndsWith(objectScriptName)) continue;
+                    this.LoadObjectScript(gameObject, objectScriptType);
+                    scriptLoaded = true;
+                    break;
+                }
+            }
+
+            // Output if no script was loaded.
+            if (scriptLoaded) return;
+            Logger.Debug($"No script found for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
+        }
+        
+        /// <summary>
         /// Loads an object script. Either happens immediately or is queued
         /// for when all the objects load depending on if the zone has loaded.
         /// </summary>

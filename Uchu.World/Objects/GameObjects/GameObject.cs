@@ -147,22 +147,12 @@ namespace Uchu.World
                 foreach (var component in Components.ToArray()) Start(component);
                 
                 // Load the script for the object.
-                // Special case for when custom_script_server but there is no script component.
-                if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
-                    this.GetComponent<LuaScriptComponent>() != default || this.GetComponent<SpawnerComponent>() != default) return;
-                var scriptName = ((string) scriptNameValue).ToLower();
-                Logger.Debug($"{this} -> {scriptNameValue}");
-                var scriptLoaded = false;
-                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
+                // Special case for when custom_script_server or custom_script_client but there is no script component.
+                var hasCustomServerScript = this.Settings.TryGetValue("custom_script_server", out var serverScriptNameValue);
+                var hasCustomClientScript = this.Settings.TryGetValue("custom_script_client", out var clientScriptNameValue);
+                if ((hasCustomClientScript || hasCustomServerScript) && this.GetComponent<LuaScriptComponent>() == default && this.GetComponent<SpawnerComponent>() == default)
                 {
-                    if (!scriptName.EndsWith(objectScriptName)) continue;
-                    this.Zone.LoadObjectScript(this, objectScriptType);
-                    scriptLoaded = true;
-                    break;
-                }
-                //if it attempted to load a script that isn't here yet, log it
-                if (!scriptLoaded && scriptName != ""){
-                    Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
+                    this.Zone.LoadScriptForObject(this);
                 }
             });
 
