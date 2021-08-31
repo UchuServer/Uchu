@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
-namespace Uchu.StandardScripts.General
+namespace Uchu.StandardScripts.General.DeathPlane
 {
     /// <summary>
     /// Native implementation of scripts/ai/gf/l_player_fall_death.lua

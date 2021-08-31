@@ -1,13 +1,8 @@
-using System;
-using System.Numerics;
 using System.Threading.Tasks;
-using InfectedRose.Core;
-using InfectedRose.Lvl;
-using Uchu.Physics;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
-namespace Uchu.StandardScripts.General
+namespace Uchu.StandardScripts.General.DeathPlane
 {
     /// <summary>
     /// Native implementation of scripts/ai/act/l_act_shark_player_death_trigger.lua
