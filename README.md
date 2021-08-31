@@ -24,7 +24,7 @@ Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_,
 
 To play LU, a client and a server are needed. The client connects to the server, and the server tells the client what to show and handles combat, NPCs, missions, and a lot more. Uchu is a server; you need the original client too (explained in detail under [Setting up a client](#setting-up-a-client)).
 
-To set up Uchu, You need to be able to navigate to folders using your operating system's terminal emulator. [Here](https://www.watchingthenet.com/how-to-navigate-through-folders-when-using-windows-command-prompt.html) is an introduction for Windows. For macOS, see [this](https://computers.tutsplus.com/tutorials/navigating-the-terminal-a-gentle-introduction--mac-3855) article. Linux users, you probably don't need this, but [here](https://www.redhat.com/sysadmin/navigating-filesystem-linux-terminal) is a guide.
+To set up Uchu, you need to be able to navigate to folders using your operating system's terminal emulator. [Here](https://www.watchingthenet.com/how-to-navigate-through-folders-when-using-windows-command-prompt.html) is an introduction for Windows. For macOS, see [this](https://computers.tutsplus.com/tutorials/navigating-the-terminal-a-gentle-introduction--mac-3855) article. Linux users, you probably don't need this, but [here](https://www.redhat.com/sysadmin/navigating-filesystem-linux-terminal) is a guide.
 
 ## Features
 ### Core
