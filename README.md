@@ -1,179 +1,128 @@
-# Uchu [![appveyor](https://ci.appveyor.com/api/projects/status/of25uoxf8um5ejc3?svg=true)](https://ci.appveyor.com/project/jettford/uchu) [![discord](https://img.shields.io/discord/762298384979329114?label=Discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
+# Uchu [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FUchuServer%2FUchu%2Fbadge%3Fref%3Ddev&style=flat&label=build&logo=github )](https://actions-badge.atrox.dev/UchuServer/Uchu/goto?ref=dev) [![Discord](https://img.shields.io/discord/762298384979329114?label=discord&logo=discord&logoColor=white)](https://discord.gg/mrhBXVVNBD)
 
-LEGO Universe server written in C#
+LEGO® Universe server written in C#
 
-## Disclaimer
 > The LEGO Group has not endorsed or authorized the operation of this game and is not liable for any safety issues in relation to its operation.
 
-## Contributions
-Contributions are always welcome! Feel free to open pull requests or issues to help with the continued development of Uchu.
+## Table of contents
+1. [Introduction](#introduction)
+2. [Features](#features)
+3. [Setting up a client](#setting-up-a-client)
+   1. [Option A: Nexus LU Launcher](#option-a-nexus-lu-launcher)
+   2. [Option B: Manual installation](#option-b-manual-installation)
+4. [Setting up a server](#setting-up-a-server)
+   1. [Option A: Using a release](#option-a-using-a-release)
+   2. [Option B: Building from source](#option-b-building-from-source)
+   3. [Advanced configuration (optional)](#advanced-server-configuration-_optional_)
+5. [Getting ready to play](#getting-ready-to-play)
+6. [Support](#support)
+7. [Python scripting](#python-scripting)
+8. [Contributing](#contributing)
 
-## Python scripting
-Uchu supports [Python scripting](https://github.com/UchuServer/Uchu/blob/master/Uchu.Python/SCRIPTING.md), which you can use to code minigames, new game features, and a lot more! This is the perfect way for those of you with less programming experience to contribute.
+## Introduction
+Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_, which was shut down in January 2012.
 
-## Releases
-Check out the [release page](https://github.com/UchuServer/Uchu/releases) for standalone binary releases of Uchu. **These currently are very outdated; many things in the game will not work. It is recommended to install from source from the time being.** (Read on for instructions)
+To play LU, a client and a server are needed. The client connects to the server, and the server tells the client what to show and handles combat, NPCs, missions, and a lot more. Uchu is a server; you need the original client too (explained in detail under [Setting up a client](#setting-up-a-client)).
 
-## Prerequisites
-This project will be built and run using a CLI. You will also require a text editor capable of editing raw text files. These are requirements of setting up this project so if you are not familiar with either it is recommended to research them in advance.
-Users should also understand that Uchu is not a game in and of itself, but a server which tells a program on your computer - the client - what to do.
-Uchu is built with .NET 5.0 (see below for installation details) which is compatible with Windows, Linux, and MacOS.
+To set up Uchu, You need to be able to navigate to folders using your operating system's terminal emulator. [Here](https://www.watchingthenet.com/how-to-navigate-through-folders-when-using-windows-command-prompt.html) is an introduction for Windows. For macOS, see [this](https://computers.tutsplus.com/tutorials/navigating-the-terminal-a-gentle-introduction--mac-3855) article. Linux users, you probably don't need this, but [here](https://www.redhat.com/sysadmin/navigating-filesystem-linux-terminal) is a guide.
 
-### .NET 5.0
-Install .NET 5.0 SDK for your OS using the instructions found on [here](https://dotnet.microsoft.com/download/dotnet/5.0).
+## Features
+### Core
+- Missions & achievements
+- Smashables
+- Quickbuilds
+- Rocket building, launchpads and world teleporters
+- Enemies (movement AI is slow; disabled by default)
+- Vendors
+- Items and skills
+- Death planes
+- Factions
+- Vault
+- Moving platforms
 
-### Database
-Uchu uses SQLite as its database provider by default. This can be changed in the config file to either MySQL or PostgreSQL.
+### Minigames
+- Avant Gardens Survival
+- Footraces
+- Monument Race
+- Combat Challenge
+- Leaderboards for the above, where applicable
 
-### Redis (optional)
-Uchu uses Redis as its Cache service provider. If you decide to skip this step, the server will fall back to the database for caching. The latest version of Redis is only natively supported on Linux and MacOS so setting it up on Windows requires some workarounds.
+## Setting up a client
 
-Recommended to install when setting up for hosting.
+There are two ways to go about this. Using Option A, Nexus LU Launcher, is recommended, as it is easier and will let you skip a configuration step when setting up the server later on.
 
-#### Linux (Debian/Ubuntu)
+### Option A: Nexus LU Launcher
+Nexus LU Launcher is a program that helps you install, configure and launch the LEGO® Universe client.
+Find the `.zip` for your operating system on [this page](https://github.com/TheNexusAvenger/Nexus-LU-Launcher/releases/tag/V.0.3.0), extract it and run the program.
+
+Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
+
+
+### Option B: Manual installation
+You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
+
+After you've extracted the client, you will need to install a mod to be able to use it with the Uchu server. This mod replaces the original, outdated networking protocol used by the game. Download `mod.zip` from [this page](https://github.com/lcdr/raknet_shim_dll/releases) and extract it in your LU client folder. The result should be that a folder called `mods`, a file called `dinput8.dll` and `legouniverse.exe` are all in the same folder.
+
+If you are on Linux or macOS, you will need [Wine](https://winehq.org) to launch the client. You need to explicitly tell Wine to load the modloader by launching it using `WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe`.
+
+## Setting up a server
+
+### Option A: Using a release
+Currently not supported. This section will be updated in the future.
+
+### Option B: Building from source
+- Install [git](https://git-scm.com/downloads)
+- Install [.NET 5.0 SDK](https://dotnet.microsoft.com/download) (for Linux users it will be called `.NET` without `SDK`)
+
+**Clone the repository:**
+```bash
+git clone https://github.com/UchuServer/Uchu --recursive
 ```
-sudo apt install redis-server
-```
+Make sure you include the `--recursive` part. If you forgot to, then type `git submodule init` and `git submodule update`.
 
-#### MacOS
-```
-brew install redis
-```
-
-##### Windows
-There's a [package on chocolatey](https://chocolatey.org/packages/redis-64), although fairly outdated and may cause issues.
-
-### LEGO Universe Client
-You can find a list of available clients [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg), it is recommended you download humanoid/lcdr's **unpacked** client.
-
-Uchu does not contain all of the information the server needs to run LEGO Universe and requires resources from the client in order to run. If you do choose a packed client, you will have to unpack the files yourself using [lcdr's utilities](https://github.com/lcdr/utils).
-
-### TcpUdp Mod
-The underlying network library this server (now) uses does not have support for the original RakNet protocol the game used. Because of this you will have to download [this client mod](https://github.com/lcdr/raknet_shim_dll/releases) made by lcdr and extract it next to the game's executable.
-
-There are several reasons for not supporting the original protocol anymore with the major one being security, if you would like to get more info please contact us on discord (or via mail if that's your thing).
-
-#### Linux and MacOS
-Unlike on Windows, Wine does not automatically load dll files placed in the same directory as the executable. You will have to run the client like this in order for it to use the shim's dinput8:
-
-```sh
-WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe
-```
-
-### Building from source
-
-#### Git
-
-##### Linux
-```
-sudo apt install git
-```
-##### MacOS
-Included in macos dev tools, running `git` from a terminal should prompt you to install them.
-
-##### Windows
-You can download git from [the official website](https://git-scm.com/).
-
-#### Clone the repository
-You can append `--depth 1` to the following command if you don't care about commit history and/or have slow internet.
-
-```
-git clone https://github.com/UchuServer/Uchu --recursive -b dev
-```
-
-#### Building
-Run the following command in the project root directory (where Uchu.sln is located)
-```
+**Build the project:**
+```bash
+cd Uchu
 dotnet build
 ```
 
-### Configuration
+**Start the server:**
+```bash
+cd Uchu.Master/bin/Debug/net5.0
+dotnet Uchu.Master.dll
+```
 
-#### Config file
-Before we can configure the server, it needs to generate a config file.
-1. Navigate to where you built the Uchu.Master project. This is commonly `bin/Debug/net5.0/`, relative to the Uchu.Master path, but may differ.
-2. Run `dotnet Uchu.Master.dll`. This will throw errors.
-3. Close the process when it says it has generated a default config file.
+The first time you run the server, a configuration file called `config.xml` will be generated.
 
-#### Configure Servers
-Uchu is not a LEGO Universe repository and you will have to supply your own game resource files for the servers to work with.
+**If you have installed your client with Nexus LU Launcher,** Uchu will automatically detect its resources location, and no manual setup is required. The server will start, and you can continue to [Getting ready to play](#getting-ready-to-play).
 
-1. Navigate to where you have LEGO Universe installed and copy the full path to the `res` directory.
-2. Find the `config.default.xml` file generated earlier and rename it to `config.xml`
-3. Open the config, go to `<GameResourceFolder></GameResourceFolder>` and paste your LEGO Universe's `res` directory path between the tags.
+**If you have manually installed your client,** or Uchu can't find the NLUL client's resource folder, open `config.xml` with a text editor. Find this text:
+```
+<GameResourceFolder>path to res folder</GameResourceFolder>
+```
+and insert the path to your LEGO® Universe client's `res` folder. For example, on Windows this could be:
+```
+<GameResourceFolder>C:\Users\Bob\LEGO Universe\res</GameResourceFolder>
+```
 
-No quotation marks (`""`) should be used.
+Now start the server again with `dotnet Uchu.Master.dll`.
 
-##### Database
+### Advanced server configuration _(optional)_
+**Only needed for advanced use cases:** see [this document](Configuration.md) for an explanation of all available configuration options.
 
-You should check if you've filled in the right database credentials in the config file, it will not run without a database connection.
+## Getting ready to play
+When you've got your server up and running, it's time to create a user account. If you're on Windows, find the window titled Authentication. On Linux/macOS, you just need the one window in which the server is running.
 
-##### Define Uchu.Instance and Uchu.StandardScripts
-You have to tell Uchu where it can find the different libraries it will utilize at runtime.
+Type `/adduser <username>` and press enter to create a user (don't include the `<>`). Uchu will prompt you for a password. You can set your permissions using `/gamemaster <username> <level>`. The highest level available is **9**.
 
-1. Open the config file and find the `<DllSource></DllSource>` section.
-2. If `dotnet` is not accessible as a global command, copy the path to `dotnet(.exe)` in between the `<DotNetPath></DotNetPath>` tags.
-3. Copy the path to Uchu.Instance.dll in between the `<Instance></Instance>` tags. This is commonly `/bin/Debug/net5.0`, relative to the Uchu.Instance path, but may differ.
-4. Copy the path to Uchu.StandardScripts.dll in between the `<ScriptDllSource></ScriptDllSource>` tags. This is commonly `/bin/Debug/net5.0`, relative to the Uchu.StandardScripts path, but may differ.
+There are in-game commands available that are useful to know, such as `/complete` (completes active missions), `/smash` (you'll respawn at a safe location), and `/fly` (...it lets you fly). Type `/help` in the in-game chat for a complete list. You can also type this in the Uchu console for a list of console commands.
 
-No quotation marks (`""`) should be used.
+## Support
+If you encounter issues with the installation process, take a moment to re-read all instructions carefully, and if you're still stuck you are welcome to [join our Discord server](https://discord.gg/njjfQ4W6qv) and ask your question in the `#help` channel.
 
-##### Network ports (optional)
-If your operating system does not allow you to host a server on any specific network port, or you run other services that might occupy any of the network ports used by Uchu, you can change the config to bind to different ports.
+## Python scripting
+Uchu supports Python scripting, which allows you to make minigames and other server additions with Python. See [this document](Uchu.Python/SCRIPTING.md) to get started.
 
-###### Servers
-1. Open the config file and find the `<Networking></Networking>` section.
-2. To rebind the character network port, add a xml element like this (for network port 4000), `<CharacterPort>4000</CharacterPort>`.
-3. World servers will incrementally bind to network 2003(+). This might not be feasible for when you have to port-forward for every world server. You can therefore add ANY NUMBER of xml element like this (for network port 10000), `<WorldPort>10000</WorldPort>`, to tell Uchu where it can bind world servers.
-
-**IMPORTANT!** If Uchu runs out of specified world ports, additional world servers will **not** work.
-
-###### API
-1. Open the config file and find the `<Api></Api>` section.
-2. APIs will incrementally bind to network 10000(+) by default. This can be changed by setting the number in the `<Port></Port>` tags.
-
-### Infrastructure
-
-#### Single-Sign-On authentication
-If you are using a Single-Sign-On (SSO) authentication server (https://github.com/lcdr/sso_auth), you need to specify the domain it is located on.
-1. Open the config file and find the `<Sso></Sso>` section.
-2. Input the domain where the SSO authentication server is hosted in between the `<Domain></Domain>` tags.
-3. Set the `<HostAuthentication></HostAuthentication>` variable in the `<Networking></Networking>` section to `false`.
-
-#### Creating a user
-In the Uchu.Master console, type `/adduser <username>` and press enter. You will than have to enter a password which will be displayed as stars (\*), and when you are done, press enter.
-
-#### Admin commands
-In the Uchu.Master console, type `/gamemaster <username> 2`. This will make your account an Admin and will give you access to a lot of commands. Type "/" using the ingame chat to have your options displayed to you.
-
-#### Experimental features
-These features are experiential and may be unstable. These can be enabled under the `<GamePlay></GamePlay>` section in the config file.
-
-### Troubleshooting
-
-#### Old config file
-If you have used an older version of Uchu, you might have to reset your config file to accomodate new additions. Do this by deleting your old config file and have the server generate a new one.
-
-#### Code does not compile
-Make sure the `RakDotNet/` and `InfectedRose/` directories are not empty. If they are you have to pull those submodules with git.
-
-If they are not empty but the code still does not compile, they might be out of date. Pull those submodules with git to update them.
-
-#### Nothing happens when I run Uchu.Master.dll
-If the server did not output a line saying the api is ready, attempt to rebind the API port. See Network ports -> API
-
-#### The server is saying `Invalid local resources (Invalid path or no .luz files found). Please ensure you are using an unpacked client.`
-Please ensure you are using an unpacked client. See Prerequisite -> LEGO Universe Client
-
-#### Two windows open and immediately close
-Attempt to specify a different character port. See Network ports -> Servers.
-If that doesn't work double check that the Uchu.Instance and Uchu.StandardScripts paths are correct. See Configuration -> Define Uchu.Instance and Uchu.StandardScripts.
-
-#### Cannot load into world
-Attempt the specify a couple of world server ports. See Network ports -> Servers
-
-#### Cannot create a character
-Make sure the `CDClient.db` is not corrupted. You might have to manually copy it to the output directory from Uchu.Core.
-
-#### Cannot progress
-Uchu is far from complete, and a lot of features just are not implemented. You can run the `/complete` command in chat to complete all your active missions.
+## Contributing
+Contributions are always welcome! If you encounter an issue that isn't logged on the [issue board](https://github.com/UchuServer/Uchu/issues) yet, feel free to add it. And, of course, you're more than welcome to open a pull request to fix it :)
+If you are interested in contributing code to Uchu,  feel free to join the [community Discord server](https://discord.gg/njjfQ4W6qv) and contact one of the developers to get an invite to the development-focused Discord server.
