@@ -27,6 +27,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 {
                     if (spawnObject.TryGetComponent<SpawnerComponent>(out var spawnerComponent))
                     {
+                        //this runs but doesnt appear to do anything, i'd put it up to needing the ai overhaul or me doing it wrong
                         spawnerComponent.Spawn();
                     }
                 }
