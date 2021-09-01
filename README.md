@@ -13,7 +13,7 @@ LEGO® Universe server written in C#
 4. [Setting up a server](#setting-up-a-server)
    1. [Option A: Using a release](#option-a-using-a-release)
    2. [Option B: Building from source](#option-b-building-from-source)
-   3. [Advanced configuration (optional)](#advanced-server-configuration-_optional_)
+   3. [Advanced configuration (optional)](#advanced-server-configuration-optional)
 5. [Getting ready to play](#getting-ready-to-play)
 6. [Support](#support)
 7. [Python scripting](#python-scripting)
@@ -53,7 +53,7 @@ There are two ways to go about this. Using Option A, Nexus LU Launcher, is recom
 
 ### Option A: Nexus LU Launcher
 Nexus LU Launcher is a program that helps you install, configure and launch the LEGO® Universe client.
-Find the `.zip` for your operating system on [this page](https://github.com/TheNexusAvenger/Nexus-LU-Launcher/releases/tag/V.0.3.0), extract it and run the program.
+Find the `.zip` for your operating system on [this page](https://github.com/TheNexusAvenger/Nexus-LU-Launcher/releases/latest), extract it and run the program.
 
 Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
 
