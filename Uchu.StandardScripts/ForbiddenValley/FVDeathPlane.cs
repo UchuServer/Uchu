@@ -16,12 +16,8 @@ namespace Uchu.StandardScripts.ForbiddenValley
                 Listen(player.OnPositionUpdate, (position, rotation) =>
                 {
                     if (position.Y < -100 && destructibleComponent.Alive)
-                    {
                         destructibleComponent.SmashAsync(player);
-                    }
                 });
-                
-                return Task.CompletedTask;
             });
             
             return Task.CompletedTask;
