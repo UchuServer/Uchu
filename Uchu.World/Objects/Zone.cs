@@ -165,6 +165,7 @@ namespace Uchu.World
             {
                 scriptNames.Add(scriptComponent.ScriptName.ToLower());
             }
+            /*
             if (gameObject.Settings.TryGetValue("custom_script_client", out var clientScriptOverride) && (string) clientScriptOverride != "" && !scriptNames.Contains(((string) clientScriptOverride).ToLower()))
             {
                 scriptNames.Add(((string) clientScriptOverride).ToLower());
@@ -173,6 +174,7 @@ namespace Uchu.World
             {
                 scriptNames.Add(scriptComponent.ClientScriptName.ToLower());
             }
+            */
 
             //Log the script names.
             if (scriptNames.Count == 0) return;
@@ -194,7 +196,7 @@ namespace Uchu.World
             }
 
             // Output if no script was loaded.
-            if (scriptLoaded) return;
+            if (scriptLoaded || scriptNamesOutput == "") return;
             Logger.Debug($"No script found for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
         }
         
