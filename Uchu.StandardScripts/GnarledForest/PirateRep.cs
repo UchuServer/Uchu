@@ -4,7 +4,7 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.GnarledForest
 {
-    [ScriptName("l_pirate_rep")]
+    [ScriptName("l_pirate_rep.lua")]
     public class PirateRep : ObjectScript
     {
         /// <summary>
