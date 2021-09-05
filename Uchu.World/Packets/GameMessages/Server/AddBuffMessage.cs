@@ -4,6 +4,7 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
+    [ServerGameMessagePacketStruct]
     public struct AddBuffMessage
     {
         public GameObject Associate { get; set; }

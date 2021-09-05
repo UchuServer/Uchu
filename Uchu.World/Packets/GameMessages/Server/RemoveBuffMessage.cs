@@ -3,6 +3,7 @@ using RakDotNet.IO;
 
 namespace Uchu.World
 {
+    [ServerGameMessagePacketStruct]
     public struct RemoveBuffMessage
     {
 

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace Uchu.World.Systems.Behaviors
     public class BlockBehaviorExecutionParameters : BehaviorExecutionParameters
     {
         public BehaviorExecutionParameters Parameters { get; set; }
+        public uint Handle { get; set; }
 
         public BlockBehaviorExecutionParameters(ExecutionContext context, ExecutionBranchContext branchContext) 
             : base(context, branchContext)
@@ -21,6 +23,7 @@ namespace Uchu.World.Systems.Behaviors
     public class BlockBehavior : BehaviorBase<BlockBehaviorExecutionParameters>
     {
         public override BehaviorTemplateId Id => BehaviorTemplateId.Block;
+        private bool Active { get; set; }
 
         private bool BlockDamage { get; set; }
 
@@ -34,29 +37,24 @@ namespace Uchu.World.Systems.Behaviors
 
         private int BlocksLeft { get; set; }
 
+        private bool Broken { get; set; }
+
         public override async Task BuildAsync()
         {
-            BlockDamage = await GetParameter<bool>("block_damage");
-            BlockKnockback = await GetParameter<bool>("block_knockback");
-            BlockStun = await GetParameter<bool>("block_stuns");
+            BlockDamage = await GetParameter<int>("block_damage") == 1;
+            BlockKnockback = await GetParameter<int>("block_knockback") == 1;
+            BlockStun = await GetParameter<int>("block_stuns") == 1;
             BreakAction = await GetBehavior("break_action");
             BlockableAttacks = await GetParameter<int>("num_attacks_can_block");
         }
 
         protected override void DeserializeStart(BitReader reader, BlockBehaviorExecutionParameters parameters)
         {
-            parameters.Parameters = BreakAction.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
-            //how do these work? this behavior is so different compared to the others, i have a feeling this wouldn't
-            //work in some circumstances. you could unblock, but how would the game predict that beforehand?
-        }
-        protected override void SerializeStart(BitWriter writer, BlockBehaviorExecutionParameters parameters)
-        {
-            parameters.Parameters = BreakAction.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
-        }
-        protected override void ExecuteStart(BlockBehaviorExecutionParameters parameters)
-        {
-            if (!(parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out var destroyable))) return;
+            //parameters.Parameters = BreakAction.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
+            if (!(parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out var destroyable)) || Active) return;
             if (parameters.BranchContext.StartNode == default) return; //prevent accidental invincibility
+            Active = true;
+            Broken = false;
             var startNode = parameters.BranchContext.StartNode;
             destroyable.Shielded = BlockDamage;
             destroyable.ShieldedKnockback = BlockKnockback;
@@ -64,31 +62,59 @@ namespace Uchu.World.Systems.Behaviors
             BlocksLeft = BlockableAttacks;
             Action blockAction = default;
             Action finish = default;
-            blockAction = (() => 
-            {
-                BlocksLeft--;
-                if (BlocksLeft <= 0){
-                    destroyable.Shielded = false;
-                    destroyable.ShieldedKnockback = false;
-                    destroyable.ShieldedStun = false;
-                    destroyable.OnAttacked.RemoveListener(blockAction);
-                    startNode.End.RemoveListener(finish);
-                    BreakAction.ExecuteStart(parameters.Parameters); //this causes an error with reading a bit in knockback, likely because it's being executed so far in the future
-                    //after the packets have been sent
-                }
-            });
-            finish = (() => 
+            Action end = (() => 
             {
                 destroyable.Shielded = false;
                 destroyable.ShieldedKnockback = false;
                 destroyable.ShieldedStun = false;
+                Active = false;
                 BlocksLeft = 0;
                 destroyable.OnAttacked.RemoveListener(blockAction);
                 startNode.End.RemoveListener(finish);
-                //unblocking normally is completely fine from my testing
             });
+            blockAction = (() => 
+            {
+                if (!Active)
+                {
+                    destroyable.OnAttacked.RemoveListener(blockAction);
+                    startNode.End.RemoveListener(finish);
+                    return;
+                }
+                BlocksLeft--;
+                Console.WriteLine(BlocksLeft);
+                if (BlocksLeft <= 0){
+                    end();
+                    Broken = true;
+                }
+            });
+            finish = (() => 
+            {
+                if (!Active)
+                {
+                    destroyable.OnAttacked.RemoveListener(blockAction);
+                    startNode.End.RemoveListener(finish);
+                    return;
+                }
+                end();
+            });
+            
             destroyable.OnAttacked.AddListener(blockAction);
             startNode.End.AddListener(finish);
+        }
+        protected override void SerializeStart(BitWriter writer, BlockBehaviorExecutionParameters parameters)
+        {
+            //parameters.Parameters = BreakAction.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
+        }
+        protected override void ExecuteSync(BlockBehaviorExecutionParameters parameters)
+        {
+            Active = false;
+            if (Broken) BreakAction.ExecuteStart(parameters.Parameters);
+        }
+        protected override void SerializeSync(BitWriter writer, BlockBehaviorExecutionParameters parameters)
+        {
+            if (!Broken) return;
+            parameters.Parameters = BreakAction.SerializeStart(writer, parameters.NpcContext,
+                parameters.BranchContext);
         }
     }
 }
