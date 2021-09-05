@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Nexus.Logging.Attribute;
 using Uchu.Core;
 
 namespace Uchu.World
 {
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public abstract class AsyncEventDictionaryBase<TKey, TAction> where TAction : Delegate
     {
         protected readonly Dictionary<TKey, TAction[]> ActionDictionary = new Dictionary<TKey, TAction[]>();
@@ -34,7 +35,7 @@ namespace Uchu.World
         }
     }
     
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class AsyncEventDictionary<TKey> : AsyncEventDictionaryBase<TKey, Func<Task>>
     {
         public async Task InvokeAsync(TKey key)
@@ -48,7 +49,7 @@ namespace Uchu.World
         }
     }
     
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class AsyncEventDictionary<TKey, T> : AsyncEventDictionaryBase<TKey, Func<T, Task>>
     {
         public async Task InvokeAsync(TKey key, T value)
@@ -62,7 +63,7 @@ namespace Uchu.World
         }
     }
     
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class AsyncEventDictionary<TKey, T, T2> : AsyncEventDictionaryBase<TKey, Func<T, T2, Task>>
     {
         public async Task InvokeAsync(TKey key, T value, T2 value2)
@@ -76,7 +77,7 @@ namespace Uchu.World
         }
     }
     
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class AsyncEventDictionary<TKey, T, T2, T3> : AsyncEventDictionaryBase<TKey, Func<T, T2, T3, Task>>
     {
         public async Task InvokeAsync(TKey key, T value, T2 value2, T3 value3)
@@ -90,7 +91,7 @@ namespace Uchu.World
         }
     }
     
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class AsyncEventDictionary<TKey, T, T2, T3, T4> : AsyncEventDictionaryBase<TKey, Func<T, T2, T3, T4, Task>>
     {
         public async Task InvokeAsync(TKey key, T value, T2 value2, T3 value3, T4 value4)

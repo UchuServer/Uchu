@@ -38,6 +38,8 @@ namespace Uchu.Core.Providers
         public DbSet<TradeTransactionItem> TransactionItems { get; set; }
         
         public DbSet<CharacterFlag> Flags { get; set; }
+
+        public DbSet<ActivityScore> ActivityScores { get; set; }
         
         public async Task EnsureUpdatedAsync()
         {

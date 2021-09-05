@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
+using InfectedRose.Core;
 using InfectedRose.Luz;
 using InfectedRose.Lvl;
 using InfectedRose.Utilities;
@@ -16,6 +17,7 @@ using Sentry;
 using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.Core.Data;
 using Uchu.Physics;
 using Uchu.Python;
 using Uchu.World.Client;
@@ -47,13 +49,14 @@ namespace Uchu.World
         private Timer GameLoop { get; set; }
         
         // Managed objects
-        private List<Object> ManagedObjects { get; }
-        private List<GameObject> SpawnedObjects { get; }
+        private ThreadedCollection<Object> ManagedObjects { get; }
+        private ThreadedCollection<GameObject> SpawnedObjects { get; }
+        public ThreadedCollection<SpawnerNetwork> SpawnerNetworks { get; }
         
         // Macro properties
-        public Object[] Objects => ManagedObjects.ToArray();
-        public GameObject[] GameObjects => Objects.OfType<GameObject>().ToArray();
-        public Player[] Players => Objects.OfType<Player>().ToArray();
+        public Object[] Objects => this.ManagedObjects.GetArray((list) => list.ToArray());
+        public GameObject[] GameObjects => this.ManagedObjects.GetArray((list) => list.OfType<GameObject>().ToArray());
+        public Player[] Players => this.ManagedObjects.GetArray((list) => list.OfType<Player>().ToArray());
         public GameObject[] Spawned => SpawnedObjects.ToArray();
         public ZoneId ZoneId { get; private set; }
         public Vector3 SpawnPosition { get; private set; }
@@ -76,7 +79,7 @@ namespace Uchu.World
         public float DeltaTime { get; private set; }
         public ScriptManager ScriptManager { get; }
         public ManagedScriptEngine ManagedScriptEngine { get; }
-        private List<UpdatedObject> UpdatedObjects { get; }
+        private ThreadedCollection<UpdatedObject> UpdatedObjects { get; }
         private List<ScheduledAction> NewScheduledActions { get; }
         private List<ScheduledAction> ScheduledActions { get; }
         
@@ -110,11 +113,12 @@ namespace Uchu.World
 
             ScriptManager = new ScriptManager(this);
             ManagedScriptEngine = new ManagedScriptEngine();
-            UpdatedObjects = new List<UpdatedObject>();
+            UpdatedObjects = new ThreadedCollection<UpdatedObject>();
             ScheduledActions = new List<ScheduledAction>();
             NewScheduledActions = new List<ScheduledAction>();
-            ManagedObjects = new List<Object>();
-            SpawnedObjects = new List<GameObject>();
+            ManagedObjects = new ThreadedCollection<Object>();
+            SpawnedObjects = new ThreadedCollection<GameObject>();
+            SpawnerNetworks = new ThreadedCollection<SpawnerNetwork>();
             Simulation = new PhysicsSimulation();
 
             Listen(OnDestroyed,() => { _running = false; });
@@ -210,8 +214,15 @@ namespace Uchu.World
             GC.Collect();
             
             // Spawns all the NPCs in the area
+            var zoneControlLot = ClientCache.Find<ZoneTable>(this.ZoneId.Id).ZoneControlTemplate ??= 2365;
+            var zoneControlSettings = new LegoDataDictionary();
             foreach (var levelObject in objects)
             {
+                if (levelObject.Lot == zoneControlLot)
+                {
+                    zoneControlSettings = levelObject.LegoInfo;
+                    continue;
+                }
                 if (levelObject.LegoInfo.TryGetValue("trigger_id", out var trigger))
                 {
                     Logger.Debug($"Trigger: {trigger}");
@@ -230,17 +241,13 @@ namespace Uchu.World
                 
             }
 
-            var ZoneControlLot = ClientCache.Find<ZoneTable>(this.ZoneId.Id).ZoneControlTemplate;
-
-            int Lot = ZoneControlLot ??= 2365;
-
-            var ZoneObject = GameObject.Instantiate(this, lot: Lot, objectId: (ObjectId) 70368744177662);
-
-            Start(ZoneObject);
-
-            Objects.Append(ZoneObject);
-
-            ZoneControlObject = ZoneObject;
+            var zoneObject = GameObject.Instantiate(this, lot: zoneControlLot, objectId: (ObjectId) 70368744177662);
+            zoneObject.Settings = zoneControlSettings;
+            zoneObject.InitializeComponents();
+            Start(zoneObject);
+            
+            Objects.Append(zoneObject);
+            ZoneControlObject = zoneObject;
 
             Logger.Information($"Loaded {GameObjects.Length}/{objects.Count} for {ZoneId}");
             LoadSpawnPaths();
@@ -312,9 +319,10 @@ namespace Uchu.World
 
             if (network.ActivateOnLoad)
             {
-                Start(network);
+                network.Activate();
                 network.SpawnAll();
             }
+            this.SpawnerNetworks.Add(network);
         }
 
         #endregion
@@ -448,7 +456,7 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
-                if (!recipient.Perspective.View(gameObject)) continue;
+                if (gameObject != gameObject.Zone.ZoneControlObject && !recipient.Perspective.View(gameObject)) continue;
                 if (!recipient.Perspective.Reveal(gameObject, out var id)) continue;
                 if (id == 0) return;
 
@@ -464,7 +472,7 @@ namespace Uchu.World
         {
             foreach (var recipient in recipients)
             {
-                if (!recipient.Perspective.View(gameObject)) continue;
+                if (gameObject != gameObject.Zone.ZoneControlObject && !recipient.Perspective.View(gameObject)) continue;
                 if (!recipient.Perspective.TryGetNetworkId(gameObject, out var id)) continue;
 
                 recipient.Connection.Send(new SerializePacket()

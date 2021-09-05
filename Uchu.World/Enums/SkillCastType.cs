@@ -5,7 +5,8 @@ namespace Uchu.World
         Default = -1,
         OnUse,
         OnEquip,
-        OnConsumed = 3,
-        OnSpawn = 4
+        OnCollect,
+        OnConsumed,
+        OnSpawn
     }
 }

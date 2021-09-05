@@ -106,6 +106,8 @@ namespace Uchu.World
 
         public Event OnRailMovementReady { get; }
 
+        public Event<Player, MessageBoxRespondMessage> OnMessageBoxRespond { get; }
+
         #endregion
         
         #region Macro
@@ -138,6 +140,8 @@ namespace Uchu.World
 
             OnCancelRailMovement = new Event();
 
+            OnMessageBoxRespond = new Event<Player, MessageBoxRespondMessage>();
+
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);
@@ -145,14 +149,20 @@ namespace Uchu.World
                 // Load the script for the object.
                 // Special case for when custom_script_server but there is no script component.
                 if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
-                    this.GetComponent<LuaScriptComponent>() != default) return;
+                    this.GetComponent<LuaScriptComponent>() != default || this.GetComponent<SpawnerComponent>() != default) return;
                 var scriptName = ((string) scriptNameValue).ToLower();
                 Logger.Debug($"{this} -> {scriptNameValue}");
+                var scriptLoaded = false;
                 foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
                     this.Zone.LoadObjectScript(this, objectScriptType);
+                    scriptLoaded = true;
                     break;
+                }
+                //if it attempted to load a script that isn't here yet, log it
+                if (!scriptLoaded && scriptName != ""){
+                    Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
                 }
             });
 
@@ -251,6 +261,56 @@ namespace Uchu.World
         public T AddComponent<T>() where T : Component
         {
             return AddComponent(typeof(T)) as T;
+        }
+        
+        /// <summary>
+        /// Initializes the components to the object.
+        /// </summary>
+        public void InitializeComponents()
+        {
+            // ReSharper disable PossibleInvalidOperationException
+            // Collect all the components on this object.
+            var registryComponents = ClientCache.FindAll<ComponentsRegistry>(this.Lot);
+
+            // Select all the none networked components on this object.
+            var componentEntries = registryComponents.Where(o =>
+                o.Componenttype != null && !ReplicaComponent.ComponentOrder.Contains(o.Componenttype.Value)
+            ).ToArray();
+
+            // Add components from the entries
+            foreach (var component in componentEntries)
+            {
+                var componentType = ReplicaComponent.GetReplica((ComponentId) (int) component.Componenttype);
+                if (componentType != default) this.AddComponent(componentType);
+            }
+
+            // Select all the networked components on this object
+            registryComponents = registryComponents.Where(
+                c => ReplicaComponent.ComponentOrder.Contains(c.Componenttype.Value)
+            ).ToArray();
+
+            // Sort components
+            Array.Sort(registryComponents, (c1, c2) =>
+                ReplicaComponent.ComponentOrder.IndexOf((int) c1.Componenttype)
+                    .CompareTo(ReplicaComponent.ComponentOrder.IndexOf((int) c2.Componenttype))
+            );
+
+            foreach (var component in registryComponents)
+            {
+                var componentType = ReplicaComponent.GetReplica((ComponentId) component.Componenttype);
+                if (componentType == null) Logger.Warning($"No component of ID {(ComponentId) component.Componenttype}");
+                else this.AddComponent(componentType);
+            }
+
+            // Check if this object is a trigger
+            if (this.Settings.ContainsKey("trigger_id"))
+            {
+                this.AddComponent<TriggerComponent>();
+            }
+            if (this.Settings.ContainsKey("primitiveModelType"))
+            {
+                this.AddComponent<PrimitiveModelComponent>();
+            }
         }
 
         public Component GetComponent(Type type)
@@ -453,21 +513,13 @@ namespace Uchu.World
         public static GameObject Instantiate(Type type, LevelObjectTemplate levelObject, Object parent,
             SpawnerComponent spawner = default, GameObject author = default)
         {
-            // ReSharper disable PossibleInvalidOperationException
-
-            //
             // Check if spawner
-            //
-
             if (levelObject.LegoInfo.TryGetValue("spawntemplate", out _) && spawner == default)
                 return InstancingUtilities.Spawner(levelObject, parent);
 
             var name = levelObject.LegoInfo.TryGetValue("npcName", out var npcName) ? (string) npcName : "";
 
-            //
             // Create GameObject
-            //
-
             var id = levelObject.ObjectId == ObjectId.Invalid
                 ? ObjectId.FromFlags(ObjectIdFlags.Spawned | ObjectIdFlags.Client)
                 : (ObjectId) levelObject.ObjectId;
@@ -493,68 +545,8 @@ namespace Uchu.World
                 authoredGameObject.Author = author;
             }
 
-            //
-            // Collect all the components on this object
-            //
-
-            var registryComponents = ClientCache.FindAll<ComponentsRegistry>(levelObject.Lot);
-
-            //
-            // Select all the none networked components on this object
-            //
-
-            var componentEntries = registryComponents.Where(o =>
-                o.Componenttype != null && !ReplicaComponent.ComponentOrder.Contains(o.Componenttype.Value)
-            ).ToArray();
-
-            foreach (var component in componentEntries)
-            {
-                //
-                // Add components from the entries
-                //
-
-                var componentType = ReplicaComponent.GetReplica((ComponentId) (int) component.Componenttype);
-
-                if (componentType != default) instance.AddComponent(componentType);
-            }
-
-            //
-            // Select all the networked components on this object
-            //
-
-            registryComponents = registryComponents.Where(
-                c => ReplicaComponent.ComponentOrder.Contains(c.Componenttype.Value)
-            ).ToArray();
-
-            // Sort components
-
-            Array.Sort(registryComponents, (c1, c2) =>
-                ReplicaComponent.ComponentOrder.IndexOf((int) c1.Componenttype)
-                    .CompareTo(ReplicaComponent.ComponentOrder.IndexOf((int) c2.Componenttype))
-            );
-
-            foreach (var component in registryComponents)
-            {
-                var componentType = ReplicaComponent.GetReplica((ComponentId) component.Componenttype);
-
-                if (componentType == null) Logger.Warning($"No component of ID {(ComponentId) component.Componenttype}");
-                else instance.AddComponent(componentType);
-            }
-
-            //
-            // Check if this object is a trigger
-            //
-
-            if (levelObject.LegoInfo.ContainsKey("trigger_id"))
-            {
-                instance.AddComponent<TriggerComponent>();
-            }
-
-            if (levelObject.LegoInfo.ContainsKey("primitiveModelType"))
-            {
-                instance.AddComponent<PrimitiveModelComponent>();
-            }
-
+            // Add the components.
+            instance.InitializeComponents();
             return instance;
         }
 

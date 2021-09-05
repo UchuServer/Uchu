@@ -12,8 +12,6 @@ namespace Uchu.World.Systems.Missions
 
         public override MissionTaskType Type => MissionTaskType.UseConsumable;
 
-        public override bool Completed => Progress.Contains(Target);
-
         public async Task ReportProgress(int lot)
         {
             if (Target != lot)

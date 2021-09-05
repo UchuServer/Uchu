@@ -77,8 +77,6 @@ namespace Uchu.World.Systems.Match
             // Load the match data.
             var matchData = ClientCache.Find<Activities>(type);
             var matchZoneId =  matchData.InstanceMapID ?? 0;
-            var matchCurrencyLot = matchData.OptionalCostLOT;
-            var matchCurrencyCount = matchData.OptionalCostCount;
             _waitTime = matchData.WaitTime ?? 60000;
             _playWaitTime = matchData.StartDelay ?? 5000;
             _requiredPlayers = (matchData.MinTeams ?? 1) * (matchData.MinTeamSize ?? 1);
@@ -89,17 +87,7 @@ namespace Uchu.World.Systems.Match
             {
                 // Remove the round from the provisioner.
                 TimeEnded.Invoke();
-                
-                // Take the optional currency from the players.
-                if (matchCurrencyLot.HasValue && matchCurrencyCount.HasValue)
-                {
-                    foreach (var player in _players)
-                    {
-                        if (!player.TryGetComponent<InventoryManagerComponent>(out var inventoryManager)) continue;
-                        await inventoryManager.RemoveLotAsync(matchCurrencyLot.Value,(uint) matchCurrencyCount.Value);
-                    }
-                }
-                
+
                 // Allocate the new zone.
                 InstanceInfo allocatedInstance;
                 try
@@ -235,7 +223,7 @@ namespace Uchu.World.Systems.Match
                     Data = new LegoDataDictionary
                     {
                         {"player", player.Id, 9},
-                        {"nplayerName", player.Name, 0},
+                        {"playerName", player.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });
@@ -245,7 +233,7 @@ namespace Uchu.World.Systems.Match
                     Data = new LegoDataDictionary
                     {
                         {"player", player.Id, 9},
-                        {"nplayerName", player.Name, 0},
+                        {"playerName", player.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });

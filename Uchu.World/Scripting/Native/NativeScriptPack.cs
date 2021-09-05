@@ -59,11 +59,12 @@ namespace Uchu.World.Scripting.Native
             {
                 // Ignore non-object scripts.
                 if (!type.IsAssignableTo(typeof(ObjectScript))) continue;
-                var scriptName = type.GetCustomAttribute<ScriptName>();
-                if (scriptName == null) continue;
-                
-                // Add the object script.
-                this.ObjectScriptTypes.Add(scriptName.Name.ToLower(), type);
+                var scriptNames = type.GetCustomAttributes<ScriptName>();
+                foreach (var scriptName in scriptNames)
+                {
+                    // Add the object script.
+                    this.ObjectScriptTypes.Add(scriptName.Name.ToLower(), type);
+                }
             }
         }
 

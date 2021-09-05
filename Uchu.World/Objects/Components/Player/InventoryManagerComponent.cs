@@ -59,6 +59,13 @@ namespace Uchu.World
         #endregion properties
 
         #region constructors
+
+        /// <summary>
+        /// Whether the inventory has loaded or not. If it hasn't loaded,
+        /// it will not be saved.
+        /// </summary>
+        private bool _loaded = false;
+        
         protected InventoryManagerComponent()
         {
             Listen(OnStart, async () =>
@@ -97,6 +104,7 @@ namespace Uchu.World
                 if (this[InventoryType.Hidden] is {} hiddenInventory)
                     await hiddenInventory.LoadItems(playerCharacter.Items.Where(i => i.ParentId != ObjectId.Invalid 
                         && (InventoryType) i.InventoryType == InventoryType.Hidden));
+                this._loaded = true;
             });
 
             Listen(OnDestroyed, () =>
@@ -114,6 +122,7 @@ namespace Uchu.World
 
         public async Task SaveAsync(UchuContext context)
         {
+            if (!this._loaded) return;
             var itemsToSave = Items;
 
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
@@ -354,6 +363,9 @@ namespace Uchu.World
             if (stackSize == default) 
                 stackSize = int.MaxValue;
             
+            if (settings != null && settings.Count > 0)
+                stackSize = 1;
+
             var totalAdded = 0L;
             var totalToAdd = count;
 

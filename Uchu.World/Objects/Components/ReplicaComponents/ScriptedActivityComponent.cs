@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
-using Uchu.Core.Resources;
 using Uchu.World.Client;
 
 namespace Uchu.World
@@ -17,7 +16,7 @@ namespace Uchu.World
         
         public readonly List<GameObject> Participants = new List<GameObject>();
 
-        public float[] Parameters { get; set; } = new float[10];
+        public List<float[]> Parameters { get; set; } = new List<float[]>();
 
         public override ComponentId Id => ComponentId.ScriptedActivityComponent;
 
@@ -25,6 +24,9 @@ namespace Uchu.World
         
         public ActivityRewards[] Rewards { get; private set; }
 
+        /// <summary>
+        /// Creates the scripted activity component.
+        /// </summary>
         protected ScriptedActivityComponent()
         {
             _random = new Random();
@@ -36,81 +38,197 @@ namespace Uchu.World
                     return;
                 }
 
+                // Get the activity info.
                 var activityId = (int) id;
                 ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
-
                 if (ActivityInfo == default)
                 {
                     Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
                     return;
                 }
 
-                Rewards = ClientCache.FindAll<ActivityRewards>(activityId);
+                // Get and sort the activities.
+                Rewards = ClientCache.FindAll<ActivityRewards>(activityId).ToSortedList((a, b) =>
+                {
+                    if (a.ChallengeRating != b.ChallengeRating) return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
+                    return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
+                }).ToArray();
             });
         }
 
-        public async Task DropLootAsync(Player lootOwner)
+        /// <summary>
+        /// Drops loot for the activity.
+        /// </summary>
+        /// <param name="lootOwner">Owner of the loot.</param>
+        /// <param name="autoAddCurrency">Whether to automatically add currency to the player instead of dropping.</param>
+        /// <param name="autoAddItems">Whether to automatically add items to the player instead of dropping.</param>
+        public async Task DropLootAsync(Player lootOwner, bool autoAddCurrency = false, bool autoAddItems = false)
         {
-            var matrices = Rewards.SelectMany(r =>
-                ClientCache.FindAll<Core.Client.LootMatrix>(r.LootMatrixIndex)).ToArray();
-
-            foreach (var matrix in matrices)
+            // Get the highest activity reward.
+            ActivityRewards reward = null;
+            var playerScore = this.GetParameter(lootOwner, 1);
+            foreach (var activityRewards in this.Rewards)
             {
-                var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
-
-                var items = ClientCache.FindAll<LootTable>(matrix.LootTableIndex).ToList();
-                for (var i = 0; i < count; i++)
+                if (playerScore < activityRewards.ActivityRating) continue;
+                if (reward != default && reward.ActivityRating > activityRewards.ActivityRating) continue;
+                reward = activityRewards;
+            }
+            if (reward == default) return;
+            
+            // Award the items.
+            if (reward.LootMatrixIndex.HasValue)
+            {
+                var matrices = ClientCache.FindAll<Core.Client.LootMatrix>(reward.LootMatrixIndex);
+                foreach (var matrix in matrices)
                 {
-                    if (items.Count == default) break;
-                    
-                    var proc = _random.NextDouble();
+                    // Determine the count.
+                    var count = _random.Next(matrix.MinToDrop ?? 0, matrix.MaxToDrop ?? 0);
 
-                    if (!(proc <= matrix.Percent)) continue;
-
-                    var item = items[_random.Next(0, items.Count)];
-                    items.Remove(item);
-
-                    if (item.Itemid == null) continue;
-                    
-                    Lot lot = item.Itemid ?? 0;
-                    var character = lootOwner.GetComponent<CharacterComponent>();
-                    
-                    if (lot == Lot.FactionTokenProxy)
+                    // Start adding the items.
+                    var itemsToAdd = new Dictionary<Lot, uint>();
+                    var items = ClientCache.FindAll<LootTable>(matrix.LootTableIndex).ToList();
+                    for (var i = 0; i < count; i++)
                     {
-                        if (character.IsAssembly) lot = Lot.AssemblyFactionToken;
-                        if (character.IsParadox) lot = Lot.ParadoxFactionToken;
-                        if (character.IsSentinel) lot = Lot.SentinelFactionToken;
-                        if (character.IsVentureLeague) lot = Lot.VentureFactionToken;
-                        if (item.Itemid == lot) return;
+                        if (items.Count == default) break;
+                    
+                        // Return if the chance was not satisfied.
+                        var proc = _random.NextDouble();
+                        if (!(proc <= matrix.Percent)) continue;
+
+                        // Get the item to add.
+                        var item = items[_random.Next(0, items.Count)];
+                        if (item.Itemid == null) continue;
+                    
+                        // Convert the LOT if it is a faction token.
+                        Lot lot = item.Itemid ?? 0;
+                        var character = lootOwner.GetComponent<CharacterComponent>();
+                        if (lot == Lot.FactionTokenProxy)
+                        {
+                            if (character.IsAssembly) lot = Lot.AssemblyFactionToken;
+                            if (character.IsParadox) lot = Lot.ParadoxFactionToken;
+                            if (character.IsSentinel) lot = Lot.SentinelFactionToken;
+                            if (character.IsVentureLeague) lot = Lot.VentureFactionToken;
+                            if (item.Itemid == lot) continue;
+                        }
+                    
+                        // Either drop or prepare to add the item.
+                        if (!autoAddItems)
+                        {
+                            var drop = InstancingUtilities.InstantiateLoot(lot, lootOwner, GameObject, Transform.Position);
+                            Start(drop);
+                        }
+                        else
+                        {
+                            itemsToAdd[lot] = (itemsToAdd.ContainsKey(lot) ? itemsToAdd[lot] + 1 : 1);
+                        }
                     }
                     
-                    var drop = InstancingUtilities.InstantiateLoot(lot, lootOwner, GameObject, Transform.Position);
-                    
-                    Start(drop);
+                    // Add the items.
+                    var inventory = lootOwner.GetComponent<InventoryManagerComponent>();
+                    foreach (var (lot, total) in itemsToAdd)
+                    {
+                        await inventory.AddLotAsync(lot, total);
+                    }
                 }
             }
-
-            foreach (var reward in Rewards)
+            
+            // Add the coins.
+            if (reward.CurrencyIndex.HasValue)
             {
                 var currencies = ClientCache.FindAll<CurrencyTable>(reward.CurrencyIndex);
                 foreach (var currency in currencies)
                 {
                     if (currency.Npcminlevel > reward.ChallengeRating) continue;
-
                     var coinToDrop = _random.Next(currency.Minvalue ?? 0, currency.Maxvalue ?? 0);
-                    
-                    lootOwner.SendChatMessage("Dropping activity coin!!!");
-                    
-                    InstancingUtilities.InstantiateCurrency(coinToDrop, lootOwner, GameObject, Transform.Position);
+                    if (autoAddCurrency)
+                    {
+                        var character = lootOwner.GetComponent<CharacterComponent>();
+                        character.Currency += coinToDrop;
+                    }
+                    else
+                    {
+                        InstancingUtilities.InstantiateCurrency(coinToDrop, lootOwner, GameObject, Transform.Position);
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Adds a player to the activity.
+        /// </summary>
+        /// <param name="player">Player to add.</param>
+        public void AddPlayer(Player player)
+        {
+            // Add the player.
+            if (this.Participants.Contains(player)) return;
+            this.Participants.Add(player);
+            this.Parameters.Add(new float[10]);
+
+            // Make sure the player will keep receiving updates for this object
+            // even when they're far away while playing the footrace.
+            player.Perspective.RenderDistanceFilter?.AddBypassFilter(this.GameObject);
+
+            // Serialize the object.
+            GameObject.Serialize(this.GameObject);
+        }
+        
+        /// <summary>
+        /// Removes a player from the activity.
+        /// </summary>
+        /// <param name="player">Player to remove.</param>
+        public void RemovePlayer(Player player)
+        {
+            // Remove the player.
+            if (!this.Participants.Contains(player)) return;
+            var index = this.Participants.IndexOf(player);
+            this.Participants.Remove(player);
+            this.Parameters.RemoveAt(index);
+            
+            // Serialize the object.
+            GameObject.Serialize(this.GameObject);
+
+            // Remove the override that was added to ensure the player
+            // receives updates while playing the footrace.
+            player.Perspective.RenderDistanceFilter?.RemoveBypassFilter(this.GameObject);
+        }
+
+        /// <summary>
+        /// Gets a parameter for a player.
+        /// </summary>
+        /// <param name="player">Player to get.</param>
+        /// <param name="index">Index to get.</param>
+        public float GetParameter(Player player, int index)
+        {
+            if (!this.Participants.Contains(player)) return 0;
+            return this.Parameters[this.Participants.IndexOf(player)][index];
+        }
+
+        /// <summary>
+        /// Sets a parameter for a player.
+        /// </summary>
+        /// <param name="player">Player to set.</param>
+        /// <param name="index">Index to set.</param>
+        /// <param name="value">Value to set.</param>
+        public void SetParameter(Player player, int index, float value)
+        {
+            if (!this.Participants.Contains(player)) return;
+            this.Parameters[this.Participants.IndexOf(player)][index] = value;
+            GameObject.Serialize(this.GameObject);
+        }
+
+        /// <summary>
+        /// Writes the Construct information.
+        /// </summary>
+        /// <param name="writer">Writer to write to.</param>
         public override void Construct(BitWriter writer)
         {
             Serialize(writer);
         }
 
+        /// <summary>
+        /// Writes the Serialize information.
+        /// </summary>
+        /// <param name="writer">Writer to write to.</param>
         public override void Serialize(BitWriter writer)
         {
             writer.WriteBit(true);
@@ -120,7 +238,8 @@ namespace Uchu.World
             {
                 writer.Write(contributor);
 
-                foreach (var parameter in Parameters) writer.Write(parameter);
+                foreach (var parameter in Parameters[this.Participants.IndexOf(contributor)])
+                    writer.Write(parameter);
             }
         }
     }

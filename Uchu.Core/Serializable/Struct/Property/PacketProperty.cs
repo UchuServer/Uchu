@@ -31,7 +31,7 @@ namespace Uchu.Core
                         var data = (LegoDataDictionary) o;
                         if (data != null)
                         {
-                            var ldf = data.ToString();
+                            var ldf = data.ToString("\n");
                             writer.Write((uint) ldf.Length);
                             if (ldf.Length > 0)
                             {
@@ -121,21 +121,42 @@ namespace Uchu.Core
             {
                 readerWriterType = readerWriterType.GetElementType();
             }
-            foreach (var (customWriterType, customWriter) in CustomWriters)
+            if (readerWriterType != null)
             {
-                if (customWriterType == readerWriterType || readerWriterType.IsSubclassOf(customWriterType))
+                // Set the writer and reader for types.
+                foreach (var (customWriterType, customWriter) in CustomWriters)
                 {
-                    this._customWriter = customWriter;
+                    if (customWriterType == readerWriterType || readerWriterType.IsSubclassOf(customWriterType))
+                    {
+                        this._customWriter = customWriter;
+                    }
+                }
+                foreach (var (customReaderType, customReader) in CustomReaders)
+                {
+                    if (customReaderType == readerWriterType || readerWriterType.IsSubclassOf(customReaderType))
+                    {
+                        this._customReader = customReader;
+                    }
+                }
+                
+                // Set the writer and reader for structs.
+                if (readerWriterType.IsValueType && readerWriterType.GetCustomAttribute<StructAttribute>() != null)
+                {
+                    var structPacketProperty = new StructPacketProperty(readerWriterType);
+                    this._customWriter = ((writer, o) =>
+                    {
+                        structPacketProperty.Write(o, writer, null);
+                    });
+                    this._customReader = ((reader, context) =>
+                    {
+                        var o = Activator.CreateInstance(readerWriterType);
+                        var writtenProperties = new Dictionary<string, object>();
+                        structPacketProperty.Read(o, reader, writtenProperties, context);
+                        return o;
+                    });
                 }
             }
-            foreach (var (customReaderType, customReader) in CustomReaders)
-            {
-                if (customReaderType == readerWriterType || readerWriterType.IsSubclassOf(customReaderType))
-                {
-                    this._customReader = customReader;
-                }
-            }
-            
+
             // Get the array length type.
             if (property.GetCustomAttribute(typeof(StoreLengthAsAttribute)) is StoreLengthAsAttribute storeLengthAs)
             {

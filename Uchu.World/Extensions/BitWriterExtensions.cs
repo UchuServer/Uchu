@@ -17,8 +17,8 @@ namespace Uchu.World
         {
             using var stream = new MemoryStream();
             using var temp = new BitWriter(stream);
-            
-            Core.BitWriterExtensions.Write(temp, dict);
+
+            dict.Serialize(temp, false);
 
             var buffer = stream.ToArray();
 
