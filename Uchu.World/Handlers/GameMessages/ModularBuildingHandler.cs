@@ -32,9 +32,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void ModelPrefabHandler(StartArrangingWithModelMessage message, Player player)
+        public async Task ModelPrefabHandler(StartArrangingWithModelMessage message, Player player)
         {
-            
+            await player.GetComponent<ModularBuilderComponent>().StartBuildingWithModel(message.Item);
         }
 
         [PacketHandler]

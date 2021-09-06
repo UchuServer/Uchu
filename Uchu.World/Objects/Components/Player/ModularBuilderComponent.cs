@@ -93,6 +93,18 @@ namespace Uchu.World
             });
         }
         
+        public async Task StartBuildingWithModel(Item model) {
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+
+            if (model.Settings.TryGetValue("assemblyPartLOTs", out var list))
+            {
+                await inventory.RemoveItemAsync(model, 1);
+
+                foreach (var part in (LegoDataList) list)
+                    await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
+            }
+        }
+
         public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
