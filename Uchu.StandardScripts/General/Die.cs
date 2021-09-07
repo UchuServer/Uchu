@@ -23,19 +23,16 @@ namespace Uchu.StandardScripts.General
             var length = animation.Animationlength * 1000;
             Zone.Schedule(() => 
             {
-                foreach(var player in Zone.Players)
+                Zone.BroadcastMessage(new DieMessage
                 {
-                    player.Message(new DieMessage
-                    {
-                        Associate = gameObject,
-                        ClientDeath = true,
-                        SpawnLoot = false,
-                        DeathType = "",
-                        KillType = KillType.Silent,
-                        Killer = gameObject,
-                        LootOwner = default
-                    });
-                }
+                    Associate = gameObject,
+                    ClientDeath = true,
+                    SpawnLoot = false,
+                    DeathType = "",
+                    KillType = KillType.Silent,
+                    Killer = gameObject,
+                    LootOwner = default
+                });
                 World.Object.Destroy(gameObject);
                 //should we add a RequestDie method? this seems a bit excessive to do every time
             }, 10000);
