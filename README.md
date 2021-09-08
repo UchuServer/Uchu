@@ -123,5 +123,5 @@ If you encounter issues with the installation process, take a moment to re-read 
 Uchu supports Python scripting, which allows you to make minigames and other server additions with Python. See [this document](Uchu.Python/SCRIPTING.md) to get started.
 
 ## Contributing
-Contributions are always welcome! If you encounter an issue that isn't logged on the [issue board](https://github.com/UchuServer/Uchu/issues) yet, feel free to add it. And, of course, you're more than welcome to open a pull request to fix it :)
-If you are interested in contributing code to Uchu,  feel free to join the [community Discord server](https://discord.gg/njjfQ4W6qv) and contact one of the developers to get an invite to the development-focused Discord server.
+Contributions are always welcome! If you encounter an issue that isn't logged on the [issue board](https://github.com/UchuServer/Uchu/issues) yet, feel free to add it. And, of course, you're more than welcome to open a pull request to fix it :)  
+If you are interested in contributing code to Uchu, feel free to join the [community Discord server](https://discord.gg/njjfQ4W6qv) and contact one of the developers to get an invite to the development-focused Discord server.
