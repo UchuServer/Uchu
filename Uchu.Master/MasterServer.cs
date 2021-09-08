@@ -321,17 +321,23 @@ namespace Uchu.Master
             // Use config.xml if it exists
             if (File.Exists(configFilename))
             {
-                LogQueue.Config = Config = UchuConfiguration.Load(configFilename);
+                Config = UchuConfiguration.Load(configFilename);
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, use config.default.xml if it exists
             else if (File.Exists(legacySecondConfigName))
             {
-                LogQueue.Config = Config = UchuConfiguration.Load(legacySecondConfigName);
+                Config = UchuConfiguration.Load(legacySecondConfigName);
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, generate a new config file
             else
             {
-                LogQueue.Config = Config = new UchuConfiguration();
+                Config = new UchuConfiguration();
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
 
                 // Add default value for script DLL source
                 Config.DllSource.ScriptDllSource.Add("../../../../Uchu.StandardScripts/bin/Debug/net5.0/Uchu.StandardScripts.dll");

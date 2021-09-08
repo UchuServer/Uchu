@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Nexus.Logging.Attribute;
 using Sentry;
 using Uchu.Core;
 
 namespace Uchu.World
 {
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public abstract class EventBase
     {
         public abstract void Clear();
@@ -14,7 +15,7 @@ namespace Uchu.World
         public abstract void RemoveListener(Delegate @delegate);
     }
 
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public abstract class EventBase<T, T2> : EventBase where T : Delegate where T2 : Delegate
     {
         protected Delegate[] Actions = new Delegate[0];
@@ -57,7 +58,7 @@ namespace Uchu.World
         }
     }
 
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class Event : EventBase<Action, Func<Task>>
     {
         public void Invoke()
@@ -123,7 +124,7 @@ namespace Uchu.World
         }
     }
 
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class Event<T> : EventBase<Action<T>, Func<T, Task>>
     {
         public void Invoke(T value)
@@ -189,7 +190,7 @@ namespace Uchu.World
         }
     }
 
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class Event<T, T2> : EventBase<Action<T, T2>, Func<T, T2, Task>>
     {
         public void Invoke(T value, T2 value2)
@@ -255,7 +256,7 @@ namespace Uchu.World
         }
     }
 
-    [LoggerIgnore]
+    [LogTraceIgnore]
     public class Event<T, T2, T3> : EventBase<Action<T, T2, T3>, Func<T, T2, T3, Task>>
     {
         public void Invoke(T value, T2 value2, T3 value3)

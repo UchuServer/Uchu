@@ -4,3 +4,6 @@
 [submodule "InfectedRose"]
 	path = InfectedRose
 	url = https://github.com/Wincent01/InfectedRose.git
+[submodule "NexusLogging"]
+	path = NexusLogging
+	url = https://github.com/TheNexusAvenger/Nexus-Logging.git
