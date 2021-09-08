@@ -57,13 +57,12 @@ Find the `.zip` for your operating system on [this page](https://github.com/TheN
 
 Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
 
-
 ### Option B: Manual installation
 You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
 
 After you've extracted the client, you will need to install a mod to be able to use it with the Uchu server. This mod replaces the original, outdated networking protocol used by the game. Download `mod.zip` from [this page](https://github.com/lcdr/raknet_shim_dll/releases) and extract it in your LU client folder. The result should be that a folder called `mods`, a file called `dinput8.dll` and `legouniverse.exe` are all in the same folder.
 
-If you are on Linux or macOS, you will need [Wine](https://winehq.org) to launch the client. You need to explicitly tell Wine to load the modloader by launching it using `WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe`.
+If you are on Linux or macOS, you will need [Wine](https://winehq.org) to launch the client (macOS 10.15 and later: use [this version](https://github.com/Gcenx/homebrew-wine), which has the 32-bit support you need for LU). You need to explicitly tell Wine to load the modloader by launching it using `WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe`.
 
 ## Setting up a server
 
