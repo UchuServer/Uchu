@@ -18,44 +18,21 @@ namespace Uchu.StandardScripts.GnarledForest
         {
             if (gameObject.TryGetComponent<QuickBuildComponent>(out var quickBuild) && gameObject.Settings.TryGetValue("Wall", out var wallObject) && wallObject is string wall)
             {
-                GameObject[] pirateSpawners = default;
-                GameObject[] captainSpawners = default;
+                SpawnerNetwork pirateSpawner = GetSpawnerByName($"Jail0{wall}");
+                SpawnerNetwork captainSpawner = GetSpawnerByName($"JailCaptain0{wall}");
                 Listen(quickBuild.OnStateChange, (state) =>
                 {
-                    if (pirateSpawners == default || captainSpawners == default)
-                    {
-                        //prevent zone freeze when player loads in an area where this script is present
-                        pirateSpawners = Zone.GameObjects.Where(i => i.Name == $"Jail0{wall}" && i is SpawnerNetwork).ToArray();
-                        captainSpawners = Zone.GameObjects.Where(i => i.Name == $"JailCaptain0{wall}" && i is SpawnerNetwork).ToArray();
-                    }
                     if (state == RebuildState.Completed)
                     {
-                        Console.WriteLine("rebuilt");
-                        foreach (var pirate in pirateSpawners)
-                        {
-                            if (pirate is SpawnerNetwork network) network.Deactivate();
-                        }
-                        foreach (var captain in captainSpawners)
-                        {
-                            if (captain is SpawnerNetwork network) network.Deactivate();
-                        }
+                        pirateSpawner.Deactivate();
+                        captainSpawner.Deactivate();
                     }
                     else if (state == RebuildState.Resetting)
                     {
-                        foreach (var pirate in pirateSpawners)
-                        {
-                            if (pirate is SpawnerNetwork network){
-                                network.Reset();
-                                network.Activate();
-                            }
-                        }
-                        foreach (var captain in captainSpawners)
-                        {
-                            if (captain is SpawnerNetwork network){
-                                network.Reset();
-                                network.Activate();
-                            }
-                        }
+                        pirateSpawner.Reset();
+                        pirateSpawner.Activate();
+                        captainSpawner.Reset();
+                        captainSpawner.Activate();
                     }
                 });
             }
