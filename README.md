@@ -98,11 +98,11 @@ The first time you run the server, a configuration file called `config.xml` will
 **If you have installed your client with Nexus LU Launcher,** Uchu will automatically detect its resources location, and no manual setup is required. The server will start, and you can continue to [Getting ready to play](#getting-ready-to-play).
 
 **If you have manually installed your client,** or Uchu can't find the NLUL client's resource folder, open `config.xml` with a text editor. Find this text:
-```
+```xml
 <GameResourceFolder>path to res folder</GameResourceFolder>
 ```
 and insert the path to your LEGO® Universe client's `res` folder. For example, on Windows this could be:
-```
+```xml
 <GameResourceFolder>C:\Users\Bob\LEGO Universe\res</GameResourceFolder>
 ```
 
