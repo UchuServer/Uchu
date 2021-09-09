@@ -57,6 +57,8 @@ Find the `.zip` for your operating system on [this page](https://github.com/TheN
 
 Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
 
+_If you're using macOS version 10.14 (Mojave) or older, you might encounter an issue with launching the client through NLUL. If this is the case, you can try installing [Wine](https://winehq.org/) manually and running the client with that. If you still can't get it to work, feel free to write us on [Discord](#support)._
+
 ### Option B: Manual installation
 You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
 
