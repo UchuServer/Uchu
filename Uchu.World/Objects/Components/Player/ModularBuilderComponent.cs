@@ -28,7 +28,7 @@ namespace Uchu.World
 
                 Listen(inventory.OnEquipped, item =>
                 {
-                    if (item.ItemType == ItemType.LootModel)
+                    if (item.ItemType == ItemType.LootModel && !IsBuilding)
                     {
                         StartBuildingWithItem(item);
                     }
@@ -133,19 +133,12 @@ namespace Uchu.World
 
         public async Task Pickup(Lot lot)
         {
+            if (!(GameObject is Player player)) return;
+
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-            
             var item = inventory[InventoryType.TemporaryModels].Items.First(i => i.Lot == lot);
 
             await item.EquipAsync(true);
-
-            /*
-            As<Player>().Message(new StartArrangingWithItemMessage
-            {
-                Associate = GameObject,
-                FirstTime = false
-            });
-            */
         }
 
         public async Task ConfirmFinish()
