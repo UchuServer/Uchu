@@ -16,7 +16,7 @@ namespace Uchu.World.Systems.Missions
 
         public async Task ReportProgress(GameObject gameObject, int emote)
         {
-            if (gameObject == null || gameObject.Lot != Target || Parameters.FirstOrDefault() != emote)
+            if (gameObject == null || gameObject.Lot != Target || !Parameters.Contains(emote))
                 return;
 
             AddProgress(emote);
