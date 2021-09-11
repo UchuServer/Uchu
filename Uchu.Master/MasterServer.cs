@@ -339,8 +339,14 @@ namespace Uchu.Master
                 Logger.SetConfiguration(Config);
                 Logger.SetServerTypeInformation("Master");
 
-                // Add default value for script DLL source
-                Config.DllSource.ScriptDllSource.Add("../../../../Uchu.StandardScripts/bin/Debug/net5.0/Uchu.StandardScripts.dll");
+                // Add default value for instance DLL source and script DLL source..
+                if (File.Exists("Uchu.Instance.dll"))
+                {
+                    Config.DllSource.Instance = "Uchu.Instance.dll";
+                }
+                Config.DllSource.ScriptDllSource.Add(File.Exists("Uchu.StandardScripts.dll")
+                    ? "Uchu.StandardScripts.dll"
+                    : "../../../../Uchu.StandardScripts/bin/Debug/net5.0/Uchu.StandardScripts.dll");
 
                 // Write config file
                 Config.Save(configFilename);
