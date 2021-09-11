@@ -129,5 +129,39 @@ namespace Uchu.Physics.Test
             Assert.IsFalse(PhysicsSimulation.BoxBoxCollision(smallBox5, box7));
             Assert.IsTrue(PhysicsSimulation.BoxBoxCollision(box9, box8Rotated));
         }
+
+        [Test]
+        public void CapsuleSphereCollision()
+        {
+            // r=1.5 at (0,8,0)
+            var sphere = SphereBody.Create(_simulation,
+                new Vector3(0, 8, 0),
+                1.5f);
+
+            // pointing straight up, should hit sphere
+            var capsule1 = CapsuleBody.Create(this._simulation,
+                new Vector3(0, 0, 0),
+                Quaternion.Identity,
+                1f,
+                6f);
+
+            // rotated 45deg, should miss sphere
+            var capsule2 = CapsuleBody.Create(this._simulation,
+                new Vector3(0, 0, 0),
+                Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float) (0.125 * Math.Tau)),
+                1f,
+                6f);
+
+            // floating, rotated 90deg, should hit sphere
+            var capsule3 = CapsuleBody.Create(this._simulation,
+                new Vector3(8, 8, 0),
+                Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float) (0.25 * Math.Tau)),
+                1f,
+                6f);
+
+            Assert.IsTrue(PhysicsSimulation.CapsuleSphereCollision(capsule1, sphere));
+            Assert.IsFalse(PhysicsSimulation.CapsuleSphereCollision(capsule2, sphere));
+            Assert.IsTrue(PhysicsSimulation.CapsuleSphereCollision(capsule3, sphere));
+        }
     }
 }
