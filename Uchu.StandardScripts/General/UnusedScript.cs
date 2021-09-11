@@ -7,6 +7,8 @@ namespace Uchu.StandardScripts.General
     [ScriptName("l_qb_spawner.lua")]
     //already implemented by checking if an object has the POI tag on every collision
     [ScriptName("l_poi_mission.lua")]
+    //function done by LaunchpadEvent.cs
+    [ScriptName("l_ag_zone_player.lua")]
     public class UnusedScript : ObjectScript
     {
         /// <summary>
