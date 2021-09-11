@@ -33,23 +33,16 @@ namespace Uchu.World
 
                 // Set the server script name.
                 if (GameObject.Settings.TryGetValue("custom_script_server", out var serverScriptOverride) && (string) serverScriptOverride != "")
-                {
                     this.ScriptName = (string) serverScriptOverride;
-                }
                 else
-                {
                     this.ScriptName = script.Scriptname;
-                }
-                
+
                 // Set the client script name.
                 if (GameObject.Settings.TryGetValue("custom_script_client", out var clientScriptOverride) && (string) clientScriptOverride != "")
-                {
                     this.ClientScriptName = (string) clientScriptOverride;
-                }
                 else
-                {
                     this.ClientScriptName = script.Scriptname;
-                }
+
                 Logger.Debug($"{GameObject} -> {this.ScriptName}, {this.ClientScriptName}");
                 
                 // Start the object script.

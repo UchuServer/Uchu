@@ -147,13 +147,10 @@ namespace Uchu.World
                 foreach (var component in Components.ToArray()) Start(component);
                 
                 // Load the script for the object.
-                // Special case for when custom_script_server or custom_script_client but there is no script component.
-                var hasCustomServerScript = this.Settings.TryGetValue("custom_script_server", out var serverScriptNameValue);
-                //var hasCustomClientScript = this.Settings.TryGetValue("custom_script_client", out var clientScriptNameValue);
+                // Special case for when custom_script_server but there is no script component.
+                var hasCustomServerScript = this.Settings.TryGetValue("custom_script_server", out _);
                 if (hasCustomServerScript && this.GetComponent<LuaScriptComponent>() == default && this.GetComponent<SpawnerComponent>() == default)
-                {
                     this.Zone.LoadScriptForObject(this);
-                }
             });
 
             Listen(OnDestroyed, () =>

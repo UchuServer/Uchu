@@ -156,27 +156,20 @@ namespace Uchu.World
             // Get the script names to try to load.
             var scriptNames = new List<string>();
             var scriptComponent = gameObject.GetComponent<LuaScriptComponent>();
+
             if (gameObject.Settings.TryGetValue("custom_script_server", out var serverScriptOverride) &&
                 (string) serverScriptOverride != "")
             {
                 scriptNames.Add(((string) serverScriptOverride).ToLower());
             }
-            if (scriptComponent?.ScriptName != null && scriptComponent.ScriptName != "" && !scriptNames.Contains(scriptComponent.ScriptName.ToLower()))
+
+            if (!string.IsNullOrWhiteSpace(scriptComponent?.ScriptName) &&
+                !scriptNames.Contains(scriptComponent.ScriptName.ToLower()))
             {
                 scriptNames.Add(scriptComponent.ScriptName.ToLower());
             }
-            /*
-            if (gameObject.Settings.TryGetValue("custom_script_client", out var clientScriptOverride) && (string) clientScriptOverride != "" && !scriptNames.Contains(((string) clientScriptOverride).ToLower()))
-            {
-                scriptNames.Add(((string) clientScriptOverride).ToLower());
-            }
-            if (scriptComponent?.ClientScriptName != null && scriptComponent.ClientScriptName != "" && !scriptNames.Contains(scriptComponent.ClientScriptName.ToLower()))
-            {
-                scriptNames.Add(scriptComponent.ClientScriptName.ToLower());
-            }
-            */
 
-            //Log the script names.
+            // Log the script names.
             if (scriptNames.Count == 0) return;
             var scriptNamesOutput = scriptNames.Aggregate((i, j) => i + ", " + j);
             Logger.Debug($"Loading script for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
