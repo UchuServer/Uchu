@@ -4,9 +4,9 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.General
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/general/l_binoculars_client.lua
+    /// Script to set flags for binoculars (https://lu.lcdruniverse.org/explorer/objects/6700) the player uses
     /// </summary>
-    [ScriptName("l_binoculars_client.lua")]
+    [ScriptName("ScriptComponent_1002_script_name__removed")]
     public class Binoculars : ObjectScript
     {
         /// <summary>

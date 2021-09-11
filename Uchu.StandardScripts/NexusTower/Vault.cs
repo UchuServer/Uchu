@@ -5,9 +5,10 @@ using Uchu.World.Social;
 namespace Uchu.StandardScripts.NexusTower
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/general/l_bank_interact_client.lua
+    /// Script to handle interactions with the Vault
     /// </summary>
-    [ScriptName("l_bank_interact_client.lua")]
+    [ScriptName("ScriptComponent_1480_script_name__removed")]
+    [ScriptName("ScriptComponent_1481_script_name__removed")]
     public class Vault : ObjectScript
     {
         /// <summary>
