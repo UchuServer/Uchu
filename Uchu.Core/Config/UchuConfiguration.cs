@@ -142,7 +142,7 @@ namespace Uchu.Core.Config
         /// if no service is installed and the connection will
         /// always timeout.
         /// </summary>
-        [XmlElement] public bool UseService { get; set; } = true;
+        [XmlElement] public bool UseService { get; set; } = false;
         
         /// <summary>
         /// Hostname to use when connecting to the cache service
