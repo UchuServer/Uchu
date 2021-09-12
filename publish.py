@@ -1,5 +1,5 @@
 """
-TheNexusAvenger
+TheNexusAvenger, enteryournamehere
 
 Creates the binaries for distribution.
 """
@@ -43,21 +43,19 @@ for platform in PLATFORMS:
     for project in PROJECTS:
         # Compile the project for the platform.
         print("\tExporting " + project + " for " + platform[0])
-        buildParameters = ["dotnet", "publish", "-r", platform[1], "-c", "Release", project + "/" + project + ".csproj"]
+
+        buildParameters = ["dotnet", "publish",
+            "--runtime", platform[1],
+            "--configuration", "Release",
+            "--output", platformDirectory,
+            project + "/" + project + ".csproj"
+        ]
         subprocess.call(buildParameters, stdout=open(os.devnull, "w"))
 
         # Clear the unwanted files of the compile.
-        dotNetVersion = os.listdir(project + "/bin/Release/")[0]
-        outputDirectory = project + "/bin/Release/" + dotNetVersion + "/" + platform[1] + "/publish"
-        for file in os.listdir(outputDirectory):
+        for file in os.listdir(platformDirectory):
             if file.endswith(".pdb"):
-                os.remove(outputDirectory + "/" + file)
-
-        # Copy the files.
-        for file in os.listdir(outputDirectory):
-            targetLocation = platformDirectory + "/" + file
-            if not os.path.exists(targetLocation):
-                shutil.copy(outputDirectory + "/" + file, targetLocation)
+                os.remove(platformDirectory + "/" + file)
 
     # Create the archive.
     print("\tCreating archive for " + platform[0])
