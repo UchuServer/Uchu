@@ -57,6 +57,10 @@ for platform in PLATFORMS:
             if file.endswith(".pdb"):
                 os.remove(platformDirectory + "/" + file)
 
+    # Add documentation & license to the output directory.
+    for file in ["README.md", "Configuration.md", "LICENSE"]:
+        shutil.copy(file, platformDirectory)
+
     # Create the archive.
     print("\tCreating archive for " + platform[0])
     shutil.make_archive("bin/Uchu-" + platform[0], "zip", platformDirectory)
