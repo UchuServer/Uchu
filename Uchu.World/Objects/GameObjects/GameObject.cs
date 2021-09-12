@@ -161,8 +161,8 @@ namespace Uchu.World
                     break;
                 }
                 //if it attempted to load a script that isn't here yet, log it
-                if (!scriptLoaded && scriptName != ""){
-                    Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
+                if (!scriptLoaded && scriptName != "" && scriptName != " "){
+                    Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id} (GameObject.cs)");
                 }
             });
 

@@ -49,7 +49,14 @@ namespace Uchu.World
                     objectScriptName => (this.ScriptName ?? "").ToLower().EndsWith(objectScriptName))
                         ?? Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
                             objectScriptName => (this.ClientScriptName ?? "").ToLower().EndsWith(objectScriptName));
-                if (newObjectScriptName == null) return;
+                if (newObjectScriptName == null)
+                {
+                    if (ScriptName != "" && ScriptName != " ")
+                    {
+                        Logger.Debug($"Did not load script: {ScriptName} Object LOT: {GameObject.Lot.Id} (LuaScriptComponent.cs)");
+                    }
+                    return;
+                }
                 this.Zone.LoadObjectScript(this.GameObject, Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName]);
             });
         }
