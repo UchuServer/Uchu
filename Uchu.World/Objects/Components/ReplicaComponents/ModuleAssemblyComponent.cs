@@ -7,7 +7,7 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.ModuleAssemblyComponent;
 
-        private string GetAssenblyData() {
+        private string GetAssemblyData() {
             GameObject.Settings.TryGetValue("assemblyPartLOTs", out var parts);
             return parts.ToString();
         }
@@ -21,7 +21,7 @@ namespace Uchu.World
 
                 writer.WriteBit(false);
 
-                var assemblyData = GetAssenblyData();
+                var assemblyData = GetAssemblyData();
                 writer.Write((ushort) assemblyData.Length);
                 writer.WriteString(assemblyData, assemblyData.Length, true);
             }
