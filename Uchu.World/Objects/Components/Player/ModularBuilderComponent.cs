@@ -155,7 +155,8 @@ namespace Uchu.World
                         temp,
                         temp.Count,
                         InventoryType.TemporaryModels,
-                        InventoryType.Models
+                        InventoryType.Models,
+                        showFlyingLoot: true
                     );
                 }
             }
