@@ -48,7 +48,7 @@ for platform in PLATFORMS:
         # Compile the project for the platform.
         print("\tExporting " + project + " for " + platform[0])
 
-        outputDirectory = platformDirectory + (project in DIRECTORY_ADDITIONS.keys() and DIRECTORY_ADDITIONS[project] or "")
+        outputDirectory = platformDirectory + DIRECTORY_ADDITIONS.get(project, "")
         buildParameters = ["dotnet", "publish",
             "--runtime", platform[1],
             "--configuration", "Release",
