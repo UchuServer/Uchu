@@ -9,6 +9,10 @@ PROJECTS = [
     "Uchu.Instance",
     "Uchu.StandardScripts",
 ]
+DIRECTORY_ADDITIONS = {
+    "Uchu.Instance": "/lib",
+    "Uchu.StandardScripts": "/lib",
+}
 PLATFORMS = [
     ["Windows-x64", "win-x64"],
     ["macOS-x64", "osx-x64"],
@@ -44,18 +48,19 @@ for platform in PLATFORMS:
         # Compile the project for the platform.
         print("\tExporting " + project + " for " + platform[0])
 
+        outputDirectory = platformDirectory + (project in DIRECTORY_ADDITIONS.keys() and DIRECTORY_ADDITIONS[project] or "")
         buildParameters = ["dotnet", "publish",
             "--runtime", platform[1],
             "--configuration", "Release",
-            "--output", platformDirectory,
+            "--output", outputDirectory,
             project + "/" + project + ".csproj"
         ]
         subprocess.call(buildParameters, stdout=open(os.devnull, "w"))
 
         # Clear the unwanted files of the compile.
-        for file in os.listdir(platformDirectory):
-            if file.endswith(".pdb"):
-                os.remove(platformDirectory + "/" + file)
+        for file in os.listdir(outputDirectory):
+            if file.endswith(".pdb") or file.endswith(".bak"):
+                os.remove(outputDirectory + "/" + file)
 
     # Add documentation & license to the output directory.
     for file in ["README.md", "Configuration.md", "LICENSE"]:
@@ -64,4 +69,4 @@ for platform in PLATFORMS:
     # Create the archive.
     print("\tCreating archive for " + platform[0])
     shutil.make_archive("bin/Uchu-" + platform[0], "zip", platformDirectory)
-    shutil.rmtree(platformDirectory)
+    shutil.rmtree(platformDirectory, True)
