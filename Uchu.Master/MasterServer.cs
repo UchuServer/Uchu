@@ -365,6 +365,7 @@ namespace Uchu.Master
                 try
                 {
                     Config.ResourcesConfiguration.GameResourceFolder = FindNlulClientResources();
+                    Config.Save(configFilename);
                     Logger.Information($"Using automatically detected client resource folder: {Config.ResourcesConfiguration.GameResourceFolder}");
                 }
                 catch
