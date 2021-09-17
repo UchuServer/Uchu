@@ -14,7 +14,8 @@ namespace Uchu.StandardScripts.BlockYard
                 await UiHelper.AnnouncementAsync(player, "Not yet implemented",
                     "Block Yard is currently not implemented. You can return to Avant Gardens by sending <font color=\"#FF7F00\">/testmap 1100</font> in the chat.");
             });
-            throw new System.NotImplementedException();
+
+            return Task.CompletedTask;
         }
     }
 }
