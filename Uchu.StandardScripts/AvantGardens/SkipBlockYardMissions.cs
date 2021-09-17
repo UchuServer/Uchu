@@ -12,8 +12,8 @@ namespace Uchu.StandardScripts.AvantGardens
     {
         public override Task LoadAsync()
         {
-            var man = Zone.GameObjects.First(g => g.Lot == Lot.CrashHelmutNpc);
-            Listen(man.GetComponent<MissionGiverComponent>().OnMissionOk, async tuple =>
+            var crashHelmut = Zone.GameObjects.First(g => g.Lot == Lot.CrashHelmutNpc);
+            Listen(crashHelmut.GetComponent<MissionGiverComponent>().OnMissionOk, async tuple =>
             {
                 var (missionId, _, _, player) = tuple;
 
