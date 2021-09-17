@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Threading.Tasks;
+using Uchu.Physics;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 
@@ -30,10 +32,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
                     await missionInventoryComponent.ScriptAsync(664, gameObject.Lot);
                     await missionInventoryComponent.ScriptAsync(663, gameObject.Lot);
                 });
-                Task.Run(async () =>
-                {
-                    await player.GetComponent<DestructibleComponent>().SmashAsync(gameObject, animation: "big-shark-death");
-                });
+                player.GetComponent<DestructibleComponent>().SmashAsync(gameObject, animation: "big-shark-death");
             });
         }
     }
