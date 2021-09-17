@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Uchu.World;
 using Uchu.World.Scripting.Native;
 using Uchu.Core.Resources;
@@ -5,18 +7,35 @@ using Uchu.Core.Resources;
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/ag/l_ag_maelstrom_sample.lua
+    /// Script to show/hide maelstrom samples based on whether the player has the relevant mission
     /// </summary>
-    [ScriptName("l_ag_maelstrom_sample.lua")]
-    public class MaelstromSample : ObjectScript
+    [ZoneSpecific(1100)]
+    public class MaelstromSample : NativeScript
     {
-        /// <summary>
-        /// Creates the object script.
-        /// </summary>
-        /// <param name="gameObject">Game object to control with the script.</param>
-        public MaelstromSample(GameObject gameObject) : base(gameObject)
+        public override Task LoadAsync()
         {
-            var missionFilter = gameObject.AddComponent<MissionFilterComponent>();
+            foreach (var gameObject in Zone.GameObjects.Where(g => g.Lot == 14718))
+            {
+                Mount(gameObject);
+            }
+
+            Listen(Zone.OnObject, @object =>
+            {
+                if (@object is GameObject gameObject && gameObject.Lot == 14718)
+                {
+                    Mount(gameObject);
+                }
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public static void Mount(GameObject gameObject)
+        {
+            if (!gameObject.TryGetComponent<MissionFilterComponent>(out var missionFilter))
+            {
+                missionFilter = gameObject.AddComponent<MissionFilterComponent>();
+            }
             missionFilter.AddMissionIdToFilter(MissionId.FollowingtheTrail);
             missionFilter.AddMissionIdToFilter(MissionId.SampleforScience);
         }
