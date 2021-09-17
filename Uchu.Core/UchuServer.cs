@@ -202,7 +202,8 @@ namespace Uchu.Core
             {
                 using (var xmlReader = XmlReader.Create(fs))
                 {
-                    LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
+                    Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
+                    Logger.SetConfiguration(Config);
                     UchuContextBase.Config = Config;
                 }
             }
@@ -716,7 +717,7 @@ namespace Uchu.Core
             if (task && res != null)
                 await ((Task) res).ConfigureAwait(false);
             if (res == null)
-                Logger.Warning($"Handler {handler.GetType().FullName} returned null for {endPoint}.");
+                Logger.Debug($"Handler {handler.GetType().FullName} returned null for {endPoint}.");
         }
     }
 }

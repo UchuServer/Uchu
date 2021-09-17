@@ -1,98 +1,124 @@
 using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Nexus.Logging.Attribute;
+using Nexus.Logging.Output;
 using Uchu.Core.Config;
 
 namespace Uchu.Core
 {
     public static class Logger
     {
-        private static LogQueue logQueue = new LogQueue();
+        /// <summary>
+        /// Logger used by Uchu.
+        /// </summary>
+        private static readonly Nexus.Logging.Logger NexusLogger = new Nexus.Logging.Logger();
 
-        private static bool outputTaskStarted = false;
-
-        public static void Log(object content, LogLevel logLevel = LogLevel.Information)
+        /// <summary>
+        /// Prepares logging.
+        /// </summary>
+        /// <param name="configuration">Configuration to use.</param>
+        public static void SetConfiguration(UchuConfiguration configuration)
         {
-            switch (logLevel)
+            // Get the log levels. They are used referenced twice.
+            var consoleLogLevel = LogLevel.Debug;
+            var fileLogLevel = LogLevel.None;
+            if (Enum.TryParse<LogLevel>(configuration?.ConsoleLogging.Level, out var newConsoleLogLevel))
             {
-                case LogLevel.Debug:
-                    Debug(content);
-                    break;
-                case LogLevel.Information:
-                    Information(content);
-                    break;
-                case LogLevel.Warning:
-                    Warning(content);
-                    break;
-                case LogLevel.Error:
-                    Error(content);
-                    break;
-                case LogLevel.None:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+                consoleLogLevel = newConsoleLogLevel;
             }
-        }
-
-        public static void Debug(object content)
-        {
-            if (content is null) throw new ArgumentNullException(nameof(content));
-#if DEBUG
-            var trace = new StackTrace();
-            AddToQueue(content.ToString(), LogLevel.Debug, ConsoleColor.Green, trace);
-#endif
-        }
-
-        public static void Information(object content)
-        {
-            if (content is null) throw new ArgumentNullException(nameof(content));
-#if DEBUG
-            var trace = new StackTrace();
-            AddToQueue(content.ToString(), LogLevel.Information, ConsoleColor.White, trace); 
-#else
-            AddToQueue(content.ToString(), LogLevel.Information, ConsoleColor.White);
-#endif
-        }
-
-        public static void Warning(object content)
-        {
-            if (content is null) throw new ArgumentNullException(nameof(content));
-#if DEBUG
-            var trace = new StackTrace();
-            AddToQueue(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow, trace);
-#else
-            AddToQueue(content.ToString(), LogLevel.Warning, ConsoleColor.Yellow);
-#endif
-        }
-
-        public static void Error(object content)
-        {
-            if (content is null) throw new ArgumentNullException(nameof(content));
-#if DEBUG
-            var trace = new StackTrace();
-            AddToQueue(content.ToString(), LogLevel.Error, ConsoleColor.Red, trace); 
-#else
-            AddToQueue(content.ToString(), LogLevel.Error, ConsoleColor.Red);
-#endif
-        }
-
-#if DEBUG
-        private static void AddToQueue(string message, LogLevel logLevel, ConsoleColor color, StackTrace trace)
-#else
-        private static void AddToQueue(string message, LogLevel logLevel, ConsoleColor color)
-#endif
-        {
-#if DEBUG
-            logQueue.AddLine(message, logLevel, color, trace);
-#else
-            logQueue.AddLine(message, logLevel, color);
-#endif
-            if (!outputTaskStarted && LogQueue.Config != default)
+            if (Enum.TryParse<LogLevel>(configuration?.FileLogging.Level, out var newFileLogLevel))
             {
-                outputTaskStarted = true;
-                logQueue.StartConsoleOutput();
+                fileLogLevel = newFileLogLevel;
             }
             
+            // Add console logging.
+            if (consoleLogLevel != LogLevel.None)
+            {
+                NexusLogger.Outputs.Add(new ConsoleOutput()
+                {
+                    IncludeDate = configuration?.ConsoleLogging.Timestamp ?? false,
+                    NamespaceWhitelist = new List<string>() { "Uchu" },
+                    MinimumLevel = consoleLogLevel,
+                });
+            }
+            
+            // Add file logging.
+            if (fileLogLevel != LogLevel.None)
+            {
+                NexusLogger.Outputs.Add(new FileOutput()
+                {
+                    IncludeDate = configuration?.FileLogging.Timestamp ?? false,
+                    NamespaceWhitelist = new List<string>() { "Uchu" },
+                    MinimumLevel = fileLogLevel,
+                    FileLocation = configuration?.FileLogging.File ?? "uchu.log",
+                });
+            }
+        }
+
+        /// <summary>
+        /// Sets the server information to the log messages used to
+        /// identify the server type. Used for conditions where
+        /// the logs are together, such as in a Docker container.
+        /// </summary>
+        /// <param name="type">Server type to add.</param>
+        public static void SetServerTypeInformation(string type)
+        {
+            foreach (var output in NexusLogger.Outputs)
+            {
+                output.AdditionalLogInfo.Add(type);
+            }
+        }
+        
+        /// <summary>
+        /// Logs a message.
+        /// </summary>
+        /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        /// <param name="logLevel">Log level to output with.</param>
+        [LogTraceIgnore]
+        public static void Log(object content, LogLevel logLevel = LogLevel.Information)
+        {
+            NexusLogger.Log(content, logLevel);
+        }
+
+        /// <summary>
+        /// Logs a message as a Debug level.
+        /// </summary>
+        /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
+        public static void Debug(object content)
+        {
+            NexusLogger.Debug(content);
+        }
+
+        /// <summary>
+        /// Logs a message as an Information level.
+        /// </summary>
+        /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
+        public static void Information(object content)
+        {
+            NexusLogger.Info(content);
+        }
+
+        /// <summary>
+        /// Logs a message as a Warning level.
+        /// </summary>
+        /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
+        public static void Warning(object content)
+        {
+            NexusLogger.Warn(content);
+        }
+
+        /// <summary>
+        /// Logs a message as a Error level.
+        /// </summary>
+        /// <param name="content">Content to log. Can be an object, like an exception.</param>
+        [LogTraceIgnore]
+        public static void Error(object content)
+        {
+            NexusLogger.Error(content);
         }
     }
 }

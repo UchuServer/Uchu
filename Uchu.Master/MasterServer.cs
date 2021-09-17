@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml.Serialization;
@@ -261,65 +263,126 @@ namespace Uchu.Master
             }
         }
 
+        /// <summary>
+        /// Attempt to find the resource folder of an unpacked client installed using Nexus LU Launcher.
+        /// </summary>
+        /// <returns>The path to the client's res folder.</returns>
+        /// <exception cref="FileNotFoundException">Valid resource folder was not found.</exception>
+        private static string FindNlulClientResources()
+        {
+            // Get .nlul location, e.g. ~/.nlul
+            var nlulHomeLocation = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".nlul");
+            if (!Directory.Exists(nlulHomeLocation))
+                throw new DirectoryNotFoundException("No NLUL installation found.");
+
+            // Get path to NLUL config file
+            var launcherFileLocation = Path.Combine(
+                nlulHomeLocation,
+                "launcher.json");
+            if (!File.Exists(launcherFileLocation))
+                throw new FileNotFoundException("No NLUL configuration file found.");
+
+            // Parse NLUL config file
+            var nlulConfig = JsonDocument.Parse(File.ReadAllText(launcherFileLocation));
+
+            // Client parent directory is ClientParentLocation if set, otherwise nlulHomeLocation
+            var clientParentLocation = nlulHomeLocation;
+            if (nlulConfig.RootElement.TryGetProperty("ClientParentLocation", out var customClientParentLocation))
+                clientParentLocation = customClientParentLocation.GetString();
+            if (!Directory.Exists(clientParentLocation))
+                throw new FileNotFoundException("Configured ClientParentLocation directory does not exist.");
+
+            // Iterate over subdirectories to search for a valid client
+            Debug.Assert(clientParentLocation != null, nameof(clientParentLocation) + " != null");
+            foreach (var clientDirectory in Directory.GetDirectories(clientParentLocation))
+            {
+                var resLocation = Path.Combine(clientDirectory, "res");
+                if (!EnsureUnpackedClient(resLocation))
+                    continue;
+
+                return resLocation;
+            }
+
+            throw new FileNotFoundException("No unpacked client found.");
+        }
+
+        /// <summary>
+        /// Load the server configuration.
+        /// </summary>
+        /// <exception cref="DirectoryNotFoundException">Resource folder is not configured correctly.</exception>
+        /// <exception cref="FileNotFoundException">One of the required files are not configured correctly.</exception>
         private static async Task ConfigureAsync()
         {
-            var serializer = new XmlSerializer(typeof(UchuConfiguration));
-            var configFilename = File.Exists("config.xml") ? "config.xml" : "config.default.xml";
+            const string configFilename = "config.xml";
+            const string legacySecondConfigName = "config.default.xml";
 
+            // Use config.xml if it exists
             if (File.Exists(configFilename))
             {
-                await using var file = File.OpenRead(configFilename);
-                LogQueue.Config = Config = (UchuConfiguration) serializer.Deserialize(file);
+                Config = UchuConfiguration.Load(configFilename);
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
             }
+            // Otherwise, use config.default.xml if it exists
+            else if (File.Exists(legacySecondConfigName))
+            {
+                Config = UchuConfiguration.Load(legacySecondConfigName);
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
+            }
+            // Otherwise, generate a new config file
             else
             {
-                LogQueue.Config = Config = new UchuConfiguration();
+                Config = new UchuConfiguration();
+                Logger.SetConfiguration(Config);
+                Logger.SetServerTypeInformation("Master");
 
-                Config.DllSource.ScriptDllSource.Add("Enter path to Uchu.StandardScripts.dll");
+                // Add default value for instance DLL source and script DLL source.
+                if (File.Exists("lib/Uchu.Instance.dll"))
+                {
+                    Config.DllSource.Instance = "lib/Uchu.Instance.dll";
+                }
+                Config.DllSource.ScriptDllSource.Add(File.Exists("lib/Uchu.StandardScripts.dll")
+                    ? "lib/Uchu.StandardScripts.dll"
+                    : "../../../../Uchu.StandardScripts/bin/Debug/net5.0/Uchu.StandardScripts.dll");
 
-                var backup = File.CreateText("config.default.xml");
+                // Write config file
+                Config.Save(configFilename);
 
-                serializer.Serialize(backup, Config);
+                var info = new FileInfo(configFilename);
 
-                backup.Close();
-
-                Logger.Warning("No config file found, creating default.");
-
-                var info = new FileInfo("config.default.xml");
-
-                Logger.Information($"You may now continue with configuring Uchu. Default config file located at: {info.FullName}");
-
-                throw new FileNotFoundException("No config file found.", info.FullName);
+                Logger.Warning($"No config file found, created one at {info.FullName}");
             }
 
             SqliteContext.DatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "./Uchu.sqlite");
 
             UchuContextBase.Config = Config;
 
-            var resourceFolder = Config.ResourcesConfiguration?.GameResourceFolder;
-
-            if (!string.IsNullOrWhiteSpace(resourceFolder))
-            {
-                if (EnsureUnpackedClient(resourceFolder))
-                {
-                    Logger.Information($"Using game resources: {Config.ResourcesConfiguration.GameResourceFolder}");
-                }
-                else
-                {
-                    Logger.Error($"Invalid local resources (Invalid path or no .luz files found). Please ensure you are using an unpacked client.");
-
-                    throw new FileNotFoundException("No luz files found.");
-                }
-            }
-            else
-            {
-                Logger.Error("No input location of local resources. Please input in config file.");
-
-                throw new DirectoryNotFoundException("No local resource path.");
-            }
-
             UseAuthentication = Config.Networking.HostAuthentication;
 
+            // Check: resource folder
+            var resourceFolder = Config.ResourcesConfiguration.GameResourceFolder;
+
+            if (!EnsureUnpackedClient(resourceFolder))
+            {
+                // Try finding NLUL client
+                try
+                {
+                    Config.ResourcesConfiguration.GameResourceFolder = FindNlulClientResources();
+                    Config.Save(configFilename);
+                    Logger.Information($"Using automatically detected client resource folder: {Config.ResourcesConfiguration.GameResourceFolder}");
+                }
+                catch
+                {
+                    // Unsuccessful in finding unpacked client resource folder
+                    throw new DirectoryNotFoundException(
+                        "Please enter a valid unpacked client resource folder in the configuration file.");
+                }
+            }
+
+            // Check: Uchu.Instance.dll
             DllLocation = Config.DllSource.Instance;
 
             if (!File.Exists(DllLocation))
@@ -327,6 +390,7 @@ namespace Uchu.Master
                 throw new FileNotFoundException("Could not find file specified in <Instance> under <DllSource> in config.xml.");
             }
 
+            // Check: Uchu.StandardScripts.dll
             var validScriptPackExists = false;
 
             Config.DllSource.ScriptDllSource.ForEach(scriptPackPath =>
@@ -359,9 +423,16 @@ namespace Uchu.Master
             Logger.Information($"Using configuration: {ConfigPath}\nUsing CDClient: {CdClientPath}");
         }
 
+        /// <summary>
+        /// Check whether a directory is the res folder of an unpacked client. Accounts for the possibility of the
+        /// directory not existing at all.
+        /// </summary>
+        /// <param name="directory">Path to the directory.</param>
+        /// <returns>Whether it's an unpacked res folder.</returns>
         private static bool EnsureUnpackedClient(string directory)
         {
-            return directory.EndsWith("res") &&
+            return !string.IsNullOrWhiteSpace(directory) &&
+                   directory.EndsWith("res") &&
                    Directory.Exists(directory) &&
                    Directory.GetFiles(directory, "*.luz", SearchOption.AllDirectories).Any();
         }

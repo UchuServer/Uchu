@@ -1,3 +1,4 @@
+using RakDotNet.IO;
 using Uchu.Core;
 
 namespace Uchu.Char
@@ -7,5 +8,10 @@ namespace Uchu.Char
         public override RemoteConnectionType RemoteConnectionType => RemoteConnectionType.Client;
 
         public override uint PacketId => 0x2;
+
+        public override void Deserialize(BitReader reader)
+        {
+
+        }
     }
 }
