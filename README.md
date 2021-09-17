@@ -57,6 +57,8 @@ Find the `.zip` for your operating system on [this page](https://github.com/TheN
 
 Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
 
+In the **Play** menu, click the **Add** button and add a server with as address `localhost` (the name is up to you).
+
 ### Option B: Manual installation
 You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
 
@@ -105,6 +107,12 @@ and insert the path to your LEGO® Universe client's `res` folder. For example, 
 ```
 
 Now start the server again with `dotnet Uchu.Master.dll`.
+
+To update the server with the latest changes, navigate to Uchu's top-level directory (which is where you ran `dotnet build`, and where `Uchu.sln` is located), and run:
+```bash
+git pull
+dotnet build
+```
 
 ### Advanced server configuration _(optional)_
 **Only needed for advanced use cases:** see [this document](Configuration.md) for an explanation of all available configuration options.
