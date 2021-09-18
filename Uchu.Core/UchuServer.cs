@@ -717,7 +717,7 @@ namespace Uchu.Core
             if (task && res != null)
                 await ((Task) res).ConfigureAwait(false);
             if (res == null)
-                Logger.Warning($"Handler {handler.GetType().FullName} returned null for {endPoint}.");
+                Logger.Debug($"Handler {handler.GetType().FullName} returned null for {endPoint}.");
         }
     }
 }

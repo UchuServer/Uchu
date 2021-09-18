@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -40,7 +42,7 @@ namespace Uchu.Core.Config
         [XmlElement]
         public LoggingConfiguration ConsoleLogging { get; set; } = new LoggingConfiguration
         {
-            Level = LogLevel.Debug.ToString()
+            Level = LogLevel.Information.ToString()
         };
 
         /// <summary>
@@ -68,7 +70,7 @@ namespace Uchu.Core.Config
         /// </summary>
         [XmlElement]
         public ResourcesConfiguration ResourcesConfiguration { get; set; } =
-            new ResourcesConfiguration {GameResourceFolder = "/res"};
+            new ResourcesConfiguration {GameResourceFolder = "path to res folder"};
         
         /// <summary>
         /// Networking settings like character- and world server ports and certificates
@@ -99,6 +101,34 @@ namespace Uchu.Core.Config
         /// General behaviour of the program
         /// </summary>
         [XmlElement("ServerBehaviour")] public ServerBehaviour ServerBehaviour { get; set; } = new ServerBehaviour();
+
+        private static readonly XmlSerializer Serializer = new XmlSerializer(typeof(UchuConfiguration));
+
+        /// <summary>
+        /// Save the configuration to a file.
+        /// </summary>
+        /// <param name="path">File to save to.</param>
+        public void Save(string path)
+        {
+            using var file = File.CreateText(path);
+            Serializer.Serialize(file, this);
+            file.Close();
+        }
+
+        /// <summary>
+        /// Load the configuration from a file.
+        /// </summary>
+        /// <param name="path">File to load from.</param>
+        /// <returns>The <see cref="UchuConfiguration"/>, if the file exists, otherwise null.</returns>
+        public static UchuConfiguration Load(string path)
+        {
+            if (!File.Exists(path))
+                return null;
+
+            using var file = File.OpenRead(path);
+            using var reader = XmlReader.Create(file);
+            return (UchuConfiguration) Serializer.Deserialize(reader);
+        }
     }
 
     /// <summary>
@@ -112,7 +142,7 @@ namespace Uchu.Core.Config
         /// if no service is installed and the connection will
         /// always timeout.
         /// </summary>
-        [XmlElement] public bool UseService { get; set; } = true;
+        [XmlElement] public bool UseService { get; set; } = false;
         
         /// <summary>
         /// Hostname to use when connecting to the cache service
@@ -156,7 +186,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "Enter path to Uchu.Instance.dll";
+        [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net5.0/Uchu.Instance.dll";
         
         /// <summary>
         /// The path to the script source DLLs

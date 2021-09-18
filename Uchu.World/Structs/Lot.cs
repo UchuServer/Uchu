@@ -155,6 +155,8 @@ namespace Uchu.World
         public const int MonumentRaceCancelTrigger = 3297;
         public const int MonumentFinishLine = 4967;
 
+        public const int CrashHelmutNpc = 6374;
+
         #endregion
     }
 }
