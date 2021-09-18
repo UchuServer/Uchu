@@ -8,8 +8,7 @@ namespace Uchu.World
         public override ComponentId Id => ComponentId.ModuleAssemblyComponent;
 
         private string GetAssemblyData() {
-            GameObject.Settings.TryGetValue("assemblyPartLOTs", out var parts);
-            return parts.ToString();
+            return GameObject.Settings.ToString();
         }
 
         public override void Construct(BitWriter writer)
@@ -17,9 +16,9 @@ namespace Uchu.World
             if (writer.Flag(true))
             {
                 if (writer.Flag(false)) 
-                    writer.Write((long)0);
+                    writer.Write((long)0); // Subkey
 
-                writer.WriteBit(false);
+                writer.WriteBit(false); // Use optional Parts?
 
                 var assemblyData = GetAssemblyData();
                 writer.Write((ushort) assemblyData.Length);
