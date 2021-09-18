@@ -21,21 +21,6 @@ namespace Uchu.World
         protected ModularBuilderComponent()
         {
             this.OnBuildFinished = new Event<Lot[]>();
-            
-            Listen(OnStart, () =>
-            {
-                var inventory = GameObject.GetComponent<InventoryComponent>();
-
-                Listen(inventory.OnEquipped, item =>
-                {
-                    if (item.ItemType == ItemType.LootModel && !IsBuilding)
-                    {
-                        StartBuildingWithItem(item);
-                    }
-                    
-                    return Task.CompletedTask;
-                });
-            });
         }
 
         public async Task StartBuildingAsync(StartBuildingWithItemMessage message)
@@ -67,29 +52,6 @@ namespace Uchu.World
                 TargetLot = message.TargetLot,
                 TargetPosition = message.TargetPosition,
                 TargetType = message.TargetType
-            });
-        }
-
-        public void StartBuildingWithItem(Item item)
-        {
-            if (!(GameObject is Player player)) return;
-
-            player.Message(new StartArrangingWithItemMessage
-            {
-                Associate = GameObject,
-                FirstTime = false,
-                BuildArea = BasePlate,
-                StartPosition = Transform.Position,
-                
-                SourceBag = item.Inventory.InventoryType,
-                Source = item,
-                SourceLot = item.Lot,
-                SourceType = 8, // TODO: find out how to get this
-                
-                Target = BasePlate,
-                TargetLot = BasePlate.Lot,
-                TargetPosition = BasePlate.Transform.Position,
-                TargetType = 0
             });
         }
         
