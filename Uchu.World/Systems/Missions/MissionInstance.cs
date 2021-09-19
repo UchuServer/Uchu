@@ -307,7 +307,7 @@ namespace Uchu.World.Systems.Missions
 
             PrerequisiteMissions = mission.PrereqMissionID;
             IsMission = mission.IsMission ?? true;
-            IsChoiceReward = mission.IsChoiceReward ?? false;
+            IsChoiceReward = (mission.IsChoiceReward ?? false) && IsMission;
             DefinedType = mission.Definedtype;
             DefinedSubType = mission.Definedsubtype;
             
