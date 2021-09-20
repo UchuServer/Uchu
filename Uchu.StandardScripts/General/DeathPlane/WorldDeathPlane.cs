@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Uchu.Core;
 using Uchu.World;
@@ -10,6 +11,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
     {
         public override Task LoadAsync()
         {
+            List<Player> dead = new List<Player>();
             Dictionary<int, int> heights = new Dictionary<int, int>(){
                 {1400, -200},
                 {1800, -100},
@@ -28,8 +30,16 @@ namespace Uchu.StandardScripts.General.DeathPlane
                 var destructibleComponent = player.GetComponent<DestructibleComponent>();
                 Listen(player.OnPositionUpdate, (position, rotation) =>
                 {
-                    if (position.Y < height && destructibleComponent.Alive)
+                    if (position.Y < height && destructibleComponent.Alive && !dead.Contains(player))
+                    {
+                        dead.Add(player);
                         destructibleComponent.SmashAsync(player);
+                    }
+                });
+                Listen(destructibleComponent.OnResurrect, async () => 
+                {
+                    await Task.Delay(1000);
+                    dead.Remove(player);
                 });
             });
             
