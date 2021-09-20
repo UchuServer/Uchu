@@ -10,7 +10,7 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
-    public class ScriptedActivityComponent : ReplicaComponent
+    public class ScriptedActivityComponent : StructReplicaComponent<ScriptedActivitySerialization>
     {
         private readonly Random _random;
         
@@ -217,30 +217,45 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Writes the Construct information.
+        /// Creates the Construct packet for the replica component.
         /// </summary>
-        /// <param name="writer">Writer to write to.</param>
-        public override void Construct(BitWriter writer)
+        /// <returns>The Construct packet for the replica component.</returns>
+        public override ScriptedActivitySerialization GetConstructPacket()
         {
-            Serialize(writer);
+            var packet = base.GetConstructPacket();
+            packet.ActivityUserInfos = new ActivityUserInfo[Participants.Count];
+            for (var i = 0; i < this.Participants.Count; i++)
+            {
+                var participant = this.Participants[i];
+                var parameters = Parameters[i];
+                var activityUserInfo = new ActivityUserInfo
+                {
+                    User = participant,
+                    ActivityValue0 = parameters[0],
+                    ActivityValue1 = parameters[1],
+                    ActivityValue2 = parameters[2],
+                    ActivityValue3 = parameters[3],
+                    ActivityValue4 = parameters[4],
+                    ActivityValue5 = parameters[5],
+                    ActivityValue6 = parameters[6],
+                    ActivityValue7 = parameters[7],
+                    ActivityValue8 = parameters[8],
+                    ActivityValue9 = parameters[9],
+                };
+                packet.ActivityUserInfos[i] = activityUserInfo;
+            }
+
+            return packet;
         }
 
         /// <summary>
-        /// Writes the Serialize information.
+        /// Creates the Serialize packet for the replica component.
         /// </summary>
-        /// <param name="writer">Writer to write to.</param>
-        public override void Serialize(BitWriter writer)
+        /// <returns>The Serialize packet for the replica component.</returns>
+        public override ScriptedActivitySerialization GetSerializePacket()
         {
-            writer.WriteBit(true);
-            writer.Write((uint) Participants.Count);
-
-            foreach (var contributor in Participants)
-            {
-                writer.Write(contributor);
-
-                foreach (var parameter in Parameters[this.Participants.IndexOf(contributor)])
-                    writer.Write(parameter);
-            }
+            var packet = this.GetConstructPacket();
+            return packet;
         }
     }
 }
