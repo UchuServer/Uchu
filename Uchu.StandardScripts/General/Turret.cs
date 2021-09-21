@@ -19,14 +19,14 @@ namespace Uchu.StandardScripts.General
             {
                 //engie turret + rebuild mechs have a smash time of 10 so they'll self destruct before the timer happens, ?????????
                 float killTime = gameObject.TryGetComponent<LuaScriptComponent>(out var luaScriptComponent) && luaScriptComponent.ScriptName.ToLower().EndsWith("l_ag_turret.lua") ? 20 : 30;
-                AddTimerWithCancel(30, "TickTime");
+                AddTimerWithCancel(killTime, "TickTime");
                 var quickBuild = gameObject.GetComponent<QuickBuildComponent>();
                 Listen(quickBuild.OnStateChange, state =>
                 {
                     if (state == RebuildState.Completed)
                     {
                         CancelAllTimers();
-                        AddTimerWithCancel(30, "TickTime");
+                        AddTimerWithCancel(killTime, "TickTime");
                     }
                     if (state == RebuildState.Building)
                     {
