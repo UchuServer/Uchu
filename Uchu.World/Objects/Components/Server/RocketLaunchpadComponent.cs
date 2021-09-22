@@ -57,6 +57,10 @@ namespace Uchu.World
         /// <param name="player">Player who requested launching.</param>
         public async void OnInteract(Player player)
         {
+            // LUP launchpad is handled in its own component
+            if (GameObject.TryGetComponent<LUPLaunchpadComponent>(out _))
+                return;
+
             // Get the player rocket.
             var rocket = player.GetComponent<InventoryManagerComponent>()[InventoryType.Models].Items.FirstOrDefault(
                 item => item.Lot == Lot.ModularRocket
