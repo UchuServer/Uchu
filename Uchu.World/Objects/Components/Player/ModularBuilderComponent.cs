@@ -55,6 +55,9 @@ namespace Uchu.World
             });
         }
         
+        /// <summary>
+        /// When the player puts a model (not a part) into the builder while already being in build mode.
+        /// </summary>
         public async Task StartBuildingWithModel(Item model) {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
@@ -67,6 +70,9 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// When the player is done with a modular build and gets a model.
+        /// </summary>
         public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
@@ -89,10 +95,16 @@ namespace Uchu.World
             await this.OnBuildFinished.InvokeAsync(models);
         }
         
+        /// <summary>
+        /// When the player leaves the build mode either through exiting or being done.
+        /// </summary>
         public void DoneArranging(DoneArrangingWithItemMessage message)
         {
         }
 
+        /// <summary>
+        /// When the player picks up a part from the ground.
+        /// </summary>
         public async Task Pickup(Lot lot)
         {
             if (!(GameObject is Player player)) return;
