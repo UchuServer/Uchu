@@ -13,8 +13,11 @@ namespace Uchu.World
         public override PossessableSerialization GetPacket()
         {
             var packet = base.GetPacket();
-            packet.PossessableInfoExists = true;
-            packet.ImmediateDepossess = false;
+            packet.PossessableInfo = new PossessableInfo
+            {
+                Driver = this.Driver,
+                ImmediateDepossess = false,
+            };
             return packet;
         }
     }

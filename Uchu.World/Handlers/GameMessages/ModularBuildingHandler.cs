@@ -63,5 +63,19 @@ namespace Uchu.World.Handlers.GameMessages
                 StartPosition = message.StartPosition
             });
         }
+
+        [PacketHandler]
+        public void ModuleAssemblyQueryDataHandler(ModuleAssemblyQueryDataMessage message, Player player)
+        {
+            if (!message.Associate.TryGetComponent<ModuleAssemblyComponent>(out var moduleAssembly))
+                Logger.Error($"assembly data requested for {message.Associate} but no module assembly component exists");
+            player.Zone.BroadcastMessage(new ModuleAssemblyDBDataForClientMessage
+            {
+                AssemblyId = GameObject.InvalidObject, // todo subkey? i think
+                // chassis wheels engine frontbumper rearpanel rearbumper sides
+                Blob = moduleAssembly.GetAssembly(),
+                Associate = message.Associate,
+            });
+        }
     }
 }

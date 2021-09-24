@@ -10,14 +10,14 @@ namespace Uchu.World
     {
         public static readonly int[] ComponentOrder =
         {
-            108,
-            61,
-            1,
-            3,
-            20,
-            30,
-            40,
-            7,
+            108, // Possesable
+            61, // ModuleAssemblyComponent
+            1, // ControllablePhysicsComponent
+            3, // SimplePhysicsComponent
+            20, // RigidBodyPhantomPhysicsComponent
+            30, // VehiclePhysicsComponent
+            40, // PhantomPhysicsComponent
+            7, // DestructibleComponent
             23,
             26,
             4,
