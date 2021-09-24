@@ -23,10 +23,11 @@ namespace Uchu.StandardScripts.General
                         var id = launchpad.GameObject.Lot.GetComponentId(ComponentId.RocketLaunchComponent);
                         var launchpadComponent = await ClientCache.FindAsync<RocketLaunchpadControlComponent>(id);
 
-                        if (launchpadComponent.TargetZone != null)
+                        // TargetZone is 0 for the LUP launchpad, ignore it
+                        if (launchpadComponent.TargetZone != null && launchpadComponent.TargetZone != 0)
                         {
                             var target = (ZoneId)launchpadComponent.TargetZone;
-                            
+
                             // We don't want to lock up the server on a world server request, as it may take time.
                             var _ = Task.Run(async () =>
                             {

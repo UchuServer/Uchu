@@ -20,13 +20,8 @@ namespace Uchu.StandardScripts.WorldTeleporters
         protected override string Animation => "lup-teleport";
         protected override string AcceptIdentifier => "PlayButton";
         protected override string CancelIdentifier => "CloseButton";
-        protected override string TargetSpawnLocation => this.TargetZone switch
-        {
-            1200 => "NS_LEGO_Club",
-            1900 => "NS_LEGO_Club",
-            _ => null,
-        };
-        protected override bool CheckUserData => false;
+        protected override string TargetSpawnLocation => "NS_LEGO_Club";
+        protected override bool UseUserData => false;
 
         protected override void ShowTransferPopup(Player player)
         {
