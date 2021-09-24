@@ -66,9 +66,9 @@ namespace Uchu.World.Client
 
             // Reset the timer and return the cached entry.
             var result = (this._cachedTable.ContainsKey(index) ? this._cachedTable[index] : Array.Empty<object>()).Cast<T>().ToArray();
-            this._semaphore.Release();
             this._resetTimer.Stop();
             this._resetTimer.Start();
+            this._semaphore.Release();
             return result;
         }
     }

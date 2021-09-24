@@ -178,5 +178,11 @@ namespace Uchu.World.Handlers.GameMessages
         {
             message.Associate?.OnMessageBoxRespond.Invoke(player, message);
         }
+
+        [PacketHandler]
+        public void ChoiceBoxRespondHandler(ChoiceBoxRespondMessage message, Player player)
+        {
+            message.Associate?.OnChoiceBoxRespond.Invoke(player, message);
+        }
     }
 }

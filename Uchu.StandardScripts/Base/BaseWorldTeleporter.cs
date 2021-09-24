@@ -12,9 +12,14 @@ namespace Uchu.StandardScripts.Base
         protected virtual string Animation { get; }
         protected virtual string AcceptIdentifier { get; } = "TransferBox";
         protected virtual string CancelIdentifier { get; } = "TransferBox";
-        protected virtual bool CheckUserData { get; } = true;
+        protected virtual bool UseUserData { get; } = true;
 
         protected virtual void ShowTransferPopup(Player player)
+        {
+            this.ShowTransferPopup(player, this.TargetZone, this.MessageBoxText);
+        }
+
+        protected virtual void ShowTransferPopup(Player player, int zone, string text)
         {
             player.Message(new DisplayMessageBoxMessage
             {
@@ -22,8 +27,8 @@ namespace Uchu.StandardScripts.Base
                 Identifier = this.AcceptIdentifier,
                 CallbackClient = GameObject,
                 Show = true,
-                UserData = this.TargetZone.ToString(),
-                Text = this.MessageBoxText,
+                UserData = zone.ToString(),
+                Text = text,
             });
         }
 
@@ -35,8 +40,7 @@ namespace Uchu.StandardScripts.Base
             {
                 // Ensure player is answering the right message box
                 // Identifier differs for accept/cancel for LEGO® Club world teleporter interaction
-                if ((message.Identifier != this.AcceptIdentifier && message.Identifier != this.CancelIdentifier)
-                    || (this.CheckUserData && message.UserData != this.TargetZone.ToString()))
+                if ((message.Identifier != this.AcceptIdentifier && message.Identifier != this.CancelIdentifier))
                     return;
 
                 // If user clicked no, terminate interaction
@@ -63,6 +67,8 @@ namespace Uchu.StandardScripts.Base
                 });
                 player.Animate(this.Animation);
 
+                var targetZone = this.UseUserData ? int.Parse(message.UserData) : this.TargetZone;
+
                 if (this.TargetSpawnLocation != null)
                     player.GetComponent<CharacterComponent>().SpawnLocationName = this.TargetSpawnLocation;
 
@@ -74,7 +80,7 @@ namespace Uchu.StandardScripts.Base
                     this.Listen(player.OnFireServerEvent, (arguments, _) =>
                     {
                         if (arguments == "summaryComplete")
-                            player.SendToWorldAsync((ZoneId) this.TargetZone);
+                            player.SendToWorldAsync((ZoneId) targetZone);
                     });
                     player.Message(new DisplayZoneSummaryMessage
                     {

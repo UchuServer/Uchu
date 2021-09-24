@@ -95,7 +95,7 @@ namespace Uchu.Core
             await using var ctx = new UchuContext();
             
             string key;
-            var timeout = 1000;
+            var timeout = 5000;
             
             while (!_keys.TryGetValue(endpoint.ToString(), out key))
             {
