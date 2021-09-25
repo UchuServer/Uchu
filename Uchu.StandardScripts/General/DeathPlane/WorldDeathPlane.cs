@@ -13,6 +13,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
         {
             List<Player> dead = new List<Player>();
             Dictionary<int, int> heights = new Dictionary<int, int>(){
+                {1300, 80},
                 {1400, -200},
                 {1800, -100},
                 //if we decide that -100 is fine for every world, switch this to a
