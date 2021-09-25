@@ -21,10 +21,12 @@ namespace Uchu.StandardScripts.General
         {
             SetProximityRadius(2, "Firepit");
             PlayFXEffect("Burn", "running", 295);
+            
             //fix aoe skill not running
             var ai = gameObject.AddComponent<BaseCombatAiComponent>();
             ai.Enabled = false;
-            ai.Stats = gameObject.GetComponent<DestroyableComponent>();
+            ai.StartCombatAI();
+
             Listen(Zone.OnPlayerLoad, player =>
             {
                 Listen(player.OnSkillEvent, async (target, effectHandler) =>

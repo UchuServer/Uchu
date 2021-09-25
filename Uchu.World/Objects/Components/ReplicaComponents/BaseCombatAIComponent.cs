@@ -22,7 +22,7 @@ namespace Uchu.World
         /// Cooldown that's set after a skill is executed, equal to <c>Cooldown</c> but not decremented on tick
         /// </summary>
         private float FrozenCooldown { get; set; }
-        
+
         /// <summary>
         /// Cooldown that's set after a skill is executed, this will be decremented on each tick
         /// </summary>
@@ -32,13 +32,13 @@ namespace Uchu.World
 
         public List<NpcSkillEntry> SkillEntries { get; set; }
 
-        public SkillComponent SkillComponent { get; set; }
+        private SkillComponent SkillComponent { get; set; }
 
-        public DestructibleComponent DestructibleComponent { get; set; }
+        private DestructibleComponent DestructibleComponent { get; set; }
 
-        public QuickBuildComponent QuickBuildComponent { get; set; }
+        private QuickBuildComponent QuickBuildComponent { get; set; }
 
-        public DestroyableComponent Stats { get; set; }
+        private DestroyableComponent Stats { get; set; }
 
         public bool Enabled { get; set; } = true;
 
@@ -48,28 +48,7 @@ namespace Uchu.World
             {
                 SkillEntries = new List<NpcSkillEntry>();
 
-                Listen(GameObject.OnStart, async () =>
-                {
-                    SkillComponent = GameObject.GetComponent<SkillComponent>();
-                    DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
-                    QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
-                    Stats = GameObject.GetComponent<DestroyableComponent>();
-
-                    foreach (var skillEntry in SkillComponent.DefaultSkillSet)
-                    {
-                        var skillInfo = await ClientCache.FindAsync<SkillBehavior>(skillEntry.SkillId);
-                        
-                        SkillEntries.Add(new NpcSkillEntry
-                        {
-                            SkillId = skillEntry.SkillId,
-                            Cooldown = 0,
-                            AbilityCooldown = (skillInfo.Cooldown ?? 1) * 1000,
-                            Tree = await BehaviorTree.FromSkillAsync((int)skillEntry.SkillId)
-                        });
-                    }
-
-                    Zone.Update(GameObject, delta => CalculateCombat(delta), 1);
-                });
+                Listen(GameObject.OnStart, StartCombatAI);
             });
         }
 
@@ -79,8 +58,8 @@ namespace Uchu.World
         /// <param name="delta">Passed time in milliseconds since last tick</param>
         private Task CalculateCombat(float delta)
         {
-            if (!Enabled 
-                || !DestructibleComponent.Alive 
+            if (!Enabled
+                || !DestructibleComponent.Alive
                 || QuickBuildComponent != default && QuickBuildComponent.State != RebuildState.Completed)
                 return Task.CompletedTask;
 
@@ -88,7 +67,7 @@ namespace Uchu.World
             {
                 AbilityDowntime = false;
                 var elapsedCooldown = FrozenCooldown;
-                
+
                 Cooldown = 1000f;
                 FrozenCooldown = Cooldown;
 
@@ -98,13 +77,13 @@ namespace Uchu.World
                     if (entry.Cooldown > 0 || AbilityDowntime)
                         continue;
 
-                    var time = SkillComponent.CalculateSkill(entry.Tree, (int) entry.SkillId);
+                    var time = SkillComponent.CalculateSkill(entry.Tree, (int)entry.SkillId);
                     if (time == 0)
                         continue;
 
                     AbilityDowntime = true;
                     entry.Cooldown = entry.AbilityCooldown + time;
-                    
+
                     Cooldown += time;
                     FrozenCooldown = Cooldown;
                 }
@@ -130,7 +109,7 @@ namespace Uchu.World
             {
                 if (entry.GameObject.TryGetComponent<TriggerComponent>(out _))
                     continue;
-                
+
                 if (Stats.Enemies.Contains(entry.Factions.First()) && !Stats.Friends.Contains(entry.Factions.First()))
                 {
                     targets.Add(entry.GameObject);
@@ -138,6 +117,28 @@ namespace Uchu.World
             }
 
             return targets.ToArray();
+        }
+        public async void StartCombatAI()
+        {
+            SkillComponent = GameObject.GetComponent<SkillComponent>();
+            DestructibleComponent = GameObject.GetComponent<DestructibleComponent>();
+            QuickBuildComponent = GameObject.GetComponent<QuickBuildComponent>();
+            Stats = GameObject.GetComponent<DestroyableComponent>();
+
+            foreach (var skillEntry in SkillComponent.DefaultSkillSet)
+            {
+                var skillInfo = await ClientCache.FindAsync<SkillBehavior>(skillEntry.SkillId);
+
+                SkillEntries.Add(new NpcSkillEntry
+                {
+                    SkillId = skillEntry.SkillId,
+                    Cooldown = 0,
+                    AbilityCooldown = (skillInfo.Cooldown ?? 1) * 1000,
+                    Tree = await BehaviorTree.FromSkillAsync((int)skillEntry.SkillId)
+                });
+            }
+
+            Zone.Update(GameObject, delta => CalculateCombat(delta), 1);
         }
     }
 }
