@@ -110,7 +110,7 @@ namespace Uchu.World.Systems.Behaviors
         protected override void SerializeStart(BitWriter writer, BasicAttackBehaviorExecutionParameters parameters)
         {
             parameters.ServerSide = true;
-            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+            //parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
             writer.Align();
             
             // Three unknowns
