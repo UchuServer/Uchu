@@ -32,13 +32,13 @@ namespace Uchu.World
 
         public List<NpcSkillEntry> SkillEntries { get; set; }
 
-        private SkillComponent SkillComponent { get; set; }
+        public SkillComponent SkillComponent { get; set; }
 
-        private DestructibleComponent DestructibleComponent { get; set; }
+        public DestructibleComponent DestructibleComponent { get; set; }
 
-        private QuickBuildComponent QuickBuildComponent { get; set; }
+        public QuickBuildComponent QuickBuildComponent { get; set; }
 
-        private DestroyableComponent Stats { get; set; }
+        public DestroyableComponent Stats { get; set; }
 
         public bool Enabled { get; set; } = true;
 
