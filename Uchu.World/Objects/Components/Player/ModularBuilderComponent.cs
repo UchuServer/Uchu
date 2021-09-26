@@ -4,6 +4,7 @@ using InfectedRose.Lvl;
 using InfectedRose.Core;
 using Uchu.Core;
 using Uchu.Core.Client;
+using System;
 
 namespace Uchu.World
 {
@@ -61,13 +62,12 @@ namespace Uchu.World
         public async Task StartBuildingWithModel(Item model) {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
-            if (model.Settings.TryGetValue("assemblyPartLOTs", out var list))
-            {
-                await inventory.RemoveItemAsync(model, 1);
+            // Move all models back into the players inventory
+            if (inventory[InventoryType.TemporaryModels] != default)
+                foreach (Item item in inventory[InventoryType.TemporaryModels].Items)
+                    await inventory.MoveItemBetweenInventoriesAsync(item, item.Count, InventoryType.TemporaryModels, InventoryType.Models, showFlyingLoot: true, objectId: item.Id);
 
-                foreach (var part in (LegoDataList) list)
-                    await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
-            }
+            await inventory.MoveItemBetweenInventoriesAsync(model, 1, model.Inventory.InventoryType, InventoryType.TemporaryModels, objectId: model.Id);
         }
 
         /// <summary>
@@ -76,6 +76,17 @@ namespace Uchu.World
         public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+
+            // Disassemble all models
+            foreach (Item item in inventory[InventoryType.TemporaryModels].Items)
+            {
+                if (item.Settings.TryGetValue("assemblyPartLOTs", out var list))
+                {
+                    await inventory.RemoveItemAsync(item, 1);
+                    foreach (var part in (LegoDataList) list)
+                        await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
+                }
+            }
 
             // Remove all the items that were used for building this module
             foreach (var lot in models)
@@ -120,6 +131,7 @@ namespace Uchu.World
             if (!(GameObject is Player player))
                 return;
 
+            // Remove all remaining items from TemporaryModels
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             if (inventory[InventoryType.TemporaryModels] != null)
             {
