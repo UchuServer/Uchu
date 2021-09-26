@@ -24,7 +24,7 @@ Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_,
 
 To play LU, a client and a server are needed. The client connects to the server, and the server tells the client what to show and handles combat, NPCs, missions, and a lot more. Uchu is a server; you need the original client too (explained in detail under [Setting up a client](#setting-up-a-client)).
 
-To set up Uchu, you need to be able to navigate to folders using your operating system's terminal emulator. [Here](https://www.watchingthenet.com/how-to-navigate-through-folders-when-using-windows-command-prompt.html) is an introduction for Windows. For macOS, see [this](https://computers.tutsplus.com/tutorials/navigating-the-terminal-a-gentle-introduction--mac-3855) article. Linux users, you probably don't need this, but [here](https://www.redhat.com/sysadmin/navigating-filesystem-linux-terminal) is a guide.
+For the recommended installation process, there's a video tutorial available [for Windows](https://www.youtube.com/watch?v=mfT7p1CgApQ) and [for macOS](https://www.youtube.com/watch?v=7i8bBG9IdEM).
 
 ## Features
 ### Core
@@ -67,11 +67,18 @@ After you've extracted the client, you will need to install a mod to be able to 
 If you are on Linux or macOS, you will need [Wine](https://winehq.org) to launch the client (macOS 10.15 and later: use [this version](https://github.com/Gcenx/homebrew-wine), which has the 32-bit support you need for LU). You need to explicitly tell Wine to load the modloader by launching it using `WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe`.
 
 ## Setting up a server
+You can either use a release or build from source. Using a release is recommended for most users, as it is far easier than manually building from source.
 
 ### Option A: Using a release
-Currently not supported. This section will be updated in the future.
+- Download and run [Uchu Tool](https://github.com/UchuServer/UchuTool/releases/latest)
+  - If you've installed the client with Nexus LU Launcher, that's it - you're ready to go. Continue to [Getting ready to play](#getting-ready-to-play).
+  - If you've done a manual client installation, set the client resources path in `config.xml` as described under [Configuration](#configuration), and then run Uchu Tool again.
+
+Whenever you run Uchu Tool, it will automatically check for updates and (when applicable) offer to install them for you.
 
 ### Option B: Building from source
+In this section it is assumed that you are familiar with your operating system's terminal emulator, and know how to use it to navigate to folders and run files.
+
 - Install [git](https://git-scm.com/downloads)
 - Install [.NET 5.0 SDK](https://dotnet.microsoft.com/download) (for Linux users it will be called `.NET` without `SDK`)
 
@@ -94,6 +101,8 @@ dotnet Uchu.Master.dll
 ```
 
 The first time you run the server, a configuration file called `config.xml` will be generated.
+
+#### Configuration
 
 **If you have installed your client with Nexus LU Launcher,** Uchu will automatically detect its resources location, and no manual setup is required. The server will start, and you can continue to [Getting ready to play](#getting-ready-to-play).
 
