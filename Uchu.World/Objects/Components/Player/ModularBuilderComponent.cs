@@ -65,9 +65,9 @@ namespace Uchu.World
             // Move all models back into the players inventory
             if (inventory[InventoryType.TemporaryModels] != default)
                 foreach (Item item in inventory[InventoryType.TemporaryModels].Items)
-                    await inventory.MoveItemBetweenInventoriesAsync(item, item.Count, InventoryType.TemporaryModels, InventoryType.Models, showFlyingLoot: true, objectId: item.Id);
+                    await inventory.MoveItemBetweenInventoriesAsync(item, item.Count, InventoryType.TemporaryModels, InventoryType.Models, showFlyingLoot: true);
 
-            await inventory.MoveItemBetweenInventoriesAsync(model, 1, model.Inventory.InventoryType, InventoryType.TemporaryModels, objectId: model.Id);
+            await inventory.MoveItemBetweenInventoriesAsync(model, 1, model.Inventory.InventoryType, InventoryType.TemporaryModels);
         }
 
         /// <summary>

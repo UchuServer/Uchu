@@ -610,12 +610,14 @@ namespace Uchu.World
         /// <param name="destination">The destination inventory to move to</param>
         /// <param name="silent">Whether to send inventory update messages or not</param>
         /// <param name="showFlyingLoot">Whether to show flying loot animation</param>
-        /// <param name="objectId">The objectId that the moved item should have if it's moved as a whole stack</param>
         public async Task MoveItemBetweenInventoriesAsync(Item item, uint count, InventoryType source,
-            InventoryType destination, bool silent = false, bool showFlyingLoot = false, ObjectId objectId = default)
+            InventoryType destination, bool silent = false, bool showFlyingLoot = false)
         {
             if (item == null)
                 return;
+
+            // Use old object ID for new item if full stack (or more) is removed
+            var objectId = item.Count <= count ? item.Id : default;
 
             await RemoveItemAsync(item, count, source, silent);
             await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory, showFlyingLoot: showFlyingLoot, objectId: objectId); // TODO: find out if lootType is correct (what's LootType.Relocate?)
