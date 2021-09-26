@@ -124,6 +124,7 @@ namespace Uchu.World
                     GameObject.Serialize(this.GameObject);
 
                     // playerObject->Possess(myCar);
+                    Listen(player.OnAcknowledgePossession, this.OnAcknowledgePossession);
                     car.GetComponent<PossessableComponent>().Driver = player;
                     player.GetComponent<CharacterComponent>().VehicleObject = car;
 
@@ -181,7 +182,7 @@ namespace Uchu.World
         // y = 0.8638404011726379
         // z = 0.0
 
-        public void OnAcknowledgePossession(AcknowledgePossessionMessage message)
+        public void OnAcknowledgePossession(GameObject possessed)
         {
             GameObject.Serialize(this.GameObject);
 

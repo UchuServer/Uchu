@@ -7,8 +7,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void AcknowledgePossessionHandler(AcknowledgePossessionMessage message, Player player)
         {
-            var racingControl = player.Zone.ZoneControlObject.GetComponent<RacingControlComponent>();
-            racingControl.OnAcknowledgePossession(message);
+            message.Associate?.OnAcknowledgePossession.Invoke(message.PossessedObjId);
         }
 
         [PacketHandler]
