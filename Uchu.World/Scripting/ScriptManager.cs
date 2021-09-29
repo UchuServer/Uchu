@@ -13,9 +13,14 @@ namespace Uchu.World.Scripting
     public class ScriptManager
     {
         /// <summary>
-        /// Object scripts types in the script manager.
+        /// Object scripts types in the script manager referenced by name.
         /// </summary>
-        public Dictionary<string, Type> ObjectScriptTypes { get; } = new Dictionary<string, Type>();
+        public Dictionary<string, Type> NameObjectScriptTypes { get; } = new Dictionary<string, Type>();
+        
+        /// <summary>
+        /// Object scripts types in the script manager referenced by LOT.
+        /// </summary>
+        public Dictionary<Lot, Type> LotObjectScriptTypes { get; } = new Dictionary<Lot, Type>();
         
         private Zone Zone { get; }
         
@@ -44,14 +49,23 @@ namespace Uchu.World.Scripting
             foreach (var pack in ScriptPacks)
             {
                 if (!(pack is NativeScriptPack nativePack)) continue;
-                foreach (var (scriptName, objectScriptType) in nativePack.ObjectScriptTypes)
+                foreach (var (scriptName, objectScriptType) in nativePack.NameObjectScriptTypes)
                 {
-                    if (ObjectScriptTypes.ContainsKey(scriptName))
+                    if (NameObjectScriptTypes.ContainsKey(scriptName))
                     {
-                        Logger.Warning($"Object script time registered multiple times: {scriptName}");
+                        Logger.Warning($"Name-based object script time registered multiple times: {scriptName}");
                     }
-                    ObjectScriptTypes[scriptName] = objectScriptType;
+                    NameObjectScriptTypes[scriptName] = objectScriptType;
                     Logger.Information($"Registered object script {scriptName}");
+                }
+                foreach (var (scriptLot, objectScriptType) in nativePack.LotObjectScriptTypes)
+                {
+                    if (LotObjectScriptTypes.ContainsKey(scriptLot))
+                    {
+                        Logger.Warning($"LOT-based object script time registered multiple times: {scriptLot}");
+                    }
+                    LotObjectScriptTypes[scriptLot] = objectScriptType;
+                    Logger.Information($"Registered object script {objectScriptType.Name} for LOT {scriptLot}");
                 }
             }
         }

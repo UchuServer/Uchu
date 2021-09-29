@@ -170,16 +170,25 @@ namespace Uchu.World
             }
 
             // Log the script names.
-            if (scriptNames.Count == 0) return;
-            var scriptNamesOutput = scriptNames.Aggregate((i, j) => i + ", " + j);
-            Logger.Debug($"Loading script for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
+            var hasLotScript = this.ScriptManager.LotObjectScriptTypes.ContainsKey(gameObject.Lot);
+            if (scriptNames.Count == 0 && !hasLotScript) return;
+            string scriptNamesOutput = default;
+            if (scriptNames.Count > 0)
+            {
+                scriptNamesOutput = scriptNames.Aggregate((i, j) => i + ", " + j);
+                Logger.Debug($"Loading script for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
+            }
+            else if (hasLotScript)
+            {
+                Logger.Debug($"Loading LOT script for {gameObject} (LOT {gameObject.Lot})");
+            }
 
             // Attempt to load a script.
             var scriptLoaded = false;
             foreach (var scriptName in scriptNames)
             {
                 if (scriptLoaded) break;
-                foreach (var (objectScriptName, objectScriptType) in this.ScriptManager.ObjectScriptTypes)
+                foreach (var (objectScriptName, objectScriptType) in this.ScriptManager.NameObjectScriptTypes)
                 {
                     if (!scriptName.EndsWith(objectScriptName)) continue;
                     this.LoadObjectScript(gameObject, objectScriptType);
@@ -187,9 +196,14 @@ namespace Uchu.World
                     break;
                 }
             }
+            if (!scriptLoaded && hasLotScript)
+            {
+                this.LoadObjectScript(gameObject, this.ScriptManager.LotObjectScriptTypes[gameObject.Lot]);
+                scriptLoaded = true;
+            }
 
             // Output if no script was loaded.
-            if (scriptLoaded || scriptNamesOutput == "") return;
+            if (scriptLoaded || scriptNamesOutput == default) return;
             Logger.Debug($"No script found for {gameObject} (LOT {gameObject.Lot}): {scriptNamesOutput}");
         }
         

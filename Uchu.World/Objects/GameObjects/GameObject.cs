@@ -149,7 +149,8 @@ namespace Uchu.World
                 // Load the script for the object.
                 // Special case for when custom_script_server but there is no script component.
                 var hasCustomServerScript = this.Settings.TryGetValue("custom_script_server", out _);
-                if (hasCustomServerScript && this.GetComponent<LuaScriptComponent>() == default && this.GetComponent<SpawnerComponent>() == default)
+                var hasLotScript = this.Zone.ScriptManager.LotObjectScriptTypes.ContainsKey(this.Lot);
+                if ((hasCustomServerScript || hasLotScript) && this.GetComponent<LuaScriptComponent>() == default && this.GetComponent<SpawnerComponent>() == default)
                     this.Zone.LoadScriptForObject(this);
             });
 
