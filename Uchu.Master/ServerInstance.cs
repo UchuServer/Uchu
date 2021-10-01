@@ -40,7 +40,7 @@ namespace Uchu.Master
             var useDotNet = !string.IsNullOrWhiteSpace(dotnet);
             if (useDotNet && dotnet?.ToLower() == "dotnet" && !File.Exists(dotnet))
             {
-                var pathDirectories = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(";");
+                var pathDirectories = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(new[] { ';', ':' });
                 var dotNetInPath = pathDirectories.Any(pathDirectory => File.Exists(Path.Combine(pathDirectory, dotnet)));
                 if (!dotNetInPath)
                 {
