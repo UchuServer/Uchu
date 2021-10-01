@@ -124,7 +124,7 @@ namespace Uchu.World.Objects
         private readonly Dictionary<int, int?> _skillSetMap;
 
         /// <summary>
-        /// For an item makes sure that an item set is created if said item is part of one, if this item is not port of
+        /// For an item makes sure that an item set is created if said item is part of one, if this item is not part of
         /// an item set or the the item set this item belongs to is already created, this does nothing
         /// </summary>
         /// <param name="inventory">The inventory to get possible set items from</param>

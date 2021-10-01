@@ -12,6 +12,17 @@ namespace Uchu.StandardScripts.Equipment
         private int CoilCount = 0;
         public Coil(GameObject gameObject) : base(gameObject)
         {
+            //remove recoil count when unequipped
+            if (gameObject is Item item)
+            {
+                Listen(item.Owner.GetComponent<InventoryComponent>().OnUnEquipped, unequippedItem => 
+                {
+                    if (unequippedItem == item)
+                    {
+                        CoilCount = 0;
+                    }
+                });
+            }
         }
         protected void Process(Item item)
         {

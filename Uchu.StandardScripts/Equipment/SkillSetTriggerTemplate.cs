@@ -30,9 +30,9 @@ namespace Uchu.StandardScripts.Equipment
             {
                 bool priority = true;
                 var inventoryComponent = item.Owner.GetComponent<InventoryComponent>();
+                var set = inventoryComponent.ActiveItemSets.Find(i => i.SetID == SetID);
                 foreach (var otherItem in inventoryComponent.EquippedItems)
                 {
-                    var set = inventoryComponent.ActiveItemSets.Find(i => i.SetID == SetID);
                     if (otherItem.Lot > item.Lot && set.ItemsInSet.Contains(otherItem.Lot))
                     {
                         priority = false;

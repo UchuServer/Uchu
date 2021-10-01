@@ -20,7 +20,7 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+            parameters.Context.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
             //the variables seem to do nothing
             /*
             if (OrientCaster)
