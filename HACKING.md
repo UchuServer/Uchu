@@ -91,7 +91,7 @@ namespace Uchu.World.Handlers.GameMessages
 
 As you can see all handlers are inside a class that extends `HandlerGroup`. The actual handling functions are annotated with `PacketHandler` and should always contain two arguments: The message to handle and the player that the message came from.
 
-Uchu will automatically find the right handler for a certain Game Message and invoke it so you just have to define it.
+Uchu will use C# assembly reflection to find the right handler for a certain Game Message and invoke it so you just have to define it.
 
 ### Sending Game Messages
 To send a Game Message you need access to a player object which you can send the message to. Just create a new Game Message with all the arguments and call `Message` with it.
