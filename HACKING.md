@@ -33,7 +33,7 @@ Then there are also the folders that contain the actual Uchu code. These are:
 * **Uchu.World.Test** - Unit Test for Uchu.World
 * **Uchu.World** - Code for the world server
 
-If you want to contribute to Uchu most likely Uchu.Wolrd is where you want to make your changes as it contains most of the actual game logic.
+If you want to contribute to Uchu most likely Uchu.World is where you want to make your changes as it contains most of the actual game logic.
 
 ## Logging
 One of the most important things for debugging is logging stuff into the console. For this you can use The `Logger` class from `Uchu.Core`. It has four logging functions: Debug, Information, Warning and Error. You can also use Log and pass the log level as an argument. 
