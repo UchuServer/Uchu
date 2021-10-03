@@ -93,4 +93,18 @@ player.Message(new PlayerReadyMessage
 {
     Associate = player
 });
+```
 
+### Components
+Components don't exist by themselves. They are always attached to a GameObject. You can get components from a GameObject by using one of those functions:
+* `GetComponent(Type type)`
+* `GetComponents(Type type)`
+* `GetComponent<T>()`
+* `GetComponents<T>()`
+* `GetAllComponents()`
+* `TryGetComponent(Type type, out Component result)`
+* `TryGetComponents(Type type, out Component[] result)`
+* `TryGetComponent<T>(out T result)`
+* `TryGetComponents<T>(out T[] result)`
+
+The TryGet functions return a bool that says if a component of the requested type is present. Every component has a reference to it's GameObject, called `GameObject` that you can use to get access to other components.
