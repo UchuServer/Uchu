@@ -7,12 +7,12 @@ LU used two different types of servers to communicate. These are:
   * Character selection (Uchu.Char)
   * Main game (Uchu.World)
 
-**Note:** A world server in Uchu only handles one world but there can be multiple world servers in one Uchu instance. They can even serve the same map if one world server has reached the maximum amount of player. 
+**Note:** A world server in Uchu only handles one world but there can be multiple world servers in one Uchu instance. They can even serve the same map if one world server has reached the maximum amount of players.
 
 The address of the auth server is configured in the `boot.cfg` file in the installation directory of the client. All other servers can have any address because the previous server sends the address to the client.
 
 There were also two other server types that aren't implemented in Uchu. These are
-* The Chat server which was never used because the world sever handles chat messages
+* The Chat server, which isn't used, since chat messages are handled in the world server
 * The UGC (user generated content) server. This handles stuff like custom icons for modular rockets and cars. The UGC Server address is also set in `boot.cfg`
 
 ## The repo structure
@@ -37,7 +37,7 @@ Then there are also the folders that contain the actual Uchu code. These are:
 * **Uchu.Physics** - Code for all kinds of physics calculations (used by the world server)
 * **Uchu.Python** - Python interpreter for scripts
 * **Uchu.Sso** - Code for lcdr's [Single-Sign-On](https://github.com/lcdr/sso_auth)
-* **Uchu.StandardScripts** - C# versions of server scripts (most of the original lua server scripts are not available)
+* **Uchu.StandardScripts** - C# re-implementations of lua server scripts (most of which are not available in the client)
 * **Uchu.World.Test** - Unit Tests for Uchu.World
 * **Uchu.World** - Code for the world server
 
