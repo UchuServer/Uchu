@@ -40,3 +40,47 @@ One of the most important things for debugging is logging stuff into the console
 
 ## World Server
 The main entry point for the world server is `WorldUchuServer.cs` but this is probably not very interesting to you. What's more interesting is the Handlers folder. Like many other servers the world server is event driven. That means that it acts whenever it receives packets from a client. For nearly all messages that the client sends there is a handler defined in one of the `Handler` classes which are located in the Handlers folder. A handler class contains handlers for a specific purpose. For example the `InventoryHandler` class handles all inventory related packages. However these clases do not contain that much code. Rather they call functions on the corresponding components. Components as well as GameObjects are defined in the Objects folder and its subfolders. The deffinitions for Packets are stored in the Packets folder.
+
+### Game Messages
+Most of the Packages that the client and world server exchange are Game Messages (GM for short). They're used to communicate all kinds of things. GMs are described in the [lu_packet_structs](https://docs.google.com/document/d/1v9GB1gNwO0C81Rhd4imbaLN7z-R0zpK5sYJMbxPP3Kc) document and in lcdr's [lu_packets](https://lcdruniverse.org/lu_packets/lu_packets/).
+
+Uchu stores the struct definitions for Game Messages in `Packets/GameMessages`. There are two sub-folders here. One for messages sent by the client and one for messages sent by the server. The code for them looks like this (EquipItemMessage as an example)
+
+```c#
+namespace Uchu.World
+{
+    [ClientGameMessagePacketStruct]
+    public struct EquipItemMessage
+    {
+        public GameObject Associate { get; set; }
+        public GameMessageId GameMessageId => GameMessageId.EquipInventory;
+        public bool IgnoreCooldown { get; set; }
+        public bool OutSuccess { get; set; }
+        public Item Item { get; set; }
+    }
+}
+```
+The first two Properties (`Associate` and `GameMessageId`) are always present. Uchu will automatically create GM structs when it receives a GM based on `GameMessageId`. The `GameMessageId` type is an enum with an integer parameter that is defined in the `Enums` folder.
+
+Have a look at some GM structs if you want to learn more.
+
+### Handlers
+Handlers for Game Messages are defined in `Uchu.World.Handlers.GameMessages`.
+
+```c#
+namespace Uchu.World.Handlers.GameMessages
+{
+    public class MyHandler : HandlerGroup
+    {
+        [PacketHandler]
+        public void MyNewHandler(GameMessageToHandle message, Player player)
+        {
+            // Do stuff
+        }
+    }
+}
+```
+
+As you can see all handlers are inside a class that extends `HandlerGroup`. The actual handling functions are annotated with `PacketHandler` and should always contain two arguments: The message to handle and the player that the message came from.
+
+Uchu will automatically find the right handler for a certain Game Message and invoke it so just have to define it.
