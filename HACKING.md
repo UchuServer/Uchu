@@ -1,11 +1,19 @@
 ## Introduction
 LU is build with the [Entity–component–system](https://en.wikipedia.org/wiki/Entity_component_system) which you may know from the Unity Engine. In short that means everything that you see on screen (and more) is a GameObject on which Components can be attached. These components give the object functionality like rendering, physics and so on. 
 
-LU uses four different types of servers to communicate. These are: The authentication server (Uchu.Auth), which handles login and redirection to the character server (Uchu.Char). The character server then handles the character selection and redirection to the world server (Uchu.World). Now the world server is the server that you actually play on. It handles everything from movement to chat to missions. There can be multiple World servers running at once but one world server only serves one world. There can however be multiple world servers serving the same world. This happens if the maximum amount of players on a server is reached.
+LU used two different types of servers to communicate. These are: 
+* The authentication server (Uchu.Auth), which handles login and redirection to the world server. 
+* The world server, which handles two things
+  * Character selection (Uchu.Char)
+  * Main game (Uchu.World)
+
+**Note:** A world server in Uchu only handles one world but there can be multiple world servers in one Uchu instance. They can even serve the same map if one world server has reached the maximum amount of player. 
 
 The address of the auth server is configured in the `boot.cfg` file in the installation directory of the client. All other servers can have any address because the previous server sends the address to the client.
 
-Now of course these were only 3 servers but shouldn't there be four servers? - Yes there is also the UGC (User generated content) Server. This server was used for things like icons for modular rockets. As of now the UGC server is not implemented in Uchu.
+There were also two other server types that aren't implemented in Uchu. These are
+* The Chat server which was never used because the world sever handles chat messages
+* The UGC (user generated content) server. This handles stuff like custom icons for modular rockets and cars. The UGC Server address is also set in `boot.cfg`
 
 ## The repo structure
 As you probably already noticed the Uchu repository is quite complex. Therefore this paragraph will explain what the different folders contain and what they are for.
