@@ -26,8 +26,8 @@ There are 3 submodules (marked with a blue text color in GitHub) in the repo.
 Then there are also the folders that contain the actual Uchu code. These are:
 
 * **Uchu.Api** - It contains code for an api with which the Uchu instance can be controlled. There is a [Cli Tool](https://github.com/UchuServer/cli) that uses this api
-* **Uchu.Auth** - This contains the auth server
-* **Uchu.Char** - This contains the char server
+* **Uchu.Auth** - This contains code for handling authentication related packets
+* **Uchu.Char** - This contains code for handling packets related to the character selection
 * **Uchu.Core.Test** - Unit Tests for Uchu.Core
 * **Uchu.Core** - Contains stuff that is used all over the project, like logging, io, database access, etc
 * **Uchu.Instance** - The base for all servers that Uchu runs (like auth, char, world)
@@ -39,7 +39,7 @@ Then there are also the folders that contain the actual Uchu code. These are:
 * **Uchu.Sso** - Code for lcdr's [Single-Sign-On](https://github.com/lcdr/sso_auth)
 * **Uchu.StandardScripts** - C# re-implementations of lua server scripts (most of which are not available in the client)
 * **Uchu.World.Test** - Unit Tests for Uchu.World
-* **Uchu.World** - Code for the world server
+* **Uchu.World** - Code for handling the main game
 
 If you want to contribute to Uchu most likely Uchu.World is where you want to make your changes as it contains most of the actual game logic.
 
