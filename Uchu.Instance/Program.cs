@@ -62,11 +62,11 @@ namespace Uchu.Instance
                     // Server cannot function without auth or char; exit
                     await UchuServer.Api.RunCommandAsync<Task>(
                         UchuServer.MasterApi,
-                        $"master/decommission?message=Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying another port in config.xml."
+                        $"master/decommission?message=Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying another port in config.xml, or running Uchu as an administrator."
                     ).ConfigureAwait(false);
                 }
                 else if (ServerType == ServerType.World) {
-                    Console.WriteLine($"Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying more WorldPort entries under Networking in config.xml.");
+                    Console.WriteLine($"Could not start {ServerType} server on port {UchuServer.Port}: {e.Message}. Try specifying more WorldPort entries under Networking in config.xml, or running Uchu as an administrator.");
                 }
 
                 Environment.Exit(1);
