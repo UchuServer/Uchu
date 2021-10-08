@@ -116,3 +116,16 @@ Components don't exist by themselves. They are always attached to a GameObject. 
 * `TryGetComponents<T>(out T[] result)`
 
 The TryGet functions return a bool that says if a component of the requested type is present. Every component has a reference to it's GameObject, called `GameObject` that you can use to get access to other components.
+
+## Standard Scripts
+As mentioned before Uchu reimplements many of the server-side lua scripts in c# because most of them aren't included in the client and so are not accessible to the public. Similar to packet handlers the classes that represent those scripts have a special annotation that tells Uchu which script it replaces. Uchu will then, based on these annotations, find the right c# script to apply to a given object.
+
+Here's an example
+```c#
+[ScriptName("l_zone_ag_survival.lua")]
+public class AvantGardensSurvival : BaseSurvivalGame
+{
+    public AvantGardensSurvival(GameObject gameObject) : base(gameObject)
+    {
+        ...
+```
