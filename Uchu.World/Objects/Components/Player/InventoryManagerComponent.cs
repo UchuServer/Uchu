@@ -396,6 +396,7 @@ namespace Uchu.World
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
                     var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem, objectId: objectId);
+                    objectId = default;
 
                     totalToAdd -= toAdd;
                     totalAdded += toAdd;
