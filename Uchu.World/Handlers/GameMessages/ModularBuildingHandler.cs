@@ -46,7 +46,7 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void SetLastCustomBuildHandler(SetLastCustomBuildMessage message, Player player)
         {
-            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent))
+            if (player.TryGetComponent<CharacterComponent>(out var characterComponent))
                 characterComponent.Rocket = message.Tokens;
         }
 
