@@ -15,7 +15,7 @@ namespace Uchu.World
         
         public bool IsBuilding { get; private set; }
 
-        public int BuildMode { get; private set; }
+        public BuildMode Mode { get; private set; }
 
         /// <summary>
         /// Called when a modular build is completed.
@@ -39,7 +39,7 @@ namespace Uchu.World
             
             IsBuilding = true;
             BasePlate = message.Associate;
-            BuildMode = GetBuildModeForBasePlateLot(BasePlate.Lot); 
+            Mode = GetBuildModeForBasePlateLot(BasePlate.Lot); 
 
             player.Message(new StartArrangingWithItemMessage
             {
@@ -91,7 +91,7 @@ namespace Uchu.World
             {
                 ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
             };
-            Lot modelLot = GetModelLotForBuildMode(BuildMode);
+            Lot modelLot = GetModelLotForBuildMode(Mode);
             await inventory.AddLotAsync(modelLot, 1, model, InventoryType.Models);
 
             // Finish the build.
@@ -153,34 +153,31 @@ namespace Uchu.World
             IsBuilding = false;
         }
 
-        private static int GetBuildModeForBasePlateLot(Lot lot)
+        private static BuildMode GetBuildModeForBasePlateLot(Lot lot)
         {
-            // Modes are stored as bit flags in an integer
-            // 1: Not Customized, 2: Model, 4: Unused
-            // 8: Rocket, 16: Car (old), 32: Car (mod)
-            // 64: Car module, 128: Unused, 256: Pet
-
-            var dict = new Dictionary<Lot, int>()
-            {
-                { 4, 8 },     // "UGG - New Rocket Bay" (Rockets - Probably unused)
-                { 8044, 32 }, // "UGG - Modular Car Garage 6 (current newest)" (Cars)
-                { 9861, 32 }, // "Build Border Gnarled Forest Car" (Cars - Probably unused) 
-                { 9980, 8 },  // "Build Border for Nimbus Station" (Rockets)
-                { 10047, 8 }, // "Build border for LUPs station Rocket" (Rockets - Probably unused)
-            };
-
-            return dict[lot];
+            switch(lot) {
+                case Lot.NewRocketBay:
+                case Lot.NimbusRocketBuildBorder:
+                case Lot.LupRocketBuildBorder:
+                    return BuildMode.Rocket;
+                case Lot.CarBuildBorder:
+                case Lot.GnarledForestCarBuildBorder:
+                    return BuildMode.Car;
+                default:
+                    return BuildMode.NotCustomized;
+            }
         }
 
-        private static Lot GetModelLotForBuildMode(int mode)
+        private static Lot GetModelLotForBuildMode(BuildMode mode)
         {
-            var dict = new Dictionary<int, Lot>()
-            {
-                { 8, 6416 },  // Custom Modular Rocket Ship
-                { 32, 8092 }, // Custom Racing Car
-            };
-
-            return dict[mode];
+            switch(mode) {
+                case BuildMode.Rocket:
+                    return Lot.ModularRocket;
+                case BuildMode.Car:
+                    return Lot.ModularCar;
+                default:
+                    return default;
+            }
         }
     }
 }
