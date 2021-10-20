@@ -66,26 +66,13 @@ namespace Uchu.World
         public async Task StartBuildingWithModel(Item model) {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
-            // Move all previous models back into the players inventory
-            if (inventory[InventoryType.TemporaryModels] != default)
-                foreach (Item item in inventory[InventoryType.TemporaryModels].Items)
-                    await inventory.MoveItemBetweenInventoriesAsync(item, item.Count, InventoryType.TemporaryModels, InventoryType.Models, showFlyingLoot: true);
-
-            // Remove all remaining parts of the previuos Model from TemporaryItems
-            if (inventory[InventoryType.TemporaryItems] != default)
-                foreach (Item item in inventory[InventoryType.TemporaryItems].Items)
-                    await inventory.RemoveItemAsync(item);
-
-            // Move new model into TemporaryModels
-            await inventory.MoveItemBetweenInventoriesAsync(model, 1, model.Inventory.InventoryType, InventoryType.TemporaryModels);
-
-            // Move new models parts int TemporaryItems (this is for picking them up)
-            // If the parts were moved into TemporaryModels the client would move them into the 
-            // players inventory if they would be replaced and this is unwanted.
             if (model.Settings.TryGetValue("assemblyPartLOTs", out var list))
-                foreach (var part in (LegoDataList) list)
-                    await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryItems);
+            {
+                await inventory.RemoveItemAsync(model);
 
+                foreach (var part in (LegoDataList) list)
+                    await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
+            }
         }
 
         /// <summary>
@@ -94,17 +81,6 @@ namespace Uchu.World
         public async Task FinishBuilding(Lot[] models)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-
-            // Disassemble all models
-            foreach (Item item in inventory[InventoryType.TemporaryModels].Items)
-            {
-                if (item.Settings.TryGetValue("assemblyPartLOTs", out var list))
-                {
-                    await inventory.RemoveItemAsync(item, 1);
-                    foreach (var part in (LegoDataList) list)
-                        await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
-                }
-            }
 
             // Remove all the items that were used for building this module
             foreach (var lot in models)
@@ -138,10 +114,7 @@ namespace Uchu.World
             if (!(GameObject is Player player)) return;
 
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
-            
             var item = inventory.FindItem(lot, InventoryType.TemporaryModels);
-            if (item == default || item == null) 
-                item = inventory.FindItem(lot, InventoryType.TemporaryItems);
 
             await item.EquipAsync(true);
         }
@@ -150,9 +123,10 @@ namespace Uchu.World
         {
             if (!(GameObject is Player player))
                 return;
+            
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
             // Remove all remaining items from TemporaryModels
-            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
             if (inventory[InventoryType.TemporaryModels] != null)
             {
                 foreach (var temp in inventory[InventoryType.TemporaryModels].Items)
@@ -167,10 +141,6 @@ namespace Uchu.World
                 }
             }
 
-            // Remove all remaining parts from TemporaryItems
-            foreach (Item part in inventory[InventoryType.TemporaryItems].Items)
-                await inventory.RemoveItemAsync(part);
-            
             var thinkingHat = inventory[InventoryType.Items].Items.First(i => i.Lot == 6086);
             await thinkingHat.UnEquipAsync();
             
