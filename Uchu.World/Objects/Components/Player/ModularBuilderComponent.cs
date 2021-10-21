@@ -17,6 +17,8 @@ namespace Uchu.World
 
         public BuildMode Mode { get; private set; }
 
+        private Lot[] CurrentModel { get; set; }
+
         /// <summary>
         /// Called when a modular build is completed.
         /// </summary>
@@ -68,10 +70,19 @@ namespace Uchu.World
 
             if (model.Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
+                var legoDataList = (LegoDataList) list;
+
+                await GetBackOldModel();
                 await inventory.RemoveItemAsync(model);
 
-                foreach (var part in (LegoDataList) list)
+                // Remember the model that the player put into the builder
+                CurrentModel = new Lot[legoDataList.Count];
+                for(var i = 0; i < legoDataList.Count; i++)
+                {
+                    Lot part = (int)legoDataList[i];
+                    CurrentModel[i] = part;
                     await inventory.AddLotAsync((int) part, 1, default, InventoryType.TemporaryModels);
+                }
             }
         }
 
@@ -86,13 +97,10 @@ namespace Uchu.World
             foreach (var lot in models)
                 await inventory.RemoveLotAsync(lot, 1, InventoryType.TemporaryModels);
 
-            // Create the rocket.
-            var model = new LegoDataDictionary
-            {
-                ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(models.Select(s => s.Id))
-            };
-            Lot modelLot = GetModelLotForBuildMode(Mode);
-            await inventory.AddLotAsync(modelLot, 1, model, InventoryType.Models);
+            await CreateNewModel(models);
+
+            // Don't give back the original model if the user made a new one.
+            CurrentModel = null;
 
             // Finish the build.
             await ConfirmFinish();
@@ -126,6 +134,8 @@ namespace Uchu.World
             
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
+            await GetBackOldModel();
+
             // Remove all remaining items from TemporaryModels
             if (inventory[InventoryType.TemporaryModels] != null)
             {
@@ -151,6 +161,53 @@ namespace Uchu.World
             });
             
             IsBuilding = false;
+        }
+
+        private async Task CreateNewModel(Lot[] parts)
+        {
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+
+            var model = new LegoDataDictionary
+            {
+                ["assemblyPartLOTs"] = LegoDataList.FromEnumerable(parts.Select(s => s.Id))
+            };
+
+            Lot modelLot = GetModelLotForBuildMode(Mode);
+            await inventory.AddLotAsync(modelLot, 1, model, InventoryType.Models);
+        }
+
+        private async Task GetBackOldModel()
+        {
+            if (CurrentModel == null)
+                return;
+
+            var inventory = GameObject.GetComponent<InventoryManagerComponent>();
+
+            var parts = new Item[CurrentModel.Length];
+            var model = CurrentModel;
+
+            // Remove model so it doesn't get duplicated
+            CurrentModel = null;
+
+            // Check if all parts are still available in the players inventory
+            for (var i = 0; i < parts.Length; i++)
+            {
+                Lot lot = model[i];
+
+                var item = inventory.FindItem(lot, InventoryType.TemporaryModels);
+                if (item == null)
+                    item = inventory.FindItem(lot, InventoryType.Models);
+
+                if (item == null)
+                    return;
+
+                parts[i] = item;
+            }
+
+            foreach (var part in parts)
+                await inventory.RemoveItemAsync(part, 1);
+
+            await CreateNewModel(model);
         }
 
         private static BuildMode GetBuildModeForBasePlateLot(Lot lot)
