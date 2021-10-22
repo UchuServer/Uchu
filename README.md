@@ -8,12 +8,10 @@ LEGO® Universe server written in C#
 1. [Introduction](#introduction)
 2. [Features](#features)
 3. [Setting up a client](#setting-up-a-client)
-   1. [Option A: Nexus LU Launcher](#option-a-nexus-lu-launcher)
-   2. [Option B: Manual installation](#option-b-manual-installation)
 4. [Setting up a server](#setting-up-a-server)
    1. [Option A: Using a release](#option-a-using-a-release)
    2. [Option B: Building from source](#option-b-building-from-source)
-   3. [Advanced configuration (optional)](#advanced-server-configuration-optional)
+   3. [Configuration](#configuration)
 5. [Getting ready to play](#getting-ready-to-play)
 6. [Support](#support)
 7. [Python scripting](#python-scripting)
@@ -23,8 +21,6 @@ LEGO® Universe server written in C#
 Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_, which was shut down in January 2012.
 
 To play LU, a client and a server are needed. The client connects to the server, and the server tells the client what to show and handles combat, NPCs, missions, and a lot more. Uchu is a server; you need the original client too (explained in detail under [Setting up a client](#setting-up-a-client)).
-
-For the recommended installation process, there's a video tutorial available [for Windows](https://www.youtube.com/watch?v=mfT7p1CgApQ) and [for macOS](https://www.youtube.com/watch?v=7i8bBG9IdEM).
 
 ## Features
 ### Core
@@ -48,18 +44,6 @@ For the recommended installation process, there's a video tutorial available [fo
 - Leaderboards for the above, where applicable
 
 ## Setting up a client
-
-There are two ways to go about this. Using Option A, Nexus LU Launcher, is recommended, as it is easier and will let you skip a configuration step when setting up the server later on.
-
-### Option A: Nexus LU Launcher
-Nexus LU Launcher is a program that helps you install, configure and launch the LEGO® Universe client.
-Find the `.zip` for your operating system on [this page](https://github.com/TheNexusAvenger/Nexus-LU-Launcher/releases/latest), extract it and run the program.
-
-Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
-
-In the **Play** menu, click the **Add** button and add a server with as address `localhost` (the name is up to you).
-
-### Option B: Manual installation
 You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
 
 After you've extracted the client, you will need to install a mod to be able to use it with the Uchu server. This mod replaces the original, outdated networking protocol used by the game. Download `mod.zip` from [this page](https://github.com/lcdr/raknet_shim_dll/releases) and extract it in your LU client folder. The result should be that a folder called `mods`, a file called `dinput8.dll` and `legouniverse.exe` are all in the same folder.
@@ -71,8 +55,7 @@ You can either use a release or build from source. Using a release is recommende
 
 ### Option A: Using a release
 - Download and run [Uchu Tool](https://github.com/UchuServer/UchuTool/releases/latest)
-  - If you've installed the client with Nexus LU Launcher, that's it - you're ready to go. Continue to [Getting ready to play](#getting-ready-to-play).
-  - If you've done a manual client installation, set the client resources path in `config.xml` as described under [Configuration](#configuration), and then run Uchu Tool again.
+- Set the client resources path in `config.xml` as described under [Configuration](#configuration), and then run Uchu Tool again.
 
 Whenever you run Uchu Tool, it will automatically check for updates and (when applicable) offer to install them for you.
 
@@ -102,11 +85,8 @@ dotnet Uchu.Master.dll
 
 The first time you run the server, a configuration file called `config.xml` will be generated.
 
-#### Configuration
-
-**If you have installed your client with Nexus LU Launcher,** Uchu will automatically detect its resources location, and no manual setup is required. The server will start, and you can continue to [Getting ready to play](#getting-ready-to-play).
-
-**If you have manually installed your client,** or Uchu can't find the client resources downloaded by Nexus LU Launcher, open `config.xml` with a text editor. Find this text:
+### Configuration
+Open `config.xml` with a text editor. Find this text:
 ```xml
 <GameResourceFolder>path to res folder</GameResourceFolder>
 ```
@@ -123,7 +103,7 @@ git pull
 dotnet build
 ```
 
-### Advanced server configuration _(optional)_
+#### Advanced server configuration _(optional)_
 **Only needed for advanced use cases:** see [this document](Configuration.md) for an explanation of all available configuration options.
 
 ## Getting ready to play
