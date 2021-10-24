@@ -7,9 +7,9 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/ve/l_mission_console_client.lua
+    /// Script for VE console (https://lu.lcdruniverse.org/explorer/objects/12551)
     /// </summary>
-    [ScriptName("l_mission_console_client.lua")]
+    [ScriptName("ScriptComponent_1372_script_name__removed")]
     public class MissionConsole : ObjectScript
     {
         /// <summary>

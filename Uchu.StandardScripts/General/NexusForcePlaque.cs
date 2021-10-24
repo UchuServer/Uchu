@@ -4,9 +4,9 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.General
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/general/l_story_box_interact_client.lua
+    /// Script to set flags for story plaques (https://lu.lcdruniverse.org/explorer/objects/8139) the player uses
     /// </summary>
-    [ScriptName("l_story_box_interact_client.lua")]
+    [ScriptName("ScriptComponent_1054_script_name__removed")]
     public class NexusForcePlaque : ObjectScript
     {
         /// <summary>

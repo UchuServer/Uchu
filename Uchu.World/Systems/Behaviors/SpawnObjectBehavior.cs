@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace Uchu.World.Systems.Behaviors
@@ -23,10 +24,12 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
+            var rotateOffset = Vector3.Transform(new Vector3(Distance, 0, 0), parameters.Context.Associate.Transform.Rotation);
+            var offset = new Vector3(rotateOffset.X, 0, rotateOffset.Y);
             var obj = GameObject.Instantiate<AuthoredGameObject>(
                 parameters.Context.Associate.Zone, 
                 Lot, 
-                parameters.Context.Associate.Transform.Position, 
+                parameters.Context.Associate.Transform.Position + offset, 
                 parameters.Context.Associate.Transform.Rotation,
                 parameters.Context.Associate
             );

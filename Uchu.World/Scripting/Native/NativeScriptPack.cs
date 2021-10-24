@@ -11,10 +11,15 @@ namespace Uchu.World.Scripting.Native
     internal class NativeScriptPack : ScriptPack
     {
         /// <summary>
-        /// Object script types in the script pack.
+        /// Object script types in the script pack referenced by name.
         /// </summary>
-        public Dictionary<string, Type> ObjectScriptTypes { get; } = new Dictionary<string, Type>();
+        public Dictionary<string, Type> NameObjectScriptTypes { get; } = new Dictionary<string, Type>();
         
+        /// <summary>
+        /// Object script types in the script pack referenced by LOT.
+        /// </summary>
+        public Dictionary<Lot, Type> LotObjectScriptTypes { get; } = new Dictionary<Lot, Type>();
+
         private List<NativeScript> _scripts;
 
         private Assembly _assembly;
@@ -59,11 +64,17 @@ namespace Uchu.World.Scripting.Native
             {
                 // Ignore non-object scripts.
                 if (!type.IsAssignableTo(typeof(ObjectScript))) continue;
+                
+                // Add the object scripts.
                 var scriptNames = type.GetCustomAttributes<ScriptName>();
                 foreach (var scriptName in scriptNames)
                 {
-                    // Add the object script.
-                    this.ObjectScriptTypes.Add(scriptName.Name.ToLower(), type);
+                    this.NameObjectScriptTypes.Add(scriptName.Name.ToLower(), type);
+                }
+                var scriptLots = type.GetCustomAttributes<LotSpecific>();
+                foreach (var scriptLot in scriptLots)
+                {
+                    this.LotObjectScriptTypes.Add(scriptLot.Lot, type);
                 }
             }
         }

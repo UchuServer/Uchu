@@ -8,12 +8,10 @@ LEGO® Universe server written in C#
 1. [Introduction](#introduction)
 2. [Features](#features)
 3. [Setting up a client](#setting-up-a-client)
-   1. [Option A: Nexus LU Launcher](#option-a-nexus-lu-launcher)
-   2. [Option B: Manual installation](#option-b-manual-installation)
 4. [Setting up a server](#setting-up-a-server)
    1. [Option A: Using a release](#option-a-using-a-release)
    2. [Option B: Building from source](#option-b-building-from-source)
-   3. [Advanced configuration (optional)](#advanced-server-configuration-optional)
+   3. [Configuration](#configuration)
 5. [Getting ready to play](#getting-ready-to-play)
 6. [Support](#support)
 7. [Python scripting](#python-scripting)
@@ -23,8 +21,6 @@ LEGO® Universe server written in C#
 Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_, which was shut down in January 2012.
 
 To play LU, a client and a server are needed. The client connects to the server, and the server tells the client what to show and handles combat, NPCs, missions, and a lot more. Uchu is a server; you need the original client too (explained in detail under [Setting up a client](#setting-up-a-client)).
-
-To set up Uchu, you need to be able to navigate to folders using your operating system's terminal emulator. [Here](https://www.watchingthenet.com/how-to-navigate-through-folders-when-using-windows-command-prompt.html) is an introduction for Windows. For macOS, see [this](https://computers.tutsplus.com/tutorials/navigating-the-terminal-a-gentle-introduction--mac-3855) article. Linux users, you probably don't need this, but [here](https://www.redhat.com/sysadmin/navigating-filesystem-linux-terminal) is a guide.
 
 ## Features
 ### Core
@@ -48,18 +44,6 @@ To set up Uchu, you need to be able to navigate to folders using your operating 
 - Leaderboards for the above, where applicable
 
 ## Setting up a client
-
-There are two ways to go about this. Using Option A, Nexus LU Launcher, is recommended, as it is easier and will let you skip a configuration step when setting up the server later on.
-
-### Option A: Nexus LU Launcher
-Nexus LU Launcher is a program that helps you install, configure and launch the LEGO® Universe client.
-Find the `.zip` for your operating system on [this page](https://github.com/TheNexusAvenger/Nexus-LU-Launcher/releases/latest), extract it and run the program.
-
-Let it download and extract the client, then when that's finished go to the `Patches` menu and enable **Mod Loader** and **TCP/UDP Shim**.
-
-In the **Play** menu, click the **Add** button and add a server with as address `localhost` (the name is up to you).
-
-### Option B: Manual installation
 You need to download an **unpacked** client, so that Uchu can use its resources. A list of client downloads is available [here](https://docs.google.com/document/d/1XmHXWuUQqzUIOcv6SVVjaNBm4bFg9lnW4Pk1pllimEg/view). The recommended client is **humanoid/lcdr’s unpacked client**. This is a `.RAR` file; extract it somewhere.
 
 After you've extracted the client, you will need to install a mod to be able to use it with the Uchu server. This mod replaces the original, outdated networking protocol used by the game. Download `mod.zip` from [this page](https://github.com/lcdr/raknet_shim_dll/releases) and extract it in your LU client folder. The result should be that a folder called `mods`, a file called `dinput8.dll` and `legouniverse.exe` are all in the same folder.
@@ -67,11 +51,17 @@ After you've extracted the client, you will need to install a mod to be able to 
 If you are on Linux or macOS, you will need [Wine](https://winehq.org) to launch the client (macOS 10.15 and later: use [this version](https://github.com/Gcenx/homebrew-wine), which has the 32-bit support you need for LU). You need to explicitly tell Wine to load the modloader by launching it using `WINEDLLOVERRIDES="dinput8.dll=n,b" wine ./legouniverse.exe`.
 
 ## Setting up a server
+You can either use a release or build from source. Using a release is recommended for most users, as it is far easier than manually building from source.
 
 ### Option A: Using a release
-Currently not supported. This section will be updated in the future.
+- Download and run [Uchu Tool](https://github.com/UchuServer/UchuTool/releases/latest)
+- Set the client resources path in `config.xml` as described under [Configuration](#configuration), and then run Uchu Tool again.
+
+Whenever you run Uchu Tool, it will automatically check for updates and (when applicable) offer to install them for you.
 
 ### Option B: Building from source
+In this section it is assumed that you are familiar with your operating system's terminal emulator, and know how to use it to navigate to folders and run files.
+
 - Install [git](https://git-scm.com/downloads)
 - Install [.NET 5.0 SDK](https://dotnet.microsoft.com/download) (for Linux users it will be called `.NET` without `SDK`)
 
@@ -95,9 +85,8 @@ dotnet Uchu.Master.dll
 
 The first time you run the server, a configuration file called `config.xml` will be generated.
 
-**If you have installed your client with Nexus LU Launcher,** Uchu will automatically detect its resources location, and no manual setup is required. The server will start, and you can continue to [Getting ready to play](#getting-ready-to-play).
-
-**If you have manually installed your client,** or Uchu can't find the client resources downloaded by Nexus LU Launcher, open `config.xml` with a text editor. Find this text:
+### Configuration
+Open `config.xml` with a text editor. Find this text:
 ```xml
 <GameResourceFolder>path to res folder</GameResourceFolder>
 ```
@@ -114,7 +103,7 @@ git pull
 dotnet build
 ```
 
-### Advanced server configuration _(optional)_
+#### Advanced server configuration _(optional)_
 **Only needed for advanced use cases:** see [this document](Configuration.md) for an explanation of all available configuration options.
 
 ## Getting ready to play
@@ -132,4 +121,5 @@ Uchu supports Python scripting, which allows you to make minigames and other ser
 
 ## Contributing
 Contributions are always welcome! If you encounter an issue that isn't logged on the [issue board](https://github.com/UchuServer/Uchu/issues) yet, feel free to add it. And, of course, you're more than welcome to open a pull request to fix it :)  
-If you are interested in contributing code to Uchu, feel free to join the [community Discord server](https://discord.gg/njjfQ4W6qv) and contact one of the developers to get an invite to the development-focused Discord server.
+If you are interested in contributing code to Uchu, feel free to join the [community Discord server](https://discord.gg/njjfQ4W6qv) and contact one of the developers to get an invite to the development-focused Discord server.  
+See [HACKING.md](HACKING.md) to learn more about developing Uchu.
