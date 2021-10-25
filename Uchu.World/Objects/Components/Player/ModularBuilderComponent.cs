@@ -194,9 +194,8 @@ namespace Uchu.World
             {
                 Lot lot = model[i];
 
-                var item = inventory.FindItem(lot, InventoryType.TemporaryModels);
-                if (item == null)
-                    item = inventory.FindItem(lot, InventoryType.Models);
+                var item = inventory.FindItem(lot, InventoryType.TemporaryModels) 
+                        ?? inventory.FindItem(lot, InventoryType.Models);
 
                 if (item == null)
                     return;
