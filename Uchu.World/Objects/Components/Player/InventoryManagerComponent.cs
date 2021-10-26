@@ -331,10 +331,11 @@ namespace Uchu.World
         /// <param name="rootItem">An optional parent item</param>
         /// <param name="lootType">The reason this lot is given to the player</param>
         /// <param name="showFlyingLoot">Whether to show flying loot animation</param>
+        /// <param name="objectId">The objectId that the moved item should have if it is moved as a whole stack</param>
         /// <returns>The list of items that were created while adding the lot</returns>
         public async Task AddLotAsync(Lot lot, uint count, LegoDataDictionary settings = default,
             InventoryType inventoryType = default, Item rootItem = default, LootType lootType = default,
-            bool showFlyingLoot = true)
+            bool showFlyingLoot = true, ObjectId objectId = default)
         {
             var createdItems = new List<Item>();
             
@@ -394,7 +395,8 @@ namespace Uchu.World
                 while (totalToAdd > 0)
                 {
                     var toAdd = (uint) Min(stackSize, (int) totalToAdd);
-                    var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem);
+                    var item = await Item.Instantiate(GameObject, lot, inventory, toAdd, extraInfo: settings, rootItem: rootItem, objectId: objectId);
+                    objectId = default;
 
                     totalToAdd -= toAdd;
                     totalAdded += toAdd;
@@ -615,8 +617,11 @@ namespace Uchu.World
             if (item == null)
                 return;
 
+            // Use old object ID for new item if full stack (or more) is removed
+            var objectId = item.Count <= count ? item.Id : default;
+
             await RemoveItemAsync(item, count, source, silent);
-            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory, showFlyingLoot: showFlyingLoot); // TODO: find out if lootType is correct (what's LootType.Relocate?)
+            await AddLotAsync(item.Lot , count, item.Settings, destination, lootType: LootType.Inventory, showFlyingLoot: showFlyingLoot, objectId: objectId); // TODO: find out if lootType is correct (what's LootType.Relocate?)
         }
         
         #endregion methods

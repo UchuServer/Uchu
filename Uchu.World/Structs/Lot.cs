@@ -88,6 +88,13 @@ namespace Uchu.World
         #region Consts
 
         public static readonly Lot ModularRocket = 6416;
+        public static readonly Lot ModularCar = 8092;
+
+        public const int NewRocketBay = 4;
+        public const int NimbusRocketBuildBorder = 9980;
+        public const int LupRocketBuildBorder = 10047;
+        public const int CarBuildBorder = 8044;
+        public const int GnarledForestCarBuildBorder = 9861;
 
         public static readonly Lot Spawner = 176;
 
