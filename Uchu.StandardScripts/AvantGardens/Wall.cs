@@ -25,6 +25,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 GameObject[] spawners = Zone.GameObjects.Where(t => t.GetGroups().Contains("AG_WallSpawner_1")).ToArray();
                 foreach (var spawnObject in spawners)
                 {
+                    /*
                     var obj = GameObject.Instantiate(new LevelObjectTemplate
                     {
                         Lot = 4712, //stromling
@@ -37,6 +38,7 @@ namespace Uchu.StandardScripts.AvantGardens
 
                     Object.Start(obj);
                     GameObject.Construct(obj);
+                    */
                 }
             });
         }

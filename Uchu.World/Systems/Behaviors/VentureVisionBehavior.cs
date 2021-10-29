@@ -17,6 +17,7 @@ namespace Uchu.World.Systems.Behaviors
             ShowMiniBosses = await GetParameter<bool>("show_minibosses");
             ShowPetDigs = await GetParameter<bool>("show_pet_digs");
         }
+        /*
 
         public override BehaviorExecutionParameters DeserializeStart(BitReader reader, ExecutionContext context,
             ExecutionBranchContext branchContext)
@@ -35,5 +36,6 @@ namespace Uchu.World.Systems.Behaviors
             writer.WriteBit(ShowPetDigs);
             return base.SerializeStart(writer, context, branchContext);
         }
+        */
     }
 }

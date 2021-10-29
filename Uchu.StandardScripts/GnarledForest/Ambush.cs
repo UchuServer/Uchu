@@ -23,6 +23,7 @@ namespace Uchu.StandardScripts.GnarledForest
                 {
                     if (collider.GameObject is Player player)
                     {
+                        /*
                         if (!triggered)
                         {
                             //this appears to trigger properly but does nothing for some reason
@@ -35,6 +36,7 @@ namespace Uchu.StandardScripts.GnarledForest
                                 spawner.Deactivate();
                             }, 45000);
                         }
+                        */
                     }
                 });
             }

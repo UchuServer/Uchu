@@ -17,9 +17,7 @@ namespace Uchu.StandardScripts.General
         /// <param name="gameObject">Game object to control with the script.</param>
         public UnusedScript(GameObject gameObject) : base(gameObject)
         {
-            //scripts that use this either do nothing or are implemented with other functions, and to prevent
-            //the logger from showing those scripts for the "did not load" message, they use this blank
-            //script
+            //TODO: replace this with actual script ignore list
         }
     }
 }
