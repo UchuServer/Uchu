@@ -24,12 +24,11 @@ namespace Uchu.World.Systems.Behaviors
 
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
-            var rotateOffset = Vector3.Transform(new Vector3(Distance, 0, 0), parameters.Context.Associate.Transform.Rotation);
-            var offset = new Vector3(rotateOffset.X, 0, rotateOffset.Y);
+            var rotateOffset = Vector3.Transform(new Vector3(0, 0, Distance), parameters.Context.Associate.Transform.Rotation);
             var obj = GameObject.Instantiate<AuthoredGameObject>(
                 parameters.Context.Associate.Zone, 
                 Lot, 
-                parameters.Context.Associate.Transform.Position + offset, 
+                parameters.Context.Associate.Transform.Position + rotateOffset, 
                 parameters.Context.Associate.Transform.Rotation,
                 parameters.Context.Associate
             );
