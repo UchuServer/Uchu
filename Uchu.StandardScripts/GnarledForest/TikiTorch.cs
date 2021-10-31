@@ -14,7 +14,7 @@ namespace Uchu.StandardScripts.GnarledForest
         /// <param name="gameObject">Game object to control with the script.</param>
         public TikiTorch(GameObject gameObject) : base(gameObject)
         {
-            PlayFXEffect("tikitorch", "fire", 611);
+            StartFXEffect("tikitorch", "fire", 611);
             // Listen to the tiki torch being interacted with.
             Listen(gameObject.OnInteract, player =>
             {
@@ -35,13 +35,6 @@ namespace Uchu.StandardScripts.GnarledForest
             });
             Listen(Zone.OnPlayerLoad, player => 
             {
-                Listen(player.OnFireServerEvent, (args, message) =>
-                {
-                    if (args == "physicsReady" && IsBurning)
-                    {
-                        PlayFXEffect("tikitorch", "fire", 611);
-                    }
-                });
                 Listen(player.OnSkillEvent, async (target, effectHandler) =>
                 {
                     if (effectHandler == "waterspray" && IsBurning && target == gameObject)
@@ -58,7 +51,7 @@ namespace Uchu.StandardScripts.GnarledForest
                                 IsBurning = true;
                                 StopFXEffect("water");
                                 StopFXEffect("steam");
-                                PlayFXEffect("tikitorch", "fire", 611);
+                                StartFXEffect("tikitorch", "fire", 611);
                             }
                         }, 7000);
                         if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))

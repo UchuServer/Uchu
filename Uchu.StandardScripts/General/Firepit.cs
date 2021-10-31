@@ -20,7 +20,7 @@ namespace Uchu.StandardScripts.General
         public Firepit(GameObject gameObject) : base(gameObject)
         {
             SetProximityRadius(2, "Firepit");
-            PlayFXEffect("Burn", "running", 295);
+            StartFXEffect("Burn", "running", 295);
             
             //fix aoe skill not running
             var ai = gameObject.AddComponent<BaseCombatAiComponent>();
@@ -42,17 +42,9 @@ namespace Uchu.StandardScripts.General
                             {
                                 IsBurning = true;
                                 StopFXEffect("Off");
-                                PlayFXEffect("Burn", "running", 295);
+                                StartFXEffect("Burn", "running", 295);
                             }
                         }, 37000);
-                    }
-                });
-                //this is inside the script but causes double fire, ???
-                Listen(player.OnFireServerEvent, (args, message) =>
-                {
-                    if (args == "physicsReady" && IsBurning)
-                    {
-                        PlayFXEffect("Burn", "running", 295);
                     }
                 });
             });
