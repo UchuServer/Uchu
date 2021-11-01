@@ -72,14 +72,20 @@ namespace Uchu.Physics
             }
 
             // First precedence value >= second precedence value
-            // Cube = 1, sphere = 0
+            // Capsule = 2, cube = 1, sphere = 0
 
-            if (first is BoxBody box && second is SphereBody sphere)
-                return BoxSphereCollision(box, sphere);
-            if (first is SphereBody sphere1 && second is SphereBody sphere2)
-                return SphereSphereCollision(sphere1, sphere2);
-            if (first is BoxBody box1 && second is BoxBody box2)
-                return BoxBoxCollision(box1, box2);
+            if (first is BoxBody boxSphereFirst && second is SphereBody boxSphereSecond)
+                return BoxSphereCollision(boxSphereFirst, boxSphereSecond);
+            if (first is SphereBody sphereSphereFirst && second is SphereBody sphereSphereSecond)
+                return SphereSphereCollision(sphereSphereFirst, sphereSphereSecond);
+            if (first is BoxBody boxBoxFirst && second is BoxBody boxBoxSecond)
+                return BoxBoxCollision(boxBoxFirst, boxBoxSecond);
+            if (first is CapsuleBody capsuleSphereFirst && second is SphereBody capsuleSphereSecond)
+                return CapsuleSphereCollision(capsuleSphereFirst, capsuleSphereSecond);
+            if (first is CapsuleBody capsuleBoxFirst && second is BoxBody capsuleBoxSecond)
+                return CapsuleBoxCollision(capsuleBoxFirst, capsuleBoxSecond);
+            if (first is CapsuleBody capsuleCapsuleFirst && second is CapsuleBody capsuleCapsuleSecond)
+                return CapsuleCapsuleCollision(capsuleCapsuleFirst, capsuleCapsuleSecond);
 
             throw new NotSupportedException();
         }
@@ -142,6 +148,54 @@ namespace Uchu.Physics
             var maxDistanceSquared = Math.Pow(firstSphere.Radius + secondSphere.Radius, 2);
             var distanceSquared = Vector3.DistanceSquared(firstSphere.Position, secondSphere.Position);
             return distanceSquared < maxDistanceSquared;
+        }
+
+        /// <summary>
+        /// Determine whether a capsule and a sphere intersect.
+        /// </summary>
+        /// <param name="capsule">Capsule physics object</param>
+        /// <param name="sphere">Sphere physics object</param>
+        public static bool CapsuleSphereCollision(CapsuleBody capsule, SphereBody sphere)
+        {
+            // reference frame: capsule at (0, 0, 0), pointing in positive y direction
+            var sphereCoordsRelative = sphere.Position - capsule.Position;
+
+            // to transform coordinate system to have capsule be axis-aligned, we apply
+            // the reverse of the rotation to the sphere coordinates
+            var inverse = new Quaternion(capsule.Rotation.X, capsule.Rotation.Y, capsule.Rotation.Z, -capsule.Rotation.W);
+            var sphereCoordsTransformed = Vector3.Transform(sphereCoordsRelative, inverse);
+
+            // coordinates of the line in the centre of the cylinder part
+            const int capsuleMinY = 0;
+            var capsuleMaxY = capsule.Height;
+
+            const int closestPointToSphereX = 0;
+            var closestPointToSphereY = Math.Clamp(sphereCoordsTransformed.Y, capsuleMinY, capsuleMaxY);
+            const int closestPointToSphereZ = 0;
+
+            return Vector3.DistanceSquared(sphereCoordsTransformed,
+                       new Vector3(closestPointToSphereX, closestPointToSphereY, closestPointToSphereZ))
+                   < Math.Pow(capsule.Radius + sphere.Radius, 2);
+        }
+
+        /// <summary>
+        /// Determine whether two capsules intersect.
+        /// </summary>
+        /// <param name="firstCapsule">The first capsule</param>
+        /// <param name="secondCapsule">The second capsule</param>
+        public static bool CapsuleCapsuleCollision(CapsuleBody firstCapsule, CapsuleBody secondCapsule)
+        {
+            throw new NotImplementedException("Capsule-capsule collision checks are not implemented.");
+        }
+
+        /// <summary>
+        /// Determine whether a capsule and a box intersect.
+        /// </summary>
+        /// <param name="capsule">The capsule</param>
+        /// <param name="box">The box</param>
+        public static bool CapsuleBoxCollision(CapsuleBody capsule, BoxBody box)
+        {
+            throw new NotImplementedException("Capsule-box collision checks are not implemented.");
         }
 
         /// <summary>

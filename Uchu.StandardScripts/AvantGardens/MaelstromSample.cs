@@ -5,9 +5,9 @@ using Uchu.Core.Resources;
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/ag/l_ag_maelstrom_sample.lua
+    /// Script to show/hide maelstrom samples based on whether the player has the relevant mission
     /// </summary>
-    [ScriptName("l_ag_maelstrom_sample.lua")]
+    [LotSpecific(14718)]
     public class MaelstromSample : ObjectScript
     {
         /// <summary>

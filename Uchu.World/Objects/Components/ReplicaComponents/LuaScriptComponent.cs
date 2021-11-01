@@ -31,26 +31,22 @@ namespace Uchu.World
                     return;
                 }
 
-                if (GameObject.Settings.TryGetValue("custom_script_server", out var scriptOverride) && (string) scriptOverride != "")
-                {
-                    ScriptName = (string) scriptOverride;
-                }
+                // Set the server script name.
+                if (GameObject.Settings.TryGetValue("custom_script_server", out var serverScriptOverride) && (string) serverScriptOverride != "")
+                    this.ScriptName = (string) serverScriptOverride;
                 else
-                {
-                    ScriptName = script.Scriptname;
-                }
-                
-                // Set the script name.
-                this.ClientScriptName = script.Clientscriptname;
+                    this.ScriptName = script.Scriptname;
+
+                // Set the client script name.
+                if (GameObject.Settings.TryGetValue("custom_script_client", out var clientScriptOverride) && (string) clientScriptOverride != "")
+                    this.ClientScriptName = (string) clientScriptOverride;
+                else
+                    this.ClientScriptName = script.Scriptname;
+
                 Logger.Debug($"{GameObject} -> {this.ScriptName}, {this.ClientScriptName}");
                 
                 // Start the object script.
-                var newObjectScriptName = Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
-                    objectScriptName => (this.ScriptName ?? "").ToLower().EndsWith(objectScriptName))
-                        ?? Zone.ScriptManager.ObjectScriptTypes.Keys.FirstOrDefault(
-                            objectScriptName => (this.ClientScriptName ?? "").ToLower().EndsWith(objectScriptName));
-                if (newObjectScriptName == null) return;
-                this.Zone.LoadObjectScript(this.GameObject, Zone.ScriptManager.ObjectScriptTypes[newObjectScriptName]);
+                this.Zone.LoadScriptForObject(this.GameObject);
             });
         }
 

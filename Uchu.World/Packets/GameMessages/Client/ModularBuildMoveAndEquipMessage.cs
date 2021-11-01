@@ -7,6 +7,6 @@ namespace Uchu.World
     {
         public GameObject Associate { get; set; }
         public GameMessageId GameMessageId => GameMessageId.ModularBuildMoveAndEquip;
-        public Lot Lot;
+        public Lot Lot { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RakDotNet.IO;
 
@@ -56,13 +57,16 @@ namespace Uchu.World.Social
                     break;
                 case IDictionary<string, object> dict:
                     writer.Write((byte) Amf3Type.Array);
-                    WriteArray(writer, dict);
+                    WriteDict(writer, dict);
+                    break;
+                case Array array:
+                    writer.Write((byte) Amf3Type.Array);
+                    WriteArray(writer, array);
                     break;
                 case null:
                     writer.Write((byte) Amf3Type.Undefined);
                     break;
             }
-
         }
 
         public static void WriteText(BitWriter writer, string value)
@@ -77,15 +81,26 @@ namespace Uchu.World.Social
             }
         }
 
-        public static void WriteArray(BitWriter writer, IDictionary<string, object> dict)
+        public static void WriteDict(BitWriter writer, IDictionary<string, object> dict) => WriteArrayAndDict(writer, dict: dict);
+
+        public static void WriteArray(BitWriter writer, Array array) => WriteArrayAndDict(writer, array: array);
+
+        public static void WriteArrayAndDict(BitWriter writer, Array array = null, IDictionary<string, object> dict = null)
         {
-            WriteNumber(writer, 0x01);
-            foreach (var (key, value) in dict)
-            {
-                WriteText(writer, key);
-                Write(writer, value);
-            }
-            writer.Write((byte) Amf3Type.Null);
+            var arrayLength = (uint) (array?.Length ?? 0);
+            WriteNumber(writer, (arrayLength << 1) | 0x01);
+            if (dict != null)
+                foreach (var (key, value) in dict)
+                {
+                    WriteText(writer, key);
+                    Write(writer, value);
+                }
+            WriteText(writer, "");
+            if (array != null)
+                foreach (var value in array)
+                {
+                    Write(writer, value);
+                }
         }
     }
 }

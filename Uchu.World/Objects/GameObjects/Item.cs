@@ -83,7 +83,9 @@ namespace Uchu.World
 
             // If no object Id is provided (e.g. for an NPC or at pickup) generate a random one
             objectId = objectId == default ? ObjectId.Standalone : objectId;
+
             var instance = Instantiate<Item>(owner.Zone, itemTemplate?.Name ?? $"Objects_{lot}_name", objectId: objectId, lot: lot);
+            instance.InitializeComponents();
 
             // Set all the standard values
             instance.Settings = extraInfo ?? new LegoDataDictionary();

@@ -109,6 +109,8 @@ namespace Uchu.World
         public Event<Player, MessageBoxRespondMessage> OnMessageBoxRespond { get; }
 
         public Event<GameObject> OnAcknowledgePossession { get; }
+        
+        public Event<Player, ChoiceBoxRespondMessage> OnChoiceBoxRespond { get; }
 
         #endregion
         
@@ -146,28 +148,18 @@ namespace Uchu.World
 
             OnAcknowledgePossession = new Event<GameObject>();
 
+            OnChoiceBoxRespond = new Event<Player, ChoiceBoxRespondMessage>();
+
             Listen(OnStart, () =>
             {
                 foreach (var component in Components.ToArray()) Start(component);
                 
                 // Load the script for the object.
                 // Special case for when custom_script_server but there is no script component.
-                if (!this.Settings.TryGetValue("custom_script_server", out var scriptNameValue) || 
-                    this.GetComponent<LuaScriptComponent>() != default || this.GetComponent<SpawnerComponent>() != default) return;
-                var scriptName = ((string) scriptNameValue).ToLower();
-                Logger.Debug($"{this} -> {scriptNameValue}");
-                var scriptLoaded = false;
-                foreach (var (objectScriptName, objectScriptType) in Zone.ScriptManager.ObjectScriptTypes)
-                {
-                    if (!scriptName.EndsWith(objectScriptName)) continue;
-                    this.Zone.LoadObjectScript(this, objectScriptType);
-                    scriptLoaded = true;
-                    break;
-                }
-                //if it attempted to load a script that isn't here yet, log it
-                if (!scriptLoaded && scriptName != ""){
-                    Logger.Debug($"Did not load script: {scriptName} Object LOT: {Lot.Id}");
-                }
+                var hasCustomServerScript = this.Settings.TryGetValue("custom_script_server", out _);
+                var hasLotScript = this.Zone.ScriptManager.LotObjectScriptTypes.ContainsKey(this.Lot);
+                if ((hasCustomServerScript || hasLotScript) && this.GetComponent<LuaScriptComponent>() == default && this.GetComponent<SpawnerComponent>() == default)
+                    this.Zone.LoadScriptForObject(this);
             });
 
             Listen(OnDestroyed, () =>

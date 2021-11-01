@@ -32,9 +32,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void ModelPrefabHandler(StartArrangingWithModelMessage message, Player player)
+        public async Task ModelPrefabHandler(StartArrangingWithModelMessage message, Player player)
         {
-            
+            await player.GetComponent<ModularBuilderComponent>().StartBuildingWithModel(message.Item);
         }
 
         [PacketHandler]
@@ -46,8 +46,8 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public void SetLastCustomBuildHandler(SetLastCustomBuildMessage message, Player player)
         {
-            if (!player.TryGetComponent<CharacterComponent>(out var characterComponent));
-            characterComponent.Rocket = message.Tokens;
+            if (player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                characterComponent.Rocket = message.Tokens;
         }
 
         [PacketHandler]

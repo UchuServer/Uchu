@@ -7,9 +7,9 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/Equipment/l_maelstrom_extracticator_client.lua
+    /// Script for spawned maelstrom vacuum (https://lu.lcdruniverse.org/explorer/objects/14596)
     /// </summary>
-    [ScriptName("l_maelstrom_extracticator_client.lua")]
+    [ScriptName("ScriptComponent_1582_script_name__removed")]
     public class MaelstromVacuum : ObjectScript
     {
         /// <summary>

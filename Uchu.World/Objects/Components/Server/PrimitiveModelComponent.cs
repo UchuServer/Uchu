@@ -42,7 +42,7 @@ namespace Uchu.World
                         Z = (float) GameObject.Settings["primitiveModelValueZ"]
                     };
 
-                    return BoxBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, cuboidSize);
+                    return BoxBody.Create(Zone.Simulation, Transform.Position + new Vector3(0, cuboidSize.Y / 2, 0), Transform.Rotation, cuboidSize);
                 case PrimitiveModelType.Cone:
                     break;
                 case PrimitiveModelType.Cylinder:
@@ -52,7 +52,7 @@ namespace Uchu.World
                         Y = (float) GameObject.Settings["primitiveModelValueY"]
                     };
 
-                    return SphereBody.Create(Zone.Simulation, Transform.Position, cylinderSize.X);
+                    return CapsuleBody.Create(Zone.Simulation, Transform.Position, Transform.Rotation, cylinderSize.X, cylinderSize.Y);
                 case PrimitiveModelType.Sphere:
                     break;
                 case PrimitiveModelType.Invalid:

@@ -5,9 +5,9 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.AvantGardens
 {
     /// <summary>
-    /// Native implementation of scripts/02_client/map/ag/l_ag_plunger_target.lua
+    /// Script to show/hide targets based on whether the player has the relevant mission
     /// </summary>
-    [ScriptName("l_ag_plunger_target.lua")]
+    [LotSpecific(14380)]
     public class TargetFilter : ObjectScript
     {
         /// <summary>
