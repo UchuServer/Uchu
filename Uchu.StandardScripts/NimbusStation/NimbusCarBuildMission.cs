@@ -24,15 +24,11 @@ namespace Uchu.StandardScripts.NimbusStation
                 if (!player.TryGetComponent<ModularBuilderComponent>(out var modularBuilderComponent)) return;
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
 
-                // Listen for rockets being built.
+                // Listen for cars being built.
                 Listen(modularBuilderComponent.OnBuildFinished, async (build) =>
                 {
-                    Logger.Debug("OnBuildFinished: " + build.model);
                     if (build.model == Lot.ModularCar)
-                    {
                         await missionInventoryComponent.ScriptAsync(939, 8044);
-                        Logger.Debug("MissionFinished");
-                    }
                 });
             });
         }
