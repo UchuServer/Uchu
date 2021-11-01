@@ -33,10 +33,10 @@ namespace Uchu.StandardScripts.NimbusStation
                 if (!player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) return;
                 
                 // Listen for rockets being built.
-                Listen(modularBuilderComponent.OnBuildFinished, async (models) =>
+                Listen(modularBuilderComponent.OnBuildFinished, async (build) =>
                 {
                     // Complete the task if one of the models is a Nimbus Rocket part.
-                    var isNimbusRocket = models.Any(model => NimbusRocketParts.Contains(model));
+                    var isNimbusRocket = build.parts.Any(part => NimbusRocketParts.Contains(part));
                     if (!isNimbusRocket) return;
                     await missionInventoryComponent.ScriptAsync(1178, 9980);
                 });
