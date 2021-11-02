@@ -62,7 +62,11 @@ namespace Uchu.Core
             {
                 typeof(LegoDataDictionary), (reader, context) =>
                 {
-                    return LegoDataDictionary.FromString(reader.ReadString((int) reader.Read<uint>(), true));
+                    var length = (int) reader.Read<uint>();
+                    var legoDataDictionary = LegoDataDictionary.FromString(reader.ReadString(length, true));
+                    if (length > 0) reader.Read<ushort>(); // Trailing null bytes
+
+                    return legoDataDictionary;
                 }
             },
         };
