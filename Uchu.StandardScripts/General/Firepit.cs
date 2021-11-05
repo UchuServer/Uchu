@@ -53,14 +53,16 @@ namespace Uchu.StandardScripts.General
         {
             if (timerName == "TimeBetweenCast" && GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
             {
-                //when returnRotation is removed, remove async from here
                 AddTimerWithCancel(2, "TimeBetweenCast");
                 foreach (var player in Zone.Players)
                 {
                     //skill radius
                     if (Vector3.Distance(player.Transform.Position, GameObject.Transform.Position) <= 5 && player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
                     {
-                        missionInventoryComponent.ScriptAsync(658, GameObject.Lot);
+                        Task.Run(async () => 
+                        {
+                            await missionInventoryComponent.ScriptAsync(658, GameObject.Lot);
+                        });
                     }
                 }
                 skillComponent.CalculateSkillAsync(43, GameObject);

@@ -36,7 +36,7 @@ namespace Uchu.StandardScripts.General
                 World.Object.Destroy(gameObject);
                 //should we add a RequestDie method? this seems a bit excessive to do every time
             }, 10000);
-            Zone.Schedule(() => 
+            Zone.Schedule(async () => 
             {
                 var rand = new Random();
                 var roll = rand.Next(1, 7);
@@ -51,7 +51,7 @@ namespace Uchu.StandardScripts.General
                     {
                         bonusLog = "! Congratulations!";
                         var mission = missions.GetMission(756);
-                        missions.ScriptAsync(mission.Tasks[0].TaskId, gameObject.Lot);
+                        await missions.ScriptAsync(mission.Tasks[0].TaskId, gameObject.Lot);
                     }
                     Logger.Information($"{authored.Author.Name} rolled a {roll}{bonusLog}");
                 }
