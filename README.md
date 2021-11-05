@@ -15,7 +15,8 @@ LEGO® Universe server written in C#
 5. [Getting ready to play](#getting-ready-to-play)
 6. [Support](#support)
 7. [Python scripting](#python-scripting)
-8. [Contributing](#contributing)
+8. [API](#api)
+9. [Contributing](#contributing)
 
 ## Introduction
 Uchu is a server implementation for The LEGO Group's 2010 MMO _LEGO® Universe_, which was shut down in January 2012.
@@ -118,6 +119,9 @@ If you encounter issues with the installation process, take a moment to re-read 
 
 ## Python scripting
 Uchu supports Python scripting, which allows you to make minigames and other server additions with Python. See [this document](Uchu.Python/SCRIPTING.md) to get started.
+
+## API
+Uchu supports REST API requests, which allows you to create, retrieve, update, or delete access to the uchu server. See [this document](Uchu.Api/API.md) to get started.
 
 ## Contributing
 Contributions are always welcome! If you encounter an issue that isn't logged on the [issue board](https://github.com/UchuServer/Uchu/issues) yet, feel free to add it. And, of course, you're more than welcome to open a pull request to fix it :)  
