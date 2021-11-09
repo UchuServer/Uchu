@@ -75,10 +75,11 @@ namespace Uchu.World
 
                     player.Teleport(startPosition + new Vector3(20, 50, 0));
 
+                    var carItem = player.GetComponent<InventoryManagerComponent>().FindItem(Lot.ModularCar);
                     // auto modAComp = myCar->GetComponent<ModuleAssemblyComponent>();
                     var moduleAssemblyComponent = car.GetComponent<ModuleAssemblyComponent>();
                     // modAComp->SetAssembly(u"1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;");
-                    moduleAssemblyComponent.SetAssembly("1:8129;1:8130;1:14709;1:14708;1:14711;1:14712;1:14710;");
+                    moduleAssemblyComponent.SetAssembly(carItem.Settings["assemblyPartLOTs"].ToString());
 
                     // // Set Parent
                     // myCar->SetParent(this->owner->GetZoneInstance()->zoneControlObject);
