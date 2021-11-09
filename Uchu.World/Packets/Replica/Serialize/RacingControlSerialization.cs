@@ -34,17 +34,17 @@ namespace Uchu.World
     public struct RacingControlSerialization
     {
         [Default]
-        [StoreLengthAs(typeof(uint))]
-        public ActivityUserInfo[] ActivityUserInfos { get; set; }
-        [Default]
         public ushort ExpectedPlayerCount { get; set; }
         [Default]
+        [NoLength]
         public PreRacePlayerInfo[] PreRacePlayerInfos { get; set; }
         [Default]
+        [NoLength]
         public PostRacePlayerInfo[] PostRacePlayerInfos { get; set; }
         [Default]
         public RaceInfo RaceInfo { get; set; } // this is still good, at least the LapCount
         [Default]
+        [NoLength]
         public DuringRacePlayerInfo[] DuringRacePlayerInfos { get; set; }
     }
 }

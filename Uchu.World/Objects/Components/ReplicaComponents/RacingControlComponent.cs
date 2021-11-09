@@ -206,49 +206,28 @@ namespace Uchu.World
         // override to be able to use ScriptedActivityComponent as base
         public override void Serialize(BitWriter writer)
         {
-            // First write scripted activity info (list of players)
-            // Atm this is done in GetConstructPacket here,
-            // it could be done with base.Construct but then the
-            // RacingControlSerialization struct isn't actually correct
-            // base.Construct(writer);
-            StructPacketParser.WritePacket(this.GetConstructPacket(), writer);
-        }
-
-        public new RacingControlSerialization GetConstructPacket()
-        {
-            var packet = this.GetPacket<RacingControlSerialization>();
-            packet.ActivityUserInfos = new ActivityUserInfo[this.Participants.Count];
-            Logger.Information("Adding participants to packet");
-            for (var i = 0; i < this.Participants.Count; i++)
+            for (var i = 0; i < this.Parameters.Count; i++)
             {
-                Logger.Information($"Adding participant {i}");
-                var participant = this.Participants[i];
                 var parameters = Parameters[i];
                 parameters[0] = 1;
                 parameters[1] = 265f; // doesn't appear on client
                 parameters[2] = 87f; // doesn't appear on client
-                var activityUserInfo = new ActivityUserInfo
-                {
-                    User = participant,
-                    ActivityValue0 = parameters[0],
-                    ActivityValue1 = parameters[1],
-                    ActivityValue2 = parameters[2],
-                    ActivityValue3 = parameters[3],
-                    ActivityValue4 = parameters[4],
-                    ActivityValue5 = parameters[5],
-                    ActivityValue6 = parameters[6],
-                    ActivityValue7 = parameters[7],
-                    ActivityValue8 = parameters[8],
-                    ActivityValue9 = parameters[9],
-                };
-                packet.ActivityUserInfos[i] = activityUserInfo;
             }
 
-            packet.ExpectedPlayerCount = 1; // this displays correctly on the client
+            base.Serialize(writer);
+            StructPacketParser.WritePacket(this.GetSerializePacket(), writer);
+        }
+
+        public new RacingControlSerialization GetSerializePacket()
+        {
+            var packet = this.GetPacket<RacingControlSerialization>();
+
+            packet.ExpectedPlayerCount = (ushort)this.Participants.Count;
+
+            packet.PreRacePlayerInfos = this._preRacePlayerInfos.ToArray();
 
             packet.RaceInfo = _raceInfo; // lap count displays correctly on the client
 
-            // packet.PreRacePlayerInfos = this._preRacePlayerInfos.ToArray();
             packet.DuringRacePlayerInfos = this._duringRacePlayerInfos.ToArray();
 
             // TODO

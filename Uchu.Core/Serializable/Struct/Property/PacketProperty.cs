@@ -92,6 +92,8 @@ namespace Uchu.Core
         /// </summary>
         private Type _arrayLengthPropertyType = typeof(uint);
 
+        private bool _arrayNoLenght = false;
+
         /// <summary>
         /// Custom property writer for the type.
         /// </summary>
@@ -166,6 +168,9 @@ namespace Uchu.Core
             {
                 this._arrayLengthPropertyType = storeLengthAs.Type;
             }
+
+            if(property.GetCustomAttribute(typeof(NoLengthAttribute)) is NoLengthAttribute noLength)
+                this._arrayNoLenght = true;
         }
 
         /// <summary>
@@ -183,7 +188,7 @@ namespace Uchu.Core
                 // Write the length if the type is defined.
                 // Some packets, like UIMessageServerToSingleClientMessage, do not send a length.
                 var valueArray = (Array) value;
-                if (this._arrayLengthPropertyType != null) {
+                if (this._arrayLengthPropertyType != null && !_arrayNoLenght) {
                     var length = Convert.ChangeType(valueArray.Length, this._arrayLengthPropertyType);
                     _bitWriterWriteMethod.MakeGenericMethod(this._arrayLengthPropertyType)
                         .Invoke(writer, new object[] { length });
@@ -192,6 +197,9 @@ namespace Uchu.Core
                 // Write the array values.
                 foreach (var subValue in valueArray)
                 {
+                    if (_arrayNoLenght)
+                        writer.WriteBit(true);
+
                     if (this._customWriter != null)
                     {
                         this._customWriter(writer, subValue);
@@ -200,6 +208,9 @@ namespace Uchu.Core
                             .Invoke(writer, new object[] { subValue });
                     }
                 }
+
+                if (_arrayNoLenght)
+                    writer.WriteBit(false);
             }
             else
             {

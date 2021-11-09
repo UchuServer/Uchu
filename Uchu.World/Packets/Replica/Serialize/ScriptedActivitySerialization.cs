@@ -5,6 +5,7 @@ namespace Uchu.World
     public struct ScriptedActivitySerialization
     {
         [Default]
+        [StoreLengthAs(typeof(uint))]
         public ActivityUserInfo[] ActivityUserInfos { get; set; }
     }
 
