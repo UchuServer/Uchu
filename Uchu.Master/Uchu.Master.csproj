@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
-        <LangVersion>8</LangVersion>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>10</LangVersion>
         <BeautyLibsDir>lib</BeautyLibsDir>
         <NoBeautyFlag>True</NoBeautyFlag>
         <ForceBeauty>True</ForceBeauty>
