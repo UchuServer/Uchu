@@ -180,7 +180,7 @@ namespace Uchu.Master
 
             foreach (var instance in Instances)
             {
-                instance.Process.Kill();
+                instance.Process?.Kill();
             }
 
             if (!(ev is ConsoleCancelEventArgs cancelEv)) return;
@@ -323,21 +323,30 @@ namespace Uchu.Master
             {
                 Config = UchuConfiguration.Load(configFilename);
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DllSource.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, use config.default.xml if it exists
             else if (File.Exists(legacySecondConfigName))
             {
                 Config = UchuConfiguration.Load(legacySecondConfigName);
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DllSource.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, generate a new config file
             else
             {
                 Config = new UchuConfiguration();
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DllSource.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
 
                 // Add default value for instance DLL source and script DLL source.
                 if (File.Exists("lib/Uchu.Instance.dll"))

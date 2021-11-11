@@ -187,7 +187,12 @@ namespace Uchu.Core.Config
         /// The path to the Uchu.Instance DLL
         /// </summary>
         [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net5.0/Uchu.Instance.dll";
-        
+
+        /// <summary>
+        /// Whether to use threads instead of processes. Only available for builds in Debug mode.
+        /// </summary>
+        [XmlElement] public bool StartInstancesAsThreads { get; set; } = false;
+
         /// <summary>
         /// The path to the script source DLLs
         /// </summary>

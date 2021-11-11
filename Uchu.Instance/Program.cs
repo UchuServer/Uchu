@@ -15,15 +15,22 @@ using Uchu.World.Handlers;
 
 namespace Uchu.Instance
 {
-    internal static class Program
+    public class Program
     {
-        private static UchuServer UchuServer { get; set; }
-        
-        private static Guid Id { get; set; }
-        
-        private static ServerType ServerType { get; set; }
-        
-        private static async Task Main(string[] args)
+        private UchuServer UchuServer { get; set; }
+
+        private Guid Id { get; set; }
+
+        private ServerType ServerType { get; set; }
+
+        public static async Task Main(string[] args)
+        {
+            var server = new Program();
+
+            await server.Start(args);
+        }
+
+        public async Task Start(string[] args)
         {
             if (args.Length != 2)
                 throw new ArgumentException("Expected 2 argument.");
@@ -40,11 +47,17 @@ namespace Uchu.Instance
                 switch (ServerType)
                 {
                     case ServerType.Authentication:
-                        Logger.SetServerTypeInformation("Auth");
+#if DEBUG
+                        if (!UchuServer.Config.DllSource.StartInstancesAsThreads)
+#endif
+                            Logger.SetServerTypeInformation("Auth");
                         await UchuServer.StartAsync(typeof(LoginHandler).Assembly, true);
                         break;
                     case ServerType.Character:
-                        Logger.SetServerTypeInformation("Char");
+#if DEBUG
+                        if (!UchuServer.Config.DllSource.StartInstancesAsThreads)
+#endif
+                            Logger.SetServerTypeInformation("Char");
                         await UchuServer.StartAsync(typeof(CharacterHandler).Assembly);
                         break;
                     case ServerType.World:
@@ -77,7 +90,7 @@ namespace Uchu.Instance
             Console.ReadKey();
         }
 
-        private static async Task ConfigureAsync(string config)
+        private async Task ConfigureAsync(string config)
         {
             var serializer = new XmlSerializer(typeof(UchuConfiguration));
 

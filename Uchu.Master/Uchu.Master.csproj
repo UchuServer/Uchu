@@ -12,6 +12,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Uchu.Api\Uchu.Api.csproj" />
       <ProjectReference Include="..\Uchu.Core\Uchu.Core.csproj" />
+      <ProjectReference Include="..\Uchu.Instance\Uchu.Instance.csproj" Condition="'$(Configuration)' == 'Debug'"/>
     </ItemGroup>
 
     <ItemGroup>
