@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Extensions.Logging;
@@ -110,9 +111,9 @@ namespace Uchu.Core.Config
         /// <param name="path">File to save to.</param>
         public void Save(string path)
         {
-            using var file = File.CreateText(path);
-            Serializer.Serialize(file, this);
-            file.Close();
+            using var streamWriter = new XmlTextWriter(path, Encoding.UTF8);
+            streamWriter.Formatting = Formatting.Indented;
+            Serializer.Serialize(streamWriter, this);
         }
 
         /// <summary>
@@ -186,7 +187,7 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net5.0/Uchu.Instance.dll";
+        [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net6.0/Uchu.Instance.dll";
 
         /// <summary>
         /// Whether to use threads instead of processes. Only available for builds in Debug mode.
