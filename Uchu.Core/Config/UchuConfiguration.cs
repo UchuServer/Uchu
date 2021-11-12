@@ -102,6 +102,11 @@ namespace Uchu.Core.Config
         /// General behaviour of the program
         /// </summary>
         [XmlElement("ServerBehaviour")] public ServerBehaviour ServerBehaviour { get; set; } = new ServerBehaviour();
+        
+        /// <summary>
+        /// Options for development and debugging
+        /// </summary>
+        [XmlElement("Debugging")] public DebugConfig DebugConfig { get; set; } = new DebugConfig();
 
         private static readonly XmlSerializer Serializer = new XmlSerializer(typeof(UchuConfiguration));
 
@@ -188,11 +193,6 @@ namespace Uchu.Core.Config
         /// The path to the Uchu.Instance DLL
         /// </summary>
         [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net6.0/Uchu.Instance.dll";
-
-        /// <summary>
-        /// Whether to use threads instead of processes. Only available for builds in Debug mode.
-        /// </summary>
-        [XmlElement] public bool StartInstancesAsThreads { get; set; } = false;
 
         /// <summary>
         /// The path to the script source DLLs
@@ -388,5 +388,16 @@ namespace Uchu.Core.Config
         /// How long the server should wait for newly created instances to get ready before throwing a timeout exception
         /// </summary>
         [XmlElement] public int InstanceCommissionTimeout { get; set; } = 30000;
+    }
+
+    /// <summary>
+    /// Options for development and debugging
+    /// </summary>
+    public class DebugConfig
+    {
+        /// <summary>
+        /// Whether to use threads instead of processes. Only available for builds in Debug mode.
+        /// </summary>
+        [XmlElement] public bool StartInstancesAsThreads { get; set; } = false;
     }
 }

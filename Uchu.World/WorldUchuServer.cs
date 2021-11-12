@@ -80,7 +80,7 @@ namespace Uchu.World
 
             ZoneId = (ZoneId) instance.Info.Zones.First();
 #if DEBUG
-            if (!Config.DllSource.StartInstancesAsThreads)
+            if (!Config.DebugConfig.StartInstancesAsThreads)
 #endif
                 Logger.SetServerTypeInformation("Z" + ZoneId.Id);
 

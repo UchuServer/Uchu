@@ -48,14 +48,14 @@ namespace Uchu.Instance
                 {
                     case ServerType.Authentication:
 #if DEBUG
-                        if (!UchuServer.Config.DllSource.StartInstancesAsThreads)
+                        if (!UchuServer.Config.DebugConfig.StartInstancesAsThreads)
 #endif
                             Logger.SetServerTypeInformation("Auth");
                         await UchuServer.StartAsync(typeof(LoginHandler).Assembly, true);
                         break;
                     case ServerType.Character:
 #if DEBUG
-                        if (!UchuServer.Config.DllSource.StartInstancesAsThreads)
+                        if (!UchuServer.Config.DebugConfig.StartInstancesAsThreads)
 #endif
                             Logger.SetServerTypeInformation("Char");
                         await UchuServer.StartAsync(typeof(CharacterHandler).Assembly);

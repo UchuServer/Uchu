@@ -203,7 +203,7 @@ namespace Uchu.Core
                 using (var xmlReader = XmlReader.Create(fs))
                 {
                     Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
-                    if (!Config.DllSource.StartInstancesAsThreads)
+                    if (!Config.DebugConfig.StartInstancesAsThreads)
                         Logger.SetConfiguration(Config);
                     UchuContextBase.Config = Config;
                 }

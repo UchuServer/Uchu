@@ -324,7 +324,7 @@ namespace Uchu.Master
                 Config = UchuConfiguration.Load(configFilename);
                 Logger.SetConfiguration(Config);
 #if DEBUG
-                if (!Config.DllSource.StartInstancesAsThreads)
+                if (!Config.DebugConfig.StartInstancesAsThreads)
 #endif
                     Logger.SetServerTypeInformation("Master");
             }
@@ -334,7 +334,7 @@ namespace Uchu.Master
                 Config = UchuConfiguration.Load(legacySecondConfigName);
                 Logger.SetConfiguration(Config);
 #if DEBUG
-                if (!Config.DllSource.StartInstancesAsThreads)
+                if (!Config.DebugConfig.StartInstancesAsThreads)
 #endif
                     Logger.SetServerTypeInformation("Master");
             }
@@ -344,7 +344,7 @@ namespace Uchu.Master
                 Config = new UchuConfiguration();
                 Logger.SetConfiguration(Config);
 #if DEBUG
-                if (!Config.DllSource.StartInstancesAsThreads)
+                if (!Config.DebugConfig.StartInstancesAsThreads)
 #endif
                     Logger.SetServerTypeInformation("Master");
 

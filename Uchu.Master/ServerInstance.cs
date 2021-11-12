@@ -39,7 +39,7 @@ namespace Uchu.Master
         public void Start(string location, string dotnet)
         {
 #if DEBUG
-            if (MasterServer.Config.DllSource.StartInstancesAsThreads)
+            if (MasterServer.Config.DebugConfig.StartInstancesAsThreads)
                 this.StartInstanceAsThread();
             else
 #endif
