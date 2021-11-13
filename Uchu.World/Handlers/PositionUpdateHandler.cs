@@ -14,8 +14,6 @@ namespace Uchu.World.Handlers
             var player = UchuServer.FindPlayer(connection);
             if (player?.Transform == default) return;
 
-            Logger.Debug(packet.Position);
-
             // TODO: set position of possessed object? maybe?
             
             // The server is a slave to the position update packets it gets from the client right now.
