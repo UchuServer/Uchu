@@ -4,21 +4,21 @@ namespace Uchu.World
 {
     [Struct]
     public struct PreRacePlayerInfo {
-        public GameObject PlayerId { get; set; }
-        public GameObject VehicleId { get; set; }
+        public GameObject Player { get; set; }
+        public GameObject Vehicle { get; set; }
         public uint StartingPosition { get; set; }
         public bool IsReady { get; set; }
     }
 
     [Struct]
     public struct PostRacePlayerInfo {
-        public GameObject PlayerId { get; set; }
+        public GameObject Player { get; set; }
         public uint CurrentRank { get; set; }
     }
 
     [Struct]
     public struct DuringRacePlayerInfo {
-        public GameObject PlayerId { get; set; }
+        public GameObject Player { get; set; }
         public float BestLapTime { get; set; }
         public float RaceTime { get; set; }
     }

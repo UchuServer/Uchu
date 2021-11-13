@@ -16,12 +16,11 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.RacingControlComponent;
 
-        private List<PreRacePlayerInfo> _preRacePlayerInfos = new List<PreRacePlayerInfo>();
-        private List<DuringRacePlayerInfo> _duringRacePlayerInfos = new List<DuringRacePlayerInfo>();
+        private List<RacingPlayerInfo> _players = new List<RacingPlayerInfo>();
 
         private RaceInfo _raceInfo = new RaceInfo();
 
-        private RacingStatus racingStatus = RacingStatus.None;
+        private RacingStatus _racingStatus = RacingStatus.None;
 
         public RacingControlComponent()
         {
@@ -55,11 +54,11 @@ namespace Uchu.World
             Logger.Information("Player loaded into racing");
 
             // Register player
-            this._preRacePlayerInfos.Add(new PreRacePlayerInfo
+            this._players.Add(new RacingPlayerInfo
             {
-                PlayerId = player,
-                IsReady = true,
-                StartingPosition = (uint)_preRacePlayerInfos.Count + 1,
+                Player = player,
+                PlayerLoaded = true,
+                PlayerIndex = (uint) _players.Count + 1,
             });
 
             LoadPlayerCar(player);
@@ -75,7 +74,7 @@ namespace Uchu.World
 
             var startPosition = mainPath.Waypoints.First().Position + Vector3.UnitY * 3;
             var spacing = 15;
-            var range = _preRacePlayerInfos.Count * spacing;
+            var range = _players.Count * spacing;
             startPosition += Vector3.UnitZ * range;
 
             var startRotation = Quaternion.CreateFromYawPitchRoll(((float) Math.PI) * -0.5f, 0 , 0);
@@ -144,23 +143,23 @@ namespace Uchu.World
             });
 
             // Register car for player
-            for (var i = 0; i < _preRacePlayerInfos.Count; i++)
+            for (var i = 0; i < _players.Count; i++)
             {
-                PreRacePlayerInfo info = _preRacePlayerInfos[i];
-                if (info.PlayerId == player)
+                RacingPlayerInfo info = _players[i];
+                if (info.Player == player)
                 {
-                    info.VehicleId = car;
-                    _preRacePlayerInfos[i] = info;
+                    info.Vehicle = car;
+                    _players[i] = info;
                 }
             }
         }
 
         private void InitRace()
         {
-            if (racingStatus == RacingStatus.Loaded)
+            if (_racingStatus == RacingStatus.Loaded)
                 return;
 
-            racingStatus = RacingStatus.Loaded;
+            _racingStatus = RacingStatus.Loaded;
 
             Zone.BroadcastMessage(new NotifyRacingClientMessage
             {
@@ -174,16 +173,16 @@ namespace Uchu.World
 
         private void StartRace()
         {
-            if (racingStatus == RacingStatus.Started)
+            if (_racingStatus == RacingStatus.Started)
                 return;
 
-            racingStatus = RacingStatus.Started;
+            _racingStatus = RacingStatus.Started;
 
-            foreach (PreRacePlayerInfo info in _preRacePlayerInfos)
+            foreach (var info in _players)
             {
                 Zone.BroadcastMessage(new VehicleUnlockInputMessage
                 {
-                    Associate = info.VehicleId,
+                    Associate = info.Vehicle,
                     LockWheels = false,
                 });
             }
@@ -231,6 +230,18 @@ namespace Uchu.World
             });
         }
 
+        public void OnPlayerRequestDie(Player player)
+        {
+
+            foreach (var racingPlayer in _players)
+            {
+                if (racingPlayer.Player != player)
+                    continue;
+
+                
+            }
+        }
+
         public override void Construct(BitWriter writer)
         {
             this.Serialize(writer);
@@ -257,11 +268,23 @@ namespace Uchu.World
 
             packet.ExpectedPlayerCount = (ushort)this.Participants.Count;
 
-            packet.PreRacePlayerInfos = this._preRacePlayerInfos.ToArray();
+            packet.PreRacePlayerInfos = this._players.Select(info => new PreRacePlayerInfo
+            {
+                Player = info.Player,
+                Vehicle = info.Vehicle,
+                StartingPosition = info.PlayerIndex,
+                IsReady = info.PlayerLoaded,
+            }).ToArray();
 
-            packet.RaceInfo = _raceInfo; // lap count displays correctly on the client
+            packet.RaceInfo = _raceInfo;
 
-            packet.DuringRacePlayerInfos = this._duringRacePlayerInfos.ToArray();
+            packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
+            {
+                Player = info.Player,
+                BestLapTime = (float) info.BestLapTime.TotalSeconds,
+                RaceTime = (float) info.RaceTime.TotalSeconds
+            }).ToArray();
+
 
             // TODO
 
@@ -271,7 +294,27 @@ namespace Uchu.World
         private enum RacingStatus {
             None,
             Loaded,
-            Started
+            Started,
         }
+
+        struct RacingPlayerInfo {
+            public GameObject Player { get; set; }
+            public GameObject Vehicle { get; set; }
+            public uint PlayerIndex { get; set; }
+            public bool PlayerLoaded { get; set; }
+            public float[] Data { get; set; }
+            public Vector3 RespawnPosition { get; set; }
+            public Quaternion RespawnRotation { get; set; }
+            public uint RespawnIndex { get; set; }
+            public uint Lap { get; set; }
+            public uint Finished { get; set; }
+            public uint ReachedPoints { get; set; }
+            public TimeSpan BestLapTime { get; set; }
+            public TimeSpan LapTime { get; set; }
+            public uint SmashedTimes { get; set; }
+            public bool NoSmashOnReload { get; set; }
+            public bool CollectedRewards { get; set; }
+            public TimeSpan RaceTime { get; set; }
+        };
     }
 }
