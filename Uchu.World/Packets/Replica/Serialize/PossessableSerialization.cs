@@ -13,8 +13,8 @@ namespace Uchu.World
     {
         [Default]
         public GameObject Driver { get; set; }
-        [Default]
-        public uint Animation { get; set; }
+
+        public bool Temp1 { get; set; }
         public bool ImmediateDepossess { get; set; }
     }
 }

@@ -23,15 +23,17 @@ namespace Uchu.World
             packet.ModuleAssemblyInfo = new ModuleAssemblyInfo
             {
                 Assembly = GameObject.InvalidObject, // this.GameObject ? subkey ?
-                Blob = this._parts,
+                Blob = "1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;",
                 UseOptionalParts = false,
             };
+            packet.Flag = true;
             return packet;
         }
 
         public override ModuleAssemblySerialization GetSerializePacket()
         {
             var packet = this.GetConstructPacket();
+            packet.Flag = false;
             return packet;
         }
 

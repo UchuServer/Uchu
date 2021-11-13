@@ -17,6 +17,7 @@ namespace Uchu.World
             {
                 Driver = this.Driver,
                 ImmediateDepossess = false,
+                Temp1 = false,
             };
             return packet;
         }

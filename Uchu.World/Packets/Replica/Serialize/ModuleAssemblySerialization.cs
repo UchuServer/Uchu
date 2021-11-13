@@ -4,7 +4,8 @@ namespace Uchu.World
 {
     public struct ModuleAssemblySerialization
     {
-        [Default]
+        public bool Flag { get; set; }
+        [Requires("Flag")]
         public ModuleAssemblyInfo ModuleAssemblyInfo { get; set; }
     }
 

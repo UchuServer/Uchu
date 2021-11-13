@@ -70,7 +70,7 @@ namespace Uchu.World
                     // Spawn Error Object
                     // delete myCar;
                     // myCar = new Entity::GameObject(this->owner->GetZoneInstance(), 1845);
-                    GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition + new Vector3(20, 50, 0));
+                    GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition + new Vector3(0, 50, 0));
                     // car.Transform.Position = startPosition;
 
                     player.Teleport(startPosition + new Vector3(20, 50, 0));

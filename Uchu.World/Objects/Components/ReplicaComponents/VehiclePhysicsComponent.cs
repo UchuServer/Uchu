@@ -110,7 +110,7 @@ namespace Uchu.World
             {
                 VehicleFrameStats = new VehicleFrameStats
                 {
-                    Position = this.GameObject.Transform.Position, // Vector3(300, 300, 0),
+                    Position = new Vector3(300, 300, 0),
                     Rotation = this.GameObject.Transform.Rotation,
                     AngularVelocity = Vector3.Zero,
                     LinearVelocity = Vector3.Zero,
