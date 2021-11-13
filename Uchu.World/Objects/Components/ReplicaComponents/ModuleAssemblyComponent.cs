@@ -23,7 +23,7 @@ namespace Uchu.World
             packet.ModuleAssemblyInfo = new ModuleAssemblyInfo
             {
                 Assembly = GameObject.InvalidObject, // this.GameObject ? subkey ?
-                Blob = "1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;",
+                Blob = _parts,
                 UseOptionalParts = false,
             };
             packet.Flag = true;

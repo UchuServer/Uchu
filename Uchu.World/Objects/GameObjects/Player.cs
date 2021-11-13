@@ -36,7 +36,7 @@ namespace Uchu.World
             // Create base game object
             var instance = Instantiate<Player>(
                 zone,
-                position: new Vector3(300, 300, 0),
+                position: zone.SpawnPosition,
                 rotation: zone.SpawnRotation,
                 scale: 1,
                 objectId: id,
