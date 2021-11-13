@@ -21,6 +21,8 @@ namespace Uchu.World
 
         private RaceInfo _raceInfo = new RaceInfo();
 
+        private RacingStatus racingStatus = RacingStatus.None;
+
         public RacingControlComponent()
         {
             _raceInfo.LapCount = 3;
@@ -44,124 +46,154 @@ namespace Uchu.World
 
             Listen(Zone.OnPlayerLoad, player =>
             {
-                Listen(player.OnWorldLoad, async () =>
-                {
-                    Logger.Information("Racing Control Component");
-                    // Entity::GameObject * playerObject = owner->GetZoneInstance()->objectsManager->GetObjectByID(playerID);
-                    // -> player
-
-
-                    // // Set ObjectID
-                    // myCar->SetObjectID(owner->GetZoneInstance()->objectsManager->GenerateSpawnedID());
-                    // -> handled automatically
-
-                    // // Set Position/Rotation
-                    // auto path = reinterpret_cast<FileTypes::LUZ::LUZonePathRace*>(owner->GetZoneInstance()->luZone->paths.find(u"MainPath")->second);
-                    // myCar->SetPosition(path->waypoints.at(0)->position);
-                    var mainPath = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
-                    if (mainPath == default)
-                        throw new Exception("Path not found");
-
-                    var startPosition = mainPath.Waypoints.First().Position;
-
-                    // // Make car
-                    // Entity::GameObject* myCar = new Entity::GameObject(this->owner->GetZoneInstance(), 8092);
-                    // if (!myCar->isSerializable) {
-                    // Spawn Error Object
-                    // delete myCar;
-                    // myCar = new Entity::GameObject(this->owner->GetZoneInstance(), 1845);
-                    GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition + new Vector3(0, 50, 0));
-                    // car.Transform.Position = startPosition;
-
-                    player.Teleport(startPosition + new Vector3(20, 50, 0));
-
-                    var carItem = player.GetComponent<InventoryManagerComponent>().FindItem(Lot.ModularCar);
-                    // auto modAComp = myCar->GetComponent<ModuleAssemblyComponent>();
-                    var moduleAssemblyComponent = car.GetComponent<ModuleAssemblyComponent>();
-                    // modAComp->SetAssembly(u"1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;");
-                    moduleAssemblyComponent.SetAssembly(carItem.Settings["assemblyPartLOTs"].ToString());
-
-                    // // Set Parent
-                    // myCar->SetParent(this->owner->GetZoneInstance()->zoneControlObject);
-                    //
-                    // // Finish & Send car
-                    // myCar->Finish();
-                    //
-                    // // Register
-                    // this->owner->GetZoneInstance()->objectsManager->RegisterObject(myCar);
-                    //
-                    // // Construct
-                    // if (myCar->isSerializable)
-                    //     this->owner->GetZoneInstance()->objectsManager->Construct(myCar);
-
-                    Start(car);
-                    GameObject.Construct(car);
-
-                    // // Add player to activity
-                    // this->AddPlayerToActivity(playerID);
-                    AddPlayer(player);
-
-
-                    // await UiHelper.StateAsync(player, "Race");
-
-                    var preInfo = new PreRacePlayerInfo
-                    {
-                        IsReady = true,
-                        PlayerId = player,
-                        StartingPosition = 0,
-                        VehicleId = car,
-                    };
-                    this._preRacePlayerInfos.Add(preInfo);
-                    var duringInfo = new DuringRacePlayerInfo
-                    {
-                        PlayerId = player,
-                        BestLapTime = 7.24f, //testing, doesnt appear on client so far
-                        RaceTime = 8.97f, //testing, doesnt appear on client so far
-                    };
-                    this._duringRacePlayerInfos.Add(duringInfo);
-
-                    // // Tell player car is ready and added to race
-                    // this->owner->GetZoneInstance()->objectsManager->Serialize(this->owner);
-                    GameObject.Serialize(this.GameObject);
-
-                    // playerObject->Possess(myCar);
-                    Listen(player.OnAcknowledgePossession, this.OnAcknowledgePossession);
-                    car.GetComponent<PossessableComponent>().Driver = player;
-                    player.GetComponent<CharacterComponent>().VehicleObject = car;
-
-                    // { GM::NotifyVehicleOfRacingObject msg; msg.racingObjectID = this->owner->GetObjectID(); GameMessages::Broadcast(this->owner->GetZoneInstance(), myCar, msg); }
-                    Zone.BroadcastMessage(new NotifyVehicleOfRacingObjectMessage
-                    {
-                        Associate = car,
-                        RacingObjectId = this.GameObject, // zonecontrol
-                    });
-                    // { GM::RacingPlayerLoaded msg; msg.playerID = playerID; msg.vehicleID = myCar->GetObjectID(); GameMessages::Broadcast(owner->GetZoneInstance(), owner, msg); }
-                    Zone.BroadcastMessage(new RacingPlayerLoadedMessage
-                    {
-                        Associate = this.GameObject,
-                        PlayerId = player,
-                        VehicleId = car,
-                    });
-                    // {GM::VehicleUnlockInput msg; msg.bLockWheels = false; GameMessages::Broadcast(owner->GetZoneInstance(), myCar, msg); }
-                    Zone.BroadcastMessage(new VehicleUnlockInputMessage
-                    {
-                        Associate = car,
-                        LockWheels = false,
-                    });
-
-                    GameObject.Serialize(car);
-                    GameObject.Serialize(player);
-
-                    //test
-                    Zone.Schedule(() =>
-                    {
-                        Logger.Information("delay thingy");
-                        car.Transform.Position = new Vector3(0, 250, 0);
-                        GameObject.Serialize(car);
-                        Zone.SendSerialization(car, new []{ player });
-                    }, 10000);
-                });
+                Listen(player.OnWorldLoad, async () => OnPlayerLoad(player));
             });
+        }
+
+        private void OnPlayerLoad(Player player)
+        {
+            Logger.Information("Player loaded into racing");
+
+            // Register player
+            this._preRacePlayerInfos.Add(new PreRacePlayerInfo
+            {
+                PlayerId = player,
+                IsReady = true,
+                StartingPosition = (uint)_preRacePlayerInfos.Count + 1,
+            });
+
+            LoadPlayerCar(player);
+            Zone.Schedule(InitRace, 10000);
+        }
+
+        private void LoadPlayerCar(Player player)
+        {
+            // Get position and rotation
+            var mainPath = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
+            if (mainPath == default)
+                throw new Exception("Path not found");
+
+            var startPosition = mainPath.Waypoints.First().Position + Vector3.UnitY * 3;
+            var spacing = 15;
+            var range = _preRacePlayerInfos.Count * spacing;
+            startPosition += Vector3.UnitZ * range;
+
+            var startRotation = Quaternion.CreateFromYawPitchRoll(((float) Math.PI) * -0.5f, 0 , 0);
+
+            // Create car
+            player.Teleport(startPosition, startRotation);
+            GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition, startRotation);
+            
+            // Setup imagination
+            var destroyableComponent = car.GetComponent<DestroyableComponent>();
+            destroyableComponent.MaxImagination = 60;
+            destroyableComponent.Imagination = 0;
+
+            // Let the player posses the car
+            // Listen(player.OnAcknowledgePossession, this.OnAcknowledgePossession);
+            var possessableComponent = car.GetComponent<PossessableComponent>();
+            possessableComponent.Driver = player;
+            var characterComponent = player.GetComponent<CharacterComponent>();
+            characterComponent.VehicleObject = car;
+
+            // Get custom parts
+            var inventory = player.GetComponent<InventoryManagerComponent>();
+            var carItem = inventory.FindItem(Lot.ModularCar);
+            var moduleAssemblyComponent = car.GetComponent<ModuleAssemblyComponent>();
+            if (carItem == null)
+                moduleAssemblyComponent.SetAssembly("1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;"); // Fallback
+            else
+                moduleAssemblyComponent.SetAssembly(carItem.Settings["assemblyPartLOTs"].ToString());
+
+            Start(car);
+            GameObject.Construct(car);
+            GameObject.Serialize(player);
+
+            AddPlayer(player);
+
+            Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
+            {
+                Associate = this.GameObject,
+                CurrentLap = 0,
+                FurthestResetPlane = 0,
+                PlayerId = player,
+                RespawnPos = startPosition,
+                UpcomingPlane = 1,
+            });
+
+            // TODO Set Jetpack mode?
+
+            Zone.BroadcastMessage(new NotifyVehicleOfRacingObjectMessage
+            {
+                Associate = car,
+                RacingObjectId = this.GameObject, // zonecontrol
+            });
+
+            Zone.BroadcastMessage(new VehicleSetWheelLockStateMessage
+            {
+                Associate = car,
+                ExtraFriction = false,
+                Locked = true
+            });
+
+            Zone.BroadcastMessage(new RacingPlayerLoadedMessage
+            {
+                Associate = this.GameObject,
+                PlayerId = player,
+                VehicleId = car,
+            });
+
+            // Register car for player
+            for (var i = 0; i < _preRacePlayerInfos.Count; i++)
+            {
+                PreRacePlayerInfo info = _preRacePlayerInfos[i];
+                if (info.PlayerId == player)
+                {
+                    info.VehicleId = car;
+                    _preRacePlayerInfos[i] = info;
+                }
+            }
+        }
+
+        private void InitRace()
+        {
+            if (racingStatus == RacingStatus.Loaded)
+                return;
+
+            racingStatus = RacingStatus.Loaded;
+
+            Zone.BroadcastMessage(new NotifyRacingClientMessage
+            {
+                Associate = this.GameObject,
+                EventType = RacingClientNotificationType.ActivityStart,
+            });
+
+            // Start after 6 seconds
+            Zone.Schedule(StartRace, 6000);
+        }
+
+        private void StartRace()
+        {
+            if (racingStatus == RacingStatus.Started)
+                return;
+
+            racingStatus = RacingStatus.Started;
+
+            foreach (PreRacePlayerInfo info in _preRacePlayerInfos)
+            {
+                Zone.BroadcastMessage(new VehicleUnlockInputMessage
+                {
+                    Associate = info.VehicleId,
+                    LockWheels = false,
+                });
+            }
+        
+            Zone.BroadcastMessage(new ActivityStartMessage
+            {
+                Associate = this.GameObject,
+            });
+
+            GameObject.Serialize(this.GameObject);
         }
 
         // todo
@@ -234,6 +266,12 @@ namespace Uchu.World
             // TODO
 
             return packet;
+        }
+
+        private enum RacingStatus {
+            None,
+            Loaded,
+            Started
         }
     }
 }
