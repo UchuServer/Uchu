@@ -16,5 +16,12 @@ namespace Uchu.World.Handlers.GameMessages
             Logger.Information($"Set wheel lock state: friction = {message.ExtraFriction}, locked = {message.Locked}");
             // TODO: handle
         }
+
+        [PacketHandler]
+        public async void ImaginationHandler(VehicleNotifyHitImaginationServerMessage message, Player player)
+        {
+            message.Associate.GetComponent<DestroyableComponent>().Imagination += 10;
+            await message.PickupObjId.GetComponent<DestructibleComponent>().SmashAsync(message.Associate);
+        }
     }
 }

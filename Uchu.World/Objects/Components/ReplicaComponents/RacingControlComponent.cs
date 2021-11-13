@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
 
@@ -22,6 +23,8 @@ namespace Uchu.World
 
         private RacingStatus _racingStatus = RacingStatus.None;
 
+        private LuzPathData _path;
+
         public RacingControlComponent()
         {
             _raceInfo.LapCount = 3;
@@ -34,19 +37,21 @@ namespace Uchu.World
 
         private async Task LoadAsync()
         {
-            Listen(this.GameObject.OnMessageBoxRespond, (player, message) =>
-            {
-                Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
-                if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
-                {
-                    // TODO: Player wants to leave race
-                }
-            });
+            Listen(this.GameObject.OnMessageBoxRespond, OnMessageBoxRespond);
 
             Listen(Zone.OnPlayerLoad, player =>
             {
-                Listen(player.OnWorldLoad, async () => OnPlayerLoad(player));
+                Listen(player.OnWorldLoad, () => OnPlayerLoad(player));
             });
+        }
+
+        private void OnMessageBoxRespond(Player player, MessageBoxRespondMessage message)
+        {
+            Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
+            if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
+            {
+                // TODO: Player wants to leave race
+            }
         }
 
         private void OnPlayerLoad(Player player)
@@ -68,11 +73,11 @@ namespace Uchu.World
         private void LoadPlayerCar(Player player)
         {
             // Get position and rotation
-            var mainPath = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
-            if (mainPath == default)
+            _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
+            if (_path == default)
                 throw new Exception("Path not found");
 
-            var startPosition = mainPath.Waypoints.First().Position + Vector3.UnitY * 3;
+            var startPosition = _path.Waypoints.First().Position + Vector3.UnitY * 3;
             var spacing = 15;
             var range = _players.Count * spacing;
             startPosition += Vector3.UnitZ * range;
@@ -178,6 +183,34 @@ namespace Uchu.World
 
             _racingStatus = RacingStatus.Started;
 
+            // Start imagination spawners
+            var minSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Min");
+            var medSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Med");
+            var maxSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Max");
+
+            minSpawner?.Activate();
+            minSpawner?.SpawnAll();
+
+            if (_players.Count > 2)
+            {
+                medSpawner?.Activate();
+                medSpawner?.SpawnAll();
+            }
+
+            if (_players.Count > 4)
+            {
+                maxSpawner?.Activate();
+                maxSpawner?.SpawnAll();
+            }
+
+            // Respawn points
+            foreach (var luzPathWaypoint in _path.Waypoints)
+            {
+                // luzPathWaypoint.Position;
+
+            }
+
+            // Go!
             foreach (var info in _players)
             {
                 Zone.BroadcastMessage(new VehicleUnlockInputMessage
@@ -232,14 +265,9 @@ namespace Uchu.World
 
         public void OnPlayerRequestDie(Player player)
         {
+            var racingPlayer = _players.Find(info => info.Player == player);
 
-            foreach (var racingPlayer in _players)
-            {
-                if (racingPlayer.Player != player)
-                    continue;
 
-                
-            }
         }
 
         public override void Construct(BitWriter writer)
