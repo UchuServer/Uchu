@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
-        <LangVersion>8</LangVersion>
+        <TargetFramework>net6.0</TargetFramework>
         <NeutralLanguage>en</NeutralLanguage>
     </PropertyGroup>
 
@@ -12,13 +11,13 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.5">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.5" />
-      <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.5.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.0" />
+      <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.0" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0" />
       <PackageReference Include="Sentry" Version="3.0.6" />
       <PackageReference Include="StackExchange.Redis" Version="2.1.0-preview.23" />
     </ItemGroup>

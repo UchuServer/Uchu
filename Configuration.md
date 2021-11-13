@@ -42,3 +42,7 @@ A Single Sign-On server makes it possible for users to have an account in one si
 ## Server behaviour
 _`<ServerBehaviour>`_  
 If `<PressKeyToExit>` is set to `true`, when the server process exits it will wait for you to press any key. This prevents windows from disappearing too quickly to read an error message.
+
+## Debug options
+_`<Debugging>`_  
+For builds in Debug mode, if `<StartInstancesAsThreads>` is set to `true`, Uchu will use threads instead of separate processes for the different server instances. This makes it possible to use .NET 6's Hot Reload. Support for this mode isn't perfect; logs will no longer include the bit indicating the log source (`[Char]`, `[Auth]` etc.) and the stopping of world won't entirely work as expected.

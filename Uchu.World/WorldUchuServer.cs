@@ -79,7 +79,10 @@ namespace Uchu.World
             ).ConfigureAwait(false);
 
             ZoneId = (ZoneId) instance.Info.Zones.First();
-            Logger.SetServerTypeInformation("Z" + ZoneId.Id);
+#if DEBUG
+            if (!Config.DebugConfig.StartInstancesAsThreads)
+#endif
+                Logger.SetServerTypeInformation("Z" + ZoneId.Id);
 
             var info = await Api.RunCommandAsync<InstanceInfoResponse>(MasterApi, $"instance/target?i={Id}");
 

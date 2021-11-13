@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if DEBUG
+using System.Threading;
+#endif
 using Uchu.Core;
 
 namespace Uchu.Master
@@ -35,6 +38,27 @@ namespace Uchu.Master
         /// <param name="dotnet">Location of the dotnet command.</param>
         public void Start(string location, string dotnet)
         {
+#if DEBUG
+            if (MasterServer.Config.DebugConfig.StartInstancesAsThreads)
+                this.StartInstanceAsThread();
+            else
+#endif
+                this.StartInstanceAsProcess(location, dotnet);
+        }
+
+#if DEBUG
+        public void StartInstanceAsThread()
+        {
+            new Thread(() =>
+            {
+                var program = new Uchu.Instance.Program();
+                program.Start(new[] { Id.ToString(), MasterServer.ConfigPath });
+            }).Start();
+        }
+#endif
+
+        public void StartInstanceAsProcess(string location, string dotnet)
+            {
             // Determine if the dotnet command should be used.
             // If the default (dotnet) is used, the system PATH is checked.
             var useDotNet = !string.IsNullOrWhiteSpace(dotnet);

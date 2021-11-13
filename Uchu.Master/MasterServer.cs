@@ -180,7 +180,7 @@ namespace Uchu.Master
 
             foreach (var instance in Instances)
             {
-                instance.Process.Kill();
+                instance.Process?.Kill();
             }
 
             if (!(ev is ConsoleCancelEventArgs cancelEv)) return;
@@ -323,21 +323,30 @@ namespace Uchu.Master
             {
                 Config = UchuConfiguration.Load(configFilename);
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DebugConfig.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, use config.default.xml if it exists
             else if (File.Exists(legacySecondConfigName))
             {
                 Config = UchuConfiguration.Load(legacySecondConfigName);
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DebugConfig.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
             }
             // Otherwise, generate a new config file
             else
             {
                 Config = new UchuConfiguration();
                 Logger.SetConfiguration(Config);
-                Logger.SetServerTypeInformation("Master");
+#if DEBUG
+                if (!Config.DebugConfig.StartInstancesAsThreads)
+#endif
+                    Logger.SetServerTypeInformation("Master");
 
                 // Add default value for instance DLL source and script DLL source.
                 if (File.Exists("lib/Uchu.Instance.dll"))
@@ -346,7 +355,7 @@ namespace Uchu.Master
                 }
                 Config.DllSource.ScriptDllSource.Add(File.Exists("lib/Uchu.StandardScripts.dll")
                     ? "lib/Uchu.StandardScripts.dll"
-                    : "../../../../Uchu.StandardScripts/bin/Debug/net5.0/Uchu.StandardScripts.dll");
+                    : "../../../../Uchu.StandardScripts/bin/Debug/net6.0/Uchu.StandardScripts.dll");
 
                 // Write config file
                 Config.Save(configFilename);
@@ -383,6 +392,13 @@ namespace Uchu.Master
             }
 
             // Check: Uchu.Instance.dll
+            // Migration from .net 5 to .net 6
+            if (Config.DllSource.Instance.Contains("net5.0"))
+            {
+                Config.DllSource.Instance = Config.DllSource.Instance.Replace("net5.0", "net6.0");
+                Config.Save(configFilename);
+            }
+
             DllLocation = Config.DllSource.Instance;
 
             if (!File.Exists(DllLocation))
@@ -393,17 +409,24 @@ namespace Uchu.Master
             // Check: Uchu.StandardScripts.dll
             var validScriptPackExists = false;
 
-            Config.DllSource.ScriptDllSource.ForEach(scriptPackPath =>
+            for (var i = 0; i < Config.DllSource.ScriptDllSource.Count; i++)
             {
-                if (File.Exists(scriptPackPath))
+                // Migration from .net 5 to .net 6
+                if (Config.DllSource.ScriptDllSource[i].Contains("net5.0"))
                 {
-                    Logger.Information($"Using script pack: {scriptPackPath}");
-                    validScriptPackExists = true;
-                    return;
+                    Config.DllSource.ScriptDllSource[i] = Config.DllSource.ScriptDllSource[i].Replace("net5.0", "net6.0");
+                    Config.Save(configFilename);
                 }
 
-                Logger.Warning($"Could not find script pack at {scriptPackPath}");
-            });
+                if (File.Exists(Config.DllSource.ScriptDllSource[i]))
+                {
+                    Logger.Information($"Using script pack: {Config.DllSource.ScriptDllSource[i]}");
+                    validScriptPackExists = true;
+                    break;
+                }
+
+                Logger.Warning($"Could not find script pack at {Config.DllSource.ScriptDllSource[i]}");
+            }
 
             if (!validScriptPackExists)
             {
