@@ -8,6 +8,10 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.VehiclePhysicsComponent;
 
+        public Vector3 AngularVelocity { get; set; } = Vector3.Zero;
+
+        public Vector3 LinearVelocity { get; set; } = Vector3.Zero;
+
         public override VehiclePhysicsConstruction GetConstructPacket()
         {
             var packet = base.GetConstructPacket();
@@ -15,8 +19,8 @@ namespace Uchu.World
             {
                 Position = this.GameObject.Transform.Position,
                 Rotation = this.GameObject.Transform.Rotation,
-                AngularVelocity = Vector3.Zero,
-                LinearVelocity = Vector3.Zero,
+                AngularVelocity = this.AngularVelocity,
+                LinearVelocity = this.LinearVelocity,
                 IsOnGround = true,
                 IsOnRail = false,
                 RemoteInputPing = 0.0f,
@@ -36,8 +40,8 @@ namespace Uchu.World
                 {
                     Position = this.GameObject.Transform.Position,
                     Rotation = this.GameObject.Transform.Rotation,
-                    AngularVelocity = Vector3.Zero,
-                    LinearVelocity = Vector3.Zero,
+                    AngularVelocity = this.AngularVelocity,
+                    LinearVelocity = this.LinearVelocity,
                     IsOnGround = true,
                     IsOnRail = false,
                     RemoteInputPing = 0.0f,
