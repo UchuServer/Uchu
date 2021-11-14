@@ -1,7 +1,7 @@
 
 namespace Uchu.World
 {
-    public class ModuleAssemblyComponent : StructReplicaComponent<ModuleAssemblySerialization>
+    public class ModuleAssemblyComponent : StructReplicaComponent<ModuleAssemblyConstruction, ModuleAssemblySerialization>
     {
         public override ComponentId Id => ComponentId.ModuleAssemblyComponent;
 
@@ -17,12 +17,12 @@ namespace Uchu.World
             return this._parts;
         }
 
-        public override ModuleAssemblySerialization GetConstructPacket()
+        public override ModuleAssemblyConstruction GetConstructPacket()
         {
             var packet = base.GetConstructPacket();
             packet.ModuleAssemblyInfo = new ModuleAssemblyInfo
             {
-                Assembly = GameObject.InvalidObject, // this.GameObject ? subkey ?
+                Assembly = GameObject.InvalidObject, // subkey
                 Blob = _parts,
                 UseOptionalParts = false,
             };
@@ -32,10 +32,8 @@ namespace Uchu.World
 
         public override ModuleAssemblySerialization GetSerializePacket()
         {
-            var packet = this.GetConstructPacket();
-            packet.Flag = false;
+            var packet = base.GetSerializePacket();
             return packet;
         }
-
     }
 }

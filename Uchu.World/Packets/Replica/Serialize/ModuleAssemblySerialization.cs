@@ -2,11 +2,15 @@ using Uchu.Core;
 
 namespace Uchu.World
 {
-    public struct ModuleAssemblySerialization
+    public struct ModuleAssemblyConstruction
     {
         public bool Flag { get; set; }
         [Requires("Flag")]
         public ModuleAssemblyInfo ModuleAssemblyInfo { get; set; }
+    }
+
+    public struct ModuleAssemblySerialization
+    {
     }
 
     [Struct]
