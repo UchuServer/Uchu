@@ -50,7 +50,8 @@ namespace Uchu.World
             Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
             if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
             {
-                // TODO: Player wants to leave race
+                _players.RemoveAll(info => info.Player == player);
+                player.SendToWorldAsync(1200, new Vector3(248.8f, 287.4f, 186.9f), new Quaternion(0, 0.7f, 0, 0.7f));
             }
         }
 
