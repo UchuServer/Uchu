@@ -26,6 +26,8 @@ namespace Uchu.World
 
         private LuzPathData _path;
 
+        private int _deathPlaneHeight;
+
         public RacingControlComponent()
         {
             _raceInfo.LapCount = 3;
@@ -39,6 +41,22 @@ namespace Uchu.World
         private async Task LoadAsync()
         {
             _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
+
+            switch (Zone.ZoneId)
+            {
+                case 1203:
+                    _deathPlaneHeight = 100;
+                    break;
+                case 1303:
+                    _deathPlaneHeight = 0;
+                    break;
+                case 1403:
+                    _deathPlaneHeight = 300;
+                    break;
+                default:
+                    _deathPlaneHeight = 0;
+                    break;
+            }
 
             if (_path == default)
                 throw new Exception("Path not found");
@@ -88,6 +106,15 @@ namespace Uchu.World
             });
 
             LoadPlayerCar(player);
+
+            Listen(player.OnPositionUpdate, (position, rotation) =>
+            {
+                if (position.Y < _deathPlaneHeight)
+                {
+                    OnPlayerRequestDie(player);
+                }
+            });
+
             Zone.Schedule(InitRace, 10000);
         }
 
@@ -183,7 +210,7 @@ namespace Uchu.World
 
         private void InitRace()
         {
-            if (_racingStatus == RacingStatus.Loaded)
+            if (_racingStatus != RacingStatus.None)
                 return;
 
             _racingStatus = RacingStatus.Loaded;
@@ -200,7 +227,7 @@ namespace Uchu.World
 
         private void StartRace()
         {
-            if (_racingStatus == RacingStatus.Started)
+            if (_racingStatus != RacingStatus.Loaded)
                 return;
 
             _racingStatus = RacingStatus.Started;
@@ -276,25 +303,6 @@ namespace Uchu.World
             GameObject.Serialize(this.GameObject);
         }
 
-        // todo
-        // RacingClientReady client->server
-        // RacingPlayerLoaded server->client
-        // RacingResetPlayerToLastReset server->client --> this is like player reached respawn checkpoint
-        // RacingSetPlayerResetInfo server->client
-        // RacingPlayerInfoResetFinished client->server
-
-        // in capture even before acknowledge poss:
-        // teleport msg [player]
-        // bIgnoreY = False
-        // bSetRotation = True
-        // bSkipAllChecks = False
-        // pos = (-1457.711669921875, 794.0, -351.61419677734375)
-        // useNavmesh = False
-        // w = 0.5037656426429749
-        // x = 0.0
-        // y = 0.8638404011726379
-        // z = 0.0
-
         public void OnAcknowledgePossession(Player player, GameObject vehicle)
         {
         }
@@ -311,7 +319,13 @@ namespace Uchu.World
 
             if (!playerInfo.NoSmashOnReload)
             {
-                car.GetComponent<DestructibleComponent>().SmashAsync(player);
+                Zone.BroadcastMessage(new DieMessage
+                {
+                    Associate = car,
+                    DeathType = "violent",
+                    Killer = player,
+                    SpawnLoot = false,
+                });
 
                 player.Message(new VehicleUnlockInputMessage
                 {
@@ -325,8 +339,6 @@ namespace Uchu.World
                     ExtraFriction = false,
                     Locked = false,
                 });
-
-                car.GetComponent<DestructibleComponent>().ResurrectAsync();
 
                 Zone.BroadcastMessage(new ResurrectMessage
                 {
@@ -348,17 +360,20 @@ namespace Uchu.World
 
             Logger.Information($"{player} requested death - respawning to {racingPlayer.RespawnPosition}");
 
-            player.Message(new RacingSetPlayerResetInfoMessage
+            if (racingPlayer.RespawnPosition == Vector3.Zero)
+                racingPlayer.RespawnPosition = _path.Waypoints.First().Position;
+
+            Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
             {
                 Associate = GameObject,
                 CurrentLap = (int) racingPlayer.Lap,
                 FurthestResetPlane = racingPlayer.RespawnIndex,
                 PlayerId = player,
-                RespawnPos = racingPlayer.RespawnPosition,
+                RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
                 UpcomingPlane = racingPlayer.RespawnIndex + 1,
             });
 
-            player.Message(new RacingResetPlayerToLastResetMessage
+            Zone.BroadcastMessage(new RacingResetPlayerToLastResetMessage
             {
                 Associate = GameObject,
                 PlayerId = player,
