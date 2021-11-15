@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using InfectedRose.Luz;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Physics;
 
 namespace Uchu.World
 {
@@ -37,24 +38,42 @@ namespace Uchu.World
 
         private async Task LoadAsync()
         {
+            _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
+
+            if (_path == default)
+                throw new Exception("Path not found");
+
             Listen(this.GameObject.OnMessageBoxRespond, OnMessageBoxRespond);
 
             Listen(Zone.OnPlayerLoad, player =>
             {
                 Listen(player.OnWorldLoad, () => OnPlayerLoad(player));
+                Listen(player.OnRequestDie, (msg) => OnPlayerRequestDie(player));
+                Listen(player.OnRacingPlayerInfoResetFinished, () => OnRacingPlayerInfoResetFinished(player));
+                Listen(player.OnAcknowledgePossession, vehicle => OnAcknowledgePossession(player, vehicle));
             });
         }
 
+        /// <summary>
+        /// Message box response handler
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="message"></param>
         private void OnMessageBoxRespond(Player player, MessageBoxRespondMessage message)
         {
             Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
             if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
             {
                 _players.RemoveAll(info => info.Player == player);
+                // TODO: use zone corresponding to this racing world
                 player.SendToWorldAsync(1200, new Vector3(248.8f, 287.4f, 186.9f), new Quaternion(0, 0.7f, 0, 0.7f));
             }
         }
 
+        /// <summary>
+        /// This runs when the player loads into the world, it registers the player
+        /// </summary>
+        /// <param name="player"></param>
         private void OnPlayerLoad(Player player)
         {
             Logger.Information("Player loaded into racing");
@@ -65,19 +84,21 @@ namespace Uchu.World
                 Player = player,
                 PlayerLoaded = true,
                 PlayerIndex = (uint) _players.Count + 1,
+                NoSmashOnReload = true,
             });
 
             LoadPlayerCar(player);
             Zone.Schedule(InitRace, 10000);
         }
 
+        /// <summary>
+        /// Set up the player's car
+        /// </summary>
+        /// <param name="player"></param>
+        /// <exception cref="Exception"></exception>
         private void LoadPlayerCar(Player player)
         {
             // Get position and rotation
-            _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
-            if (_path == default)
-                throw new Exception("Path not found");
-
             var startPosition = _path.Waypoints.First().Position + Vector3.UnitY * 3;
             var spacing = 15;
             var range = _players.Count * spacing;
@@ -88,7 +109,7 @@ namespace Uchu.World
             // Create car
             player.Teleport(startPosition, startRotation);
             GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition, startRotation);
-            
+
             // Setup imagination
             var destroyableComponent = car.GetComponent<DestroyableComponent>();
             destroyableComponent.MaxImagination = 60;
@@ -205,10 +226,36 @@ namespace Uchu.World
             }
 
             // Respawn points
-            foreach (var luzPathWaypoint in _path.Waypoints)
+            // This is not the most efficient way to do this.
+            // This checks the distance to every respawn point every physics tick,
+            // but we only really need to check the next one (or nearest few).
+            for (var i = 0; i < _path.Waypoints.Length; i++)
             {
-                // luzPathWaypoint.Position;
+                var proximityObject = GameObject.Instantiate(GameObject.Zone);
+                var physics = proximityObject.AddComponent<PhysicsComponent>();
+                var physicsObject = SphereBody.Create(
+                    GameObject.Zone.Simulation,
+                    _path.Waypoints[i].Position,
+                    50f);
+                physics.SetPhysics(physicsObject);
 
+                // Listen for players entering and leaving.
+                var playersInPhysicsObject = new List<Player>();
+                var index = i;
+                this.Listen(physics.OnEnter, component =>
+                {
+                    if (!(component.GameObject is Player player)) return;
+                    if (playersInPhysicsObject.Contains(player)) return;
+                    playersInPhysicsObject.Add(player);
+
+                    this.PlayerReachedCheckpoint(player, index);
+                });
+                this.Listen(physics.OnLeave, component =>
+                {
+                    if (!(component.GameObject is Player player)) return;
+                    if (!playersInPhysicsObject.Contains(player)) return;
+                    playersInPhysicsObject.Remove(player);
+                });
             }
 
             // Go!
@@ -220,7 +267,7 @@ namespace Uchu.World
                     LockWheels = false,
                 });
             }
-        
+
             Zone.BroadcastMessage(new ActivityStartMessage
             {
                 Associate = this.GameObject,
@@ -248,27 +295,87 @@ namespace Uchu.World
         // y = 0.8638404011726379
         // z = 0.0
 
-        public void OnAcknowledgePossession(GameObject possessed)
+        public void OnAcknowledgePossession(Player player, GameObject vehicle)
         {
-            GameObject.Serialize(this.GameObject);
-
-            Zone.BroadcastMessage(new NotifyRacingClientMessage
-            {
-                Associate = this.GameObject,
-                EventType = RacingClientNotificationType.ActivityStart,
-            });
-
-            Zone.BroadcastMessage(new ActivityStartMessage
-            {
-                Associate = this.GameObject,
-            });
         }
 
+        /// <summary>
+        /// Respawns the player's car after a crash
+        /// </summary>
+        /// <param name="player"></param>
+        private void OnRacingPlayerInfoResetFinished(Player player)
+        {
+            var playerInfoIndex = _players.FindIndex(x => x.Player == player);
+            var playerInfo = _players[playerInfoIndex];
+            var car = playerInfo.Vehicle;
+
+            if (!playerInfo.NoSmashOnReload)
+            {
+                car.GetComponent<DestructibleComponent>().SmashAsync(player);
+
+                player.Message(new VehicleUnlockInputMessage
+                {
+                    Associate = car,
+                    LockWheels = false,
+                });
+
+                player.Message(new VehicleSetWheelLockStateMessage
+                {
+                    Associate = car,
+                    ExtraFriction = false,
+                    Locked = false,
+                });
+
+                car.GetComponent<DestructibleComponent>().ResurrectAsync();
+
+                Zone.BroadcastMessage(new ResurrectMessage
+                {
+                    Associate = car,
+                });
+            }
+
+            playerInfo.NoSmashOnReload = false;
+            _players[playerInfoIndex] = playerInfo;
+        }
+
+        /// <summary>
+        /// Handler for when the client tells the server that the car crashed
+        /// </summary>
+        /// <param name="player"></param>
         public void OnPlayerRequestDie(Player player)
         {
             var racingPlayer = _players.Find(info => info.Player == player);
 
+            Logger.Information($"{player} requested death - respawning to {racingPlayer.RespawnPosition}");
 
+            player.Message(new RacingSetPlayerResetInfoMessage
+            {
+                Associate = GameObject,
+                CurrentLap = (int) racingPlayer.Lap,
+                FurthestResetPlane = racingPlayer.RespawnIndex,
+                PlayerId = player,
+                RespawnPos = racingPlayer.RespawnPosition,
+                UpcomingPlane = racingPlayer.RespawnIndex + 1,
+            });
+
+            player.Message(new RacingResetPlayerToLastResetMessage
+            {
+                Associate = GameObject,
+                PlayerId = player,
+            });
+        }
+
+        private void PlayerReachedCheckpoint(Player player, int index)
+        {
+            var waypoint = _path.Waypoints[index];
+            var playerInfoIndex = _players.FindIndex(x => x.Player == player);
+            var playerInfo = _players[playerInfoIndex];
+            playerInfo.RespawnIndex = (uint) index;
+            playerInfo.RespawnPosition = waypoint.Position;
+            playerInfo.RespawnRotation = player.Transform.Rotation;
+            _players[playerInfoIndex] = playerInfo;
+
+            Logger.Information($"Player reached checkpoint: {index}");
         }
 
         public override void Construct(BitWriter writer)

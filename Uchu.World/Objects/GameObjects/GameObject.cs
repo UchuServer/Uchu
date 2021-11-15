@@ -112,6 +112,10 @@ namespace Uchu.World
         
         public Event<Player, ChoiceBoxRespondMessage> OnChoiceBoxRespond { get; }
 
+        public Event<RequestDieMessage> OnRequestDie { get; }
+
+        public Event OnRacingPlayerInfoResetFinished { get; }
+
         #endregion
         
         #region Macro
@@ -149,6 +153,10 @@ namespace Uchu.World
             OnAcknowledgePossession = new Event<GameObject>();
 
             OnChoiceBoxRespond = new Event<Player, ChoiceBoxRespondMessage>();
+
+            OnRequestDie = new Event<RequestDieMessage>();
+
+            OnRacingPlayerInfoResetFinished = new Event();
 
             Listen(OnStart, () =>
             {

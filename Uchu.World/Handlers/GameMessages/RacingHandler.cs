@@ -23,5 +23,11 @@ namespace Uchu.World.Handlers.GameMessages
             message.Associate.GetComponent<DestroyableComponent>().Imagination += 10;
             await message.PickupObjId.GetComponent<DestructibleComponent>().SmashAsync(message.Associate);
         }
+
+        [PacketHandler]
+        public async void RacingPlayerInfoResetFinishedHandler(RacingPlayerInfoResetFinishedMessage message, Player player)
+        {
+            await player.OnRacingPlayerInfoResetFinished.InvokeAsync();
+        }
     }
 }

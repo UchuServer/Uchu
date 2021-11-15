@@ -82,6 +82,12 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
+        public async Task RequestDieHandler(RequestDieMessage message, Player player)
+        {
+            await player.OnRequestDie.InvokeAsync(message);
+        }
+
+        [PacketHandler]
         public void RebuildCancelHandler(RebuildCancelMessage message, Player player)
         {
             if (message.Associate.TryGetComponent<QuickBuildComponent>(out var rebuild))
