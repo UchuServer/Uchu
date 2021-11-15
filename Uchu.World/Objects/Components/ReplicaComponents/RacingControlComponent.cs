@@ -28,6 +28,8 @@ namespace Uchu.World
 
         private int _deathPlaneHeight;
 
+        private MainWorldReturnData _returnData;
+
         public RacingControlComponent()
         {
             _raceInfo.LapCount = 3;
@@ -46,15 +48,39 @@ namespace Uchu.World
             {
                 case 1203:
                     _deathPlaneHeight = 100;
+                    _returnData = new MainWorldReturnData
+                    {
+                        ZoneId = 1200,
+                        Position = new Vector3(248.8f, 287.4f, 186.9f),
+                        Rotation = new Quaternion(0, 0.7f, 0, 0.7f),
+                    };
                     break;
                 case 1303:
                     _deathPlaneHeight = 0;
+                    _returnData = new MainWorldReturnData
+                    {
+                        ZoneId = 1300,
+                        Position = new Vector3(63.5f, 314.8f, 493.1f),
+                        Rotation = new Quaternion(0, 0.45f, 0, 0.89f),
+                    };
                     break;
                 case 1403:
                     _deathPlaneHeight = 300;
+                    _returnData = new MainWorldReturnData
+                    {
+                        ZoneId = 1400,
+                        Position = new Vector3(775.4f, 238.4f, 455.2f),
+                        Rotation = new Quaternion(0, 0.59f, 0, 0.8f),
+                    };
                     break;
                 default:
                     _deathPlaneHeight = 0;
+                    _returnData = new MainWorldReturnData
+                    {
+                        ZoneId = 1200,
+                        Position = new Vector3(248.8f, 287.4f, 186.9f),
+                        Rotation = new Quaternion(0, 0.7f, 0, 0.7f),
+                    };
                     break;
             }
 
@@ -82,9 +108,7 @@ namespace Uchu.World
             Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
             if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
             {
-                _players.RemoveAll(info => info.Player == player);
-                // TODO: use zone corresponding to this racing world
-                player.SendToWorldAsync(1200, new Vector3(248.8f, 287.4f, 186.9f), new Quaternion(0, 0.7f, 0, 0.7f));
+                SendPlayerToMainWorld(player);
             }
         }
 
@@ -95,6 +119,13 @@ namespace Uchu.World
         private void OnPlayerLoad(Player player)
         {
             Logger.Information("Player loaded into racing");
+
+            // If race has already started return player to main world
+            if (_racingStatus != RacingStatus.None)
+            {
+                SendPlayerToMainWorld(player);
+                return;
+            }
 
             // Register player
             this._players.Add(new RacingPlayerInfo
@@ -116,6 +147,16 @@ namespace Uchu.World
             });
 
             Zone.Schedule(InitRace, 10000);
+        }
+
+        /// <summary>
+        /// Send the player back to the world he came from
+        /// </summary>
+        /// <param name="player"></param>
+        private void SendPlayerToMainWorld(Player player)
+        {
+            _players.RemoveAll(info => info.Player == player);
+            player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
         }
 
         /// <summary>
@@ -446,6 +487,12 @@ namespace Uchu.World
             None,
             Loaded,
             Started,
+        }
+
+        private struct MainWorldReturnData {
+            public ZoneId ZoneId { get; set; }
+            public Vector3 Position { get; set; }
+            public Quaternion Rotation { get; set; }
         }
 
         struct RacingPlayerInfo {
