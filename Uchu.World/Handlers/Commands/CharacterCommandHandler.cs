@@ -354,6 +354,9 @@ namespace Uchu.World.Handlers.Commands
         [CommandHandler(Signature = "near", Help = "Get nearest object", GameMasterLevel = GameMasterLevel.Player)]
         public string Near(string[] arguments, Player player)
         {
+            // Ignore the player's car (if relevant)
+            var vehicle = player.GetComponent<CharacterComponent>().VehicleObject;
+
             var current = player.Zone.GameObjects[0];
 
             if (!arguments.Contains("-m"))
@@ -361,6 +364,8 @@ namespace Uchu.World.Handlers.Commands
                 foreach (var gameObject in player.Zone.GameObjects.Where(g => g != player && g != default))
                 {
                     if (gameObject.Transform == default) continue;
+
+                    if (gameObject == vehicle) continue;
 
                     if (!arguments.Contains("-sp"))
                     {
