@@ -28,14 +28,14 @@ namespace Uchu.World.Systems.Behaviors
 
             player.Zone.BroadcastMessage(new VehicleAddPassiveBoostAction
             {
-                Associate = player
+                Associate = parameters.BranchContext.Target,
             });
             
             player.Zone.Schedule(() =>
             {
                 player.Zone.BroadcastMessage(new VehicleRemovePassiveBoostAction
                 {
-                    Associate = player
+                    Associate = parameters.BranchContext.Target,
                 });
             }, Time * 1000);
         }
