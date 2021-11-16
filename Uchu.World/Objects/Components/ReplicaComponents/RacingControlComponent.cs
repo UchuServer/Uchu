@@ -140,7 +140,7 @@ namespace Uchu.World
 
             Listen(player.OnPositionUpdate, (position, rotation) =>
             {
-                if (position.Y < _deathPlaneHeight)
+                if (position.Y < _deathPlaneHeight && _racingStatus == RacingStatus.Started)
                 {
                     OnPlayerRequestDie(player);
                 }
@@ -167,12 +167,13 @@ namespace Uchu.World
         private void LoadPlayerCar(Player player)
         {
             // Get position and rotation
-            var startPosition = _path.Waypoints.First().Position + Vector3.UnitY * 3;
+            var waypoint = (LuzRaceWaypoint)_path.Waypoints.First();
+            var startPosition = waypoint.Position;
+            var startRotation = waypoint.Rotation;
+            
             var spacing = 15;
-            var range = _players.Count * spacing;
-            startPosition += Vector3.UnitZ * range;
-
-            var startRotation = Quaternion.CreateFromYawPitchRoll(((float) Math.PI) * -0.5f, 0 , 0);
+            var positionOffset = startRotation.VectorMultiply(Vector3.UnitX) * _players.Count * spacing;
+            startPosition += positionOffset + Vector3.UnitY * 3;
 
             // Create car
             player.Teleport(startPosition, startRotation);
