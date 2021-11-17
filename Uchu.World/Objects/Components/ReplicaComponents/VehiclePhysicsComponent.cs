@@ -33,7 +33,6 @@ namespace Uchu.World
         public override VehiclePhysicsSerialization GetSerializePacket()
         {
             var packet = base.GetSerializePacket();
-            Logger.Information(this.GameObject.Transform.Position);
             var teleportInfo = new VehicleFrameStatsTeleportInfo
             {
                 VehicleFrameStats = new VehicleFrameStats
