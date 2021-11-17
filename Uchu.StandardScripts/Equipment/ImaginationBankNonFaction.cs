@@ -9,25 +9,28 @@ namespace Uchu.StandardScripts.Equipment
     {
         public ImaginationBankNonFaction(GameObject gameObject) : base(gameObject)
         {
-            if (gameObject is Item item)
+            Listen(gameObject.OnStart, () =>
             {
-                bool Ready = true;
-                Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) => 
+                if (gameObject is Item item)
                 {
-                    if (newI < 1 && Ready && item.IsEquipped)
+                    bool Ready = true;
+                    Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) =>
                     {
-                        Task.Run(async () => 
+                        if (newI < 1 && Ready && item.IsEquipped)
                         {
-                            Ready = false;
+                            Task.Run(async () =>
+                            {
+                                Ready = false;
                             //prevent imagination from getting eaten by ability
                             await Task.Delay(100);
-                            await item.Owner.GetComponent<SkillComponent>().CalculateSkillAsync(394);
-                            await Task.Delay(900);
-                            Ready = true;
-                        });
-                    }
-                });
-            }
+                                await item.Owner.GetComponent<SkillComponent>().CalculateSkillAsync(394);
+                                await Task.Delay(900);
+                                Ready = true;
+                            });
+                        }
+                    });
+                }
+            });
         }
     }
 }
