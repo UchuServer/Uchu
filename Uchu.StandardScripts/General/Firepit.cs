@@ -61,7 +61,7 @@ namespace Uchu.StandardScripts.General
                     {
                         Task.Run(async () => 
                         {
-                            await missionInventoryComponent.ScriptAsync(658, GameObject.Lot);
+                            await missionInventoryComponent.ScriptAsync(1103, 8239);
                         });
                     }
                 }
