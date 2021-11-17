@@ -29,5 +29,23 @@ namespace Uchu.World.Handlers.GameMessages
         {
             await player.OnRacingPlayerInfoResetFinished.InvokeAsync();
         }
+
+        [PacketHandler]
+        public void VehicleNotifyServerAddPassiveBoostActionHandler(VehicleNotifyServerAddPassiveBoostActionMessage message, Player player)
+        {
+            player.Zone.ExcludingMessage(new VehicleAddPassiveBoostAction
+            {
+                Associate = message.Associate,
+            }, player);
+        }
+
+        [PacketHandler]
+        public void VehicleNotifyServerRemovePassiveBoostActionHandler(VehicleNotifyServerRemovePassiveBoostActionMessage message, Player player)
+        {
+            player.Zone.ExcludingMessage(new VehicleRemovePassiveBoostAction
+            {
+                Associate = message.Associate,
+            }, player);
+        }
     }
 }

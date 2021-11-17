@@ -405,6 +405,11 @@ namespace Uchu.World
             if (racingPlayer.RespawnPosition == Vector3.Zero)
                 racingPlayer.RespawnPosition = _path.Waypoints.First().Position;
 
+            player.Zone.ExcludingMessage(new VehicleRemovePassiveBoostAction
+            {
+                Associate = racingPlayer.Vehicle,
+            }, player);
+
             Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
             {
                 Associate = GameObject,

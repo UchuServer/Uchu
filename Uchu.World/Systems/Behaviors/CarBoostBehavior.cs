@@ -26,17 +26,17 @@ namespace Uchu.World.Systems.Behaviors
             
             Action.ExecuteStart(parameters);
 
-            player.Zone.BroadcastMessage(new VehicleAddPassiveBoostAction
+            player.Zone.ExcludingMessage(new VehicleAddPassiveBoostAction
             {
                 Associate = parameters.BranchContext.Target,
-            });
+            }, player);
             
             player.Zone.Schedule(() =>
             {
-                player.Zone.BroadcastMessage(new VehicleRemovePassiveBoostAction
+                player.Zone.ExcludingMessage(new VehicleRemovePassiveBoostAction
                 {
                     Associate = parameters.BranchContext.Target,
-                });
+                }, player);
             }, Time * 1000);
         }
     }
