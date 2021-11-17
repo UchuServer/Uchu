@@ -29,15 +29,15 @@ Default configuration in `config.xml`
 | Name | Description | Example | Expected Values |
 |-|-|-|-|
 | `character/list` | Takes in the `id` of a `username`, and returns information about the characters. | http://localhost:10000/character/list?= `id` | `id` |
-| `character/details` | Takes in the `id` of a `character`, and returns information about the characters. | http://localhost:10000/character/details?= `id` | `id`
+| `character/details` | Takes in the `id` of a `character`, and returns information about that character. | http://localhost:10000/character/details?= `id` | `id`
 
 ## Master options
 
 | Name | Description | Example | Expected Values |
 |-|-|-|-|
 | `subsidiary` | Requests information about `instance` | http://localhost:10000/subsidiary | None |
-| `instance/basic` | xx | http://localhost:10000/instance/basic?= | xx |
-| `instance/target` | Takes in the `id` of a `instance`, and returns information about the `instance`. | http://localhost:10000/instance/target?= `id` | `id` |
+| `instance/basic` | Takes in the `Type` of a `instance`, and returns information about the first `instance` of that type. | http://localhost:10000/instance/basic?= | `0`, `1`, `2` |
+| `instance/target` | Takes in the `id` of a `instance`, and returns information about that `instance`. | http://localhost:10000/instance/target?= `id` | `id` |
 | `instance/heartbeat` | Takes in the `id` of a `instance`, and sends a heart beat to the master. | http://localhost:10000/instance/heartbeat?= `id` | `id` |
 | `claim/world` | Requests information about active `world instance`, and returns the `port` for the next `world instance`. | http://localhost:10000/claim/world | None |
 | `claim/api` | Claims the port for the next `api instance`. | http://localhost:10000/claim/api | None |
