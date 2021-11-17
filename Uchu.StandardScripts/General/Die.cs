@@ -17,10 +17,13 @@ namespace Uchu.StandardScripts.General
         /// <param name="gameObject">Game object to control with the script.</param>
         public Die(GameObject gameObject) : base(gameObject)
         {
+            /*
             var cdClientContext = new CdClientContext();
             var animation = cdClientContext.AnimationsTable.FirstOrDefault(e => e.Animationtype == "dice-roll");
             if (animation?.Animationlength == null) return;
             var length = animation.Animationlength * 1000;
+            Console.WriteLine(length);
+            */
             Zone.Schedule(() => 
             {
                 Zone.BroadcastMessage(new DieMessage
@@ -50,12 +53,11 @@ namespace Uchu.StandardScripts.General
                     if (roll == 6)
                     {
                         bonusLog = "! Congratulations!";
-                        var mission = missions.GetMission(756);
-                        await missions.ScriptAsync(mission.Tasks[0].TaskId, gameObject.Lot);
+                        await missions.ScriptAsync(1103, 8239);
                     }
                     Logger.Information($"{authored.Author.Name} rolled a {roll}{bonusLog}");
                 }
-            }, (float) length);
+            }, (float) 3000);
         }
     }
 }

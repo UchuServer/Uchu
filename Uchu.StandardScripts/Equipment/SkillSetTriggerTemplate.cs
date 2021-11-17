@@ -56,7 +56,7 @@ namespace Uchu.StandardScripts.Equipment
             //for "get 1 imagination back", the ability would eat the gained imagination as well (sextant with engie 1),
             //this delay prevents it from eating the gained stats
             await Task.Delay(100);
-            skillComponent.CalculateSkillAsync(SkillID, target);
+            await skillComponent.CalculateSkillAsync(SkillID, target);
             
             //await Task.Delay((int) (CooldownTime * 1000));
             //Ready = true;

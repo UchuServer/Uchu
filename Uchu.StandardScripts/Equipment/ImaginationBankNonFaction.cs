@@ -14,14 +14,14 @@ namespace Uchu.StandardScripts.Equipment
                 bool Ready = true;
                 Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) => 
                 {
-                    if (newI < 1 && Ready)
+                    if (newI < 1 && Ready && item.IsEquipped)
                     {
                         Task.Run(async () => 
                         {
                             Ready = false;
                             //prevent imagination from getting eaten by ability
                             await Task.Delay(100);
-                            item.Owner.GetComponent<SkillComponent>().CalculateSkillAsync(394);
+                            await item.Owner.GetComponent<SkillComponent>().CalculateSkillAsync(394);
                             await Task.Delay(900);
                             Ready = true;
                         });
