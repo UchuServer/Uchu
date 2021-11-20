@@ -476,13 +476,12 @@ namespace Uchu.World
 
             packet.RaceInfo = _raceInfo;
 
-            packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
-            {
-                Player = info.Player,
-                BestLapTime = (float) info.BestLapTime.TotalSeconds,
-                RaceTime = (float) info.RaceTime.TotalSeconds
-            }).ToArray();
-
+            // packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
+            // {
+            //     Player = info.Player,
+            //     BestLapTime = (float) info.BestLapTime.TotalSeconds,
+            //     RaceTime = (float) info.RaceTime.TotalSeconds
+            // }).ToArray();
 
             // TODO
 
