@@ -106,9 +106,28 @@ namespace Uchu.World
         private void OnMessageBoxRespond(Player player, MessageBoxRespondMessage message)
         {
             Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
-            if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1)
+            if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1 || message.Identifier == "Exit")
             {
+                player.Message(new NotifyRacingClientMessage
+                {
+                    Associate = GameObject,
+                    EventType = RacingClientNotificationType.Exit,
+                    SingleClient = player,
+                });
+
                 SendPlayerToMainWorld(player);
+            }
+            else if (message.Identifier == "rewardButton")
+            {
+                // TODO: send rewards - relies on activityID being present in object settings
+                // await this.DropLootAsync(player);
+
+                player.Message(new NotifyRacingClientMessage
+                {
+                    Associate = GameObject,
+                    EventType = RacingClientNotificationType.RewardPlayer,
+                    SingleClient = player,
+                });
             }
         }
 
