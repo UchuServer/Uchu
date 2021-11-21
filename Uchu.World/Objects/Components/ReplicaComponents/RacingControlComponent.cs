@@ -410,21 +410,23 @@ namespace Uchu.World
                 Associate = racingPlayer.Vehicle,
             }, player);
 
-            Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
-            {
-                Associate = GameObject,
-                CurrentLap = (int) racingPlayer.Lap,
-                FurthestResetPlane = racingPlayer.RespawnIndex,
-                PlayerId = player,
-                RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
-                UpcomingPlane = racingPlayer.RespawnIndex + 1,
-            });
+            Zone.Schedule(() => {
+                Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
+                {
+                    Associate = GameObject,
+                    CurrentLap = (int) racingPlayer.Lap,
+                    FurthestResetPlane = racingPlayer.RespawnIndex,
+                    PlayerId = player,
+                    RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
+                    UpcomingPlane = racingPlayer.RespawnIndex + 1,
+                });
 
-            Zone.BroadcastMessage(new RacingResetPlayerToLastResetMessage
-            {
-                Associate = GameObject,
-                PlayerId = player,
-            });
+                Zone.BroadcastMessage(new RacingResetPlayerToLastResetMessage
+                {
+                    Associate = GameObject,
+                    PlayerId = player,
+                });
+            }, 2000);
         }
 
         private void PlayerReachedCheckpoint(Player player, int index)
