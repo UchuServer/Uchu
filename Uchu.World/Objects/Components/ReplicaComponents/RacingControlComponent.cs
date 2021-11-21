@@ -276,23 +276,6 @@ namespace Uchu.World
 
             _racingStatus = RacingStatus.Loaded;
 
-            Zone.BroadcastMessage(new NotifyRacingClientMessage
-            {
-                Associate = this.GameObject,
-                EventType = RacingClientNotificationType.ActivityStart,
-            });
-
-            // Start after 6 seconds
-            Zone.Schedule(StartRace, 6000);
-        }
-
-        private void StartRace()
-        {
-            if (_racingStatus != RacingStatus.Loaded)
-                return;
-
-            _racingStatus = RacingStatus.Started;
-
             // Start imagination spawners
             var minSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Min");
             var medSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Med");
@@ -345,6 +328,27 @@ namespace Uchu.World
                     playersInPhysicsObject.Remove(player);
                 });
             }
+
+            Zone.BroadcastMessage(new NotifyRacingClientMessage
+            {
+                Associate = this.GameObject,
+                EventType = RacingClientNotificationType.ActivityStart,
+            });
+
+            // Start after 7 seconds
+            Task.Run(async () =>
+            {
+                await Task.Delay(7000);
+                this.StartRace();
+            });
+        }
+
+        private void StartRace()
+        {
+            if (_racingStatus != RacingStatus.Loaded)
+                return;
+
+            _racingStatus = RacingStatus.Started;
 
             // Go!
             foreach (var info in _players)
