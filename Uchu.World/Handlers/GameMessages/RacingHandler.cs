@@ -20,8 +20,12 @@ namespace Uchu.World.Handlers.GameMessages
         [PacketHandler]
         public async void ImaginationHandler(VehicleNotifyHitImaginationServerMessage message, Player player)
         {
-            message.Associate.GetComponent<DestroyableComponent>().Imagination += 10;
-            await message.PickupObjId.GetComponent<DestructibleComponent>().SmashAsync(message.Associate);
+            if (message.Associate is null || message.PickupObjId is null)
+                return;
+            if (message.Associate.TryGetComponent<DestroyableComponent>(out var vehicleDestroyableComponent))
+                vehicleDestroyableComponent.Imagination += 10;
+            if (message.PickupObjId.TryGetComponent<DestructibleComponent>(out var imaginationDestructibleComponent))
+                await imaginationDestructibleComponent.SmashAsync(message.Associate);
         }
 
         [PacketHandler]
