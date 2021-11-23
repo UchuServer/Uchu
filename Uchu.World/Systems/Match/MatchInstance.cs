@@ -222,8 +222,8 @@ namespace Uchu.World.Systems.Match
                     Associate = player,
                     Data = new LegoDataDictionary
                     {
-                        {"player", player.Id, 9},
-                        {"playerName", player.Name, 0},
+                        {"player", otherPlayer.Id, 9},
+                        {"playerName", otherPlayer.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });
