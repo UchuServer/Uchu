@@ -46,6 +46,39 @@ namespace Uchu.World.Api
             return response;
         }
 
+        /// <summary>
+        /// Take in a zone ID, find that zone in this server's Zones, return whether it is fully loaded
+        /// </summary>
+        /// <param name="zone">Zone ID</param>
+        /// <returns>Whether the zone has loaded all objects</returns>
+        [ApiCommand("world/zoneStatus")]
+        public object ZoneStatus(string zone)
+        {
+            var response = new ZoneStatusResponse();
+
+            if (!int.TryParse(zone, out var zoneId))
+            {
+                response.FailedReason = "invalid zone";
+
+                return response;
+            }
+
+            var zoneInstance = UchuServer.Zones.FirstOrDefault(z => z.ZoneId == (ZoneId) zoneId);
+
+            if (zoneInstance == default)
+            {
+                response.FailedReason = "not found";
+
+                return response;
+            }
+
+            response.Success = true;
+
+            response.Loaded = zoneInstance.Loaded;
+
+            return response;
+        }
+
         [ApiCommand("world/saveAndKick")]
         public async Task<object> SaveAndKick()
         {

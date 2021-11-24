@@ -105,11 +105,35 @@ namespace Uchu.World.Systems.Match
                     return;
                 }
 
-                // Start the match.
-                foreach (var player in _players)
+                const int checkEveryMs = 2000;
+                const int timeoutMs = 30000;
+                var zoneLoadedTimer = new Timer(checkEveryMs);
+                var elapsed = 0;
+                zoneLoadedTimer.Elapsed += async (o, eventArgs) =>
                 {
-                    await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
-                }
+                    elapsed += checkEveryMs;
+                    if (elapsed >= timeoutMs)
+                    {
+                        zoneLoadedTimer.Stop();
+                        zoneLoadedTimer.Dispose();
+                        return;
+                    }
+
+                    var status = await zone.Server.Api.RunCommandAsync<ZoneStatusResponse>(
+                        allocatedInstance.ApiPort, $"world/zoneStatus?id={matchZoneId}"
+                    ).ConfigureAwait(false);
+
+                    // If the zone is ready, start the match.
+                    if (!status.Success || !status.Loaded) return;
+                    zoneLoadedTimer.Stop();
+                    zoneLoadedTimer.Dispose();
+
+                    // Start the match.
+                    foreach (var player in _players)
+                    {
+                        await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
+                    }
+                };
             };
         }
 
