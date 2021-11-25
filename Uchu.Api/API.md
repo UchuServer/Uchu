@@ -2,6 +2,8 @@
 
 Representational State Transfer (REST) APIs are service endpoints that support sets of HTTP operations (methods), which provide create, retrieve, update, or delete access to the uchu server.
 
+## Configuration
+
 Default configuration in `config.xml`
 
   ```xml
@@ -11,6 +13,13 @@ Default configuration in `config.xml`
     <Port>10000</Port>
   </Api>
   ```
+
+__`<Api>`__
+### Domain
+Here you can configure over which domain Uchu will listen. If you change this, the uchu rest api will only be available to requests over that exact adress (localhost will no longer work).
+
+### Port
+By default, Uchu will have its API available on ports `10000 and up`. If you want to use different ports, specify the port to start from in `<Port>`.
 
 ## Account options
 
@@ -57,3 +66,4 @@ Default configuration in `config.xml`
 | `world/players` | Takes in the `port` of a `world` as well as the `id` of a `world`, and lists all active players in that `world instance`. | http://localhost: `port` /world/players?= `id` | `port`, `id` |
 | `world/saveAndKick` | Takes in the `port` of a `world`, and kicks all active players in that `world instance`. | http://localhost: `port` /world/saveAndKick | `port` |
 | `world/announce` | Takes in the `port` of a `world`, `title` and a `message`, and sends an announcement to all players in that `world instance`. | http://localhost: `port` /world/announce?= `title`&`message` | `port`, `title`, `message` |
+| `world/zoneStatus` | Take in a `id` of a `zone`, find that `zone` in this server's `zones`, return whether it is fully loaded. | http://localhost: `port` /world/zoneStatus?= `id` | `id` |
