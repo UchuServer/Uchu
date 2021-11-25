@@ -14,7 +14,8 @@ Default configuration in `config.xml`
   </Api>
   ```
 
-__`<Api>`__
+
+## Api
 ### Domain
 Here you can configure over which domain Uchu will listen. If you change this, the uchu rest api will only be available to requests over that exact adress (localhost will no longer work).
 
