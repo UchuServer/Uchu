@@ -134,6 +134,7 @@ namespace Uchu.World.Systems.Match
                         await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
                     }
                 };
+                zoneLoadedTimer.Start();
             };
         }
 
