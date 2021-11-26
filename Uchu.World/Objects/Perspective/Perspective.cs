@@ -15,6 +15,8 @@ namespace Uchu.World
 
         public GameObject[] LoadedObjects => _networkDictionary.Keys.ToArray();
 
+        public bool IsLoaded(GameObject gameObject) => _networkDictionary.ContainsKey(gameObject);
+
         public MaskFilter MaskFilter => TryGetFilter<MaskFilter>(out var filter) ? filter : default;
         public RenderDistanceFilter RenderDistanceFilter => TryGetFilter<RenderDistanceFilter>(out var filter) ? filter : default;
         

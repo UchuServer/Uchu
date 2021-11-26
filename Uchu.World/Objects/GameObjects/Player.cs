@@ -391,7 +391,6 @@ namespace Uchu.World
         /// </summary>
         internal void UpdateView()
         {
-            var loadedObjects = Perspective.LoadedObjects.ToArray();
             foreach (var gameObject in Zone.Spawned)
             {
                 TriggerViewUpdate(gameObject);
@@ -404,7 +403,7 @@ namespace Uchu.World
         /// <param name="gameObject">The game object to check</param>
         public void TriggerViewUpdate(GameObject gameObject)
         {
-            var spawned = Perspective.LoadedObjects.ToArray().Contains(gameObject);
+            var spawned = Perspective.IsLoaded(gameObject);
             var view = Perspective.View(gameObject);
 
             if (!spawned && view)

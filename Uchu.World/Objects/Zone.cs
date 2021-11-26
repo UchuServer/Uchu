@@ -287,7 +287,7 @@ namespace Uchu.World
                 {
                     Logger.Debug($"Trigger: {trigger}");
                 }
-                
+
                 Logger.Debug($"Loading {levelObject.Lot} [{levelObject.ObjectId}]...");
                 
                 try
@@ -761,11 +761,7 @@ namespace Uchu.World
             var watch = new Stopwatch();
             watch.Start();
 
-            var updatedObjects = UpdatedObjects.ToArray();
-            var visibleObjects = updatedObjects.Select(o => o.Associate)
-                .Intersect(Players.SelectMany(p => p.Perspective.LoadedObjects)).ToHashSet();
-            var objectsToUpdate = updatedObjects
-                .Where(o => visibleObjects.Contains(o.Associate));
+            var objectsToUpdate = UpdatedObjects.Where(o => Players.Any(p => p.Perspective.IsLoaded(o.Associate as GameObject)));
             
             foreach (var updatedObject in objectsToUpdate)
             {
