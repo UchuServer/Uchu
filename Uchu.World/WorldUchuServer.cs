@@ -275,7 +275,7 @@ namespace Uchu.World
                 return;
             }
 
-            Logger.Debug($"Received {(GameMessageId)messageId}");
+            // Logger.Debug($"Received {(GameMessageId)messageId}");
 
             // Check if this message came from a logged in player
             var player = Zones.SelectMany(z => z.Players).FirstOrDefault(p => p.Connection.Equals(connection));
