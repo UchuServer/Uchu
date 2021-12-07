@@ -26,6 +26,11 @@ namespace Uchu.World.Handlers.GameMessages
                 vehicleDestroyableComponent.Imagination += 10;
             if (message.PickupObjId.TryGetComponent<DestructibleComponent>(out var imaginationDestructibleComponent))
                 await imaginationDestructibleComponent.SmashAsync(message.Associate);
+
+            // Progress imagination collect task
+            if (message.Associate.TryGetComponent<PossessableComponent>(out PossessableComponent possessableComponent))
+                if (possessableComponent.Driver.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+                    await missionInventoryComponent.RacingCollectImaginationAsync();
         }
 
         [PacketHandler]

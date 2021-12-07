@@ -146,6 +146,9 @@ namespace Uchu.World
                 return;
             }
 
+            if (player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+                missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
+
             // Register player
             this._players.Add(new RacingPlayerInfo
             {

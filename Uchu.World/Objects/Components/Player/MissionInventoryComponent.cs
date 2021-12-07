@@ -706,6 +706,87 @@ namespace Uchu.World
             });
         }
 
+        public async Task RaceFinishedAsync(int rank, int racetime)
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
+                await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
+                if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, 0, async task =>
+            {
+                await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
+                await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
+            });
+        }
+
+        public async Task RacingLaptimeAsync(int laptime)
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportLaptime(laptime, this.GameObject.Zone.ZoneId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, laptime, async task =>
+            {
+                await task.ReportLaptime(laptime, this.GameObject.Zone.ZoneId);
+            });
+        }
+
+        public async Task RacingMissionCompleteAsync(int missionId)
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportMissionComplete(missionId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, missionId, async task =>
+            {
+                await task.ReportMissionComplete(missionId);
+            });
+        }
+
+        public async Task RacingCollectImaginationAsync()
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportImagination(this.GameObject.Zone.ZoneId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, Lot.Imagination, async task =>
+            {
+                await task.ReportImagination(this.GameObject.Zone.ZoneId);
+            });
+        }
+
+        public async Task RacingEnterWorld(ZoneId zoneId)
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportWorldEnter(zoneId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
+            {
+                await task.ReportImagination(zoneId);
+            });
+        }
+
+        public async Task RacingSmashAsync(Lot lot)
+        {
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportSmash(lot);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, lot, async task =>
+            {
+                await task.ReportSmash(lot);;
+            });
+        }
+
         /// <summary>
         /// Returns a list of achievements that a player may start for a certain task type due to meeting it's prerequisites
         /// </summary>
