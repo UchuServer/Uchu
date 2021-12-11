@@ -274,7 +274,7 @@ namespace Uchu.Master.Api
                 return response;
             }
 
-            instance.Process.Kill();
+            instance.Process?.Kill();
 
             instances.Remove(instance);
 
