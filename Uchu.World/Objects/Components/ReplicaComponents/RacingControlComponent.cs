@@ -1,9 +1,14 @@
 // Thanks to Simon Nitzsche for his research into racing
 // https://github.com/SimonNitzsche/OpCrux-Server/
 // https://www.youtube.com/watch?v=X5qvEDmtE5U
+//
+// Thanks to Darkflame Universe for releasing the source code
+// of their server. https://github.com/DarkflameUniverse/
+// https://www.darkflameuniverse.org/
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -29,6 +34,8 @@ namespace Uchu.World
         private int _deathPlaneHeight;
 
         private MainWorldReturnData _returnData;
+
+        private int _rankCounter = 0;
 
         public RacingControlComponent()
         {
@@ -156,6 +163,9 @@ namespace Uchu.World
                 PlayerLoaded = true,
                 PlayerIndex = (uint) _players.Count + 1,
                 NoSmashOnReload = true,
+                RaceTime = new Stopwatch(),
+                LapTime = new Stopwatch(),
+                BestLapTime = new TimeSpan(0),
             });
 
             LoadPlayerCar(player);
@@ -322,6 +332,7 @@ namespace Uchu.World
                     if (playersInPhysicsObject.Contains(player)) return;
                     playersInPhysicsObject.Add(player);
 
+                    // TODO: Check for players driving in the wrong direction
                     this.PlayerReachedCheckpoint(player, index);
                 });
                 this.Listen(physics.OnLeave, component =>
@@ -356,6 +367,9 @@ namespace Uchu.World
             // Go!
             foreach (var info in _players)
             {
+                info.RaceTime.Restart();
+                info.LapTime.Restart();
+
                 Zone.BroadcastMessage(new VehicleUnlockInputMessage
                 {
                     Associate = info.Vehicle,
@@ -460,6 +474,40 @@ namespace Uchu.World
             var waypoint = _path.Waypoints[index];
             var playerInfoIndex = _players.FindIndex(x => x.Player == player);
             var playerInfo = _players[playerInfoIndex];
+
+            // If start point is reached
+            if (index == 0)
+            {
+                var lapTime = (int)playerInfo.LapTime.ElapsedMilliseconds;
+                playerInfo.LapTime.Restart();
+
+                // If player finished race
+                if (playerInfo.Lap >= _raceInfo.LapCount)
+                {
+                    var raceTime = (int)playerInfo.RaceTime.ElapsedMilliseconds;
+                    playerInfo.RaceTime.Stop();
+                    
+                    if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+                        missionInventoryComponent.RaceFinishedAsync(++_rankCounter, (int)playerInfo.RaceTime.ElapsedMilliseconds);
+                }
+
+                // Set new best lap if applicable
+                if (lapTime > playerInfo.BestLapTime.Milliseconds)
+                {
+                    playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
+
+                    if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+                        missionInventoryComponent.RacingLaptimeAsync(lapTime);
+                }
+
+                playerInfo.Lap++;
+
+                Logger.Debug("Player crossed line: " + lapTime);
+                Logger.Debug("Now Lap " + playerInfo.Lap);
+
+                // TODO: Update Leaderboard
+            }
+
             playerInfo.RespawnIndex = (uint) index;
             playerInfo.RespawnPosition = waypoint.Position;
             playerInfo.RespawnRotation = player.Transform.Rotation;
@@ -504,12 +552,12 @@ namespace Uchu.World
 
             packet.RaceInfo = _raceInfo;
 
-            // packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
-            // {
-            //     Player = info.Player,
-            //     BestLapTime = (float) info.BestLapTime.TotalSeconds,
-            //     RaceTime = (float) info.RaceTime.TotalSeconds
-            // }).ToArray();
+            packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
+            {
+                Player = info.Player,
+                BestLapTime = (float) info.BestLapTime.TotalSeconds,
+                RaceTime = (float) info.RaceTime.Elapsed.TotalSeconds,
+            }).ToArray();
 
             // TODO
 
@@ -541,11 +589,11 @@ namespace Uchu.World
             public uint Finished { get; set; }
             public uint ReachedPoints { get; set; }
             public TimeSpan BestLapTime { get; set; }
-            public TimeSpan LapTime { get; set; }
+            public Stopwatch LapTime { get; set; }
             public uint SmashedTimes { get; set; }
             public bool NoSmashOnReload { get; set; }
             public bool CollectedRewards { get; set; }
-            public TimeSpan RaceTime { get; set; }
+            public Stopwatch RaceTime { get; set; }
         };
     }
 }
