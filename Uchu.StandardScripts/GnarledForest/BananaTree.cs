@@ -83,8 +83,9 @@ namespace Uchu.StandardScripts.GnarledForest
         private void animateBananaSmash()
         {
             int framerate = 20;
-            var destroyable = Banana.GetComponent<DestroyableComponent>();
-            destroyable.Health = 9999;
+            //var destroyable = Banana.GetComponent<DestroyableComponent>();
+            //destroyable.Health = 9999;
+            
             //:)
             //this isn't part of the original script but i wanted to make it look nicer
             Task.Run(async () =>
@@ -92,10 +93,11 @@ namespace Uchu.StandardScripts.GnarledForest
                 for (int i = 0; i < framerate / 2; i++)
                 {
                     await Task.Delay(1000 / framerate);
+                    if (Banana == null || !Banana.Alive) return;
                     Banana.Transform.Translate(new Vector3(0, delta((((float)i + 1) / framerate), (float)i / framerate), 0));
                 }
                 AddTimerWithCancel(100, "smashGroundedBanana");
-                destroyable.Health = 1;
+                //destroyable.Health = 1;
             });
         }
     }
