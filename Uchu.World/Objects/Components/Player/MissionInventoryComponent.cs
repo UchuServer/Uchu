@@ -719,6 +719,7 @@ namespace Uchu.World
             {
                 await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
                 await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
+                if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
             });
         }
 

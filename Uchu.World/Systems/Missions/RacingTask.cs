@@ -41,7 +41,7 @@ namespace Uchu.World.Systems.Missions
 
         private async Task ReportProgressValue(int value, ZoneId zoneId)
         {
-            if (value >= RequiredProgress)
+            if (value <= RequiredProgress)
                 AddProgress(zoneId);
 
             if (Completed)
