@@ -13,23 +13,9 @@ namespace Uchu.StandardScripts.Equipment
     {
         public GemPack(GameObject gameObject) : base(gameObject)
         {
-            if (gameObject is Item item)
-            {
-                SkillID = 1488;
-                CoilThreshold = 5;
-                Listen(item.Owner.GetComponent<DestroyableComponent>().OnHealthChanged, (newH, delta) => 
-                {
-                    if (delta < 0){
-                        Process(item);
-                    }
-                });
-                Listen(item.Owner.GetComponent<DestroyableComponent>().OnArmorChanged, (newA, delta) => 
-                {
-                    if (delta < 0){
-                        Process(item);
-                    }
-                });
-            }
+            SkillID = 1488;
+            CoilThreshold = 5;
+            Ready = true;
         }
     }
 }

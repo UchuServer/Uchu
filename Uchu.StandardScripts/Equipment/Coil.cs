@@ -10,6 +10,7 @@ namespace Uchu.StandardScripts.Equipment
         public int SkillID { get; set; }
         public int CoilThreshold { get; set; }
         private int CoilCount = 0;
+        protected bool Ready = false;
         public Coil(GameObject gameObject) : base(gameObject)
         {
             Listen(gameObject.OnStart, () =>
@@ -24,12 +25,26 @@ namespace Uchu.StandardScripts.Equipment
                             //remove recoil count when unequipped
                         }
                     });
+                    Listen(item.Owner.GetComponent<DestroyableComponent>().OnHealthChanged, (newH, delta) =>
+                    {
+                        if (delta < 0)
+                        {
+                            Process(item);
+                        }
+                    });
+                    Listen(item.Owner.GetComponent<DestroyableComponent>().OnArmorChanged, (newA, delta) =>
+                    {
+                        if (delta < 0)
+                        {
+                            Process(item);
+                        }
+                    });
                 }
             });
         }
         protected void Process(Item item)
         {
-            if (item.IsEquipped)
+            if (item.IsEquipped && Ready)
             {
                 CoilCount++;
                 if (CoilCount >= CoilThreshold)
@@ -45,6 +60,7 @@ namespace Uchu.StandardScripts.Equipment
         }
         private async void Effect(GameObject target)
         {
+            //TODO: remove delay
             Task.Delay(100);
             var skillComponent = target.GetComponent<SkillComponent>();
             skillComponent.CalculateSkillAsync(SkillID, target);

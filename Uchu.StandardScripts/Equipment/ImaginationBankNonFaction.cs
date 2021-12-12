@@ -21,8 +21,8 @@ namespace Uchu.StandardScripts.Equipment
                             Task.Run(async () =>
                             {
                                 Ready = false;
-                            //prevent imagination from getting eaten by ability
-                            await Task.Delay(100);
+                                //prevent imagination from getting eaten by ability
+                                await Task.Delay(100);
                                 await item.Owner.GetComponent<SkillComponent>().CalculateSkillAsync(394);
                                 await Task.Delay(900);
                                 Ready = true;
