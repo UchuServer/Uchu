@@ -64,7 +64,7 @@ Whenever you run Uchu Tool, it will automatically check for updates and (when ap
 In this section it is assumed that you are familiar with your operating system's terminal emulator, and know how to use it to navigate to folders and run files.
 
 - Install [git](https://git-scm.com/downloads)
-- Install [.NET 5.0 SDK](https://dotnet.microsoft.com/download) (for Linux users it will be called `.NET` without `SDK`)
+- Install [.NET 6.0 SDK](https://dotnet.microsoft.com/download) (for Linux users it will be called `.NET` without `SDK`)
 
 **Clone the repository:**
 ```bash
@@ -80,7 +80,7 @@ dotnet build
 
 **Start the server:**
 ```bash
-cd Uchu.Master/bin/Debug/net5.0
+cd Uchu.Master/bin/Debug/net6.0
 dotnet Uchu.Master.dll
 ```
 
