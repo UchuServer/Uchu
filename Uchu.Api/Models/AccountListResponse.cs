@@ -4,6 +4,6 @@ namespace Uchu.Api.Models
 {
     public class AccountListResponse : BaseResponse
     {
-        public List<long> Accounts { get; set; }
+        public List<string> Accounts { get; set; }
     }
 }

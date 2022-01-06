@@ -66,6 +66,47 @@ namespace Uchu.Master.Api
             return response;
         }
 
+        [ApiCommand("account/verify")]
+        public async Task<object> VerifyAccount(string accountName, string accountPassword)
+        {
+            var response = new AccountVerifyResponse();
+
+            if (string.IsNullOrWhiteSpace(accountName))
+            {
+                response.FailedReason = "username null";
+
+                return response;
+            }
+
+            if (string.IsNullOrWhiteSpace(accountPassword))
+            {
+                response.FailedReason = "password null";
+
+                return response;
+            }
+
+            await using (var ctx = new UchuContext())
+            {
+                var user = await ctx.Users.FirstOrDefaultAsync(u => string.Equals(u.Username.ToUpper(), accountName.ToUpper()));
+
+                if (user == default)
+                {
+                    response.FailedReason = "not found";
+
+                    return response;
+                }
+
+                var EnhancedHashPassword = user.Password;
+                var VerifiedPassword = BCrypt.Net.BCrypt.EnhancedVerify(accountPassword, EnhancedHashPassword);
+
+                response.Success = true;
+                response.Username = user.Username;
+                response.VerifiedPassword = VerifiedPassword;
+            }
+
+            return response;
+        }
+
         [ApiCommand("account/delete")]
         public async Task<object> DeleteAccount(string accountName)
         {
@@ -273,7 +314,7 @@ namespace Uchu.Master.Api
 
             response.Success = true;
 
-            response.Accounts = await ctx.Users.Select(u => u.Id).ToListAsync();
+            response.Accounts = await ctx.Users.Select(u => u.Username).ToListAsync();
 
             return response;
         }
