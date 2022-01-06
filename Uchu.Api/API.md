@@ -25,6 +25,7 @@ By default, Uchu will have its API available on ports `10000 and up`. If you wan
 | Name | Description | Example | Expected Values |
 |-|-|-|-|
 | `account/new` | Takes in a `username` and `password`, and creates an account with those credentials. | http://localhost:10000/account/new?= `username`&`password` | `username`, `password` |
+| `account/verify` | Takes in a `username` and `password`, and verifies the password hash. | http://localhost:10000/account/verify?= `username`&`password` | `username`, `password` |
 | `account/delete` | Takes in a `username`, and deletes the account with that `username`. | http://localhost:10000/account/delete?= `username` | `username` |
 | `account/level` | Takes in a `username` and a `level`, and sets the account with that `username` to that game master level. | http://localhost:10000/account/level?= `username`&`level` | `username`, `1,2,6,9` 
 | `account/ban` | Takes in a `username` and a `reason`, and bans the account with that `username`. | http://localhost:10000/account/ban?= `username`&`reason` | `username`, `reason`
