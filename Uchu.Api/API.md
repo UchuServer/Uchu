@@ -31,7 +31,7 @@ By default, Uchu will have its API available on ports `10000 and up`. If you wan
 | `account/ban` | Takes in a `username` and a `reason`, and bans the account with that `username`. | http://localhost:10000/account/ban?= `username`&`reason` | `username`, `reason`
 | `account/pardon` | Takes in a `username`, and pardons the account with that `username`. | http://localhost:10000/account/pardon?= `username` | `username`
 | `account/info` | Takes in a `username`, and returns information about the account with that `username`.  | http://localhost:10000/account/info?= `username` | `username`
-| `account/list` | Returns the `id` of all created accounts. | http://localhost:10000/account/list | None
+| `account/list` | Returns the `username` of all created accounts. | http://localhost:10000/account/list | None
 
 ## Character options
 
