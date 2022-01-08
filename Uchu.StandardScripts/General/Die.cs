@@ -19,13 +19,6 @@ namespace Uchu.StandardScripts.General
         {
             Listen(gameObject.OnStart, () =>
             {
-                /*
-                var cdClientContext = new CdClientContext();
-                var animation = cdClientContext.AnimationsTable.FirstOrDefault(e => e.Animationtype == "dice-roll");
-                if (animation?.Animationlength == null) return;
-                var length = animation.Animationlength * 1000;
-                Console.WriteLine(length);
-                */
                 Zone.Schedule(() =>
                 {
                     Zone.BroadcastMessage(new DieMessage
@@ -39,7 +32,6 @@ namespace Uchu.StandardScripts.General
                         LootOwner = default
                     });
                     World.Object.Destroy(gameObject);
-                    //should we add a RequestDie method? this seems a bit excessive to do every time
                 }, 10000);
                 Zone.Schedule(async () =>
                 {

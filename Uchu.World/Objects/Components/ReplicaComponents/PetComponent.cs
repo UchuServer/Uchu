@@ -118,17 +118,7 @@ namespace Uchu.World
                     }
                 }
                 
-                //NotifyPetTamingMinigameMessage msg = new NotifyPetTamingMinigameMessage();
-
-                //msg.Associate = player;
-                
-                //msg.ForceTeleport = true;
-                //msg.PlayerTaming = player;
-                //msg.PetId = GameObject.Id;
-                //msg.NotifyType = PetTamingNotifyType.Begin;
-                
                 Vector3 petPos = GameObject.Transform.Position;
-                //msg.PetDestinationPosition = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
                 var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
@@ -137,9 +127,6 @@ namespace Uchu.World
                     petPos.Y,
                     petPos.Z + (float) interaction_distance * (float)Math.Sin(-deg)
                 );
-                //msg.TeleportPosition = pos;
-
-                //msg.TeleportRotation = pos.QuaternionLookRotation(petPos);
 
                 Zone.BroadcastMessage(new NotifyPetTamingMinigameMessage{
                     Associate = player,

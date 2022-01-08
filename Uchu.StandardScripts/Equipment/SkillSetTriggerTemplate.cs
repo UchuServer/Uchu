@@ -12,12 +12,8 @@ namespace Uchu.StandardScripts.Equipment
     {
         public int SkillID { get; set; }
         public int SetID { get; set; }
-        //public bool Triggered { get; set; }
         public float CooldownTime { get; set; }
         public int ItemsRequired { get; set; }
-        //private Item[] PreviousItems = {};
-        //private bool Prioritize = true;
-        //private int SetItemCount { get; set; }
         protected bool Ready = true;
         //these variables aren't synced between equipment with the same script but it shouldn't matter too much
         public SkillSetTriggerTemplate(GameObject gameObject) : base(gameObject)
