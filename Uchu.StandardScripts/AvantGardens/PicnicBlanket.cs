@@ -28,8 +28,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     Active = true;
                     for (var i = 0; i < 3; i++)
                     {
-                        var loot = InstancingUtilities.InstantiateLoot(935, player, gameObject,
-                        gameObject.Transform.Position + Vector3.UnitY);
+                        var loot = InstancingUtilities.InstantiateLoot(935, player, gameObject, gameObject.Transform.Position + Vector3.UnitY);
                         Start(loot);
                     }
                     await Task.Delay(5000);

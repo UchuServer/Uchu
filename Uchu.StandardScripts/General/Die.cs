@@ -37,9 +37,9 @@ namespace Uchu.StandardScripts.General
                 {
                     var rand = new Random();
                     var roll = rand.Next(1, 7);
-                //roll = 6; 
-                //for testing, if your luck is as bad as mine
-                gameObject.PlayFX("diceroll", $"Die-Roll-{roll}");
+                    //roll = 6; 
+                    //for testing, if your luck is as bad as mine
+                    gameObject.PlayFX("diceroll", $"Die-Roll-{roll}");
 
                     if (gameObject is AuthoredGameObject authored && authored.Author.TryGetComponent<MissionInventoryComponent>(out var missions))
                     {
