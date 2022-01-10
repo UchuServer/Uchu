@@ -706,12 +706,13 @@ namespace Uchu.World
             });
         }
 
-        public async Task RaceFinishedAsync(int rank, int racetime)
+        public async Task RaceFinishedAsync(int rank, int racetime, int wrecks)
         {
             foreach (var task in FindActiveTasksAsync<RacingTask>())
             {
                 await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
                 await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
+                await task.ReportWreck(wrecks, this.GameObject.Zone.ZoneId);
                 if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
             }
 
@@ -719,6 +720,7 @@ namespace Uchu.World
             {
                 await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
                 await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
+                await task.ReportWreck(wrecks, this.GameObject.Zone.ZoneId);
                 if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
             });
         }

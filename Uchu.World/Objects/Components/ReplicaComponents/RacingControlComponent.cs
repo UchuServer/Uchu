@@ -35,7 +35,7 @@ namespace Uchu.World
 
         private MainWorldReturnData _returnData;
 
-        private int _rankCounter = 0;
+        private uint _rankCounter = 0;
 
         public RacingControlComponent()
         {
@@ -326,14 +326,14 @@ namespace Uchu.World
                 // Listen for players entering and leaving.
                 var playersInPhysicsObject = new List<Player>();
                 var index = i;
-                this.Listen(physics.OnEnter, component =>
+                this.Listen(physics.OnEnter, async component =>
                 {
                     if (!(component.GameObject is Player player)) return;
                     if (playersInPhysicsObject.Contains(player)) return;
                     playersInPhysicsObject.Add(player);
 
                     // TODO: Check for players driving in the wrong direction
-                    this.PlayerReachedCheckpoint(player, index);
+                    await this.PlayerReachedCheckpoint(player, index);
                 });
                 this.Listen(physics.OnLeave, component =>
                 {
@@ -367,8 +367,8 @@ namespace Uchu.World
             // Go!
             foreach (var info in _players)
             {
-                info.RaceTime.Restart();
-                info.LapTime.Restart();
+                info.RaceTime.Start();
+                info.LapTime.Start();
 
                 Zone.BroadcastMessage(new VehicleUnlockInputMessage
                 {
@@ -439,6 +439,7 @@ namespace Uchu.World
         public void OnPlayerRequestDie(Player player)
         {
             var racingPlayer = _players.Find(info => info.Player == player);
+            racingPlayer.SmashedTimes++;
 
             Logger.Information($"{player} requested death - respawning to {racingPlayer.RespawnPosition}");
 
@@ -469,26 +470,50 @@ namespace Uchu.World
             }, 2000);
         }
 
-        private void PlayerReachedCheckpoint(Player player, int index)
+        private async Task PlayerReachedCheckpoint(Player player, int index)
         {
             var waypoint = _path.Waypoints[index];
             var playerInfoIndex = _players.FindIndex(x => x.Player == player);
             var playerInfo = _players[playerInfoIndex];
 
-            // If start point is reached
-            if (index == 0)
+            // Only count up
+            // TODO: reset player
+            if (playerInfo.RespawnIndex > index && index != 0)
+                return;
+
+            playerInfo.RespawnIndex = (uint)index;
+            playerInfo.RespawnPosition = waypoint.Position;
+            playerInfo.RespawnRotation = player.Transform.Rotation;
+
+            // If start point is reached (with 40 sec cheat protection)
+            if (index == 0 && playerInfo.LapTime.ElapsedMilliseconds > 40000)
             {
                 var lapTime = (int)playerInfo.LapTime.ElapsedMilliseconds;
                 playerInfo.LapTime.Restart();
 
+                playerInfo.Lap++;
+                Logger.Information($"{playerInfo.Player} now in lap {playerInfo.Lap}");
+                
                 // If player finished race
                 if (playerInfo.Lap >= _raceInfo.LapCount)
                 {
                     var raceTime = (int)playerInfo.RaceTime.ElapsedMilliseconds;
                     playerInfo.RaceTime.Stop();
-                    
+                    playerInfo.Finished = ++_rankCounter;
+
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                        missionInventoryComponent.RaceFinishedAsync(++_rankCounter, (int)playerInfo.RaceTime.ElapsedMilliseconds);
+                        await missionInventoryComponent.RaceFinishedAsync((int)playerInfo.Finished, raceTime, (int)playerInfo.SmashedTimes);
+
+                    Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}");
+
+                    // TODO: Give rewards
+                    // TODO: Update leaderboard
+
+                    if (_rankCounter >= _players.Count)
+                    {
+                        Logger.Information("Race ended");
+                        // TODO: close instance
+                    }
                 }
 
                 // Set new best lap if applicable
@@ -497,22 +522,11 @@ namespace Uchu.World
                     playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
 
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                        missionInventoryComponent.RacingLaptimeAsync(lapTime);
+                        await missionInventoryComponent.RacingLaptimeAsync(lapTime);
                 }
-
-                playerInfo.Lap++;
-
-                Logger.Debug("Player crossed line: " + lapTime);
-                Logger.Debug("Now Lap " + playerInfo.Lap);
-
-                // TODO: Update Leaderboard
             }
 
-            playerInfo.RespawnIndex = (uint) index;
-            playerInfo.RespawnPosition = waypoint.Position;
-            playerInfo.RespawnRotation = player.Transform.Rotation;
             _players[playerInfoIndex] = playerInfo;
-
             Logger.Information($"Player reached checkpoint: {index}");
         }
 
