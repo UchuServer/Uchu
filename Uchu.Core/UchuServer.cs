@@ -9,8 +9,6 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using RakDotNet;
 using RakDotNet.IO;
@@ -22,7 +20,6 @@ using Uchu.Api.Models;
 using Uchu.Core.Api;
 using Uchu.Core.Config;
 using Uchu.Core.IO;
-using Uchu.Core.Providers;
 using Uchu.Core.Resources;
 using Uchu.Sso;
 
@@ -191,22 +188,11 @@ namespace Uchu.Core
                     ResourceStrings.Server_ConfigureAsync_ConfigFileNullException);
             
             MasterPath = Path.GetDirectoryName(configFile);
-            var serializer = new XmlSerializer(typeof(UchuConfiguration));
+            Config = UchuConfiguration.Load(configFile);
 
             if (!File.Exists(configFile))
             {
                 throw new ArgumentException($"{configFile} config file does not exist.");
-            }
-
-            await using (var fs = File.OpenRead(configFile))
-            {
-                using (var xmlReader = XmlReader.Create(fs))
-                {
-                    Config = (UchuConfiguration) serializer.Deserialize(xmlReader);
-                    if (!Config.DebugConfig.StartInstancesAsThreads)
-                        Logger.SetConfiguration(Config);
-                    UchuContextBase.Config = Config;
-                }
             }
 
             await SetupApiAsync().ConfigureAwait(false);
