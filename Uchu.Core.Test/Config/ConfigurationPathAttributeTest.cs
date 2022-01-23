@@ -12,11 +12,7 @@ namespace Uchu.Core.Test.Config
         [ConfigurationPath]
         public string TestPath2 { get; set; } = "test1/test2";
         [ConfigurationPath]
-        public string TestPath3 { get; set; } = "C:/test";
-        [ConfigurationPath]
-        public string TestPath4 { get; set; } = "C:\\test";
-        [ConfigurationPath]
-        public string TestPath5 { get; set; } = "/test";
+        public string TestPath3 { get; set; } = "/test";
         [ConfigurationPath]
         public string[] TestPaths1 { get; set; } = new string[]
         {
@@ -53,41 +49,12 @@ namespace Uchu.Core.Test.Config
         {
             ConfigurationPathAttribute.ReplaceFilePaths("", null);
         }
-
-        /// <summary>
-        /// Tests replacing paths on Windows.
-        /// </summary>
-        [Test]
-        public void TestWindowsPaths()
-        {
-            // Replace the configuration paths.
-            var configuration = new TestConfiguration();
-            ConfigurationPathAttribute.ReplaceFilePaths("C:\\test1\\test2\\config.xml", configuration);
-            
-            // Assert the strings are correct.
-            AssertPath(configuration.TestString, "test");
-            AssertPath(configuration.TestPath1, "C:\\test1\\test2\\test1");
-            AssertPath(configuration.TestPath2, "C:\\test1\\test2\\test1\\test2");
-            AssertPath(configuration.TestPath3, "C:\\test");
-            AssertPath(configuration.TestPath4, "C:\\test");
-            AssertPath(configuration.TestPath5, "\\test");
-            
-            // Assert the array of strings is correct.
-            AssertPath(configuration.TestPaths1[0], "C:\\test1\\test2\\test1");
-            AssertPath(configuration.TestPaths1[1], "C:\\test1\\test2\\test1\\test2");
-            AssertPath(configuration.TestPaths1[2], "\\test");
-            
-            // Assert the list of strings is correct.
-            AssertPath(configuration.TestPaths2[0], "C:\\test1\\test2\\test1");
-            AssertPath(configuration.TestPaths2[1], "C:\\test1\\test2\\test1\\test2");
-            AssertPath(configuration.TestPaths2[2], "\\test");
-        }
         
         /// <summary>
         /// Tests replacing paths on Linux.
         /// </summary>
         [Test]
-        public void TestLinuxPaths()
+        public void TestPaths()
         {
             // Replace the configuration paths.
             var configuration = new TestConfiguration();
@@ -97,9 +64,7 @@ namespace Uchu.Core.Test.Config
             AssertPath(configuration.TestString, "test");
             AssertPath(configuration.TestPath1, "/test1/test2/test1");
             AssertPath(configuration.TestPath2, "/test1/test2/test1/test2");
-            AssertPath(configuration.TestPath3, "C:/test");
-            AssertPath(configuration.TestPath4, "C:/test");
-            AssertPath(configuration.TestPath5, "/test");
+            AssertPath(configuration.TestPath3, "/test");
             
             // Assert the array of strings is correct.
             AssertPath(configuration.TestPaths1[0], "/test1/test2/test1");
