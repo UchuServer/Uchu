@@ -20,6 +20,7 @@ using Uchu.Api.Models;
 using Uchu.Core.Api;
 using Uchu.Core.Config;
 using Uchu.Core.IO;
+using Uchu.Core.Providers;
 using Uchu.Core.Resources;
 using Uchu.Sso;
 
@@ -189,6 +190,9 @@ namespace Uchu.Core
             
             MasterPath = Path.GetDirectoryName(configFile);
             Config = UchuConfiguration.Load(configFile);
+            if (!Config.DebugConfig.StartInstancesAsThreads)
+                Logger.SetConfiguration(Config);
+            UchuContextBase.Config = Config;
 
             if (!File.Exists(configFile))
             {
