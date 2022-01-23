@@ -25,20 +25,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 GameObject[] spawners = Zone.GameObjects.Where(t => t.GetGroups().Contains("AG_WallSpawner_1")).ToArray();
                 foreach (var spawnObject in spawners)
                 {
-                    /*
-                    var obj = GameObject.Instantiate(new LevelObjectTemplate
-                    {
-                        Lot = 4712, //stromling
-                        Position = spawnObject.Transform.Position - new Vector3(15, 0 , 0), //manual offset because it spawns directly in the wall and causes weird behavior
-                        //it appears to be dead but still attacking, i've seen this bug elsewhere and i don't know how to fix it
-                        Rotation = spawnObject.Transform.Rotation,
-                        Scale = 1,
-                        LegoInfo = new LegoDataDictionary()
-                    }, spawnObject.Zone);
-
-                    Object.Start(obj);
-                    GameObject.Construct(obj);
-                    */
+                    //TODO: add functional enemy spawn code
                 }
             });
         }

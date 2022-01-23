@@ -21,23 +21,6 @@ namespace Uchu.World.Systems.Behaviors
         public override void ExecuteStart(BehaviorExecutionParameters parameters)
         {
             parameters.Context.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
-            //the variables seem to do nothing
-            /*
-            if (OrientCaster)
-            {
-                if (ToTarget)
-                {
-                    parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
-                }
-            }
-            else
-            {
-                if (ToTarget)
-                {
-                    parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
-                }
-            }
-            */
         }
     }
 }

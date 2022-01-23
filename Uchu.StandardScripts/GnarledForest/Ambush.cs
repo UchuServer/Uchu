@@ -23,20 +23,10 @@ namespace Uchu.StandardScripts.GnarledForest
                 {
                     if (collider.GameObject is Player player)
                     {
-                        /*
                         if (!triggered)
                         {
-                            //this appears to trigger properly but does nothing for some reason
-                            triggered = true;
-                            spawner.Activate();
-                            Zone.Schedule(() =>
-                            {
-                                triggered = false;
-                                spawner.Reset();
-                                spawner.Deactivate();
-                            }, 45000);
+                            //TODO: add functional enemy spawn code
                         }
-                        */
                     }
                 });
             }
