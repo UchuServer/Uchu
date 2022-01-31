@@ -175,6 +175,19 @@ namespace Uchu.World
                 node.ChangeSpawnTemplate(lot);
             }
         }
+        
+        /// <summary>
+        /// Sets the respawn time of the spawners.
+        /// </summary>
+        /// <param name="respawnTime">Respawn time to use in seconds.</param>
+        public void SetRespawnTime(int respawnTime)
+        {
+            this.RespawnTime = (uint) respawnTime * 1000;
+            foreach (var node in SpawnerNodes)
+            {
+                node.RespawnTime = (int) this.RespawnTime;
+            }
+        }
 
         /// <summary>
         /// Clears the active objects created by the spawner.
