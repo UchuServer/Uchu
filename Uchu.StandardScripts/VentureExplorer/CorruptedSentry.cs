@@ -4,6 +4,8 @@ using Uchu.World.Scripting.Native;
 namespace Uchu.StandardScripts.VentureExplorer
 {
     [ScriptName("ScriptComponent_1075_script_name__removed")]
+    [LotSpecific(Lot.CruxPrimeMech)]
+    [LotSpecific(Lot.CruxPrimeNamedMech)]
     public class CorruptedSentry : ObjectScript
     {
         /// <summary>
