@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Uchu.Core.Providers;
 
+#nullable disable
+
 namespace Uchu.Core.Migrations.Sqlite
 {
     [DbContext(typeof(SqliteContext))]
@@ -13,8 +15,7 @@ namespace Uchu.Core.Migrations.Sqlite
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "5.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.0");
 
             modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
                 {
@@ -23,6 +24,9 @@ namespace Uchu.Core.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Activity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BestLapTime")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("CharacterId")
@@ -41,6 +45,9 @@ namespace Uchu.Core.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Week")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Wins")
                         .HasColumnType("INTEGER");
 
                     b.Property<ushort>("Zone")

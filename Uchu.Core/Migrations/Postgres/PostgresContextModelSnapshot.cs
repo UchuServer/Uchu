@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
 
+#nullable disable
+
 namespace Uchu.Core.Migrations
 {
     [DbContext(typeof(PostgresContext))]
@@ -15,18 +17,23 @@ namespace Uchu.Core.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("ProductVersion", "5.0.5")
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("Activity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BestLapTime")
                         .HasColumnType("integer");
 
                     b.Property<long>("CharacterId")
@@ -45,6 +52,9 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Week")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Wins")
                         .HasColumnType("integer");
 
                     b.Property<int>("Zone")
