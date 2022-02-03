@@ -18,11 +18,18 @@ namespace Uchu.Core
 
         public int Points { get; set; }
 
+        // BestTime for racing
         public int Time { get; set; }
 
         public long LastPlayed { get; set; }
 
         public int NumPlayed { get; set; }
+
+        // Racing 
+        public int BestLapTime { get; set; }
+
+        // Racing 
+        public int Wins { get; set; }
 
         // YYYYWW for Weekly leaderboard entries
         // 0 for All-time leaderboard entries

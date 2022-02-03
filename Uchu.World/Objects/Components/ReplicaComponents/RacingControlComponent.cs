@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -35,6 +36,8 @@ namespace Uchu.World
 
         private MainWorldReturnData _returnData;
 
+        private int _activityId;
+
         private uint _rankCounter = 0;
 
         public RacingControlComponent()
@@ -55,6 +58,7 @@ namespace Uchu.World
             {
                 case 1203:
                     _deathPlaneHeight = 100;
+                    _activityId = 42;
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1200,
@@ -64,6 +68,7 @@ namespace Uchu.World
                     break;
                 case 1303:
                     _deathPlaneHeight = 0;
+                    _activityId = 39;
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1300,
@@ -73,6 +78,7 @@ namespace Uchu.World
                     break;
                 case 1403:
                     _deathPlaneHeight = 300;
+                    _activityId = 45;
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1400,
@@ -493,7 +499,16 @@ namespace Uchu.World
 
                 playerInfo.Lap++;
                 Logger.Information($"{playerInfo.Player} now in lap {playerInfo.Lap}");
-                
+
+                // Set new best lap if applicable
+                if (lapTime < playerInfo.BestLapTime.Milliseconds)
+                {
+                    playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
+
+                    if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+                        await missionInventoryComponent.RacingLaptimeAsync(lapTime);
+                }
+
                 // If player finished race
                 if (playerInfo.Lap >= _raceInfo.LapCount)
                 {
@@ -507,7 +522,7 @@ namespace Uchu.World
                     Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}");
 
                     // TODO: Give rewards
-                    // TODO: Update leaderboard
+                    this.UpdateLeaderboard(playerInfo);
 
                     if (_rankCounter >= _players.Count)
                     {
@@ -515,19 +530,91 @@ namespace Uchu.World
                         // TODO: close instance
                     }
                 }
-
-                // Set new best lap if applicable
-                if (lapTime > playerInfo.BestLapTime.Milliseconds)
-                {
-                    playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
-
-                    if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                        await missionInventoryComponent.RacingLaptimeAsync(lapTime);
-                }
             }
 
             _players[playerInfoIndex] = playerInfo;
             Logger.Information($"Player reached checkpoint: {index}");
+        }
+
+        private void UpdateLeaderboard(RacingPlayerInfo playerInfo)
+        {
+            var player = playerInfo.Player;
+            int lapTime = (int)(playerInfo.BestLapTime.TotalMilliseconds / 1000d);
+            int raceTime = (int)(playerInfo.RaceTime.ElapsedMilliseconds / 1000d);
+            var rank = playerInfo.Finished;
+
+            Logger.Debug("RaceTime: " + raceTime + " LapTime: " + lapTime);
+
+            var yearAndWeek = ISOWeek.GetYear(DateTime.Now) * 100 + ISOWeek.GetWeekOfYear(DateTime.Now);
+            using var ctx = new UchuContext();
+
+            var existingWeekly = ctx.ActivityScores.FirstOrDefault(entry =>
+                entry.Activity == _activityId
+                && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
+                && entry.CharacterId == (long) player.Id
+                && entry.Week == yearAndWeek);
+
+            var existingAllTime = ctx.ActivityScores.FirstOrDefault(entry =>
+                entry.Activity == _activityId
+                && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
+                && entry.CharacterId == (long) player.Id
+                && entry.Week == 0);
+
+            // Update existing weekly leaderboard entry
+            if (existingWeekly != null)
+            {
+                existingWeekly.Time = Math.Min(existingWeekly.Time, raceTime);
+                existingWeekly.BestLapTime = Math.Min(existingWeekly.BestLapTime, lapTime);
+                existingWeekly.Wins += rank == 1 ? 1 : 0;
+
+                Logger.Debug("Weekly: " + existingWeekly.Time + " Lap: " + existingWeekly.BestLapTime);
+                ctx.ActivityScores.Update(existingWeekly);
+            }
+            // Add new entry
+            else
+            {
+                ctx.ActivityScores.Add(new ActivityScore
+                {
+                    Activity = _activityId,
+                    Zone = player.Zone.ZoneId,
+                    CharacterId = player.Id,
+                    Time = raceTime,
+                    BestLapTime = lapTime,
+                    Wins = rank == 1 ? 1 : 0,
+                    Week = yearAndWeek,
+                });
+            }
+
+            // Update existing all-time leaderboard entry.
+            if (existingAllTime != null)
+            {
+                existingAllTime.NumPlayed++;
+                existingAllTime.Time = Math.Min(existingAllTime.Time, raceTime);
+                existingAllTime.BestLapTime = Math.Min(existingAllTime.BestLapTime, lapTime);
+                existingAllTime.Wins += rank == 1 ? 1 : 0;
+                existingAllTime.LastPlayed = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                Logger.Debug("AllTime: " + existingAllTime.Time + " Lap: " + existingAllTime.BestLapTime);
+                ctx.ActivityScores.Update(existingAllTime);
+            }
+            // Add new entry.
+            else
+            {
+                ctx.ActivityScores.Add(new ActivityScore
+                {
+                    Activity = _activityId,
+                    Zone = player.Zone.ZoneId,
+                    CharacterId = player.Id,
+                    Time = raceTime,
+                    BestLapTime = lapTime,
+                    Wins = rank == 1 ? 1 : 0,
+                    LastPlayed = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    NumPlayed = 1,
+                    Week = 0,
+                });
+            }
+
+            ctx.SaveChanges();
         }
 
         public override void Construct(BitWriter writer)

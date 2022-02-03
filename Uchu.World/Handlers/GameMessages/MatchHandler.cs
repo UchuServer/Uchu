@@ -142,9 +142,20 @@ namespace Uchu.World.Handlers.GameMessages
                 data.Add($"Result[0].Row[{index}].LastPlayed", activityScore.LastPlayed);
                 data.Add($"Result[0].Row[{index}].NumPlayed", activityScore.NumPlayed);
                 data.Add($"Result[0].Row[{index}].RowNumber", rank);
-                data.Add($"Result[0].Row[{index}].Time", activityScore.Time);
-                data.Add($"Result[0].Row[{index}].Points", activityScore.Points);
                 data.Add($"Result[0].Row[{index}].name", characterName);
+
+                if (leaderboardType == LeaderboardType.Racing)
+                {
+                    data.Add($"Result[0].Row[{index}].BestTime", activityScore.Time);
+                    data.Add($"Result[0].Row[{index}].BestLapTime", activityScore.BestLapTime);
+                    data.Add($"Result[0].Row[{index}].NumWins", activityScore.Wins);
+                }
+                else
+                {
+                    data.Add($"Result[0].Row[{index}].Time", activityScore.Time);
+                    data.Add($"Result[0].Row[{index}].Points", activityScore.Points);
+                }
+
                 // TODO: ".Relationship" variable (int).
                 // (AGS client script: if not 0, FoundFriendGuild set to true. Teams?)
                 // data.Add($"Result[0].Row[{index}].Relationship", 0);
