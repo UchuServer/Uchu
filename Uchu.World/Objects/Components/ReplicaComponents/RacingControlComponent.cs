@@ -178,7 +178,7 @@ namespace Uchu.World
                 NoSmashOnReload = true,
                 RaceTime = new Stopwatch(),
                 LapTime = new Stopwatch(),
-                BestLapTime = new TimeSpan(0),
+                BestLapTime = default,
             });
 
             LoadPlayerCar(player);
@@ -508,7 +508,7 @@ namespace Uchu.World
                 Logger.Information($"{playerInfo.Player} now in lap {playerInfo.Lap}");
 
                 // Set new best lap if applicable
-                if (lapTime < playerInfo.BestLapTime.Milliseconds)
+                if (playerInfo.BestLapTime == default || lapTime < playerInfo.BestLapTime.Milliseconds)
                 {
                     playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
 
@@ -526,7 +526,7 @@ namespace Uchu.World
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
                         await missionInventoryComponent.RaceFinishedAsync((int)playerInfo.Finished, raceTime, (int)playerInfo.SmashedTimes);
 
-                    Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}");
+                    Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}, best lap: {playerInfo.BestLapTime.TotalMilliseconds}");
                     this.UpdateLeaderboard(playerInfo);
 
                     // Set player score for rewards
