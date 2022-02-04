@@ -14,9 +14,12 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using InfectedRose.Luz;
+using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
 using Uchu.Core;
+using Uchu.Core.Client;
 using Uchu.Physics;
+using Uchu.World.Client;
 
 namespace Uchu.World
 {
@@ -35,8 +38,6 @@ namespace Uchu.World
         private int _deathPlaneHeight;
 
         private MainWorldReturnData _returnData;
-
-        private int _activityId;
 
         private uint _rankCounter = 0;
 
@@ -58,7 +59,7 @@ namespace Uchu.World
             {
                 case 1203:
                     _deathPlaneHeight = 100;
-                    _activityId = 42;
+                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(42);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1200,
@@ -68,7 +69,7 @@ namespace Uchu.World
                     break;
                 case 1303:
                     _deathPlaneHeight = 0;
-                    _activityId = 39;
+                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(39);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1300,
@@ -78,7 +79,7 @@ namespace Uchu.World
                     break;
                 case 1403:
                     _deathPlaneHeight = 300;
-                    _activityId = 45;
+                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(54);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1400,
@@ -96,6 +97,13 @@ namespace Uchu.World
                     };
                     break;
             }
+
+            Rewards = ClientCache.FindAll<ActivityRewards>(this.ActivityInfo.ActivityID).ToSortedList((a, b) =>
+                {
+                    if (a.ChallengeRating != b.ChallengeRating)
+                        return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
+                    return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
+                }).ToArray();
 
             if (_path == default)
                 throw new Exception("Path not found");
@@ -116,7 +124,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="player"></param>
         /// <param name="message"></param>
-        private void OnMessageBoxRespond(Player player, MessageBoxRespondMessage message)
+        private async Task OnMessageBoxRespond(Player player, MessageBoxRespondMessage message)
         {
             Logger.Information($"Button - {message.Button} {message.Identifier} {message.UserData}");
             if (message.Identifier == "ACT_RACE_EXIT_THE_RACE?" && message.Button == 1 || message.Identifier == "Exit")
@@ -132,8 +140,7 @@ namespace Uchu.World
             }
             else if (message.Identifier == "rewardButton")
             {
-                // TODO: send rewards - relies on activityID being present in object settings
-                // await this.DropLootAsync(player);
+                await this.DropLootAsync(player, true, true);
 
                 player.Message(new NotifyRacingClientMessage
                 {
@@ -520,9 +527,10 @@ namespace Uchu.World
                         await missionInventoryComponent.RaceFinishedAsync((int)playerInfo.Finished, raceTime, (int)playerInfo.SmashedTimes);
 
                     Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}");
-
-                    // TODO: Give rewards
                     this.UpdateLeaderboard(playerInfo);
+
+                    // Set player score for rewards
+                    this.SetParameter(playerInfo.Player, 1, _players.Count * 10 + playerInfo.Finished);
 
                     if (_rankCounter >= _players.Count)
                     {
@@ -549,13 +557,13 @@ namespace Uchu.World
             using var ctx = new UchuContext();
 
             var existingWeekly = ctx.ActivityScores.FirstOrDefault(entry =>
-                entry.Activity == _activityId
+                entry.Activity == this.ActivityInfo.ActivityID
                 && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
                 && entry.CharacterId == (long) player.Id
                 && entry.Week == yearAndWeek);
 
             var existingAllTime = ctx.ActivityScores.FirstOrDefault(entry =>
-                entry.Activity == _activityId
+                entry.Activity == this.ActivityInfo.ActivityID
                 && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
                 && entry.CharacterId == (long) player.Id
                 && entry.Week == 0);
@@ -575,7 +583,7 @@ namespace Uchu.World
             {
                 ctx.ActivityScores.Add(new ActivityScore
                 {
-                    Activity = _activityId,
+                    Activity = this.ActivityInfo.ActivityID ?? 0,
                     Zone = player.Zone.ZoneId,
                     CharacterId = player.Id,
                     Time = raceTime,
@@ -602,7 +610,7 @@ namespace Uchu.World
             {
                 ctx.ActivityScores.Add(new ActivityScore
                 {
-                    Activity = _activityId,
+                    Activity = this.ActivityInfo.ActivityID ?? 0,
                     Zone = player.Zone.ZoneId,
                     CharacterId = player.Id,
                     Time = raceTime,
@@ -678,7 +686,7 @@ namespace Uchu.World
         }
 
         struct RacingPlayerInfo {
-            public GameObject Player { get; set; }
+            public Player Player { get; set; }
             public GameObject Vehicle { get; set; }
             public uint PlayerIndex { get; set; }
             public bool PlayerLoaded { get; set; }

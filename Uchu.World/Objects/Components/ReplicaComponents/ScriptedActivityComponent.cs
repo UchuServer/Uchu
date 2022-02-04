@@ -20,9 +20,9 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.ScriptedActivityComponent;
 
-        public Activities ActivityInfo { get; private set; }
+        public Activities ActivityInfo { get; protected set; }
         
-        public ActivityRewards[] Rewards { get; private set; }
+        public ActivityRewards[] Rewards { get; protected set; }
 
         /// <summary>
         /// Creates the scripted activity component.
