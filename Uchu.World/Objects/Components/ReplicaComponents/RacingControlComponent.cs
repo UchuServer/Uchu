@@ -43,7 +43,7 @@ namespace Uchu.World
 
         public RacingControlComponent()
         {
-            _raceInfo.LapCount = 3;
+            _raceInfo.LapCount = 1;
             _raceInfo.PathName = "MainPath"; // MainPath
             Listen(OnStart, async () =>
             {
@@ -136,7 +136,7 @@ namespace Uchu.World
                     SingleClient = player,
                 });
 
-                SendPlayerToMainWorld(player);
+                await SendPlayerToMainWorldAsync(player);
             }
             else if (message.Identifier == "rewardButton")
             {
@@ -155,19 +155,19 @@ namespace Uchu.World
         /// This runs when the player loads into the world, it registers the player
         /// </summary>
         /// <param name="player"></param>
-        private void OnPlayerLoad(Player player)
+        private async Task OnPlayerLoad(Player player)
         {
             Logger.Information("Player loaded into racing");
 
             // If race has already started return player to main world
             if (_racingStatus != RacingStatus.None)
             {
-                SendPlayerToMainWorld(player);
+                await SendPlayerToMainWorldAsync(player);
                 return;
             }
 
             if (player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
+                await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
 
             // Register player
             this._players.Add(new RacingPlayerInfo
@@ -198,10 +198,16 @@ namespace Uchu.World
         /// Send the player back to the world he came from
         /// </summary>
         /// <param name="player"></param>
-        private void SendPlayerToMainWorld(Player player)
+        private async Task SendPlayerToMainWorldAsync(Player player)
         {
             _players.RemoveAll(info => info.Player == player);
-            player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
+            await player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
+
+            if (_players.Count == 0) {
+                await Task.Delay(10000);
+                await this.GameObject.UchuServer.StopAsync();
+                Logger.Debug("Closed Server");
+            }
         }
 
         /// <summary>
@@ -535,7 +541,6 @@ namespace Uchu.World
                     if (_rankCounter >= _players.Count)
                     {
                         Logger.Information("Race ended");
-                        // TODO: close instance
                     }
                 }
             }
