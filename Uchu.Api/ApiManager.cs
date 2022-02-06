@@ -69,75 +69,193 @@ namespace Uchu.Api
                 var _ = Task.Run(async () =>
                 {
                     var request = context.Request;
-                    
+
                     var response = context.Response;
 
-                    try
+                    object returnValue;
+
+                    string returnString;
+
+                    response.ContentType = "application/json";
+                    response.ContentEncoding = Encoding.UTF8;
+                    response.Headers.Add("Access-Control-Allow-Origin", "*");
+
+                    if (request.Headers.AllKeys.Contains("X-Uchu-Token"))
                     {
-                        var parameters = (
-                            from string name in request.QueryString select request.QueryString.Get(name)
-                        ).ToArray();
+                        var contents = request.Headers.Get("X-Uchu-Token");
 
-                        string returnString;
-
-                        var query = request.Url.LocalPath.Remove(0, 1);
-
-                        if (Map.TryGetValue(query, out var value))
+                        Console.WriteLine(contents == "pu76QkecNwW7bzbaQtQzSF4URc9VGY4sLqJEvuXu");
+                        
+                        if (contents == "pu76QkecNwW7bzbaQtQzSF4URc9VGY4sLqJEvuXu")
                         {
-                            var (info, host) = value;
-
-                            object returnValue;
-
+                            Console.WriteLine("Message if Header is present " + contents);
+                            // if correct continue, otherwise return 403 response
+                            
                             try
                             {
-                                returnValue = info.Invoke(host, parameters);
+                                var parameters = (
+                                    from string name in request.QueryString select request.QueryString.Get(name)
+                                ).ToArray();
+
+                                var query = request.Url.LocalPath.Remove(0, 1);
+
+                                if (Map.TryGetValue(query, out var value))
+                                {
+                                    var (info, host) = value;
+
+                                    try
+                                    {
+                                        returnValue = info.Invoke(host, parameters);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
+
+                                        returnValue = new BaseResponse
+                                        {
+                                            FailedReason = "error"
+                                        };
+                                    }
+
+                                    if (returnValue is Task<object> task)
+                                    {
+                                        returnValue = await task;
+                                    }
+
+                                    returnString = returnValue switch
+                                    {
+                                        string str => str,
+                                        _ => JsonConvert.SerializeObject(returnValue)
+                                    };
+                                }
+                                else
+                                {
+                                    returnString = JsonConvert.SerializeObject(new BaseResponse
+                                    {
+                                        FailedReason = "invalid"
+                                    });
+                                }
+
+                                var data = Encoding.UTF8.GetBytes(returnString);
+
+                                response.ContentLength64 = data.LongLength;
+
+                                var output = response.OutputStream;
+
+                                await output.WriteAsync(data);
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(e);
-
-                                returnValue = new BaseResponse
-                                {
-                                    FailedReason = "error"
-                                };
                             }
-
-                            if (returnValue is Task<object> task)
+                            finally
                             {
-                                returnValue = await task;
+                                response.Close();
                             }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Error if not correct value is present");
+
+                            returnValue = new BaseResponse
+                            {
+                                FailedReason = "Unauthorized 401"
+                            };
 
                             returnString = returnValue switch
                             {
                                 string str => str,
                                 _ => JsonConvert.SerializeObject(returnValue)
                             };
+
+                            await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(returnString));
+
+                            response.Close();
                         }
-                        else
-                        {
-                            returnString = JsonConvert.SerializeObject(new BaseResponse
+                    }
+                    else if (request.Url.LocalPath.Contains("account/verify"))
+                    {
+                        Console.WriteLine("Verify ok " + request.Url.LocalPath);
+                         try
                             {
-                                FailedReason = "invalid"
-                            });
-                        }
+                                var parameters = (
+                                    from string name in request.QueryString select request.QueryString.Get(name)
+                                ).ToArray();
 
-                        response.ContentType = "application/json";
-                        response.ContentEncoding = Encoding.UTF8;
+                                var query = request.Url.LocalPath.Remove(0, 1);
 
-                        var data = Encoding.UTF8.GetBytes(returnString);
+                                if (Map.TryGetValue(query, out var value))
+                                {
+                                    var (info, host) = value;
 
-                        response.ContentLength64 = data.LongLength;
+                                    try
+                                    {
+                                        returnValue = info.Invoke(host, parameters);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
 
-                        var output = response.OutputStream;
+                                        returnValue = new BaseResponse
+                                        {
+                                            FailedReason = "error"
+                                        };
+                                    }
 
-                        await output.WriteAsync(data);
+                                    if (returnValue is Task<object> task)
+                                    {
+                                        returnValue = await task;
+                                    }
+
+                                    returnString = returnValue switch
+                                    {
+                                        string str => str,
+                                        _ => JsonConvert.SerializeObject(returnValue)
+                                    };
+                                }
+                                else
+                                {
+                                    returnString = JsonConvert.SerializeObject(new BaseResponse
+                                    {
+                                        FailedReason = "invalid"
+                                    });
+                                }
+
+                                var data = Encoding.UTF8.GetBytes(returnString);
+
+                                response.ContentLength64 = data.LongLength;
+
+                                var output = response.OutputStream;
+
+                                await output.WriteAsync(data);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+                            finally
+                            {
+                                response.Close();
+                            }
+                        
                     }
-                    catch (Exception e)
+                    else
                     {
-                        Console.WriteLine(e);
-                    }
-                    finally
-                    {
+                        Console.WriteLine("Error if no Header is present");
+
+                        returnValue = new BaseResponse
+                            {
+                                FailedReason = "Unauthorized 401"
+                            };
+
+                        returnString = returnValue switch
+                            {
+                                string str => str,
+                                _ => JsonConvert.SerializeObject(returnValue)
+                            };
+
+                        await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(returnString));
+
                         response.Close();
                     }
                 });

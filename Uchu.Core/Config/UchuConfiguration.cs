@@ -293,6 +293,11 @@ namespace Uchu.Core.Config
         /// The port to run the API on
         /// </summary>
         [XmlElement] public int Port { get; set; } = 10000;
+
+        /// <summary>
+        /// The key to access the API
+        /// </summary>
+        [XmlElement] public string Key { get; set; } = "";
     }
 
     /// <summary>

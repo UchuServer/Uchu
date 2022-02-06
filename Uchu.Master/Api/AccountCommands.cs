@@ -5,11 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Uchu.Api;
 using Uchu.Api.Models;
 using Uchu.Core;
+using Uchu.Core.Config;
 
 namespace Uchu.Master.Api
 {
     public class AccountCommands
     {
+        public static UchuConfiguration Config { get; set; }
+
         [ApiCommand("account/new")]
         public async Task<object> CreateAccount(string accountName, string accountPassword)
         {
@@ -99,9 +102,11 @@ namespace Uchu.Master.Api
                 var EnhancedHashPassword = user.Password;
                 var VerifiedPassword = BCrypt.Net.BCrypt.EnhancedVerify(accountPassword, EnhancedHashPassword);
 
+                var Key = "test";
                 response.Success = true;
                 response.Username = user.Username;
                 response.VerifiedPassword = VerifiedPassword;
+                response.Key = Key;
             }
 
             return response;
