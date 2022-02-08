@@ -94,6 +94,17 @@ namespace Uchu.World
         public Event<Object> OnObject { get; }
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
+        public static readonly string[] ScriptBlacklist =
+        {
+            //done with one script, comment out if needed
+            "l_qb_spawner.lua",
+
+            //already implemented by checking if an object has the POI tag on every collision
+            "l_poi_mission.lua",
+
+            //function done by LaunchpadEvent.cs
+            "l_ag_zone_player.lua",
+        };
         
         public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)
         {
@@ -167,6 +178,17 @@ namespace Uchu.World
                 !scriptNames.Contains(scriptComponent.ScriptName.ToLower()))
             {
                 scriptNames.Add(scriptComponent.ScriptName.ToLower());
+            }
+            
+            foreach (var name in scriptNames)
+            {
+                for (var i = 0; i < ScriptBlacklist.Count(); i++)
+                {
+                    if (ScriptBlacklist[i].EndsWith(name))
+                    {
+                        scriptNames.Remove(name);
+                    }
+                }
             }
 
             // Log the script names.
