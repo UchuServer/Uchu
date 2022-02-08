@@ -31,62 +31,44 @@ namespace Uchu.StandardScripts.Equipment
     public class FactionEquipment : SkillSetTriggerTemplate
     {
         private bool Started = false;
+
+        //save memory by having this hardcoded nonsense static
+        private static Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, bool method)> sets = new Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, bool method)>
+        {
+            //Engineer
+            {2, (394, 4, 11, true)}, //1
+            {3, (581, 4, 11, true)}, //2
+            {4, (582, 4, 11, true)}, //3
+            //Knight
+            {7, (559, 4, 0, false)}, //1
+            {8, (560, 4, 0, false)}, //2
+            {9, (561, 4, 0, false)}, //3
+            //Space Ranger
+            {10, (1101, 4, 0, false)}, //1
+            {11, (1102, 4, 0, false)}, //2
+            {12, (1103, 4, 0, false)}, //3
+            //Samurai
+            {13, (562, 4, 0, false)}, //1
+            {14, (563, 4, 0, false)}, //2
+            {15, (564, 4, 0, false)}, //3
+            //Inventor
+            {25, (394, 4, 11, true)}, //1
+            {26, (581, 4, 11, true)}, //2
+            {27, (582, 4, 11, true)}, //3
+            //Summoner
+            {28, (394, 4, 11, true)}, //1
+            {29, (581, 4, 11, true)}, //2
+            {30, (582, 4, 11, true)}, //3
+        };
         public FactionEquipment(GameObject gameObject) : base(gameObject)
         {
             Listen(gameObject.OnStart, () =>
             {
                 if (gameObject is Item item)
                 {
-                    Action imagination = () =>
-                    {
-                        Listen(item.Owner.GetComponent<DestroyableComponent>().OnImaginationChanged, (newI, delta) =>
-                        {
-                            if (newI < 1)
-                            {
-                                Process(item);
-                            }
-                        });
-                    };
-                    Action armor = () =>
-                    {
-                        Listen(item.Owner.GetComponent<DestroyableComponent>().OnArmorChanged, (newA, delta) =>
-                        {
-                            if (newA < 1)
-                            {
-                                Process(item);
-                            }
-                        });
-                    };
-                    var sets = new Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, Action method)>
-                    {
-                        //Engineer
-                        {2, (394, 4, 11, imagination)}, //1
-                        {3, (581, 4, 11, imagination)}, //2
-                        {4, (582, 4, 11, imagination)}, //3
-                        //Knight
-                        {7, (559, 4, 0, armor)}, //1
-                        {8, (560, 4, 0, armor)}, //2
-                        {9, (561, 4, 0, armor)}, //3
-                        //Space Ranger
-                        {10, (1101, 4, 0, armor)}, //1
-                        {11, (1102, 4, 0, armor)}, //2
-                        {12, (1103, 4, 0, armor)}, //3
-                        //Samurai
-                        {13, (562, 4, 0, armor)}, //1
-                        {14, (563, 4, 0, armor)}, //2
-                        {15, (564, 4, 0, armor)}, //3
-                        //Inventor
-                        {25, (394, 4, 11, imagination)}, //1
-                        {26, (581, 4, 11, imagination)}, //2
-                        {27, (582, 4, 11, imagination)}, //3
-                        //Summoner
-                        {28, (394, 4, 11, imagination)}, //1
-                        {29, (581, 4, 11, imagination)}, //2
-                        {30, (582, 4, 11, imagination)}, //3
-                    };
-
                     var itemSet = -1;
                     var inventoryComponent = item.Owner.GetComponent<InventoryComponent>();
+                    var destroyableComponent = item.Owner.GetComponent<DestroyableComponent>();
 
                     //i couldn't find an item's set in the item itself
                     var context = new Uchu.Core.Client.CdClientContext();
@@ -100,7 +82,15 @@ namespace Uchu.StandardScripts.Equipment
                     ItemsRequired = currentSet.itemsRequired;
                     CooldownTime = currentSet.cooldownTime;
 
-                    currentSet.method();
+                    var listenTarget = currentSet.method ? destroyableComponent.OnImaginationChanged : destroyableComponent.OnArmorChanged;
+
+                    Listen(listenTarget, (newValue, delta) =>
+                    {
+                        if (newValue < 1)
+                        {
+                            Process(item);
+                        }
+                    });
                 }
             });
         }
