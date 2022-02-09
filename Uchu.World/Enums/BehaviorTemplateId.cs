@@ -28,7 +28,7 @@ namespace Uchu.World
         Speed,
         DarkInspiration,
         LootBuff,
-        VentureVisision,
+        VentureVision,
         SpawnObject,
         LayBrick,
         Switch,

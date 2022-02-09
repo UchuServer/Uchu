@@ -7,12 +7,14 @@ namespace Uchu.StandardScripts.GnarledForest
     [ScriptName("ScriptComponent_946_script_name__removed")]
     public class TikiTorch : ObjectScript
     {
+        private bool IsBurning = true;
         /// <summary>
         /// Creates the object script.
         /// </summary>
         /// <param name="gameObject">Game object to control with the script.</param>
         public TikiTorch(GameObject gameObject) : base(gameObject)
         {
+            StartFXEffect("tikitorch", "fire", 611);
             // Listen to the tiki torch being interacted with.
             Listen(gameObject.OnInteract, player =>
             {
@@ -30,6 +32,34 @@ namespace Uchu.StandardScripts.GnarledForest
 
                 // Reset the torch.
                 this.AddTimerWithCancel(0.5f, "ResetTikiTorch");
+            });
+            Listen(Zone.OnPlayerLoad, player => 
+            {
+                Listen(player.OnSkillEvent, async (target, effectHandler) =>
+                {
+                    if (effectHandler == "waterspray" && IsBurning && target == gameObject)
+                    {
+                        IsBurning = false;
+                        this.PlayAnimation("water");
+                        StopFXEffect("tikitorch");
+                        PlayFXEffect("water", "water", 611);
+                        PlayFXEffect("steam", "steam", 611);
+                        Zone.Schedule(() =>
+                        {
+                            if (!IsBurning)
+                            {
+                                IsBurning = true;
+                                StopFXEffect("water");
+                                StopFXEffect("steam");
+                                StartFXEffect("tikitorch", "fire", 611);
+                            }
+                        }, 7000);
+                        if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
+                        {
+                            missionInventoryComponent.ScriptAsync(702, gameObject.Lot);
+                        }
+                    }
+                });
             });
         }
         

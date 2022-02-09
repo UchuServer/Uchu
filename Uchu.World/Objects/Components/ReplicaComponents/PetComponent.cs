@@ -78,8 +78,17 @@ namespace Uchu.World
             if (PetWild)
             {
                 XmlDocument doc = new XmlDocument();
-                doc.Load(Path.Combine(UchuServer.Config.ResourcesConfiguration.GameResourceFolder,
-                    ClientCache.Find<TamingBuildPuzzles>(GameObject.Lot).ValidPiecesLXF));
+                //var currentPath = Zone.Server.Config.ResourcesConfiguration.GameResourceFolder;
+                var currentPath = Zone.Server.Resources.RootPath;
+                var partsToFind = ClientCache.Find<TamingBuildPuzzles>(GameObject.Lot)
+                    .ValidPiecesLXF.ToLower().Split('\\');
+                foreach (var part in partsToFind)
+                {
+                    var allFound = Directory.GetFileSystemEntries(currentPath);
+                    var matching = allFound.FirstOrDefault(path => String.Equals(path, Path.Combine(currentPath, part), StringComparison.CurrentCultureIgnoreCase));
+                    currentPath = matching ?? throw new FileNotFoundException("Could not find " + currentPath);
+                }
+                doc.Load(currentPath);
 
                 foreach (XmlNode node in doc.DocumentElement.ChildNodes)
                 {
@@ -109,17 +118,7 @@ namespace Uchu.World
                     }
                 }
                 
-                NotifyPetTamingMinigameMessage msg = new NotifyPetTamingMinigameMessage();
-
-                msg.Associate = player;
-                
-                msg.ForceTeleport = true;
-                msg.PlayerTaming = player;
-                msg.PetId = GameObject.Id;
-                msg.NotifyType = PetTamingNotifyType.Begin;
-                
                 Vector3 petPos = GameObject.Transform.Position;
-                msg.PetDestinationPosition = petPos;
                 Vector3 pos = player.Transform.Position;
                 double deg = Math.Atan2(petPos.Z - pos.Z, petPos.X - pos.X) * 180 / Math.PI;
                 var interaction_distance = GameObject.Settings.ContainsKey("interaction_distance") ? GameObject.Settings["interaction_distance"] : 0.0f;
@@ -128,16 +127,22 @@ namespace Uchu.World
                     petPos.Y,
                     petPos.Z + (float) interaction_distance * (float)Math.Sin(-deg)
                 );
-                msg.TeleportPosition = pos;
 
-                msg.TeleportRotation = pos.QuaternionLookRotation(petPos);
-                
-                Zone.BroadcastMessage(msg);
+                Zone.BroadcastMessage(new NotifyPetTamingMinigameMessage{
+                    Associate = player,
+                    ForceTeleport = true,
+                    PlayerTaming = player,
+                    PetId = GameObject.Id,
+                    NotifyType = PetTamingNotifyType.Begin,
+                    PetDestinationPosition = petPos,
+                    TeleportPosition = pos,
+                    TeleportRotation = pos.QuaternionLookRotation(petPos)
+                });
 
-                var nmsg = new NotifyPetTamingPuzzleSelectedMessage();
-                nmsg.Associate = player;
-                nmsg.Bricks = Bricks.ToArray();
-                player.Message(nmsg);
+                player.Message(new NotifyPetTamingPuzzleSelectedMessage{
+                    Associate = player,
+                    Bricks = Bricks.ToArray()
+                });
                 player.Message(new NotifyPetTamingMinigameMessage
                 {
                     Associate = GameObject,

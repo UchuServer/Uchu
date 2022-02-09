@@ -28,6 +28,11 @@ namespace Uchu.World.Systems.Behaviors
             parameters.Parameters = Action.DeserializeStart(reader, parameters.Context, parameters.BranchContext);
             parameters.Parameters.BranchContext.Target = parameters.Context.Associate;
         }
+        protected override void SerializeStart(BitWriter writer, TargetCasterBehaviorExecutionParameters parameters)
+        {
+            parameters.Parameters = Action.SerializeStart(writer, parameters.NpcContext, parameters.BranchContext);
+            parameters.Parameters.BranchContext.Target = parameters.Context.Associate;
+        }
 
         protected override void ExecuteStart(TargetCasterBehaviorExecutionParameters parameters)
         {
