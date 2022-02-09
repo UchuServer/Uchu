@@ -35,6 +35,11 @@ namespace Uchu.World
         public (Missions, MissionNPCComponent)[] Missions { get; set; }
 
         /// <summary>
+        /// Randomizer for selecting random messages.
+        /// </summary>
+        private Random _random = new Random();
+
+        /// <summary>
         /// Finds all the missions that this giver may offer and stores them
         /// </summary>
         private void CollectMissions()
@@ -150,6 +155,16 @@ namespace Uchu.World
             // Get the mission.
             var mission = this.GetMissionToOffer(missionInventory);
             if (mission == null) return default;
+            
+            // Return a random mission.
+            if ((mission.IsRandom ?? false) && !string.IsNullOrEmpty(mission.RandomPool))
+            {
+                var randomMissions = mission.RandomPool.Split(",");
+                if (int.TryParse(randomMissions[this._random.Next(randomMissions.Length)], out var randomMissionId))
+                {
+                    return randomMissionId;
+                }
+            }
             
             // Return the id.
             return mission.Id ?? default;

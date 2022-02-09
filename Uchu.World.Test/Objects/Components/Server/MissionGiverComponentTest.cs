@@ -146,6 +146,50 @@ namespace Uchu.World.Test.Objects.Components.Server
             this._missionInventoryComponent.AddTestMission(mockMission3.Object);
             Assert.AreEqual(2, this._missionGiverComponent.GetIdMissionToOffer(this._missionInventoryComponent));
         }
+        
+        /// <summary>
+        /// Tests GetIdMissionToOffer with an empty random mission pool.
+        /// </summary>
+        [Test]
+        public void TestGetIdMissionToOfferEmptyRandomPool()
+        {
+            var mockMission = new Mock<MissionInstance>(1, null);
+            mockMission.SetupGet(mission => mission.State).Returns(MissionState.Available);
+            
+            this._missionGiverComponent.Missions = new[]
+            {
+                (new Missions()
+                {
+                    Id = 1,
+                    RandomPool = "",
+                }, this._missionNpcComponent),
+            };
+            this._missionInventoryComponent.AddTestMission(mockMission.Object);
+            Assert.AreEqual(1, this._missionGiverComponent.GetIdMissionToOffer(this._missionInventoryComponent));
+        }
+        
+        /// <summary>
+        /// Tests GetIdMissionToOffer with a random mission pool.
+        /// </summary>
+        [Test]
+        public void TestGetIdMissionToOfferRandomPool()
+        {
+            var mockMission = new Mock<MissionInstance>(1, null);
+            mockMission.SetupGet(mission => mission.State).Returns(MissionState.Available);
+            
+            this._missionGiverComponent.Missions = new[]
+            {
+                (new Missions()
+                {
+                    Id = 1,
+                    IsRandom = true,
+                    RandomPool = "2,3",
+                }, this._missionNpcComponent),
+            };
+            this._missionInventoryComponent.AddTestMission(mockMission.Object);
+            var randomMission = this._missionGiverComponent.GetIdMissionToOffer(this._missionInventoryComponent);
+            Assert.IsTrue(randomMission == 2 || randomMission == 3);
+        }
     }
 }
 
