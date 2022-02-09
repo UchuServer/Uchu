@@ -59,6 +59,13 @@ namespace Uchu.World
                     return;
 
                 ActiveBehaviors[BehaviorSlot.Primary] = 1;
+
+                // Load the selected consumable.
+                await using var uchuContext = new UchuContext();
+                var character = await uchuContext.Characters
+                    .FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+                if (character == null) return;
+                this.SelectedConsumable = character.SelectedConsumable;
             });
         }
         
