@@ -91,27 +91,9 @@ namespace Uchu.World.Objects
         /// The items in the inventory that are equipped and part of this item set
         /// </summary>
         private readonly HashSet<Lot> _equippedItemsInSet;
-        public int EquippedItemCount 
-        { 
-            get 
-            { 
-                return _equippedItemsInSet.Count; 
-            } 
-        }
-        public int SetID 
-        {
-            get
-            {
-                return _setId;
-            }
-        }
-        public HashSet<Lot> ItemsInSet
-        {
-            get
-            {
-                return _itemsInSet;
-            }
-        }
+        public int EquippedItemCount => _equippedItemsInSet.Count;
+        public int SetID => _setId;
+        public HashSet<Lot> ItemsInSet => _itemsInSet;
         
         /// <summary>
         /// All the possible items that can be part of this item set

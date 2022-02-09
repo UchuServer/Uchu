@@ -33,7 +33,7 @@ namespace Uchu.StandardScripts.Equipment
         private bool Started = false;
 
         //save memory by having this hardcoded nonsense static
-        private static Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, bool method)> sets = new Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, bool method)>
+        private static Dictionary<int, (int skillID, int itemsRequired, float cooldownTime, bool method)> sets = new()
         {
             //Engineer
             {2, (394, 4, 11, true)}, //1
