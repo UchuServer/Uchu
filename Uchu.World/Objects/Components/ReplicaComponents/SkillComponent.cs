@@ -8,11 +8,12 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
+using Uchu.World.Objects.Components;
 using Uchu.World.Systems.Behaviors;
 
 namespace Uchu.World
 {
-    public class SkillComponent : ReplicaComponent
+    public class SkillComponent : ReplicaComponent, ISavableComponent
     {
         private Dictionary<BehaviorSlot, uint> ActiveBehaviors { get; }
         private Dictionary<uint, ExecutionContext> HandledSkills { get; }
@@ -24,7 +25,7 @@ namespace Uchu.World
         
         public SkillEntry[] DefaultSkillSet { get; private set; }
 
-        public Lot SelectedConsumeable { get; set; }
+        public Lot SelectedConsumable { get; set; }
 
         public uint SelectedSkill
         {
@@ -59,6 +60,22 @@ namespace Uchu.World
 
                 ActiveBehaviors[BehaviorSlot.Primary] = 1;
             });
+        }
+        
+        /// <summary>
+        /// Saves the contents of this component to the database
+        /// </summary>
+        /// <param name="context">The context to save to</param>
+        public async Task SaveAsync(UchuContext context)
+        {
+            // Get the character.
+            var character = await context.Characters.FirstOrDefaultAsync(c => c.Id == GameObject.Id);
+            if (character == default)
+                return;
+
+            // Saved the selected consumable.
+            character.SelectedConsumable = this.SelectedConsumable;
+            Logger.Debug($"Saved skills for {GameObject}");
         }
 
         public override void Construct(BitWriter writer)
