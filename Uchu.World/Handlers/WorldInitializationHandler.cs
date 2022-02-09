@@ -255,6 +255,7 @@ namespace Uchu.World.Handlers
         {
             return new InventoryNode
             {
+                ConsumableSlotLot = character.SelectedConsumable,
                 ItemContainers = new[]
                 {
                     ItemContainerNode(character, InventoryType.Items),
