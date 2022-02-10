@@ -546,6 +546,7 @@ namespace Uchu.World
             }
 
             _players[playerInfoIndex] = playerInfo;
+            GameObject.Serialize(this.GameObject);
             Logger.Information($"Player reached checkpoint: {index}");
         }
 
@@ -673,7 +674,11 @@ namespace Uchu.World
                 RaceTime = (float) info.RaceTime.Elapsed.TotalSeconds,
             }).ToArray();
 
-            // TODO
+            packet.PostRacePlayerInfos = this._players.Select(info => new PostRacePlayerInfo
+            {
+                Player = info.Player,
+                CurrentRank = info.Finished
+            }).ToArray();
 
             return packet;
         }
