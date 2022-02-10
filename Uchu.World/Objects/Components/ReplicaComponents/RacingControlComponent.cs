@@ -174,7 +174,7 @@ namespace Uchu.World
             {
                 Player = player,
                 PlayerLoaded = true,
-                PlayerIndex = (uint) _players.Count + 1,
+                PlayerIndex = (uint)_players.Count + 1,
                 NoSmashOnReload = true,
                 RaceTime = new Stopwatch(),
                 LapTime = new Stopwatch(),
@@ -203,7 +203,8 @@ namespace Uchu.World
             _players.RemoveAll(info => info.Player == player);
             await player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
 
-            if (_players.Count == 0) {
+            if (_players.Count == 0)
+            {
                 await Task.Delay(10000);
                 await this.GameObject.UchuServer.StopAsync();
                 Logger.Debug("Closed Server");
@@ -221,7 +222,7 @@ namespace Uchu.World
             var waypoint = (LuzRaceWaypoint)_path.Waypoints.First();
             var startPosition = waypoint.Position;
             var startRotation = waypoint.Rotation;
-            
+
             var spacing = 15;
             var positionOffset = startRotation.VectorMultiply(Vector3.UnitX) * _players.Count * spacing;
             startPosition += positionOffset + Vector3.UnitY * 3;
@@ -470,11 +471,12 @@ namespace Uchu.World
                 Associate = racingPlayer.Vehicle,
             }, player);
 
-            Zone.Schedule(() => {
+            Zone.Schedule(() =>
+            {
                 Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
                 {
                     Associate = GameObject,
-                    CurrentLap = (int) racingPlayer.Lap,
+                    CurrentLap = (int)racingPlayer.Lap,
                     FurthestResetPlane = racingPlayer.RespawnIndex,
                     PlayerId = player,
                     RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
@@ -565,13 +567,13 @@ namespace Uchu.World
             var existingWeekly = ctx.ActivityScores.FirstOrDefault(entry =>
                 entry.Activity == this.ActivityInfo.ActivityID
                 && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
-                && entry.CharacterId == (long) player.Id
+                && entry.CharacterId == (long)player.Id
                 && entry.Week == yearAndWeek);
 
             var existingAllTime = ctx.ActivityScores.FirstOrDefault(entry =>
                 entry.Activity == this.ActivityInfo.ActivityID
                 && entry.Zone == Convert.ToInt32(player.Zone.ZoneId)
-                && entry.CharacterId == (long) player.Id
+                && entry.CharacterId == (long)player.Id
                 && entry.Week == 0);
 
             // Update existing weekly leaderboard entry
@@ -670,8 +672,8 @@ namespace Uchu.World
             packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
             {
                 Player = info.Player,
-                BestLapTime = (float) info.BestLapTime.TotalSeconds,
-                RaceTime = (float) info.RaceTime.Elapsed.TotalSeconds,
+                BestLapTime = (float)info.BestLapTime.TotalSeconds,
+                RaceTime = (float)info.RaceTime.Elapsed.TotalSeconds,
             }).ToArray();
 
             packet.PostRacePlayerInfos = this._players.Select(info => new PostRacePlayerInfo
@@ -683,19 +685,22 @@ namespace Uchu.World
             return packet;
         }
 
-        private enum RacingStatus {
+        private enum RacingStatus
+        {
             None,
             Loaded,
             Started,
         }
 
-        private struct MainWorldReturnData {
+        private struct MainWorldReturnData
+        {
             public ZoneId ZoneId { get; set; }
             public Vector3 Position { get; set; }
             public Quaternion Rotation { get; set; }
         }
 
-        struct RacingPlayerInfo {
+        struct RacingPlayerInfo
+        {
             public Player Player { get; set; }
             public GameObject Vehicle { get; set; }
             public uint PlayerIndex { get; set; }
