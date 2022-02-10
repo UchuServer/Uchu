@@ -92,6 +92,10 @@ namespace Uchu.Core
         /// </summary>
         private Type _arrayLengthPropertyType = typeof(uint);
 
+        /// <summary>
+        /// A special way of sending arrays without a lenght attribute by
+        /// having a bit after each item that indicates if the array ends
+        /// </summary>
         private bool _arrayNoLenght = false;
 
         /// <summary>
