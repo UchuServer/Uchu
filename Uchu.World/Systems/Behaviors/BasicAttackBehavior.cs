@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using RakDotNet.IO;
 using Uchu.Core;
@@ -110,7 +111,13 @@ namespace Uchu.World.Systems.Behaviors
         protected override void SerializeStart(BitWriter writer, BasicAttackBehaviorExecutionParameters parameters)
         {
             parameters.ServerSide = true;
-            parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+
+            //TODO: when pathfinding gets added, remove this
+            //makes enemies turn toward players when attacking
+            if (parameters.Context.Associate.TryGetComponent<DestroyableComponent>(out var destroyableComponent) && destroyableComponent.Factions.First() == 4) 
+                parameters.NpcContext.Associate.Transform.LookAt(parameters.BranchContext.Target.Transform.Position);
+
+
             writer.Align();
             
             // Three unknowns

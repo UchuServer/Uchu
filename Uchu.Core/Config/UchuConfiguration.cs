@@ -128,12 +128,18 @@ namespace Uchu.Core.Config
         /// <returns>The <see cref="UchuConfiguration"/>, if the file exists, otherwise null.</returns>
         public static UchuConfiguration Load(string path)
         {
+            // Return null if the configuration path does not exist.
             if (!File.Exists(path))
                 return null;
 
+            // Read the configuration.
             using var file = File.OpenRead(path);
             using var reader = XmlReader.Create(file);
-            return (UchuConfiguration) Serializer.Deserialize(reader);
+            var configuration = (UchuConfiguration)Serializer.Deserialize(reader);
+            
+            // Replace the paths and return the configuration.
+            ConfigurationPathAttribute.ReplaceFilePaths(Path.GetFullPath(path), configuration);
+            return configuration;
         }
     }
 
@@ -192,12 +198,15 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The path to the Uchu.Instance DLL
         /// </summary>
-        [XmlElement] public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net6.0/Uchu.Instance.dll";
+        [XmlElement]
+        [ConfigurationPath]
+        public string Instance { get; set; } = "../../../../Uchu.Instance/bin/Debug/net6.0/Uchu.Instance.dll";
 
         /// <summary>
         /// The path to the script source DLLs
         /// </summary>
         [XmlElement]
+        [ConfigurationPath]
         public List<string> ScriptDllSource { get; } = new List<string>();
     }
 
@@ -209,7 +218,9 @@ namespace Uchu.Core.Config
         /// <summary>
         /// Optional certificate file to use for connections
         /// </summary>
-        [XmlElement] public string Certificate { get; set; } = "";
+        [XmlElement]
+        [ConfigurationPath]
+        public string Certificate { get; set; } = "";
 
         /// <summary>
         /// The hostname of the Uchu servers
@@ -303,7 +314,9 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The location of the local game resource folder
         /// </summary>
-        [XmlElement] public string GameResourceFolder { get; set; }
+        [XmlElement]
+        [ConfigurationPath]
+        public string GameResourceFolder { get; set; }
     }
 
     /// <summary>
@@ -319,7 +332,9 @@ namespace Uchu.Core.Config
         /// <summary>
         /// The file to log to
         /// </summary>
-        [XmlElement] public string File { get; set; }
+        [XmlElement]
+        [ConfigurationPath]
+        public string File { get; set; }
         
         /// <summary>
         /// Whether to log timestamps or not

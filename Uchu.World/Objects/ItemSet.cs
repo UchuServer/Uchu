@@ -91,6 +91,9 @@ namespace Uchu.World.Objects
         /// The items in the inventory that are equipped and part of this item set
         /// </summary>
         private readonly HashSet<Lot> _equippedItemsInSet;
+        public int EquippedItemCount => _equippedItemsInSet.Count;
+        public int SetID => _setId;
+        public HashSet<Lot> ItemsInSet => _itemsInSet;
         
         /// <summary>
         /// All the possible items that can be part of this item set
@@ -103,7 +106,7 @@ namespace Uchu.World.Objects
         private readonly Dictionary<int, int?> _skillSetMap;
 
         /// <summary>
-        /// For an item makes sure that an item set is created if said item is part of one, if this item is not port of
+        /// For an item makes sure that an item set is created if said item is part of one, if this item is not part of
         /// an item set or the the item set this item belongs to is already created, this does nothing
         /// </summary>
         /// <param name="inventory">The inventory to get possible set items from</param>

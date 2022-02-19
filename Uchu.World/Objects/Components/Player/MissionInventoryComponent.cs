@@ -870,7 +870,8 @@ namespace Uchu.World
 
                 foreach (var task in mission.Tasks)
                 {
-                    await progress(task as T);
+                    if (!(task is T instance)) continue;
+                    await progress(instance);
                 }
             }
         }

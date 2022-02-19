@@ -377,6 +377,20 @@ namespace Uchu.World
                 FailReason = reason,
                 Player = player
             });
+            
+            player.Message(new TerminateInteractionMessage
+            {
+                Associate = player,
+                Terminator = GameObject,
+                Type = TerminateType.FromInteraction,
+            });
+            
+            Zone.BroadcastMessage(new TerminateInteractionMessage
+            {
+                Associate = GameObject,
+                Terminator = GameObject,
+                Type = TerminateType.FromInteraction,
+            });
 
             State = RebuildState.Incomplete;
             Enabled = true;

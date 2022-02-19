@@ -99,12 +99,8 @@ namespace Uchu.Instance
                 throw new ArgumentException($"{config} config file does not exist.");
             }
 
-            UchuConfiguration uchuConfiguration;
-            
-            await using (var fs = File.OpenRead(config))
-            {
-                UchuContextBase.Config = uchuConfiguration = (UchuConfiguration) serializer.Deserialize(fs);
-            }
+            var uchuConfiguration = UchuConfiguration.Load(config);
+            UchuContextBase.Config = uchuConfiguration;
             
             var masterPath = Path.GetDirectoryName(config);
 

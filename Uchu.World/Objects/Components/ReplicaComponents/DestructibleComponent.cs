@@ -121,6 +121,7 @@ namespace Uchu.World
             if (owner != null && owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
                 await missionInventory.SmashAsync(GameObject.Lot);
+                owner.OnSmashObject.Invoke(GameObject);
             }
 
             Zone.BroadcastMessage(new DieMessage

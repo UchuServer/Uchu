@@ -7,7 +7,7 @@
     
     public struct Brick
     {
-        public Part DesignPart;
         public uint DesignID;
+        public Part DesignPart;
     }
 }

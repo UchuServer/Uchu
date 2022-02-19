@@ -26,6 +26,7 @@ namespace Uchu.World
 
         public Lot SelectedConsumeable { get; set; }
 
+        public Event<int> OnSkill { get; set; }
         public uint SelectedSkill
         {
             get => ActiveBehaviors[BehaviorSlot.Primary];
@@ -38,6 +39,7 @@ namespace Uchu.World
         {
             ActiveBehaviors = new Dictionary<BehaviorSlot, uint>();
             HandledSkills = new Dictionary<uint, ExecutionContext>();
+            OnSkill = new Event<int>();
             
             Listen(OnStart, async () =>
             {
@@ -206,6 +208,7 @@ namespace Uchu.World
             });
 
             tree.Execute();
+            OnSkill.Invoke(skillId);
             return context.SkillTime * 1000;
         }
 
@@ -242,7 +245,7 @@ namespace Uchu.World
             });
 
             tree.Execute();
-
+            OnSkill.Invoke(skillId);
             return context.SkillTime;
         }
 
