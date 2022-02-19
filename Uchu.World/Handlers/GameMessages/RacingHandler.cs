@@ -30,7 +30,7 @@ namespace Uchu.World.Handlers.GameMessages
             // Progress imagination collect task
             if (message.Associate.TryGetComponent<PossessableComponent>(out PossessableComponent possessableComponent))
                 if (possessableComponent.Driver.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                    await missionInventoryComponent.RacingCollectImaginationAsync();
+                    await missionInventoryComponent.RacingCollectImaginationAsync(player.Zone.ZoneId);
         }
 
         [PacketHandler]

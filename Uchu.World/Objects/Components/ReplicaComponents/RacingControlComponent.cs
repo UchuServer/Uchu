@@ -521,7 +521,7 @@ namespace Uchu.World
                     playerInfo.BestLapTime = new TimeSpan(0, 0, 0, 0, lapTime);
 
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                        await missionInventoryComponent.RacingLaptimeAsync(lapTime);
+                        await missionInventoryComponent.RacingLaptimeAsync(Zone.ZoneId, lapTime);
                 }
 
                 // If player finished race
@@ -532,7 +532,10 @@ namespace Uchu.World
                     playerInfo.Finished = ++_rankCounter;
 
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                        await missionInventoryComponent.RaceFinishedAsync((int)playerInfo.Finished, raceTime, (int)playerInfo.SmashedTimes);
+                    {
+                        await missionInventoryComponent.RaceFinishedAsync(Zone.ZoneId, playerInfo.Finished,
+                            playerInfo.RaceTime.ElapsedMilliseconds, playerInfo.SmashedTimes, _players.Count);
+                    }
 
                     Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}, best lap: {playerInfo.BestLapTime.TotalMilliseconds}");
                     this.UpdateLeaderboard(playerInfo);

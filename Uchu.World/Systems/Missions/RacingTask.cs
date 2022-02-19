@@ -15,140 +15,109 @@ namespace Uchu.World.Systems.Missions
 
         public override bool Completed => IsCompleted();
 
-        public async Task ReportRank(int place, ZoneId zoneId)
+        public async Task ReportRaceDone(ZoneId zoneId, uint place, long racetime, uint wrecks, int playerCount)
         {
-            if (!IsValid(TaskType.Rank, zoneId))
+            if (!Targets.Contains(zoneId))
                 return;
 
-            await ReportProgressValue(place, zoneId);
+            int minPlayerCount = 0; // TODO: 3;
+            switch ((RacingTaskType)Parameters[0])
+            {
+                case RacingTaskType.Rank:
+                    if (place <= RequiredProgress && playerCount >= minPlayerCount)
+                        await AddProgressAndCheck(zoneId);
+                    break;
+
+                case RacingTaskType.Racetime:
+                    if (racetime <= RequiredProgress)
+                        await AddProgressAndCheck(zoneId);
+                    break;
+
+                case RacingTaskType.Wrecks:
+                    if (wrecks <= 0)
+                        await AddProgressAndCheck(zoneId);
+                    break;
+
+                case RacingTaskType.WinInWorld:
+                case RacingTaskType.WinInWorlds:
+                    if (place <= 1 && playerCount >= minPlayerCount)
+                        await AddProgressAndCheck(zoneId);
+                    break;
+
+                case RacingTaskType.FinishLast:
+                    if (place >= playerCount)
+                        await AddProgressAndCheck(zoneId);
+                    break;
+            }
         }
 
         public async Task ReportLaptime(int laptime, ZoneId zoneId)
         {
-            if (!IsValid(TaskType.Laptime, zoneId))
+            if (!IsValid(RacingTaskType.Laptime, zoneId))
                 return;
 
-            await ReportProgressValue(laptime, zoneId);
-        }
-
-        public async Task ReportRacetime(int racetime, ZoneId zoneId)
-        {
-            if (!IsValid(TaskType.Racetime, zoneId))
-                return;
-
-            await ReportProgressValue(racetime, zoneId);
-        }
-
-        private async Task ReportProgressValue(int value, ZoneId zoneId)
-        {
-            if (value <= RequiredProgress)
-                AddProgress(zoneId);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
+            if (laptime <= RequiredProgress)
+                await AddProgressAndCheck(zoneId);
         }
 
         public async Task ReportMissionComplete(int missionId)
         {
-            if (!IsValid(TaskType.Achievements, missionId))
+            var taskType = Parameters[0];
+            if (taskType != (int)RacingTaskType.Missions && taskType != (int)RacingTaskType.ZoneMissions)
                 return;
 
-            AddProgress(missionId);
+            if (!Targets.Contains(missionId) || Progress.Contains(missionId))
+                return;
 
-            if (Completed)
-                await CheckMissionCompletedAsync();
+            await AddProgressAndCheck(missionId);
         }
 
-        public async Task ReportWreck(int wrecks, ZoneId zoneId)
+        public async Task ReportSmash(Lot lot, ZoneId zoneId)
         {
-            if (!IsValid(TaskType.Wrecks, zoneId))
-                return;
-
-            if (wrecks >= RequiredProgress)
-                return;
-
-            AddProgress(zoneId);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
+            if (IsValid(RacingTaskType.SmashAny, zoneId))
+                await AddProgressAndCheck(zoneId);
+            else if (IsValid(RacingTaskType.Smash, lot))
+                await AddProgressAndCheck(lot);
         }
 
         public async Task ReportImagination(ZoneId zoneId)
         {
-            if (!IsValid(TaskType.Imagination, zoneId))
+            if (!IsValid(RacingTaskType.Imagination, zoneId))
                 return;
 
-            AddProgress(zoneId);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
+            await AddProgressAndCheck(zoneId);
         }
 
         public async Task ReportWorldEnter(ZoneId zoneId)
         {
-            if (!IsValid(TaskType.EnterWorld, zoneId))
+            if (!IsValid(RacingTaskType.EnterWorld, zoneId))
                 return;
 
-            AddProgress(zoneId);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
+            await AddProgressAndCheck(zoneId);
         }
 
-        public async Task ReportWin(ZoneId zoneId)
+        private async Task AddProgressAndCheck(float value)
         {
-            if (Parameters[0] != (int)TaskType.WinInWorld && Parameters[0] != (int)TaskType.WinInWorlds)
-                return;
-
-            if (!Targets.Contains(zoneId))
-                return;
-
-            AddProgress(zoneId);
-
-            if (Completed)
-                await CheckMissionCompletedAsync();
-        }
-
-        public async Task ReportSmash(Lot lot)
-        {
-            if (!IsValid(TaskType.Smash, lot))
-                return;
-
-            AddProgress(lot);
-
+            AddProgress(value);
             if (Completed)
                 await CheckMissionCompletedAsync();
         }
 
         private bool IsCompleted()
         {
-            switch ((TaskType)Parameters[0])
+            switch ((RacingTaskType)Parameters[0])
             {
-                case TaskType.Rank:
-                case TaskType.Laptime:
-                case TaskType.Racetime:
-                    return Progress.Contains(Target);
+                case RacingTaskType.Rank:
+                case RacingTaskType.Laptime:
+                case RacingTaskType.Racetime:
+                    return CurrentProgress > 0;
 
                 default:
                     return base.Completed;
             }
         }
-
-        private bool IsValid(TaskType taskType, int target) =>
+        
+        private bool IsValid(RacingTaskType taskType, int target) =>
             Parameters[0] == (int)taskType && Targets.Contains(target);
-
-        private enum TaskType : int
-        {
-            Rank = 1,
-            Laptime = 2,
-            Racetime = 3,
-            Achievements = 5,
-            Wrecks = 10,
-            Imagination = 12,
-            EnterWorld = 13,
-            WinInWorld = 14,
-            WinInWorlds = 15,
-            Smash = 17
-        }
     }
 }

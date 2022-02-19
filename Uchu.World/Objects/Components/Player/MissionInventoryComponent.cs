@@ -706,35 +706,29 @@ namespace Uchu.World
             });
         }
 
-        public async Task RaceFinishedAsync(int rank, int racetime, int wrecks)
+        public async Task RaceFinishedAsync(ZoneId zoneId, uint rank, long racetime, uint wrecks, int playerCount)
         {
             foreach (var task in FindActiveTasksAsync<RacingTask>())
             {
-                await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
-                await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
-                await task.ReportWreck(wrecks, this.GameObject.Zone.ZoneId);
-                if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
+                await task.ReportRaceDone(zoneId, rank, racetime, wrecks, playerCount);
             }
 
-            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, 0, async task =>
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
             {
-                await task.ReportRank(rank, this.GameObject.Zone.ZoneId);
-                await task.ReportRacetime(racetime, this.GameObject.Zone.ZoneId);
-                await task.ReportWreck(wrecks, this.GameObject.Zone.ZoneId);
-                if (rank == 1) await task.ReportWin(this.GameObject.Zone.ZoneId);
+                await task.ReportRaceDone(zoneId, rank, racetime, wrecks, playerCount);
             });
         }
 
-        public async Task RacingLaptimeAsync(int laptime)
+        public async Task RacingLaptimeAsync(ZoneId zoneId, int laptime)
         {
             foreach (var task in FindActiveTasksAsync<RacingTask>())
             {
-                await task.ReportLaptime(laptime, this.GameObject.Zone.ZoneId);
+                await task.ReportLaptime(laptime, zoneId);
             }
 
-            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, laptime, async task =>
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
             {
-                await task.ReportLaptime(laptime, this.GameObject.Zone.ZoneId);
+                await task.ReportLaptime(laptime, zoneId);
             });
         }
 
@@ -751,16 +745,16 @@ namespace Uchu.World
             });
         }
 
-        public async Task RacingCollectImaginationAsync()
+        public async Task RacingCollectImaginationAsync(ZoneId zoneId)
         {
             foreach (var task in FindActiveTasksAsync<RacingTask>())
             {
-                await task.ReportImagination(this.GameObject.Zone.ZoneId);
+                await task.ReportImagination(zoneId);
             }
 
-            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, Lot.Imagination, async task =>
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
             {
-                await task.ReportImagination(this.GameObject.Zone.ZoneId);
+                await task.ReportImagination(zoneId);
             });
         }
 
@@ -773,20 +767,25 @@ namespace Uchu.World
 
             await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
             {
-                await task.ReportImagination(zoneId);
+                await task.ReportWorldEnter(zoneId);
             });
         }
 
-        public async Task RacingSmashAsync(Lot lot)
+        public async Task RacingSmashAsync(Lot lot, ZoneId zoneId)
         {
             foreach (var task in FindActiveTasksAsync<RacingTask>())
             {
-                await task.ReportSmash(lot);
+                await task.ReportSmash(lot, zoneId);
             }
 
             await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, lot, async task =>
             {
-                await task.ReportSmash(lot);;
+                await task.ReportSmash(lot, zoneId);
+            });
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
+            {
+                await task.ReportSmash(lot, zoneId);
             });
         }
 
@@ -803,7 +802,7 @@ namespace Uchu.World
         /// <returns>A list of all the achievements a player can unlock, given the task type and the lot</returns>
         private MissionInstance[] UnlockableAchievements<T>(MissionTaskType type, Lot lot)
             where T : MissionTaskInstance => ClientCache.Achievements.Where(m =>
-            m.Tasks.OfType<T>().Any(t => t.Type == type && (t.Targets.Contains((int) lot) || t.Parameters.Contains((int) lot)))
+            m.Tasks.OfType<T>().Any(t => t.Type == type && (t.Targets.Contains((int)lot) || t.Parameters.Contains((int)lot)))
             && CanAccept(m)).ToArray();
 
         /// <summary>
