@@ -8,7 +8,7 @@ public class ForbiddenValleyEggs : ObjectScript
 {
     public ForbiddenValleyEggs(GameObject gameObject) : base(gameObject)
     {
-        this.Listen(gameObject.GetComponent<DestructibleComponent>().OnSmashed, (killer, lootOwner) =>
+        Listen(gameObject.GetComponent<DestructibleComponent>().OnSmashed, (killer, lootOwner) =>
         {
             if (killer is not Player player)
                 return;
@@ -19,6 +19,8 @@ public class ForbiddenValleyEggs : ObjectScript
             
             var skillComponent = car.GetComponent<SkillComponent>();
             skillComponent.CalculateSkillAsync(586, car);
+            if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) 
+                missionInventoryComponent.RacingSmashAsync(gameObject.Lot, 1404);
         });
     }
 }

@@ -8,7 +8,7 @@ public class ImaginationCrate : ObjectScript
 {
     public ImaginationCrate(GameObject gameObject) : base(gameObject)
     {
-        this.Listen(gameObject.GetComponent<DestructibleComponent>().OnSmashed, (killer, lootOwner) =>
+        Listen(gameObject.GetComponent<DestructibleComponent>().OnSmashed, (killer, lootOwner) =>
         {
             if (killer is not Player player)
                 return;
