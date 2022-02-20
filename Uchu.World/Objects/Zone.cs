@@ -104,6 +104,9 @@ namespace Uchu.World
 
             //function done by LaunchpadEvent.cs
             "l_ag_zone_player.lua",
+            
+            //appears to actually do nothing?
+            "race_imagine_powerup.lua",
         };
         
         public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)

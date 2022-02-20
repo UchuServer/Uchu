@@ -19,8 +19,6 @@ public class ForbiddenValleyEggs : ObjectScript
             
             var skillComponent = car.GetComponent<SkillComponent>();
             skillComponent.CalculateSkillAsync(586, car);
-            if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent)) 
-                missionInventoryComponent.RacingSmashAsync(gameObject.Lot, 1404);
         });
     }
 }
