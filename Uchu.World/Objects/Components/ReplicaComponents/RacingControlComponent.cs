@@ -166,7 +166,7 @@ namespace Uchu.World
                 return;
             }
 
-            if (player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
+            if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
                 await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
 
             // Register player
@@ -247,10 +247,9 @@ namespace Uchu.World
             var inventory = player.GetComponent<InventoryManagerComponent>();
             var carItem = inventory.FindItem(Lot.ModularCar);
             var moduleAssemblyComponent = car.GetComponent<ModuleAssemblyComponent>();
-            if (carItem == null)
-                moduleAssemblyComponent.SetAssembly("1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;"); // Fallback
-            else
-                moduleAssemblyComponent.SetAssembly(carItem.Settings["assemblyPartLOTs"].ToString());
+            moduleAssemblyComponent.SetAssembly(carItem == null
+                ? "1:8129;1:8130;1:13513;1:13512;1:13515;1:13516;1:13514;"
+                : carItem.Settings["assemblyPartLOTs"].ToString());
 
             Start(car);
             GameObject.Construct(car);
@@ -357,7 +356,7 @@ namespace Uchu.World
                 });
                 this.Listen(physics.OnLeave, component =>
                 {
-                    if (!(component.GameObject is Player player)) return;
+                    if (component.GameObject is not Player player) return;
                     if (!playersInPhysicsObject.Contains(player)) return;
                     playersInPhysicsObject.Remove(player);
                 });

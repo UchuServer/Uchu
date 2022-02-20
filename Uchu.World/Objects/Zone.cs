@@ -107,6 +107,9 @@ namespace Uchu.World
             
             //appears to actually do nothing?
             "race_imagine_powerup.lua",
+            
+            //already implemented by checking whenever an object is smashed
+            "race_smash_server.lua",
         };
         
         public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)
