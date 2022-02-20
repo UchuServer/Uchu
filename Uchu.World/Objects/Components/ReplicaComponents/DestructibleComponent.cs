@@ -120,7 +120,7 @@ namespace Uchu.World
             // Check achievements and missions
             if (owner != null && owner.TryGetComponent<MissionInventoryComponent>(out var missionInventory))
             {
-                await missionInventory.SmashAsync(GameObject.Lot);
+                await missionInventory.SmashAsync(GameObject.Lot, Zone.ZoneId);
                 owner.OnSmashObject.Invoke(GameObject);
             }
 

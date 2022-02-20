@@ -429,7 +429,7 @@ namespace Uchu.World
         /// Progresses all the smash tasks using the provided lot
         /// </summary>
         /// <param name="lot">The lot to progress the smash tasks with</param>
-        public async Task SmashAsync(Lot lot)
+        public async Task SmashAsync(Lot lot, ZoneId zoneId)
         {
             foreach (var task in FindActiveTasksAsync<SmashTask>())
             {
@@ -439,6 +439,16 @@ namespace Uchu.World
             await StartUnlockableAchievementsAsync<SmashTask>(MissionTaskType.Smash, lot, async task =>
             {
                 await task.ReportProgress(lot);
+            });
+
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportSmash(lot, zoneId);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, (int)zoneId, async task =>
+            {
+                await task.ReportSmash(lot, zoneId);
             });
         }
 
@@ -668,6 +678,16 @@ namespace Uchu.World
             await StartUnlockableAchievementsAsync<MissionCompleteTask>(MissionTaskType.MissionComplete, id, async task =>
             {
                 await task.ReportProgress(id);
+            });
+
+            foreach (var task in FindActiveTasksAsync<RacingTask>())
+            {
+                await task.ReportMissionComplete(id);
+            }
+
+            await StartUnlockableAchievementsAsync<RacingTask>(MissionTaskType.Racing, id, async task =>
+            {
+                await task.ReportMissionComplete(id);
             });
         }
 
