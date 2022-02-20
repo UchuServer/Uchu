@@ -16,10 +16,9 @@ public class ForbiddenValleyEggs : ObjectScript
             var car = player.GetComponent<CharacterComponent>().VehicleObject;
             if (car is null)
                 return;
-
-            // it's meant to be skill 586...
-            var destroyableComponent = car.GetComponent<DestroyableComponent>();
-            destroyableComponent.Imagination += 10;
+            
+            var skillComponent = car.GetComponent<SkillComponent>();
+            skillComponent.CalculateSkillAsync(586, car);
         });
     }
 }

@@ -16,10 +16,9 @@ public class ImaginationCrate : ObjectScript
             var car = player.GetComponent<CharacterComponent>().VehicleObject;
             if (car is null)
                 return;
-
-            // it's meant to be skill 585 but i could not get that to work
-            var destroyableComponent = car.GetComponent<DestroyableComponent>();
-            destroyableComponent.Imagination += 100;
+            
+            var skillComponent = car.GetComponent<SkillComponent>();
+            skillComponent.CalculateSkillAsync(585, car);
         });
     }
 }
