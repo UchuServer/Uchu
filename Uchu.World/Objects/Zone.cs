@@ -492,7 +492,7 @@ namespace Uchu.World
 
                 ManagedObjects.Add(obj);
 
-                if (!(obj is GameObject gameObject)) return;
+                if (obj is not GameObject gameObject) return;
                 
                 if ((gameObject.Id.Flags & ObjectIdFlags.Spawned) != 0)
                 {

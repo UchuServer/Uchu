@@ -27,9 +27,9 @@ namespace Uchu.World
     {
         public override ComponentId Id => ComponentId.RacingControlComponent;
 
-        private List<RacingPlayerInfo> _players = new List<RacingPlayerInfo>();
+        public List<RacingPlayerInfo> Players = new();
 
-        private RaceInfo _raceInfo = new RaceInfo();
+        private RaceInfo _raceInfo = new();
 
         private RacingStatus _racingStatus = RacingStatus.None;
 
@@ -43,7 +43,7 @@ namespace Uchu.World
 
         public RacingControlComponent()
         {
-            _raceInfo.LapCount = 1;
+            _raceInfo.LapCount = 3;
             _raceInfo.PathName = "MainPath"; // MainPath
             Listen(OnStart, async () =>
             {
@@ -170,11 +170,11 @@ namespace Uchu.World
                 await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
 
             // Register player
-            this._players.Add(new RacingPlayerInfo
+            this.Players.Add(new RacingPlayerInfo
             {
                 Player = player,
                 PlayerLoaded = true,
-                PlayerIndex = (uint)_players.Count + 1,
+                PlayerIndex = (uint)Players.Count + 1,
                 NoSmashOnReload = true,
                 RaceTime = new Stopwatch(),
                 LapTime = new Stopwatch(),
@@ -200,10 +200,10 @@ namespace Uchu.World
         /// <param name="player"></param>
         private async Task SendPlayerToMainWorldAsync(Player player)
         {
-            _players.RemoveAll(info => info.Player == player);
+            Players.RemoveAll(info => info.Player == player);
             await player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
 
-            if (_players.Count == 0)
+            if (Players.Count == 0)
             {
                 await Task.Delay(10000);
                 await this.GameObject.UchuServer.StopAsync();
@@ -224,12 +224,12 @@ namespace Uchu.World
             var startRotation = waypoint.Rotation;
 
             var spacing = 15;
-            var positionOffset = startRotation.VectorMultiply(Vector3.UnitX) * _players.Count * spacing;
+            var positionOffset = startRotation.VectorMultiply(Vector3.UnitX) * Players.Count * spacing;
             startPosition += positionOffset + Vector3.UnitY * 3;
 
             // Create car
             player.Teleport(startPosition, startRotation);
-            GameObject car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition, startRotation);
+            var car = GameObject.Instantiate(this.GameObject.Zone.ZoneControlObject, 8092, startPosition, startRotation);
 
             // Setup imagination
             var destroyableComponent = car.GetComponent<DestroyableComponent>();
@@ -290,13 +290,13 @@ namespace Uchu.World
             });
 
             // Register car for player
-            for (var i = 0; i < _players.Count; i++)
+            for (var i = 0; i < Players.Count; i++)
             {
-                RacingPlayerInfo info = _players[i];
+                RacingPlayerInfo info = Players[i];
                 if (info.Player == player)
                 {
                     info.Vehicle = car;
-                    _players[i] = info;
+                    Players[i] = info;
                 }
             }
         }
@@ -316,13 +316,13 @@ namespace Uchu.World
             minSpawner?.Activate();
             minSpawner?.SpawnAll();
 
-            if (_players.Count > 2)
+            if (Players.Count > 2)
             {
                 medSpawner?.Activate();
                 medSpawner?.SpawnAll();
             }
 
-            if (_players.Count > 4)
+            if (Players.Count > 4)
             {
                 maxSpawner?.Activate();
                 maxSpawner?.SpawnAll();
@@ -345,16 +345,16 @@ namespace Uchu.World
                 // Listen for players entering and leaving.
                 var playersInPhysicsObject = new List<Player>();
                 var index = i;
-                this.Listen(physics.OnEnter, async component =>
+                Listen(physics.OnEnter, async component =>
                 {
-                    if (!(component.GameObject is Player player)) return;
+                    if (component.GameObject is not Player player) return;
                     if (playersInPhysicsObject.Contains(player)) return;
                     playersInPhysicsObject.Add(player);
 
                     // TODO: Check for players driving in the wrong direction
-                    await this.PlayerReachedCheckpoint(player, index);
+                    await PlayerReachedCheckpoint(player, index);
                 });
-                this.Listen(physics.OnLeave, component =>
+                Listen(physics.OnLeave, component =>
                 {
                     if (component.GameObject is not Player player) return;
                     if (!playersInPhysicsObject.Contains(player)) return;
@@ -384,7 +384,7 @@ namespace Uchu.World
             _racingStatus = RacingStatus.Started;
 
             // Go!
-            foreach (var info in _players)
+            foreach (var info in Players)
             {
                 info.RaceTime.Start();
                 info.LapTime.Start();
@@ -414,8 +414,8 @@ namespace Uchu.World
         /// <param name="player"></param>
         private void OnRacingPlayerInfoResetFinished(Player player)
         {
-            var playerInfoIndex = _players.FindIndex(x => x.Player == player);
-            var playerInfo = _players[playerInfoIndex];
+            var playerInfoIndex = Players.FindIndex(x => x.Player == player);
+            var playerInfo = Players[playerInfoIndex];
             var car = playerInfo.Vehicle;
 
             if (!playerInfo.NoSmashOnReload)
@@ -448,7 +448,7 @@ namespace Uchu.World
             }
 
             playerInfo.NoSmashOnReload = false;
-            _players[playerInfoIndex] = playerInfo;
+            Players[playerInfoIndex] = playerInfo;
         }
 
         /// <summary>
@@ -457,7 +457,7 @@ namespace Uchu.World
         /// <param name="player"></param>
         public void OnPlayerRequestDie(Player player)
         {
-            var racingPlayer = _players.Find(info => info.Player == player);
+            var racingPlayer = Players.Find(info => info.Player == player);
             racingPlayer.SmashedTimes++;
 
             Logger.Information($"{player} requested death - respawning to {racingPlayer.RespawnPosition}");
@@ -493,13 +493,16 @@ namespace Uchu.World
         private async Task PlayerReachedCheckpoint(Player player, int index)
         {
             var waypoint = _path.Waypoints[index];
-            var playerInfoIndex = _players.FindIndex(x => x.Player == player);
-            var playerInfo = _players[playerInfoIndex];
+            var playerInfoIndex = Players.FindIndex(x => x.Player == player);
+            var playerInfo = Players[playerInfoIndex];
 
             // Only count up
             // TODO: reset player
             if (playerInfo.RespawnIndex > index && index != 0)
                 return;
+            //is it possible to back up slightly then go across the finish line to skip laps? this seems like it would allow
+            //for an exploit like that
+            //there needs to be 
 
             playerInfo.RespawnIndex = (uint)index;
             playerInfo.RespawnPosition = waypoint.Position;
@@ -533,23 +536,23 @@ namespace Uchu.World
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
                     {
                         await missionInventoryComponent.RaceFinishedAsync(Zone.ZoneId, playerInfo.Finished,
-                            playerInfo.RaceTime.ElapsedMilliseconds, playerInfo.SmashedTimes, _players.Count);
+                            playerInfo.RaceTime.ElapsedMilliseconds, playerInfo.SmashedTimes, Players.Count);
                     }
 
                     Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}, best lap: {playerInfo.BestLapTime.TotalMilliseconds}");
                     this.UpdateLeaderboard(playerInfo);
 
                     // Set player score for rewards
-                    this.SetParameter(playerInfo.Player, 1, _players.Count * 10 + playerInfo.Finished);
+                    this.SetParameter(playerInfo.Player, 1, Players.Count * 10 + playerInfo.Finished);
 
-                    if (_rankCounter >= _players.Count)
+                    if (_rankCounter >= Players.Count)
                     {
                         Logger.Information("Race ended");
                     }
                 }
             }
 
-            _players[playerInfoIndex] = playerInfo;
+            Players[playerInfoIndex] = playerInfo;
             GameObject.Serialize(this.GameObject);
             Logger.Information($"Player reached checkpoint: {index}");
         }
@@ -661,7 +664,7 @@ namespace Uchu.World
 
             packet.ExpectedPlayerCount = (ushort)this.Participants.Count;
 
-            packet.PreRacePlayerInfos = this._players.Select(info => new PreRacePlayerInfo
+            packet.PreRacePlayerInfos = this.Players.Select(info => new PreRacePlayerInfo
             {
                 Player = info.Player,
                 Vehicle = info.Vehicle,
@@ -671,14 +674,14 @@ namespace Uchu.World
 
             packet.RaceInfo = _raceInfo;
 
-            packet.DuringRacePlayerInfos = this._players.Select(info => new DuringRacePlayerInfo
+            packet.DuringRacePlayerInfos = this.Players.Select(info => new DuringRacePlayerInfo
             {
                 Player = info.Player,
                 BestLapTime = (float)info.BestLapTime.TotalSeconds,
                 RaceTime = (float)info.RaceTime.Elapsed.TotalSeconds,
             }).ToArray();
 
-            packet.PostRacePlayerInfos = this._players.Select(info => new PostRacePlayerInfo
+            packet.PostRacePlayerInfos = this.Players.Select(info => new PostRacePlayerInfo
             {
                 Player = info.Player,
                 CurrentRank = info.Finished
@@ -701,7 +704,7 @@ namespace Uchu.World
             public Quaternion Rotation { get; set; }
         }
 
-        struct RacingPlayerInfo
+        public struct RacingPlayerInfo
         {
             public Player Player { get; set; }
             public GameObject Vehicle { get; set; }

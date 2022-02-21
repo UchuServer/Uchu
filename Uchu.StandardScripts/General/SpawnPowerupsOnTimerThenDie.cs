@@ -31,7 +31,8 @@ namespace Uchu.StandardScripts.General
                 await Task.Delay((int) (secPerCycle * 1000));
             }
             await Task.Delay((int) (deathDelay * 1000));
-            gameObject.GetComponent<DestructibleComponent>().SmashAsync(gameObject);
+            Object.Destroy(gameObject);
+            //gameObject.GetComponent<DestructibleComponent>().SmashAsync(gameObject);
         }
     }
 }

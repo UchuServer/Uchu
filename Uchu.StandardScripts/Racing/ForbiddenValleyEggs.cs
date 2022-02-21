@@ -10,6 +10,7 @@ public class ForbiddenValleyEggs : ObjectScript
     {
         Listen(gameObject.GetComponent<DestructibleComponent>().OnSmashed, (killer, lootOwner) =>
         {
+            PlayFXEffect("onHit", "onHit", 4102);
             if (killer is not Player player)
                 return;
 

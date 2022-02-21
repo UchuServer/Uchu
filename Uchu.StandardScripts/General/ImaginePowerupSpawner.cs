@@ -32,7 +32,7 @@ namespace Uchu.StandardScripts.General
             Listen(physics.OnEnter, other =>
             {
                 // Return if the collided object isn't a player.
-                if (!(other.GameObject is Player player)) return;
+                if (other.GameObject is not Player player) return;
                 if (!gameObject.GetComponent<DestructibleComponent>().Alive) return;
 
                 // Play the effect, add the imagination, and destroy the power-up.
