@@ -45,10 +45,7 @@ namespace Uchu.World
         {
             _raceInfo.LapCount = 3;
             _raceInfo.PathName = "MainPath"; // MainPath
-            Listen(OnStart, async () =>
-            {
-                await LoadAsync();
-            });
+            Listen(OnStart, async () => await LoadAsync());
         }
 
         private async Task LoadAsync()
@@ -108,7 +105,7 @@ namespace Uchu.World
             if (_path == default)
                 throw new Exception("Path not found");
 
-            Listen(this.GameObject.OnMessageBoxRespond, OnMessageBoxRespond);
+            Listen(GameObject.OnMessageBoxRespond, OnMessageBoxRespond);
 
             Listen(Zone.OnPlayerLoad, player =>
             {
@@ -157,7 +154,7 @@ namespace Uchu.World
         /// <param name="player"></param>
         private async Task OnPlayerLoad(Player player)
         {
-            Logger.Information("Player loaded into racing");
+            Logger.Information($"{player} loaded into racing");
 
             // If race has already started return player to main world
             if (_racingStatus != RacingStatus.None)
@@ -186,9 +183,7 @@ namespace Uchu.World
             Listen(player.OnPositionUpdate, (position, rotation) =>
             {
                 if (position.Y < _deathPlaneHeight && _racingStatus == RacingStatus.Started)
-                {
                     OnPlayerRequestDie(player);
-                }
             });
 
             Zone.Schedule(InitRace, 10000);
@@ -204,11 +199,7 @@ namespace Uchu.World
             await player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
 
             if (Players.Count == 0)
-            {
-                await Task.Delay(10000);
-                await this.GameObject.UchuServer.StopAsync();
-                Logger.Debug("Closed Server");
-            }
+                Zone.Schedule(async () => await this.GameObject.UchuServer.StopAsync(), 10000);
         }
 
         /// <summary>
@@ -332,7 +323,7 @@ namespace Uchu.World
             // This is not the most efficient way to do this.
             // This checks the distance to every respawn point every physics tick,
             // but we only really need to check the next one (or nearest few).
-            for (var i = 0; i < _path.Waypoints.Length; i++)
+            for (uint i = 0; i < _path.Waypoints.Length; i++)
             {
                 var proximityObject = GameObject.Instantiate(GameObject.Zone);
                 var physics = proximityObject.AddComponent<PhysicsComponent>();
@@ -490,21 +481,20 @@ namespace Uchu.World
             }, 2000);
         }
 
-        private async Task PlayerReachedCheckpoint(Player player, int index)
+        private async Task PlayerReachedCheckpoint(Player player, uint index)
         {
             var waypoint = _path.Waypoints[index];
             var playerInfoIndex = Players.FindIndex(x => x.Player == player);
             var playerInfo = Players[playerInfoIndex];
 
             // Only count up
-            // TODO: reset player
-            if (playerInfo.RespawnIndex > index && index != 0)
+            if (!IsCheckpointValid(playerInfo.RespawnIndex, index))
+            {
+                // TODO: reset player
                 return;
-            //is it possible to back up slightly then go across the finish line to skip laps? this seems like it would allow
-            //for an exploit like that
-            //there needs to be 
+            }
 
-            playerInfo.RespawnIndex = (uint)index;
+            playerInfo.RespawnIndex = index;
             playerInfo.RespawnPosition = waypoint.Position;
             playerInfo.RespawnRotation = player.Transform.Rotation;
 
@@ -513,8 +503,8 @@ namespace Uchu.World
             {
                 var lapTime = (int)playerInfo.LapTime.ElapsedMilliseconds;
                 playerInfo.LapTime.Restart();
-
                 playerInfo.Lap++;
+
                 Logger.Information($"{playerInfo.Player} now in lap {playerInfo.Lap}");
 
                 // Set new best lap if applicable
@@ -529,32 +519,36 @@ namespace Uchu.World
                 // If player finished race
                 if (playerInfo.Lap >= _raceInfo.LapCount)
                 {
-                    var raceTime = (int)playerInfo.RaceTime.ElapsedMilliseconds;
                     playerInfo.RaceTime.Stop();
                     playerInfo.Finished = ++_rankCounter;
 
+                    // Progress missions
                     if (playerInfo.Player.TryGetComponent<MissionInventoryComponent>(out MissionInventoryComponent missionInventoryComponent))
-                    {
-                        await missionInventoryComponent.RaceFinishedAsync(Zone.ZoneId, playerInfo.Finished,
-                            playerInfo.RaceTime.ElapsedMilliseconds, playerInfo.SmashedTimes, Players.Count);
-                    }
+                        await missionInventoryComponent.RaceFinishedAsync(Zone.ZoneId, playerInfo.Finished, playerInfo.RaceTime.ElapsedMilliseconds, playerInfo.SmashedTimes, Players.Count);
 
+                    // Set player score and leaderboard
+                    SetParameter(playerInfo.Player, 1, Players.Count * 10 + playerInfo.Finished);
+                    UpdateLeaderboard(playerInfo);
                     Logger.Information($"Race finished: {playerInfo.Player}, place {playerInfo.Finished}, time: {playerInfo.RaceTime.ElapsedMilliseconds}, smashed: {playerInfo.SmashedTimes}, best lap: {playerInfo.BestLapTime.TotalMilliseconds}");
-                    this.UpdateLeaderboard(playerInfo);
-
-                    // Set player score for rewards
-                    this.SetParameter(playerInfo.Player, 1, Players.Count * 10 + playerInfo.Finished);
-
-                    if (_rankCounter >= Players.Count)
-                    {
-                        Logger.Information("Race ended");
-                    }
                 }
             }
 
             Players[playerInfoIndex] = playerInfo;
             GameObject.Serialize(this.GameObject);
             Logger.Information($"Player reached checkpoint: {index}");
+        }
+
+        private bool IsCheckpointValid(uint oldIndex, uint newIndex)
+        {
+            // Only allow forward
+            if (newIndex > oldIndex)
+                return true;
+
+            // Only go from last checkpoint to first
+            if (oldIndex == _path.Waypoints.Length - 1 && newIndex == 0)
+                return true;
+
+            return false;
         }
 
         private void UpdateLeaderboard(RacingPlayerInfo playerInfo)
@@ -646,14 +640,6 @@ namespace Uchu.World
         // override to be able to use ScriptedActivityComponent as base
         public override void Serialize(BitWriter writer)
         {
-            for (var i = 0; i < this.Parameters.Count; i++)
-            {
-                var parameters = Parameters[i];
-                parameters[0] = 1;
-                parameters[1] = 265f; // doesn't appear on client
-                parameters[2] = 87f; // doesn't appear on client
-            }
-
             base.Serialize(writer);
             StructPacketParser.WritePacket(this.GetSerializePacket(), writer);
         }
