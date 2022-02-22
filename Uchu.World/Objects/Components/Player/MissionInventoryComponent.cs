@@ -43,7 +43,7 @@ namespace Uchu.World
         /// <summary>
         /// Complete list of missions this player has, either active or completed
         /// </summary>
-        private List<MissionInstance> Missions { get; set; }
+        private List<MissionInstance> Missions { get; set; } = new List<MissionInstance>();
 
         /// <summary>
         /// Missions and achievements that the player has that are currently not completed. Provided as an array for
@@ -108,8 +108,6 @@ namespace Uchu.World
                 var missions = await uchuContext.Missions.Where(
                     m => m.CharacterId == GameObject.Id
                 ).ToArrayAsync();
-
-                Missions = new List<MissionInstance>();
                 
                 foreach (var mission in missions)
                 {
@@ -322,6 +320,17 @@ namespace Uchu.World
             }
 
             return mission;
+        }
+
+        /// <summary>
+        /// Adds a mission for unit testing.
+        /// </summary>
+        /// <param name="mission">The test mission to add.</param>
+        public void AddTestMission(MissionInstance mission)
+        {
+            lock (Missions) {
+                Missions.Add(mission);
+            }
         }
 
         /// <summary>

@@ -22,9 +22,9 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
-        public void SetConsumeableHandler(SetConsumableItemMessage message, Player player)
+        public void SetConsumableHandler(SetConsumableItemMessage message, Player player)
         {
-            player.GetComponent<SkillComponent>().SelectedConsumeable = message.Lot;
+            player.GetComponent<SkillComponent>().SelectedConsumable = message.Lot;
         }
 
         [PacketHandler]

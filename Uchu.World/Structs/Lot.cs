@@ -164,6 +164,23 @@ namespace Uchu.World
 
         public const int CrashHelmutNpc = 6374;
 
+        public const int CruxPrimeStromling = 11212;
+        public const int CruxPrimeMech = 11213;
+        public const int CruxPrimeSpider = 11214;
+        public const int CruxPrimePirate = 11215;
+        public const int CruxPrimeAdmiral = 11216;
+        public const int CruxPrimeGorilla = 11217;
+        public const int CruxPrimeRonin = 11218;
+        public const int CruxPrimeHorseman = 11219;
+        
+        public const int CruxPrimeNamedStromling = 11982;
+        public const int CruxPrimeNamedMech = 11983;
+        public const int CruxPrimeNamedSpider = 11984;
+        public const int CruxPrimeNamedPirate = 11985;
+        public const int CruxPrimeNamedAdmiral = 11986;
+        public const int CruxPrimeNamedRonin = 11988;
+        public const int CruxPrimeNamedHorseman = 12654;
+
         #endregion
     }
 }

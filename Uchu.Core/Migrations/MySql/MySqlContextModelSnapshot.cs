@@ -163,6 +163,9 @@ namespace Uchu.Core.Migrations.MySql
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<int>("SelectedConsumable")
+                        .HasColumnType("int");
+
                     b.Property<long>("ShirtColor")
                         .HasColumnType("bigint");
 

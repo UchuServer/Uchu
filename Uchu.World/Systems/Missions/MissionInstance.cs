@@ -202,7 +202,7 @@ namespace Uchu.World.Systems.Missions
         /// <summary>
         /// The current state of this mission for the player
         /// </summary>
-        public MissionState State { get; private set; }
+        public virtual MissionState State { get; private set; }
         
         /// <summary>
         /// Whether the player may repeat this mission

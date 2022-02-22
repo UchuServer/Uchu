@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Uchu.Core.Providers;
@@ -11,9 +12,10 @@ using Uchu.Core.Providers;
 namespace Uchu.Core.Migrations
 {
     [DbContext(typeof(PostgresContext))]
-    partial class PostgresContextModelSnapshot : ModelSnapshot
+    [Migration("20220209191441_PostgresSelectedConsumable")]
+    partial class PostgresSelectedConsumable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,9 +35,6 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("Activity")
                         .HasColumnType("integer");
 
-                    b.Property<int>("BestLapTime")
-                        .HasColumnType("integer");
-
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
@@ -52,9 +51,6 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Week")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Wins")
                         .HasColumnType("integer");
 
                     b.Property<int>("Zone")

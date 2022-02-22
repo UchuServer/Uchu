@@ -161,6 +161,9 @@ namespace Uchu.Core.Migrations.Sqlite
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SelectedConsumable")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("ShirtColor")
                         .HasColumnType("INTEGER");
 
