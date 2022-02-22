@@ -167,7 +167,7 @@ namespace Uchu.World
                 await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
 
             // Register player
-            this.Players.Add(new RacingPlayerInfo
+            RacingPlayerInfo info = new RacingPlayerInfo
             {
                 Player = player,
                 PlayerLoaded = true,
@@ -176,7 +176,12 @@ namespace Uchu.World
                 RaceTime = new Stopwatch(),
                 LapTime = new Stopwatch(),
                 BestLapTime = default,
-            });
+                ResetTimer = new SimpleTimer(6000),
+            };
+
+            Listen(info.ResetTimer.OnElapsed, () => ResetPlayer(player));
+
+            this.Players.Add(info);
 
             LoadPlayerCar(player);
 
@@ -450,6 +455,7 @@ namespace Uchu.World
         {
             var racingPlayer = Players.Find(info => info.Player == player);
             racingPlayer.SmashedTimes++;
+            racingPlayer.ResetTimer.Stop();
 
             Logger.Information($"{player} requested death - respawning to {racingPlayer.RespawnPosition}");
 
@@ -483,6 +489,7 @@ namespace Uchu.World
 
         private async Task PlayerReachedCheckpoint(Player player, uint index)
         {
+            Logger.Information($"Player reached checkpoint: {index}");
             var waypoint = _path.Waypoints[index];
             var playerInfoIndex = Players.FindIndex(x => x.Player == player);
             var playerInfo = Players[playerInfoIndex];
@@ -490,10 +497,21 @@ namespace Uchu.World
             // Only count up
             if (!IsCheckpointValid(playerInfo.RespawnIndex, index))
             {
-                // TODO: reset player
+                // Don't reset player after respawning
+                if (playerInfo.RespawnIndex == index)
+                {
+                    playerInfo.ResetTimer.Stop();
+                    return;
+                }
+
+                // Don't restart timer if it's already running 
+                if (!playerInfo.ResetTimer.IsRunning)
+                    playerInfo.ResetTimer.Start();
+                
                 return;
             }
 
+            playerInfo.ResetTimer.Stop();
             playerInfo.RespawnIndex = index;
             playerInfo.RespawnPosition = waypoint.Position;
             playerInfo.RespawnRotation = player.Transform.Rotation;
@@ -535,17 +553,46 @@ namespace Uchu.World
 
             Players[playerInfoIndex] = playerInfo;
             GameObject.Serialize(this.GameObject);
-            Logger.Information($"Player reached checkpoint: {index}");
+        }
+
+        private void ResetPlayer(Player player)
+        {
+            Logger.Information("Reset Player");
+            var racingPlayer = Players.Find(info => info.Player == player);
+
+            if (racingPlayer.RespawnPosition == Vector3.Zero)
+                racingPlayer.RespawnPosition = _path.Waypoints.First().Position;
+
+            player.Zone.ExcludingMessage(new VehicleRemovePassiveBoostAction
+            {
+                Associate = racingPlayer.Vehicle,
+            }, player);
+
+            Zone.BroadcastMessage(new RacingSetPlayerResetInfoMessage
+            {
+                Associate = GameObject,
+                CurrentLap = (int)racingPlayer.Lap,
+                FurthestResetPlane = racingPlayer.RespawnIndex,
+                PlayerId = player,
+                RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
+                UpcomingPlane = racingPlayer.RespawnIndex + 1,
+            });
+
+            Zone.BroadcastMessage(new RacingResetPlayerToLastResetMessage
+            {
+                Associate = GameObject,
+                PlayerId = player,
+            });
         }
 
         private bool IsCheckpointValid(uint oldIndex, uint newIndex)
         {
-            // Only allow forward
-            if (newIndex > oldIndex)
+            // Only allow forward and only a small checkpoint skip
+            if (newIndex > oldIndex && (newIndex - oldIndex) < 3)
                 return true;
 
             // Only go from last checkpoint to first
-            if (oldIndex == _path.Waypoints.Length - 1 && newIndex == 0)
+            if (newIndex == 0 && (_path.Waypoints.Length - oldIndex) < 3)
                 return true;
 
             return false;
@@ -709,6 +756,7 @@ namespace Uchu.World
             public bool NoSmashOnReload { get; set; }
             public bool CollectedRewards { get; set; }
             public Stopwatch RaceTime { get; set; }
+            public SimpleTimer ResetTimer { get; set; }
         };
     }
 }
