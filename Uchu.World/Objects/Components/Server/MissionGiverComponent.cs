@@ -13,7 +13,7 @@ namespace Uchu.World
     [ServerComponent(Id = ComponentId.MissionNPCComponent)]
     public class MissionGiverComponent : Component
     {
-        protected MissionGiverComponent()
+        public MissionGiverComponent()
         {
             OnMissionOk = new Event<(int, bool, MissionState, GameObject)>();
             
@@ -33,6 +33,11 @@ namespace Uchu.World
         /// All missions this giver can offer
         /// </summary>
         public (Missions, MissionNPCComponent)[] Missions { get; set; }
+
+        /// <summary>
+        /// Randomizer for selecting random messages.
+        /// </summary>
+        private Random _random = new Random();
 
         /// <summary>
         /// Finds all the missions that this giver may offer and stores them
@@ -70,6 +75,102 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Gets the id of a mission to offer.
+        /// </summary>
+        /// <param name="missionInventory">Mission inventory to give a mission for.</param>
+        /// <returns>The mission id to offer.</returns>
+        private Missions GetMissionToOffer(MissionInventoryComponent missionInventory)
+        {
+            Missions questToOffer = null;
+            foreach (var (mission, component) in Missions)
+            {
+                // Get the quest id.
+                if (mission.Id == default)
+                    continue;
+                
+                // If the player is ready to hand this mission in, allow them to complete the mission.
+                var questId = mission.Id.Value;
+                var playerMission = missionInventory.GetMission(questId);
+                if (playerMission != default && (component.AcceptsMission ?? false) && (playerMission.State == MissionState.ReadyToComplete || playerMission.State == MissionState.CompletedReadyToComplete))
+                {
+                    return mission;
+                }
+
+                // Ignore the mission if the component can't offer a mission.
+                if (!(component.OffersMission ?? false))
+                    continue;
+
+                // Change or return a mission id depending on the state of the mission.
+                if (playerMission != default)
+                {
+                    switch (playerMission.State)
+                    {
+                        case MissionState.Available:
+                        case MissionState.CompletedAvailable:
+                            // If this is a mission a player hasn't started yet, but somehow has in their inventory
+                            // Allow them to start it
+                            break;
+                        case MissionState.Active:
+                            // Display the in-progress mission instead of possibly continuing and offering a new mission.
+                            return mission;
+                        case MissionState.CompletedActive:
+                            // If this is an active mission show the offer popup again for information.
+                            return mission;
+                        case MissionState.ReadyToComplete:
+                        case MissionState.CompletedReadyToComplete:
+                        case MissionState.Unavailable:
+                        case MissionState.Completed:
+                            // Allow the mission if it is repeatable and the cooldown period has passed.
+                            if (!playerMission.CanRepeat) continue;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(
+                                nameof(playerMission.State), $@"{playerMission.State} is not a valid {nameof(MissionState)}"
+                            );
+                    }
+                }
+                
+                // Ignore the mission if the prerequisites aren't met.
+                if (!MissionParser.CheckPrerequiredMissions(mission.PrereqMissionID, missionInventory.AllMissions))
+                    continue;
+
+                // Set the mission as the mission to offer.
+                // The mission is not offered directly in cases where an Available mission comes up before a ReadyToComplete mission.
+                if (questToOffer != default) continue;
+                questToOffer = mission;
+            }
+            
+            // Return the final quest to offer.
+            // This is reached if there are no completed missions to complete.
+            return questToOffer;
+        }
+        
+        /// <summary>
+        /// Gets the id of a mission to offer.
+        /// </summary>
+        /// <param name="missionInventory">Mission inventory to give a mission for.</param>
+        /// <returns>The mission id to offer.</returns>
+        public int GetIdMissionToOffer(MissionInventoryComponent missionInventory)
+        {
+            // Get the mission.
+            var mission = this.GetMissionToOffer(missionInventory);
+            if (mission == null) return default;
+            
+            // Return a random mission.
+            if ((mission.IsRandom ?? false) && !string.IsNullOrEmpty(mission.RandomPool))
+            {
+                var randomMissions = mission.RandomPool.Split(",");
+                if (int.TryParse(randomMissions[this._random.Next(randomMissions.Length)], out var randomMissionId))
+                {
+                    return randomMissionId;
+                }
+            }
+            
+            // Return the id.
+            return mission.Id ?? default;
+        }
+
+        /// <summary>
         /// Handles the interaction between a mission giver and a player, completing any missions ready to complete or offering
         /// new missions a player may start.
         /// </summary>
@@ -77,78 +178,17 @@ namespace Uchu.World
         /// <exception cref="ArgumentOutOfRangeException">If an invalid mission state was provided</exception>
         public void HandleInteraction(Player player)
         {
-            var missionInventory = player.GetComponent<MissionInventoryComponent>();
-
             try
             {
-                int questIdToOffer = default;
-                foreach (var (mission, component) in Missions)
-                {
-                    // Get the quest id.
-                    if (mission.Id == default)
-                        continue;
-                    
-                    var questId = mission.Id.Value;
-                    var playerMission = missionInventory.GetMission(questId);
-                    
-                    // If the player is ready to hand this mission in, allow them to complete the mission
-                    if (playerMission != default && (component.AcceptsMission ?? false) && (playerMission.State == MissionState.ReadyToComplete || playerMission.State == MissionState.CompletedReadyToComplete))
-                    {
-                            missionInventory.MessageOfferMission(questId, GameObject);
-                            return;
-                    }
-
-                    if (!(component.OffersMission ?? false))
-                        continue;
-
-                    if (playerMission != default)
-                    {
-                        switch (playerMission.State)
-                        {
-                            case MissionState.Available:
-                            case MissionState.CompletedAvailable:
-                                // If this is a mission a player hasn't started yet, but somehow has in their inventory
-                                // Allow them to start it
-                                break;
-                            case MissionState.Active:
-                                // Display the in-progress mission instead of possibly continuing and offering a new mission.
-                                missionInventory.MessageOfferMission(playerMission.MissionId, GameObject);
-                                return;
-                            case MissionState.CompletedActive:
-                                // If this is an active mission show the offer popup again for information
-                                missionInventory.MessageOfferMission(playerMission.MissionId, GameObject);
-                                return;
-                            case MissionState.ReadyToComplete:
-                            case MissionState.CompletedReadyToComplete:
-                            case MissionState.Unavailable:
-                            case MissionState.Completed:
-                                // Allow the mission if it is repeatable and the cooldown period has passed.
-                                if (!playerMission.CanRepeat) continue;
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(
-                                    nameof(playerMission.State), $"{playerMission.State} is not a valid {nameof(MissionState)}"
-                                );
-                        }
-                    }
-                    
-                    if (!MissionParser.CheckPrerequiredMissions(
-                        mission.PrereqMissionID,
-                        missionInventory.AllMissions))
-                        continue;
-
-                    // Set the mission as the mission to offer.
-                    // The mission is not offered directly in cases where an Available mission comes up before a ReadyToComplete mission.
-                    if (questIdToOffer != default) continue;
-                    questIdToOffer = questId;
-                }
-                
-                // Offer the mission. This happens if there are no completed missions to complete.
+                // Get the mission to offer and offer it if one exists.
+                var missionInventory = player.GetComponent<MissionInventoryComponent>();
+                var questIdToOffer = this.GetIdMissionToOffer(missionInventory);
                 if (questIdToOffer == default) return;
                 missionInventory.MessageOfferMission(questIdToOffer, GameObject);
             }
             catch (Exception e)
             {
+                // Log the error (most likely network related).
                 Logger.Error(e);
             }
         }
