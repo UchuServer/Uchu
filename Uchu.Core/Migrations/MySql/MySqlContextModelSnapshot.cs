@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Uchu.Core.Providers;
 
+#nullable disable
+
 namespace Uchu.Core.Migrations.MySql
 {
     [DbContext(typeof(MySqlContext))]
@@ -14,8 +16,8 @@ namespace Uchu.Core.Migrations.MySql
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.5");
+                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Uchu.Core.ActivityScore", b =>
                 {
@@ -154,6 +156,9 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<string>("Rocket")
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
+
+                    b.Property<int>("SelectedConsumable")
+                        .HasColumnType("int");
 
                     b.Property<long>("ShirtColor")
                         .HasColumnType("bigint");

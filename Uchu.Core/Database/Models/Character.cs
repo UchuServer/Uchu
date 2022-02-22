@@ -184,6 +184,8 @@ namespace Uchu.Core
         public bool LandingByRocket { get; set; }
         
         public int InventorySize { get; set; }
+        
+        public int SelectedConsumable { get; set; }
 
         public int VaultInventorySize { get; set; }
         
