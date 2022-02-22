@@ -22,7 +22,7 @@ public class ForbiddenValleyEggManager : NativeScript
                     if (racingControlComponent.Players.Any(p => p.RespawnIndex is >= 10 and < 14)) continue;
                     foreach (var egg in eggs)
                     {
-                        if (!egg.TryGetComponent<DestructibleComponent>(out var destructibleComponent) || destructibleComponent.Alive) return;
+                        if (!egg.TryGetComponent<DestructibleComponent>(out var destructibleComponent) || destructibleComponent.Alive) continue;
                         await destructibleComponent.ResurrectAsync();
                     }
                 }
