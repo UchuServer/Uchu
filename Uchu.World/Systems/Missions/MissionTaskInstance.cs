@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
+using Uchu.World.Client;
 
 namespace Uchu.World.Systems.Missions
 {
@@ -191,6 +192,7 @@ namespace Uchu.World.Systems.Missions
         /// </example>
         protected void AddProgress(float value)
         {
+            if (this.Mission.Player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent) && !MissionParser.CheckPrerequiredMissions(this.Mission.PrerequisiteMissions, missionInventoryComponent.AllMissions)) return;
             Progress.Add(value);
             MessageUpdateMissionTask();
         }

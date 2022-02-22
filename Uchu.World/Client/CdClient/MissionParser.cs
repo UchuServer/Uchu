@@ -42,7 +42,7 @@ namespace Uchu.World.Client
             }
             
             var id = int.Parse(str);
-            return playerMissions.Any(c => c.MissionId == id);
+            return playerMissions.Any(c => c.MissionId == id && c.Completed);
         }
 
         public static bool CheckPrerequiredMissions(string missions, MissionInstance[] playerMissions)
