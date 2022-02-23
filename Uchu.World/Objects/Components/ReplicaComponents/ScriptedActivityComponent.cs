@@ -33,27 +33,30 @@ namespace Uchu.World
             
             Listen(OnStart, async () =>
             {
-                if (!GameObject.Settings.TryGetValue("activityID", out var id))
-                {
-                    return;
-                }
-
-                // Get the activity info.
-                var activityId = (int) id;
-                ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
-                if (ActivityInfo == default)
-                {
-                    Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
-                    return;
-                }
-
-                // Get and sort the activities.
-                Rewards = ClientCache.FindAll<ActivityRewards>(activityId).ToSortedList((a, b) =>
-                {
-                    if (a.ChallengeRating != b.ChallengeRating) return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
-                    return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
-                }).ToArray();
+                if (GameObject.Settings.TryGetValue("activityID", out var id))
+                    await SetupActivityInfo((int)id);
             });
+        }
+
+        protected async Task SetupActivityInfo(int activityId)
+        {
+            // Get the activity info.
+            ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
+            if (ActivityInfo == default)
+            {
+                Logger.Error($"Invalid activityID: {activityId}");
+                return;
+            }
+
+            // Get and sort the activities.
+            Rewards = ClientCache.FindAll<ActivityRewards>(activityId).ToSortedList((a, b) =>
+            {
+                if (a.ChallengeRating != b.ChallengeRating) return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
+                return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
+            }).ToArray();
+
+            if (ActivityInfo.MaxTeams != null && ActivityInfo.MaxTeamSize != null)
+                this.Zone.Server.SetMaxPlayerCount((uint)ActivityInfo.MaxTeams * (uint)ActivityInfo.MaxTeamSize);
         }
 
         /// <summary>

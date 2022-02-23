@@ -27,7 +27,7 @@ namespace Uchu.World
 
         public List<Zone> Zones { get; }
 
-        public uint MaxPlayerCount { get; }
+        public uint MaxPlayerCount { get; private set; }
         
         public ZoneParser ZoneParser { get; private set; }
         
@@ -49,6 +49,11 @@ namespace Uchu.World
             MaxPlayerCount = 20; // TODO: Set
             
             _gameMessageHandlerMap = new GameMessageHandlerMap();
+        }
+
+        public void SetMaxPlayerCount(uint maxPlayerCount)
+        {
+            this.MaxPlayerCount = maxPlayerCount;
         }
 
         public override async Task ConfigureAsync(string configFile)

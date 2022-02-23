@@ -52,11 +52,12 @@ namespace Uchu.World
         {
             _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
 
+            // In live this was done with zone specific scripts
             switch (Zone.ZoneId)
             {
                 case 1203:
                     _deathPlaneHeight = 100;
-                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(42);
+                    await SetupActivityInfo(42);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1200,
@@ -66,7 +67,7 @@ namespace Uchu.World
                     break;
                 case 1303:
                     _deathPlaneHeight = 0;
-                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(39);
+                    await SetupActivityInfo(39);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1300,
@@ -76,7 +77,7 @@ namespace Uchu.World
                     break;
                 case 1403:
                     _deathPlaneHeight = 300;
-                    this.ActivityInfo = await ClientCache.FindAsync<Activities>(54);
+                    await SetupActivityInfo(54);
                     _returnData = new MainWorldReturnData
                     {
                         ZoneId = 1400,
@@ -94,13 +95,6 @@ namespace Uchu.World
                     };
                     break;
             }
-
-            Rewards = ClientCache.FindAll<ActivityRewards>(this.ActivityInfo.ActivityID).ToSortedList((a, b) =>
-                {
-                    if (a.ChallengeRating != b.ChallengeRating)
-                        return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
-                    return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
-                }).ToArray();
 
             if (_path == default)
                 throw new Exception("Path not found");
@@ -303,6 +297,7 @@ namespace Uchu.World
                 return;
 
             _racingStatus = RacingStatus.Loaded;
+            this.Zone.Server.SetMaxPlayerCount((uint)Players.Count);
 
             // Start imagination spawners
             var minSpawner = Zone.SpawnerNetworks.FirstOrDefault(gameObject => gameObject.Name == "ImaginationSpawn_Min");
@@ -587,12 +582,12 @@ namespace Uchu.World
 
         private bool IsCheckpointValid(uint oldIndex, uint newIndex)
         {
-            // Only allow forward and only a small checkpoint skip
-            if (newIndex > oldIndex && (newIndex - oldIndex) < 3)
+            // Only allow forward (with a bit of tolerance)
+            if (newIndex > oldIndex && (newIndex - oldIndex) < 10)
                 return true;
 
-            // Only go from last checkpoint to first
-            if (newIndex == 0 && (_path.Waypoints.Length - oldIndex) < 3)
+            // Only go from last checkpoint to first (with a bit of tolerance)
+            if (newIndex == 0 && (_path.Waypoints.Length - oldIndex) < 10)
                 return true;
 
             return false;
