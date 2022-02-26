@@ -20,6 +20,8 @@ namespace Uchu.Api
         public string Domain { get; }
         
         public int Port { get; private set; }
+
+        private string _key;
         
         public Dictionary<string, (MethodInfo, object)> Map { get; }
 
@@ -27,7 +29,7 @@ namespace Uchu.Api
 
         private bool _running;
 
-        public ApiManager(string protocol, string domain)
+        public ApiManager(string protocol, string domain, string key)
         {
             Listener = new HttpListener();
 
@@ -36,6 +38,8 @@ namespace Uchu.Api
             Protocol = protocol;
 
             Domain = domain;
+
+            _key = key;
         }
 
         public async Task StartAsync(int port)
@@ -84,9 +88,9 @@ namespace Uchu.Api
                     {
                         var contents = request.Headers.Get("X-Uchu-Token");
 
-                        Console.WriteLine(contents == "pu76QkecNwW7bzbaQtQzSF4URc9VGY4sLqJEvuXu");
+                        Console.WriteLine(contents == _key);
                         
-                        if (contents == "pu76QkecNwW7bzbaQtQzSF4URc9VGY4sLqJEvuXu")
+                        if (contents == _key)
                         {
                             Console.WriteLine("Message if Header is present " + contents);
                             // if correct continue, otherwise return 403 response

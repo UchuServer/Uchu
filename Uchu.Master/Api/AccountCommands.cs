@@ -11,7 +11,7 @@ namespace Uchu.Master.Api
 {
     public class AccountCommands
     {
-        public static UchuConfiguration Config { get; set; }
+        public UchuConfiguration Config { get; set; }
 
         [ApiCommand("account/new")]
         public async Task<object> CreateAccount(string accountName, string accountPassword)
@@ -72,6 +72,8 @@ namespace Uchu.Master.Api
         [ApiCommand("account/verify")]
         public async Task<object> VerifyAccount(string accountName, string accountPassword)
         {
+            var config = new UchuConfiguration();
+
             var response = new AccountVerifyResponse();
 
             if (string.IsNullOrWhiteSpace(accountName))
@@ -102,11 +104,17 @@ namespace Uchu.Master.Api
                 var EnhancedHashPassword = user.Password;
                 var VerifiedPassword = BCrypt.Net.BCrypt.EnhancedVerify(accountPassword, EnhancedHashPassword);
 
-                var Key = "test";
+                if (VerifiedPassword == false)
+                {
+                    response.FailedReason = "password wrong";
+
+                    return response;
+                }
+
                 response.Success = true;
                 response.Username = user.Username;
                 response.VerifiedPassword = VerifiedPassword;
-                response.Key = Key;
+                response.Key = config.ApiConfig.Key;
             }
 
             return response;

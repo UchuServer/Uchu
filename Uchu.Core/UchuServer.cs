@@ -263,7 +263,7 @@ namespace Uchu.Core
         /// <exception cref="Exception">An exception if the setup of the API failed</exception>
         public async Task SetupApiAsync()
         {
-            Api = new ApiManager(Config.ApiConfig.Protocol, Config.ApiConfig.Domain);
+            Api = new ApiManager(Config.ApiConfig.Protocol, Config.ApiConfig.Domain, Config.ApiConfig.Key);
 
             var instance = await Api.RunCommandAsync<InstanceInfoResponse>(
                 Config.ApiConfig.Port, $"instance/target?i={Id}"

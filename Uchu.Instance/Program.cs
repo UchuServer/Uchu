@@ -110,7 +110,7 @@ namespace Uchu.Instance
 
             SqliteContext.DatabasePath = Path.Combine(masterPath, "./Uchu.sqlite");
 
-            var api = new ApiManager(uchuConfiguration.ApiConfig.Protocol, uchuConfiguration.ApiConfig.Domain);
+            var api = new ApiManager(uchuConfiguration.ApiConfig.Protocol, uchuConfiguration.ApiConfig.Domain, uchuConfiguration.ApiConfig.Key);
 
             var instance = await api.RunCommandAsync<InstanceInfoResponse>(
                 uchuConfiguration.ApiConfig.Port, $"instance/target?i={Id}"

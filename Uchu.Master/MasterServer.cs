@@ -194,7 +194,7 @@ namespace Uchu.Master
         {
             var apiConfig = Config.ApiConfig;
 
-            Api = new ApiManager(apiConfig.Protocol, apiConfig.Domain);
+            Api = new ApiManager(apiConfig.Protocol, apiConfig.Domain, apiConfig.Key);
             
             Api.RegisterCommandCollection<AccountCommands>();
             
