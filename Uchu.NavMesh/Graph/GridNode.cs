@@ -57,19 +57,33 @@ public class GridNode
     }
 
     /// <summary>
+    /// Returns the neighbors where the index is the rotation multiple of 45 degrees.
+    /// </summary>
+    /// <returns>The neighbors where the index is the rotation multiple of 45 degrees.</returns>
+    private GridNode?[] GetNodesAtRotation()
+    {
+        var nodesAtAngles = new GridNode?[8];
+        for (byte i = 0; i < 8; i++)
+        {
+            var node = this.GetNodeByRotation(i);
+            if (node == null) continue;
+            nodesAtAngles[i] = node;
+        }
+        return nodesAtAngles;
+    }
+
+    /// <summary>
     /// Splits the node so that no 2 shapes share the same node instance.
     /// </summary>
     /// <returns>The nodes that were created.</returns>
     public List<GridNode> SplitNode()
     {
         // Get the nodes for each angle.
-        var nodesAtAngles = new GridNode?[8];
+        var nodesAtAngles = this.GetNodesAtRotation();
         var totalNodes = 0;
         for (byte i = 0; i < 8; i++)
         {
-            var node = this.GetNodeByRotation(i);
-            if (node == null) continue;
-            nodesAtAngles[i] = node;
+            if (nodesAtAngles[i] == null) continue;
             totalNodes += 1;
         }
         
@@ -125,5 +139,36 @@ public class GridNode
         // Return the created nodes.
         this.Neighbors.Clear();
         return createdNodes;
+    }
+
+    /// <summary>
+    /// Returns the neighbors that do not have a neighbor on the left or right.
+    /// </summary>
+    /// <returns>the neighbors that do not have a neighbor on the left or right.</returns>
+    public List<GridNode> GetOuterNeighbors()
+    {
+        // Get the neighbors that only have a left or right neighbor (not both).
+        var nodesAtAngles = this.GetNodesAtRotation();
+        var neighbors = new List<GridNode>(4);
+        for (var i = 0; i < 8; i++)
+        {
+            // Get the current neighbor and continue if there is no neighbor to act on.
+            var currentNeighbor = nodesAtAngles[i];
+            if (currentNeighbor == null) continue;
+            
+            // Get the previous and next neighbors.
+            // The previous index calculation uses +7 instead of -1 to ensure a positive result.
+            var previousIndex = (i + 7) % 8;
+            var nextIndex = (i + 1) % 8;
+            var previousNeighbor = nodesAtAngles[previousIndex];
+            var nextNeighbor = nodesAtAngles[nextIndex];
+            
+            // Add the neighbor if isn't both a left and right neighbor.
+            if (previousNeighbor != null && nextNeighbor != null) continue;
+            neighbors.Add(currentNeighbor);
+        }
+
+        // Return the neighbors.
+        return neighbors;
     }
 }

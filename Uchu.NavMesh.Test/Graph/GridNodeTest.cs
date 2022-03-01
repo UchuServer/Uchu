@@ -127,4 +127,19 @@ public class GridNodeTest
         Assert.AreEqual(this.TestNode,  this.TestNode.SplitNode()[0]);
         Assert.AreEqual(this.TestNode.Neighbors.Count, 8);
     }
+
+    /// <summary>
+    /// Tests the GetOuterNeighbors method.
+    /// </summary>
+    [Test]
+    public void TestGetOuterNeighbors()
+    {
+        Assert.AreEqual(new List<GridNode>()
+        {
+            this.TestNode.Neighbors[0],
+            this.TestNode.Neighbors[2],
+            this.TestNode.Neighbors[3],
+            this.TestNode.Neighbors[4],
+        }, this.TestNode.GetOuterNeighbors());
+    }
 }
