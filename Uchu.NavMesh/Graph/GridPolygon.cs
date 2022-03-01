@@ -145,7 +145,12 @@ public class GridPolygon
             {
                 // Get the next point.
                 var lastPoint = currentPoints[^1];
-                var nextEdge = remainingEdges.First(edge => edge.Start == lastPoint || edge.End == lastPoint);
+                var nextEdge = remainingEdges.FirstOrDefault(edge => edge.Start == lastPoint || edge.End == lastPoint);
+                if (nextEdge == null)
+                {
+                    currentPoints.RemoveAt(currentPoints.Count - 1);
+                    continue;
+                }
                 remainingEdges.Remove(nextEdge);
                 var nextPoint = (nextEdge.Start == lastPoint ? nextEdge.End : nextEdge.Start);
                 
