@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Uchu.NavMesh.Graph;
@@ -81,15 +82,17 @@ public class GridNodeTest
     public void TestSplitNodeTwoShapes()
     {
         // Split the nodes and make sure 2 were created.
+        var neighbors = this.TestNode.Neighbors.ToList();
         var createdNodes = this.TestNode.SplitNode();
         Assert.AreEqual(createdNodes.Count, 2);
+        Assert.AreEqual(this.TestNode.Neighbors.Count, 0);
         
         // Check the neighbors.
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[0].Neighbors[0]);
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[1].Neighbors[0]);
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[2].Neighbors[0]);
-        Assert.AreEqual(createdNodes[1], this.TestNode.Neighbors[3].Neighbors[0]);
-        Assert.AreEqual(createdNodes[1], this.TestNode.Neighbors[4].Neighbors[0]);
+        Assert.AreEqual(createdNodes[0], neighbors[0].Neighbors[0]);
+        Assert.AreEqual(createdNodes[0], neighbors[1].Neighbors[0]);
+        Assert.AreEqual(createdNodes[0], neighbors[2].Neighbors[0]);
+        Assert.AreEqual(createdNodes[1], neighbors[3].Neighbors[0]);
+        Assert.AreEqual(createdNodes[1], neighbors[4].Neighbors[0]);
     }
 
     /// <summary>
@@ -100,14 +103,16 @@ public class GridNodeTest
     {
         // Split the nodes and make sure 1 was created.
         this.TestNode.Neighbors.RemoveAt(4);
+        var neighbors = this.TestNode.Neighbors.ToList();
         var createdNodes = this.TestNode.SplitNode();
         Assert.AreEqual(createdNodes.Count, 1);
+        Assert.AreEqual(this.TestNode.Neighbors.Count, 0);
         
         // Check the neighbors.
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[0].Neighbors[0]);
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[1].Neighbors[0]);
-        Assert.AreEqual(createdNodes[0], this.TestNode.Neighbors[2].Neighbors[0]);
-        Assert.AreEqual(0, this.TestNode.Neighbors[3].Neighbors.Count);
+        Assert.AreEqual(createdNodes[0], neighbors[0].Neighbors[0]);
+        Assert.AreEqual(createdNodes[0], neighbors[1].Neighbors[0]);
+        Assert.AreEqual(createdNodes[0], neighbors[2].Neighbors[0]);
+        Assert.AreEqual(0, neighbors[3].Neighbors.Count);
     }
 
     /// <summary>
@@ -120,5 +125,6 @@ public class GridNodeTest
         this.TestNode.Neighbors.Add(new GridNode(new Vector3(2, 0, 1)));
         this.TestNode.Neighbors.Add(new GridNode(new Vector3(3, 0, 1)));
         Assert.AreEqual(this.TestNode,  this.TestNode.SplitNode()[0]);
+        Assert.AreEqual(this.TestNode.Neighbors.Count, 8);
     }
 }

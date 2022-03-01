@@ -123,6 +123,7 @@ public class GridNode
         }
 
         // Return the created nodes.
+        this.Neighbors.Clear();
         return createdNodes;
     }
 }
