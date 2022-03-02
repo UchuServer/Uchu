@@ -1,20 +1,20 @@
 using System.Numerics;
 using NUnit.Framework;
-using Uchu.NavMesh.Graph;
+using Uchu.NavMesh.Grid;
 
-namespace Uchu.NavMesh.Test.Graph;
+namespace Uchu.NavMesh.Test.Grid;
 
-public class GridEdgeTest
+public class EdgeTest
 {
     /// <summary>
     /// First test edge used.
     /// </summary>
-    public GridEdge TestEdge1 = new GridEdge(Vector3.One, Vector3.Zero);
+    public Edge TestEdge1 = new Edge(Vector3.One, Vector3.Zero);
     
     /// <summary>
     /// Second test edge used.
     /// </summary>
-    public GridEdge TestEdge2 = new GridEdge(Vector3.Zero, Vector3.One);
+    public Edge TestEdge2 = new Edge(Vector3.Zero, Vector3.One);
 
     /// <summary>
     /// Tests the Equals method.

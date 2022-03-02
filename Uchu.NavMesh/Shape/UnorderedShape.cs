@@ -1,88 +1,89 @@
 using System.Numerics;
+using Uchu.NavMesh.Grid;
 
-namespace Uchu.NavMesh.Graph;
+namespace Uchu.NavMesh.Shape;
 
-public class GridPolygon
+public class UnorderedShape
 {
     /// <summary>
-    /// Edges of the polygon.
+    /// Edges of the shape.
     /// </summary>
-    public HashSet<GridEdge> Edges { get; set; } = new HashSet<GridEdge>();
+    public HashSet<Edge> Edges { get; set; } = new HashSet<Edge>();
     
     /// <summary>
-    /// Returns a polygon from a set of nodes.
+    /// Returns a shape from a set of nodes.
     /// </summary>
-    /// <param name="node1">Corner 1 of the polygon.</param>
-    /// <param name="node2">Corner 2 of the polygon.</param>
-    /// <param name="node3">Corner 3 of the polygon.</param>
-    /// <param name="node4">Corner 4 of the polygon.</param>
-    /// <returns>The created polygon.</returns>
-    public static GridPolygon? FromNodes(GridNode node1, GridNode node2, GridNode node3, GridNode node4)
+    /// <param name="node1">Corner 1 of the shape.</param>
+    /// <param name="node2">Corner 2 of the shape.</param>
+    /// <param name="node3">Corner 3 of the shape.</param>
+    /// <param name="node4">Corner 4 of the shape.</param>
+    /// <returns>The created shape.</returns>
+    public static UnorderedShape? FromNodes(Node node1, Node node2, Node node3, Node node4)
     {
-        // Return either a polygon of the square or null if the square is not filled.
+        // Return either a shape of the square or null if the square is not filled.
         if (node1.Neighbors.Contains(node2) && node1.Neighbors.Contains(node3) && node4.Neighbors.Contains(node2) && node4.Neighbors.Contains(node3))
         {
             if (node1.Neighbors.Contains(node4) || node2.Neighbors.Contains(node3))
             {
-                return new GridPolygon()
+                return new UnorderedShape()
                 {
                     Edges = {
-                        new GridEdge(node1.Position, node2.Position),
-                        new GridEdge(node1.Position, node3.Position),
-                        new GridEdge(node4.Position, node2.Position),
-                        new GridEdge(node4.Position, node3.Position),
+                        new Edge(node1.Position, node2.Position),
+                        new Edge(node1.Position, node3.Position),
+                        new Edge(node4.Position, node2.Position),
+                        new Edge(node4.Position, node3.Position),
                     },
                 };
             }
             return null;
         }
         
-        // Return a triangle polygon.
+        // Return a triangle shape.
         if (node1.Neighbors.Contains(node2) && node2.Neighbors.Contains(node3) && node3.Neighbors.Contains(node1))
         {
-            // Return a polygon without node 4.
-            return new GridPolygon()
+            // Return a shape without node 4.
+            return new UnorderedShape()
             {
                 Edges = {
-                    new GridEdge(node1.Position, node2.Position),
-                    new GridEdge(node2.Position, node3.Position),
-                    new GridEdge(node3.Position, node1.Position),
+                    new Edge(node1.Position, node2.Position),
+                    new Edge(node2.Position, node3.Position),
+                    new Edge(node3.Position, node1.Position),
                 },
             };
         }
         if (node2.Neighbors.Contains(node3) && node3.Neighbors.Contains(node4) && node4.Neighbors.Contains(node2))
         {
-            // Return a polygon without node 1.
-            return new GridPolygon()
+            // Return a shape without node 1.
+            return new UnorderedShape()
             {
                 Edges = {
-                    new GridEdge(node2.Position, node3.Position),
-                    new GridEdge(node3.Position, node4.Position),
-                    new GridEdge(node4.Position, node2.Position),
+                    new Edge(node2.Position, node3.Position),
+                    new Edge(node3.Position, node4.Position),
+                    new Edge(node4.Position, node2.Position),
                 },
             };
         }
         if (node1.Neighbors.Contains(node3) && node3.Neighbors.Contains(node4) && node4.Neighbors.Contains(node1))
         {
-            // Return a polygon without node 2.
-            return new GridPolygon()
+            // Return a shape without node 2.
+            return new UnorderedShape()
             {
                 Edges = {
-                    new GridEdge(node1.Position, node3.Position),
-                    new GridEdge(node3.Position, node4.Position),
-                    new GridEdge(node4.Position, node1.Position),
+                    new Edge(node1.Position, node3.Position),
+                    new Edge(node3.Position, node4.Position),
+                    new Edge(node4.Position, node1.Position),
                 },
             };
         }
         if (node1.Neighbors.Contains(node2) && node2.Neighbors.Contains(node4) && node4.Neighbors.Contains(node1))
         {
-            // Return a polygon without node 3.
-            return new GridPolygon()
+            // Return a shape without node 3.
+            return new UnorderedShape()
             {
                 Edges = {
-                    new GridEdge(node1.Position, node2.Position),
-                    new GridEdge(node2.Position, node4.Position),
-                    new GridEdge(node4.Position, node1.Position),
+                    new Edge(node1.Position, node2.Position),
+                    new Edge(node2.Position, node4.Position),
+                    new Edge(node4.Position, node1.Position),
                 },
             };
         }
@@ -92,23 +93,23 @@ public class GridPolygon
     }
     
     /// <summary>
-    /// Returns if a polygon can merge.
+    /// Returns if a shape can merge.
     /// </summary>
-    /// <param name="polygon">Polygon to check merging.</param>
+    /// <param name="shape">Shape to check merging.</param>
     /// <returns>Whether the merge can be done.</returns>
-    public bool CanMerge(GridPolygon polygon)
+    public bool CanMerge(UnorderedShape shape)
     {
-        if (polygon == this) return false;
-        return (from edge in this.Edges from otherEdge in polygon.Edges where edge.Equals(otherEdge) select edge).Any();
+        if (shape == this) return false;
+        return (from edge in this.Edges from otherEdge in shape.Edges where edge.Equals(otherEdge) select edge).Any();
     }
     
     /// <summary>
-    /// Merges another polygon.
+    /// Merges another shape.
     /// </summary>
-    /// <param name="polygon">Polygon to merge.</param>
-    public void Merge(GridPolygon polygon)
+    /// <param name="shape">Shape to merge.</param>
+    public void Merge(UnorderedShape shape)
     {
-        foreach (var edge in polygon.Edges)
+        foreach (var edge in shape.Edges)
         {
             if (this.Edges.Contains(edge))
             {
@@ -122,13 +123,13 @@ public class GridPolygon
     }
     
     /// <summary>
-    /// Returns a list of ordered polygons for the current polygon.
+    /// Returns a list of ordered shapes for the current shape.
     /// </summary>
-    /// <returns>Ordered polygons from the current edges.</returns>
-    public List<OrderedPolygon> GetOrderedPolygons()
+    /// <returns>Ordered shapes from the current edges.</returns>
+    public List<OrderedShape> GetOrderedShapes()
     {
         // Iterate over the edges.
-        var orderedPolygons = new List<OrderedPolygon>();
+        var orderedShapes = new List<OrderedShape>();
         var remainingEdges = this.Edges.ToList();
         var currentPoints = new List<Vector3>();
         while (remainingEdges.Count != 0)
@@ -164,7 +165,7 @@ public class GridPolygon
                         var point = currentPoints[i];
                         newPoints.Add(new Vector2(point.X, point.Z));
                     }
-                    orderedPolygons.Add(new OrderedPolygon()
+                    orderedShapes.Add(new OrderedShape()
                     {
                         Points = newPoints,
                     });
@@ -176,7 +177,7 @@ public class GridPolygon
             }
         }
 
-        // Return the ordered polygons.
-        return orderedPolygons;
+        // Return the ordered shapes.
+        return orderedShapes;
     }
 }

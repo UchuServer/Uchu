@@ -1,16 +1,16 @@
 using System.Numerics;
 
-namespace Uchu.NavMesh.Graph;
+namespace Uchu.NavMesh.Shape;
 
-public class OrderedPolygon
+public class OrderedShape
 {
     /// <summary>
-    /// Points of the ordered polygon.
+    /// Points of the ordered shape.
     /// </summary>
     public List<Vector2> Points { get; set; } = new List<Vector2>();
 
     /// <summary>
-    /// Optimizes the polygon by removing points to make longer lines.
+    /// Optimizes the shape by removing points to make longer lines.
     /// </summary>
     public void Optimize()
     {

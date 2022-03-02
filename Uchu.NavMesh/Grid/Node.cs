@@ -1,8 +1,8 @@
 using System.Numerics;
 
-namespace Uchu.NavMesh.Graph;
+namespace Uchu.NavMesh.Grid;
 
-public class GridNode
+public class Node
 {
     /// <summary>
     /// Position of the grid node.
@@ -12,13 +12,13 @@ public class GridNode
     /// <summary>
     /// Neighbors of the node.
     /// </summary>
-    public List<GridNode> Neighbors { get; set; } = new List<GridNode>(8);
+    public List<Node> Neighbors { get; set; } = new List<Node>(8);
 
     /// <summary>
     /// Creates the node.
     /// </summary>
     /// <param name="position">Position of the node.</param>
-    public GridNode(Vector3 position)
+    public Node(Vector3 position)
     {
         this.Position = position;
     }
@@ -51,7 +51,7 @@ public class GridNode
     /// </summary>
     /// <param name="rotation">Rotation multiplier to use.</param>
     /// <returns>Node at the given rotation.</returns>
-    public GridNode? GetNodeByRotation(byte rotation)
+    public Node? GetNodeByRotation(byte rotation)
     {
         return this.Neighbors.FirstOrDefault(node => this.RotationTo(node.Position) == rotation);
     }
@@ -60,9 +60,9 @@ public class GridNode
     /// Returns the neighbors where the index is the rotation multiple of 45 degrees.
     /// </summary>
     /// <returns>The neighbors where the index is the rotation multiple of 45 degrees.</returns>
-    private GridNode?[] GetNodesAtRotation()
+    private Node?[] GetNodesAtRotation()
     {
-        var nodesAtAngles = new GridNode?[8];
+        var nodesAtAngles = new Node?[8];
         for (byte i = 0; i < 8; i++)
         {
             var node = this.GetNodeByRotation(i);
@@ -76,7 +76,7 @@ public class GridNode
     /// Splits the node so that no 2 shapes share the same node instance.
     /// </summary>
     /// <returns>The nodes that were created.</returns>
-    public List<GridNode> SplitNode()
+    public List<Node> SplitNode()
     {
         // Get the nodes for each angle.
         var nodesAtAngles = this.GetNodesAtRotation();
@@ -90,7 +90,7 @@ public class GridNode
         // Return if all 8 angles are covered, or there are no nodes to operate on.
         if (totalNodes == 0 || totalNodes == 8)
         {
-            return new List<GridNode>(1) { this };
+            return new List<Node>(1) { this };
         }
         
         // Determine a starting offset where the first index does not need to be replaced.
@@ -103,8 +103,8 @@ public class GridNode
         }
         
         // Replaces the node references of the neighbors.
-        var createdNodes = new List<GridNode>(3);
-        var newNodesForNeighbor = new GridNode?[8];
+        var createdNodes = new List<Node>(3);
+        var newNodesForNeighbor = new Node?[8];
         for (var i = 0; i < 8; i++)
         {
             // Get the current neighbor and continue if there is no neighbor to act on.
@@ -127,7 +127,7 @@ public class GridNode
             var newNode = newNodesForNeighbor[previousIndex];
             if (newNode == null)
             {
-                newNode = new GridNode(this.Position);
+                newNode = new Node(this.Position);
                 createdNodes.Add(newNode);
             }
             newNodesForNeighbor[currentIndex] = newNode;
@@ -145,11 +145,11 @@ public class GridNode
     /// Returns the neighbors that do not have a neighbor on the left or right.
     /// </summary>
     /// <returns>the neighbors that do not have a neighbor on the left or right.</returns>
-    public List<GridNode> GetOuterNeighbors()
+    public List<Node> GetOuterNeighbors()
     {
         // Get the neighbors that only have a left or right neighbor (not both).
         var nodesAtAngles = this.GetNodesAtRotation();
-        var neighbors = new List<GridNode>(4);
+        var neighbors = new List<Node>(4);
         for (var i = 0; i < 8; i++)
         {
             // Get the current neighbor and continue if there is no neighbor to act on.

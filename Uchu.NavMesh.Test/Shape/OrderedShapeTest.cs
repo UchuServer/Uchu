@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
-using Uchu.NavMesh.Graph;
+using Uchu.NavMesh.Shape;
 
-namespace Uchu.NavMesh.Test.Graph;
+namespace Uchu.NavMesh.Test.Shape;
 
-public class OrderedPolygonTest
+public class OrderedShapeTest
 {
     /// <summary>
     /// Tests the Optimize method.
@@ -13,7 +13,7 @@ public class OrderedPolygonTest
     [Test]
     public void TestOptimize()
     {
-        var polygon = new OrderedPolygon()
+        var shape = new OrderedShape()
         {
             Points = new List<Vector2>()
             {
@@ -31,13 +31,13 @@ public class OrderedPolygonTest
             },
         };
         
-        polygon.Optimize();
+        shape.Optimize();
         Assert.AreEqual(new List<Vector2>()
         {
             new Vector2(0, 3),
             new Vector2(1, 4),
             new Vector2(1, -1),
             new Vector2(0, -1),
-        }, polygon.Points);
+        }, shape.Points);
     }
 }

@@ -1,8 +1,8 @@
 using System.Numerics;
 
-namespace Uchu.NavMesh.Graph;
+namespace Uchu.NavMesh.Grid;
 
-public class GridEdge : IEquatable<GridEdge>
+public class Edge : IEquatable<Edge>
 {
     /// <summary>
     /// Start of the edge.
@@ -15,11 +15,11 @@ public class GridEdge : IEquatable<GridEdge>
     public readonly Vector3 End;
 
     /// <summary>
-    /// Creates the grid edge.
+    /// Creates the edge.
     /// </summary>
     /// <param name="start">Start of the edge.</param>
     /// <param name="end">End of the edge.</param>
-    public GridEdge(Vector3 start, Vector3 end)
+    public Edge(Vector3 start, Vector3 end)
     {
         this.Start = start;
         this.End = end;
@@ -30,7 +30,7 @@ public class GridEdge : IEquatable<GridEdge>
     /// </summary>
     /// <param name="other">The other edge to compare.</param>
     /// <returns>If the edges are equal.</returns>
-    public bool Equals(GridEdge? other)
+    public bool Equals(Edge? other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -47,7 +47,7 @@ public class GridEdge : IEquatable<GridEdge>
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((GridEdge) obj);
+        return Equals((Edge) obj);
     }
 
     /// <summary>

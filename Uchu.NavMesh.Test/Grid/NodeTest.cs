@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
-using Uchu.NavMesh.Graph;
+using Uchu.NavMesh.Grid;
 
-namespace Uchu.NavMesh.Test.Graph;
+namespace Uchu.NavMesh.Test.Grid;
 
 public class GridNodeTest
 {
     /// <summary>
     /// Test node used with most of the tests.
     /// </summary>
-    public GridNode TestNode { get; set; }
+    public Node TestNode { get; set; }
 
     /// <summary>
     /// Sets up the test node.
@@ -20,15 +20,15 @@ public class GridNodeTest
     public void SetUp()
     {
         // Create the test node.
-        this.TestNode = new GridNode(new Vector3(2, 0, 2))
+        this.TestNode = new Node(new Vector3(2, 0, 2))
         {
-            Neighbors = new List<GridNode>()
+            Neighbors = new List<Node>()
             {
-                new GridNode(new Vector3(2, 4, 3)),
-                new GridNode(new Vector3(3, -2, 3)),
-                new GridNode(new Vector3(3, 0, 2)),
-                new GridNode(new Vector3(1, 1, 1)),
-                new GridNode(new Vector3(1, 1, 2)),
+                new Node(new Vector3(2, 4, 3)),
+                new Node(new Vector3(3, -2, 3)),
+                new Node(new Vector3(3, 0, 2)),
+                new Node(new Vector3(1, 1, 1)),
+                new Node(new Vector3(1, 1, 2)),
             }
         };
         
@@ -121,9 +121,9 @@ public class GridNodeTest
     [Test]
     public void TestSplitNodeAllEdges()
     {
-        this.TestNode.Neighbors.Add(new GridNode(new Vector3(1, 0, 3)));
-        this.TestNode.Neighbors.Add(new GridNode(new Vector3(2, 0, 1)));
-        this.TestNode.Neighbors.Add(new GridNode(new Vector3(3, 0, 1)));
+        this.TestNode.Neighbors.Add(new Node(new Vector3(1, 0, 3)));
+        this.TestNode.Neighbors.Add(new Node(new Vector3(2, 0, 1)));
+        this.TestNode.Neighbors.Add(new Node(new Vector3(3, 0, 1)));
         Assert.AreEqual(this.TestNode,  this.TestNode.SplitNode()[0]);
         Assert.AreEqual(this.TestNode.Neighbors.Count, 8);
     }
@@ -134,7 +134,7 @@ public class GridNodeTest
     [Test]
     public void TestGetOuterNeighbors()
     {
-        Assert.AreEqual(new List<GridNode>()
+        Assert.AreEqual(new List<Node>()
         {
             this.TestNode.Neighbors[0],
             this.TestNode.Neighbors[2],
