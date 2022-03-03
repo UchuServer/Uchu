@@ -19,7 +19,7 @@ using RakDotNet.IO;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
-using Uchu.World.Client;
+using Uchu.World.Filters;
 
 namespace Uchu.World
 {
@@ -159,6 +159,9 @@ namespace Uchu.World
                 await SendPlayerToMainWorldAsync(player);
                 return;
             }
+
+            // Disable render distance filter
+            player.Perspective.GetFilter<RenderDistanceFilter>().Distance = 10000;
 
             if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
                 await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
@@ -473,7 +476,7 @@ namespace Uchu.World
                     CurrentLap = (int)racingPlayer.Lap,
                     FurthestResetPlane = racingPlayer.RespawnIndex,
                     PlayerId = player,
-                    RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 5,
+                    RespawnPos = racingPlayer.RespawnPosition + Vector3.UnitY * 3,
                     UpcomingPlane = racingPlayer.RespawnIndex + 1,
                 });
 
