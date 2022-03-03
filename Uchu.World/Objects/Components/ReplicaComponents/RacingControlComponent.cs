@@ -28,6 +28,8 @@ namespace Uchu.World
         public override ComponentId Id => ComponentId.RacingControlComponent;
 
         public List<RacingPlayerInfo> Players = new();
+        
+        public Event<RacingPlayerInfo> OnPlayerLap { get; set; }
 
         private RaceInfo _raceInfo = new();
 
@@ -43,6 +45,7 @@ namespace Uchu.World
 
         public RacingControlComponent()
         {
+            OnPlayerLap = new Event<RacingPlayerInfo>();
             _raceInfo.LapCount = 3;
             _raceInfo.PathName = "MainPath"; // MainPath
             Listen(OnStart, async () => await LoadAsync());
@@ -517,7 +520,7 @@ namespace Uchu.World
                 var lapTime = (int)playerInfo.LapTime.ElapsedMilliseconds;
                 playerInfo.LapTime.Restart();
                 playerInfo.Lap++;
-
+                OnPlayerLap.Invoke(playerInfo);
                 Logger.Information($"{playerInfo.Player} now in lap {playerInfo.Lap}");
 
                 // Set new best lap if applicable
