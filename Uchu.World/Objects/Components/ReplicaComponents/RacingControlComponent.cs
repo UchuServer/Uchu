@@ -164,7 +164,7 @@ namespace Uchu.World
             player.Perspective.GetFilter<RenderDistanceFilter>().Distance = 10000;
 
             if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
-                await missionInventoryComponent.RacingEnterWorld(this.GameObject.Zone.ZoneId);
+                await missionInventoryComponent.RacingEnterWorld(GameObject.Zone.ZoneId);
 
             // Register player
             RacingPlayerInfo info = new RacingPlayerInfo
@@ -181,14 +181,23 @@ namespace Uchu.World
 
             Listen(info.ResetTimer.OnElapsed, () => ResetPlayer(player));
 
-            this.Players.Add(info);
+            Players.Add(info);
 
             LoadPlayerCar(player);
 
             Listen(player.OnPositionUpdate, (position, rotation) =>
             {
-                if (position.Y < _deathPlaneHeight && _racingStatus == RacingStatus.Started)
-                    OnPlayerRequestDie(player);
+                if (!(position.Y < _deathPlaneHeight) || _racingStatus != RacingStatus.Started) return;
+                var car = Players.First(i => i.Player == player).Vehicle;
+                Zone.BroadcastMessage(new DieMessage
+                {
+                    Associate = car,
+                    Killer = GameObject,
+                    //KillType = KillType.Violent,
+                    //ClientDeath = true,
+                    SpawnLoot = false,
+                });
+                OnPlayerRequestDie(player);
             });
 
             Zone.Schedule(InitRace, 10000);

@@ -3,14 +3,14 @@ using Uchu.World.Scripting.Native;
 
 namespace Uchu.StandardScripts.Racing;
 
-[ScriptName("L_ACT_VEHICLE_DEATH_TRIGGER.lua")]
-public class VehicleDeathTrigger : ObjectScript
+[ScriptName("vehicle_death_trigger_water_server.lua")]
+public class VehicleDeathTriggerWater : ObjectScript
 {
     /// <summary>
     /// Script to kill cars that enter death triggers
     /// </summary>
     /// <param name="gameObject"></param>
-    public VehicleDeathTrigger(GameObject gameObject) : base(gameObject)
+    public VehicleDeathTriggerWater(GameObject gameObject) : base(gameObject)
     {
         if (!gameObject.TryGetComponent<PhysicsComponent>(out var physicsComponent)) return;
         if (!gameObject.Zone.ZoneControlObject.TryGetComponent<RacingControlComponent>(out var racingControlComponent)) return;
@@ -22,8 +22,9 @@ public class VehicleDeathTrigger : ObjectScript
             {
                 Associate = car,
                 Killer = GameObject,
-                //KillType = KillType.Violent,
-                //ClientDeath = true,
+                KillType = KillType.Violent,
+                DeathType = "death_water",
+                ClientDeath = true,
                 SpawnLoot = false,
             });
             racingControlComponent.OnPlayerRequestDie(player);
