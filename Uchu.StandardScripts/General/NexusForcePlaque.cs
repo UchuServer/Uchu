@@ -23,6 +23,8 @@ namespace Uchu.StandardScripts.General
             var idString = (string) text;
             var id = int.Parse(idString.Substring(idString.Length - 2));
             var flag = 10000 + Zone.ZoneId + id;
+            if (gameObject.Settings.TryGetValue("altFlagID", out var altFlagId))
+                flag = (int) altFlagId;
                 
             // Set the flag for players who interact with the plaque.
             Listen(gameObject.OnInteract, async player =>
