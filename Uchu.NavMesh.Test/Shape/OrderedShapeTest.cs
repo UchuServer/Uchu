@@ -74,7 +74,7 @@ public class OrderedShapeTest
     }
 
     /// <summary>
-    /// Tests teh LineValid method.
+    /// Tests the LineValid method.
     /// </summary>
     [Test]
     public void TestLineValid()
@@ -103,5 +103,40 @@ public class OrderedShapeTest
         // Test with intersections.
         Assert.IsFalse(shape.LineValid(new Vector2(-1, -1), new Vector2(1, -1)));
         Assert.IsFalse(shape.LineValid(new Vector2(-2, -2), new Vector2(2, 2)));
+    }
+
+    /// <summary>
+    /// Tests the GenerateGraph method.
+    /// </summary>
+    [Test]
+    public void TestGenerateGraph()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(0, -1),
+                new Vector2(-2, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+        };
+        shape.GenerateGraph();
+        
+        // Test that the connected nodes are correct.
+        Assert.AreEqual(4, shape.Nodes[0].Nodes.Count);
+        Assert.AreEqual(new Vector2(-2, -2), shape.Nodes[0].Nodes[0].Point);
+        Assert.AreEqual(new Vector2(-2, 2), shape.Nodes[0].Nodes[1].Point);
+        Assert.AreEqual(new Vector2(2, 2), shape.Nodes[0].Nodes[2].Point);
+        Assert.AreEqual(new Vector2(2, -2), shape.Nodes[0].Nodes[3].Point);
+        Assert.AreEqual(3, shape.Nodes[1].Nodes.Count);
+        Assert.AreEqual(new Vector2(0, -1), shape.Nodes[1].Nodes[0].Point);
+        Assert.AreEqual(new Vector2(-2, 2), shape.Nodes[1].Nodes[1].Point);
+        Assert.AreEqual(new Vector2(2, 2), shape.Nodes[1].Nodes[2].Point);
+        Assert.AreEqual(4, shape.Nodes[2].Nodes.Count);
+        Assert.AreEqual(4, shape.Nodes[3].Nodes.Count);
+        Assert.AreEqual(3, shape.Nodes[4].Nodes.Count);
     }
 }

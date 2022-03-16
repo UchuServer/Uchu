@@ -1,4 +1,5 @@
 using System.Numerics;
+using Uchu.NavMesh.Graph;
 
 namespace Uchu.NavMesh.Shape;
 
@@ -8,6 +9,11 @@ public class OrderedShape
     /// Points of the ordered shape.
     /// </summary>
     public List<Vector2> Points { get; set; } = new List<Vector2>();
+
+    /// <summary>
+    /// Nodes of the shape.
+    /// </summary>
+    public List<Node> Nodes { get; set; } = new List<Node>();
 
     /// <summary>
     /// Returns the cross product of 2 2D vectors.
@@ -49,6 +55,29 @@ public class OrderedShape
     }
 
     /// <summary>
+    /// Generates the connected nodes of the shape.
+    /// </summary>
+    public void GenerateGraph()
+    {
+        // Create the nodes.
+        foreach (var point in this.Points)
+        {
+            this.Nodes.Add(new Node(point));
+        }
+        
+        // Connect the nodes.
+        foreach (var node in this.Nodes)
+        {
+            foreach (var otherNode in this.Nodes)
+            {
+                if (node == otherNode) continue;
+                if (!this.LineValid(node.Point, otherNode.Point)) continue;
+                node.Nodes.Add(otherNode);
+            }
+        }
+    }
+
+    /// <summary>
     /// Returns if a point is in the shape.
     /// </summary>
     /// <param name="point">Point to check.</param>
@@ -73,8 +102,6 @@ public class OrderedShape
         return linesLeftOfPoint % 2 == 1;
     }
 
-    
-    
     /// <summary>
     /// Returns if a line is valid for the shape. A line is considered valid if 
     /// </summary>
