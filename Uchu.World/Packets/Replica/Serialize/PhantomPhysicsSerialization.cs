@@ -10,8 +10,8 @@ namespace Uchu.World
         public Vector3 Position { get; set; }
         [Requires("HasPosition")]
         public Quaternion Rotation { get; set; }
-        public bool UnknownFlag { get; set; }
-        [Requires("UnknownFlag")]
+        public bool HasEffectInfo { get; set; }
+        [Requires("HasEffectInfo")]
         public bool IsEffectActive { get; set; }
         [Requires("IsEffectActive")]
         public PhantomPhysicsEffectType EffectType { get; set; }
@@ -23,8 +23,10 @@ namespace Uchu.World
         public float MinDistance { get; set; }
         [Requires("AffectedByDistance")]
         public float MaxDistance { get; set; }
-        [Default]
         [Requires("IsEffectActive")]
-        public Vector3 EffectDirectionScaled { get; set; }
+        public bool IsDirectional { get; set; }
+        //[Default]
+        [Requires("IsDirectional")]
+        public Vector3 EffectDirection { get; set; }
     }
 }

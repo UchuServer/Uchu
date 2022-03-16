@@ -35,7 +35,7 @@ namespace Uchu.StandardScripts.NexusTower
             var physics = gameObject.GetComponent<PhysicsComponent>();
             Listen(physics.OnEnter, other =>
             {
-                if (!(other.GameObject is Player player))
+                if (other.GameObject is not Player player)
                     return;
 
                 // Progress mission 1047 and 1331

@@ -56,10 +56,21 @@ namespace Uchu.World
         public override PhantomPhysicsSerialization GetPacket()
         {
             var packet = base.GetPacket();
+            packet.HasPosition = true;
             packet.Position = Transform.Position;
             packet.Rotation = Transform.Rotation;
-            packet.UnknownFlag = true;
-            packet.EffectDirectionScaled = EffectDirection * EffectAmount;
+            packet.HasEffectInfo = true;
+            packet.IsEffectActive = IsEffectActive;
+            packet.EffectType = EffectType;
+            packet.EffectAmount = EffectAmount;
+            packet.AffectedByDistance = false;
+            /*
+            packet.MinDistance = MinDistance;
+            packet.MaxDistance = MaxDistance;
+            */
+            packet.IsDirectional = true;
+            packet.EffectDirection = EffectDirection;
+            //Logger.Log();
             return packet;
         }
     }
