@@ -106,6 +106,70 @@ public class OrderedShapeTest
     }
 
     /// <summary>
+    /// Tests the TryAddShape method.
+    /// </summary>
+    [Test]
+    public void TestTryAddShape()
+    {
+        // Create several rectangles.
+        var shape1 = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-1, 0),
+                new Vector2(-1, 1),
+                new Vector2(1, 1),
+                new Vector2(1, 0),
+            },
+        };
+        var shape2 = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-1, 0),
+                new Vector2(-1, -1),
+                new Vector2(1, -1),
+                new Vector2(1, 0),
+            },
+        };
+        var shape3 = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-2, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+        };
+        var shape4 = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-3, -3),
+                new Vector2(-3, 3),
+                new Vector2(3, 3),
+                new Vector2(3, -3),
+            },
+        };
+        
+        // Assert certain shapes that can't be added.
+        Assert.IsFalse(shape1.TryAddShape(shape2));
+        Assert.IsFalse(shape1.TryAddShape(shape3));
+        
+        // Assert adding shapes.
+        Assert.IsTrue(shape4.TryAddShape(shape1));
+        Assert.IsTrue(shape4.TryAddShape(shape3));
+        Assert.IsTrue(shape4.TryAddShape(shape2));
+        
+        // Assert the correct shapes are stored.
+        Assert.AreEqual(new List<OrderedShape>(), shape1.Shapes);
+        Assert.AreEqual(new List<OrderedShape>(), shape2.Shapes);
+        Assert.AreEqual(new List<OrderedShape>() {shape1, shape2}, shape3.Shapes);
+        Assert.AreEqual(new List<OrderedShape>() {shape3}, shape4.Shapes);
+    }
+
+    /// <summary>
     /// Tests the GenerateGraph method.
     /// </summary>
     [Test]

@@ -16,6 +16,11 @@ public class OrderedShape
     public List<Node> Nodes { get; set; } = new List<Node>();
 
     /// <summary>
+    /// Shapes that are contained in the shape.
+    /// </summary>
+    public List<OrderedShape> Shapes { get; set; } = new List<OrderedShape>();
+
+    /// <summary>
     /// Returns the cross product of 2 2D vectors.
     /// </summary>
     /// <param name="point1">The first point.</param>
@@ -75,6 +80,37 @@ public class OrderedShape
                 node.Nodes.Add(otherNode);
             }
         }
+    }
+
+    /// <summary>
+    /// Tries to add a child shape.
+    /// </summary>
+    /// <param name="shape">Shape to try to add.</param>
+    /// <returns>Whether the shape was added.</returns>
+    public bool TryAddShape(OrderedShape shape)
+    {
+        // Return false if there is a point not in the shape.
+        foreach (var point in shape.Points)
+        {
+            if (this.Points.Contains(point)) continue;
+            if (!this.PointInShape(point)) return false;
+        }
+        
+        // Return true if it can be added directly to a child shape.
+        foreach (var otherShape in this.Shapes)
+        {
+            if (!otherShape.TryAddShape(shape)) continue;
+            return true;
+        }
+        
+        // Add the child shape directly and remove the child shapes that are contained in the new shape.
+        foreach (var otherShape in this.Shapes.ToList())
+        {
+            if (!shape.TryAddShape(otherShape)) continue;
+            this.Shapes.Remove(otherShape);
+        }
+        this.Shapes.Add(shape);
+        return true;
     }
 
     /// <summary>
