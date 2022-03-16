@@ -13,6 +13,7 @@ public class OrderedShapeTest
     [Test]
     public void TestOptimize()
     {
+        // Create the test shape.
         var shape = new OrderedShape()
         {
             Points = new List<Vector2>()
@@ -31,6 +32,7 @@ public class OrderedShapeTest
             },
         };
         
+        // Test optimizing the shape.
         shape.Optimize();
         Assert.AreEqual(new List<Vector2>()
         {
@@ -39,5 +41,35 @@ public class OrderedShapeTest
             new Vector2(1, -1),
             new Vector2(0, -1),
         }, shape.Points);
+    }
+
+    /// <summary>
+    /// Tests the PointInShape method.
+    /// </summary>
+    [Test]
+    public void TestPointInShape()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(0, 0),
+                new Vector2(-2, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+        };
+        
+        // Test that various parts are in the shape.
+        Assert.IsTrue(shape.PointInShape(new Vector2(0, 0)));
+        Assert.IsTrue(shape.PointInShape(new Vector2(1, 1)));
+        Assert.IsTrue(shape.PointInShape(new Vector2(1, -1)));
+        Assert.IsTrue(shape.PointInShape(new Vector2(0, 1)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(0, -1)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(-3, -1)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(3, -1)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(0, 3)));
     }
 }

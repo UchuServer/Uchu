@@ -36,4 +36,29 @@ public class OrderedShape
             this.Points.RemoveAt(0);
         }
     }
+
+    /// <summary>
+    /// Returns if a point is in the shape.
+    /// </summary>
+    /// <param name="point">Point to check.</param>
+    /// <returns>Whether the point is in the shape.</returns>
+    public bool PointInShape(Vector2 point)
+    {
+        // Get the lines that are left of the point.
+        var linesLeftOfPoint = 0;
+        for (var i = 0; i < this.Points.Count; i++)
+        {
+            var currentPoint = this.Points[i];
+            if (point == currentPoint) return true;
+            var lastPoint = this.Points[i == 0 ? this.Points.Count - 1 : (i - 1)];
+            if (!((currentPoint.Y > point.Y && lastPoint.Y < point.Y) || (currentPoint.Y < point.Y && lastPoint.Y > point.Y))) continue;
+            var lineRatio = (point.Y - currentPoint.Y) / (lastPoint.Y - currentPoint.Y);
+            var lineX = currentPoint.X + ((lastPoint.X - currentPoint.X) * lineRatio);
+            if (lineX > point.X) continue;
+            linesLeftOfPoint += 1;
+        }
+        
+        // Return if the points to the left is odd.
+        return linesLeftOfPoint % 2 == 1;
+    }
 }
