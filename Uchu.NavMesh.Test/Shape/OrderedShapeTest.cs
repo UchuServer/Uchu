@@ -72,4 +72,36 @@ public class OrderedShapeTest
         Assert.IsFalse(shape.PointInShape(new Vector2(3, -1)));
         Assert.IsFalse(shape.PointInShape(new Vector2(0, 3)));
     }
+
+    /// <summary>
+    /// Tests teh LineValid method.
+    /// </summary>
+    [Test]
+    public void TestLineValid()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(0, 0),
+                new Vector2(-2, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+        };
+        
+        // Test with lines that make up the shape.
+        Assert.IsTrue(shape.LineValid(new Vector2(0, 0), new Vector2(-2, -2)));
+        Assert.IsTrue(shape.LineValid(new Vector2(2, 2), new Vector2(-2, 2)));
+        
+        // Test with lines completely inside or outside the shape.
+        Assert.IsTrue(shape.LineValid(new Vector2(-1, 1), new Vector2(1, 1)));
+        Assert.IsFalse(shape.LineValid(new Vector2(-2, -2), new Vector2(2, -2)));
+        
+        // Test with intersections.
+        Assert.IsFalse(shape.LineValid(new Vector2(-1, -1), new Vector2(1, -1)));
+        Assert.IsFalse(shape.LineValid(new Vector2(-2, -2), new Vector2(2, 2)));
+    }
 }
