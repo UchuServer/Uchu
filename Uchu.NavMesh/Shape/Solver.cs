@@ -22,9 +22,9 @@ public class Solver
     public HeightMap HeightMap { get; private set; }
     
     /// <summary>
-    /// Shapes that define the boundaries in 2D.
+    /// Shape that define the boundaries in 2D.
     /// </summary>
-    public List<OrderedShape> BoundingShapes { get; private set; }
+    public OrderedShape BoundingShape { get; private set; }
 
     /// <summary>
     /// Initializes the solver.
@@ -197,6 +197,19 @@ public class Solver
         await Task.WhenAll(tasks);
         
         // Store the shapes.
-        this.BoundingShapes = shapes;
+        this.BoundingShape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(float.MaxValue, float.MaxValue),
+                new Vector2(float.MinValue, float.MaxValue),
+                new Vector2(float.MinValue, float.MinValue),
+                new Vector2(float.MaxValue, float.MinValue),
+            }
+        };
+        foreach (var shape in shapes)
+        {
+            this.BoundingShape.TryAddShape(shape);
+        }
     }
 }
