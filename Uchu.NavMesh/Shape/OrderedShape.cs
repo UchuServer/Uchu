@@ -1,9 +1,10 @@
 using System.Numerics;
+using RakDotNet.IO;
 using Uchu.NavMesh.Graph;
 
 namespace Uchu.NavMesh.Shape;
 
-public class OrderedShape
+public class OrderedShape : ISerializable, IDeserializable
 {
     /// <summary>
     /// Result for a line intersection test.
@@ -233,5 +234,81 @@ public class OrderedShape
 
         // Return true (valid).
         return true;
+    }
+    
+    /// <summary>
+    /// Serializes the object.
+    /// </summary>
+    /// <param name="writer">Writer to write to.</param>
+    public void Serialize(BitWriter writer)
+    {
+        // Write the points.
+        writer.Write(this.Points.Count);
+        foreach (var point in this.Points)
+        {
+            writer.Write(point);
+        }
+        
+        // Write the nodes.
+        writer.Write(this.Nodes.Count);
+        foreach (var node in this.Nodes)
+        {
+            writer.Write(node.Point);
+        }
+        foreach (var node in this.Nodes)
+        {
+            writer.Write(node.Nodes.Count);
+            foreach (var connectedNode in node.Nodes)
+            {
+                writer.Write(this.Nodes.FindIndex((listNode) => listNode == connectedNode));
+            }
+        }
+        
+        // Write the shapes.
+        writer.Write(this.Shapes.Count);
+        foreach (var shape in this.Shapes)
+        {
+            shape.Serialize(writer);
+        }
+    }
+
+    /// <summary>
+    /// Deserializes the object.
+    /// </summary>
+    /// <param name="reader">Reader to read to.</param>
+    public void Deserialize(BitReader reader)
+    {
+        // Read the points.
+        var totalPoints = reader.Read<int>();
+        for (var i = 0; i < totalPoints; i++)
+        {
+            this.Points.Add(reader.Read<Vector2>());
+        }
+        
+        // Read the nodes.
+        var totalNodes = reader.Read<int>();
+        for (var i = 0; i < totalNodes; i++)
+        {
+            this.Nodes.Add(new Node(reader.Read<Vector2>()));
+        }
+        for (var i = 0; i < totalNodes; i++)
+        {
+            var node = this.Nodes[i];
+            var totalConnections = reader.Read<int>();
+            for (var j = 0; j < totalConnections; j++)
+            {
+                var connectionIndex = reader.Read<int>();
+                node.Nodes.Add(this.Nodes[connectionIndex]);
+            }
+        }
+        
+        // Read the shapes.
+        var totalShapes = reader.Read<int>();
+        for (var i = 0; i < totalShapes; i++)
+        {
+            var shape = new OrderedShape();
+            shape.Deserialize(reader);
+            this.Shapes.Add(shape);
+        }
     }
 }

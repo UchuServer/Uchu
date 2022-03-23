@@ -1,11 +1,20 @@
 using System.Numerics;
+using RakDotNet.IO;
+using Uchu.Core;
 using Uchu.NavMesh.Grid;
 using Uchu.World.Client;
 
 namespace Uchu.NavMesh.Shape;
 
-public class Solver
+public class Solver : ISerializable, IDeserializable
 {
+    /// <summary>
+    /// Version of the solver stored with the cache files. If the version does not match, the cached version of the
+    /// solver is discarded. If changes are made that change the results of generating the solver, this number
+    /// should be incremented to invalidate the cache entries of updating servers.
+    /// </summary>
+    public const int SolverVersion = 0;
+    
     /// <summary>
     /// Maximum distance 2 nodes on the heightmap can be before being considered to steep to connect.
     /// </summary>
@@ -27,14 +36,90 @@ public class Solver
     public OrderedShape BoundingShape { get; private set; }
 
     /// <summary>
-    /// Initializes the solver.
+    /// Creates a solver for a zone. The zone may be cached.
     /// </summary>
     /// <param name="zoneInfo">Zone info with a terrain file to read.</param>
-    public async Task Initialize(ZoneInfo zoneInfo)
+    public static async Task<Solver> FromZoneAsync(ZoneInfo zoneInfo)
     {
-        this.HeightMap = HeightMap.FromZoneInfo(zoneInfo);
-        // TODO: Consider caching the results somehow. These can take time to generate.
-        await this.GenerateShapesAsync();
+        // Create the solver with the heightmap.
+        var solver = new Solver();
+        solver.HeightMap = HeightMap.FromZoneInfo(zoneInfo);
+        
+        // Return a cached entry.
+        try
+        {
+            await solver.LoadFromCacheAsync(zoneInfo);
+            return solver;
+        }
+        catch (FileNotFoundException)
+        {
+            // Cache file not found.
+            Logger.Information("Cached version of map path solver not found.");
+        }
+        catch (InvalidDataException)
+        {
+            // Delete the invalid cache file.
+            Logger.Information("");
+            File.Delete(Path.Combine("MapSolverCache", zoneInfo.LuzFile.WorldId + ".bin"));
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e);
+        }
+
+        // Load the solver from the heightmap.
+        await solver.GenerateShapesAsync();
+        await solver.SaveToCacheAsync(zoneInfo);
+        return solver;
+    }
+    
+    /// <summary>
+    /// Saves the file for caching.
+    /// </summary>
+    /// <param name="zoneInfo">Zone info to save as.</param>
+    private async Task SaveToCacheAsync(ZoneInfo zoneInfo)
+    {
+        // Create the directory if it does not exist.
+        if (!Directory.Exists("MapSolverCache"))
+        {
+            Directory.CreateDirectory("MapSolverCache");
+        }
+
+        // Save the file.
+        var path = Path.Combine("MapSolverCache", zoneInfo.LuzFile.WorldId + ".bin");
+        if (File.Exists(path))
+            return;
+        await using var memoryStream = new MemoryStream();
+        var writer = new BitWriter(memoryStream);
+        writer.Write(SolverVersion);
+        this.Serialize(writer);
+        await File.WriteAllBytesAsync(path, memoryStream.ToArray());
+    }
+
+    /// <summary>
+    /// Loads the solver from the cache. Throws an exception if the cache is invalid.
+    /// </summary>
+    /// <param name="zoneInfo">Zone info to save as.</param>
+    private async Task LoadFromCacheAsync(ZoneInfo zoneInfo)
+    {
+        // Throw an exception if the cache file does not exist.
+        var path = Path.Combine("MapSolverCache", zoneInfo.LuzFile.WorldId + ".bin");
+        if (!File.Exists(path))
+            throw new FileNotFoundException("Cache file not found");
+        
+        // Start to read the file and throw an exception if the version does not match.
+        var cacheData = await File.ReadAllBytesAsync(path);
+        await using var memoryStream = new MemoryStream(cacheData.Length);
+        memoryStream.Write(cacheData);
+        await memoryStream.FlushAsync();
+        memoryStream.Position = 0;
+        var reader = new BitReader(memoryStream);
+        var cacheVersion = reader.Read<int>();
+        if (cacheVersion != SolverVersion)
+            throw new InvalidDataException("Cache version is not current. (Expected " + SolverVersion + ", got " + cacheVersion);
+        
+        // Deserialize the file.
+        this.Deserialize(reader);
     }
     
     /// <summary>
@@ -222,5 +307,24 @@ public class Solver
             }));
         }
         await Task.WhenAll(tasks);
+    }
+
+    /// <summary>
+    /// Serializes the object.
+    /// </summary>
+    /// <param name="writer">Writer to write to.</param>
+    public void Serialize(BitWriter writer)
+    {
+        this.BoundingShape.Serialize(writer);
+    }
+
+    /// <summary>
+    /// Deserializes the object.
+    /// </summary>
+    /// <param name="reader">Reader to read to.</param>
+    public void Deserialize(BitReader reader)
+    {
+        this.BoundingShape = new OrderedShape();
+        this.BoundingShape.Deserialize(reader);
     }
 }
