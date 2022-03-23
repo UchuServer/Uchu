@@ -71,6 +71,37 @@ public class OrderedShapeTest
         Assert.IsFalse(shape.PointInShape(new Vector2(-3, -1)));
         Assert.IsFalse(shape.PointInShape(new Vector2(3, -1)));
         Assert.IsFalse(shape.PointInShape(new Vector2(0, 3)));
+        
+        // Test edges cases where the point is inline with the lines.
+        Assert.IsTrue(shape.PointInShape(new Vector2(-1, 0)));
+        Assert.IsTrue(shape.PointInShape(new Vector2(1, 0)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(-3, 0)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(3, 0)));
+    }
+    
+    /// <summary>
+    /// Tests the PointInShape method with a horizontal line.
+    /// </summary>
+    [Test]
+    public void TestPointHorizontalLineEdgeCaseInShape()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(0, 0),
+                new Vector2(0, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+        };
+        
+        // Test the edge case points.
+        Assert.IsTrue(shape.PointInShape(new Vector2(1, 0)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(-3, 0)));
+        Assert.IsFalse(shape.PointInShape(new Vector2(3, 0)));
     }
 
     /// <summary>
