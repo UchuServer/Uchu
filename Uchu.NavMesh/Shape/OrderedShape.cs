@@ -92,7 +92,6 @@ public class OrderedShape
         // Return false if there is a point not in the shape.
         foreach (var point in shape.Points)
         {
-            if (this.Points.Contains(point)) continue;
             if (!this.PointInShape(point)) return false;
         }
         
@@ -120,22 +119,35 @@ public class OrderedShape
     /// <returns>Whether the point is in the shape.</returns>
     public bool PointInShape(Vector2 point)
     {
-        // Get the lines that are left of the point.
-        var linesLeftOfPoint = 0;
+        // Get the sum of the angles of the point to every pair of points that form the lines.
+        var totalAngle = 0d;
         for (var i = 0; i < this.Points.Count; i++)
         {
+            // Get the current point and last point.
             var currentPoint = this.Points[i];
             if (point == currentPoint) return true;
             var lastPoint = this.Points[i == 0 ? this.Points.Count - 1 : (i - 1)];
-            if (!((currentPoint.Y > point.Y && lastPoint.Y < point.Y) || (currentPoint.Y < point.Y && lastPoint.Y > point.Y))) continue;
-            var lineRatio = (point.Y - currentPoint.Y) / (lastPoint.Y - currentPoint.Y);
-            var lineX = currentPoint.X + ((lastPoint.X - currentPoint.X) * lineRatio);
-            if (lineX > point.X) continue;
-            linesLeftOfPoint += 1;
+
+            // Determine the angles to each point and determine the angle difference.
+            var theta1 = Math.Atan2(currentPoint.Y - point.Y, currentPoint.X - point.X);
+            var theta2 = Math.Atan2(lastPoint.Y - point.Y, lastPoint.X - point.X);
+            var thetaDelta = theta2 - theta1;
+            while (thetaDelta > Math.PI)
+            {
+                thetaDelta += -(2 * Math.PI);
+            }
+            while (thetaDelta < -Math.PI)
+            {
+                thetaDelta += (2 * Math.PI);
+            }
+
+            // Add the difference.
+            totalAngle += thetaDelta;
         }
-        
-        // Return if the points to the left is odd.
-        return linesLeftOfPoint % 2 == 1;
+
+        // Return if the sum is 360 degrees.
+        // If it is 0, the point is outside the polygon.
+        return Math.Abs(totalAngle) > Math.PI;
     }
 
     /// <summary>
