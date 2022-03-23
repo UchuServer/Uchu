@@ -211,5 +211,16 @@ public class Solver
         {
             this.BoundingShape.TryAddShape(shape);
         }
+        
+        // Generate the nodes for each shape.
+        tasks = new List<Task>();
+        foreach (var shape in shapes)
+        {
+            tasks.Add(Task.Run(() =>
+            {
+                shape.GenerateGraph();
+            }));
+        }
+        await Task.WhenAll(tasks);
     }
 }
