@@ -78,6 +78,14 @@ public class OrderedShape
         {
             this.Nodes.Add(new Node(point));
         }
+        foreach (var shape in this.Shapes)
+        {
+            foreach (var point in shape.Points)
+            {
+                if (this.Nodes.FirstOrDefault(node => node.Point == point) != null) continue;
+                this.Nodes.Add(new Node(point));
+            }
+        }
         
         // Connect the nodes.
         foreach (var node in this.Nodes)

@@ -264,4 +264,62 @@ public class OrderedShapeTest
         Assert.AreEqual(4, shape.Nodes[3].Nodes.Count);
         Assert.AreEqual(3, shape.Nodes[4].Nodes.Count);
     }
+
+    /// <summary>
+    /// Tests the GenerateGraph method with contained shapes.
+    /// </summary>
+    [Test]
+    public void TestGenerateGraphContainedShapes()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-4, -4),
+                new Vector2(-4, 4),
+                new Vector2(4, 4),
+                new Vector2(4, -4),
+            },
+            Shapes = new List<OrderedShape>()
+            {
+                new OrderedShape()
+                {
+                    Points = new List<Vector2>()
+                    {
+                        new Vector2(-2, -2),
+                        new Vector2(-2, -1),
+                        new Vector2(2, -1),
+                        new Vector2(2, -2),
+                    },
+                },
+                new OrderedShape()
+                {
+                    Points = new List<Vector2>()
+                    {
+                        new Vector2(-2, 2),
+                        new Vector2(-2, 1),
+                        new Vector2(2, 1),
+                        new Vector2(2, 2),
+                    },
+                },
+            },
+        };
+        shape.GenerateGraph();
+        
+        // Test that the connected nodes are correct.
+        // Due to how many nodes there are, only the totals are checked.
+        Assert.AreEqual(7, shape.Nodes[0].Nodes.Count);
+        Assert.AreEqual(7, shape.Nodes[1].Nodes.Count);
+        Assert.AreEqual(7, shape.Nodes[2].Nodes.Count);
+        Assert.AreEqual(7, shape.Nodes[3].Nodes.Count);
+        Assert.AreEqual(5, shape.Nodes[4].Nodes.Count);
+        Assert.AreEqual(6, shape.Nodes[5].Nodes.Count);
+        Assert.AreEqual(6, shape.Nodes[6].Nodes.Count);
+        Assert.AreEqual(5, shape.Nodes[7].Nodes.Count);
+        Assert.AreEqual(5, shape.Nodes[8].Nodes.Count);
+        Assert.AreEqual(6, shape.Nodes[9].Nodes.Count);
+        Assert.AreEqual(6, shape.Nodes[10].Nodes.Count);
+        Assert.AreEqual(5, shape.Nodes[11].Nodes.Count);
+    }
 }
