@@ -207,6 +207,18 @@ public class OrderedShape
         if (lineIntersectResult == LineIntersectionResult.LineIntersects)
             return false;
         
+        // Return false if a contained shape intersects or the center of the line is inside the contained shape.
+        foreach (var shape in this.Shapes)
+        {
+            var containedLineIntersectResult = shape.LineIntersects(start, end);
+            if (containedLineIntersectResult == LineIntersectionResult.PartOfShape)
+                return true;
+            if (containedLineIntersectResult == LineIntersectionResult.LineIntersects)
+                return false;
+            if (shape.PointInShape(new Vector2(start.X + ((end.X - start.X) * 0.5f), start.Y + ((end.Y - start.Y) * 0.5f))))
+                return false;
+        }
+
         // Return false if the middle of the line is not in the shape.
         if (!this.PointInShape(new Vector2(start.X + ((end.X - start.X) / 2), start.Y + ((end.Y - start.Y) / 2))))
             return false;

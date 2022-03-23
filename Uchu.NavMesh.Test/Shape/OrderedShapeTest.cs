@@ -112,6 +112,61 @@ public class OrderedShapeTest
     }
 
     /// <summary>
+    /// Tests the LineValid method with a containing shape..
+    /// </summary>
+    [Test]
+    public void TestLineValidContainingShape()
+    {
+        // Create the test shape.
+        var shape = new OrderedShape()
+        {
+            Points = new List<Vector2>()
+            {
+                new Vector2(-2, -2),
+                new Vector2(-2, 2),
+                new Vector2(2, 2),
+                new Vector2(2, -2),
+            },
+            Shapes = new List<OrderedShape>()
+            {
+                new OrderedShape()
+                {
+                    Points = new List<Vector2>()
+                    {
+                        new Vector2(-1, -1),
+                        new Vector2(-1, 1),
+                        new Vector2(1, 1),
+                        new Vector2(1, -1),
+                    },
+                }
+            }
+        };
+        
+        // Test with lines that make up the shape.
+        Assert.IsTrue(shape.LineValid(new Vector2(-2, 2), new Vector2(-2, -2)));
+        Assert.IsTrue(shape.LineValid(new Vector2(2, 2), new Vector2(-2, 2)));
+        
+        // Test with lines completely inside or outside the shape.
+        Assert.IsTrue(shape.LineValid(new Vector2(-1, 1.5f), new Vector2(1, 1.5f)));
+        Assert.IsFalse(shape.LineValid(new Vector2(-3, -3), new Vector2(3, -3)));
+        
+        // Test with lines that are part of the inner shape.
+        Assert.IsTrue(shape.LineValid(new Vector2(-1, -1), new Vector2(-1, 1)));
+        Assert.IsTrue(shape.LineValid(new Vector2(1, -1), new Vector2(1, 1)));
+        
+        // Test with lines that intersect the inner shape.
+        Assert.IsFalse(shape.LineValid(new Vector2(-2, -2), new Vector2(2, 2)));
+        Assert.IsFalse(shape.LineValid(new Vector2(-2, 2), new Vector2(2, -2)));
+        
+        // Test with lines inside the inner shape.
+        Assert.IsFalse(shape.LineValid(new Vector2(-1, -1), new Vector2(1, 1)));
+        Assert.IsFalse(shape.LineValid(new Vector2(-1, 1), new Vector2(-1, 1)));
+        
+        // Test with intersections.
+        Assert.IsFalse(shape.LineValid(new Vector2(-3, -1), new Vector2(-1, -1)));
+    }
+
+    /// <summary>
     /// Tests the TryAddShape method.
     /// </summary>
     [Test]
