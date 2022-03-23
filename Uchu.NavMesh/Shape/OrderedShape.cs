@@ -6,6 +6,15 @@ namespace Uchu.NavMesh.Shape;
 public class OrderedShape
 {
     /// <summary>
+    /// Result for a line intersection test.
+    /// </summary>
+    public enum LineIntersectionResult {
+        LineIntersects,
+        NoLineIntersects,
+        PartOfShape,
+    }
+    
+    /// <summary>
     /// Points of the ordered shape.
     /// </summary>
     public List<Vector2> Points { get; set; } = new List<Vector2>();
@@ -151,21 +160,22 @@ public class OrderedShape
     }
 
     /// <summary>
-    /// Returns if a line is valid for the shape. A line is considered valid if 
+    /// Returns if the given line intersects the shape.
+    /// Inner shapes are not checked.
     /// </summary>
     /// <param name="start">Start point of the line.</param>
     /// <param name="end">End point of the line.</param>
-    /// <returns>Whether the line is valid.</returns>
-    public bool LineValid(Vector2 start, Vector2 end)
+    /// <returns>Whether the line intersects the shape.</returns>
+    public LineIntersectionResult LineIntersects(Vector2 start, Vector2 end)
     {
-        // Return false if at least 1 line intersects.
+        // Return true if at least 1 line intersects.
         var lineDelta1 = end - start;
         for (var i = 0; i < this.Points.Count; i++)
         {
             // Get the start and end. Ignore if the start or end of the line match the start or end of the parameters.
             var currentPoint = this.Points[i];
             var lastPoint = this.Points[i == 0 ? this.Points.Count - 1 : (i - 1)];
-            if ((currentPoint == start && lastPoint == end) || (lastPoint == start && currentPoint == end)) return true;
+            if ((currentPoint == start && lastPoint == end) || (lastPoint == start && currentPoint == end)) return LineIntersectionResult.PartOfShape;
             if (currentPoint == start || currentPoint == end) continue;
             if (lastPoint == start || lastPoint == end) continue;
 
@@ -175,8 +185,27 @@ public class OrderedShape
             var coefficient1 = Cross(currentPoint - start, lineDelta1) / mainCross;
             var coefficient2 = Cross(currentPoint - start, lineDelta2) / mainCross;
             if (coefficient1 >= 0 && coefficient1 <= 1 && coefficient2 >= 0 && coefficient2 <= 1)
-                return false;
+                return LineIntersectionResult.LineIntersects;
         }
+
+        // Return false (doesn't intersect).
+        return LineIntersectionResult.NoLineIntersects;
+    }
+
+    /// <summary>
+    /// Returns if a line is valid for the shape. A line is considered valid if 
+    /// </summary>
+    /// <param name="start">Start point of the line.</param>
+    /// <param name="end">End point of the line.</param>
+    /// <returns>Whether the line is valid.</returns>
+    public bool LineValid(Vector2 start, Vector2 end)
+    {
+        // Return false if at least 1 line intersects.
+        var lineIntersectResult = this.LineIntersects(start, end);
+        if (lineIntersectResult == LineIntersectionResult.PartOfShape)
+            return true;
+        if (lineIntersectResult == LineIntersectionResult.LineIntersects)
+            return false;
         
         // Return false if the middle of the line is not in the shape.
         if (!this.PointInShape(new Vector2(start.X + ((end.X - start.X) / 2), start.Y + ((end.Y - start.Y) / 2))))
