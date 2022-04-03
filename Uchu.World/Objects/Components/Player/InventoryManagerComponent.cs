@@ -84,7 +84,7 @@ namespace Uchu.World
                     .Distinct();
                 
                 // Load all the already owned items of the player
-                foreach (var inventoryType in inventoryTypesToCreate)
+                foreach (var inventoryType in inventoryTypesToCreate.Where(inventoryType => inventoryType != InventoryType.VendorBuyback))
                 {
                     
                     Logger.Debug($"Loading {inventoryType} inventory.");
