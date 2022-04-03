@@ -56,6 +56,12 @@ namespace Uchu.World
         /// All the items located in all inventories
         /// </summary>
         public Item[] Items => _inventories.Values.SelectMany(i => i.Items).ToArray();
+
+        /// <summary>
+        /// All the items located in all inventories except for those sold back to the vendor
+        /// </summary>
+        public Item[] UnsoldItems => _inventories.Values.Where(inventory => inventory.InventoryType != InventoryType.VendorBuyback)
+            .SelectMany(i => i.Items).ToArray();
         #endregion properties
 
         #region constructors
