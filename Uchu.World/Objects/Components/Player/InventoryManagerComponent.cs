@@ -129,7 +129,7 @@ namespace Uchu.World
         public async Task SaveAsync(UchuContext context)
         {
             if (!this._loaded) return;
-            var itemsToSave = Items;
+            var itemsToSave = UnsoldItems;
 
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Items)
@@ -148,7 +148,6 @@ namespace Uchu.World
             {
                 var savedItem = character.Items.FirstOrDefault(i => i.Id == itemToSave.Id);
                 var inventoryType = itemToSave.Inventory?.InventoryType ?? InventoryType.None;
-                if (inventoryType == InventoryType.VendorBuyback) continue;
                 if (savedItem == default)
                 {
                     character.Items.Add(new InventoryItem
