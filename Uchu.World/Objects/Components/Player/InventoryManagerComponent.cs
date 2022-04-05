@@ -56,6 +56,12 @@ namespace Uchu.World
         /// All the items located in all inventories
         /// </summary>
         public Item[] Items => _inventories.Values.SelectMany(i => i.Items).ToArray();
+
+        /// <summary>
+        /// All the items located in all inventories except for those sold back to the vendor
+        /// </summary>
+        public Item[] UnsoldItems => _inventories.Values.Where(inventory => inventory.InventoryType != InventoryType.VendorBuyback)
+            .SelectMany(i => i.Items).ToArray();
         #endregion properties
 
         #region constructors
@@ -84,7 +90,7 @@ namespace Uchu.World
                     .Distinct();
                 
                 // Load all the already owned items of the player
-                foreach (var inventoryType in inventoryTypesToCreate)
+                foreach (var inventoryType in inventoryTypesToCreate.Where(inventoryType => inventoryType != InventoryType.VendorBuyback))
                 {
                     
                     Logger.Debug($"Loading {inventoryType} inventory.");
@@ -123,7 +129,7 @@ namespace Uchu.World
         public async Task SaveAsync(UchuContext context)
         {
             if (!this._loaded) return;
-            var itemsToSave = Items;
+            var itemsToSave = UnsoldItems;
 
             var character = await context.Characters.Where(c => c.Id == GameObject.Id)
                 .Include(c => c.Items)
@@ -140,7 +146,8 @@ namespace Uchu.World
             // Update existing items and add new items
             foreach (var itemToSave in itemsToSave)
             {
-                var savedItem = character.Items.FirstOrDefault(i => i.Id == itemToSave.Id); 
+                var savedItem = character.Items.FirstOrDefault(i => i.Id == itemToSave.Id);
+                var inventoryType = itemToSave.Inventory?.InventoryType ?? InventoryType.None;
                 if (savedItem == default)
                 {
                     character.Items.Add(new InventoryItem
@@ -151,7 +158,7 @@ namespace Uchu.World
                         Count = itemToSave.Count,
                         IsBound = itemToSave.IsBound,
                         IsEquipped = itemToSave.IsEquipped,
-                        InventoryType = (int) (itemToSave.Inventory?.InventoryType ?? InventoryType.None),
+                        InventoryType = (int) inventoryType,
                         ExtraInfo = itemToSave.Settings.ToString(),
                         ParentId = itemToSave.RootItem?.Id ?? ObjectId.Invalid
                     });
@@ -162,7 +169,7 @@ namespace Uchu.World
                     savedItem.Count = itemToSave.Count;
                     savedItem.IsBound = itemToSave.IsBound;
                     savedItem.IsEquipped = itemToSave.IsEquipped;
-                    savedItem.InventoryType = (int) (itemToSave.Inventory?.InventoryType ?? InventoryType.None);
+                    savedItem.InventoryType = (int) inventoryType;
                     savedItem.ExtraInfo = itemToSave.Settings.ToString();
                     savedItem.ParentId = itemToSave.RootItem?.Id ?? ObjectId.Invalid;
                 }

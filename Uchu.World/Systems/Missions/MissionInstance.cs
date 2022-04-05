@@ -467,7 +467,7 @@ namespace Uchu.World.Systems.Missions
             if (!Player.TryGetComponent<InventoryManagerComponent>(out var inventoryManagerComponent))
                 return;
             
-            var items = inventoryManagerComponent.Items;
+            var items = inventoryManagerComponent.UnsoldItems;
             
             foreach (var task in Tasks.OfType<ObtainItemTask>())
             {
