@@ -17,6 +17,8 @@ using Uchu.World.Client;
 using Uchu.World.Filters;
 using Uchu.World.Scripting.Native;
 using Uchu.World.Social;
+using Uchu.World.Objects;
+using System.Threading;
 
 namespace Uchu.World.Handlers.Commands
 {
@@ -242,6 +244,25 @@ namespace Uchu.World.Handlers.Commands
         public void Dab(string[] arguments, Player player)
         {
             player.Animate("cute-spin-exit");
+        }
+
+        bool toggleSpeed = false;
+        [CommandHandler(Signature = "speed", Help = "Toggles speed boost", GameMasterLevel = GameMasterLevel.Mythran)]
+        public async void Speed(string[] arguments, Player player)
+        {
+            var skill = player.GetComponent<SkillComponent>();
+
+            if (!toggleSpeed)
+                toggleSpeed = true;
+            else
+                toggleSpeed = false;
+
+            while (toggleSpeed)
+            {
+                await skill.CalculateSkillAsync(126, player);
+                //await skill.CalculateSkillAsync(927, player);
+                Thread.Sleep(4000);
+            }
         }
 
         [CommandHandler(Signature = "fly", Help = "Change jetpack state", GameMasterLevel = GameMasterLevel.Mythran)]
