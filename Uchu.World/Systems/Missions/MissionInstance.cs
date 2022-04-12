@@ -236,10 +236,10 @@ namespace Uchu.World.Systems.Missions
         public List<MissionTaskInstance> Tasks { get; private set; }
         
         /// <summary>
-        /// Checks if this mission is completed by checking if all sub-tasks are completed
+        /// Checks if this mission is completed by checking if all sub-tasks are completed or the state is completed
         /// </summary>
         /// <returns><c>true</c> if completed, <c>false</c> otherwise</returns>
-        public bool Completed => Tasks.All(t => t.Completed);
+        public bool Completed => State == MissionState.Completed || Tasks.All(t => t.Completed);
         
         /// <summary>
         /// Checks if this mission is can be repeated and the cooldown time is satisfied.
