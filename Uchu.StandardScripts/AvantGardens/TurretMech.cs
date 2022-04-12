@@ -30,6 +30,7 @@ namespace Uchu.StandardScripts.AvantGardens
                 Construct(quickBuild);
 
                 // Destroy the turret after 20 seconds.
+                /*
                 Task.Run(async () =>
                 {
                     await Task.Delay(20000);
@@ -43,6 +44,7 @@ namespace Uchu.StandardScripts.AvantGardens
                     });
                     Destroy(quickBuild);
                 });
+                */
             });
         }
     }

@@ -40,7 +40,7 @@ namespace Uchu.StandardScripts.Base
         {
             // Listen to the station being built.
             var quickBuildComponent = gameObject.AddComponent<QuickBuildComponent>();
-            quickBuildComponent.TimeToSmash = SmashTime;
+            quickBuildComponent.ResetTime = SmashTime;
             Listen(quickBuildComponent.OnStateChange, (state) =>
             {
                 if (state != RebuildState.Completed) return;

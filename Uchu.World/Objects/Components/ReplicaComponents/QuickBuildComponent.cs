@@ -20,7 +20,6 @@ namespace Uchu.World
     {
         private float _completeTime;
         private int _imaginationCost;
-        private float _resetTime;
 
         private PauseTimer _timer;
         private Timer _imaginationTimer;
@@ -45,7 +44,7 @@ namespace Uchu.World
 
         public bool Enabled { get; set; } = true;
         public bool ConnectedToSpawner { get; private set; }
-
+        public float ResetTime { get; set; }
         public float TimeToSmash { get; set; }
 
         public float TimeSinceStart => (float) ((DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime) / 1000d);
@@ -107,7 +106,7 @@ namespace Uchu.World
                 _completeTime = clientComponent.Completetime ?? _imaginationCost;
                 
                 TimeToSmash = clientComponent.Timebeforesmash ?? 0;
-                _resetTime = clientComponent.Resettime ?? 0;
+                ResetTime = clientComponent.Resettime ?? 0;
 
                 //if (!GameObject.Settings.TryGetValue("spawnActivator", out var spawnActivator) ||
                 //    !(bool) spawnActivator) return;
@@ -144,7 +143,7 @@ namespace Uchu.World
                         // Sometimes the spawners are constructed after this quick build game object
                         Listen(Zone.OnObject, @object =>
                         {
-                            if (!(@object is SpawnerNetwork gameObject))
+                            if (@object is not SpawnerNetwork gameObject)
                                 return;
                             TryConnectSpawner(gameObject, spawnerName);
                         });
@@ -217,7 +216,7 @@ namespace Uchu.World
             Activator.Layer = StandardLayer.Hidden;
             
             // Sync the respawn time and the reset time between the two components
-            spawner.RespawnTime = (uint) (_resetTime + TimeToSmash) * 1000;
+            spawner.RespawnTime = (uint) (ResetTime + TimeToSmash) * 1000;
             
             Listen(spawner.OnRespawnInitiated, Show);
             Listen(spawner.OnRespawnTimeCompleted, Hide);
@@ -404,7 +403,7 @@ namespace Uchu.World
             var timer = new Timer
             {
                 AutoReset = false,
-                Interval = _resetTime * 1000
+                Interval = ResetTime * 1000
             };
 
             timer.Elapsed += (sender, args) =>
@@ -439,7 +438,7 @@ namespace Uchu.World
                 Associate = GameObject,
                 IsSuccess = true,
                 Player = player,
-                Duration = _resetTime
+                Duration = ResetTime
             });
             
             State = RebuildState.Completed;
@@ -466,7 +465,7 @@ namespace Uchu.World
                 var timer = new Timer
                 {
                     AutoReset = false,
-                    Interval = TimeToSmash * 1000
+                    Interval = ResetTime * 1000
                 };
                 timer.Elapsed += (sender, args) => { ResetBuild(player); };
 

@@ -17,15 +17,20 @@ namespace Uchu.StandardScripts.General
         {
             Listen(gameObject.OnStart, () =>
             {
-                //engie turret + rebuild mechs have a smash time of 10 so they'll self destruct before the timer happens, ?????????
-                float killTime = gameObject.TryGetComponent<LuaScriptComponent>(out var luaScriptComponent) && luaScriptComponent.ScriptName.ToLower().EndsWith("l_ag_turret.lua") ? 20 : 30;
+                float killTime = gameObject.TryGetComponent<LuaScriptComponent>(out var luaScriptComponent) 
+                                 && luaScriptComponent.ScriptName.ToLower().EndsWith("l_ag_turret.lua") ? 20 : 30;
+                if (gameObject.TryGetComponent<QuickBuildComponent>(out var quickBuildComponent))
+                {
+                    //why?
+                    quickBuildComponent.ResetTime = killTime;
+                }
                 AddTimerWithCancel(killTime, "TickTime");
                 var quickBuild = gameObject.GetComponent<QuickBuildComponent>();
                 Listen(quickBuild.OnStateChange, state =>
                 {
                     if (state == RebuildState.Completed)
                     {
-                        CancelAllTimers();
+                        //CancelAllTimers();
                         AddTimerWithCancel(killTime, "TickTime");
                     }
                     if (state == RebuildState.Building)
@@ -41,10 +46,13 @@ namespace Uchu.StandardScripts.General
         }
         public override void OnTimerDone(string timerName)
         {
-            if (timerName == "TickTime")
+            if (timerName != "TickTime") return;
+            Zone.BroadcastMessage(new DieMessage
             {
-                GameObject.GetComponent<DestructibleComponent>().SmashAsync(GameObject);
-            }
+                Associate = GameObject,
+                SpawnLoot = false,
+            });
+            Destroy(GameObject);
         }
     }
 }
