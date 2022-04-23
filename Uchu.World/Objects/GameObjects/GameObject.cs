@@ -120,6 +120,8 @@ namespace Uchu.World
 
         public ReplicaComponent[] ReplicaComponents => Components.OfType<ReplicaComponent>().ToArray();
 
+        public int TotalReplicaComponents => Components.OfType<ReplicaComponent>().Count();
+
         public Player[] Viewers => Zone.Players.Where(p => p.Perspective.TryGetNetworkId(this, out _)).ToArray();
 
         #endregion
@@ -353,7 +355,17 @@ namespace Uchu.World
             result = GetComponents<T>();
             return result.Length != default;
         }
+        
+        public bool HasComponent(Type type)
+        {
+            return GetComponent(type) != default;
+        }
 
+        public bool HasComponent<T>() where T : Component
+        {
+            return GetComponent<T>() != default;
+        }
+        
         public void RemoveComponent(Type type)
         {
             var comp = GetComponent(type);

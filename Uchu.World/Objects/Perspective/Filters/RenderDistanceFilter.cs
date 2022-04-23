@@ -42,7 +42,13 @@ namespace Uchu.World.Filters
         /// <returns>Whether the object passes the render distance check.</returns>
         public bool View(GameObject gameObject)
         {
-            if (gameObject?.Transform == default)
+            if (gameObject == default)
+                return false;
+
+            if (gameObject.TotalReplicaComponents == 3 && gameObject.HasComponent<SimplePhysicsComponent>() && gameObject.HasComponent<RendererComponent>() && gameObject.HasComponent<TriggerComponent>())
+                return true;
+            
+            if (gameObject.Transform == default)
                 return false;
 
             if (gameObject is Player)
