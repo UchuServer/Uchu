@@ -54,7 +54,7 @@ PLATFORMS = [
 ]
 ```
 
-It is recommended to do the same for [like UchuTool](https://github.com/UchuServer/UchuTool)
+It is recommended to do the same for [UchuTool](https://github.com/UchuServer/UchuTool)
 as well. Be aware that the [code for downloading releases](https://github.com/UchuServer/UchuTool/blob/master/Uchu.Tool/Action/Update.cs)
 may need to be updated depending on how it ends up attempting to find a version to download.
 At the time of writing, anything beyond 64-bit x86 (commonly known as x64) is untested,
