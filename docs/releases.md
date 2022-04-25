@@ -7,13 +7,13 @@ any platform. However, while the releases built on macOS/Linux for Windows work
 as expected, the releases built on Windows for macOS/Linux require changing
 file permissions to run. This is because Linux file permissions don't exist
 on Windows and default to not being executable on macOS and Linux. **Publishing
-macOS and Linux releases built on Windows are strongly discouraged.**
+macOS and Linux releases built on Windows is strongly discouraged.**
 If you are on Windows, a Linux virtual machine, such as [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/about)
 or [Oracle VirtualBox](https://www.virtualbox.org/).
 
 ## Setup
 The only supported way to create releases for automation tools [like UchuTool](https://github.com/UchuServer/UchuTool)
-using the [`publish.py`](../publish.py) script. In order to use it, 2 programs
+is using the [`publish.py`](../publish.py) script. In order to use it, 2 programs
 need to be installed:
 1. [Microsoft .NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) for building releases.
 2. [Python 3](https://www.python.org/downloads/) for running the helper script.
@@ -61,4 +61,4 @@ At the time of writing, anything beyond 64-bit x86 (commonly known as x64) is un
 and releases specifically for Windows/macOS/Linux versions are untested.
 
 If you want to add new runtimes, submit a pull request. Make sure to test the
-release on the intended system and why this new release is useful.
+release on the intended system and include why this new release is useful.
