@@ -9,7 +9,8 @@ file permissions to run. This is because Linux file permissions don't exist
 on Windows and default to not being executable on macOS and Linux. **Publishing
 macOS and Linux releases built on Windows is strongly discouraged.**
 If you are on Windows, a Linux virtual machine, such as [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/about)
-or [Oracle VirtualBox](https://www.virtualbox.org/).
+or [Oracle VirtualBox](https://www.virtualbox.org/), is strongly recommended
+for creating releases.
 
 ## Setup
 The only supported way to create releases for automation tools [like UchuTool](https://github.com/UchuServer/UchuTool)
