@@ -187,20 +187,74 @@ namespace Uchu.World.Handlers.Commands
             return "You smashed yourself";
         }
         
+        List<uint> stats = new List<uint>();
         [CommandHandler(Signature = "buffme", Help = "Boost stats for testing", GameMasterLevel = GameMasterLevel.Admin)]
         public string Buffme(string[] arguments, Player player)
         {
             DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
 
-            comp.MaxArmor = 999;
-            comp.MaxHealth = 999;
-            comp.Armor = 999;
-            comp.Health = 999;
+            if (arguments.Length == 0) return "/buffme <state(on/off)>";
+            
+            var state = false;
+        
+            if (comp.MaxHealth != 999) {
+                stats.Insert(0, comp.MaxHealth);
+                stats.Insert(1, comp.MaxArmor); 
+                stats.Insert(2, comp.MaxImagination); 
+                stats.Insert(3, comp.Health); 
+                stats.Insert(4, comp.Armor); 
+                stats.Insert(5, comp.Imagination);
+            }
 
-            comp.MaxImagination = 999;
-            comp.Imagination = 999;
+            switch (arguments[0].ToLower())
+            {
+                case "true":
+                case "on":
+                    state = true;
+                    break;
+                case "false":
+                case "off":
+                    break;
+                default:
+                    return "Invalid <state(on/off)>";
+            }
 
-            return "Buffed";
+            if (state)
+            {
+                comp.MaxHealth = 999;
+                comp.MaxArmor = 999;
+                comp.MaxImagination = 999;
+                comp.Health = 999;
+                comp.Armor = 999;
+                comp.Imagination = 999;
+            }
+            else
+            {
+                comp.MaxHealth = stats[0];
+                comp.MaxArmor = stats[1];
+                comp.MaxImagination = stats[2];
+                comp.Health = stats[3];
+                comp.Armor = stats[4];
+                comp.Imagination = stats[5]; 
+            }
+
+            return $"Set buff state to: {state}";
+        }
+
+        [CommandHandler(Signature = "unbuff", Help = "Remove buff stats", GameMasterLevel = GameMasterLevel.Admin)]
+        public string Unbuff(string[] arguments, Player player)
+        {
+            DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
+
+            comp.MaxArmor = 1;
+            comp.MaxHealth = 1;
+            comp.Armor = 1;
+            comp.Health = 1;
+
+            comp.MaxImagination = 1;
+            comp.Imagination = 1;
+
+            return "Unbuffed";
         }
 
         [CommandHandler(Signature = "freecam", Help = "Fly around in a free camera. Initial positon is at 0, 0, 0.", GameMasterLevel = GameMasterLevel.Admin)]
