@@ -241,22 +241,6 @@ namespace Uchu.World.Handlers.Commands
             return $"Set buff state to: {state}";
         }
 
-        [CommandHandler(Signature = "unbuff", Help = "Remove buff stats", GameMasterLevel = GameMasterLevel.Admin)]
-        public string Unbuff(string[] arguments, Player player)
-        {
-            DestroyableComponent comp = player.GetComponent<DestroyableComponent>();
-
-            comp.MaxArmor = 1;
-            comp.MaxHealth = 1;
-            comp.Armor = 1;
-            comp.Health = 1;
-
-            comp.MaxImagination = 1;
-            comp.Imagination = 1;
-
-            return "Unbuffed";
-        }
-
         [CommandHandler(Signature = "freecam", Help = "Fly around in a free camera. Initial positon is at 0, 0, 0.", GameMasterLevel = GameMasterLevel.Admin)]
         public string Freecam(string[] arguments, Player player)
         {
