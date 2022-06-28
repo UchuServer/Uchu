@@ -85,6 +85,36 @@ namespace Uchu.Core.Handlers.Commands
             return $"\nSuccessfully added user: {name}!";
         }
 
+        [CommandHandler(Signature = "resetpassword", Help = "Reset a user's password")]
+        public static string ResetPassword(string[] arguments)
+        {
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments),
+                    "arguments cannot be null");
+
+            if (arguments.Length != 1)
+                return "resetpassword <username>";
+
+            var username = arguments[0];
+
+            using var ctx = new UchuContext();
+            var user = ctx.Users.FirstOrDefault(u => string.Equals(u.Username.ToUpper(), username.ToUpper()));
+
+            if (user == null)
+                return "No user with that username exists";
+
+            Console.Write("New password: ");
+            var password = GetPassword();
+
+            if (password.Length > 42)
+                return "\nPasswords with more than 42 characters are not supported";
+
+            user.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+            ctx.SaveChanges();
+
+            return $"\nSuccessfully reset password for user: {user.Username}!";
+        }
+
         [CommandHandler(Signature = "removeuser", Help = "Remove a user")]
         public static string RemoveUser(string[] arguments)
         {
