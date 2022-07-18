@@ -16,6 +16,8 @@ using System.Threading.Tasks;
 using InfectedRose.Luz;
 using Microsoft.Scripting.Utils;
 using RakDotNet.IO;
+using Uchu.Api;
+using Uchu.Api.Models;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.Physics;
@@ -53,6 +55,8 @@ namespace Uchu.World
 
         private async Task LoadAsync()
         {
+            UchuServer.Api.RegisterCommandCollection<RacingMatchCommands>(this);
+
             _path = Zone.ZoneInfo.LuzFile.PathData.FirstOrDefault(path => path.PathName == "MainPath");
 
             // In live this was done with zone specific scripts
@@ -145,6 +149,51 @@ namespace Uchu.World
             }
         }
 
+        private void AddExpectedPlayer(ulong objectId) {
+            Logger.Information("PreLoad Player " + objectId);
+
+            var fakePlayer = GameObject.Instantiate<Player>(
+                Zone,
+                position: Zone.SpawnPosition,
+                rotation: Zone.SpawnRotation,
+                scale: 1,
+                objectId: new ObjectId(objectId),
+                lot: 1
+            );
+
+            if (!IsPlayerRegistered(fakePlayer)) {
+                Players.Add(new RacingPlayerInfo
+                {
+                    Player = fakePlayer,
+                    PlayerLoaded = false,
+                    PlayerIndex = (uint)Players.Count + 1,
+                    NoSmashOnReload = true,
+                    RaceTime = new Stopwatch(),
+                    LapTime = new Stopwatch(),
+                    BestLapTime = default,
+                    ResetTimer = new SimpleTimer(6000),
+                });
+            }
+        }
+
+        private bool IsPlayerRegistered(Player player) {
+            foreach (var info in Players) {
+                if (info.Player.Id == player.Id)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool AllRegisteredPlayersReady() {
+            foreach (var info in Players) {
+                if (!info.PlayerLoaded)
+                    return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// This runs when the player loads into the world, it registers the player
         /// </summary>
@@ -166,24 +215,30 @@ namespace Uchu.World
             if (player.TryGetComponent<MissionInventoryComponent>(out var missionInventoryComponent))
                 await missionInventoryComponent.RacingEnterWorld(GameObject.Zone.ZoneId);
 
-            // Register player
-            RacingPlayerInfo info = new RacingPlayerInfo
-            {
-                Player = player,
-                PlayerLoaded = true,
-                PlayerIndex = (uint)Players.Count + 1,
-                NoSmashOnReload = true,
-                RaceTime = new Stopwatch(),
-                LapTime = new Stopwatch(),
-                BestLapTime = default,
-                ResetTimer = new SimpleTimer(6000),
-            };
+            RacingPlayerInfo playerInfo;
 
-            Listen(info.ResetTimer.OnElapsed, () => ResetPlayer(player));
-
-            Players.Add(info);
+            if (IsPlayerRegistered(player)) {
+                playerInfo = Players.Find(info => info.Player.Id == player.Id);
+                playerInfo.Player = player;
+                playerInfo.PlayerLoaded = true;
+            } else {
+                playerInfo = new RacingPlayerInfo
+                {
+                    Player = player,
+                    PlayerLoaded = true,
+                    PlayerIndex = (uint)Players.Count + 1,
+                    NoSmashOnReload = true,
+                    RaceTime = new Stopwatch(),
+                    LapTime = new Stopwatch(),
+                    BestLapTime = default,
+                    ResetTimer = new SimpleTimer(6000),
+                };
+                Players.Add(playerInfo);
+            }
 
             LoadPlayerCar(player);
+
+            Listen(playerInfo.ResetTimer.OnElapsed, () => ResetPlayer(player));
 
             Listen(player.OnPositionUpdate, (position, rotation) =>
             {
@@ -200,7 +255,16 @@ namespace Uchu.World
                 OnPlayerRequestDie(player);
             });
 
-            Zone.Schedule(InitRace, 10000);
+            // Wait for players to join
+            // If all players from the queue are loaded wait 
+            // another 10 seconds max
+            // NOTE: This code schedules 'InitRace' multiple times
+            // but 'InitRace' will only do it's thing once. There is 
+            // room for improvement here...
+            if (AllRegisteredPlayersReady())
+                Zone.Schedule(InitRace, 10000);
+            else 
+                Zone.Schedule(InitRace, 30000);
         }
 
         /// <summary>
@@ -294,22 +358,20 @@ namespace Uchu.World
                 VehicleId = car,
             });
 
-            // Register car for player
-            for (var i = 0; i < Players.Count; i++)
-            {
-                RacingPlayerInfo info = Players[i];
-                if (info.Player == player)
-                {
-                    info.Vehicle = car;
-                    Players[i] = info;
-                }
-            }
+            var playerInfo = Players.Find(info => info.Player.Id == player.Id);
+            playerInfo.Vehicle = car;
         }
 
         private void InitRace()
         {
             if (_racingStatus != RacingStatus.None)
                 return;
+
+            // Remove all players that aren't loaded yet
+            for (var i = Players.Count - 1; i > 0; i--) {
+                if (!Players[i].PlayerLoaded)
+                    Players.RemoveAt(i);
+            }
 
             _racingStatus = RacingStatus.Loaded;
             this.Zone.Server.SetMaxPlayerCount((uint)Players.Count);
@@ -421,6 +483,9 @@ namespace Uchu.World
         private void OnRacingPlayerInfoResetFinished(Player player)
         {
             var playerInfoIndex = Players.FindIndex(x => x.Player == player);
+            if (playerInfoIndex < 0 || playerInfoIndex >= Players.Count)
+                return;
+
             var playerInfo = Players[playerInfoIndex];
             var car = playerInfo.Vehicle;
 
@@ -768,5 +833,30 @@ namespace Uchu.World
             public Stopwatch RaceTime { get; set; }
             public SimpleTimer ResetTimer { get; set; }
         };
+
+        public class RacingMatchCommands {
+
+            RacingControlComponent RacingControl;
+
+            public RacingMatchCommands(RacingControlComponent racingControl) {
+                this.RacingControl = racingControl;
+            }
+
+            [ApiCommand("match/addMatchPlayer")]
+            public object AddMatchPlayer(string id)
+            {
+                var response = new BaseResponse();
+
+                if (ulong.TryParse(id, out var objectId))
+                {
+                    RacingControl.AddExpectedPlayer(objectId);
+                    response.Success = true;
+                    return response;
+                }
+
+                response.FailedReason = "invalid id";
+                return response;
+            }
+        }
     }
 }

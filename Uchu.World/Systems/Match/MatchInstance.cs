@@ -128,6 +128,14 @@ namespace Uchu.World.Systems.Match
                     zoneLoadedTimer.Stop();
                     zoneLoadedTimer.Dispose();
 
+                    // Tell server what players to expect
+                    foreach (var player in _players)
+                    {
+                        var response = await zone.Server.Api.RunCommandAsync<BaseResponse>(
+                            allocatedInstance.ApiPort, $"match/addMatchPlayer?id={player.Id}")
+                        .ConfigureAwait(false);
+                    }
+
                     // Start the match.
                     foreach (var player in _players)
                     {
