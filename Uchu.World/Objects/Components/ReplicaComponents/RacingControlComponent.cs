@@ -115,6 +115,8 @@ namespace Uchu.World
                 Listen(player.OnRacingPlayerInfoResetFinished, () => OnRacingPlayerInfoResetFinished(player));
                 Listen(player.OnAcknowledgePossession, vehicle => OnAcknowledgePossession(player, vehicle));
             });
+
+            Listen(Zone.OnPlayerLeave, player => RemoveRacingPlayer(player));
         }
 
         /// <summary>
@@ -209,6 +211,16 @@ namespace Uchu.World
                 return;
             }
 
+            // Set respawn point so when the players leave unexpectedly
+            // and relogin they don't spawn in a racing world
+            if (player.TryGetComponent<CharacterComponent>(out var characterComponent))
+                {
+                    characterComponent.LastZone = _returnData.ZoneId;
+                    characterComponent.SpawnPosition = _returnData.Position;
+                    characterComponent.SpawnRotation = _returnData.Rotation;
+                }
+            await player.GetComponent<SaveComponent>().SaveAsync();
+
             // Disable render distance filter
             player.Perspective.GetFilter<RenderDistanceFilter>().Distance = 10000;
 
@@ -273,11 +285,19 @@ namespace Uchu.World
         /// <param name="player"></param>
         private async Task SendPlayerToMainWorldAsync(Player player)
         {
-            Players.RemoveAll(info => info.Player == player);
             await player.SendToWorldAsync(_returnData.ZoneId, _returnData.Position, _returnData.Rotation);
+            RemoveRacingPlayer(player);
+        }
+
+        private void RemoveRacingPlayer(Player player)
+        {
+            Players.RemoveAll(info => info.Player == player);
 
             if (Players.Count == 0)
+            {
                 Zone.Schedule(async () => await this.GameObject.UchuServer.StopAsync(), 10000);
+                Logger.Information("No players left in racing world. Closing instance");
+            }
         }
 
         /// <summary>
@@ -483,8 +503,11 @@ namespace Uchu.World
         private void OnRacingPlayerInfoResetFinished(Player player)
         {
             var playerInfoIndex = Players.FindIndex(x => x.Player == player);
-            if (playerInfoIndex < 0 || playerInfoIndex >= Players.Count)
+
+            if (playerInfoIndex < 0 || playerInfoIndex >= Players.Count) {
+                Logger.Warning("Invalid playerInfoIndex");
                 return;
+            }
 
             var playerInfo = Players[playerInfoIndex];
             var car = playerInfo.Vehicle;
