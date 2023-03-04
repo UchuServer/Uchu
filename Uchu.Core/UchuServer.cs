@@ -210,7 +210,7 @@ namespace Uchu.Core
             if (Config.Networking?.Certificate != default && File.Exists(certificateFilePath))
             {
                 var cert = new X509Certificate2(certificateFilePath);
-                Logger.Information($"PRIVATE KEY: {cert.HasPrivateKey} {cert.PrivateKey}");
+                Logger.Information($"Using certificate: {certificateFilePath}");
                 Certificate = cert;
                 RakNetServer = new TcpUdpServer(Port, "3.25 ND1", Certificate, 150);
             }
