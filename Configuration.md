@@ -31,6 +31,8 @@ If you want your server to be publicly accessible (not just from your local PC),
 _`<GamePlay>`_  
 `<PathFinding>` determines if enemies should have movement AI and follow players when attacking them. `<AiWander>` sets whether enemies should also wander around randomly while out of combat. At the moment, Uchu's pathfinding implementation is quite slow, so you might experience issues with it enabled.
 
+Note: if you run Uchu on Linux, you need to have `libgdiplus` installed to use this functionality.
+
 ## API ports
 _`<Api>`_  
 By default, Uchu will have its API available on ports 10000 and up. If you want to use different ports, specify the port to start from in `<Port>`.
