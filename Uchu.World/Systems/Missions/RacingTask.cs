@@ -20,7 +20,7 @@ namespace Uchu.World.Systems.Missions
             if (!Targets.Contains(zoneId))
                 return;
 
-            int minPlayerCount = 0; // TODO: 3;
+            int minPlayerCount = 3;
             switch ((RacingTaskType)Parameters[0])
             {
                 case RacingTaskType.Rank:
