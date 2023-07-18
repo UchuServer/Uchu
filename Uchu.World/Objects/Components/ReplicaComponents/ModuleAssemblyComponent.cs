@@ -1,33 +1,39 @@
-using RakDotNet.IO;
-using Uchu.Core;
 
 namespace Uchu.World
 {
-    public class ModuleAssemblyComponent : ReplicaComponent
+    public class ModuleAssemblyComponent : StructReplicaComponent<ModuleAssemblyConstruction, ModuleAssemblySerialization>
     {
         public override ComponentId Id => ComponentId.ModuleAssemblyComponent;
 
-        private string GetAssemblyData() {
-            return GameObject.Settings.ToString();
+        private string _parts;
+
+        public void SetAssembly(string parts)
+        {
+            this._parts = parts;
         }
 
-        public override void Construct(BitWriter writer)
+        public string GetAssembly()
         {
-            if (writer.Flag(true))
+            return this._parts;
+        }
+
+        public override ModuleAssemblyConstruction GetConstructPacket()
+        {
+            var packet = base.GetConstructPacket();
+            packet.ModuleAssemblyInfo = new ModuleAssemblyInfo
             {
-                if (writer.Flag(false)) 
-                    writer.Write((long)0); // Subkey
-
-                writer.WriteBit(false); // Use optional Parts?
-
-                var assemblyData = GetAssemblyData();
-                writer.Write((ushort) assemblyData.Length);
-                writer.WriteString(assemblyData, assemblyData.Length, true);
-            }
+                Assembly = GameObject.InvalidObject, // subkey
+                Blob = _parts,
+                UseOptionalParts = false,
+            };
+            packet.Flag = true;
+            return packet;
         }
 
-        public override void Serialize(BitWriter writer)
+        public override ModuleAssemblySerialization GetSerializePacket()
         {
+            var packet = base.GetSerializePacket();
+            return packet;
         }
     }
 }

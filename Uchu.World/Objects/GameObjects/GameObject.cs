@@ -108,7 +108,13 @@ namespace Uchu.World
 
         public Event<Player, MessageBoxRespondMessage> OnMessageBoxRespond { get; }
 
+        public Event<GameObject> OnAcknowledgePossession { get; }
+        
         public Event<Player, ChoiceBoxRespondMessage> OnChoiceBoxRespond { get; }
+
+        public Event<RequestDieMessage> OnRequestDie { get; }
+
+        public Event OnRacingPlayerInfoResetFinished { get; }
 
         #endregion
         
@@ -146,7 +152,13 @@ namespace Uchu.World
 
             OnMessageBoxRespond = new Event<Player, MessageBoxRespondMessage>();
 
+            OnAcknowledgePossession = new Event<GameObject>();
+
             OnChoiceBoxRespond = new Event<Player, ChoiceBoxRespondMessage>();
+
+            OnRequestDie = new Event<RequestDieMessage>();
+
+            OnRacingPlayerInfoResetFinished = new Event();
 
             Listen(OnStart, () =>
             {

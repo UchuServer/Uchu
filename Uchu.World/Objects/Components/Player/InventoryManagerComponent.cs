@@ -200,7 +200,7 @@ namespace Uchu.World
         {
             return _inventories.Values.Select(
                 inventory => inventory.Items.FirstOrDefault(i => i.Lot == lot)
-            ).FirstOrDefault(item => item != default);
+            ).FirstOrDefault(item => item != null);
         }
 
         /// <summary>

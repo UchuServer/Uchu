@@ -13,6 +13,21 @@ namespace Uchu.World.Handlers
         {
             var player = UchuServer.FindPlayer(connection);
             if (player?.Transform == default) return;
+
+            // Update position of possessed object & serialize it
+            var vehicle = player.GetComponent<CharacterComponent>().VehicleObject;
+            if (vehicle != null)
+            {
+                vehicle.Transform.Position = packet.Position;
+                vehicle.Transform.Rotation = packet.Rotation;
+                if (vehicle.TryGetComponent<VehiclePhysicsComponent>(out var vehiclePhysics))
+                {
+                    vehiclePhysics.LinearVelocity = packet.Velocity;
+                    vehiclePhysics.AngularVelocity = packet.AngularVelocity;
+                }
+                GameObject.Serialize(vehicle);
+            }
+
             
             // The server is a slave to the position update packets it gets from the client right now.
             player.Transform.Position = packet.Position;

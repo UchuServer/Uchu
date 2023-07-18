@@ -28,6 +28,9 @@ namespace Uchu.Core.Migrations.MySql
                     b.Property<int>("Activity")
                         .HasColumnType("int");
 
+                    b.Property<int>("BestLapTime")
+                        .HasColumnType("int");
+
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
@@ -44,6 +47,9 @@ namespace Uchu.Core.Migrations.MySql
                         .HasColumnType("int");
 
                     b.Property<int>("Week")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Wins")
                         .HasColumnType("int");
 
                     b.Property<ushort>("Zone")

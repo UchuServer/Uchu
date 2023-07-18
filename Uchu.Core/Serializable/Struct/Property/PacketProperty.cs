@@ -62,7 +62,11 @@ namespace Uchu.Core
             {
                 typeof(LegoDataDictionary), (reader, context) =>
                 {
-                    return LegoDataDictionary.FromString(reader.ReadString((int) reader.Read<uint>(), true));
+                    var length = (int) reader.Read<uint>();
+                    var legoDataDictionary = LegoDataDictionary.FromString(reader.ReadString(length, true));
+                    if (length > 0) reader.Read<ushort>(); // Trailing null bytes
+
+                    return legoDataDictionary;
                 }
             },
         };
@@ -87,6 +91,12 @@ namespace Uchu.Core
         /// Property is unused for non-arrays.
         /// </summary>
         private Type _arrayLengthPropertyType = typeof(uint);
+
+        /// <summary>
+        /// A special way of sending arrays without a lenght attribute by
+        /// having a bit after each item that indicates if the array ends
+        /// </summary>
+        private bool _arrayNoLenght = false;
 
         /// <summary>
         /// Custom property writer for the type.
@@ -162,6 +172,9 @@ namespace Uchu.Core
             {
                 this._arrayLengthPropertyType = storeLengthAs.Type;
             }
+
+            if(property.GetCustomAttribute(typeof(NoLengthAttribute)) is NoLengthAttribute noLength)
+                this._arrayNoLenght = true;
         }
 
         /// <summary>
@@ -179,7 +192,7 @@ namespace Uchu.Core
                 // Write the length if the type is defined.
                 // Some packets, like UIMessageServerToSingleClientMessage, do not send a length.
                 var valueArray = (Array) value;
-                if (this._arrayLengthPropertyType != null) {
+                if (this._arrayLengthPropertyType != null && !_arrayNoLenght) {
                     var length = Convert.ChangeType(valueArray.Length, this._arrayLengthPropertyType);
                     _bitWriterWriteMethod.MakeGenericMethod(this._arrayLengthPropertyType)
                         .Invoke(writer, new object[] { length });
@@ -188,6 +201,9 @@ namespace Uchu.Core
                 // Write the array values.
                 foreach (var subValue in valueArray)
                 {
+                    if (_arrayNoLenght)
+                        writer.WriteBit(true);
+
                     if (this._customWriter != null)
                     {
                         this._customWriter(writer, subValue);
@@ -196,6 +212,9 @@ namespace Uchu.Core
                             .Invoke(writer, new object[] { subValue });
                     }
                 }
+
+                if (_arrayNoLenght)
+                    writer.WriteBit(false);
             }
             else
             {

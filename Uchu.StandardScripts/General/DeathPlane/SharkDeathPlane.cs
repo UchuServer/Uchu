@@ -22,7 +22,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
             if (physics == default) return;
             Listen(physics.OnEnter, other =>
             {
-                if (!(other.GameObject is Player player)) return;
+                if (other.GameObject is not Player player) return;
                 var character = player.GetComponent<CharacterComponent>();
                 var missionInventoryComponent = player.GetComponent<MissionInventoryComponent>();
                 Task.Run(async () => 

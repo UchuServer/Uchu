@@ -22,11 +22,11 @@ namespace Uchu.World
         /// <summary>
         /// Called when a modular build is completed.
         /// </summary>
-        public Event<Lot[]> OnBuildFinished { get; }
+        public Event<ModularBuildCompleteEvent> OnBuildFinished { get; }
         
         protected ModularBuilderComponent()
         {
-            this.OnBuildFinished = new Event<Lot[]>();
+            this.OnBuildFinished = new Event<ModularBuildCompleteEvent>();
         }
 
         public async Task StartBuildingAsync(StartBuildingWithItemMessage message)
@@ -89,22 +89,26 @@ namespace Uchu.World
         /// <summary>
         /// When the player is done with a modular build and gets a model.
         /// </summary>
-        public async Task FinishBuilding(Lot[] models)
+        public async Task FinishBuilding(Lot[] parts)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
             // Remove all the items that were used for building this module
-            foreach (var lot in models)
+            foreach (var lot in parts)
                 await inventory.RemoveLotAsync(lot, 1, InventoryType.TemporaryModels);
 
-            await CreateNewModel(models);
+            var modelLot = await CreateNewModel(parts);
 
             // Don't give back the original model if the user made a new one.
             CurrentModel = null;
 
             // Finish the build.
             await ConfirmFinish();
-            await this.OnBuildFinished.InvokeAsync(models);
+            await this.OnBuildFinished.InvokeAsync(new ModularBuildCompleteEvent
+            {
+                model = modelLot,
+                parts = parts
+            });
         }
         
         /// <summary>
@@ -163,7 +167,7 @@ namespace Uchu.World
             IsBuilding = false;
         }
 
-        private async Task CreateNewModel(Lot[] parts)
+        private async Task<Lot> CreateNewModel(Lot[] parts)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
 
@@ -174,6 +178,8 @@ namespace Uchu.World
 
             Lot modelLot = GetModelLotForBuildMode(Mode);
             await inventory.AddLotAsync(modelLot, 1, model, InventoryType.Models);
+
+            return modelLot;
         }
 
         private async Task GetBackOldModel()
@@ -234,6 +240,11 @@ namespace Uchu.World
                 default:
                     return default;
             }
+        }
+
+        public struct ModularBuildCompleteEvent  {
+            public Lot model {get; set;}
+            public Lot[] parts {get; set;}
         }
     }
 }

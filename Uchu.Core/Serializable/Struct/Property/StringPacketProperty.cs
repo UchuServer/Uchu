@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RakDotNet.IO;
@@ -20,6 +21,11 @@ namespace Uchu.Core
         /// Whether the encoded string is "wide" (2 bytes per character).
         /// </summary>
         private bool _isWide = false;
+
+        /// <summary>
+        /// Type of the property that the string length is written.
+        /// </summary>
+        private Type _stringLengthPropertyType = typeof(uint);
         
         /// <summary>
         /// Creates the string packet property.
@@ -39,6 +45,11 @@ namespace Uchu.Core
             {
                 this._isWide = true;
             }
+            // Get the string length type.
+            if (property.GetCustomAttribute(typeof(StoreLengthAsAttribute)) is StoreLengthAsAttribute storeLengthAs)
+            {
+                this._stringLengthPropertyType = storeLengthAs.Type;
+            }
         }
 
         /// <summary>
@@ -55,7 +66,12 @@ namespace Uchu.Core
             if (length == 0)
             {
                 length = value.Length;
-                writer.Write<uint>((uint) length);
+                // var test = Convert.ChangeType(length, this._stringLengthPropertyType);
+                // TODO: do this in a way similar to the Array one instead of only handling these 2
+                if (this._stringLengthPropertyType == typeof(ushort))
+                    writer.Write<ushort>((ushort) length);
+                else
+                    writer.Write<uint>((uint) length);
             }
             writer.WriteString(value, length, this._isWide);
 

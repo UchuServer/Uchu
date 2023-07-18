@@ -33,6 +33,9 @@ namespace Uchu.Core.Migrations
                     b.Property<int>("Activity")
                         .HasColumnType("integer");
 
+                    b.Property<int>("BestLapTime")
+                        .HasColumnType("integer");
+
                     b.Property<long>("CharacterId")
                         .HasColumnType("bigint");
 
@@ -49,6 +52,9 @@ namespace Uchu.Core.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Week")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Wins")
                         .HasColumnType("integer");
 
                     b.Property<int>("Zone")

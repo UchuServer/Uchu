@@ -10,7 +10,7 @@ using Uchu.World.Client;
 
 namespace Uchu.World
 {
-    public class ScriptedActivityComponent : ReplicaComponent
+    public class ScriptedActivityComponent : StructReplicaComponent<ScriptedActivitySerialization>
     {
         private readonly Random _random;
         
@@ -20,9 +20,9 @@ namespace Uchu.World
 
         public override ComponentId Id => ComponentId.ScriptedActivityComponent;
 
-        public Activities ActivityInfo { get; private set; }
+        public Activities ActivityInfo { get; protected set; }
         
-        public ActivityRewards[] Rewards { get; private set; }
+        public ActivityRewards[] Rewards { get; protected set; }
 
         /// <summary>
         /// Creates the scripted activity component.
@@ -33,27 +33,30 @@ namespace Uchu.World
             
             Listen(OnStart, async () =>
             {
-                if (!GameObject.Settings.TryGetValue("activityID", out var id))
-                {
-                    return;
-                }
-
-                // Get the activity info.
-                var activityId = (int) id;
-                ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
-                if (ActivityInfo == default)
-                {
-                    Logger.Error($"{GameObject} has an invalid activityID: {activityId}");
-                    return;
-                }
-
-                // Get and sort the activities.
-                Rewards = ClientCache.FindAll<ActivityRewards>(activityId).ToSortedList((a, b) =>
-                {
-                    if (a.ChallengeRating != b.ChallengeRating) return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
-                    return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
-                }).ToArray();
+                if (GameObject.Settings.TryGetValue("activityID", out var id))
+                    await SetupActivityInfo((int)id);
             });
+        }
+
+        protected async Task SetupActivityInfo(int activityId)
+        {
+            // Get the activity info.
+            ActivityInfo = await ClientCache.FindAsync<Activities>(activityId);
+            if (ActivityInfo == default)
+            {
+                Logger.Error($"Invalid activityID: {activityId}");
+                return;
+            }
+
+            // Get and sort the activities.
+            Rewards = ClientCache.FindAll<ActivityRewards>(activityId).ToSortedList((a, b) =>
+            {
+                if (a.ChallengeRating != b.ChallengeRating) return (a.ChallengeRating ?? 1) - (b.ChallengeRating ?? 1);
+                return (a.ActivityRating ?? -1) - (b.ActivityRating ?? -1);
+            }).ToArray();
+
+            if (ActivityInfo.MaxTeams != null && ActivityInfo.MaxTeamSize != null)
+                this.Zone.Server.SetMaxPlayerCount((uint)ActivityInfo.MaxTeams * (uint)ActivityInfo.MaxTeamSize);
         }
 
         /// <summary>
@@ -217,30 +220,45 @@ namespace Uchu.World
         }
 
         /// <summary>
-        /// Writes the Construct information.
+        /// Creates the Construct packet for the replica component.
         /// </summary>
-        /// <param name="writer">Writer to write to.</param>
-        public override void Construct(BitWriter writer)
+        /// <returns>The Construct packet for the replica component.</returns>
+        public override ScriptedActivitySerialization GetConstructPacket()
         {
-            Serialize(writer);
+            var packet = base.GetConstructPacket();
+            packet.ActivityUserInfos = new ActivityUserInfo[Participants.Count];
+            for (var i = 0; i < this.Participants.Count; i++)
+            {
+                var participant = this.Participants[i];
+                var parameters = Parameters[i];
+                var activityUserInfo = new ActivityUserInfo
+                {
+                    User = participant,
+                    ActivityValue0 = parameters[0],
+                    ActivityValue1 = parameters[1],
+                    ActivityValue2 = parameters[2],
+                    ActivityValue3 = parameters[3],
+                    ActivityValue4 = parameters[4],
+                    ActivityValue5 = parameters[5],
+                    ActivityValue6 = parameters[6],
+                    ActivityValue7 = parameters[7],
+                    ActivityValue8 = parameters[8],
+                    ActivityValue9 = parameters[9],
+                };
+                packet.ActivityUserInfos[i] = activityUserInfo;
+            }
+
+            return packet;
         }
 
         /// <summary>
-        /// Writes the Serialize information.
+        /// Creates the Serialize packet for the replica component.
         /// </summary>
-        /// <param name="writer">Writer to write to.</param>
-        public override void Serialize(BitWriter writer)
+        /// <returns>The Serialize packet for the replica component.</returns>
+        public override ScriptedActivitySerialization GetSerializePacket()
         {
-            writer.WriteBit(true);
-            writer.Write((uint) Participants.Count);
-
-            foreach (var contributor in Participants)
-            {
-                writer.Write(contributor);
-
-                foreach (var parameter in Parameters[this.Participants.IndexOf(contributor)])
-                    writer.Write(parameter);
-            }
+            var packet = this.GetConstructPacket();
+            return packet;
         }
     }
 }

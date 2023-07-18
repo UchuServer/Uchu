@@ -26,6 +26,9 @@ namespace Uchu.Core.Migrations.Sqlite
                     b.Property<int>("Activity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("BestLapTime")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("CharacterId")
                         .HasColumnType("INTEGER");
 
@@ -42,6 +45,9 @@ namespace Uchu.Core.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Week")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Wins")
                         .HasColumnType("INTEGER");
 
                     b.Property<ushort>("Zone")

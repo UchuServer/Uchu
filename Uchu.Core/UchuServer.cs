@@ -498,7 +498,7 @@ namespace Uchu.Core
                     return;
                 }
 
-                Logger.Debug($"Received {handler.PacketType.FullName}");
+                // Logger.Debug($"Received {handler.PacketType.FullName}");
                 reader.BaseStream.Position = 8;
 
                 try

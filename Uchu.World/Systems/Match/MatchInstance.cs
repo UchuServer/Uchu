@@ -105,11 +105,44 @@ namespace Uchu.World.Systems.Match
                     return;
                 }
 
-                // Start the match.
-                foreach (var player in _players)
+                const int checkEveryMs = 2000;
+                const int timeoutMs = 30000;
+                var zoneLoadedTimer = new Timer(checkEveryMs);
+                var elapsed = 0;
+                zoneLoadedTimer.Elapsed += async (o, eventArgs) =>
                 {
-                    await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
-                }
+                    elapsed += checkEveryMs;
+                    if (elapsed >= timeoutMs)
+                    {
+                        zoneLoadedTimer.Stop();
+                        zoneLoadedTimer.Dispose();
+                        return;
+                    }
+
+                    var status = await zone.Server.Api.RunCommandAsync<ZoneStatusResponse>(
+                        allocatedInstance.ApiPort, $"world/zoneStatus?id={matchZoneId}"
+                    ).ConfigureAwait(false);
+
+                    // If the zone is ready, start the match.
+                    if (!status.Success || !status.Loaded) return;
+                    zoneLoadedTimer.Stop();
+                    zoneLoadedTimer.Dispose();
+
+                    // Tell server what players to expect
+                    foreach (var player in _players)
+                    {
+                        var response = await zone.Server.Api.RunCommandAsync<BaseResponse>(
+                            allocatedInstance.ApiPort, $"match/addMatchPlayer?id={player.Id}")
+                        .ConfigureAwait(false);
+                    }
+
+                    // Start the match.
+                    foreach (var player in _players)
+                    {
+                        await player.SendToWorldAsync(allocatedInstance, (ZoneId) matchZoneId);
+                    }
+                };
+                zoneLoadedTimer.Start();
             };
         }
 
@@ -222,8 +255,8 @@ namespace Uchu.World.Systems.Match
                     Associate = player,
                     Data = new LegoDataDictionary
                     {
-                        {"player", player.Id, 9},
-                        {"playerName", player.Name, 0},
+                        {"player", otherPlayer.Id, 9},
+                        {"playerName", otherPlayer.Name, 0},
                     },
                     Type = MatchUpdateType.PlayerAdded,
                 });

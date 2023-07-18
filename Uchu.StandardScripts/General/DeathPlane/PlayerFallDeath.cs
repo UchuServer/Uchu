@@ -20,7 +20,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
             if (physics == default) return;
             Listen(physics.OnEnter, other =>
             {
-                if (!(other.GameObject is Player player)) return;
+                if (other.GameObject is not Player player) return;
                 Task.Run(async () =>
                 {
                     await Task.Delay(2000);

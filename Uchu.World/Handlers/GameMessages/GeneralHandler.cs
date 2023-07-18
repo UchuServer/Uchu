@@ -82,6 +82,12 @@ namespace Uchu.World.Handlers.GameMessages
         }
 
         [PacketHandler]
+        public async Task RequestDieHandler(RequestDieMessage message, Player player)
+        {
+            await player.OnRequestDie.InvokeAsync(message);
+        }
+
+        [PacketHandler]
         public void RebuildCancelHandler(RebuildCancelMessage message, Player player)
         {
             if (message.Associate.TryGetComponent<QuickBuildComponent>(out var rebuild))
@@ -94,7 +100,7 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task ReadyForUpdatesHandler(ReadyForUpdatesMessage message, Player player)
         {
             if (message.GameObject == null) return;
-            Logger.Debug($"Loaded: {message.GameObject}");
+            Logger.Debug($"Loaded (recv ready for updates): {message.GameObject}");
             await player.OnReadyForUpdatesEvent.InvokeAsync(message);
             Zone.SendSerialization(message.GameObject, new []{ player });
         }

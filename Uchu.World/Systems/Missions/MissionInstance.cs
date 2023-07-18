@@ -276,6 +276,7 @@ namespace Uchu.World.Systems.Missions
                 [MissionTaskType.Discover] = typeof(DiscoverTask),
                 [MissionTaskType.MinigameAchievement] = typeof(MinigameAchievementTask),
                 [MissionTaskType.CollectPowerup] = typeof(CollectPowerupTask),
+                [MissionTaskType.Racing] = typeof(RacingTask),
             };
         }
         

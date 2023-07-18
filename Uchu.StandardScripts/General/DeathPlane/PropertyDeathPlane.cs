@@ -19,7 +19,7 @@ namespace Uchu.StandardScripts.General.DeathPlane
             if (physics == default) return;
             Listen(physics.OnEnter, other =>
             {
-                if (!(other.GameObject is Player player)) return;
+                if (other.GameObject is not Player player) return;
                 var teleportObject = this.GetGroup("Teleport")[0];
                 player.Teleport(teleportObject.Transform.Position, ignore: false);
             });

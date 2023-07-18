@@ -94,7 +94,8 @@ namespace Uchu.World
         public Event<Object> OnObject { get; }
         public Event OnTick { get; }
         public Event<Player, string> OnChatMessage { get; }
-        public static readonly string[] ScriptBlacklist =
+
+        private static readonly string[] ScriptBlacklist =
         {
             //done with one script, comment out if needed
             "l_qb_spawner.lua",
@@ -104,6 +105,18 @@ namespace Uchu.World
 
             //function done by LaunchpadEvent.cs
             "l_ag_zone_player.lua",
+            
+            //appears to actually do nothing?
+            "race_imagine_powerup.lua",
+            
+            //implemented by checking whenever an object is smashed
+            "race_smash_server.lua",
+            
+            //we may be missing parts of these scripts, so take note of what's inside of them, but most of the
+            //functionality is already implemented in the RacingControlComponent
+            "ns_race_server.lua",
+            "gf_race_server.lua",
+            "fv_race_server.lua",
         };
         
         public Zone(ZoneInfo zoneInfo, WorldUchuServer server, ushort instanceId = default, uint cloneId = default)
@@ -179,15 +192,12 @@ namespace Uchu.World
             {
                 scriptNames.Add(scriptComponent.ScriptName.ToLower());
             }
-            
-            foreach (var name in scriptNames)
+
+            foreach (var script in ScriptBlacklist)
             {
-                for (var i = 0; i < ScriptBlacklist.Count(); i++)
+                foreach (var name in scriptNames.Where(i => i.EndsWith(script)).ToArray())
                 {
-                    if (ScriptBlacklist[i].EndsWith(name))
-                    {
-                        scriptNames.Remove(name);
-                    }
+                    scriptNames.Remove(name);
                 }
             }
 
@@ -309,7 +319,7 @@ namespace Uchu.World
                 {
                     Logger.Debug($"Trigger: {trigger}");
                 }
-                
+
                 Logger.Debug($"Loading {levelObject.Lot} [{levelObject.ObjectId}]...");
                 
                 try
@@ -486,7 +496,7 @@ namespace Uchu.World
 
                 ManagedObjects.Add(obj);
 
-                if (!(obj is GameObject gameObject)) return;
+                if (obj is not GameObject gameObject) return;
                 
                 if ((gameObject.Id.Flags & ObjectIdFlags.Spawned) != 0)
                 {
@@ -783,11 +793,7 @@ namespace Uchu.World
             var watch = new Stopwatch();
             watch.Start();
 
-            var updatedObjects = UpdatedObjects.ToArray();
-            var visibleObjects = updatedObjects.Select(o => o.Associate)
-                .Intersect(Players.SelectMany(p => p.Perspective.LoadedObjects)).ToHashSet();
-            var objectsToUpdate = updatedObjects
-                .Where(o => visibleObjects.Contains(o.Associate));
+            var objectsToUpdate = UpdatedObjects.Where(o => Players.Any(p => p.Perspective.IsLoaded(o.Associate as GameObject)));
             
             foreach (var updatedObject in objectsToUpdate)
             {
