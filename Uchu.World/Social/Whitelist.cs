@@ -115,7 +115,7 @@ namespace Uchu.World.Social
                 if (allowed) continue;
 
                 // Add the bad word's position and length.
-                var position = (byte) phrase.IndexOf(word, StringComparison.Ordinal);
+                var position = (byte) (phrase.Substring(match.Index).IndexOf(word, StringComparison.Ordinal) + match.Index);
                 redact.Add((position, (byte) word.Length));
             }
 
