@@ -378,8 +378,10 @@ namespace Uchu.World
                 VehicleId = car,
             });
 
-            var playerInfo = Players.Find(info => info.Player.Id == player.Id);
-            playerInfo.Vehicle = car;
+            var playerInfoIndex = Players.FindIndex(info => info.Player.Id == player.Id);
+            var tempInfo = Players[playerInfoIndex];
+            tempInfo.Vehicle = car;
+            Players[playerInfoIndex] = tempInfo;
         }
 
         private void InitRace()
