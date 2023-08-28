@@ -230,9 +230,11 @@ namespace Uchu.World
             RacingPlayerInfo playerInfo;
 
             if (IsPlayerRegistered(player)) {
-                playerInfo = Players.Find(info => info.Player.Id == player.Id);
+                var playerInfoIndex = Players.FindIndex(info => info.Player.Id == player.Id);
+                playerInfo = Players[playerInfoIndex];
                 playerInfo.Player = player;
                 playerInfo.PlayerLoaded = true;
+                Players[playerInfoIndex] = playerInfo;
             } else {
                 playerInfo = new RacingPlayerInfo
                 {
