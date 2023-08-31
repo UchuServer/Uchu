@@ -90,6 +90,8 @@ namespace Uchu.World
         public static readonly Lot ModularRocket = 6416;
         public static readonly Lot ModularCar = 8092;
 
+        public const int ThinkingHat = 6086;
+
         public const int NewRocketBay = 4;
         public const int NimbusRocketBuildBorder = 9980;
         public const int LupRocketBuildBorder = 10047;

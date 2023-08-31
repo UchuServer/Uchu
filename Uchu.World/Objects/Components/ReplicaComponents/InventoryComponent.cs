@@ -237,6 +237,22 @@ namespace Uchu.World
         }
 
         /// <summary>
+        /// Pushes the currently equipped item state to an internal buffer. Can be reverted by calling
+        /// <see cref="PopEquippedItemState"/>
+        /// </summary>
+
+        public void PushEquippedItemState() {
+
+        }
+
+        /// <summary>
+        /// Restores the state saved by <see cref="PushEquippedItemState"/>
+        /// </summary>
+        public void PopEquippedItemState() {
+
+        }
+
+        /// <summary>
         /// Constructs the component
         /// </summary>
         /// <param name="writer">The writer to serialize to</param>
@@ -253,8 +269,8 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            var items = Items.Values.ToArray();
-            writer.Write((uint) items.Length);
+            var items = Items.Values;
+            writer.Write((uint) items.Count);
 
             foreach (var item in items)
             {

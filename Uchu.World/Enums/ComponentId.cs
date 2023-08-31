@@ -106,6 +106,7 @@ namespace Uchu.World
         CombatMediatorComponent = 101,
         RailActivator = 104,
         Component107 = 107,
-        Possesable = 108
+        Possesable = 108,
+        BuildBorder = 114
     }
 }
