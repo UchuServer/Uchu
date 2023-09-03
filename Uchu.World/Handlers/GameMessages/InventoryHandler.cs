@@ -104,6 +104,13 @@ namespace Uchu.World.Handlers.GameMessages
         {
             var inventory = player.GetComponent<InventoryComponent>();
             inventory.PopEquippedItemState();
+
+            var destroyable = player.GetComponent<DestroyableComponent>();
+            destroyable.Health = destroyable.MaxHealth;
+            destroyable.Armor = destroyable.MaxArmor;
+            destroyable.Imagination = destroyable.MaxImagination;
+
+            GameObject.Serialize(player);
         }
     }
 }

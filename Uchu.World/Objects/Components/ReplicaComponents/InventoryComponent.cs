@@ -248,6 +248,7 @@ namespace Uchu.World
             EquippedItemStack.Clear();
             foreach (var pair in Items)
             {
+                Logger.Debug($"Pushing {pair.Key}: {pair.Value}");
                 EquippedItemStack.Add(pair.Key, pair.Value);
             }
         }
@@ -255,15 +256,30 @@ namespace Uchu.World
         /// <summary>
         /// Restores the state saved by <see cref="PushEquippedItemState"/>
         /// </summary>
-        public void PopEquippedItemState()
+        public async void PopEquippedItemState()
         {
-            if (EquippedItemStack == null)
+            Logger.Debug("PopEquippedItemState");
+            if (EquippedItemStack == null || EquippedItemStack.Count == 0)
                 return;
 
-            Items.Clear();
+            Logger.Debug($"Equipped Items: {EquippedItems.Length}");
+            Logger.Debug($"Items on stack: {EquippedItemStack.Count}");
+
+            // Only applies the diff
+            foreach (var pair in Items) {
+                if (!EquippedItemStack.Contains(pair)) {
+                    Logger.Debug($"Unequip {pair.Value}");
+                    await pair.Value.UnEquipAsync();
+                } else {
+                    Logger.Debug($"Leave {pair.Value}");
+                    EquippedItemStack.Remove(pair.Key);
+                }
+            }
+
             foreach (var pair in EquippedItemStack)
             {
-                Items.Add(pair.Key, pair.Value);
+                Logger.Debug($"Equip {pair.Value}");
+                await EquipItemAsync(pair.Value);
             }
 
             EquippedItemStack.Clear();
