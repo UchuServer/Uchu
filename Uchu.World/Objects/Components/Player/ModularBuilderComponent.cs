@@ -25,6 +25,9 @@ namespace Uchu.World
             this.OnBuildFinished = new Event<ModularBuildCompleteEvent>();
         }
 
+        /// <summary>
+        /// Starts a modular builder session. Can be exited by calling <see cref="FinishBuild"/> or <see cref="ConfirmExitBuild"/>
+        /// </summary>
         public void StartBuild(StartBuildingWithItemMessage message)
         {
             Logger.Debug($"Associate: {message.Associate}");
@@ -55,6 +58,9 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Sets the build mode (whatever this is).
+        /// </summary>
         public void SetBuildMode(SetBuildModeMessage message)
         {
             Logger.Debug($"Associate: {message.Associate}");
@@ -84,6 +90,9 @@ namespace Uchu.World
             await StoreCurrentModel(message.Item);
         }
 
+        /// <summary>
+        /// Is called when a player picks up an item from the build/ground.
+        /// </summary>
         public async void MoveAndEquip(ModularBuildMoveAndEquipMessage message)
         {
             Logger.Debug($"Associate: {message.Associate}");
@@ -111,6 +120,9 @@ namespace Uchu.World
             await item.EquipAsync();
         }
 
+        /// <summary>
+        /// Finishes the build and assembles a model. This new model is put into the models inventory.
+        /// </summary>
         public async Task FinishBuild(ModularBuildFinishMessage message)
         {
             Logger.Debug($"Associate: {message.Associate}");
@@ -125,6 +137,9 @@ namespace Uchu.World
             });
         }
 
+        /// <summary>
+        /// Quits the build without assembling a models. Puts all used items back into the models inventory.
+        /// </summary>
         public async void ConfirmExitBuild(BuildExitConfirmationMessage message)
         {
             Logger.Debug($"Associate: {message.Associate}");
@@ -133,6 +148,9 @@ namespace Uchu.World
             await ExitBuild();
         }
 
+        /// <summary>
+        /// Stops the build mode and cleans up.
+        /// </summary>
         private async Task ExitBuild()
         {
             // Should be removed once PopEquippedItemState is implemented
@@ -153,6 +171,10 @@ namespace Uchu.World
             IsBuilding = false;
         }
 
+        /// <summary>
+        /// Stores a model, that the user put into the builde for later use (for example to give it back when the player exits).
+        /// See <see cref="RetrieveCurrentModel"/>.
+        /// </summary>
         private async Task StoreCurrentModel(Item model)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
@@ -172,6 +194,9 @@ namespace Uchu.World
             await inventory.RemoveItemAsync(model, 1);
         }
 
+        /// <summary>
+        /// Give back the model stored by <see cref="StoreCurrentModel"/>.
+        /// </summary>
         private async Task RetrieveCurrentModel()
         {
             if (CurrentModel == null || CurrentModel.Length == 0)
@@ -181,11 +206,17 @@ namespace Uchu.World
             ClearCurrentModel();
         }
 
+        /// <summary>
+        /// Clears the model stored by <see cref="StoreCurrentModel"/>.
+        /// </summary>
         private void ClearCurrentModel()
         {
             CurrentModel = null;
         }
 
+        /// <summary>
+        /// Moves all items from TemporaryModels to Models inventory.
+        /// </summary>
         private async Task CleanupTempModels()
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
@@ -207,6 +238,9 @@ namespace Uchu.World
             }
         }
 
+        /// <summary>
+        /// Creates a new model from the parts in the builder.
+        /// </summary>
         private async Task<Lot> CreateModel(Lot[] parts)
         {
             var inventory = GameObject.GetComponent<InventoryManagerComponent>();
@@ -227,10 +261,13 @@ namespace Uchu.World
             return modelLot;
         }
 
-
+        /// <summary>
+        /// Gets what lot the output model should have.
+        /// </summary>
         private static Lot GetModelLotForBuildAreaLot(Lot lot)
         {
-            switch(lot) {
+            switch (lot)
+            {
                 case Lot.NewRocketBay:
                 case Lot.NimbusRocketBuildBorder:
                 case Lot.LupRocketBuildBorder:

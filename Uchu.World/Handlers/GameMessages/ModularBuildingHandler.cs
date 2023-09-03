@@ -1,6 +1,4 @@
-using System;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 
 namespace Uchu.World.Handlers.GameMessages
@@ -25,7 +23,7 @@ namespace Uchu.World.Handlers.GameMessages
             player.GetComponent<ModularBuilderComponent>().SetBuildMode(message);
         }
 
-        // Is sent directly after SetBuildMode
+        // Is sent directly after SetBuildMode to acknowledge that the build mode was set
         [PacketHandler]
         public void BuildModeSetHandler(BuildModeSetMessage message, Player player)
         {
