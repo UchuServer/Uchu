@@ -9,6 +9,7 @@ using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
 using Uchu.World.Objects;
+using Uchu.World.Services;
 
 namespace Uchu.World
 {
@@ -153,15 +154,8 @@ namespace Uchu.World
         /// <param name="ignoreAllChecks">Disables item checks, which checks for example if a player is building</param>
         public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
         {
-            var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
-
-            // TODO: What does this do?
-            if (!ignoreAllChecks 
-                && GameObject is Player player 
-                && player.TryGetComponent<ModularBuilderComponent>(out var modularBuilderComponent)
-                && !modularBuilderComponent.IsBuilding
-                && (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle 
-                    || item.Lot == 6086))
+            bool ok = await Requirements.CheckRequirementsAsync(item.ItemComponent.ReqPrecondition, GameObject as Player);
+            if (!ok && !ignoreAllChecks)
             {
                 return;
             }
@@ -169,7 +163,7 @@ namespace Uchu.World
             await EnsureItemEquipped(item);
             foreach (var subItem in item.SubItems)
                 await EquipItemAsync(subItem);
-            
+
             GameObject.Serialize(GameObject);
         }
 

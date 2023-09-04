@@ -21,6 +21,7 @@ namespace Uchu.World
         HasRacingLicence,
         DoesNotHaveRacingLicence,
         LegoClubMember,
-        NoInteraction
+        NoInteraction,
+        PlayerHasLevel = 22
     }
 }

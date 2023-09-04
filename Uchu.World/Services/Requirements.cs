@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Uchu.Core;
 using Uchu.Core.Client;
 using Uchu.World.Client;
@@ -21,7 +21,7 @@ namespace Uchu.World.Services
                 _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
             };
         }
-        
+
         private enum Mode
         {
             None,
@@ -35,7 +35,7 @@ namespace Uchu.World.Services
 
             return await CheckPreconditionAsync(int.Parse(cur), player);
         }
-        
+
         public static async Task<bool> CheckRequirementsAsync(string requirements, Player player)
         {
             if (string.IsNullOrWhiteSpace(requirements)) return true;
@@ -55,27 +55,28 @@ namespace Uchu.World.Services
 
                     case '&':
                     case ',':
-                    {
-                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+                    case ';':
+                        {
+                            res = Check(res, await CheckAsync(cur.ToString(), player), mode);
 
-                        cur.Clear();
+                            cur.Clear();
 
-                        if (!res)
-                            return false;
+                            if (!res)
+                                return false;
 
-                        mode = Mode.And;
-                        break;
-                    }
+                            mode = Mode.And;
+                            break;
+                        }
 
                     case '|':
-                    {
-                        res = Check(res, await CheckAsync(cur.ToString(), player), mode);
+                        {
+                            res = Check(res, await CheckAsync(cur.ToString(), player), mode);
 
-                        cur.Clear();
+                            cur.Clear();
 
-                        mode = Mode.Or;
-                        break;
-                    }
+                            mode = Mode.Or;
+                            break;
+                        }
 
                     case '(':
                         res = Check(res, await CheckRequirementsAsync(requirements.Substring(i + 1), player), mode);
@@ -104,7 +105,7 @@ namespace Uchu.World.Services
 
             return res;
         }
-        
+
         public static async Task<bool> CheckPreconditionAsync(int id, Player player)
         {
             var precondition = await ClientCache.FindAsync<Preconditions>(id);
@@ -115,7 +116,8 @@ namespace Uchu.World.Services
                 return false;
             }
 
-            var type = (PreconditionType) precondition.Type;
+            var type = (PreconditionType)precondition.Type;
+            Logger.Debug($"Checking {type}");
 
             switch (type)
             {
@@ -138,29 +140,31 @@ namespace Uchu.World.Services
                 case PreconditionType.PetDeployed:
                     break;
                 case PreconditionType.HasFlag:
-                    break;
+                    return HasFlag(precondition, player);
                 case PreconditionType.WithinShape:
-                    break;
+                    return WithinShape(precondition, player);
                 case PreconditionType.InBuild:
-                    break;
+                    return InBuild(precondition, player);
                 case PreconditionType.TeamCheck:
                     break;
                 case PreconditionType.IsPetTaming:
                     break;
                 case PreconditionType.HasFaction:
-                    break;
+                    return HasFaction(precondition, player);
                 case PreconditionType.DoesNotHaveFaction:
-                    break;
+                    return DoesNotHaveFaction(precondition, player);
                 case PreconditionType.HasRacingLicence:
-                    break;
+                    return HasRacingLicence(precondition, player);
                 case PreconditionType.DoesNotHaveRacingLicence:
-                    break;
+                    return DoesNotHaveRacingLicence(precondition, player);
                 case PreconditionType.LegoClubMember:
-                    break;
+                    return LegoClubMember(precondition, player);
                 case PreconditionType.NoInteraction:
                     break;
+                case PreconditionType.PlayerHasLevel:
+                    return PlayerHasLevel(precondition, player);
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("type", type, "");
             }
 
             return false;
@@ -173,14 +177,12 @@ namespace Uchu.World.Services
         }
 
         private static bool ItemNotEquipped(Preconditions preconditions, Player player)
-        {
-            return !ItemEquipped(preconditions, player);
-        }
+            => !ItemEquipped(preconditions, player);
 
         private static bool HasItem(Preconditions preconditions, Player player)
         {
             var inventory = player.GetComponent<InventoryManagerComponent>();
-            
+
             var lot = preconditions.TargetLOT.InterpretCollection().First();
 
             var count = preconditions.TargetCount ?? 1;
@@ -191,13 +193,13 @@ namespace Uchu.World.Services
         private static bool DoesNotHaveItem(Preconditions preconditions, Player player)
         {
             var inventory = player.GetComponent<InventoryManagerComponent>();
-            
+
             var lot = preconditions.TargetLOT.InterpretCollection().First();
 
             return inventory.Items.All(i => i.Lot != lot);
         }
 
-        private static bool HasAchievement(Preconditions preconditions, Player player) 
+        private static bool HasAchievement(Preconditions preconditions, Player player)
             => MissionComplete(preconditions, player);
 
         private static bool MissionAvailable(Preconditions preconditions, Player player)
@@ -219,9 +221,83 @@ namespace Uchu.World.Services
         private static bool MissionComplete(Preconditions preconditions, Player player)
         {
             var missionInventory = player.GetComponent<MissionInventoryComponent>();
+            if (missionInventory == null) {
+                // This happens because MissionInventoryComponent is initialized after InventoryComponent
+                // when the player is initialized.
+                Logger.Warning("MissionInventoryComponent is null");
+                return true;
+            }
+
             var id = preconditions.TargetLOT.InterpretCollection().First();
 
             return missionInventory.HasCompleted(id);
+        }
+
+        private static bool HasFlag(Preconditions preconditions, Player player)
+        {
+            var character = player.GetComponent<CharacterComponent>();
+            return character.GetFlag(int.Parse(preconditions.TargetLOT));
+        }
+
+        private static bool WithinShape(Preconditions preconditions, Player player)
+        {
+            // TODO: Find a better implementation
+            foreach (Lot lot in preconditions.TargetLOT.InterpretCollection())
+            {
+                var shape = player.Zone.GameObjects.FirstOrDefault(g => g.Lot == lot, null);
+                if (shape == null)
+                    continue;
+
+                var distance = Vector3.DistanceSquared(shape.Transform.Position, player.Transform.Position);
+
+                Logger.Debug($"Distance (squared) to {shape} is {distance}");
+                if (distance <= 16 * 16)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool InBuild(Preconditions preconditions, Player player)
+        {
+            var modularBuilder = player.GetComponent<ModularBuilderComponent>();
+            return modularBuilder.IsBuilding;
+        }
+
+        private static bool HasFaction(Preconditions preconditions, Player player)
+        {
+            var character = player.GetComponent<CharacterComponent>();
+            return character.IsSentinel || character.IsAssembly || character.IsParadox || character.IsVentureLeague;
+        }
+
+        private static bool DoesNotHaveFaction(Preconditions preconditions, Player player)
+            => !HasFaction(preconditions, player);
+
+        private static bool HasRacingLicence(Preconditions preconditions, Player player)
+        {
+            var missionInventory = player.GetComponent<MissionInventoryComponent>();
+            if (missionInventory == null) {
+                // This happens because MissionInventoryComponent is initialized after InventoryComponent
+                // when the player is initialized.
+                Logger.Warning("MissionInventoryComponent is null");
+                return true;
+            }
+
+            return missionInventory.HasCompleted(623);
+        }
+
+        private static bool DoesNotHaveRacingLicence(Preconditions preconditions, Player player)
+            => !HasRacingLicence(preconditions, player);
+
+        private static bool LegoClubMember(Preconditions preconditions, Player player) {
+            // TODO: Implement for real. Currently it seems this is hard coded everywhere
+            return true;
+        }
+
+        private static bool PlayerHasLevel(Preconditions preconditions, Player player)
+        {
+            var character = player.GetComponent<CharacterComponent>();
+            return character.Level >= int.Parse(preconditions.TargetLOT);
         }
     }
 }
