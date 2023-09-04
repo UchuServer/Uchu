@@ -15,8 +15,7 @@ namespace Uchu.World
 
         private void OnInteract(Player player)
         {
-            var inventory = player.GetComponent<InventoryComponent>();
-            inventory.PushEquippedItemState();
+            
         }
 
         public override void Construct(BitWriter writer)

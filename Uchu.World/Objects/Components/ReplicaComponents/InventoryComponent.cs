@@ -153,7 +153,7 @@ namespace Uchu.World
         /// </summary>
         /// <param name="item">The item to load for the player</param>
         /// <param name="ignoreAllChecks">Disables item checks, which checks for example if a player is building</param>
-        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
+        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false, bool serialize = true)
         {
             var itemType = (ItemType)(item.ItemComponent.ItemType ?? (int)ItemType.Invalid);
 
@@ -172,7 +172,8 @@ namespace Uchu.World
             foreach (var subItem in item.SubItems)
                 await EquipItemAsync(subItem);
 
-            GameObject.Serialize(GameObject);
+            if (serialize)
+                GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -203,7 +204,7 @@ namespace Uchu.World
         /// <remarks>Should be used at run-time instead of directly calling <see cref="UnEquipAsync"/> as this
         /// also calls unequip events</remarks>
         /// <param name="item">The item to unequip</param>
-        public async Task UnEquipItemAsync(Item item)
+        public async Task UnEquipItemAsync(Item item, bool serialize = true)
         {
             if (item?.Id <= 0)
                 return;
@@ -220,7 +221,8 @@ namespace Uchu.World
                 }
             }
 
-            GameObject.Serialize(GameObject);
+            if (serialize)
+                GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -265,22 +267,19 @@ namespace Uchu.World
             Logger.Debug($"Equipped Items: {EquippedItems.Length}");
             Logger.Debug($"Items on stack: {EquippedItemStack.Count}");
 
-            // Only applies the diff
-            foreach (var pair in Items) {
-                if (!EquippedItemStack.Contains(pair)) {
-                    Logger.Debug($"Unequip {pair.Value}");
-                    await pair.Value.UnEquipAsync();
-                } else {
-                    Logger.Debug($"Leave {pair.Value}");
-                    EquippedItemStack.Remove(pair.Key);
-                }
+            foreach (var item in EquippedItems)
+            {
+                Logger.Debug($"Unequip {item}");
+                await UnEquipItemAsync(item, false);
             }
 
             foreach (var pair in EquippedItemStack)
             {
                 Logger.Debug($"Equip {pair.Value}");
-                await EquipItemAsync(pair.Value);
+                await EquipItemAsync(pair.Value, false);
             }
+
+            GameObject.Serialize(GameObject);
 
             EquippedItemStack.Clear();
         }

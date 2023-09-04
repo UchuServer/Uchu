@@ -34,6 +34,9 @@ namespace Uchu.World
             IsBuilding = true;
             BuildArea = message.Associate;
 
+            var inventory = Player.GetComponent<InventoryComponent>();
+            inventory.PushEquippedItemState();
+
             Logger.Debug($"Start building with {message.Associate}");
 
             var sourceType = message.SourceType;
