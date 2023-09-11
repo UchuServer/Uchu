@@ -156,11 +156,6 @@ namespace Uchu.World
         /// </summary>
         private async Task ExitBuild()
         {
-            // Should be removed once PopEquippedItemState is implemented
-            var inventory = Player.GetComponent<InventoryManagerComponent>();
-            var thinkingHat = inventory.FindItem(Lot.ThinkingHat);
-            await thinkingHat.UnEquipAsync();
-
             await CleanupTempModels();
             ClearCurrentModel();
 
