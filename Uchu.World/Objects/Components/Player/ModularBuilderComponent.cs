@@ -30,7 +30,6 @@ namespace Uchu.World
         /// </summary>
         public void StartBuild(StartBuildingWithItemMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
             IsBuilding = true;
             BuildArea = message.Associate;
 
@@ -38,9 +37,6 @@ namespace Uchu.World
             inventory.PushEquippedItemState();
 
             Logger.Debug($"Start building with {message.Associate}");
-
-            var sourceType = message.SourceType;
-            Logger.Debug($"Source Type: {sourceType}");
 
             Player.Message(new StartArrangingWithItemMessage
             {
@@ -66,9 +62,6 @@ namespace Uchu.World
         /// </summary>
         public void SetBuildMode(SetBuildModeMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
-            Logger.Debug($"Build mode set to {message.ModeValue}");
-
             Player.Message(new SetBuildModeConfirmedMessage
             {
                 Associate = Player,
@@ -86,9 +79,6 @@ namespace Uchu.World
         /// </summary>
         public async Task ModelAdded(StartArrangingWithModelMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
-            Logger.Debug($"Model added {message.Item}");
-
             await RetrieveCurrentModel();
             await StoreCurrentModel(message.Item);
         }
@@ -98,8 +88,6 @@ namespace Uchu.World
         /// </summary>
         public async void MoveAndEquip(ModularBuildMoveAndEquipMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
-
             var inventory = Player.GetComponent<InventoryManagerComponent>();
 
             var item = inventory.FindItem(message.Lot, InventoryType.TemporaryModels);
@@ -128,8 +116,6 @@ namespace Uchu.World
         /// </summary>
         public async Task FinishBuild(ModularBuildFinishMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
-
             var modelLot = await CreateModel(message.Modules);
 
             await ExitBuild();
@@ -145,8 +131,6 @@ namespace Uchu.World
         /// </summary>
         public async void ConfirmExitBuild(BuildExitConfirmationMessage message)
         {
-            Logger.Debug($"Associate: {message.Associate}");
-
             await RetrieveCurrentModel();
             await ExitBuild();
         }
@@ -156,6 +140,8 @@ namespace Uchu.World
         /// </summary>
         private async Task ExitBuild()
         {
+            Logger.Debug("Exiting build");
+
             await CleanupTempModels();
             ClearCurrentModel();
 
