@@ -28,7 +28,7 @@ namespace Uchu.World
             writer.Write(ChatChannel);
             writer.Write(ChatMode);
 
-            writer.WriteString(PlayerName, 33, true);
+            writer.WriteString(PlayerName, 42, true);
 
             foreach (var (start, length) in UnacceptedRanges)
             {
@@ -36,7 +36,7 @@ namespace Uchu.World
                 writer.Write(length);
             }
 
-            for (var i = 0; i < 32 - UnacceptedRanges.Length; i++)
+            for (var i = 0; i < 64 - UnacceptedRanges.Length; i++)
             {
                 writer.Write<byte>(0);
                 writer.Write<byte>(0);
