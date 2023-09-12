@@ -25,7 +25,7 @@ namespace Uchu.World.Handlers.GameMessages
             var inventoryManager = message.Item.Inventory.ManagerComponent;
             if (inventoryManager.GameObject != player)
                 return;
-            
+
             var destinationInventory = message.DestinationInventoryType == InventoryType.Invalid
                 ? message.CurrentInventoryType
                 : message.DestinationInventoryType;
@@ -36,15 +36,15 @@ namespace Uchu.World.Handlers.GameMessages
             {
                 itemToSwap.Slot = message.Item.Slot;
             }
-            
-            message.Item.Slot = (uint) message.NewSlot;
+
+            message.Item.Slot = (uint)message.NewSlot;
         }
-        
+
         [PacketHandler]
         public async Task ItemMoveBetweenInventoriesHandler(MoveItemBetweenInventoryTypesMessage message, Player player)
         {
             var inventory = player.GetComponent<InventoryManagerComponent>();
-            
+
             // Sometimes an explicit item is provided, if it is available we prefer to use that to mimic the move of
             // the supplied slot, otherwise we find the first item that matches the criteria and move that
             if (message.Item == null)
@@ -64,18 +64,18 @@ namespace Uchu.World.Handlers.GameMessages
         {
             if (!message.Confirmed || message.Item == default)
                 return;
-            
+
             await player.GetComponent<InventoryManagerComponent>()
-                .RemoveItemAsync(message.Item, message.Item.Count - message.TotalItems, 
+                .RemoveItemAsync(message.Item, message.Item.Count - message.TotalItems,
                     message.InventoryType, true);
 
             // Disassemble item
             if (player.TryGetComponent<InventoryManagerComponent>(out var inventory)
                 && message.Item.Settings.TryGetValue("assemblyPartLOTs", out var list))
             {
-                foreach (var part in (LegoDataList) list)
+                foreach (var part in (LegoDataList)list)
                 {
-                    await inventory.AddLotAsync((int) part, 1);
+                    await inventory.AddLotAsync((int)part, 1);
                 }
             }
         }
@@ -92,11 +92,25 @@ namespace Uchu.World.Handlers.GameMessages
         public async Task UnEquipItemHandler(UnEquipItemMessage message, Player player)
         {
             if (message.ItemToUnEquip == null) return;
-            
+
             await message.ItemToUnEquip.UnEquipAsync();
 
             if (message.ReplacementItem != null)
                 await message.ReplacementItem.EquipAsync();
+        }
+
+        [PacketHandler]
+        public void PopEquippedItemsStateHandler(PopEquippedItemsStateMessage message, Player player)
+        {
+            var inventory = player.GetComponent<InventoryComponent>();
+            inventory.PopEquippedItemState();
+
+            var destroyable = player.GetComponent<DestroyableComponent>();
+            destroyable.Health = destroyable.MaxHealth;
+            destroyable.Armor = destroyable.MaxArmor;
+            destroyable.Imagination = destroyable.MaxImagination;
+
+            GameObject.Serialize(player);
         }
     }
 }

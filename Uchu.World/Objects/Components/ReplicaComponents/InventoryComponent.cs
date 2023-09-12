@@ -24,7 +24,7 @@ namespace Uchu.World
         /// Component Id of this component
         /// </summary>
         public override ComponentId Id => ComponentId.InventoryComponent;
-        
+
         /// <summary>
         /// Mapping of items and their equipped slots on the game object
         /// </summary>
@@ -39,16 +39,18 @@ namespace Uchu.World
         /// Called when a new item is equipped
         /// </summary>
         public Event<Item> OnEquipped { get; }
-        
+
         /// <summary>
         /// Called when an item is unequipped
         /// </summary>
         public Event<Item> OnUnEquipped { get; }
-        
+
         /// <summary>
         /// The item sets currently active on the player
         /// </summary>
         public List<ItemSet> ActiveItemSets { get; }
+
+        private Dictionary<EquipLocation, Item> EquippedItemStack = new Dictionary<EquipLocation, Item>();
 
         protected InventoryComponent()
         {
@@ -62,7 +64,7 @@ namespace Uchu.World
                 OnEquipped.Clear();
                 OnUnEquipped.Clear();
             });
-            
+
             Listen(OnStart, async () =>
             {
                 await LoadAsync();
@@ -79,7 +81,7 @@ namespace Uchu.World
             if (!(GameObject is Player))
             {
                 var component = ClientCache.FindAll<ComponentsRegistry>(GameObject.Lot).FirstOrDefault(c =>
-                    c.Componenttype == (int) ComponentId.InventoryComponent);
+                    c.Componenttype == (int)ComponentId.InventoryComponent);
                 var itemTemplates = ClientCache.FindAll<Core.Client.InventoryComponent>(component.Componentid)
                     .Where(i => i.Itemid != default).ToArray();
 
@@ -87,17 +89,17 @@ namespace Uchu.World
                 {
                     if (itemTemplate.Itemid == default)
                         continue;
-                    
-                    var lot = (Lot) itemTemplate.Itemid;
+
+                    var lot = (Lot)itemTemplate.Itemid;
                     var componentId = lot.GetComponentId(ComponentId.ItemComponent);
                     var itemComponent = await ClientCache.FindAsync<ItemComponent>(componentId);
 
                     if (itemComponent.ItemType == default)
                         continue;
-                    
+
                     var item = await Item.Instantiate(GameObject, lot, default, (uint)(itemTemplate.Count ?? 1));
                     if (item != null)
-                        Items[(EquipLocation) itemComponent.EquipLocation] = item;
+                        Items[(EquipLocation)itemComponent.EquipLocation] = item;
                 }
             }
         }
@@ -133,11 +135,11 @@ namespace Uchu.World
         /// </summary>
         /// <param name="itemId">The object id to find the equiplocation for</param>
         /// <returns>The equip location if the object could be found, default otherwise</returns>
-        private EquipLocation GetSlot(ObjectId itemId) => 
-            Items.FirstOrDefault(i => i.Value == itemId) is {} keyValue 
+        private EquipLocation GetSlot(ObjectId itemId) =>
+            Items.FirstOrDefault(i => i.Value == itemId) is { } keyValue
                 ? keyValue.Key
                 : default;
-        
+
         /// <summary>
         /// Whether the game object has this lot equipped
         /// </summary>
@@ -151,16 +153,16 @@ namespace Uchu.World
         /// </summary>
         /// <param name="item">The item to load for the player</param>
         /// <param name="ignoreAllChecks">Disables item checks, which checks for example if a player is building</param>
-        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false)
+        public async Task EquipItemAsync(Item item, bool ignoreAllChecks = false, bool serialize = true)
         {
-            var itemType = (ItemType) (item.ItemComponent.ItemType ?? (int) ItemType.Invalid);
+            var itemType = (ItemType)(item.ItemComponent.ItemType ?? (int)ItemType.Invalid);
 
             // TODO: What does this do?
-            if (!ignoreAllChecks 
-                && GameObject is Player player 
+            if (!ignoreAllChecks
+                && GameObject is Player player
                 && player.TryGetComponent<ModularBuilderComponent>(out var modularBuilderComponent)
                 && !modularBuilderComponent.IsBuilding
-                && (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle 
+                && (itemType == ItemType.Model || itemType == ItemType.LootModel || itemType == ItemType.Vehicle
                     || item.Lot == 6086))
             {
                 return;
@@ -169,8 +171,9 @@ namespace Uchu.World
             await EnsureItemEquipped(item);
             foreach (var subItem in item.SubItems)
                 await EquipItemAsync(subItem);
-            
-            GameObject.Serialize(GameObject);
+
+            if (serialize)
+                GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -182,14 +185,14 @@ namespace Uchu.World
             // If this item is already equipped, ignore
             if (Items.ContainsValue(item))
                 return;
-            
+
             await UpdateSlotAsync(item);
             item.IsEquipped = true;
 
             // Make sure that item sets are tracked for this item (if it has one)
             await ItemSet.CreateIfNewSet(this, item.Lot);
             await OnEquipped.InvokeAsync(item);
-            
+
             // Update all the new skills the player gets from this item
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.EquipItemAsync(item);
@@ -201,16 +204,16 @@ namespace Uchu.World
         /// <remarks>Should be used at run-time instead of directly calling <see cref="UnEquipAsync"/> as this
         /// also calls unequip events</remarks>
         /// <param name="item">The item to unequip</param>
-        public async Task UnEquipItemAsync(Item item)
+        public async Task UnEquipItemAsync(Item item, bool serialize = true)
         {
             if (item?.Id <= 0)
                 return;
-            
+
             if (item != null)
             {
                 var rootItem = item.RootItem ?? item;
                 await EnsureItemUnEquipped(rootItem);
-            
+
                 foreach (var subItem in rootItem.SubItems)
                 {
                     if (Items.TryGetValue(GetSlot(subItem.Id), out var equippedSubItem))
@@ -218,7 +221,8 @@ namespace Uchu.World
                 }
             }
 
-            GameObject.Serialize(GameObject);
+            if (serialize)
+                GameObject.Serialize(GameObject);
         }
 
         /// <summary>
@@ -229,11 +233,55 @@ namespace Uchu.World
         {
             if (GameObject.TryGetComponent<SkillComponent>(out var skillComponent))
                 await skillComponent.UnequipItemAsync(item);
-            
+
             await OnUnEquipped.InvokeAsync(item);
-            
+
             item.IsEquipped = false;
             Items.Remove(GetSlot(item.Id));
+        }
+
+        /// <summary>
+        /// Pushes the currently equipped item state to an internal buffer. Can be reverted by calling
+        /// <see cref="PopEquippedItemState"/>
+        /// </summary>
+
+        public void PushEquippedItemState()
+        {
+            EquippedItemStack.Clear();
+            foreach (var pair in Items)
+            {
+                Logger.Debug($"Pushing {pair.Key}: {pair.Value}");
+                EquippedItemStack.Add(pair.Key, pair.Value);
+            }
+        }
+
+        /// <summary>
+        /// Restores the state saved by <see cref="PushEquippedItemState"/>
+        /// </summary>
+        public async void PopEquippedItemState()
+        {
+            Logger.Debug("PopEquippedItemState");
+            if (EquippedItemStack == null || EquippedItemStack.Count == 0)
+                return;
+
+            Logger.Debug($"Equipped Items: {EquippedItems.Length}");
+            Logger.Debug($"Items on stack: {EquippedItemStack.Count}");
+
+            foreach (var item in EquippedItems)
+            {
+                Logger.Debug($"Unequip {item}");
+                await UnEquipItemAsync(item, false);
+            }
+
+            foreach (var pair in EquippedItemStack)
+            {
+                Logger.Debug($"Equip {pair.Value}");
+                await EquipItemAsync(pair.Value, false);
+            }
+
+            GameObject.Serialize(GameObject);
+
+            EquippedItemStack.Clear();
         }
 
         /// <summary>
@@ -253,8 +301,8 @@ namespace Uchu.World
         {
             writer.WriteBit(true);
 
-            var items = Items.Values.ToArray();
-            writer.Write((uint) items.Length);
+            var items = Items.Values;
+            writer.Write((uint)items.Count);
 
             foreach (var item in items)
             {
