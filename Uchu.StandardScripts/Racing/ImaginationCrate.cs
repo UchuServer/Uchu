@@ -18,7 +18,7 @@ public class ImaginationCrate : ObjectScript
                 return;
             
             var skillComponent = car.GetComponent<SkillComponent>();
-            skillComponent.CalculateSkillAsync(585, car);
+            skillComponent.CalculateSkillAsync(586, car);
         });
     }
 }
